@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { cloneState } from '../../../src/core/state';
 import type { ActionPhase } from '../../../src/core/types';
-import { buildWorld, finished, harness, head, runTicks, runUntil, setNeeds } from './fixtures';
+import { reservationKeys } from '../../../src/sim/reservations';
+import { objectCandidates, pickUsePoint } from '../../../src/sim/steps';
+import { buildWorld, finished, harness, head, pureCtx, runTicks, runUntil, setNeeds } from './fixtures';
 import type { FixtureWorld, Harness } from './fixtures';
 
 function quietWorld(): FixtureWorld {
@@ -284,6 +286,40 @@ describe('action lifecycle', () => {
   });
 });
 
+describe('seats shared between objects', () => {
+  it('two people never use the same desk chair through the computer and the chair', () => {
+    const w = quietWorld();
+    const h = harness(w.state);
+    const pc = { kind: 'object' as const, objectId: w.objects.computer!.id, slotId: null };
+    expect(h.sim.queue(w.theo, { interactionId: 'playComputerGames', target: pc }).ok).toBe(true);
+    runUntil(h, () => head(h, w.theo)?.phase === 'perform');
+    expect(h.sim.reservations().some((r) => r.startsWith(`slot:${w.objects.deskChair!.id}:seat=`))).toBe(true);
+    const opt = h.sim.options(w.mira, pc).find((o) => o.interactionId === 'practiceProgramming')!;
+    expect(opt).toMatchObject({ enabled: false, reason: 'Someone is using it.' });
+    expect(h.sim.queue(w.mira, { interactionId: 'practiceProgramming', target: pc })).toEqual({ ok: false, reason: 'Someone is using it.' });
+    const chair = h.sim.options(w.mira, { kind: 'object', objectId: w.objects.deskChair!.id, slotId: null })[0]!;
+    expect(chair).toMatchObject({ interactionId: 'sit', enabled: false, reason: 'Someone is using it.' });
+  });
+
+  it('a use slot lying on a seat also holds the seat, and a seated person blocks it', () => {
+    const w = quietWorld();
+    const h = harness(w.state);
+    expect(h.sim.queue(w.theo, { interactionId: 'sit', target: { kind: 'object', objectId: w.objects.deskChair!.id, slotId: null } }).ok).toBe(true);
+    runUntil(h, () => head(h, w.theo)?.phase === 'perform');
+    const pc = { kind: 'object' as const, objectId: w.objects.computer!.id, slotId: null };
+    const opt = h.sim.options(w.mira, pc).find((o) => o.interactionId === 'playComputerGames')!;
+    expect(opt).toMatchObject({ enabled: false, reason: 'Someone is using it.' });
+    // Reserving the computer's own slot directly (the fallback path) also claims the chair.
+    h.sim.cancel(w.theo, head(h, w.theo)!.id);
+    runUntil(h, () => !head(h, w.theo), 20);
+    const ctx = pureCtx(h);
+    const a = { ...head(h, w.mira) ?? {}, id: 'act_t', interactionId: 'playComputerGames', actorId: w.mira, source: 'player' as const, target: pc,
+      phase: 'reserve' as const, phaseSince: 0, route: [], elapsed: 0, duration: null, replans: 0, failureReason: null, data: {}, cancelRequested: false, queuedAt: 0 };
+    expect(pickUsePoint(ctx, h.holder.state.people[w.mira]!, a, 'use', objectCandidates(ctx, w.lot.id, w.objects.computer!.id, ['use']), { plan: false, what: 'computer' })).toBeNull();
+    expect(reservationKeys(a)).toEqual([`slot:${w.objects.computer!.id}:use`, `slot:${w.objects.deskChair!.id}:seat`]);
+  });
+});
+
 describe('rebuild after load', () => {
   it('resumes running actions with identical reservations', () => {
     const w = quietWorld();
@@ -315,7 +351,8 @@ describe('rebuild after load', () => {
     // run); the action fails inside the next tick.
     expect(head(h2, w.mira)).toBeDefined();
     runTicks(h2, 1);
-    expect(head(h2, w.mira)).toBeUndefined();
+    expect(head(h2, w.mira)?.phase).toBe('cleanup'); // gets up from where the sofa was
+    runUntil(h2, () => !head(h2, w.mira), 10);
     expect(finished(h2, w.mira, 'watchTv')[0]).toMatchObject({ result: 'failed', reason: 'The seat is gone.' });
     expect(h2.sim.reservations()).toEqual([]);
     expect(standing(h2, w.mira)).toBe(true);

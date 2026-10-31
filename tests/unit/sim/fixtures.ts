@@ -92,7 +92,7 @@ export function fixtureContent(): ContentDB {
   ];
   const interactions: InteractionDef[] = [
     inter('sleep', { behavior: 'sleep', slotKinds: ['sleep'], posture: 'lying', anims: { prepare: 'lieDown', perform: 'sleep', cleanup: 'getUp' },
-      duration: { kind: 'untilFull', need: 'energy', maxMinutes: 600 }, needsPerHour: { energy: 14 }, moodletOnComplete: 'wellRested',
+      duration: { kind: 'untilFull', need: 'energy', maxMinutes: 600 }, needsPerHour: { energy: 14, hunger: 3.5, bladder: 6 }, moodletOnComplete: 'wellRested',
       autonomy: { enabled: true, ads: { energy: 80 }, tags: ['rest'] } }),
     inter('nap', { behavior: 'rest', slotKinds: ['sleep', 'sit'], posture: 'lying', anims: { perform: 'sleep' }, duration: { kind: 'fixed', minutes: 90 },
       needsPerHour: { energy: 10 }, autonomy: { enabled: true, ads: { energy: 25 }, tags: ['rest'] } }),

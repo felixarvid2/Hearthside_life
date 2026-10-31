@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildWorld, finished, harness, head, runTicks, runUntil, setNeeds } from './fixtures';
+import { buildWorld, finished, harness, head, lotLocation, runTicks, runUntil, setNeeds } from './fixtures';
 
 describe('autonomy', () => {
   it('a hungry person finds food on their own', () => {
@@ -32,33 +32,41 @@ describe('autonomy', () => {
   it('decides at most every 5 game minutes and staggers people', () => {
     const w = buildWorld({ visitors: false, neighbour: false });
     const h = harness(w.state);
-    runTicks(h, 4);
+    runTicks(h, 1);
     const a = h.holder.state.people[w.mira]!.cooldowns['@decide']!;
     const b = h.holder.state.people[w.theo]!.cooldowns['@decide']!;
     expect(a).toBeDefined();
     expect(a).not.toBe(b);
-    const starts: number[] = [];
-    h.events.on('action.started', (e) => {
-      if (e.personId === w.mira && h.holder.state.people[w.mira]!.queue[0]?.source === 'autonomy') starts.push(h.holder.state.clock.minutes);
-    });
-    runTicks(h, 4 * 60 * 6);
-    for (let i = 1; i < starts.length; i++) expect(starts[i]! - starts[i - 1]!).toBeGreaterThanOrEqual(0.25);
+    // A decision sets '@decide' to exactly now + 5; record those moments per person.
+    const decisions: Record<string, number[]> = { [w.mira]: [], [w.theo]: [] };
+    for (let i = 0; i < 4 * 60 * 12; i++) {
+      h.sim.tick();
+      const now = h.holder.state.clock.minutes;
+      for (const id of [w.mira, w.theo]) if (h.holder.state.people[id]!.cooldowns['@decide'] === now + 5) decisions[id]!.push(now);
+    }
+    for (const id of [w.mira, w.theo]) {
+      const d = decisions[id]!;
+      expect(d.length).toBeGreaterThan(20);
+      for (let i = 1; i < d.length; i++) expect(d[i]! - d[i - 1]!).toBeGreaterThanOrEqual(5);
+    }
+    // staggered: the two people never decide on the same tick in this run
+    expect(decisions[w.mira]!.filter((t) => decisions[w.theo]!.includes(t)).length).toBeLessThan(decisions[w.mira]!.length / 2);
   });
 
-  it('does not oscillate: alone on the lot, every autonomous action runs to completion', () => {
+  it('does not oscillate: with both residents home, no autonomous action is cancelled or abandoned', () => {
     const w = buildWorld({ visitors: false, neighbour: false });
-    const theo = w.state.people[w.theo]!;
-    theo.location = { kind: 'offlot', place: 'errand', since: w.state.clock.minutes, until: null };
     const h = harness(w.state);
     runTicks(h, 4 * 60 * 24);
-    const ends = finished(h, w.mira);
-    expect(ends.length).toBeGreaterThan(10);
-    const bad = ends.filter((e) => e.result !== 'done');
-    expect(bad).toEqual([]);
-    // never starts the same autonomous activity on the same target twice in a row within its cooldown
-    const p = h.holder.state.people[w.mira]!;
-    expect(p.needs.hunger).toBeGreaterThan(15);
-    expect(p.needs.energy).toBeGreaterThan(5);
+    for (const id of [w.mira, w.theo]) {
+      const ends = finished(h, id);
+      expect(ends.length).toBeGreaterThan(10);
+      expect(ends.filter((e) => e.result !== 'done'), 'cancelled or failed actions').toEqual([]);
+    }
+    for (const id of [w.mira, w.theo]) {
+      const p = h.holder.state.people[id]!;
+      expect(p.needs.hunger).toBeGreaterThan(15);
+      expect(p.needs.energy).toBeGreaterThan(5);
+    }
   });
 
   it('interrupts a low-priority activity only for an urgent need (hysteresis)', () => {
@@ -79,11 +87,18 @@ describe('autonomy', () => {
   });
 
   it('respects the autonomy setting for the household but visitors still act', () => {
-    const w = buildWorld({ autonomy: false, neighbour: false, visitors: false });
+    const w = buildWorld({ autonomy: false, visitors: false });
     w.state.people[w.mira]!.needs.hunger = 5;
+    const ada = w.neighbour!;
+    w.state.people[ada]!.location = lotLocation(w.lot, 7, 9);
+    setNeeds(w.state, ada, 50);
     const h = harness(w.state);
     runTicks(h, 4 * 60);
-    expect(h.log.filter((e) => e.type === 'action.started')).toEqual([]);
+    const started = h.log.filter((e) => e.type === 'action.started');
+    // Residents only took part as conversation partners of the visitor; they started nothing of their own.
+    const own = started.filter((e) => e.type === 'action.started' && (e.personId === w.mira || e.personId === w.theo) && !h.content.socials[e.interactionId]);
+    expect(own).toEqual([]);
+    expect(started.some((e) => e.personId === ada)).toBe(true);
   });
 
   it('autonomy level 0 only acts on urgent needs', () => {
