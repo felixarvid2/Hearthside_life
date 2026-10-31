@@ -14,7 +14,7 @@ import type { Id, Lot, Person, Posture, WorldState } from '../core/types';
 import { iconSvg } from '../ui/kit/icons';
 import { resolveSlots } from '../world/slots';
 import type { CameraRig } from './cameraRig';
-import { DEFAULT_POSTURE_ANCHORS, type PostureAnchors } from './postures';
+import { lyingPlacement, seatedPlacement } from '../characters/posture';
 
 const ANIMS = new Set<string>(ANIM_IDS);
 const TWO_PI = Math.PI * 2;
@@ -41,6 +41,8 @@ interface Entry {
   visible: boolean;
   box: THREE.Box3;
   lastShown: string;
+  layoutKey: string;
+  width: number;
 }
 
 function shortestAngle(from: number, to: number): number {
@@ -91,12 +93,10 @@ export class PeopleView {
   private readonly shadowTex = shadowTexture();
   private readonly shadowGeo = new THREE.PlaneGeometry(0.85, 0.85).rotateX(-Math.PI / 2);
   private readonly shadowMat = new THREE.MeshBasicMaterial({ map: this.shadowTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
-  private readonly ring: THREE.Mesh;
   private slots: WorldSlot[] = [];
   private slotsLot: Lot | null = null;
   private selected: Id | null = null;
   hovered: Id | null = null;
-  anchors: PostureAnchors = DEFAULT_POSTURE_ANCHORS;
   /** Ground height under a point (grass is slightly below floors). */
   groundAt: (x: number, z: number) => number = () => 0;
   private time = 0;
@@ -107,11 +107,6 @@ export class PeopleView {
   constructor(private readonly assets: CharacterAssets, private readonly content: ContentDB, private readonly overlay: HTMLElement | null) {
     this.group.name = 'people';
     injectOverlayCss();
-    const ringGeo = new THREE.RingGeometry(0.34, 0.46, 40).rotateX(-Math.PI / 2);
-    this.ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x7fe0c8, transparent: true, opacity: 0.85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -6 }));
-    this.ring.renderOrder = 3;
-    this.ring.visible = false;
-    this.group.add(this.ring);
   }
 
   get count(): number { return this.entries.size; }
@@ -150,7 +145,6 @@ export class PeopleView {
   clear(): void {
     for (const e of [...this.entries.values()]) this.remove(e);
     this.slotsLot = null;
-    this.ring.visible = false;
   }
 
   private remove(e: Entry): void {
@@ -180,7 +174,7 @@ export class PeopleView {
       id: p.id, view, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
       facing: loc?.facing ?? 0, animKey: '', appearanceKey: JSON.stringify(p.appearance), outfitKey: JSON.stringify(outfit),
       align: loc && (loc.posture === 'seated' || loc.posture === 'lying') ? 1 : 0, slot: null, posture: loc?.posture ?? 'standing',
-      shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '',
+      shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0,
     };
     this.entries.set(p.id, e);
     return e;
@@ -256,7 +250,6 @@ export class PeopleView {
   /** Per-frame update: interpolation, animation, posture alignment, ring, shadows. */
   update(state: WorldState, lot: Lot, dt: number, alpha: number, reducedMotion: boolean): void {
     this.time += dt;
-    const A = this.anchors;
     for (const e of this.entries.values()) {
       const p = state.people[e.id];
       if (!p || p.location.kind !== 'lot') { e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
@@ -293,16 +286,14 @@ export class PeopleView {
       if (s && e.align > 0) {
         const k = e.align * e.align * (3 - 2 * e.align);
         let ax = s.x, az = s.z, ay = s.height, ar = s.facing;
+        const anchor = { x: s.x, y: s.height, z: s.z };
         if (posture === 'lying' || (e.posture === 'standing' && s.kind === 'sleep')) {
-          ar = s.facing - A.lieAxis;
-          const c = Math.cos(ar), sn = Math.sin(ar);
-          ax = s.x - (A.lieMidX * c + A.lieMidZ * sn);
-          az = s.z - (-A.lieMidX * sn + A.lieMidZ * c);
-          ay = s.height - A.lieContact;
+          // slot facing points from the pillow toward the foot of the bed
+          const pl = lyingPlacement(anchor, s.facing);
+          ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
         } else if (s.kind === 'sit' || posture === 'seated') {
-          ax = s.x - A.seatForward * Math.sin(s.facing);
-          az = s.z - A.seatForward * Math.cos(s.facing);
-          ay = s.height - A.seatContact;
+          const pl = seatedPlacement(anchor, s.facing, p.appearance.frame);
+          ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
         }
         rx = x + (ax - x) * k;
         rz = z + (az - z) * k;
@@ -323,15 +314,12 @@ export class PeopleView {
         e.box.min.set(cx - 0.6, ry, cz - 0.6);
         e.box.max.set(cx + 0.6, ry + 0.9, cz + 0.6);
       }
+      // the character's own selection ring sits at the root: hide it on seats and in bed
       if (e.id === this.selected) {
-        // on a seat or in bed the character's own highlight shows the selection (a floor ring would sit under the furniture)
-        this.ring.visible = e.align < 0.5;
-        this.ring.position.set(rx, ground + 0.015, rz);
-        const pulse = reducedMotion ? 1 : 1 + Math.sin(this.time * 3.2) * 0.06;
-        this.ring.scale.setScalar(pulse);
+        const ring = e.view.root.getObjectByName('selection');
+        if (ring) ring.visible = e.align < 0.5;
       }
     }
-    if (!this.selected || !this.entries.get(this.selected)?.visible) this.ring.visible = false;
   }
 
   /** Positions overlay elements (call after matrices are updated). */
@@ -346,7 +334,7 @@ export class PeopleView {
       const show = e.visible && (!!thought || speaking || named);
       if (!show) { if (e.lastShown !== '') { e.el.style.transform = 'translate(-9999px,0)'; e.lastShown = ''; } continue; }
       e.view.headTop(this.tmp);
-      camera.project(this.tmp.x, this.tmp.y + 0.12, this.tmp.z, this.scr);
+      camera.project(this.tmp.x, this.tmp.y + 0.03, this.tmp.z, this.scr);
       if (!this.scr.visible) { if (e.lastShown !== '') { e.el.style.transform = 'translate(-9999px,0)'; e.lastShown = ''; } continue; }
       const tk = thought ? `${thought.icon}|${thought.text}` : '';
       if (tk !== e.thoughtKey) {
@@ -361,7 +349,12 @@ export class PeopleView {
       e.speech.hidden = !speaking;
       e.name.hidden = !named;
       e.name.classList.toggle('sel', e.id === this.selected);
-      const t = `translate(${Math.round(this.scr.x)}px,${Math.round(this.scr.y)}px) translate(-50%,-100%)`;
+      // keep the bubble on screen (speech lines are wide)
+      const layoutKey = `${tk}|${speaking ? e.speech.textContent : ''}|${named ? 1 : 0}`;
+      if (layoutKey !== e.layoutKey) { e.layoutKey = layoutKey; e.width = e.el.offsetWidth; }
+      const half = e.width / 2 + 6;
+      const sx = Math.max(half, Math.min(camera.width - half, this.scr.x));
+      const t = `translate(${Math.round(sx)}px,${Math.round(this.scr.y)}px) translate(-50%,-100%)`;
       if (t !== e.lastShown) { e.el.style.transform = t; e.lastShown = t; }
     }
   }
@@ -410,7 +403,5 @@ export class PeopleView {
     this.shadowTex.dispose();
     this.shadowGeo.dispose();
     this.shadowMat.dispose();
-    this.ring.geometry.dispose();
-    (this.ring.material as THREE.Material).dispose();
   }
 }

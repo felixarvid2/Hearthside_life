@@ -20,7 +20,6 @@ import { ObjectAssets } from './objectAssets';
 import { ObjectsView } from './objectsView';
 import { PeopleView } from './peopleView';
 import { PortraitRenderer } from './portraits';
-import { DEFAULT_POSTURE_ANCHORS, type PostureAnchors } from './postures';
 import { PlacementPreview } from './previews';
 import { RenderContext, type Quality } from './renderer';
 
@@ -61,14 +60,13 @@ export class GameView {
   private hoverTimer = 0;
   private lastCameraVersion = -1;
   private lastCutawayKey = '';
-  anchors: PostureAnchors = DEFAULT_POSTURE_ANCHORS;
   /** Called when the camera moved (UI anchors). */
   onCamera: (() => void) | null = null;
 
   constructor(canvas: HTMLCanvasElement, readonly content: ContentDB, readonly overlay: HTMLElement | null, opts: ViewOptions, assetBase: string) {
     this.opts = { ...opts };
     this.ctx = new RenderContext(canvas, opts.quality);
-    this.ctx.onResize = (w, h) => { this.rig.setSize(w, h); this.creator?.setSize(w, h); };
+    this.ctx.onResize = (w, h) => { this.rig.setSize(w, h); this.creator?.setSize(w, h); if (this.orbiting) this.frameLot(true); };
     this.objectAssets = new ObjectAssets(assetBase);
     this.lighting = new Lighting(this.scene);
     this.fog = new THREE.Fog(0xefe7da, 85, 150);
@@ -87,11 +85,9 @@ export class GameView {
   }
 
   /** Attaches the character assets (people, creator preview, portraits). */
-  setCharacterAssets(assets: CharacterAssets, anchors: PostureAnchors): void {
+  setCharacterAssets(assets: CharacterAssets): void {
     this.charAssets = assets;
-    this.anchors = anchors;
     this.people = new PeopleView(assets, this.content, this.overlay);
-    this.people.anchors = anchors;
     this.people.groundAt = (x, z) => this.groundAt(x, z);
     this.scene.add(this.people.group);
     this.creator = new CreatorScene(assets, this.content);
@@ -207,16 +203,16 @@ export class GameView {
   }
 
   /** Frames the lot's house (or the whole lot) in the visible area. */
-  frameLot(instant = true): void {
+  frameLot(instant = true, margin = 1.12): void {
     const lot = this.lot;
     if (!lot) return;
     const b = houseBounds(lot);
-    const ppm = this.rig.fitPpm(b.x1 - b.x0, b.z1 - b.z0, 2.8, 1.12);
+    const ppm = this.rig.fitPpm(b.x1 - b.x0, b.z1 - b.z0, 2.8, this.orbiting ? 1.3 : margin);
     this.rig.glideTo((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2, ppm, instant ? 0 : 0.6);
   }
 
   focusOn(x: number, z: number, closeUp = false): void {
-    this.rig.glideTo(x, z, closeUp ? Math.max(this.rig.ppm, DEFAULT_PPM) : undefined, 0.55);
+    this.rig.glideTo(x, z, closeUp ? Math.max(this.rig.ppm, DEFAULT_PPM) : undefined, 0.55, 0.8); // aim at the chest, not the feet
   }
 
   personPosition(id: Id): { x: number; z: number } | null {
@@ -385,6 +381,7 @@ export class GameView {
 
   setInsets(i: Insets): void {
     this.rig.setInsets(i);
+    if (this.orbiting) { this.rig.update(0); this.frameLot(true); }
     this.creator?.setInsets(i);
   }
 

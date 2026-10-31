@@ -13,9 +13,9 @@ import type { EventBus } from '../core/events';
 import { rotatedSize } from '../core/geometry';
 import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, Id, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
+import { DEFAULT_PPM } from '../render/cameraRig';
 import { GameView } from '../render/gameView';
 import { portraitKey } from '../render/portraits';
-import { measurePostureAnchors } from '../render/postures';
 import { hasWebGL2 } from '../render/renderer';
 import { surfaceThumbnail } from '../render/textures/surfaceTextures';
 import { resolveSlots } from '../world/slots';
@@ -135,11 +135,7 @@ export class Game implements GameAPI {
       loadCharacterAssets(this.assetBase).then((a) => { chars = 1; report(); return a; }),
       v.objectAssets.preload(assets, (d, t) => { furn = d / t; report(); }),
     ]);
-    const sample = this.core.premadeHouseholds()[0]?.members[0];
-    const anchors = sample
-      ? measurePostureAnchors(characterAssets, this.content, sample.appearance, outfitFor(sample, 'everyday'))
-      : undefined;
-    v.setCharacterAssets(characterAssets, anchors ?? v.anchors);
+    v.setCharacterAssets(characterAssets);
     this.loaded = true;
     onProgress?.(1, 'Ready');
   }
@@ -252,7 +248,7 @@ export class Game implements GameAPI {
       v.frameLot(true);
       const sel = this.core.selected();
       const p = sel ? v.personPosition(sel) : null;
-      if (p) v.rig.glideTo(p.x, p.z, Math.max(v.rig.ppm, 52), 0);
+      if (p) v.rig.glideTo(p.x, p.z, DEFAULT_PPM, 0);
     }
   }
 
@@ -267,7 +263,7 @@ export class Game implements GameAPI {
   private demoWorld(): WorldState | null {
     if (this.demo) return this.demo;
     try {
-      const household = this.core.premadeHouseholds()[0];
+      const household = [...this.core.premadeHouseholds()].sort((a, b) => b.members.length - a.members.length)[0];
       if (!household) return null;
       const w = createNewWorld(this.content, { seed: 20261031, mode: 'guided', household, neighbor: NEIGHBOR_HOUSEHOLD(this.content) });
       w.clock.minutes = 16 * 60 + 40; // warm late afternoon

@@ -85,7 +85,7 @@ export class EnvironmentView {
     const e = lot.entry;
     const side = e.z >= D - 1 ? 0 : e.z <= 0 ? 2 : e.x >= W - 1 ? 1 : e.x <= 0 ? 3 : 0;
     const pave = new GeoBuilder();
-    const curb = new THREE.Color('#d8d2c6'), walk = new THREE.Color('#cfc8bb'), road = new THREE.Color('#6d6a66'), line = new THREE.Color('#efe6c8'), edge = new THREE.Color('#bdb5a6');
+    const curb = new THREE.Color('#d8d2c6'), walk = new THREE.Color('#cfc8bb'), road = new THREE.Color('#5e6164'), line = new THREE.Color('#efe6c8'), edge = new THREE.Color('#bdb5a6');
     // built for the south side in lot-centred coordinates, then rotated
     const half = W / 2; // square lots in M1
     const y = GROUND_Y + 0.003;

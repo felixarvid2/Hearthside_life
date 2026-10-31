@@ -127,8 +127,8 @@ export class CreatorScene {
     // keep turning the short way from the current yaw
     const k = Math.round((this.targetYaw - yaw) / (Math.PI * 2));
     this.targetYaw = yaw + k * Math.PI * 2;
-    this.cam.ty = v === 'face' ? 1.6 : 0.95;
-    this.cam.th = v === 'face' ? 0.55 : 1.95;
+    this.cam.ty = v === 'face' ? 1.56 : 0.95;
+    this.cam.th = v === 'face' ? 0.8 : 1.95;
     this.cam.t = this.reducedMotion ? 1 : 0;
     if (this.reducedMotion) { this.yaw = this.targetYaw; this.cam.y = this.cam.ty; this.cam.h = this.cam.th; }
     this.zoomF = 1;

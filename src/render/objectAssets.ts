@@ -186,7 +186,7 @@ export class ObjectAssets {
     for (const [name, m] of tpl.base) {
       const c = m.clone();
       c.transparent = true;
-      c.opacity = 0.74;
+      c.opacity = 0.82;
       c.depthWrite = false;
       c.emissive = new THREE.Color(0x2a2418);
       set.set(name, c);

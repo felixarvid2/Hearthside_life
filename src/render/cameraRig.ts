@@ -127,8 +127,8 @@ export class CameraRig {
   }
 
   /** Eases target (and optionally zoom) to a point. */
-  glideTo(x: number, z: number, ppm?: number, dur = 0.6): void {
-    const to = new THREE.Vector3(x, 0, z);
+  glideTo(x: number, z: number, ppm?: number, dur = 0.6, y = 0): void {
+    const to = new THREE.Vector3(x, y, z);
     to.x = Math.max(this.bounds.x0, Math.min(this.bounds.x1, to.x));
     to.z = Math.max(this.bounds.z0, Math.min(this.bounds.z1, to.z));
     const ppmTo = ppm === undefined ? this.ppm : Math.max(MIN_PPM, Math.min(MAX_PPM, ppm));

@@ -260,6 +260,7 @@ export class ObjectsView {
     this.night = night;
     for (const m of this.assets.lampMaterials) m.emissiveIntensity = 1.6 * night;
     if (this.lampLights.length === 0) return;
+    if (night <= 0.02) { for (const l of this.lampLights) l.intensity = 0; return; }
     const lamps = [...this.objects.values()].filter((e) => e.isLamp && e.group.visible);
     lamps.sort((a, b) => a.group.position.distanceToSquared(focus) - b.group.position.distanceToSquared(focus));
     this.lampLights.forEach((l, i) => {
