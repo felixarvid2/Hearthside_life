@@ -124,10 +124,10 @@ export function buildBodyTemplate(raw: RawBody): BodyTemplate {
   const armEnd = lm.wristX + 0.01;
   const armProfile = fitProfile(P, armSet, 'x', lm.armStartX, armEnd, { rows: 34, slab: 0.012, dilate: 2, smoothRows: 1.6, smoothBins: 1.2 });
 
-  const M = 16;
+  const M = 14;
   const C = 2 * M;
-  const NT = 32;
-  const NL = 28;
+  const NT = 30;
+  const NL = 23;
   const NA = 26;
   const KA = 16;
 
@@ -449,7 +449,7 @@ function buildHand(t: BodyTemplate, side: 1): MeshData {
     prx.push(0.021 + (halfW - 0.021) * smoothstep(0.1, 0.65, u));
     pry.push(0.016 - 0.0035 * smoothstep(0.3, 1, u));
   }
-  sweep(m, { path: palmPath, rx: prx, ry: pry, segments: 12, exponent: 3.2, up: [0, 1, 0], capStart: 0, capEnd: 2 }, emit);
+  sweep(m, { path: palmPath, rx: prx, ry: pry, segments: 10, exponent: 3.2, up: [0, 1, 0], capStart: 0, capEnd: 2 }, emit);
   // fingers: relaxed curl, gathered slightly toward the middle finger
   const radius = { index: 0.0099, middle: 0.0103, ring: 0.0097, pinky: 0.0086 };
   fingers.forEach((f, fi) => {
@@ -472,7 +472,7 @@ function buildHand(t: BodyTemplate, side: 1): MeshData {
     }
     const r0 = radius[f];
     const rx = path.map((_, k) => r0 * (1 - 0.18 * (k / (path.length - 1))));
-    sweep(m, { path, rx, ry: rx.map((r) => r * 0.9), segments: 7, up: [0, 1, 0], capStart: 0, capEnd: 2 }, emit);
+    sweep(m, { path, rx, ry: rx.map((r) => r * 0.9), segments: 6, up: [0, 1, 0], capStart: 0, capEnd: 1 }, emit);
   });
   // thumb: from the heel of the palm, resting along the index finger
   const front = zc + halfW - 0.004;
@@ -539,7 +539,7 @@ function headMorphs(p: Vec3, theta: number): Record<string, Vec3> {
   return d;
 }
 
-export const HEAD_COLS = 40;
+export const HEAD_COLS = 38;
 
 function buildHead(t: BodyTemplate): MeshData {
   const m = emptyMesh(SKIN_ATTRS, SKIN_MORPHS);
@@ -579,7 +579,7 @@ function buildHead(t: BodyTemplate): MeshData {
 function buildEar(t: BodyTemplate): MeshData {
   const m = emptyMesh(SKIN_ATTRS, SKIN_MORPHS);
   const O = t.headOrigin;
-  const U = 16, V = 10;
+  const U = 12, V = 8;
   const starts: number[] = [];
   const skin = rigidSkin(boneIndex(t.raw, 'Head'));
   for (let vi = 1; vi < V; vi++) {

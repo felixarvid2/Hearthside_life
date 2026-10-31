@@ -311,8 +311,12 @@ describe('rebuild after load', () => {
     delete saved.lots[w.lot.id]!.objects[w.objects.sofa!.id];
     const h2 = harness(saved, h.content);
     h2.sim.rebuild();
+    // rebuild() itself never ends actions at the pre-tick clock (that would differ from an uninterrupted
+    // run); the action fails inside the next tick.
+    expect(head(h2, w.mira)).toBeDefined();
+    runTicks(h2, 1);
     expect(head(h2, w.mira)).toBeUndefined();
-    expect(finished(h2, w.mira, 'watchTv')[0]).toMatchObject({ result: 'failed' });
+    expect(finished(h2, w.mira, 'watchTv')[0]).toMatchObject({ result: 'failed', reason: 'The seat is gone.' });
     expect(h2.sim.reservations()).toEqual([]);
     expect(standing(h2, w.mira)).toBe(true);
   });

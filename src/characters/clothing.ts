@@ -235,7 +235,7 @@ function torsoPiece(m: MeshData, t: BodyTemplate, o: TorsoOpts): void {
 /** Left leg shell from the crotch junction down to yHem (or a short gusset), mirrored for the right leg. */
 function legPieces(m: MeshData, t: BodyTemplate, yHem: number, thickness: number, loose: number, cuff: boolean, panel: number = PANEL.leg): void {
   const lm = t.lm;
-  const ss = stations(lm.crotchY, yHem, 0.028);
+  const ss = stations(lm.crotchY, yHem, 0.034);
   const kneeY = lm.kneeY;
   const rings = shellRings(t, t.legL, 'leg', ss, {
     thickness, uScale: 0.08,
@@ -401,7 +401,7 @@ function shoePiece(m: MeshData, t: BodyTemplate, b: B): number {
   }
   const zMin = Math.min(...fv.map((p) => p[2])), zMax = Math.max(...fv.map((p) => p[2]));
   const xc = fv.reduce((s, p) => s + p[0], 0) / fv.length;
-  const N = 16;
+  const N = 12;
   const path: Vec3[] = [];
   const rx: number[] = [], ry: number[] = [];
   const slab = (zMax - zMin) / N;
@@ -427,7 +427,7 @@ function shoePiece(m: MeshData, t: BodyTemplate, b: B): number {
   }
   const footFilter = t.transfer.boneFilter((n) => /^(foot|ball|calf)_l$/.test(n));
   const start = m.positions.length / 3;
-  sweep(m, { path, rx, ry, segments: 18, exponent: open ? 4 : 3.1, up: [0, 1, 0], capStart: 2, capEnd: 3 }, (v) => {
+  sweep(m, { path, rx, ry, segments: 14, exponent: open ? 4 : 3.1, up: [0, 1, 0], capStart: 2, capEnd: 2 }, (v) => {
     const p = v.p;
     const skin = t.transfer.skinAt([p[0], Math.max(0.01, Math.min(p[1], 0.1)), p[2]], footFilter, 0.025);
     const soleM = p[1] < sole ? PANEL.sole : PANEL.shoe;

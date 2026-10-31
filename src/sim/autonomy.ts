@@ -16,9 +16,10 @@ import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
 import { familyTie, peekRel } from './relationships';
 import { personKey } from './reservations';
+import { isVisitPending, neighbours } from './visitors';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
-  SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
+  LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
 } from './tuning';
 import type { ActionRequest } from './types';
 
@@ -79,6 +80,9 @@ export function sleepTimeFactor(now: number, energy: number): number {
   if (h >= SLEEP_NIGHT_START || h < SLEEP_NIGHT_END) return energy < 90 ? 3 : 0;
   return energy < SLEEP_DAY_ENERGY ? 1 : 0;
 }
+
+/** Extra score for greeting a stranger who is on the lot. */
+const STRANGER_GREETING_BONUS = 1;
 
 /** Baseline interest visitors have in sitting down, watching TV and talking (they came to socialise). */
 const VISITOR_BASE = 0.3;
@@ -148,6 +152,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (NEVER_AUTONOMOUS.has(def.behavior ?? 'generic')) continue;
       if (def.cost && def.cost > funds) continue;
       let data: ActionRequest['data'] | undefined;
+      if (def.behavior === 'invite') continue;
       if (def.behavior === 'phoneChat') {
         const friend = phoneFriend(ctx, p);
         if (!friend) continue;
@@ -160,7 +165,34 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   }
   const social = socialCandidate(ctx, p);
   if (social) out.push(social);
+  if (!visitor) { const inv = inviteCandidate(ctx, p); if (inv) out.push(inv); }
   return out;
+}
+
+/**
+ * A lonely person (social below LONELY_INVITE_BELOW) may phone a known neighbour who is at home and invite
+ * them over, in the daytime and when nobody is visiting or expected (even though invites are not otherwise
+ * autonomous).
+ */
+function inviteCandidate(ctx: SimCtx, p: Person): Candidate | null {
+  if (p.needs.social >= LONELY_INVITE_BELOW) return null;
+  const h = hourOfDay(ctx.now);
+  if (h < 9 || h >= 19) return null;
+  const def = Object.values(ctx.content.interactions).find((d) => d.behavior === 'invite' && d.kind === 'self' && d.status === 'ready');
+  const loc = lotLoc(p);
+  if (!def || !loc) return null;
+  if (Object.values(ctx.state.people).some((o) => o.householdId !== p.householdId && lotLoc(o)?.lotId === loc.lotId)) return null;
+  let guest: Person | null = null, bestF = -10;
+  for (const o of neighbours(ctx.state)) {
+    if (isVisitPending(ctx.state, o.id)) return null;
+    if (o.location.kind !== 'offlot' || o.location.place !== 'home') continue;
+    const rel = peekRel(ctx.state, p.id, o.id);
+    if (rel.familiarity > 0 && rel.friendship > bestF) { guest = o; bestF = rel.friendship; }
+  }
+  if (!guest) return null;
+  const addresses: NeedId[] = [];
+  const score = needScore(ctx, p, { social: 15 }, addresses) * cooldownMult(ctx, p, def.id, guest.id);
+  return score > 0 ? { req: { interactionId: def.id, target: { kind: 'self' }, data: { personId: guest.id } }, score, key: `${def.id}@${guest.id}`, addresses } : null;
 }
 
 /** The friendliest known person away from this lot (not at work, friendship > -10) for a phone chat, or null. */
@@ -202,7 +234,6 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
   const level = isVisitor(ctx, p) ? 1 : ctx.state.settings.autonomyLevel;
   const addresses: NeedId[] = [];
   const base = needScore(ctx, p, { social: 35 }, addresses) + (level === 2 ? 0.05 : 0) + (isVisitor(ctx, p) ? VISITOR_BASE * 1.5 : 0);
-  if (base <= 0) return null;
   let best: Candidate | null = null;
   for (const other of Object.values(ctx.state.people)) {
     if (other.id === p.id) continue;
@@ -223,8 +254,11 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     }
     if (!pick) continue;
     const rel = peekRel(ctx.state, p.id, other.id);
-    const score = (busy ? 0.5 : 1) * base * Math.min(2, pickW) * (1 + rel.friendship / 200) * biasFor(ctx, p, pick.id, ['social', pick.category])
+    // Courtesy: people greet a stranger who is present (a visitor or a newcomer) even when not lonely.
+    const greet = pick.category === 'greeting' && rel.familiarity < 10 ? STRANGER_GREETING_BONUS : 0;
+    const score = (busy ? 0.5 : 1) * (base * Math.min(2, pickW) * (1 + rel.friendship / 200) + greet) * biasFor(ctx, p, pick.id, ['social', pick.category])
       / (1 + dist(loc.x, loc.z, ol.x, ol.z) / 15);
+    if (score <= 0) continue;
     if (!best || score > best.score) {
       best = { req: { interactionId: pick.id, target: { kind: 'person', personId: other.id } }, score, key: `${pick.id}@${other.id}`, addresses: [...addresses] };
     }

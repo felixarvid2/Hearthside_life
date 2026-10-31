@@ -67,6 +67,8 @@ export const SOCIAL_SPAM_PENALTY = 0.15;
 export const SOCIAL_RECENT_DECAY_MINUTES = 60;
 /** Social autonomy approaches someone busy with an activity only when the actor's social is below this. */
 export const SOCIAL_INTERRUPT_BELOW = 30;
+/** A person this lonely may invite a known neighbour over on their own (daytime). */
+export const LONELY_INVITE_BELOW = 25;
 /** Fun and social decay at this fraction while lying down (people do not get bored or lonely asleep). */
 export const LYING_FUN_SOCIAL_DECAY = 0.25;
 /** Social: how long the actor waits next to a busy target before giving up (minutes). */

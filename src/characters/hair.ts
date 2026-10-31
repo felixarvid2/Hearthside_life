@@ -179,10 +179,10 @@ function buildCurtain(c: Ctx, o: CurtainOpts): void {
         // below the jaw, route every column behind the shoulders on a gentle arc over the upper back
         const s = 2 * u - 1;
         const by = bind[1];
-        const target: Vec3 = [s * 0.115, by, Math.min(backZ(t, by), backZ(t, shoulderTop)) - 0.03 - 0.02 * (1 - s * s)];
+        const target: Vec3 = [-s * 0.125, by, Math.min(backZ(t, by), backZ(t, shoulderTop)) - 0.03 - 0.02 * (1 - s * s)];
         const f = smoothstep(t.lm.headY + 0.0, shoulderTop - 0.02, by);
         bind = v3.lerp(bind, target, f);
-        bind[2] = Math.min(bind[2], backZ(t, by) - 0.028);
+        if (f > 0) bind[2] = Math.min(bind[2], lerp(bind[2], backZ(t, by) - 0.028, f));
         local = [(bind[0] - c.O[0]) / HEAD_SCALE, yl, (bind[2] - c.O[2]) / HEAD_SCALE];
       }
       const idx = emit(c, local, [th * 0.1, -yl, 0.25 + 0.75 * rel, HAIR_PIECE.curtain], [0, -1, 0], { bind, base: yl > 0.0 ? hp : null, theta: th });

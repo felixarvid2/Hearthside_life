@@ -584,7 +584,7 @@ vec3 hairSheen = vec3(0.0);
     float ends = (piece > 1.5 && piece < 3.5) ? smoothstep(0.55, 1.0, tip) : 0.0;
     col = mix(col, uHighlight.rgb * mix(0.85, 1.05, n), clamp(streak * 0.75 + ends * 0.6, 0.0, 0.85));
   }
-  if (!gl_FrontFacing) col *= 0.6;
+  if (!gl_FrontFacing) col *= 0.78;
   col = mix(col, col * 1.08 + vec3(0.03, 0.025, 0.0), uSelect);
   diffuseColor.rgb = col;
   // anisotropic sheen (fixed key light in view space)

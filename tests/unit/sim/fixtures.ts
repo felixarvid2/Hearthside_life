@@ -81,6 +81,12 @@ export function fixtureContent(): ContentDB {
       slots: [slot('use', 'use', [0.5, 0.5], [0, 1], 'standing')] }),
     obj('bookcase-open', { category: 'storage', footprint: { w: 1, d: 1 }, interactions: ['readBook'],
       slots: [slot('use', 'use', [0.5, 1.3], [0, 1], 'standing')] }),
+    obj('desk-oak', { category: 'tables', tags: ['desk'], footprint: { w: 2, d: 1 }, surfaceHeight: 0.76 }),
+    obj('chair-desk', { category: 'seating', footprint: { w: 1, d: 1 }, interactions: ['sit'], stats: { comfort: 4 },
+      slots: [slot('seat', 'sit', [0.5, 0.5], [0, -1], 'seated')] }),
+    // Its use slot lies on the desk chair placed in front of it (as the world's LotNav resolves it).
+    obj('computer-desktop', { category: 'electronics', footprint: { w: 1, d: 1 }, layer: 'surface', blocksMovement: false,
+      interactions: ['playComputerGames', 'practiceProgramming'], slots: [slot('use', 'use', [0.5, 1.5], [0, 2], 'seated')] }),
     obj('wardrobe-tall', { category: 'storage', footprint: { w: 1, d: 1 }, interactions: ['changeOutfit', 'editOutfits'],
       slots: [slot('use', 'use', [0.5, 1.3], [0, 1], 'standing')] }),
   ];
@@ -106,6 +112,10 @@ export function fixtureContent(): ContentDB {
       needsPerHour: { fun: 25 }, allowVisitors: true, autonomy: { enabled: true, ads: { fun: 40 }, tags: ['tv'] } }),
     inter('readBook', { behavior: 'read', slotKinds: ['use'], anims: { perform: 'read' }, duration: { kind: 'fixed', minutes: 45 },
       needsPerHour: { fun: 18 }, skill: { id: 'logic', xpPerHour: 30 }, autonomy: { enabled: true, ads: { fun: 30 }, tags: ['reading'] } }),
+    inter('playComputerGames', { behavior: 'computer', slotKinds: ['use'], posture: 'seated', anims: { perform: 'computer' }, duration: { kind: 'fixed', minutes: 60 },
+      needsPerHour: { fun: 28 }, autonomy: { enabled: true, ads: { fun: 28 }, tags: ['computer'] } }),
+    inter('practiceProgramming', { behavior: 'computer', slotKinds: ['use'], posture: 'seated', anims: { perform: 'computer' }, duration: { kind: 'fixed', minutes: 60 },
+      needsPerHour: { fun: 5 }, autonomy: { enabled: false, ads: { fun: 5 }, tags: ['computer'] } }),
     inter('changeOutfit', { behavior: 'changeOutfit', anims: { perform: 'interact' }, duration: { kind: 'fixed', minutes: 2 } }),
     inter('editOutfits', { behavior: 'editOutfits', anims: { perform: 'interact' }, duration: { kind: 'fixed', minutes: 1 } }),
     inter('goToWork', { behavior: 'goToWork', kind: 'self', duration: { kind: 'fixed', minutes: 0 } }),
@@ -151,6 +161,7 @@ export function fixtureContent(): ContentDB {
   ];
   const recipes: RecipeDef[] = [
     { id: 'pasta', name: 'Pasta', description: '', minutes: 30, cost: 1200, servings: 4, hunger: 70, minCookingLevel: 1, status: 'ready' },
+    { id: 'stew', name: 'Stew', description: '', minutes: 40, cost: 1800, servings: 4, hunger: 75, minCookingLevel: 0, status: 'ready' },
     { id: 'souffle', name: 'Souffle', description: '', minutes: 50, cost: 2500, servings: 4, hunger: 80, minCookingLevel: 5, status: 'ready' },
   ];
   const aspirations: AspirationDef[] = [{
@@ -390,6 +401,9 @@ export function buildWorld(o: WorldOptions = {}): FixtureWorld {
   objects.toilet = place(state, lot, 'toilet-basic', 14, 8);
   objects.shower = place(state, lot, 'shower-stall', 12, 8);
   objects.bookcase = place(state, lot, 'bookcase-open', 0, 9, 1);
+  objects.desk = place(state, lot, 'desk-oak', 4, 9);
+  objects.computer = place(state, lot, 'computer-desktop', 4, 9, 0, objects.desk.id);
+  objects.deskChair = place(state, lot, 'chair-desk', 4, 10, 2);
   const mira = createPerson(state, content, draft(state, 'Mira', { careerId: o.career ? 'culinary' : null, traits: o.miraTraits ?? [], aspirationId: 'homeChef' }), hh.id, lotLocation(lot, 8, 8));
   const theo = createPerson(state, content, draft(state, 'Theo', { traits: o.theoTraits ?? [] }), hh.id, lotLocation(lot, 9, 8));
   applyHouseholdTies(state, [mira.id, theo.id], [{ a: 0, b: 1, tie: 'roommate' }]);
