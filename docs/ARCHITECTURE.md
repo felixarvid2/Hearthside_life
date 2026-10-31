@@ -100,8 +100,17 @@ Tests live in `tests/unit/<module>/*.test.ts`.
   `paintFloorTiles(lotId, householdId, level, tiles: Tile[], finish)`, `paintRoomFloor(lotId, householdId, level, tile, finish)`.
   Prices: object `def.price`; paint `design.price` per side/tile actually changed. Sale value: full price
   the same game day as purchase, otherwise 80 %. Moving or selling an object that holds surface items is
-  rejected with a reason in M1. All emit `lot.changed`.
-  `src/building/preview.ts`: pure helpers for previews (cost and validity) that never mutate state.
+  rejected with a reason in M1. All emit `lot.changed`. Also `setObjectFinish(lotId, householdId, objectId,
+  regionId, swatchId)`. No-op edits (same finish/position) are rejected so they never enter the undo stack.
+  Undoing a sale writes a negative `sale` entry (allowDebt) so the sandbox cannot create money.
+  `src/building/plans.ts`: pure validation/cost per operation and `saleValue(state, obj)`.
+  `src/building/preview.ts`: `previewBuy/previewMove/previewPlaceFromInventory/previewSell` -> `{ ok, reasons, cost, tiles }`
+  and `previewPaint(state, content, lotId, hh, target: wallSide | roomWalls | floorTiles | roomFloor, finish)` with `count`, `sides`.
+- Implementation notes: `validatePlacement` also returns `warnings`; `new LotNav(getState, content, events?)`
+  invalidates itself on `lot.changed` when given the bus; `findPath` `blocked` keys are `tileKey(level, x, z)`;
+  `slotsOf` returns approach tiles adjusted to the current lot (nearest free side of the slot tile when the
+  authored approach is blocked; TVs/computers may be used from the chair in front). Set
+  `lot.ownerHouseholdId` before `furnishStarterHouse`; starter furnishings count as bought a day earlier.
 
 ### sim (`src/sim`)
 - `people.ts`: `createPerson(state, content, draft: PersonDraft, householdId, location: PersonLocation): Person`
