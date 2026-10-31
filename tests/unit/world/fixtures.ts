@@ -1,6 +1,7 @@
 // Test fixture content: the Milestone 1 shared object ids with the footprints from docs/ARCHITECTURE.md and
-// plausible slot shapes, plus the M1 wall/floor designs and openings. Chairs and similar seats use the
-// "approach from the front" convention on purpose: at a table that tile is the table itself, which
+// plausible slot shapes, plus the M1 wall/floor designs and openings. Standing use slots have their anchor
+// in front of the object (as in the real content). Chairs use the "approach from the front" convention on
+// purpose (the real content approaches from behind): at a table that tile is the table itself, which
 // exercises the access fallback in world/slots.ts.
 
 import type { ContentDB, ObjectDef, ObjectSlot, OpeningDef, SurfaceDesign } from '../../../src/content/types';
@@ -29,7 +30,7 @@ function def(id: string, w: number, d: number, layer: ObjectDef['layer'], extra:
   };
 }
 
-const use = (id = 'use', approach: [number, number] = [0, 1], pos: [number, number] = [0.5, 0.9]): ObjectSlot =>
+const use = (id = 'use', approach: [number, number] = [0, 1], pos: [number, number] = [0.5, 1.1]): ObjectSlot =>
   ({ id, kind: 'use', pos, height: 0, facing: PI, approach, posture: 'standing' });
 const sit = (id = 'seat', pos: [number, number] = [0.5, 0.5], approach: [number, number] = [0, 1]): ObjectSlot =>
   ({ id, kind: 'sit', pos, height: 0.45, facing: 0, approach, posture: 'seated' });
@@ -53,7 +54,7 @@ export const FIXTURE_OBJECTS: ObjectDef[] = [
   def('toilet-basic', 1, 1, 'floor', { price: 30000, slots: [sit()], interactions: ['useToilet'] }),
   def('shower-stall', 1, 1, 'floor', { price: 60000, slots: [use('use', [0, 1], [0.5, 0.5])], interactions: ['takeShower'] }),
   def('bathroom-sink', 1, 1, 'floor', { price: 20000, slots: [use()], interactions: ['washHands'] }),
-  def('bathroom-mirror', 1, 1, 'wall', { price: 9000, needsWall: true, blocksMovement: false, slots: [use('use', [0, 0], [0.5, 0.6])], interactions: ['practiceSpeech'] }),
+  def('bathroom-mirror', 1, 1, 'wall', { price: 9000, needsWall: true, blocksMovement: false, slots: [use('use', [0, 1], [0.5, 0.75])], interactions: ['practiceSpeech'] }),
   def('bookcase-open', 1, 1, 'floor', { price: 25000, slots: [use()], interactions: ['readBook'] }),
   def('desk-oak', 2, 1, 'floor', { price: 25000, surfaceHeight: 0.76 }),
   def('chair-desk', 1, 1, 'floor', { price: 10000, slots: [sit()], interactions: ['sit'] }),
@@ -61,9 +62,9 @@ export const FIXTURE_OBJECTS: ObjectDef[] = [
   def('wardrobe-tall', 1, 1, 'floor', { price: 40000, slots: [use()], interactions: ['changeOutfit', 'editOutfits'] }),
   def('nightstand-oak', 1, 1, 'floor', { price: 8000, surfaceHeight: 0.6 }),
   def('lamp-floor-round', 1, 1, 'floor', { price: 7000 }),
-  def('plant-potted', 1, 1, 'floor', { price: 5000, slots: [use()], interactions: ['waterPlant'] }),
+  def('plant-potted', 1, 1, 'floor', { price: 5000, interactions: ['waterPlant'] }), // no slots: used from any free side
   def('rug-rectangle', 3, 2, 'rug', { price: 12000, blocksMovement: false }),
-  def('radio-retro', 1, 1, 'surface', { price: 6000, blocksMovement: false, slots: [use()], interactions: ['listenToMusic'] }),
+  def('radio-retro', 1, 1, 'surface', { price: 6000, blocksMovement: false, interactions: ['listenToMusic'] }),
   def('trash-can', 1, 1, 'floor', { price: 3000 }),
 ];
 

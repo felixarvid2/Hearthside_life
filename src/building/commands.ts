@@ -14,7 +14,7 @@ import { copyRecord, makePlacedObject } from '../world/objects';
 import { validatePlacement } from '../world/placement';
 import { setWallSideFinish, wallSideFinish, type WallSide } from '../world/walls';
 import {
-  planBuy, planFloorPaint, planMove, planPlaceFromInventory, planSell, planStore, planWallPaint, supportBlockReason,
+  ownsObject, planBuy, planFloorPaint, planMove, planPlaceFromInventory, planSell, planStore, planWallPaint, supportBlockReason,
   type BuyRequest, type FloorChange, type FloorTarget, type Pose, type WallChange, type WallTarget,
 } from './plans';
 
@@ -55,7 +55,7 @@ function poseOf(obj: PlacedObject): Pose & { supportId?: Id } {
 // Objects
 // ---------------------------------------------------------------------------------------------
 
-/** Buys an object and places it (price def.price; free in the sandbox). Undo refunds exactly and removes it. */
+/** Buys an object and places it (price def.price; free in the sandbox, recorded as purchasePrice 0). Undo refunds exactly and removes it. */
 export function buyObject(lotId: Id, householdId: Id, req: BuyRequest): UndoableCommand {
   let record: PlacedObject | null = null;
   let name = req.defId;
@@ -73,7 +73,8 @@ export function buyObject(lotId: Id, householdId: Id, req: BuyRequest): Undoable
       if (!paid.ok) return paid;
       const obj = makePlacedObject(ctx.state, def,
         { x: req.x, z: req.z, rot: req.rot, level: req.level, ...(plan.supportId ? { supportId: plan.supportId } : {}) },
-        { finishes: plan.finishes, ownerHouseholdId: householdId });
+        // the amount actually paid (0 in the sandbox), so a same-day sale never returns more than was spent
+        { finishes: plan.finishes, ownerHouseholdId: householdId, purchasePrice: paid.charged });
       lot.objects[obj.id] = obj;
       record = copyRecord(obj);
       price = def.price;
@@ -97,7 +98,7 @@ export function buyObject(lotId: Id, householdId: Id, req: BuyRequest): Undoable
       if (!v.ok) return fail(v.reasons);
       const paid = charge(ctx, householdId, price, 'purchase', `Bought ${name}`);
       if (!paid.ok) return paid;
-      lot.objects[record.id] = copyRecord(record);
+      lot.objects[record.id] = { ...copyRecord(record), purchasePrice: paid.charged };
       charged = paid.charged;
       emit(ctx, lotId, 'objects');
       return OK;
@@ -185,6 +186,7 @@ export function sellObject(lotId: Id, householdId: Id, objectId: Id): UndoableCo
       const lot = ctx.state.lots[lotId];
       const obj = lot?.objects[objectId];
       if (!lot || !obj) return fail('That object is no longer here.');
+      if (!ownsObject(lot, obj, householdId)) return fail('It does not belong to your household.');
       const blocked = supportBlockReason(ctx.state, ctx.content, lot, objectId);
       if (blocked) return fail(blocked);
       sell(ctx, obj);
@@ -237,6 +239,7 @@ export function storeObject(lotId: Id, householdId: Id, objectId: Id): UndoableC
       const lot = ctx.state.lots[lotId];
       const obj = lot?.objects[objectId];
       if (!lot || !obj) return fail('That object is no longer here.');
+      if (!ownsObject(lot, obj, householdId)) return fail('It does not belong to your household.');
       const blocked = supportBlockReason(ctx.state, ctx.content, lot, objectId);
       if (blocked) return fail(blocked);
       return store(ctx, obj);

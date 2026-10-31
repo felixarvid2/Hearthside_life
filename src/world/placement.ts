@@ -19,7 +19,7 @@ import type { Tile } from '../core/nav';
 import type { Id, Lot, PlacedObject, Rot, WorldState } from '../core/types';
 import { hasLevel, inLot } from './lots';
 import { blocksMovement, buildNavGrid, reachableMask, type NavGrid } from './navgrid';
-import { slotAccess, type SlotAccess } from './slots';
+import { slotAccess, standTiles, type AccessContext } from './slots';
 import { edgeBetween, edgeOnSide, edgeTiles, openingOnWall, type TileSide } from './walls';
 
 export { resolveSlots } from './slots';
@@ -178,8 +178,25 @@ function findSupport(content: ContentDB, others: PlacedObject[], tiles: Tile[]):
   return undefined;
 }
 
-function countReachable(access: SlotAccess[], mask: Uint8Array, g: NavGrid): number {
-  return access.filter((a) => a.usable && mask[a.slot.approach.z * g.width + a.slot.approach.x] === 1).length;
+/**
+ * Tiles from which people use an object: approach tiles of its usable slots, or for interactive objects
+ * without slots (plants, radios) the walkable tiles next to it. Null when the object needs no access
+ * (decor without interactions). `total` is the number of slots (for the partial-access warning).
+ */
+export function accessPoints(ctx: AccessContext, obj: PlacedObject, def: ObjectDef): { tiles: Tile[]; total: number } | null {
+  if (def.slots.length > 0) {
+    const usable = slotAccess(ctx, obj, def).filter((a) => a.usable);
+    return { tiles: usable.map((a) => a.slot.approach), total: def.slots.length };
+  }
+  if (def.interactions.length > 0) {
+    const tiles = standTiles(ctx.grid, obj, def);
+    return { tiles, total: tiles.length };
+  }
+  return null;
+}
+
+function countReachable(points: Tile[], mask: Uint8Array, g: NavGrid): number {
+  return points.filter((t) => mask[t.z * g.width + t.x] === 1).length;
 }
 
 function accessChecks(
@@ -196,35 +213,35 @@ function accessChecks(
     ...(blocking ? { extra: { id: PLACING_ID, tiles } } : {}),
   });
   const objAfter = (id: Id) => (id === PLACING_ID ? hypo : id === req.ignoreObjectId ? undefined : lot.objects[id]);
+  const afterCtx: AccessContext = { grid: after, content, objectById: objAfter };
   const entry = lot.entry.level === req.level && inLot(lot, lot.entry.x, lot.entry.z) ? lot.entry : null;
   const maskAfter = entry ? reachableMask(after, entry) : null;
 
-  if (def.slots.length > 0) {
-    const access = slotAccess({ grid: after, content, objectById: objAfter }, hypo, def);
-    const usable = access.filter((a) => a.usable);
-    if (usable.length === 0) reasons.push('There is no free side to use it from.');
+  const own = accessPoints(afterCtx, hypo, def);
+  if (own) {
+    if (own.tiles.length === 0) reasons.push('There is no free side to use it from.');
     else {
-      if (maskAfter && countReachable(usable, maskAfter, after) === 0) reasons.push('It cannot be reached from the lot entry.');
-      if (usable.length < access.length) warnings.push('Some of its sides cannot be used.');
+      if (maskAfter && countReachable(own.tiles, maskAfter, after) === 0) reasons.push('It cannot be reached from the lot entry.');
+      if (def.slots.length > 0 && own.tiles.length < own.total) warnings.push('Some of its sides cannot be used.');
     }
   }
   if (!blocking || !entry || !maskAfter) return;
 
   const before = buildNavGrid(lot, content, req.level);
+  const beforeCtx: AccessContext = { grid: before, content, objectById: (id: Id) => lot.objects[id] };
   const maskBefore = reachableMask(before, entry);
   for (let i = 0; i < maskBefore.length; i++) {
     if (maskBefore[i] && after.occupant[i] === -1 && !maskAfter[i]) { reasons.push('It would cut off part of the lot.'); break; }
   }
-  const objBefore = (id: Id) => lot.objects[id];
   const others = Object.values(lot.objects)
     .filter((o) => o.level === req.level && o.id !== req.ignoreObjectId)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const other of others) {
     const od = content.objects[other.defId];
-    if (!od || od.slots.length === 0) continue;
-    if (countReachable(slotAccess({ grid: before, content, objectById: objBefore }, other, od), maskBefore, before) === 0) continue;
-    if (countReachable(slotAccess({ grid: after, content, objectById: objAfter }, other, od), maskAfter, after) === 0) {
-      reasons.push(`It would block access to the ${od.name}.`);
-    }
+    if (!od) continue;
+    const was = accessPoints(beforeCtx, other, od);
+    if (!was || countReachable(was.tiles, maskBefore, before) === 0) continue;
+    const now = accessPoints(afterCtx, other, od);
+    if (!now || countReachable(now.tiles, maskAfter, after) === 0) reasons.push(`It would block access to the ${od.name}.`);
   }
 }

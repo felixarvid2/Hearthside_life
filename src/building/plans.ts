@@ -56,6 +56,14 @@ export function editAccess(state: WorldState, lotId: Id, householdId: Id): { lot
   return { lot, hh };
 }
 
+/**
+ * True when the household may sell or store the object: it owns it, or the object came with a lot the
+ * household owns (furnishings without an owner).
+ */
+export function ownsObject(lot: Lot, obj: PlacedObject, householdId: Id): boolean {
+  return obj.ownerHouseholdId === householdId || (obj.ownerHouseholdId === null && lot.ownerHouseholdId === householdId);
+}
+
 /** Reason an object cannot be moved, sold or stored because something rests on it (M1 rule), or null. */
 export function supportBlockReason(state: WorldState, content: ContentDB, lot: Lot, objectId: Id): string | null {
   const on = itemsOnObject(state, lot, objectId);
@@ -133,6 +141,7 @@ function planRemoval(state: WorldState, content: ContentDB, lotId: Id, household
   if ('reason' in access) return failPlan(access.reason);
   const obj = access.lot.objects[objectId];
   if (!obj) return failPlan('That object is no longer here.');
+  if (!ownsObject(access.lot, obj, householdId)) return failPlan('It does not belong to your household.');
   const blocked = supportBlockReason(state, content, access.lot, objectId);
   if (blocked) return failPlan(blocked);
   return { ok: true, reasons: [], cost: 0, tiles: objectTiles(obj, content.objects[obj.defId]) };

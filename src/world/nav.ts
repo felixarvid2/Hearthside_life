@@ -10,7 +10,7 @@ import type { NavProvider, Tile, WorldSlot } from '../core/nav';
 import type { Id, Lot, WorldState } from '../core/types';
 import { hasLevel } from './lots';
 import { buildNavGrid, canStepGrid, findPathGrid, isFree, type NavGrid } from './navgrid';
-import { slotAccess, standTiles } from './slots';
+import { standTiles, usableSlots } from './slots';
 
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
@@ -58,7 +58,7 @@ export class LotNav implements NavProvider {
     return !!g && canStepGrid(g, from, to);
   }
 
-  /** Slots with the approach tile people actually use on the current lot (see world/slots.ts). */
+  /** Usable slots only, with the approach tile people actually use on the current lot (see world/slots.ts). */
   slotsOf(lotId: Id, objectId: Id): WorldSlot[] {
     const lot = this.getState().lots[lotId];
     const obj = lot?.objects[objectId];
@@ -66,7 +66,7 @@ export class LotNav implements NavProvider {
     if (!lot || !obj || !def) return [];
     const g = this.grid(lotId, obj.level);
     if (!g) return [];
-    return slotAccess({ grid: g, content: this.content, objectById: (id) => lot.objects[id] }, obj, def).map((a) => a.slot);
+    return usableSlots({ grid: g, content: this.content, objectById: (id) => lot.objects[id] }, obj, def);
   }
 
   standTilesNear(lotId: Id, objectId: Id): Tile[] {

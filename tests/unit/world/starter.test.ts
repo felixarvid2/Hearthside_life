@@ -5,9 +5,9 @@ import type { Tile } from '../../../src/core/nav';
 import { cloneState } from '../../../src/core/state';
 import type { Lot, PlacedObject, WorldState } from '../../../src/core/types';
 import { LotNav } from '../../../src/world/nav';
-import { objectTiles, validatePlacement, doorTiles } from '../../../src/world/placement';
+import { backEdges, doorTiles, objectTiles, validatePlacement } from '../../../src/world/placement';
 import { computeRooms, roomAt } from '../../../src/world/rooms';
-import { frontDir } from '../../../src/world/slots';
+import { frontDir, slotAccess } from '../../../src/world/slots';
 import { furnishNeighborHouse, furnishStarterHouse } from '../../../src/world/starter';
 import { openingOnWall } from '../../../src/world/walls';
 import { fixtureContent, testWorld } from './fixtures';
@@ -45,12 +45,26 @@ function checkHouse(state: WorldState, content: ContentDB, lot: Lot) {
   const nav = new LotNav(() => state, content);
   const entry: Tile = { x: lot.entry.x, z: lot.entry.z };
 
-  // every slot approach tile is walkable and reachable from the lot entry
+  // every slot is usable (not through a wall, never standing inside furniture) and reachable from the entry
+  const grid = nav.grid(lot.id, 0)!;
+  const actx = { grid, content, objectById: (id: string) => lot.objects[id] };
   for (const obj of Object.values(lot.objects)) {
-    for (const slot of nav.slotsOf(lot.id, obj.id)) {
-      const label = `${obj.defId} ${slot.slotId} approach (${slot.approach.x}, ${slot.approach.z})`;
+    const def = content.objects[obj.defId]!;
+    const access = slotAccess(actx, obj, def);
+    for (const a of access) {
+      const slot = a.slot;
+      const label = `${obj.defId} (${obj.x}, ${obj.z}) ${slot.slotId} via ${a.via} approach (${slot.approach.x}, ${slot.approach.z})`;
+      expect(a.usable, label).toBe(true);
       expect(nav.isWalkable(lot.id, 0, slot.approach.x, slot.approach.z), label).toBe(true);
       expect(nav.findPath(lot.id, 0, entry, [slot.approach]), label).not.toBeNull();
+      if (slot.posture === 'standing') expect(nav.isWalkable(lot.id, 0, Math.floor(slot.x), Math.floor(slot.z)) || objectTiles(obj, def).some((t) => t.x === Math.floor(slot.x) && t.z === Math.floor(slot.z)), label).toBe(true);
+    }
+    expect(nav.slotsOf(lot.id, obj.id)).toHaveLength(def.slots.length);
+    // interactive objects without slots have a free side reachable from the entry
+    if (def.slots.length === 0 && def.interactions.length > 0) {
+      const stand = nav.standTilesNear(lot.id, obj.id);
+      expect(stand.length, obj.defId).toBeGreaterThan(0);
+      expect(nav.findPath(lot.id, 0, entry, stand), `${obj.defId} (${obj.x}, ${obj.z})`).not.toBeNull();
     }
   }
   // no doorway blocked: both tiles walkable and connected through the door
@@ -132,7 +146,7 @@ describe('furnishStarterHouse (fixture content)', () => {
     const [mirror] = byDef(lot, 'bathroom-mirror');
     expect(mirror).toBeDefined();
     expect(roomAt([room(11, 6)], mirror!.x, mirror!.z)).toBeDefined();
-    expect(lot.walls['0:v:10:6']).toBeDefined();
+    for (const k of backEdges({ ...mirror!, level: 0 }, content.objects['bathroom-mirror']!)) expect(lot.walls[k], k).toBeDefined();
   });
 
   it('uses glazed front door, panel doors inside and windows only on exterior walls', () => {

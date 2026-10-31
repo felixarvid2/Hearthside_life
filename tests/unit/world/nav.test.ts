@@ -179,4 +179,15 @@ describe('LotNav slots and stand tiles', () => {
     expect(Math.abs(slot!.approach.x - 10) + Math.abs(slot!.approach.z - 9)).toBe(1);
     expect(nav.slotsOf(lot.id, 'obj_missing')).toEqual([]);
   });
+
+  it('slotsOf returns only usable slots (no lying down through a wall)', () => {
+    const { state, lot, content, nav } = setup();
+    setWall(lot, 0, 'v', 10, 10, FF);
+    setWall(lot, 0, 'v', 10, 11, FF);
+    putObject(state, content, lot, 'trash-can', 10, 12);
+    const bed = putObject(state, content, lot, 'bed-double-oak', 10, 10, 0);
+    const slots = nav.slotsOf(lot.id, bed.id);
+    expect(slots.map((s) => s.slotId)).toEqual(['right']);
+    expect(slots[0]!.approach).toEqual({ x: 12, z: 11 });
+  });
 });

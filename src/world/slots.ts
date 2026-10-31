@@ -2,14 +2,19 @@
 // approach tiles rotated with the object (core/geometry rotateLocal / rotateFacing / rotateCell), so
 // footprints, anchors and approach tiles always turn together.
 //
-// slotAccess() then decides how a person actually reaches each slot on the current lot:
-// 1. the definition's approach tile, when it is walkable and not separated from the object by a wall;
-// 2. surface items only (TV, computer): when that tile holds a seat (a dining or desk chair pushed up to
-//    the support), the seat's own approach tile, since people use the item from the chair;
-// 3. otherwise the nearest walkable neighbour of the slot's anchor tile, preferring the definition's
-//    direction (front, then the sides, then the back), e.g. a dining chair pushed up to a table is
-//    approached from its side, and a bed standing against a wall from its foot end.
-// A slot with none of these is unusable (an appliance facing a wall is never operated through it).
+// slotAccess() decides whether and how a person reaches each slot on the current lot. The simulation walks
+// to `approach` and then stands, sits or lies at the anchor (x, z, facing, posture), so both must be sound:
+// - A standing person never stands inside other furniture: a standing slot's anchor tile must be walkable,
+//   unless it lies inside the object's own blocking footprint (a shower stall).
+// - Anchor outside the footprint (use slots in front of a fridge, stove, sink, TV...): only the authored
+//   approach tile counts. It must be walkable, touch the object without a wall in between and connect to the
+//   anchor tile. An appliance facing a wall is therefore unusable, never operated through the wall.
+// - Surface items (TV, computer) whose approach tile holds a seat that faces the item across an open edge
+//   (a desk chair pushed up to the desk) are used from that seat: the slot becomes the seat's sit position.
+// - Anchor inside the footprint (seats, beds, shower): the authored approach, else the nearest walkable
+//   neighbour of the anchor tile across an open edge, preferring the authored direction (front, sides, back),
+//   e.g. a dining chair pushed up to a table is approached from its side, a bed against a wall from its foot.
+// A slot meeting none of these is unusable; LotNav.slotsOf only returns usable slots.
 
 import type { ContentDB, ObjectDef, ObjectSlot } from '../content/types';
 import { facingDir, footprintTiles, rotateCell, rotateFacing, rotateLocal } from '../core/geometry';
@@ -25,11 +30,19 @@ export function slotAnchorCell(slot: Pick<ObjectSlot, 'pos'>, fp: { w: number; d
   return { x: cx, z: cz };
 }
 
-/** Lot tile containing the slot's anchor. */
+/** Lot tile of the footprint cell nearest to the slot anchor (the anchor tile clamped into the footprint). */
 export function slotAnchorTile(obj: Pick<PlacedObject, 'x' | 'z' | 'rot'>, def: Pick<ObjectDef, 'footprint'>, slot: Pick<ObjectSlot, 'pos'>): Tile {
   const c = slotAnchorCell(slot, def.footprint);
   const r = rotateCell(c.x, c.z, def.footprint, obj.rot);
   return { x: obj.x + r.x, z: obj.z + r.z };
+}
+
+/** Lot tile containing the slot anchor (may lie outside the footprint) and whether it is inside it. */
+export function slotAnchorPlace(obj: Pick<PlacedObject, 'x' | 'z' | 'rot'>, def: Pick<ObjectDef, 'footprint'>, slot: Pick<ObjectSlot, 'pos'>): { tile: Tile; inside: boolean } {
+  const lx = Math.floor(slot.pos[0]), lz = Math.floor(slot.pos[1]);
+  const inside = lx >= 0 && lz >= 0 && lx < def.footprint.w && lz < def.footprint.d;
+  const r = rotateCell(lx, lz, def.footprint, obj.rot);
+  return { tile: { x: obj.x + r.x, z: obj.z + r.z }, inside };
 }
 
 /** One definition slot resolved into lot space (definition approach tile, no access fallback). */
@@ -124,26 +137,34 @@ function nearbyCandidates(anchor: Tile, defApproach: Tile, front: { x: number; z
 export function slotAccess(ctx: AccessContext, obj: PlacedObject, def: ObjectDef, allowSeat = true): SlotAccess[] {
   const g = ctx.grid;
   const tiles = footprintTiles(obj.x, obj.z, def.footprint, obj.rot);
+  const blocking = blocksMovement(def);
   const front = frontDir(obj.rot);
   const out: SlotAccess[] = [];
   for (const slot of def.slots) {
     const ws = resolveSlot(obj, def, slot);
-    const anchor = slotAnchorTile(obj, def, slot);
-    if (isFree(g, ws.approach.x, ws.approach.z) && touchesFootprint(g, ws.approach, tiles)) {
+    const { tile: anchor, inside } = slotAnchorPlace(obj, def, slot);
+    const standing = slot.posture === 'standing' || slot.posture === 'walking';
+    // a standing person must not end up inside other furniture (the object's own stall excepted)
+    const anchorOk = !standing || (inside && blocking) || isFree(g, anchor.x, anchor.z);
+    const reaches = (t: Tile) => isFree(g, t.x, t.z) && touchesFootprint(g, t, tiles) && touchesFootprint(g, t, [anchor]);
+    if (anchorOk && reaches(ws.approach)) {
       out.push({ slot: ws, usable: true, via: 'definition' });
       continue;
     }
-    if (allowSeat && def.layer === 'surface') {
-      const seat = seatAccess(ctx, obj.id, ws.approach);
+    if (allowSeat && def.layer === 'surface' && !inside) {
+      const seat = seatAccess(ctx, obj, tiles, ws.approach);
       if (seat) {
-        out.push({ slot: { ...ws, approach: seat.approach }, usable: true, via: 'seat', seatId: seat.seatId });
+        const s = seat.sit;
+        out.push({ slot: { ...ws, x: s.x, z: s.z, height: s.height, facing: s.facing, approach: s.approach, posture: s.posture }, usable: true, via: 'seat', seatId: seat.seatId });
         continue;
       }
     }
     let found: Tile | null = null;
-    for (const c of nearbyCandidates(anchor, ws.approach, front, !blocksMovement(def))) {
-      const same = c.x === anchor.x && c.z === anchor.z;
-      if (isFree(g, c.x, c.z) && (same || edgeOpen(g, anchor, c))) { found = c; break; }
+    if (inside && anchorOk) {
+      for (const c of nearbyCandidates(anchor, ws.approach, front, !blocking)) {
+        const same = c.x === anchor.x && c.z === anchor.z;
+        if (isFree(g, c.x, c.z) && (same || edgeOpen(g, anchor, c))) { found = c; break; }
+      }
     }
     if (found) out.push({ slot: { ...ws, approach: found }, usable: true, via: 'nearby' });
     else out.push({ slot: ws, usable: false, via: 'none' });
@@ -151,14 +172,32 @@ export function slotAccess(ctx: AccessContext, obj: PlacedObject, def: ObjectDef
   return out;
 }
 
-function seatAccess(ctx: AccessContext, selfId: Id, tile: Tile): { seatId: Id; approach: Tile } | null {
-  const seatId = occupantAt(ctx.grid, tile.x, tile.z);
-  if (!seatId || seatId === selfId) return null;
+/** Only the usable slots, with the approach tiles people actually use. */
+export function usableSlots(ctx: AccessContext, obj: PlacedObject, def: ObjectDef): WorldSlot[] {
+  return slotAccess(ctx, obj, def).filter((a) => a.usable).map((a) => a.slot);
+}
+
+/**
+ * A seat standing on the item's approach tile that people can use the item from: it touches one of the
+ * item's tiles across an open edge, its sit slot faces the item (within about 60 degrees) and is usable.
+ */
+function seatAccess(ctx: AccessContext, item: PlacedObject, itemTiles: Tile[], tile: Tile): { seatId: Id; sit: WorldSlot } | null {
+  const g = ctx.grid;
+  const seatId = occupantAt(g, tile.x, tile.z);
+  if (!seatId || seatId === item.id) return null;
+  if (!itemTiles.some((f) => Math.abs(f.x - tile.x) + Math.abs(f.z - tile.z) === 1 && edgeOpen(g, f, tile))) return null;
   const seat = ctx.objectById(seatId);
   const sdef = seat ? ctx.content.objects[seat.defId] : undefined;
-  if (!seat || !sdef || !sdef.slots.some((s) => s.kind === 'sit')) return null;
-  const sit = slotAccess(ctx, seat, sdef, false).find((a) => a.usable && a.slot.kind === 'sit');
-  return sit ? { seatId, approach: sit.slot.approach } : null;
+  if (!seat || !sdef) return null;
+  const cx = itemTiles.reduce((a, t) => a + t.x + 0.5, 0) / itemTiles.length;
+  const cz = itemTiles.reduce((a, t) => a + t.z + 0.5, 0) / itemTiles.length;
+  for (const a of slotAccess(ctx, seat, sdef, false)) {
+    if (!a.usable || a.slot.kind !== 'sit') continue;
+    const f = facingDir(a.slot.facing);
+    const dx = cx - a.slot.x, dz = cz - a.slot.z, len = Math.hypot(dx, dz);
+    if (len > 1e-6 && (f.x * dx + f.z * dz) / len > 0.5) return { seatId, sit: a.slot };
+  }
+  return null;
 }
 
 /**

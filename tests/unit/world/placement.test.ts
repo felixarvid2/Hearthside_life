@@ -164,14 +164,18 @@ describe('surface and wall items', () => {
     expect(check('bathroom-mirror', 10, 5, 0).reasons).toContain('It cannot hang over a door or window.');
   });
 
-  it('a mirror above a sink is fine and is used from the tile in front of the sink', () => {
+  it('a standing slot never puts a person inside other furniture (no mirror above a sink)', () => {
     const { state, content, lot, check } = setup();
     setWall(lot, 0, 'h', 5, 5, FF);
+    setWall(lot, 0, 'h', 8, 5, FF);
     putObject(state, content, lot, 'bathroom-sink', 5, 5, 0);
-    expect(check('bathroom-mirror', 5, 5, 0).ok).toBe(true);
-    const mirror = putObject(state, content, lot, 'bathroom-mirror', 5, 5, 0);
+    expect(check('bathroom-mirror', 5, 5, 0).reasons).toContain('There is no free side to use it from.');
+    expect(check('bathroom-mirror', 8, 5, 0).ok).toBe(true);
+    const mirror = putObject(state, content, lot, 'bathroom-mirror', 8, 5, 0);
     const nav = new LotNav(() => state, content);
-    expect(nav.slotsOf(lot.id, mirror.id)[0]!.approach).toEqual({ x: 5, z: 6 });
+    const [slot] = nav.slotsOf(lot.id, mirror.id);
+    expect(slot!.approach).toEqual({ x: 8, z: 6 });
+    expect(Math.floor(slot!.z)).toBe(5); // stands in front of the wall, on a free tile
   });
 });
 
@@ -195,6 +199,22 @@ describe('access and clearance', () => {
     expect(check('rug-rectangle', 4, 4).ok).toBe(true);
     (state.people['per_x']!.location as { posture: string }).posture = 'seated';
     expect(check('fridge-standard', 5, 5).ok).toBe(true);
+  });
+
+  it('an appliance facing a wall is unusable even with free sides; never used from inside furniture', () => {
+    const { state, content, lot, check } = setup();
+    setWall(lot, 0, 'h', 10, 11, FF); // directly in front of a fridge at (10,10)
+    expect(check('fridge-standard', 10, 10, 0).reasons).toContain('There is no free side to use it from.');
+    const fridge = putObject(state, content, lot, 'fridge-standard', 10, 10, 0);
+    const nav = new LotNav(() => state, content);
+    expect(nav.slotsOf(lot.id, fridge.id)).toEqual([]);
+    delete lot.objects[fridge.id];
+    putObject(state, content, lot, 'counter-basic', 14, 11);
+    expect(check('fridge-standard', 14, 10, 0).reasons).toContain('There is no free side to use it from.');
+    for (const id of ['stove-basic', 'counter-sink', 'bookcase-open', 'wardrobe-tall', 'bathroom-sink']) {
+      expect(check(id, 10, 10, 0).ok, id).toBe(false);
+      expect(check(id, 10, 10, 2).ok, id).toBe(true);
+    }
   });
 
   it('an appliance with every side walled off or blocked is rejected (never used through a wall)', () => {
@@ -228,6 +248,44 @@ describe('access and clearance', () => {
     const nav = new LotNav(() => state, content);
     const [slot] = nav.slotsOf(lot.id, computer.id);
     expect(nav.isWalkable(lot.id, 0, slot!.approach.x, slot!.approach.z)).toBe(true);
+  });
+
+  it('uses a desk chair for the computer only when it faces the desk across an open edge', () => {
+    const { state, content, lot, check } = setup();
+    addWallRun(lot, 0, { x: 3, z: 3 }, { x: 9, z: 3 }, FF);
+    putObject(state, content, lot, 'bookcase-open', 3, 3, 0);
+    const desk = putObject(state, content, lot, 'desk-oak', 4, 3, 0);
+    const chair = putObject(state, content, lot, 'chair-desk', 4, 4, 0); // faces away from the desk
+    expect(check('computer-desktop', 4, 3, 0).reasons).toContain('There is no free side to use it from.');
+    chair.rot = 2; // now faces the desk
+    const ok = check('computer-desktop', 4, 3, 0);
+    expect(ok.ok).toBe(true);
+    const pc = putObject(state, content, lot, 'computer-desktop', 4, 3, 0, { supportId: desk.id });
+    const nav = new LotNav(() => state, content);
+    const [slot] = nav.slotsOf(lot.id, pc.id);
+    expect(slot!.posture).toBe('seated');
+    expect(slot!.x).toBeCloseTo(4.5);
+    expect(slot!.z).toBeCloseTo(4.5);
+    expect(slot!.facing).toBeCloseTo(Math.PI);
+    // a wall between the desk and the chair: no seat access
+    setWall(lot, 0, 'h', 4, 4, FF);
+    nav.invalidate(lot.id);
+    expect(nav.slotsOf(lot.id, pc.id)).toEqual([]);
+  });
+
+  it('interactive objects without slots need a reachable free side; others may not take it', () => {
+    const { state, content, lot, check } = setup();
+    putObject(state, content, lot, 'counter-basic', 9, 10);
+    putObject(state, content, lot, 'counter-basic', 11, 10);
+    putObject(state, content, lot, 'counter-basic', 10, 9);
+    putObject(state, content, lot, 'counter-basic', 10, 11);
+    expect(check('plant-potted', 10, 10).reasons).toContain('There is no free side to use it from.');
+    expect(check('lamp-floor-round', 10, 10).reasons).not.toContain('There is no free side to use it from.'); // decor needs no access
+    delete lot.objects[Object.values(lot.objects).find((o) => o.x === 10 && o.z === 11)!.id];
+    const plant = putObject(state, content, lot, 'plant-potted', 10, 10);
+    const nav = new LotNav(() => state, content);
+    expect(nav.standTilesNear(lot.id, plant.id)).toEqual([{ x: 10, z: 11 }]);
+    expect(check('counter-basic', 10, 11).reasons).toContain('It would block access to the Plant Potted.');
   });
 
   it('rejects placements that cut off part of the lot', () => {

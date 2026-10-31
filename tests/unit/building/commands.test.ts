@@ -149,6 +149,39 @@ describe('sell and undo sale', () => {
     }
   });
 
+  it('sandbox: buying for free and selling the same day never creates money, also after undo/redo', () => {
+    const { lot, hh, ctx, stack } = setup({ mode: 'sandbox' });
+    const start = hh.funds;
+    stack.run(ctx, buyObject(lot.id, hh.id, { defId: 'bed-double-oak', x: 14, z: 14, rot: 0, level: 0 }));
+    const bed = Object.values(lot.objects)[0]!;
+    expect(bed.purchasePrice).toBe(0);
+    stack.run(ctx, sellObject(lot.id, hh.id, bed.id));
+    expect(hh.funds).toBe(start);
+    stack.undo(ctx);
+    stack.undo(ctx);
+    stack.redo(ctx);
+    expect(lot.objects[bed.id]!.purchasePrice).toBe(0);
+    stack.redo(ctx);
+    expect(hh.funds).toBe(start);
+  });
+
+  it('only sells or stores objects the household owns (or that came with its own lot)', () => {
+    const { state, lot, hh, ctx, content } = setup();
+    const other = addHousehold(state, 'Neighbours', 100000, null, false);
+    const theirs = putObject(state, content, lot, 'armchair-lounge', 14, 14, 0, { ownerHouseholdId: other.id });
+    const before = snap(state);
+    expect(sellObject(lot.id, hh.id, theirs.id).apply(ctx)).toEqual({ ok: false, reason: 'It does not belong to your household.' });
+    expect(storeObject(lot.id, hh.id, theirs.id).apply(ctx).ok).toBe(false);
+    expect(snap(state)).toBe(before);
+    // furnishings without an owner on the household's own lot can be sold
+    const furnished = putObject(state, content, lot, 'trash-can', 16, 16, 0, { ownerHouseholdId: null });
+    expect(sellObject(lot.id, hh.id, furnished.id).apply(ctx).ok).toBe(true);
+    // on an unowned lot, ownerless objects are not the household's
+    lot.ownerHouseholdId = null;
+    const loose = putObject(state, content, lot, 'trash-can', 18, 16, 0, { ownerHouseholdId: null });
+    expect(sellObject(lot.id, hh.id, loose.id).apply(ctx).ok).toBe(false);
+  });
+
   it('starter furnishings (bought the day before) sell at the depreciated value', () => {
     const { state, lot, hh, ctx, content } = setup();
     const chair = putObject(state, content, lot, 'chair-dining-oak', 14, 14, 0, { boughtAt: state.clock.minutes - MINUTES_PER_DAY });

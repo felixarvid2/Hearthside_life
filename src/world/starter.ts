@@ -6,8 +6,8 @@
 //
 //   z\x   5    6    7    8    9  | 10   11   12 | 13   14   15   16   17   18
 //    5   NS  [BED BED]  NS  LMP | TL    .   SH |  .  [DESK+PC]  .  [BED  NS
-//    6    .  [BED BED]   .   .  | SK+M  .    . |  .   CH    .    .  BED]  .
-//    7    .   rug rug  rug   .  |  .    D    . |  .   rug  rug  rug   .    .
+//    6    .  [BED BED]   .   .  | SK    .    . |  .   CH    .    .  BED]  .
+//    7    .   rug rug  rug   .  |  .    D    M |  .   rug  rug  rug   .    .
 //    8    .   rug rug  rug   D  |  D    D    D |  D   rug  rug  rug   .    .
 //    9   WR    .    .    .   .  |  D    .   PL |  .    .    .   WR   BK  LMP
 //        -- main bedroom ---------- bath / hall --- second bedroom ------------
@@ -21,8 +21,8 @@
 //        ------- living room -----------  kitchen with dining area -----------
 //   17           PL  porch PL               (path south to the lot entry)
 //
-// D = door tiles kept clear, NS nightstand, WR wardrobe, BK bookcase, TL toilet, SH shower, SK sink with the
-// mirror above it, CH chairs, CT coffee table, RA radio on the TV stand, AC armchair, PL plants,
+// D = door tiles kept clear, NS nightstand, WR wardrobe, BK bookcase, TL toilet, SH shower, SK sink, M mirror,
+// CH chairs, CT coffee table, RA radio on the TV stand, AC armchair, PL plants,
 // TR trash can, FR fridge, CO counters, ST stove, SI counter sink.
 
 import type { ContentDB } from '../content/types';
@@ -116,7 +116,7 @@ export const STARTER_PLAN: HousePlan = {
     { defId: 'toilet-basic', x: 10, z: 5, rot: 1 },
     { defId: 'shower-stall', x: 12, z: 5, rot: 0 },
     { defId: 'bathroom-sink', x: 10, z: 6, rot: 1 },
-    { defId: 'bathroom-mirror', x: 10, z: 6, rot: 1 },
+    { defId: 'bathroom-mirror', x: 12, z: 7, rot: 2 }, // beside the door, never above the sink (people stand at it)
     // main bedroom
     { defId: 'bed-double-oak', x: 6, z: 5, rot: 0 },
     { defId: 'nightstand-oak', x: 5, z: 5, rot: 0 },
@@ -148,10 +148,10 @@ export const STARTER_PLAN: HousePlan = {
 //    9    .  [BED BED]   . |  .    .    .    .    .    .
 //   10    .    .    .    D |  D    .   CH    .    .    .
 //   11   WR    .    .    . |  .    .  [TABLE  ]    .    .
-//   12   TL    .   SK+M  . |  .    .    .   CH    .    .
+//   12   TL    .   SK    . |  .    .    .   CH    .    .
 //   13    .    .    .    D |  D [SOFA  rug  rug  rug  TV
 //   14    .    .    .    . |  .  SOFA] rug  rug  rug  RA]
-//   15   SH    .    .    . | PL    .    .    D    .   LMP
+//   15   SH    .    M    . | PL    .    .    D    .   LMP
 
 /** The neighbour's smaller house. */
 export const NEIGHBOR_PLAN: HousePlan = {
@@ -191,7 +191,7 @@ export const NEIGHBOR_PLAN: HousePlan = {
     { defId: 'wardrobe-tall', x: 7, z: 11, rot: 1 },
     { defId: 'toilet-basic', x: 7, z: 12, rot: 1 },
     { defId: 'bathroom-sink', x: 9, z: 12, rot: 0 },
-    { defId: 'bathroom-mirror', x: 9, z: 12, rot: 0 },
+    { defId: 'bathroom-mirror', x: 9, z: 15, rot: 2 },
     { defId: 'shower-stall', x: 7, z: 15, rot: 1 },
     { defId: 'bookcase-open', x: 11, z: 8, rot: 0 },
     { defId: 'fridge-standard', x: 12, z: 8, rot: 0 },
