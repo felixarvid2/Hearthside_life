@@ -332,7 +332,8 @@ function skirtPiece(m: MeshData, t: BodyTemplate, yTop: number, yHem: number, fl
       const p: Vec3 = [c[0] + Math.sin(a) * r, y, c[1] + Math.cos(a) * r];
       // skin: torso near the top, blending into the thighs toward the hem by side
       const top = t.transfer.skinAt([c[0] + Math.sin(a) * surfaceR(Math.min(y, yTop), a) * 0.98, Math.max(y, lm.crotchY + 0.06), c[1] + Math.cos(a) * surfaceR(Math.min(y, yTop), a) * 0.98]);
-      const f = 0.62 * smoothstep(hipTop, yHem, y);
+      // the front follows the thighs closely (lap when seated), the back stays with the pelvis
+      const f = lerp(0.35, 0.95, smoothstep(-0.2, 0.6, Math.cos(a))) * smoothstep(hipTop + 0.02, hipTop - 0.14, y);
       const sideL = clamp(0.5 + 0.7 * Math.sin(a), 0, 1);
       const skin = f > 0.001 ? blendSkins([
         { skin: top, f: 1 - f },
