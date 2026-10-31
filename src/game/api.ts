@@ -9,7 +9,7 @@ import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import type { EventBus } from '../core/events';
 import type { AnimId } from '../core/anim';
 import type { Tile } from '../core/nav';
-import type { Cents, FinishRef, Id, OutfitCategory, Rot, StartMode, Wardrobe, WorldState } from '../core/types';
+import type { Cents, FinishRef, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
 export type CutawayMode = 'up' | 'cutaway' | 'down';
@@ -232,6 +232,8 @@ export interface GameAPI {
   // ---- settings, sound, diagnostics ----
   settings(): GameSettings;
   setSettings(patch: Partial<GameSettings>): void;
+  /** World simulation settings stored in the save (autonomy, visitors, ...). No-op without a game. */
+  setSimSettings(patch: Partial<SimSettings>): void;
   sound(id: SoundId): void;
   devStats(): DevStats;
 }
