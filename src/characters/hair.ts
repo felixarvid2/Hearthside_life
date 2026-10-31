@@ -91,7 +91,8 @@ interface CapOpts { cap: number; top: number; hairline: string; fringe: number; 
 
 function capThickness(o: CapOpts, theta: number, y: number, edge: number, rel: number): number {
   const up = smoothstep(0.09, 0.2, y);
-  let th = lerp(o.cap, o.top, up) + o.volume * (0.75 + 0.25 * up);
+  const frontEdge = 1 - 0.55 * smoothstep(0.3, 0.9, Math.cos(theta)) * (1 - smoothstep(0.15, 0.2, y));
+  let th = lerp(o.cap, o.top, up) + o.volume * (0.75 + 0.25 * up) * frontEdge;
   // part groove
   if (o.part !== 'none') {
     const px = o.part === 'left' ? 0.032 : o.part === 'right' ? -0.032 : 0;
@@ -99,7 +100,8 @@ function capThickness(o: CapOpts, theta: number, y: number, edge: number, rel: n
     th *= 1 - 0.55 * gauss(x * 0.08 - px, 0.006) * smoothstep(0.12, 0.17, y) * smoothstep(-0.6, 0.2, Math.cos(theta));
   }
   // soft taper onto the skin at the hairline
-  th *= lerp(0.15, 1, smoothstep(0, 1, rel)) * (0.35 + 0.65 * smoothstep(0, 0.012, edge));
+  const ramp = 0.014 + 0.024 * smoothstep(0.4, 0.95, Math.cos(theta));
+  th *= lerp(0.15, 1, smoothstep(0, 1, rel)) * (0.08 + 0.92 * smoothstep(0, ramp, edge));
   return Math.max(0.0015, th);
 }
 
@@ -224,7 +226,7 @@ function curls(c: Ctx, size: number, count: number): void {
     if (base[1] < hairlineY(th, 'natural', 0) + 0.02) continue;
     const n = headNormal(th, h);
     const r = size * (0.8 + 0.4 * (((k * 7919) % 13) / 13));
-    sphereBlob(c, v3.madd(base, n, 0.006 + r * 0.55), r, [1, 0.85, 1], HAIR_PIECE.curl, 6, 4);
+    sphereBlob(c, v3.madd(base, n, 0.004 + r * 0.3), r, [1, 0.8, 1], HAIR_PIECE.curl, 9, 6);
   }
 }
 
@@ -302,9 +304,9 @@ function buildFacialHair(c: Ctx, def: FacialHairDef): void {
   if (str(b, 'kind', 'paint') !== 'shell') return;
   const thick = num(b, 'thickness', 0.006);
   const chinBulk = Math.max(0, num(b, 'chin', 0) - 1);
-  const cols = 44;
+  const cols = 56;
   const ys: number[] = [];
-  for (let y = -0.036; y <= 0.1; y += 0.004) ys.push(y);
+  for (let y = -0.036; y <= 0.1; y += 0.003) ys.push(y);
   const ths: number[] = [];
   for (let i = 0; i <= cols; i++) ths.push(-Math.PI * 0.62 + (Math.PI * 1.24 * i) / cols);
   const grid: number[][] = [];
@@ -315,7 +317,7 @@ function buildFacialHair(c: Ctx, def: FacialHairDef): void {
       const base = headPoint(th, y);
       const m = facialMask(b, th, base[1], base[0]);
       const n = headNormal(th, y);
-      const off = 0.0012 + thick * Math.sqrt(m) + chinBulk * 0.012 * gauss(base[0], 0.025) * smoothstep(0.02, -0.01, base[1]) * m;
+      const off = 0.0008 + thick * smoothstep(0, 1, m) + chinBulk * 0.012 * gauss(base[0], 0.025) * smoothstep(0.02, -0.01, base[1]) * m;
       const p = v3.madd(base, n, off);
       row.push(emit(c, p, [th * 0.09, base[1], m, HAIR_PIECE.facial], [0, -1, 0.3], { base, theta: th }));
       mrow.push(m);
@@ -325,8 +327,7 @@ function buildFacialHair(c: Ctx, def: FacialHairDef): void {
   }
   for (let r = 0; r + 1 < ys.length; r++) for (let i = 0; i < cols; i++) {
     const ms = [masks[r]![i]!, masks[r]![i + 1]!, masks[r + 1]![i]!, masks[r + 1]![i + 1]!];
-    if (Math.max(...ms) < 0.05) continue;
-    if (Math.min(...ms) < 0.02 && ms.filter((v) => v > 0.05).length < 2) continue;
+    if (Math.max(...ms) < 0.02) continue;
     const a = grid[r]![i]!, bb = grid[r]![i + 1]!, d = grid[r + 1]![i]!, e = grid[r + 1]![i + 1]!;
     addTri(c.m, a, bb, d); addTri(c.m, bb, e, d);
   }
@@ -350,7 +351,7 @@ export function buildHair(t: BodyTemplate, def: HairDef | null, facial: FacialHa
     };
     buildCap(c, capO);
     const len = num(b, 'length', 0.2);
-    if (piece === 'curls') curls(c, num(b, 'curlSize', 0.016), num(b, 'curlCount', 40));
+    if (piece === 'curls') curls(c, num(b, 'curlSize', 0.016) * 0.85, Math.round(num(b, 'curlCount', 40) * 1.35));
     if (piece === 'bob') {
       buildCurtain(c, { from: 1.02, to: Math.PI * 2 - 1.02, yTop: 0.13, yEnd: 0.13 - len, offset: num(b, 'cap', 0.012) + 0.002, flare: num(b, 'flare', 0.01), wave: 0, tuck: 0.008, behindShoulders: false });
     }

@@ -84,6 +84,7 @@ export class CharacterView {
   private outfit: Outfit;
   private selected = false;
   private hairClear = 0;
+  private disposed = false;
   private ring: THREE.Mesh | null = null;
   private lastAnim: { id: AnimId; posture?: Posture } = { id: 'idle' };
   /** Problems found while resolving the outfit (unknown ids etc.). */
@@ -120,11 +121,13 @@ export class CharacterView {
 
   /** Plays a game animation. `posture` selects seated/lying variants (inferred from the last animation otherwise). */
   play(anim: AnimId, opts: { fade?: number; posture?: Posture } = {}): void {
+    if (this.disposed) return;
     this.lastAnim = { id: anim, posture: opts.posture };
     this.animator.play(anim, opts);
   }
 
   update(dtSeconds: number): void {
+    if (this.disposed) return;
     this.animator.update(Math.min(dtSeconds, 0.1));
   }
 
@@ -157,6 +160,8 @@ export class CharacterView {
 
   /** Frees per-character resources (materials, mixer); shared geometry stays in the assets cache. */
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     this.teardownRig();
     this.root.removeFromParent();
   }

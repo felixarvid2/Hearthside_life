@@ -17,7 +17,7 @@ export type HeadSculptId = (typeof HEAD_SCULPT_IDS)[number];
 
 /** Face paint layout (head-local metres) shared with the skin shader. */
 export const FACE_LAYOUT = {
-  eyeX: 0.0325, eyeY: 0.098, eyeHalfW: 0.0132, eyeHalfH: 0.0074,
+  eyeX: 0.0328, eyeY: 0.098, eyeHalfW: 0.014, eyeHalfH: 0.0079,
   browX0: 0.0085, browX1: 0.0475, browY: 0.1158,
   mouthY: 0.0285, mouthHalfW: 0.0198,
   noseTipY: 0.062, noseBaseY: 0.049,
@@ -89,7 +89,7 @@ export function headBasePoint(theta: number, h: number): Vec3 {
 // ---- features -------------------------------------------------------------------------------
 
 const NOSE_P = curve([[0.038, 0], [0.045, 0.004], [0.05, 0.0115], [0.055, 0.0195], [0.0615, 0.0245], [0.068, 0.0235], [0.08, 0.0175], [0.095, 0.0112], [0.108, 0.0062], [0.12, 0.0022], [0.132, 0]]);
-const NOSE_W = curve([[0.038, 0.012], [0.05, 0.0115], [0.058, 0.0098], [0.065, 0.0082], [0.08, 0.006], [0.1, 0.0052], [0.12, 0.0068], [0.132, 0.008]]);
+const NOSE_W = curve([[0.038, 0.012], [0.05, 0.0115], [0.058, 0.0098], [0.065, 0.0075], [0.08, 0.0057], [0.1, 0.0052], [0.12, 0.0068], [0.132, 0.008]]);
 
 const g2 = (dx: number, dy: number, sx: number, sy: number) => Math.exp(-(dx * dx) / (2 * sx * sx) - (dy * dy) / (2 * sy * sy));
 const frontMask = (p: Vec3) => smoothstep(0.02, 0.07, p[2]);
@@ -116,7 +116,7 @@ export function addFeatures(p: Vec3): Vec3 {
   // nose
   const s = NOSE_W(p[1]);
   dz += NOSE_P(p[1]) * Math.exp(-(p[0] * p[0]) / (2 * s * s)) * fz;
-  dz += 0.0055 * g2(ax - 0.0115, p[1] - 0.0535, 0.0042, 0.0042) * fz; // alae
+  dz += 0.0045 * g2(ax - 0.011, p[1] - 0.0535, 0.0038, 0.0038) * fz; // alae
   // brow ridge, eye sockets, eyeball
   dz += 0.003 * gauss(p[1] - 0.13, 0.01) * gauss(p[0], 0.045) * fz;
   dz -= 0.0046 * g2(ax - 0.033, p[1] - 0.099, 0.015, 0.0105) * fz;

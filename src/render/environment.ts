@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import type { Lot } from '../core/types';
 import { GeoBuilder, hash01 } from './geo';
 
-const GROUND_Y = -0.045;
+/** Height of the grass (floors are at 0, so their slab edge shows a little). */
+export const GROUND_Y = -0.03;
 
 function grassTexture(): THREE.CanvasTexture {
   const size = 256;

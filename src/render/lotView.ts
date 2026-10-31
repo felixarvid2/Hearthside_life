@@ -55,7 +55,6 @@ export class LotView {
   readonly doors: DoorInfo[] = [];
   private previewMats: Array<{ mat: THREE.MeshStandardMaterial; tex: THREE.Texture | null }> = [];
   private readonly boxes = new Map<string, THREE.Box3>();
-  private readonly tmpBox = new THREE.Box3();
   private readonly tmpV = new THREE.Vector3();
 
   constructor(private readonly content: ContentDB, private quality: TextureQuality) {

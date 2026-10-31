@@ -148,7 +148,7 @@ async function main(): Promise<void> {
     const hair = hairs[i % hairs.length]!;
     const pv = new CharacterView(assets, content, appearance(i, frame, hair), outfitFor(OUTFITS[i % OUTFITS.length]!, i));
     const r = Math.floor(i / cols), c = i % cols;
-    pv.root.position.set((c - (cols - 1) / 2) * 1.25, 0, r * 1.6 - 1.6);
+    pv.root.position.set((c - (cols - 1) / 2) * 1.3 + (r % 2) * 0.65, 0, r * 2.4 - 1.2);
     scene.add(pv.root);
     people.push(pv);
   }
@@ -195,6 +195,12 @@ const lab = {
     currentAnim = a;
     for (const p of people) p.play(a, posture ? { posture } : {});
   },
+  /** Switches person i to the other body frame and a new body preset (tests setAppearance rebuilds). */
+  swapFrame(i: number): void {
+    const frame: BodyFrame = i % 2 === 0 ? 'b' : 'a';
+    people[i]!.setAppearance(appearance(i + 3, frame, CH.HAIR[(i + 4) % CH.HAIR.length]!.id));
+  },
+  dispose(i: number): void { people[i]!.dispose(); },
   charStats(i: number): { triangles: number; drawCalls: number } { return people[i]!.stats(); },
   playOne(i: number, a: AnimId, posture?: 'standing' | 'seated' | 'lying'): void { people[i]!.play(a, posture ? { posture } : {}); },
   /** Orbit camera: yaw (rad), pitch (rad), distance (m), target xyz. */

@@ -1,0 +1,522 @@
+// Game: implements GameAPI (src/game/api.ts) by composing GameCore (pure state, simulation, tools, saves)
+// with GameView (three.js rendering, camera, picking, previews, portraits). Screen-space methods go through
+// the view's picking; everything that changes the world goes through GameCore. Also owns the main loop,
+// player settings (localStorage), sound, thumbnails, portraits and the main-menu backdrop.
+
+import { loadCharacterAssets } from '../characters/assets';
+import { NEIGHBOR_HOUSEHOLD } from '../characters/creator';
+import { outfitFor } from '../characters/outfits';
+import type { ContentDB } from '../content/types';
+import type { Speed } from '../core/clock';
+import type { HouseholdDraft, PersonDraft } from '../core/drafts';
+import type { EventBus } from '../core/events';
+import { rotatedSize } from '../core/geometry';
+import type { Tile } from '../core/nav';
+import type { Cents, FinishRef, Id, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
+import { GameView } from '../render/gameView';
+import { portraitKey } from '../render/portraits';
+import { measurePostureAnchors } from '../render/postures';
+import { hasWebGL2 } from '../render/renderer';
+import { surfaceThumbnail } from '../render/textures/surfaceTextures';
+import { resolveSlots } from '../world/slots';
+import type {
+  CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings, MenuOption, PaintPreview, PaintTool,
+  PickResult, PlacementState, Result, SaveSlotInfo, SoundId, UiChange,
+} from './api';
+import { GameAudio } from './audio';
+import type { GameCore } from './GameCore';
+import { createNewWorld } from './newWorld';
+import { applyDocumentSettings, loadSettings, mergeSettings, saveSettings } from './settings';
+
+export interface GameOptions {
+  canvas: HTMLCanvasElement;
+  overlay: HTMLElement | null;
+  /** Base URL of the runtime assets (default './assets/'). */
+  assetBase?: string;
+}
+
+type WorldMode = 'live' | 'buy' | 'build';
+const isWorldMode = (m: GameMode): m is WorldMode => m === 'live' || m === 'buy' || m === 'build';
+
+export class Game implements GameAPI {
+  readonly content: ContentDB;
+  readonly events: EventBus;
+  readonly view: GameAPI['view'];
+  readonly creator: GameAPI['creator'];
+  readonly thumbnails: GameAPI['thumbnails'];
+  /** The renderer half (exposed for tests and developer tools). */
+  readonly gameView: GameView;
+  private readonly listeners = new Set<(what: UiChange) => void>();
+  private settingsValue: GameSettings;
+  private readonly audio: GameAudio;
+  private readonly assetBase: string;
+  private demo: WorldState | null = null;
+  private creatorReturn: GameMode = 'menu';
+  private lastPreview: PaintPreview | null = null;
+  private loaded = false;
+  private raf = 0;
+  private lastTime = 0;
+  private fps = 60;
+  private frameMs = 16;
+  private framedWorld: WorldState | null = null;
+  private running = false;
+  private readonly portraitPending = new Set<string>();
+  private readonly cleanups: Array<() => void> = [];
+
+  constructor(readonly core: GameCore, opts: GameOptions) {
+    this.content = core.content;
+    this.events = core.events;
+    this.assetBase = opts.assetBase ?? './assets/';
+    this.settingsValue = loadSettings();
+    applyDocumentSettings(this.settingsValue);
+    this.audio = new GameAudio(this.assetBase, this.settingsValue);
+    const s = this.settingsValue;
+    this.gameView = new GameView(opts.canvas, this.content, opts.overlay, { quality: s.quality, shadows: s.shadows, reducedMotion: s.reducedMotion }, this.assetBase);
+    this.gameView.onCamera = () => this.emit('camera');
+    this.view = this.makeViewApi();
+    this.creator = this.makeCreatorApi();
+    this.thumbnails = {
+      furniture: (defId) => {
+        const def = this.content.objects[defId];
+        return def ? this.gameView.objectAssets.thumbUrl(def.model.asset) : '';
+      },
+      surface: (kind, designId, paletteId) => {
+        const d = kind === 'wall' ? this.content.wallDesigns[designId] : this.content.floorDesigns[designId];
+        if (!d) return '';
+        try { return surfaceThumbnail(d, paletteId, 96); } catch { return ''; }
+      },
+    };
+    this.cleanups.push(core.onChange((w) => this.onCoreChange(w)));
+    this.cleanups.push(core.events.onAny((e) => {
+      const v = this.gameView;
+      const live = v.displayed !== null && v.displayed === core.state();
+      switch (e.type) {
+        case 'state.replaced':
+          if (isWorldMode(core.mode())) this.showCoreWorld(true);
+          this.portraitPending.clear();
+          break;
+        case 'lot.changed': if (live) v.lotChanged(e.what); break;
+        case 'item.changed': if (live) v.itemsChanged(); break;
+        case 'person.changed':
+          if (live && (e.what === 'appearance' || e.what === 'outfit' || e.what === 'all')) v.personChanged(e.personId);
+          if (e.what === 'appearance' || e.what === 'all') this.emit('portraits');
+          break;
+        case 'social': if (live) v.say(e.actorId, e.line); break;
+        default: break;
+      }
+    }));
+    const onVis = () => {
+      if (document.hidden) { void this.core.autosave().catch(() => undefined); }
+      else { this.core.resetAccumulator(); this.lastTime = performance.now(); }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    const onHide = () => { void this.core.autosave().catch(() => undefined); };
+    window.addEventListener('pagehide', onHide);
+    this.cleanups.push(() => { document.removeEventListener('visibilitychange', onVis); window.removeEventListener('pagehide', onHide); });
+    this.start();
+  }
+
+  static webgl2Available(): boolean { return hasWebGL2(); }
+
+  // ---------------------------------------------------------------------------------------------
+  // Loading and the main loop
+  // ---------------------------------------------------------------------------------------------
+
+  /** Loads models and character assets. Progress 0..1. */
+  async load(onProgress?: (p: number, label: string) => void): Promise<void> {
+    const v = this.gameView;
+    onProgress?.(0.02, 'Reading the catalogue');
+    await v.objectAssets.loadManifest();
+    const assets = new Set<string>();
+    for (const d of Object.values(this.content.objects)) if (d.status === 'ready') assets.add(d.model.asset);
+    let furn = 0, chars = 0;
+    const report = () => onProgress?.(0.05 + 0.9 * (furn * 0.5 + chars * 0.5), 'Furnishing the house');
+    const [characterAssets] = await Promise.all([
+      loadCharacterAssets(this.assetBase).then((a) => { chars = 1; report(); return a; }),
+      v.objectAssets.preload(assets, (d, t) => { furn = d / t; report(); }),
+    ]);
+    const sample = this.core.premadeHouseholds()[0]?.members[0];
+    const anchors = sample
+      ? measurePostureAnchors(characterAssets, this.content, sample.appearance, outfitFor(sample, 'everyday'))
+      : undefined;
+    v.setCharacterAssets(characterAssets, anchors ?? v.anchors);
+    this.loaded = true;
+    onProgress?.(1, 'Ready');
+  }
+
+  get isLoaded(): boolean { return this.loaded; }
+
+  private start(): void {
+    if (this.running) return;
+    this.running = true;
+    this.lastTime = performance.now();
+    const frame = (now: number) => {
+      this.raf = requestAnimationFrame(frame);
+      if (document.hidden) { this.lastTime = now; return; }
+      const dt = Math.max(0, Math.min(0.25, (now - this.lastTime) / 1000));
+      this.lastTime = now;
+      this.step(dt);
+    };
+    this.raf = requestAnimationFrame(frame);
+  }
+
+  /** One frame: simulation (fixed ticks), then rendering with interpolation. Exposed for tests. */
+  step(dt: number): void {
+    const t0 = performance.now();
+    let alpha = 1;
+    try {
+      const r = this.core.update(dt);
+      alpha = r.alpha;
+      if (r.ticks > 0) this.gameView.onTicks();
+    } catch (e) {
+      console.error('[game] simulation error', e);
+    }
+    try {
+      this.gameView.render(this.core.mode(), dt, alpha);
+    } catch (e) {
+      console.error('[game] render error', e);
+    }
+    const ms = performance.now() - t0;
+    if (dt > 0) this.fps += (1 / dt - this.fps) * 0.1;
+    this.frameMs += (ms - this.frameMs) * 0.1;
+  }
+
+  /** Runs simulation ticks right now (tests, developer tools) and lets the view follow. */
+  advanceTicks(n: number): void {
+    this.core.advanceTicks(n);
+    this.gameView.onTicks();
+  }
+
+  destroy(): void {
+    cancelAnimationFrame(this.raf);
+    this.running = false;
+    for (const fn of this.cleanups.splice(0)) fn();
+    this.audio.dispose();
+    this.gameView.dispose();
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Change notifications
+  // ---------------------------------------------------------------------------------------------
+
+  onChange(fn: (what: UiChange) => void): () => void {
+    this.listeners.add(fn);
+    return () => { this.listeners.delete(fn); };
+  }
+
+  private emit(what: UiChange): void { for (const fn of [...this.listeners]) fn(what); }
+
+  private onCoreChange(what: UiChange): void {
+    const v = this.gameView;
+    switch (what) {
+      case 'mode': this.onModeChanged(); break;
+      case 'selection':
+        v.setSelected(this.core.selected());
+        v.setObjectHighlight(this.core.mode() === 'buy' ? this.core.selectedObject() : null);
+        break;
+      case 'placement': v.setPlacement(this.core.placement()); break;
+      case 'paint': this.refreshPaintPreview(); break;
+      default: break;
+    }
+    this.emit(what);
+  }
+
+  private onModeChanged(): void {
+    const m = this.core.mode();
+    const v = this.gameView;
+    if (m !== 'creator') v.creatorScene?.hide();
+    if (m === 'menu') {
+      v.setWorld(this.demoWorld());
+      v.setCutaway('cutaway');
+      v.setOrbit(true);
+      v.rig.setYawStep(0);
+      v.frameLot(true);
+    } else if (isWorldMode(m)) {
+      v.setOrbit(false);
+      this.showCoreWorld(false);
+    }
+    v.setObjectHighlight(m === 'buy' ? this.core.selectedObject() : null);
+    if (m !== 'buy') v.setPlacement(null);
+    if (m !== 'build') { this.lastPreview = null; v.setPaintPreview(null, null, true); }
+  }
+
+  /** Shows the core's world; frames the house when the world is new to the view. */
+  private showCoreWorld(force: boolean): void {
+    const v = this.gameView;
+    const st = this.core.state();
+    v.setWorld(st, force);
+    v.setSelected(this.core.selected());
+    if (st && this.framedWorld !== st) {
+      this.framedWorld = st;
+      v.rig.setYawStep(0);
+      v.frameLot(true);
+      const sel = this.core.selected();
+      const p = sel ? v.personPosition(sel) : null;
+      if (p) v.rig.glideTo(p.x, p.z, Math.max(v.rig.ppm, 52), 0);
+    }
+  }
+
+  private refreshPaintPreview(): void {
+    const tool = this.core.paintTool();
+    const h = this.core.paintPreviewTarget();
+    const finish = tool && tool.kind !== 'eyedropper' ? tool.finish : null;
+    this.gameView.setPaintPreview(h, finish, this.lastPreview?.ok ?? true);
+  }
+
+  /** A throwaway furnished starter house for the main-menu backdrop (never saved). */
+  private demoWorld(): WorldState | null {
+    if (this.demo) return this.demo;
+    try {
+      const household = this.core.premadeHouseholds()[0];
+      if (!household) return null;
+      const w = createNewWorld(this.content, { seed: 20261031, mode: 'guided', household, neighbor: NEIGHBOR_HOUSEHOLD(this.content) });
+      w.clock.minutes = 16 * 60 + 40; // warm late afternoon
+      const lot = w.lots[w.activeLotId]!;
+      const members = w.households[w.activeHouseholdId]?.memberIds ?? [];
+      const spots: Array<{ defId: string; slot: number; anim: string; posture: 'seated' | 'standing' }> = [
+        { defId: 'sofa-tweed', slot: 0, anim: 'sitIdle', posture: 'seated' },
+        { defId: 'chair-dining-oak', slot: 0, anim: 'sitTalk', posture: 'seated' },
+        { defId: 'armchair-lounge', slot: 0, anim: 'sitIdle', posture: 'seated' },
+      ];
+      members.forEach((id, i) => {
+        const p = w.people[id];
+        const spot = spots[i];
+        if (!p || !spot) return;
+        const obj = Object.values(lot.objects).find((o) => o.defId === spot.defId);
+        const def = obj ? this.content.objects[obj.defId] : undefined;
+        const s = obj && def ? resolveSlots(lot, obj, def)[spot.slot] : undefined;
+        if (!s) return;
+        p.location = { kind: 'lot', lotId: lot.id, level: 0, x: s.x, z: s.z, facing: s.facing, posture: spot.posture };
+        p.anim = { id: spot.anim, since: 0, loop: true };
+      });
+      this.demo = w;
+    } catch (e) {
+      console.warn('[game] menu backdrop unavailable', e);
+      this.demo = null;
+    }
+    return this.demo;
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // State and flow
+  // ---------------------------------------------------------------------------------------------
+
+  state(): WorldState | null { return this.core.state(); }
+  mode(): GameMode { return this.core.mode(); }
+
+  showMenu(): void {
+    if (this.core.mode() === 'menu') { this.onModeChanged(); return; }
+    this.core.setMode('menu');
+  }
+
+  startNewGame(mode: StartMode, draft: HouseholdDraft): Promise<Result> {
+    try {
+      return Promise.resolve(this.core.startNewGame(mode, draft));
+    } catch (e) {
+      return Promise.resolve({ ok: false, reason: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  premadeHouseholds(): HouseholdDraft[] { return this.core.premadeHouseholds(); }
+
+  // ---- creator preview ----
+
+  private makeCreatorApi(): GameAPI['creator'] {
+    return {
+      show: (person: PersonDraft, opts: CreatorPreviewOptions) => {
+        const scene = this.gameView.creatorScene;
+        if (this.core.mode() !== 'creator') {
+          const m = this.core.mode();
+          this.creatorReturn = m === 'creator' || m === 'boot' ? 'menu' : m;
+          this.core.setMode('creator');
+          scene?.setView('front');
+        }
+        try { scene?.show(person, opts); } catch (e) { console.warn('[game] creator preview failed', e); }
+        this.emit('creator');
+      },
+      setView: (view) => { this.gameView.creatorScene?.setView(view); this.emit('creator'); },
+      rotate: (d) => this.gameView.creatorScene?.rotate(d),
+      zoom: (f) => this.gameView.creatorScene?.zoom(f),
+      hide: () => {
+        this.gameView.creatorScene?.hide();
+        if (this.core.mode() !== 'creator') return;
+        let back = this.creatorReturn;
+        if (isWorldMode(back) && !this.core.state()) back = 'menu';
+        this.core.setMode(back);
+        this.emit('creator');
+      },
+      portrait: (person: PersonDraft) => {
+        const pr = this.gameView.portraitRenderer;
+        if (!pr) return Promise.resolve('');
+        return pr.request(person.appearance, outfitFor(person, 'everyday'));
+      },
+    };
+  }
+
+  // ---- saves ----
+
+  listSaves(): Promise<SaveSlotInfo[]> { return this.core.listSaves(); }
+  latestSave(): Promise<SaveSlotInfo | null> { return this.core.latestSave(); }
+  saveTo(slotId: string, name: string): Promise<Result> { return this.core.saveTo(slotId, name); }
+  loadFrom(slotId: string): Promise<Result & { report?: string[] }> { return this.core.loadFrom(slotId); }
+  deleteSave(slotId: string): Promise<Result> { return this.core.deleteSave(slotId); }
+  exportWorld(): string | null { return this.core.exportWorld(); }
+  importWorld(json: string): Promise<Result & { report?: string[] }> { return this.core.importWorld(json); }
+
+  // ---- time ----
+
+  speed(): Speed { return this.core.speed(); }
+  setSpeed(s: Speed): void { this.core.setSpeed(s); }
+  togglePause(): void { this.core.togglePause(); }
+
+  // ---- live mode ----
+
+  selected(): Id | null { return this.core.selected(); }
+  select(personId: Id | null): void { this.core.select(personId); }
+  options(personId: Id, pick: PickResult): MenuOption[] { return this.core.options(personId, pick); }
+  queue(personId: Id, option: MenuOption): Result { return this.core.queue(personId, option); }
+  goTo(personId: Id, tile: Tile): Result { return this.core.goTo(personId, tile); }
+  cancel(personId: Id, actionId: Id): void { this.core.cancel(personId, actionId); }
+  reorder(personId: Id, actionId: Id, toIndex: number): void { this.core.reorder(personId, actionId, toIndex); }
+  mood(personId: Id): { value: number; label: string; reasons: string[] } { return this.core.mood(personId); }
+  updateWardrobe(personId: Id, wardrobe: Wardrobe): Result { return this.core.updateWardrobe(personId, wardrobe); }
+
+  setMode(m: 'live' | 'buy' | 'build'): void { this.core.setMode(m); }
+
+  // ---- buy ----
+
+  startPlacement(defId: string): Result { return this.core.startPlacement(defId); }
+  startMove(objectId: Id): Result { return this.core.startMove(objectId); }
+  startPlaceFromInventory(index: number): Result { return this.core.startPlaceFromInventory(index); }
+  placement(): PlacementState | null { return this.core.placement(); }
+
+  placementAt(screenX: number, screenY: number): void {
+    const p = this.core.placement();
+    if (!p) return;
+    const tile = this.gameView.tileAt(screenX, screenY);
+    if (!tile) return;
+    const def = this.content.objects[p.defId];
+    const size = def ? rotatedSize(def.footprint, p.rot) : { w: 1, d: 1 };
+    this.core.placementTile(tile.x - Math.floor((size.w - 1) / 2), tile.z - Math.floor((size.d - 1) / 2));
+  }
+
+  rotatePlacement(dir?: 1 | -1): void { this.core.rotatePlacement(dir); }
+  confirmPlacement(): Result & { objectId?: Id } { return this.core.confirmPlacement(); }
+  cancelPlacement(): void { this.core.cancelPlacement(); }
+  sell(objectId: Id): Result { return this.core.sell(objectId); }
+  saleValue(objectId: Id): Cents { return this.core.saleValue(objectId); }
+  store(objectId: Id): Result { return this.core.store(objectId); }
+  setObjectFinish(objectId: Id, regionId: string, swatchId: string): Result { return this.core.setObjectFinish(objectId, regionId, swatchId); }
+  selectObject(objectId: Id | null): void { this.core.selectObject(objectId); }
+  selectedObject(): Id | null { return this.core.selectedObject(); }
+
+  // ---- build ----
+
+  setPaintTool(tool: PaintTool | null): void { this.lastPreview = null; this.core.setPaintTool(tool); }
+  paintTool(): PaintTool | null { return this.core.paintTool(); }
+
+  paintPreview(pick: PickResult | null): PaintPreview | null {
+    const r = this.core.paintPreview(pick);
+    const changed = (r?.ok ?? true) !== (this.lastPreview?.ok ?? true);
+    this.lastPreview = r;
+    if (changed) this.refreshPaintPreview();
+    return r;
+  }
+
+  /** The most recent paintPreview result (the build panel shows its cost and reason). */
+  lastPaintPreview(): PaintPreview | null { return this.lastPreview; }
+
+  paintApply(pick: PickResult): Result { const r = this.core.paintApply(pick); if (r.ok) this.lastPreview = null; return r; }
+  eyedrop(pick: PickResult): FinishRef | null { return this.core.eyedrop(pick); }
+  recentFinishes(kind: 'wall' | 'floor'): FinishRef[] { return this.core.recentFinishes(kind); }
+  undo(): string | null { return this.core.undo(); }
+  redo(): string | null { return this.core.redo(); }
+  canUndo(): boolean { return this.core.canUndo(); }
+  canRedo(): boolean { return this.core.canRedo(); }
+
+  // ---- camera and view ----
+
+  private makeViewApi(): GameAPI['view'] {
+    const v = () => this.gameView;
+    return {
+      pick: (x, y) => v().pick(x, y, this.core.mode()),
+      pan: (dx, dy) => { v().rig.pan(dx, dy); this.emit('camera'); },
+      zoomAt: (f, x, y) => { v().rig.zoomAt(f, x, y); this.emit('camera'); },
+      rotate: (dir) => { v().rig.rotate(dir === -1 ? -1 : 1); this.emit('camera'); },
+      cutaway: () => v().getCutaway(),
+      setCutaway: (m: CutawayMode) => {
+        if (m !== 'up' && m !== 'cutaway' && m !== 'down') return;
+        v().setCutaway(m);
+        this.emit('camera');
+      },
+      focusPerson: (id) => {
+        const p = v().personPosition(id);
+        if (p) v().focusOn(p.x, p.z, true);
+        this.emit('camera');
+      },
+      worldToScreen: (x, y, z) => v().worldToScreen(x, y, z),
+      anchorOf: (pick) => v().anchorOf(pick),
+      setInsets: (i) => v().setInsets(i),
+    };
+  }
+
+  // ---- portraits ----
+
+  portrait(personId: Id): string | null {
+    const p = this.core.state()?.people[personId];
+    const pr = this.gameView.portraitRenderer;
+    if (!p || !pr) return null;
+    const outfit = outfitFor(p, 'everyday');
+    const key = portraitKey(p.appearance, outfit);
+    const hit = pr.cached(key);
+    if (hit) return hit;
+    if (!this.portraitPending.has(key)) {
+      this.portraitPending.add(key);
+      void pr.request(p.appearance, outfit).then((url) => {
+        this.portraitPending.delete(key);
+        if (url) this.emit('portraits');
+      });
+    }
+    return null;
+  }
+
+  // ---- settings, sound, diagnostics ----
+
+  settings(): GameSettings { return { ...this.settingsValue }; }
+
+  setSettings(patch: Partial<GameSettings>): void {
+    const next = mergeSettings(this.settingsValue, patch);
+    if (JSON.stringify(next) === JSON.stringify(this.settingsValue)) return;
+    this.settingsValue = next;
+    saveSettings(next);
+    applyDocumentSettings(next);
+    this.audio.setSettings(next);
+    this.gameView.applyOptions({ quality: next.quality, shadows: next.shadows, reducedMotion: next.reducedMotion });
+    this.emit('settings');
+  }
+
+  setSimSettings(patch: Partial<SimSettings>): void { this.core.setSimSettings(patch); }
+
+  sound(id: SoundId): void {
+    try { this.audio.unlock(); this.audio.play(id); } catch { /* audio is optional */ }
+  }
+
+  devStats(): DevStats {
+    const r = this.gameView.stats();
+    const c = this.core.devStats();
+    return {
+      fps: Math.round(this.fps * 10) / 10,
+      frameMs: Math.round(this.frameMs * 100) / 100,
+      drawCalls: r.drawCalls,
+      triangles: r.triangles,
+      geometries: r.geometries,
+      textures: r.textures,
+      loadedAssets: this.gameView.objectAssets.loadedCount + (this.gameView.characterAssets ? 4 : 0),
+      agents: c.agents,
+      routeRequests: c.routeRequests,
+      simTickMs: c.simTickMs,
+      ticksPerFrame: c.ticksPerFrame,
+    };
+  }
+}
+

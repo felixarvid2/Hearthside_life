@@ -158,7 +158,7 @@ if (vInfo.x > 4.5) {
     float ll = 0.0064 * (1.0 + 0.35 * uMouth.y);
     float yTop = my + ul * pow(inside, 0.65) * (1.0 - 0.32 * exp(-u * u / 0.03));
     float yBot = my - ll * pow(inside, 0.6);
-    float yLine = my + 0.0005 * u * u;
+    float yLine = my + 0.0011 * u * u;
     float soft = max(aa, 0.0006);
     float lipM = smoothstep(yBot - soft, yBot + soft, fp.y) * (1.0 - smoothstep(yTop - soft * 0.6, yTop + soft * 0.6, fp.y)) * step(abs(u), 1.08);
     vec3 natural = col * vec3(0.9, 0.68, 0.66);
@@ -184,7 +184,7 @@ if (vInfo.x > 4.5) {
     float eyeM = smoothstep(yLo - aa, yLo + aa, q.y) * (1.0 - smoothstep(yUp - aa, yUp + aa, q.y)) * step(abs(ue), 1.0);
     // sclera, iris, pupil, highlight
     vec2 ic = vec2(-0.0003, -0.0006);
-    float ri = 0.0068 * (1.0 + 0.13 * es);
+    float ri = 0.0075 * (1.0 + 0.13 * es);
     float d = length(q - ic);
     vec3 sclera = vec3(0.93, 0.91, 0.88) * mix(0.68, 1.0, smoothstep(hh * 0.95, hh * 0.0, q.y));
     float ang = atan(q.y - ic.y, q.x - ic.x);
@@ -360,9 +360,10 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
   }
   // ---- base colour and pattern ----
   vec3 base = diffuseColor.rgb;
-  if (panel > 4.5 && panel < 5.5) base = uAltColor;
-  if (panel > 6.5 && panel < 7.5) base = uAltColor;
-  bool patterned = !isShoe && !(panel > 6.5 && panel < 7.5);
+  bool inner = (panel > 6.5 && panel < 7.5) || panel > 8.5;
+  if (isShoe && b.y < uHem.x) base = uAltColor;
+  if (inner) base = uAltColor;
+  bool patterned = !isShoe && !inner;
   float pm = 0.0;
   if (patterned && uPattern > 0.5) {
     if (uPattern < 1.5) pm = hcBand(uv.y, 0.05, 0.5);
@@ -407,7 +408,7 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
   float rib = 0.0;
   float dNeck = neckY - b.y;
   if (torsoLike && uFlags.z > 0.5 && dNeck < 0.013 && dNeck > -0.001) rib = 1.0;
-  if (panel > 0.5 && panel < 1.5 && (uFlags.z > 0.5 || uFlags2.x > 0.5) && uHem.y - ax < (uFlags2.x > 0.5 ? 0.045 : 0.014)) rib = 1.0;
+  if ((panel > 0.5 && panel < 1.5 || panel > 8.5) && (uFlags.z > 0.5 || uFlags2.x > 0.5 || panel > 8.5) && uHem.y - ax < (uFlags2.x > 0.5 ? 0.045 : 0.014)) rib = 1.0;
   if (torsoLike && uFlags2.x > 0.5 && b.y - uHem.x < 0.045 && uHem.x > 0.0) rib = 1.0;
   if (panel > 1.5 && panel < 2.5 && uFlags2.z > 0.5 && b.y - uHem.z < 0.05) rib = 1.0;
   if ((panel < 0.5 || panel > 1.5 && panel < 3.5 || panel > 7.5) && uFlags2.w > 0.5 && uHem.w - b.y < 0.035 && uHem.w - b.y > -0.01) rib = 1.0;
@@ -474,7 +475,7 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
     col = mix(col, vec3(0.78, 0.66, 0.36), buckle);
   }
   // shoes: sneaker laces and toe cap, loafer strap
-  if (isShoe && panel > 5.5) {
+  if (isShoe && b.y >= uHem.x) {
     float fx = ax - uBody.w;
     if (uFlags.x > 3.5 && uFlags.x < 4.5) {
       float instep = step(0.0, b.z) * step(b.z, 0.11) * step(0.055, b.y);

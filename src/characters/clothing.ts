@@ -17,7 +17,7 @@ import type { BodyTemplate, Grid } from './template';
 import { gridNormal, legPoint } from './template';
 
 /** Panel ids stored in aCloth.w (shared with the cloth shader). */
-export const PANEL = { torso: 0, sleeve: 1, leg: 2, skirt: 3, collar: 4, sole: 5, shoe: 6, inner: 7, bib: 8 } as const;
+export const PANEL = { torso: 0, sleeve: 1, leg: 2, skirt: 3, collar: 4, sole: 5, shoe: 6, inner: 7, bib: 8, innerSleeve: 9 } as const;
 
 export const CLOTH_ATTRS = { aCloth: 4 };
 
@@ -547,7 +547,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     // inner tee (shirt colour)
     const sleeveEnd = lm.armStartX + 0.04 + num(b, 'sleeve', 0.3) * (armLen - 0.045);
     torsoPiece(m, t, { yBottom: yWaist(0.7), yTop: lm.neckBaseY + 0.04, thickness: thickness * 0.8, drape: 0.3, panel: PANEL.inner });
-    sleevePieces(m, t, sleeveEnd, thickness * 0.8, 0.5, false, PANEL.inner);
+    sleevePieces(m, t, sleeveEnd, thickness * 0.8, 0.5, false, PANEL.innerSleeve);
     // denim: pants plus bib/strap shell (masked in the shader)
     torsoPiece(m, t, { yBottom: lm.crotchY, yTop: lm.neckBaseY + 0.03, thickness: thickness * 1.5, drape: 0.3, panel: PANEL.bib });
     legPieces(m, t, yHem, thickness * 1.5, num(b, 'legLoose', 0.5), false);
@@ -569,6 +569,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     const left = newMesh();
     shoePiece(left, t, b);
     const style = str(b, 'style', 'sneaker');
+    cuts.hem[0] = num(b, 'sole', 0.02);
     if (style === 'boot') {
       const top = num(b, 'height', 0.2);
       const ss = stations(top, lm.ankleY - 0.03, 0.02);

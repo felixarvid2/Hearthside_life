@@ -143,8 +143,11 @@ export class ObjectsView {
     this.objects.delete(e.id);
   }
 
+  /** Ground height under a point (grass sits slightly below floors). */
+  groundAt: (x: number, z: number) => number = () => 0;
+
   private baseHeight(o: PlacedObject): number {
-    if (!o.supportId || !this.lot) return 0;
+    if (!o.supportId || !this.lot) return this.groundAt(o.x + 0.5, o.z + 0.5);
     const sup = this.lot.objects[o.supportId];
     const sdef = sup ? this.content.objects[sup.defId] : undefined;
     return sdef?.surfaceHeight ?? 0;
