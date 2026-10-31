@@ -9,17 +9,22 @@ import type { ActionInstance, OutfitCategory, Person, Posture } from '../core/ty
 import { OUTFIT_CATEGORIES } from '../core/types';
 import type { ObjRef, SimCtx } from './context';
 import {
-  behaviorOf, dist, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef,
+  behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef,
 } from './context';
 import { cookBehavior, eatMealBehavior } from './cooking';
 import { socialBehavior } from './social';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
-  defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
+  candidateFree, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
   clearUsePoint,
 } from './steps';
 import { goHereBehavior, goToWorkBehavior, inviteBehavior, leaveLotBehavior, phoneChatBehavior } from './travel';
-import { READ_SEAT_RADIUS, TV_SEAT_RADIUS } from './tuning';
+import {
+  READ_SEAT_RADIUS, SLEEP_NIGHT_BEDTIME, SLEEP_NIGHT_END, SLEEP_WAKE_BEFORE_SHIFT, SLEEP_WAKE_MINUTE, SLEEP_WAKE_SPREAD,
+  TV_SEAT_RADIUS,
+} from './tuning';
+import { atDayMinute, dayIndex, hourOfDay } from '../core/clock';
+import { nextShift } from './careers';
 
 // ---------------------------------------------------------------------------------------------
 // Shared helpers
@@ -190,9 +195,25 @@ function switchOutfit(ctx: SimCtx, p: Person, category: OutfitCategory, index = 
 /** Sleep: lie in a bed slot until energy is full, wearing the sleep outfit while in bed. */
 const sleepBehavior: Behavior = {
   ...restoreBehavior,
+  step(ctx, p, a) {
+    const s = primaryStep(ctx, p, a);
+    // Night sleep lasts until the morning wake time instead of stopping at full energy.
+    if (typeof s === 'string' || typeof a.data.wakeAt !== 'number') return s;
+    return { ...s, duration: { kind: 'external' } };
+  },
+  tick(ctx, p, a) {
+    if (typeof a.data.wakeAt !== 'number') return null;
+    if (ctx.now >= a.data.wakeAt || a.elapsed >= 13 * 60) return 'done';
+    // Wake early for a bursting bladder or real hunger.
+    return p.needs.bladder < 8 || p.needs.hunger < 8 ? 'done' : null;
+  },
   begin(ctx, p, a) {
     const r = chargeCost(ctx, p, a);
     if (r) return r;
+    if (a.data.wakeAt === undefined) {
+      const wake = morningWake(ctx, p);
+      if (wake !== null) a.data.wakeAt = wake;
+    }
     if (a.data.prevOutfit === undefined && (p.outfits.outfits.sleep?.length ?? 0) > 0) {
       a.data.prevOutfit = p.outfits.current.category;
       a.data.prevOutfitIndex = p.outfits.current.index;
@@ -208,14 +229,55 @@ const sleepBehavior: Behavior = {
   },
 };
 
+/**
+ * When sleep starts in the evening or at night: the next morning wake time (06:30-07:45, spread per
+ * person), earlier when a shift starts soon. Null for daytime sleep, which ends when rested.
+ */
+function morningWake(ctx: SimCtx, p: Person): number | null {
+  const h = hourOfDay(ctx.now);
+  if (!(h >= SLEEP_NIGHT_BEDTIME || h < SLEEP_NIGHT_END)) return null;
+  const day = h >= SLEEP_NIGHT_BEDTIME ? dayIndex(ctx.now) + 1 : dayIndex(ctx.now);
+  let wake = atDayMinute(day, SLEEP_WAKE_MINUTE + (hashString(p.id) % (SLEEP_WAKE_SPREAD / 15 + 1)) * 15);
+  const shift = nextShift(ctx.state, ctx.content, p, ctx.now);
+  if (shift && shift.start - SLEEP_WAKE_BEFORE_SHIFT < wake) wake = Math.max(ctx.now + 60, shift.start - SLEEP_WAKE_BEFORE_SHIFT);
+  return wake;
+}
+
+/** Seats a TV can be watched from: within 5 m and facing it. */
+function tvSeats(ctx: SimCtx, p: Person, tv: ObjRef): UseCandidate[] {
+  const c = objectCenter(tv);
+  return seatCandidates(ctx, p, (s) => dist(s.x, s.z, c.x, c.z) <= TV_SEAT_RADIUS && seatFaces(s, c));
+}
+
+/** Chairs in front of a computer. */
+function computerSeats(ctx: SimCtx, p: Person, pc: ObjRef): UseCandidate[] {
+  const c = objectCenter(pc);
+  return seatCandidates(ctx, p, (s) => dist(s.x, s.z, c.x, c.z) <= 1.6 && seatFaces(s, c, 0.3));
+}
+
+/**
+ * Whether the person could start this interaction on the object right now as far as free spots go
+ * (slots, stand tiles, seats sharing a slot's spot, and the TV/computer seat alternatives).
+ * Objects without any use point return true (the action then fails with its own reason).
+ */
+export function freeUsePointExists(ctx: SimCtx, p: Person, def: InteractionDef, objectId: string): boolean {
+  const loc = lotLoc(p);
+  const ref = loc ? objectRef(ctx, loc.lotId, objectId) : null;
+  if (!loc || !ref) return false;
+  const cands = objectCandidates(ctx, loc.lotId, objectId, def.slotKinds);
+  if (cands.some((c) => candidateFree(ctx, loc.lotId, loc.level, c))) return true;
+  const seats = def.behavior === 'watchTv' ? tvSeats(ctx, p, ref) : def.behavior === 'computer' ? computerSeats(ctx, p, ref) : [];
+  if (seats.some((c) => candidateFree(ctx, loc.lotId, loc.level, c))) return true;
+  return cands.length === 0 && seats.length === 0;
+}
+
 /** Watch TV: a free seat within 5 m facing the TV, else stand at the TV's slot. */
 const watchTvBehavior: Behavior = {
   check: interactionCheck,
   reserve(ctx, p, a) {
     const tv = targetObject(ctx, p, a);
     if (!tv) return 'It is gone.';
-    const c = objectCenter(tv);
-    const seats = seatCandidates(ctx, p, (s) => dist(s.x, s.z, c.x, c.z) <= TV_SEAT_RADIUS && seatFaces(s, c));
+    const seats = tvSeats(ctx, p, tv);
     if (seats.length > 0 && !pickUsePoint(ctx, p, a, 'seat', seats, { plan: true, what: 'seat' })) return null;
     return reservePrimary(ctx, p, a);
   },
@@ -237,8 +299,7 @@ const computerBehavior: Behavior = {
   reserve(ctx, p, a) {
     const pc = targetObject(ctx, p, a);
     if (!pc) return 'It is gone.';
-    const c = objectCenter(pc);
-    const seats = seatCandidates(ctx, p, (s) => dist(s.x, s.z, c.x, c.z) <= 1.6 && seatFaces(s, c, 0.3));
+    const seats = computerSeats(ctx, p, pc);
     if (seats.length > 0 && !pickUsePoint(ctx, p, a, 'seat', seats, { plan: true, what: 'chair' })) return null;
     return reservePrimary(ctx, p, a);
   },

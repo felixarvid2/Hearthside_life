@@ -190,6 +190,7 @@ const lab = {
     currentAnim = a;
     for (const p of people) p.play(a, posture ? { posture } : {});
   },
+  charStats(i: number): { triangles: number; drawCalls: number } { return people[i]!.stats(); },
   playOne(i: number, a: AnimId, posture?: 'standing' | 'seated' | 'lying'): void { people[i]!.play(a, posture ? { posture } : {}); },
   /** Orbit camera: yaw (rad), pitch (rad), distance (m), target xyz. */
   cam(yaw: number, pitch: number, dist: number, tx = 0, ty = 0.9, tz = 0, fov = 30): void {

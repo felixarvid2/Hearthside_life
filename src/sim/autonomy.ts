@@ -8,18 +8,17 @@ import type { InteractionDef, SocialDef } from '../content/types';
 import { hourOfDay } from '../core/clock';
 import type { ActionInstance, NeedId, Person } from '../core/types';
 import { NEED_IDS } from '../core/types';
-import { behaviorFor } from './behaviors';
+import { behaviorFor, freeUsePointExists } from './behaviors';
 import { availableMeals } from './cooking';
-import type { ObjRef, SimCtx } from './context';
+import type { SimCtx } from './context';
 import { dist, hashString, isStove, isVisitor, lotLoc, lotObjects, objectCenter } from './context';
 import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
 import { familyTie, peekRel } from './relationships';
-import { personKey, slotKey, tileResKey } from './reservations';
+import { personKey } from './reservations';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
-import { objectCandidates } from './steps';
 import {
-  AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
+  SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
 } from './tuning';
 import type { ActionRequest } from './types';
 
@@ -72,14 +71,13 @@ function cooldownMult(ctx: SimCtx, p: Person, id: string, targetKey: string): nu
 }
 
 /**
- * Night-time preference for going to bed: sleep is favoured at night and damped during the day unless
- * the person is really tired, so households settle into a day/night rhythm.
+ * Day/night rhythm for going to bed: at night (SLEEP_NIGHT_START..SLEEP_NIGHT_END) sleep is strongly
+ * favoured unless the person is nearly rested; during the day people only go to bed when really tired.
  */
 export function sleepTimeFactor(now: number, energy: number): number {
   const h = hourOfDay(now);
-  if (h >= 22 || h < 6) return 1.5;
-  if (h >= 9 && h < 19) return energy < 25 ? 1 : 0.35;
-  return 1;
+  if (h >= SLEEP_NIGHT_START || h < SLEEP_NIGHT_END) return energy < 90 ? 3 : 0;
+  return energy < SLEEP_DAY_ENERGY ? 1 : 0;
 }
 
 /** Baseline interest visitors have in sitting down, watching TV and talking (they came to socialise). */
@@ -96,15 +94,6 @@ export function interactionScore(ctx: SimCtx, p: Person, def: InteractionDef, di
   s *= biasFor(ctx, p, def.id, def.autonomy.tags);
   s /= 1 + distance / 15;
   return s * cooldownMult(ctx, p, def.id, targetKey);
-}
-
-function anyFreeUsePoint(ctx: SimCtx, lotId: string, ref: ObjRef, def: InteractionDef, actorId: string): boolean {
-  const cands = objectCandidates(ctx, lotId, ref.obj.id, def.slotKinds);
-  if (def.behavior === 'watchTv' || def.behavior === 'computer' || def.behavior === 'read') return true;
-  return cands.some((c) => {
-    const key = c.slot ? slotKey(c.objectId, c.slot.slotId) : c.tile ? tileResKey(c.tile.x, c.tile.z) : null;
-    return key !== null && ctx.res.isFree(key, actorId);
-  });
 }
 
 function householdCooking(ctx: SimCtx, p: Person): boolean {
@@ -134,7 +123,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
         const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready').reduce((m, r) => Math.min(m, r.cost), Infinity);
         if (!(cheapest <= funds)) continue;
       }
-      if (!anyFreeUsePoint(ctx, loc.lotId, ref, def, '')) continue;
+      if (!freeUsePointExists(ctx, p, def, ref.obj.id)) continue;
       const c = objectCenter(ref);
       const addresses: NeedId[] = [];
       const score = interactionScore(ctx, p, def, dist(loc.x, loc.z, c.x, c.z), ref.obj.id, addresses);
@@ -174,18 +163,19 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   return out;
 }
 
-/** The closest friend away from this lot (not at work) for a phone chat, or null. */
+/** The friendliest known person away from this lot (not at work, friendship > -10) for a phone chat, or null. */
 function phoneFriend(ctx: SimCtx, p: Person): string | null {
   const loc = lotLoc(p);
-  let best: string | null = null, bestF = 10;
+  let best: string | null = null, bestF = -Infinity;
   for (const rel of Object.values(ctx.state.relationships)) {
-    if (rel.from !== p.id || rel.familiarity <= 0 || rel.friendship < bestF) continue;
+    if (rel.from !== p.id || rel.familiarity <= 0 || rel.friendship <= -10 || rel.friendship <= bestF) continue;
     const o = ctx.state.people[rel.to];
     if (!o) continue;
     const ol = lotLoc(o);
     if (ol && loc && ol.lotId === loc.lotId) continue;
     if (o.location.kind === 'offlot' && o.location.place === 'work') continue;
-    if (rel.friendship > bestF || best === null) { best = o.id; bestF = rel.friendship; }
+    best = o.id;
+    bestF = rel.friendship;
   }
   return best;
 }

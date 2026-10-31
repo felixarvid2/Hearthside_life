@@ -3,13 +3,11 @@
 
 import { OUTFIT_CATEGORIES } from '../core/types';
 import type { ActionInstance, OutfitCategory, Person } from '../core/types';
-import { behaviorFor } from './behaviors';
+import { behaviorFor, freeUsePointExists } from './behaviors';
 import type { SimCtx } from './context';
 import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, objectRef } from './context';
 import { NEED_LABELS } from './needs';
 import { knownPeople } from './relationships';
-import { slotKey, tileResKey } from './reservations';
-import { objectCandidates } from './steps';
 import { QUEUE_MAX } from './tuning';
 import type { ActionData, ActionRequest, InteractionOption } from './types';
 
@@ -44,15 +42,7 @@ export function requestReason(ctx: SimCtx, p: Person, req: ActionRequest, transi
   const def = interactionDef(ctx, req.interactionId);
   if (!def) return null;
   if (def.duration.kind === 'untilFull' && p.needs[def.duration.need] >= 95) return `${NEED_LABELS[def.duration.need]} is already full.`;
-  const loc = lotLoc(p)!;
-  if (def.kind === 'object' && req.target.kind === 'object' && !['watchTv', 'computer'].includes(def.behavior ?? '')) {
-    const cands = objectCandidates(ctx, loc.lotId, req.target.objectId, def.slotKinds);
-    const free = cands.some((c) => {
-      const key = c.slot ? slotKey(c.objectId, c.slot.slotId) : c.tile ? tileResKey(c.tile.x, c.tile.z) : null;
-      return key !== null && ctx.res.isFree(key);
-    });
-    if (cands.length > 0 && !free) return 'Someone is using it.';
-  }
+  if (def.kind === 'object' && req.target.kind === 'object' && !freeUsePointExists(ctx, p, def, req.target.objectId)) return 'Someone is using it.';
   return null;
 }
 

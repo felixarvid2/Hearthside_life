@@ -6,7 +6,7 @@ import type { AnimId } from '../core/anim';
 import type { Tile, WorldSlot } from '../core/nav';
 import type { ActionInstance, Id, NeedId, Person, Posture } from '../core/types';
 import type { ObjRef, SimCtx } from './context';
-import { dist, findSlot, lotLoc, objectCenter, objectName, objectRef, tileOfLoc } from './context';
+import { dist, findSlot, isSeat, lotLoc, lotObjects, objectCenter, objectName, objectRef, tileOfLoc } from './context';
 import { planRoute, routeFromPath } from './movement';
 import type { UsePointPrefix } from './reservations';
 import { reservationKeys, slotKey, surfaceKey, tileResKey } from './reservations';
@@ -110,6 +110,31 @@ export function syncReservations(ctx: SimCtx, a: ActionInstance): boolean {
 }
 
 /**
+ * A sit slot of a seating object occupying the same spot as `slot` (for example a computer's use slot that
+ * the world resolves onto the desk chair in front of it). Using either one occupies the seat.
+ */
+export function coincidentSeat(ctx: SimCtx, lotId: Id, level: number, slot: WorldSlot): UseCandidate | null {
+  for (const ref of lotObjects(ctx, lotId, level)) {
+    if (ref.obj.id === slot.objectId || !isSeat(ref.def)) continue;
+    for (const s of ctx.nav.slotsOf(lotId, ref.obj.id)) {
+      if (s.kind === 'sit' && Math.abs(s.x - slot.x) < 0.05 && Math.abs(s.z - slot.z) < 0.05) return { objectId: ref.obj.id, slot: s };
+    }
+  }
+  return null;
+}
+
+/** True when a candidate use point, and any seat sharing its spot, is free for `actionId`. */
+export function candidateFree(ctx: SimCtx, lotId: Id, level: number, c: UseCandidate, actionId?: Id): boolean {
+  const key = c.slot ? slotKey(c.objectId, c.slot.slotId) : c.tile ? tileResKey(c.tile.x, c.tile.z) : null;
+  if (!key || !ctx.res.isFree(key, actionId)) return false;
+  if (c.slot && c.slot.kind !== 'sit') {
+    const seat = coincidentSeat(ctx, lotId, level, c.slot);
+    if (seat?.slot && !ctx.res.isFree(slotKey(seat.objectId, seat.slot.slotId), actionId)) return false;
+  }
+  return true;
+}
+
+/**
  * Picks the first free and (optionally) reachable candidate, ordered by distance from `from`.
  * Stores it under `prefix` in the action's data and, when `plan` is set, stores the route.
  * Returns null on success or a readable reason.
@@ -130,8 +155,7 @@ export function pickUsePoint(
     .sort((x, y) => x.d - y.d || x.i - y.i);
   let sawFree = false;
   for (const { c } of scored) {
-    const key = c.slot ? slotKey(c.objectId, c.slot.slotId) : c.tile ? tileResKey(c.tile.x, c.tile.z) : null;
-    if (!key || !ctx.res.isFree(key, a.id)) continue;
+    if (!candidateFree(ctx, loc.lotId, loc.level, c, a.id)) continue;
     if (prefix === 'surf' && !ctx.res.isFree(surfaceKey(c.objectId), a.id)) continue;
     sawFree = true;
     if (opts.plan) {
@@ -143,6 +167,11 @@ export function pickUsePoint(
       a.route = routeFromPath(loc, cur, path);
     }
     setUsePoint(a, prefix, c);
+    // A use slot that sits on a seat (e.g. the chair in front of a computer) also holds that seat.
+    if (prefix !== 'seat' && c.slot && c.slot.kind !== 'sit' && !hasUsePoint(a, 'seat')) {
+      const seat = coincidentSeat(ctx, loc.lotId, loc.level, c.slot);
+      if (seat) setUsePoint(a, 'seat', seat);
+    }
     return null;
   }
   if (candidates.length === 0) return `Nowhere to use the ${opts.what}.`;

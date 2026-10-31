@@ -46,6 +46,18 @@ export const AUTONOMY_MIN_SCORE: Readonly<Record<0 | 1 | 2, number>> = { 0: 1.2,
 /** Autonomy: default repetition cooldown after an autonomous action completes (minutes). */
 export const AUTONOMY_REPEAT_COOLDOWN = 45;
 
+/** Sleep rhythm: night hours in which going to bed is favoured, the daytime energy below which people
+ *  still go to bed, and the morning wake window (minute of day, plus up to SLEEP_WAKE_SPREAD per person). */
+export const SLEEP_NIGHT_START = 21;
+export const SLEEP_NIGHT_END = 6;
+export const SLEEP_DAY_ENERGY = 35;
+export const SLEEP_WAKE_MINUTE = 6 * 60 + 30;
+export const SLEEP_WAKE_SPREAD = 75;
+/** Sleep that starts at or after this hour (or before SLEEP_NIGHT_END) lasts until the morning wake time. */
+export const SLEEP_NIGHT_BEDTIME = 19;
+/** Wake up this many minutes before a shift starts. */
+export const SLEEP_WAKE_BEFORE_SHIFT = 90;
+
 /** Social: acceptance is clamped to this band so nothing is ever certain. */
 export const SOCIAL_ACCEPT_MIN = 0.03;
 export const SOCIAL_ACCEPT_MAX = 0.97;
