@@ -119,8 +119,9 @@ export class CameraRig {
     const s = Math.sin(this.yaw), c = Math.cos(this.yaw);
     // screen right in world: (c, 0, -s); screen up on the ground: away from the camera (-s, 0, -c) scaled by 1/sin(pitch)
     const mx = dx / this.ppm, my = dy / this.ppm / Math.sin(PITCH);
-    this.target.x -= c * mx - s * my;
-    this.target.z -= -s * mx - c * my;
+    // content follows the pointer: the target moves against screen-right and toward screen-up
+    this.target.x += -c * mx - s * my;
+    this.target.z += s * mx - c * my;
     this.clampTarget();
     this.dirty = true;
   }

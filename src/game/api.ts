@@ -206,6 +206,9 @@ export interface GameAPI {
   canRedo(): boolean;
 
   // ---- camera and view ----
+  // All screen coordinates are canvas-relative CSS pixels. pan(dx, dy) receives the pointer movement and the
+  // content follows the finger (keyboard "pan right" sends a negative dx). zoomAt(factor > 1) zooms in around
+  // the given point. mood().value ranges about -100..100; reasons carry signed numbers, e.g. "Lonely (-12)".
   view: {
     pick(screenX: number, screenY: number): PickResult;
     pan(dxPixels: number, dyPixels: number): void;

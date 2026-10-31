@@ -7,7 +7,7 @@ import { NEED_IDS } from '../core/types';
 import type { SimCtx } from './context';
 import { clamp, householdOf, lotLoc, setThought } from './context';
 import {
-  NEED_CRITICAL, NEED_DECAY_PER_HOUR, NEED_LOW, OFFLOT_DECAY_MULT, OFFLOT_HOME_DRIFT_PER_HOUR, OFFLOT_HOME_NEED_TARGET,
+  LYING_FUN_SOCIAL_DECAY, NEED_CRITICAL, NEED_DECAY_PER_HOUR, NEED_LOW, OFFLOT_DECAY_MULT, OFFLOT_HOME_DRIFT_PER_HOUR, OFFLOT_HOME_NEED_TARGET,
 } from './tuning';
 
 /** Player-facing need names. */
@@ -52,7 +52,8 @@ export function decayNeeds(ctx: SimCtx, p: Person): void {
   const lying = loc.kind === 'lot' && loc.posture === 'lying';
   for (const n of NEED_IDS) {
     if (n === 'energy' && lying) continue;
-    const rate = (NEED_DECAY_PER_HOUR[n] / 60) * TICK_MINUTES * mult * traitDecayMult(ctx, p, n);
+    const posture = lying && (n === 'fun' || n === 'social') ? LYING_FUN_SOCIAL_DECAY : 1;
+    const rate = (NEED_DECAY_PER_HOUR[n] / 60) * TICK_MINUTES * mult * posture * traitDecayMult(ctx, p, n);
     changeNeed(ctx, p, n, -rate);
   }
 }

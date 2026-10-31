@@ -65,6 +65,10 @@ export const SOCIAL_ACCEPT_MAX = 0.97;
 export const SOCIAL_SPAM_PENALTY = 0.15;
 /** Social: one recent use is forgotten per this many game minutes. */
 export const SOCIAL_RECENT_DECAY_MINUTES = 60;
+/** Social autonomy approaches someone busy with an activity only when the actor's social is below this. */
+export const SOCIAL_INTERRUPT_BELOW = 30;
+/** Fun and social decay at this fraction while lying down (people do not get bored or lonely asleep). */
+export const LYING_FUN_SOCIAL_DECAY = 0.25;
 /** Social: how long the actor waits next to a busy target before giving up (minutes). */
 export const SOCIAL_WAIT_MINUTES = 6;
 

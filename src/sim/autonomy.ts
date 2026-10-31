@@ -18,7 +18,7 @@ import { familyTie, peekRel } from './relationships';
 import { personKey } from './reservations';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
-  SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
+  SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
 } from './tuning';
 import type { ActionRequest } from './types';
 
@@ -208,8 +208,12 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     if (other.id === p.id) continue;
     const ol = lotLoc(other);
     if (!ol || ol.lotId !== loc.lotId || ol.level !== loc.level) continue;
-    // Autonomous chats only approach people who are free; interrupting an activity is left to the player.
-    if (other.queue.length > 0 || personAvailable(ctx, other, p) !== null) continue;
+    if (personAvailable(ctx, other, p) !== null) continue;
+    // Interrupting someone's activity has a cost: only when lonely or when a visitor is involved, and only
+    // if the other person does not already feel socially fulfilled.
+    const busy = other.queue.length > 0;
+    if (busy && !(p.needs.social < SOCIAL_INTERRUPT_BELOW || isVisitor(ctx, p) || isVisitor(ctx, other))) continue;
+    if (busy && other.needs.social > 80) continue;
     let pick: SocialDef | null = null, pickW = 0;
     for (const def of Object.values(ctx.content.socials)) {
       if (!def.autonomy.enabled || def.status !== 'ready') continue;
@@ -219,7 +223,7 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     }
     if (!pick) continue;
     const rel = peekRel(ctx.state, p.id, other.id);
-    const score = base * Math.min(2, pickW) * (1 + rel.friendship / 200) * biasFor(ctx, p, pick.id, ['social', pick.category])
+    const score = (busy ? 0.5 : 1) * base * Math.min(2, pickW) * (1 + rel.friendship / 200) * biasFor(ctx, p, pick.id, ['social', pick.category])
       / (1 + dist(loc.x, loc.z, ol.x, ol.z) / 15);
     if (!best || score > best.score) {
       best = { req: { interactionId: pick.id, target: { kind: 'person', personId: other.id } }, score, key: `${pick.id}@${other.id}`, addresses: [...addresses] };
