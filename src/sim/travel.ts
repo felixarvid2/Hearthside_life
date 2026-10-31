@@ -7,12 +7,12 @@ import type { ActionInstance, Person } from '../core/types';
 import { abortQueue } from './actions';
 import { commutableShift, nextShift, shiftText, startShift } from './careers';
 import type { SimCtx } from './context';
-import { interactionDef, lotLoc, setAnim, tileOfLoc } from './context';
+import { clamp, interactionDef, lotLoc, setAnim, tileOfLoc } from './context';
 import { addMoodlet } from './mood';
-import { applyRelDelta, peekRel } from './relationships';
+import { applyRelDelta, decayRecent, ensureRel, peekRel } from './relationships';
 import type { Behavior, Step } from './steps';
 import { defDuration, performRates } from './steps';
-import { INVITE_DELAY_MINUTES } from './tuning';
+import { INVITE_DELAY_MINUTES, PHONE_FRIENDSHIP_CAP, SOCIAL_RECENT_DECAY_MINUTES } from './tuning';
 import { isVisitPending, scheduleVisit } from './visitors';
 
 /** A walkable tile a few steps from the lot entry toward the lot centre (for arrivals). */
@@ -170,8 +170,16 @@ export const phoneChatBehavior: Behavior = {
   apply(ctx, p, a) {
     const other = phoneTarget(ctx, a);
     if (!other) return;
-    applyRelDelta(ctx.state, p.id, other.id, { familiarity: 1, friendship: 2 }, ctx.now);
-    applyRelDelta(ctx.state, other.id, p.id, { familiarity: 1, friendship: 2 }, ctx.now);
+    // Diminishing returns: repeated calls in a short time count less (like socials' recent-use dampening)
+    // and phone calls alone cannot build a friendship beyond PHONE_FRIENDSHIP_CAP.
+    const rel = ensureRel(ctx.state, p.id, other.id);
+    decayRecent(rel, ctx.now, SOCIAL_RECENT_DECAY_MINUTES);
+    const recent = rel.recent.phoneChat ?? 0;
+    const gain = (base: number) => 2 * clamp((PHONE_FRIENDSHIP_CAP - base) / PHONE_FRIENDSHIP_CAP, 0, 1) / (1 + recent);
+    const back = peekRel(ctx.state, other.id, p.id);
+    applyRelDelta(ctx.state, p.id, other.id, { familiarity: 1, friendship: gain(rel.friendship) }, ctx.now);
+    applyRelDelta(ctx.state, other.id, p.id, { familiarity: 1, friendship: gain(back.friendship) }, ctx.now);
+    rel.recent.phoneChat = recent + 1;
     other.needs.social = Math.min(100, other.needs.social + 10);
     ctx.events.emit({ type: 'relationship', fromId: p.id, toId: other.id, what: 'value' });
     const greatChat = ctx.content.moodlets.greatChat ? 'greatChat' : null;

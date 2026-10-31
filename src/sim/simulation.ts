@@ -24,9 +24,8 @@ import { unstick } from './movement';
 import { decayNeeds } from './needs';
 import { optionsFor, requestReason } from './options';
 import { insertAction, isStarted, makeAction } from './queue';
-import { RESERVING_PHASES, Reservations } from './reservations';
+import { RESERVING_PHASES, Reservations, reservationKeys } from './reservations';
 import { recentUses } from './social';
-import { syncReservations } from './steps';
 import { dailyDropIn, ensureDepartures, ensureFirstVisit, processSchedule } from './visitors';
 import type { ActionRequest, InteractionOption, QueueResult } from './types';
 
@@ -246,18 +245,13 @@ export class Simulation {
         if (p.queue.length > 0) abortQueue(ctx, p, null);
         continue;
       }
+      // Only re-acquire what each action held (a pure function of its data). Actions whose target vanished
+      // fail inside the next tick exactly as they would have in an uninterrupted run, so a save/load never
+      // changes outcomes. Item portions are not re-checked: holders of a spoiled meal keep their claim
+      // until their own step fails. Only a genuine conflict (an edited save) ends an action here.
       for (const a of [...p.queue]) {
-        if (!p.queue.includes(a)) continue;
-        if (a.data.role === 'listen') {
-          const actor = a.target.kind === 'person' ? state.people[a.target.personId] : undefined;
-          if (!actor || actor.queue[0]?.id !== a.data.with) endAction(ctx, p, a, 'done', null);
-          continue;
-        }
-        if (!RESERVING_PHASES.has(a.phase)) continue;
-        const beh = behaviorFor(ctx, a);
-        const step = beh ? beh.step(ctx, p, a) : 'That interaction is not available.';
-        if (typeof step === 'string') { this.endCleanly(ctx, p.id, a, step); continue; }
-        if (!syncReservations(ctx, a)) this.endCleanly(ctx, p.id, a, 'Someone else is using it.');
+        if (!p.queue.includes(a) || a.data.role === 'listen' || !RESERVING_PHASES.has(a.phase)) continue;
+        if (!this.res.acquire(a.id, reservationKeys(a), () => Infinity)) this.endCleanly(ctx, p.id, a, 'Someone else is using it.');
       }
     }
   }

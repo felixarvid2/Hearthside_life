@@ -42,7 +42,8 @@ export function chooseRecipe(ctx: SimCtx, p: Person, a: ActionInstance): RecipeD
   const list = cookableRecipes(ctx, p);
   if (list.length === 0) return 'No recipes known.';
   const funds = ctx.state.households[p.householdId]?.funds ?? 0;
-  return list.find((r) => r.cost <= funds) ?? list[list.length - 1]!;
+  // Nothing affordable: report the cheapest recipe so the reason names the smallest amount needed.
+  return list.find((r) => r.cost <= funds) ?? [...list].sort((x, y) => x.cost - y.cost || (x.id < y.id ? -1 : 1))[0]!;
 }
 
 function stovesOn(ctx: SimCtx, p: Person): ObjRef[] {
@@ -195,6 +196,13 @@ export const cookBehavior: Behavior = {
       return true;
     }
     return false;
+  },
+  end(ctx, p, a, result) {
+    // Cooking finished (paid for) but serving was cancelled or failed: the food is not lost, it is put down
+    // on the chosen counter when it still exists, else at the cook's feet.
+    if (result === 'done' || a.data.charged !== true || stageOf(a) !== 2 || typeof a.data.itemId === 'string' || !lotLoc(p)) return;
+    const surf = usePointObject(ctx, p, a, 'surf');
+    serveMeal(ctx, p, a, surf && freeSurfaceTiles(ctx, lotLoc(p)!.lotId, surf).length > 0 ? surf : null);
   },
   apply(ctx, p, a) {
     if (typeof a.data.itemId !== 'string') serveMeal(ctx, p, a, usePointObject(ctx, p, a, 'surf'));

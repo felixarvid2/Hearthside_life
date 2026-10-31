@@ -51,8 +51,8 @@ export const AUTONOMY_REPEAT_COOLDOWN = 45;
 export const SLEEP_NIGHT_START = 21;
 export const SLEEP_NIGHT_END = 6;
 export const SLEEP_DAY_ENERGY = 35;
-export const SLEEP_WAKE_MINUTE = 6 * 60 + 30;
-export const SLEEP_WAKE_SPREAD = 75;
+export const SLEEP_WAKE_MINUTE = 6 * 60;
+export const SLEEP_WAKE_SPREAD = 45;
 /** Sleep that starts at or after this hour (or before SLEEP_NIGHT_END) lasts until the morning wake time. */
 export const SLEEP_NIGHT_BEDTIME = 19;
 /** Wake up this many minutes before a shift starts. */
@@ -67,6 +67,9 @@ export const SOCIAL_SPAM_PENALTY = 0.15;
 export const SOCIAL_RECENT_DECAY_MINUTES = 60;
 /** Social: how long the actor waits next to a busy target before giving up (minutes). */
 export const SOCIAL_WAIT_MINUTES = 6;
+
+/** Phone chats raise friendship with diminishing returns and never beyond this value. */
+export const PHONE_FRIENDSHIP_CAP = 50;
 
 /** Careers: goToWork is queued automatically this many minutes before the shift starts. */
 export const COMMUTE_LEAD_MINUTES = 45;

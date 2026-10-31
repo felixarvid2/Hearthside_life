@@ -208,7 +208,8 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     if (other.id === p.id) continue;
     const ol = lotLoc(other);
     if (!ol || ol.lotId !== loc.lotId || ol.level !== loc.level) continue;
-    if (personAvailable(ctx, other, p) !== null) continue;
+    // Autonomous chats only approach people who are free; interrupting an activity is left to the player.
+    if (other.queue.length > 0 || personAvailable(ctx, other, p) !== null) continue;
     let pick: SocialDef | null = null, pickW = 0;
     for (const def of Object.values(ctx.content.socials)) {
       if (!def.autonomy.enabled || def.status !== 'ready') continue;

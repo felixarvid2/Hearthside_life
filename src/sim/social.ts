@@ -250,7 +250,7 @@ export const socialBehavior: Behavior = {
     if (a.data.role === 'listen') return;
     const t = partnerOf(ctx, a);
     const def = socialDef(ctx, a.interactionId);
-    if (t && def) resolveSocial(ctx, p, t, def);
+    if (t && def) a.data.accepted = resolveSocial(ctx, p, t, def);
     endListener(ctx, a);
   },
   end(ctx, _p, a) {

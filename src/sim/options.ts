@@ -118,7 +118,7 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
   if (p.career && !defs.some((d) => d.behavior === 'goToWork')) defs.push(BUILTIN_INTERACTIONS.goToWork!);
   for (const def of defs) {
     const beh = def.behavior ?? 'generic';
-    if (beh === 'leaveLot') continue;
+    if (beh === 'leaveLot' || def.id === 'leaveLot') continue;
     if (beh === 'goToWork' && !p.career) continue;
     if (beh === 'invite') {
       for (const other of Object.values(ctx.state.people)) {

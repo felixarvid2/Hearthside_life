@@ -231,6 +231,8 @@ function applyEffects(ctx: SimCtx, p: Person, a: ActionInstance, beh: Behavior):
   grantXp(ctx, p, a);
   beh.apply?.(ctx, p, a);
   const social = def ? undefined : socialDef(ctx, a.interactionId);
+  // Socials count toward aspirations only when accepted (resolveSocial stores the outcome).
+  if (social && a.data.accepted !== true) return;
   recordInteraction(ctx, p, a.interactionId, def ? def.autonomy.tags.map((t) => `tag:${t}`) : social ? [`category:${social.category}`] : []);
 }
 

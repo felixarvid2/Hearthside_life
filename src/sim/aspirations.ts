@@ -35,8 +35,9 @@ export function objectiveProgress(state: WorldState, content: ContentDB, p: Pers
       const lot = homeLot(state, p);
       let n = 0;
       if (lot) for (const obj of Object.values(lot.objects)) {
+        if (obj.ownerHouseholdId !== p.householdId) continue;
         const def = content.objects[obj.defId];
-        if (def && (def.id === o.tag || def.tags.includes(o.tag) || def.category === o.tag)) n++;
+        if (def && (def.tags.includes(o.tag) || def.id === o.tag)) n++;
       }
       return view(n, o.count);
     }

@@ -127,11 +127,12 @@ export function addMemory(
   return mem;
 }
 
-/** Number of people this person's friendship toward is at least `minFriendship`. */
+/** Number of people with mutual friendship of at least `minFriendship` (both directions). */
 export function friendsCount(state: WorldState, personId: Id, minFriendship: number): number {
   let n = 0;
   for (const rel of Object.values(state.relationships)) {
-    if (rel.from === personId && rel.friendship >= minFriendship && state.people[rel.to]) n++;
+    if (rel.from !== personId || rel.friendship < minFriendship || !state.people[rel.to]) continue;
+    if (peekRel(state, rel.to, personId).friendship >= minFriendship) n++;
   }
   return n;
 }
