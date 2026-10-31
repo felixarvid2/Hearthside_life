@@ -7,7 +7,7 @@ import type { FamilyTie } from '../../core/types';
 import { h } from '../kit/dom';
 
 const NS = 'http://www.w3.org/2000/svg';
-const BOX_W = 116, BOX_H = 50, GAP_X = 34, GAP_Y = 64, PAD = 18;
+const BOX_W = 116, BOX_H = 50, GAP_X = 76, GAP_Y = 64, PAD = 18, TOP = 30;
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>, text?: string): SVGElementTagNameMap[K] {
   const el = document.createElementNS(NS, tag);
@@ -58,12 +58,12 @@ export function familyTree(draft: HouseholdDraft, current: number): HTMLElement 
   const compact = rows.filter((r) => r && r.length > 0);
   const widest = Math.max(1, ...compact.map((r) => r.length));
   const width = PAD * 2 + widest * BOX_W + (widest - 1) * GAP_X;
-  const height = PAD * 2 + compact.length * BOX_H + (compact.length - 1) * GAP_Y + 14;
+  const height = PAD * 2 + compact.length * BOX_H + (compact.length - 1) * GAP_Y + TOP;
   const pos = new Map<number, { x: number; y: number; row: number; col: number }>();
   compact.forEach((row, r) => {
     const rw = row.length * BOX_W + (row.length - 1) * GAP_X;
     const x0 = (width - rw) / 2;
-    row.forEach((m, c) => pos.set(m, { x: x0 + c * (BOX_W + GAP_X), y: PAD + 14 + r * (BOX_H + GAP_Y), row: r, col: c }));
+    row.forEach((m, c) => pos.set(m, { x: x0 + c * (BOX_W + GAP_X), y: PAD + TOP + r * (BOX_H + GAP_Y), row: r, col: c }));
   });
 
   const root = svg('svg', { width, height, viewBox: `0 0 ${width} ${height}`, role: 'img', class: 'cr-tree-svg' });
@@ -96,11 +96,11 @@ export function familyTree(draft: HouseholdDraft, current: number): HTMLElement 
         if (l.tie === 'spouse') {
           lines.append(svg('path', { d: `M${x1},${y - 3} H${x2} M${x1},${y + 3} H${x2}`, class: cls, fill: 'none' }));
         } else lines.append(svg('path', { d: `M${x1},${y} H${x2}`, class: cls, fill: 'none' }));
-        label((x1 + x2) / 2, y - 16, TIE_NAMES[l.tie]);
+        label((x1 + x2) / 2, y - 18, TIE_NAMES[l.tie]);
       } else {
         const lane = lanes.get(left.row) ?? 0;
         lanes.set(left.row, lane + 1);
-        const top = left.y - 8 - lane * 10;
+        const top = left.y - 14 - lane * 14;
         const x1 = left.x + BOX_W / 2 + 10, x2 = right.x + BOX_W / 2 - 10;
         lines.append(svg('path', { d: `M${x1},${left.y} V${top} H${x2} V${right.y}`, class: cls, fill: 'none' }));
         label((x1 + x2) / 2, top, TIE_NAMES[l.tie]);

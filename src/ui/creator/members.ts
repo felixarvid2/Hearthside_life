@@ -111,6 +111,7 @@ export function memberStrip(ctx: CreatorContext, portraitOf: (i: number) => stri
   });
   const el = h('div', { class: 'cr-members-wrap' }, list, add);
   let items: Array<{ btn: HTMLButtonElement; face: HTMLElement; name: HTMLElement; badge: HTMLElement }> = [];
+  let lastSelected = -1;
 
   const build = (n: number) => {
     items = Array.from({ length: n }, (_, i) => {
@@ -125,6 +126,7 @@ export function memberStrip(ctx: CreatorContext, portraitOf: (i: number) => stri
       return { btn, face, name, badge };
     });
     list.replaceChildren(...items.map((x) => x.btn));
+    lastSelected = -1;
   };
 
   const sync = () => {
@@ -154,6 +156,16 @@ export function memberStrip(ctx: CreatorContext, portraitOf: (i: number) => stri
         if (img || it.face.textContent !== t) it.face.replaceChildren(t);
       }
     });
+    // keep the selected portrait visible in the strip (scroll the strip only, never the page)
+    const selBtn = items[s.currentIndex]?.btn;
+    if (selBtn && s.currentIndex !== lastSelected) {
+      lastSelected = s.currentIndex;
+      requestAnimationFrame(() => {
+        const l = selBtn.offsetLeft - list.offsetLeft, r = l + selBtn.offsetWidth;
+        if (l < list.scrollLeft) list.scrollLeft = l;
+        else if (r > list.scrollLeft + list.clientWidth) list.scrollLeft = r - list.clientWidth;
+      });
+    }
     const full = s.members.length >= MAX_HOUSEHOLD_MEMBERS;
     toggleClass(add, 'is-disabled', full);
     add.setAttribute('aria-disabled', String(full));
