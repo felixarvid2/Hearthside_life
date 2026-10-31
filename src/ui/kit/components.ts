@@ -281,7 +281,14 @@ export function modal(o: { title: string; onClose?: () => void; wide?: boolean }
   const footer = h('div', { class: 'modal-footer' });
   const backdrop = h('div', { class: 'modal-backdrop' });
   const close = () => { backdrop.remove(); document.removeEventListener('keydown', onKey); o.onClose?.(); };
-  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  // Only the top-most modal reacts to Esc (stacked modals register one listener each on document).
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape') return;
+    const all = document.querySelectorAll('.modal-backdrop');
+    if (all[all.length - 1] !== backdrop) return;
+    e.stopImmediatePropagation();
+    close();
+  };
   const box = h('div', { class: ['modal', o.wide && 'modal-wide'], role: 'dialog', ariaLabel: o.title, attrs: { 'aria-modal': 'true' } },
     h('div', { class: 'modal-header' }, h('h2', { text: o.title }), button({ icon: 'close', iconOnly: true, label: 'Close', variant: 'ghost', small: true, onClick: close })),
     body, footer);
@@ -290,7 +297,8 @@ export function modal(o: { title: string; onClose?: () => void; wide?: boolean }
   shieldWorld(backdrop);
   document.addEventListener('keydown', onKey);
   (document.getElementById('ui-root') ?? document.body).appendChild(backdrop);
-  queueMicrotask(() => (box.querySelector('button, input, select, textarea') as HTMLElement | null)?.focus());
+  // Focus a text field first (prompts), else the first body/footer control, else the close button.
+  queueMicrotask(() => ((box.querySelector('.modal-body input, .modal-body select, .modal-body textarea') ?? box.querySelector('.modal-body button, .modal-footer button') ?? box.querySelector('button')) as HTMLElement | null)?.focus({ preventScroll: true }));
   return { el: box, body, footer, close };
 }
 
@@ -321,7 +329,7 @@ export function promptDialog(o: { title: string; label: string; value: string; c
 let toastHost: HTMLElement | null = null;
 /** Short, auto-hiding notification. */
 export function toast(text: string, kind: 'info' | 'success' | 'warning' | 'error' = 'info', ms = 3500): void {
-  if (!toastHost) {
+  if (!toastHost || !toastHost.isConnected) {
     toastHost = h('div', { class: 'toasts', role: 'status', attrs: { 'aria-live': 'polite' } });
     (document.getElementById('ui-root') ?? document.body).appendChild(toastHost);
   }

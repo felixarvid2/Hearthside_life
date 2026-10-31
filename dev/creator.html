@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#efe7da" />
+    <title>Hearthside Life - character creator (mock game)</title>
+  </head>
+  <body>
+    <!-- Same structure as index.html; a mock GameAPI draws a 2D silhouette preview on the canvas.
+         URL params: ?screen=creator|wardrobe  &mode=create|sandbox|guided  &step=identity|faceBody|hair|clothing|personality|household|review
+                     &wfail=<reason> (wardrobe save fails)  &portraitms=<ms> -->
+    <div id="app">
+      <canvas id="game-canvas" tabindex="0" aria-label="Character preview"></canvas>
+      <div id="world-overlay" class="passthrough" aria-hidden="true"></div>
+      <div id="ui-root"></div>
+    </div>
+    <script type="module" src="./creator.ts"></script>
+  </body>
+</html>
