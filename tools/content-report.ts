@@ -29,7 +29,7 @@ const CATEGORY_TARGETS: Record<CatalogCategory, number> = {
 };
 
 /** Interaction behaviours that are movement or UI shortcuts rather than activities (brief section 2 counting). */
-const NOT_ACTIVITIES = ['goHere', 'goToWork', 'editOutfits'];
+const NOT_ACTIVITIES = ['goHere', 'goToWork', 'leaveLot', 'editOutfits'];
 
 async function main(): Promise<void> {
   const { module: index } = await runnerImport<{ content: () => ContentDB }>(resolve(ROOT, 'src/content/index.ts'), { root: ROOT, logLevel: 'error' });

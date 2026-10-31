@@ -70,7 +70,7 @@ export const M1_INTERACTIONS: Record<string, string> = {
   takeShower: 'shower', washHands: 'generic', watchTv: 'watchTv', playComputerGames: 'computer', practiceProgramming: 'computer',
   readBook: 'read', listenToMusic: 'generic', practiceSpeech: 'generic', waterPlant: 'generic', changeOutfit: 'changeOutfit',
   editOutfits: 'editOutfits', goToWork: 'goToWork', goHere: 'goHere', danceSolo: 'generic', jogInPlace: 'generic',
-  phoneInvite: 'invite', phoneChat: 'phoneChat',
+  phoneInvite: 'invite', phoneChat: 'phoneChat', leaveLot: 'leaveLot',
 };
 
 /** Milestone 1 surface ids that must exist once the surfaces registry is filled. */

@@ -209,6 +209,13 @@ const SELF: InteractionDef[] = [
     autonomy: { enabled: false, ads: {}, tags: [] }, allowVisitors: true,
   }),
   def({
+    id: 'leaveLot', name: 'Leave', description: 'Walk to the lot entry and leave the lot (visitors going home, people leaving for work).',
+    icon: 'move', kind: 'self', behavior: 'leaveLot', posture: 'walking',
+    anims: { perform: 'walk' },
+    duration: { kind: 'fixed', minutes: 0 },
+    autonomy: { enabled: false, ads: {}, tags: [] }, allowVisitors: true,
+  }),
+  def({
     id: 'danceSolo', name: 'Dance', description: 'Dance like nobody is watching. Fun, and a little Fitness.',
     icon: 'fun', kind: 'self', behavior: 'generic', posture: 'standing',
     anims: { perform: 'dance' },
