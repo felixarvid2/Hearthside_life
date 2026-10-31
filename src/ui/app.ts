@@ -9,7 +9,7 @@ import type { GameAPI, GameMode, SoundId } from '../game/api';
 import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
 import type { Id, StartMode } from '../core/types';
-import { mountBuildMode } from './build/buildMode';
+import { mountBuildMode, type BuildModeUI } from './build/buildMode';
 import { mountBuyMode } from './buy/buyMode';
 import { h, toggleClass } from './kit/dom';
 import { installLayoutTracking, onLayoutChange } from './kit/layout';
@@ -79,6 +79,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     tutorialSignal: (s) => tutorial?.signal(s),
     showTutorial: () => tutorial?.show(),
     requestLayout: () => scheduleMeasure(),
+    paintPreviewShown: (pv) => { try { buildUI?.setPreview(pv); } catch { /* panel optional */ } },
     canvasToRoot,
   };
 
@@ -231,7 +232,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   let creator: { ui: ModeUI; mode: StartMode } | null = null;
   let wardrobe: ModeUI | null = null;
   let buyUI: ModeUI | null = null;
-  let buildUI: ModeUI | null = null;
+  let buildUI: BuildModeUI | null = null;
   let lastMode: GameMode | null = null;
   let destroyed = false;
 

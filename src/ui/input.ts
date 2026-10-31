@@ -164,6 +164,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
     const key = pickKey(pick);
     if (kind === 'touch' && touchPreviewKey !== key) {
       const pv = api.paintPreview(pick);
+      sh.paintPreviewShown(pv);
       touchPreviewKey = key;
       if (pv) { showTip(`${previewText(tool, pv)}${pv.ok ? ' · tap again to apply' : ''}`, at, pv.ok); sh.sound(pv.ok ? 'tap' : 'error'); }
       return;
@@ -171,6 +172,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
     const r = api.paintApply(pick);
     touchPreviewKey = null;
     hideTip();
+    sh.paintPreviewShown(null);
     if (r.ok) { sh.sound('paint'); ripple(at); } else { sh.sound('error'); toast(r.reason, 'warning', 2600); }
   };
 
@@ -202,6 +204,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
       if (key !== hoverKey) {
         hoverKey = key;
         const pv = api.paintPreview(pick);
+        sh.paintPreviewShown(pv);
         if (pv) showTip(previewText(tool, pv), at, pv.ok); else hideTip();
       } else if (!tip.hidden) {
         const p = sh.canvasToRoot(at);
@@ -251,7 +254,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   });
   on(canvas, 'pointercancel', (e) => { run(machine.cancel(e.pointerId).filter((x) => x.type === 'panEnd')); });
   on(canvas, 'lostpointercapture', (e) => { run(machine.cancel(e.pointerId).filter((x) => x.type === 'panEnd')); });
-  on(canvas, 'pointerleave', (e) => { if (e.pointerType !== 'touch' && machine.pointerCount === 0 && api.mode() === 'build') { hoverKey = null; hideTip(); api.paintPreview(null); } });
+  on(canvas, 'pointerleave', (e) => { if (e.pointerType !== 'touch' && machine.pointerCount === 0 && api.mode() === 'build') { hoverKey = null; hideTip(); api.paintPreview(null); sh.paintPreviewShown(null); } });
   on(canvas, 'wheel', (e) => {
     if (!active()) return;
     e.preventDefault();
@@ -315,7 +318,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
         if (m === 'build') {
           const t = api.paintTool();
           if (t?.kind === 'eyedropper') { const prev = lastTool[t.target]; api.setPaintTool(prev); sh.sound('close'); e.preventDefault(); return; }
-          if (touchPreviewKey || !tip.hidden) { api.paintPreview(null); touchPreviewKey = null; hideTip(); e.preventDefault(); return; }
+          if (touchPreviewKey || !tip.hidden) { api.paintPreview(null); sh.paintPreviewShown(null); touchPreviewKey = null; hideTip(); e.preventDefault(); return; }
         }
         if (sh.isPanelOpen('person') || sh.isPanelOpen('feed') || sh.isPanelOpen('ledger')) { sh.closePanels(); sh.sound('close'); e.preventDefault(); }
         return;

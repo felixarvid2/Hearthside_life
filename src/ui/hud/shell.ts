@@ -1,6 +1,6 @@
 // Shared context handed from the app root (src/ui/app.ts) to the HUD pieces and screens.
 
-import type { GameAPI, PickResult, SoundId } from '../../game/api';
+import type { GameAPI, PaintPreview, PickResult, SoundId } from '../../game/api';
 import type { Id } from '../../core/types';
 import type { TutorialSignal } from './tutorialSteps';
 
@@ -27,6 +27,8 @@ export interface Shell {
   showTutorial(): void;
   /** Re-measure covered screen areas (after panels open/close/resize). */
   requestLayout(): void;
+  /** Forwards a paint preview result (or null when cleared) to the Build panel (BuildModeUI.setPreview). */
+  paintPreviewShown(pv: PaintPreview | null): void;
   /** Canvas-relative point to ui-root coordinates. */
   canvasToRoot(p: { x: number; y: number }): { x: number; y: number };
 }
