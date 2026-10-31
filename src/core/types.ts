@@ -428,7 +428,7 @@ export interface Relationship {
 
 export type BondStatus =
   | 'acquaintance' | 'friend' | 'closeFriend' | 'rival' | 'partner' | 'engaged' | 'spouse' | 'exPartner';
-export type FamilyTie = 'parent' | 'child' | 'sibling' | 'spouse' | 'roommate' | 'none';
+export type FamilyTie = 'parent' | 'child' | 'sibling' | 'partner' | 'spouse' | 'roommate' | 'none';
 
 export interface Bond {
   a: Id; // a < b lexicographically
