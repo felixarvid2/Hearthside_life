@@ -136,11 +136,18 @@ Tests live in `tests/unit/<module>/*.test.ts`.
   `validateHousehold(draft, content): string[]`.
 - `outfits.ts` (pure): `resolveOutfit(outfit, content)`, `currentOutfit(person)`.
 
-### persistence (`src/persistence`)
-- `SaveStore.open(dbName?)`, `list()`, `save(slotId, name, state)`, `load(slotId)`, `remove(slotId)`,
-  `autosave(state)` (keeps the previous good autosave as `backup`), slots `slot-1`..`slot-5`, `autosave`, `backup`.
-- `exportWorld(state): string`, `importWorld(json, content)`, `migrate(raw)`, `validateWorld(state, content)`.
-- `TemplateStore` for character presets and household templates (save/list/remove/export/import).
+### persistence (`src/persistence`, barrel `src/persistence/index.ts`)
+- `SaveStore.open(dbName = 'hearthside', { clock?, content? })` never rejects; `available`/`unavailableReason`
+  report private-mode storage. `list()` (always 7 entries: `slot-1`..`slot-5`, `autosave`, `backup`),
+  `latest()`, `save(slotId, name, state)` (manual slots only), `autosave(state)` (rotates the previous intact
+  autosave into `backup` in the same transaction), `load(slotId, content?)` -> `{ ok, state, report, meta }` or
+  `{ ok: false, error, code }`, `remove`, `rename`, `importToSlot`.
+- `exportWorld(state, exportedAt, packs?)`, `importWorld(json, content)`, `migrate(raw)`,
+  `validateWorld(state, content)` -> `{ errors, warnings, missing }`; `describeReport(report)` for the UI.
+  Missing content references are reported, never deleted.
+- `TemplateStore` (kinds `appearance`, `household`), `exportTemplate`/`importTemplate`.
+- `Autosaver({ store, getState, isBusy })`: `requestSoon()` after build/buy commands, `tick(gameMinutes)`,
+  `flush()` on page hide, `reset(gameMinutes)` after load/new game. `requestPersistentStorage()` at start-up.
 
 ### render + game (`src/render`, `src/game`)
 - `GameAPI` (`src/game/api.ts`) is the only thing the UI talks to. Written after the modules above exist.
