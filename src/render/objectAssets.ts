@@ -8,6 +8,7 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ObjectDef } from '../content/types';
 
 export interface ManifestModel { file: string; thumb?: string; min: number[]; max: number[]; materials: Array<{ name: string; color: number[] }> }
@@ -111,11 +112,8 @@ export class ObjectAssets {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
       mesh.material = Array.isArray(mesh.material) ? mesh.material.map(convert) : convert(mesh.material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.geometry.computeBoundingBox();
     });
-    return { scene, base, refs: 0, sets: new Map(), ghost: null };
+    return { scene: mergeByMaterial(scene), base, refs: 0, sets: new Map(), ghost: null };
   }
 
   /** Material set for a definition's finishes (shared by every instance with the same choices). */
@@ -188,7 +186,7 @@ export class ObjectAssets {
     for (const [name, m] of tpl.base) {
       const c = m.clone();
       c.transparent = true;
-      c.opacity = 0.62;
+      c.opacity = 0.74;
       c.depthWrite = false;
       c.emissive = new THREE.Color(0x2a2418);
       set.set(name, c);
@@ -218,6 +216,49 @@ export class ObjectAssets {
     }
     return n;
   }
+}
+
+/**
+ * Flattens a model into one mesh per material (geometry baked in the model's root space), so an instance costs
+ * one draw call per material instead of one per node primitive. Falls back to the original hierarchy when the
+ * primitives cannot be merged (different attribute sets).
+ */
+function mergeByMaterial(scene: THREE.Group): THREE.Group {
+  scene.updateMatrixWorld(true);
+  const groups = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  let ok = true;
+  scene.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    if (Array.isArray(mesh.material)) { ok = false; return; }
+    const g = mesh.geometry.clone();
+    g.applyMatrix4(mesh.matrixWorld);
+    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+    g.morphAttributes = {};
+    const list = groups.get(mesh.material) ?? [];
+    list.push(g.index ? g.toNonIndexed() : g);
+    groups.set(mesh.material, list);
+  });
+  const out = new THREE.Group();
+  if (ok) {
+    for (const [mat, list] of groups) {
+      const merged = list.length === 1 ? list[0]! : mergeGeometries(list, false);
+      if (!merged) { ok = false; break; }
+      merged.computeBoundingBox();
+      merged.computeBoundingSphere();
+      const m = new THREE.Mesh(merged, mat);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      out.add(m);
+    }
+  }
+  if (!ok) {
+    for (const c of [...out.children]) (c as THREE.Mesh).geometry.dispose();
+    scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+    return scene;
+  }
+  scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose(); });
+  return out;
 }
 
 /** Labelled placeholder for a definition whose model is missing (rot-0 local space). */

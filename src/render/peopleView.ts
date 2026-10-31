@@ -72,13 +72,12 @@ function injectOverlayCss(): void {
   const s = document.createElement('style');
   s.textContent = `
 #world-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
-#world-overlay .wo-p { position: absolute; left: 0; top: 0; will-change: transform; display: flex; flex-direction: column; align-items: center; transform: translate(-9999px, 0); }
-#world-overlay .wo-p > * { transform: translateX(-50%); position: absolute; bottom: 0; left: 0; white-space: nowrap; }
-#world-overlay .wo-bubble { width: 38px; height: 38px; border-radius: 50%; background: #fbf6ee; color: #2f2a26; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(60,40,20,.22); border: 2px solid #e6d9c6; }
+#world-overlay .wo-p { position: absolute; left: 0; top: 0; will-change: transform; display: flex; flex-direction: column; align-items: center; gap: 6px; transform: translate(-9999px, 0); }
+#world-overlay .wo-bubble { position: relative; width: 38px; height: 38px; border-radius: 50%; background: #fbf6ee; color: #2f2a26; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(60,40,20,.22); border: 2px solid #e6d9c6; }
 #world-overlay .wo-bubble::after { content: ''; position: absolute; bottom: -7px; left: 50%; width: 9px; height: 9px; margin-left: -6px; border-radius: 50%; background: #fbf6ee; border: 2px solid #e6d9c6; }
 #world-overlay .wo-bubble.need { color: #c8473d; }
 #world-overlay .wo-speech { max-width: 220px; white-space: normal; text-align: center; font: 600 calc(13px * var(--text-scale, 1)) / 1.3 var(--font, system-ui); background: #fbf6ee; color: #2f2a26; padding: 6px 10px; border-radius: 14px; box-shadow: 0 3px 10px rgba(60,40,20,.2); width: max-content; }
-#world-overlay .wo-name { font: 700 calc(12px * var(--text-scale, 1)) / 1 var(--font, system-ui); color: #fff; background: rgba(47,42,38,.78); padding: 4px 8px; border-radius: 999px; bottom: -22px; }
+#world-overlay .wo-name { font: 700 calc(12px * var(--text-scale, 1)) / 1 var(--font, system-ui); color: #fff; background: rgba(47,42,38,.78); padding: 4px 8px; border-radius: 999px; white-space: nowrap; }
 #world-overlay .wo-name.sel { background: #d9774b; }
 #world-overlay [hidden] { display: none !important; }
 .reduced-motion #world-overlay .wo-p { transition: none; }
@@ -314,8 +313,8 @@ export class PeopleView {
       }
       e.view.root.position.set(rx, ry, rz);
       e.view.root.rotation.y = rot;
-      e.shadow.position.set(x, (s && e.align > 0.5 ? ground : ground) + 0.012, z);
-      e.shadow.scale.setScalar(posture === 'lying' ? 0 : 1);
+      e.shadow.position.set(rx, ground + 0.012, rz);
+      e.shadow.visible = e.align < 0.5;
       e.box.min.set(rx - 0.3, ry, rz - 0.3);
       e.box.max.set(rx + 0.3, ry + (posture === 'lying' ? 0.6 : posture === 'seated' ? 1.35 : 1.85), rz + 0.3);
       if (posture === 'lying') {
@@ -325,8 +324,9 @@ export class PeopleView {
         e.box.max.set(cx + 0.6, ry + 0.9, cz + 0.6);
       }
       if (e.id === this.selected) {
-        this.ring.visible = true;
-        this.ring.position.set(x, (lowered && s ? Math.max(ground, 0) : ground) + 0.015, z);
+        // on a seat or in bed the character's own highlight shows the selection (a floor ring would sit under the furniture)
+        this.ring.visible = e.align < 0.5;
+        this.ring.position.set(rx, ground + 0.015, rz);
         const pulse = reducedMotion ? 1 : 1 + Math.sin(this.time * 3.2) * 0.06;
         this.ring.scale.setScalar(pulse);
       }
@@ -361,7 +361,7 @@ export class PeopleView {
       e.speech.hidden = !speaking;
       e.name.hidden = !named;
       e.name.classList.toggle('sel', e.id === this.selected);
-      const t = `translate(${Math.round(this.scr.x)}px,${Math.round(this.scr.y)}px)`;
+      const t = `translate(${Math.round(this.scr.x)}px,${Math.round(this.scr.y)}px) translate(-50%,-100%)`;
       if (t !== e.lastShown) { e.el.style.transform = t; e.lastShown = t; }
     }
   }

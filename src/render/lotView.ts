@@ -10,6 +10,7 @@
 // without overlapping (z-fighting) faces. Exposed post faces take the finish of the wall side they continue.
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ContentDB, OpeningDef, SurfaceDesign } from '../content/types';
 import { edgeKey, tileKey } from '../core/ids';
 import type { CutawayMode } from '../game/api';
@@ -366,7 +367,10 @@ export class LotView {
   // ---------------------------------------------------------------------------------------------
 
   private clearOpenings(): void {
-    for (const c of [...this.openingGroup.children]) c.removeFromParent();
+    for (const c of [...this.openingGroup.children]) {
+      c.removeFromParent();
+      if (c.userData.ownGeometry) (c as THREE.Mesh).geometry.dispose();
+    }
     this.openingsByWall.clear();
     this.doors.length = 0;
   }
@@ -374,6 +378,7 @@ export class LotView {
   private buildOpenings(): void {
     const lot = this.lot!;
     this.clearOpenings();
+    const staticGeos = new Map<THREE.Material, THREE.BufferGeometry[]>();
     for (const o of Object.values(lot.openings)) {
       const w = lot.walls[o.wallId];
       const def: OpeningDef | undefined = this.content.openings[o.defId];
@@ -385,9 +390,33 @@ export class LotView {
       if (w.dir === 'h') holder.position.set(w.x + def.width / 2, 0, w.z);
       else { holder.position.set(w.x, 0, w.z + def.width / 2); holder.rotation.y = -Math.PI / 2; }
       holder.traverse((n) => { const m = n as THREE.Mesh; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
-      this.openingGroup.add(holder);
-      this.openingsByWall.set(w.id, holder);
-      if (def.kind === 'door') this.doors.push({ group: g, x: holder.position.x, z: holder.position.z, open: 0, target: 0 });
+      if (def.kind === 'door') {
+        this.openingGroup.add(holder);
+        this.openingsByWall.set(w.id, holder);
+        this.doors.push({ group: g, x: holder.position.x, z: holder.position.z, open: 0, target: 0 });
+        continue;
+      }
+      // windows never move: bake them into per-material merged meshes (a few draw calls for all windows)
+      holder.updateMatrixWorld(true);
+      holder.traverse((n) => {
+        const m = n as THREE.Mesh;
+        if (!m.isMesh || Array.isArray(m.material)) return;
+        const geo = m.geometry.clone().applyMatrix4(m.matrixWorld);
+        for (const name of Object.keys(geo.attributes)) if (name !== 'position' && name !== 'normal') geo.deleteAttribute(name);
+        const list = staticGeos.get(m.material) ?? [];
+        list.push(geo.index ? geo.toNonIndexed() : geo);
+        staticGeos.set(m.material, list);
+      });
+    }
+    for (const [mat, list] of staticGeos) {
+      const merged = mergeGeometries(list, false);
+      for (const g of list) g.dispose();
+      if (!merged) continue;
+      const m = new THREE.Mesh(merged, mat);
+      m.userData.ownGeometry = true;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      this.openingGroup.add(m);
     }
   }
 

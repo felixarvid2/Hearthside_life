@@ -34,11 +34,11 @@ export class PlacementPreview {
   private modelKey = '';
   private readonly okTex = tileTexture(false);
   private readonly badTex = tileTexture(true);
-  private readonly okMat = new THREE.MeshBasicMaterial({ map: this.okTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 });
-  private readonly badMat = new THREE.MeshBasicMaterial({ map: this.badTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 });
+  private readonly okMat = new THREE.MeshBasicMaterial({ map: this.okTex, transparent: true, depthWrite: false, depthTest: false });
+  private readonly badMat = new THREE.MeshBasicMaterial({ map: this.badTex, transparent: true, depthWrite: false, depthTest: false });
   private readonly tileGeo = new THREE.PlaneGeometry(0.96, 0.96).rotateX(-Math.PI / 2);
   private readonly dotGeo = new THREE.CircleGeometry(0.11, 18).rotateX(-Math.PI / 2);
-  private readonly dotMat = new THREE.MeshBasicMaterial({ color: 0xfbf6ee, transparent: true, opacity: 0.95, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -10 });
+  private readonly dotMat = new THREE.MeshBasicMaterial({ color: 0xfbf6ee, transparent: true, opacity: 0.95, depthWrite: false, depthTest: false });
   private readonly tiles: THREE.Mesh[] = [];
   private readonly dots: THREE.Mesh[] = [];
   private readonly modelHolder = new THREE.Group();
