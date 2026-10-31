@@ -4,7 +4,7 @@
 import type { AccessoryDef } from '../content/types';
 import { EAR, HEAD_SCALE, headToBind } from './headShape';
 import type { MeshData, SweepVertex } from './meshData';
-import { addVertex, computeSmoothNormals, emptyMesh, sweep, v3 } from './meshData';
+import { addVertex, computeSmoothNormals, emptyMesh, sweep } from './meshData';
 import type { Vec3 } from './rig';
 import { boneIndex, rigidSkin } from './rig';
 import type { BodyTemplate } from './template';
@@ -21,7 +21,7 @@ export function buildAccessory(t: BodyTemplate, def: AccessoryDef): MeshData {
   const skin = rigidSkin(boneIndex(t.raw, 'Head'));
   const O = t.headOrigin;
   const b = def.build;
-  const put = (local: Vec3, morph: Record<string, Vec3>) => (v: SweepVertex) => addVertex(m, headToBind(O, v.p), skin, { aAcc: [0] }, morph, v.n);
+  const put = (morph: Record<string, Vec3>) => (v: SweepVertex) => addVertex(m, headToBind(O, v.p), skin, { aAcc: [0] }, morph, v.n);
   if (def.kind === 'glasses') {
     const size = num(b, 'size', 1);
     const rim = num(b, 'rim', 0.0025);
@@ -40,14 +40,14 @@ export function buildAccessory(t: BodyTemplate, def: AccessoryDef): MeshData {
         const px = Math.sign(c) * Math.pow(Math.abs(c), e) * rx, py = Math.sign(s) * Math.pow(Math.abs(s), e) * ry;
         path.push([cx + px, cy + py, z - 0.004 * (px * side / rx) ** 2]);
       }
-      sweep(m, { path, rx: path.map(() => rim), ry: path.map(() => rim * (square ? 1.3 : 1)), segments: 6, closeStart: false, closeEnd: false, up: [0, 0, 1] }, put([cx, cy, z], bridgeM));
+      sweep(m, { path, rx: path.map(() => rim), ry: path.map(() => rim * (square ? 1.3 : 1)), segments: 6, closeStart: false, closeEnd: false, up: [0, 0, 1] }, put(bridgeM));
       // temple arm back to the ear
       const outer: Vec3 = [side * (0.0335 + 0.018 * size), cy + 0.004, z - 0.006];
       const temple: Vec3[] = [outer, [side * 0.074, cy + 0.006, 0.075], [side * 0.083, cy + 0.003, 0.03], [side * 0.082, cy - 0.004, -0.002], [side * 0.078, cy - 0.018, -0.012]];
-      sweep(m, { path: temple, rx: temple.map(() => rim * 0.9), ry: temple.map(() => rim * 1.4), segments: 5, up: [0, 1, 0] }, put(outer, { faceWidth: [side * 0.004 * HEAD_SCALE, 0, 0], noseBridge: [0, 0, 0.002 * HEAD_SCALE] }));
+      sweep(m, { path: temple, rx: temple.map(() => rim * 0.9), ry: temple.map(() => rim * 1.4), segments: 5, up: [0, 1, 0] }, put({ faceWidth: [side * 0.004 * HEAD_SCALE, 0, 0], noseBridge: [0, 0, 0.002 * HEAD_SCALE] }));
     }
     const bridge: Vec3[] = [[0.017, 0.1, z], [0.008, 0.104, z + 0.002], [0, 0.105, z + 0.0025], [-0.008, 0.104, z + 0.002], [-0.017, 0.1, z]];
-    sweep(m, { path: bridge, rx: bridge.map(() => rim), ry: bridge.map(() => rim), segments: 5, up: [0, 1, 0] }, put([0, 0.1, z], bridgeM));
+    sweep(m, { path: bridge, rx: bridge.map(() => rim), ry: bridge.map(() => rim), segments: 5, up: [0, 1, 0] }, put(bridgeM));
   } else if (def.kind === 'earrings') {
     const style = b.style === 'hoop' ? 'hoop' : 'stud';
     const size = num(b, 'size', 0.004);
@@ -56,18 +56,17 @@ export function buildAccessory(t: BodyTemplate, def: AccessoryDef): MeshData {
       const grow: Vec3 = [side * 0.002 * HEAD_SCALE, -EAR.ry * 0.86 * 0.24 * HEAD_SCALE, 0];
       if (style === 'stud') {
         const path: Vec3[] = [[lobe[0] - side * 0.002, lobe[1], lobe[2]], [lobe[0] + side * 0.002, lobe[1], lobe[2]]];
-        sweep(m, { path, rx: [size, size], segments: 8, up: [0, 1, 0], capStart: 2, capEnd: 2 }, put(lobe, { earSize: grow }));
+        sweep(m, { path, rx: [size, size], segments: 8, up: [0, 1, 0], capStart: 2, capEnd: 2 }, put({ earSize: grow }));
       } else {
         const path: Vec3[] = [];
         for (let k = 0; k <= 24; k++) {
           const a = (k / 24) * Math.PI * 2;
           path.push([lobe[0], lobe[1] - size + Math.cos(a) * size, lobe[2] + Math.sin(a) * size]);
         }
-        sweep(m, { path, rx: path.map(() => 0.0014), segments: 6, closeStart: false, closeEnd: false, up: [1, 0, 0] }, put(lobe, { earSize: grow }));
+        sweep(m, { path, rx: path.map(() => 0.0014), segments: 6, closeStart: false, closeEnd: false, up: [1, 0, 0] }, put({ earSize: grow }));
       }
     }
   }
   computeSmoothNormals(m, 1e-7);
-  void v3;
   return m;
 }

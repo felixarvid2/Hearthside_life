@@ -59,7 +59,12 @@ function outfitFor(ids: string[], i: number): Outfit {
     const pattern = g.patterns[(i % g.patterns.length)] ?? 'solid';
     layers[g.layer] = { garmentId: id, color: g.defaultColor, pattern, patternColor: '#f6f1e6' };
   }
-  return { id: `out_${i}`, name: 'Lab', layers, accessories: [] };
+  const accessories: Outfit['accessories'] = [];
+  if (i % 4 === 0) accessories.push({ accessoryId: 'glasses-round', color: '#3a3632' });
+  if (i % 5 === 1) accessories.push({ accessoryId: 'glasses-square', color: '#1f1b19' });
+  if (i % 4 === 2) accessories.push({ accessoryId: 'earrings-hoop', color: '#d9b65a' });
+  if (i % 5 === 3) accessories.push({ accessoryId: 'earrings-stud', color: '#e2c46b' });
+  return { id: `out_${i}`, name: 'Lab', layers, accessories };
 }
 
 const OUTFITS: string[][] = [

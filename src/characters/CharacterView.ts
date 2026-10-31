@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import type { AnimId } from '../core/anim';
 import type { Appearance, GarmentLayer, Outfit, Posture } from '../core/types';
-import type { ContentDB, GarmentDef } from '../content/types';
+import type { AccessoryDef, ContentDB, GarmentDef } from '../content/types';
 import type { CharacterAssets, FrameAssets } from './assets';
 import { cachedGeometry, cloneSkeleton } from './assets';
 import { Animator } from './animation';
@@ -14,8 +14,9 @@ import { BODY_PARAM_IDS } from './bodyShape';
 import type { Coverage, CutParams } from './clothing';
 import { buildGarment, mergeCoverage } from './clothing';
 import { toGeometry, triangleCount } from './geometry';
-import { HEAD_SCULPT_IDS } from './headShape';
+import { CROWN_Y, HEAD_OFFSET, HEAD_SCALE, HEAD_SCULPT_IDS } from './headShape';
 import { STRAND_IDS, buildHair } from './hair';
+import { buildAccessory } from './accessories';
 import type { ClothUniforms, HairUniforms, SkinUniforms } from './materials';
 import { FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createClothMaterial, createHairMaterial, createSkinMaterial } from './materials';
 import { resolveOutfit } from './outfits';
@@ -42,7 +43,28 @@ export function hairGeometry(assets: CharacterAssets, frame: FrameAssets, conten
   const facialDef = facialId ? content.facialHair[facialId] ?? null : null;
   const facial = facialDef && facialDef.build.kind === 'shell' ? facialDef : null;
   if (!hair && !facial) return null;
-  return cachedGeometry(assets, `hair:${frame.frame}:${hair?.id ?? '-'}:${facial?.id ?? '-'}`, () => toGeometry(buildHair(frame.template, hair, facial), `hair-${hair?.id}-${facial?.id}`));
+  return cachedGeometry(assets, `hair:${frame.frame}:${hair?.id ?? '-'}:${facial?.id ?? '-'}`, () => {
+    const mesh = buildHair(frame.template, hair, facial);
+    const g = toGeometry(mesh, `hair-${hair?.id}-${facial?.id}`);
+    let top = 0;
+    for (let i = 1; i < mesh.positions.length; i += 3) top = Math.max(top, mesh.positions[i] as number);
+    g.userData.topY = top;
+    return g;
+  });
+}
+
+let ringShared: { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } | null = null;
+/** Shared selection ring under the feet (one geometry and material for all characters). */
+function selectionRing(): { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } {
+  return (ringShared ??= {
+    geometry: new THREE.RingGeometry(0.36, 0.44, 48),
+    material: new THREE.MeshBasicMaterial({ color: '#ffcf6b', transparent: true, opacity: 0.85, depthWrite: false }),
+  });
+}
+
+/** Shared accessory geometry for a frame. */
+export function accessoryGeometry(assets: CharacterAssets, frame: FrameAssets, def: AccessoryDef): THREE.BufferGeometry {
+  return cachedGeometry(assets, `acc:${frame.frame}:${def.id}`, () => toGeometry(buildAccessory(frame.template, def), `acc-${def.id}`));
 }
 
 export class CharacterView {
@@ -55,12 +77,14 @@ export class CharacterView {
   private skinMat!: THREE.MeshStandardMaterial;
   private skinU!: SkinUniforms;
   private garments = new Map<GarmentLayer, GarmentSlot>();
+  private accessories: Array<{ mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial }> = [];
   private hair: { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: HairUniforms } | null = null;
   private animator!: Animator;
   private appearance: Appearance;
   private outfit: Outfit;
   private selected = false;
   private hairClear = 0;
+  private ring: THREE.Mesh | null = null;
   private lastAnim: { id: AnimId; posture?: Posture } = { id: 'idle' };
   /** Problems found while resolving the outfit (unknown ids etc.). */
   issues: string[] = [];
@@ -104,16 +128,28 @@ export class CharacterView {
     this.animator.update(Math.min(dtSeconds, 0.1));
   }
 
-  /** World position of the top of the head (hair included). */
+  /** World position of the top of the head (hair included), following the animated Head bone. */
   headTop(target: THREE.Vector3): THREE.Vector3 {
     const head = this.bones.get('Head');
-    if (!head) return target.copy(this.root.position).setY(this.root.position.y + 1.9);
+    const hi = this.frame.boneNames.indexOf('Head');
+    if (!head || hi < 0) return target.copy(this.root.position).setY(this.root.position.y + 1.9);
     head.updateWorldMatrix(true, false);
-    return target.set(0, 0.27, 0).applyMatrix4(head.matrixWorld);
+    const O = this.frame.template.headOrigin;
+    const hairTop = (this.hair?.mesh.geometry.userData.topY as number | undefined) ?? 0;
+    const crownY = Math.max(O[1] + HEAD_OFFSET[1] + CROWN_Y * HEAD_SCALE, hairTop);
+    return target.set(O[0], crownY, O[2]).applyMatrix4(this.frame.boneInverses[hi]!).applyMatrix4(head.matrixWorld);
   }
 
   setSelected(on: boolean): void {
     this.selected = on;
+    if (on && !this.ring) {
+      this.ring = new THREE.Mesh(selectionRing().geometry, selectionRing().material);
+      this.ring.name = 'selection';
+      this.ring.rotation.x = -Math.PI / 2;
+      this.ring.position.y = 0.012;
+      this.ring.renderOrder = 1;
+    }
+    if (this.ring) { if (on) this.root.add(this.ring); else this.ring.removeFromParent(); }
     this.skinU.uSelect.value = on ? 1 : 0;
     for (const s of this.garments.values()) s.uniforms.uSelect.value = on ? 1 : 0;
     if (this.hair) this.hair.uniforms.uSelect.value = on ? 1 : 0;
@@ -160,7 +196,9 @@ export class CharacterView {
     this.garments.clear();
     this.hair?.material.dispose();
     this.hair = null;
-    for (const child of [...this.root.children]) child.removeFromParent();
+    for (const a of this.accessories) a.material.dispose();
+    this.accessories = [];
+    for (const child of [...this.root.children]) if (child !== this.ring) child.removeFromParent();
     this.skinMat?.dispose();
   }
 
@@ -204,6 +242,7 @@ export class CharacterView {
     u.uSkinFx.value.set(clamp(a.face.freckles, 0, 1), clamp(a.face.blush, 0, 1), stubble, 0);
     this.applyMorphs(this.skinMesh);
     for (const s of this.garments.values()) this.applyMorphs(s.mesh);
+    for (const acc of this.accessories) this.applyMorphs(acc.mesh);
     this.applyHair();
   }
 
@@ -284,6 +323,18 @@ export class CharacterView {
       slot.mesh.removeFromParent();
       slot.material.dispose();
       this.garments.delete(layer);
+    }
+    // accessories (head-attached)
+    for (const a of this.accessories) { a.mesh.removeFromParent(); a.material.dispose(); }
+    this.accessories = [];
+    for (const { def, color } of resolved.accessories) {
+      if (def.kind !== 'glasses' && def.kind !== 'earrings') { this.issues.push(`${def.name} is not drawn yet.`); continue; }
+      const metal = def.kind === 'earrings';
+      const material = new THREE.MeshStandardMaterial({ color, roughness: metal ? 0.3 : 0.45, metalness: metal ? 0.85 : 0.1 });
+      const mesh = this.skinned(accessoryGeometry(this.assets, this.frame, def), material, `acc-${def.id}`);
+      mesh.castShadow = false;
+      this.accessories.push({ mesh, material });
+      this.applyMorphs(mesh);
     }
     // bulky upper layers push long hair away from the back (hair 'hairClear' morph)
     let clear = 0;
