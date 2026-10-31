@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hearthside Life - Furniture Viewer</title>
+    <style>
+      :root { --paper: #fbf6ee; --ink: #2f2a26; --accent: #d9774b; --teal: #2f8f83; }
+      html, body { margin: 0; height: 100%; background: #e9e4da; color: var(--ink); font: 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      #view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+      #bar { position: fixed; left: 8px; top: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+        background: var(--paper); border-radius: 12px; padding: 8px 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+      #bar button { min-height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #c9bfb1; background: #fff; color: var(--ink); cursor: pointer; }
+      #bar button.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+      #bar .sep { width: 1px; height: 24px; background: #d6ccbe; margin: 0 4px; }
+      #status { margin-left: auto; font-size: 12px; opacity: .85; }
+      #legend { position: fixed; left: 8px; bottom: 8px; background: var(--paper); border-radius: 10px; padding: 6px 10px; font-size: 12px; line-height: 1.6; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+      #legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 10px; vertical-align: -1px; }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="bar">
+      <strong>Furniture viewer</strong>
+      <span class="sep"></span>
+      <span>Rotate all:</span>
+      <button data-rot="0">0</button><button data-rot="1">1</button><button data-rot="2">2</button><button data-rot="3">3</button>
+      <span class="sep"></span>
+      <button data-view="top">Top</button><button data-view="iso">Iso SE</button><button data-view="iso2">Iso SW</button>
+      <span class="sep"></span>
+      <button id="labels">Labels</button><button id="slots">Slots</button>
+      <button id="swatchPrev">&lt; Finish</button><span id="swatch">0</span><button id="swatchNext">Finish &gt;</button>
+      <span id="status">Loading...</span>
+    </div>
+    <div id="legend">
+      1 m grid. <i style="background:#2f6fd9"></i>blocking footprint <i style="background:#2fa36b"></i>non-blocking
+      <i style="background:#d9774b"></i>front (+z at rot 0) <i style="background:#c03ac0"></i>sit <i style="background:#3a7bd5"></i>sleep
+      <i style="background:#e0a800"></i>use <i style="background:#7a7a7a"></i>approach tile <i style="background:#e03030"></i>model outside footprint
+    </div>
+    <script type="module" src="./objects.ts"></script>
+  </body>
+</html>
