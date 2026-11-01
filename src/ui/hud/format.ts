@@ -2,7 +2,7 @@
 // tests/unit/ui/format.test.ts. Never assume a content id exists: every lookup has a readable fallback.
 
 import type { AspirationObjective, CareerLevelDef, ContentDB } from '../../content/types';
-import { DAY_NAMES, dayIndex, formatClock, formatDuration } from '../../core/clock';
+import { DAY_NAMES, START_MINUTE, dayIndex, formatClock, formatDuration } from '../../core/clock';
 import { pairKey } from '../../core/ids';
 import { formatMoney } from '../../core/money';
 import type { ActionInstance, BondStatus, CareerState, FamilyTie, NeedId, Person, WorldState } from '../../core/types';
@@ -240,7 +240,7 @@ export function objectiveProgress(state: WorldState, db: ContentDB, person: Pers
     case 'ownObjects': {
       const lotId = state.households[person.householdId]?.homeLotId;
       const lot = lotId ? state.lots[lotId] : undefined;
-      current = lot ? Object.values(lot.objects).filter((o) => db.objects[o.defId]?.tags.includes(obj.tag)).length : 0;
+      current = lot ? Object.values(lot.objects).filter((o) => db.objects[o.defId]?.tags.includes(obj.tag) && !(obj.bought && o.boughtAt < START_MINUTE)).length : 0;
       target = obj.count;
       break;
     }

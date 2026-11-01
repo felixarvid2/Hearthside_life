@@ -56,7 +56,8 @@ export type PaintTool =
   | { kind: 'floor'; finish: FinishRef; scope: 'tile' | 'room' }
   | { kind: 'eyedropper'; target: 'wall' | 'floor' };
 
-export interface PaintPreview { ok: boolean; reason?: string; cost: Cents; count: number }
+/** `unchanged`: the pick already has the chosen finish (not an error; `reason` says so for display). */
+export interface PaintPreview { ok: boolean; reason?: string; unchanged?: true; cost: Cents; count: number }
 
 export interface GameSettings {
   masterVolume: number; // 0..1

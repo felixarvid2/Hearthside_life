@@ -296,6 +296,36 @@ describe('saves', () => {
     expect((await other.deleteSave('nope')).ok).toBe(false);
   });
 
+  it('loading restores the saved speed: a game saved paused loads paused, older saves without speed load paused', async () => {
+    const store = await freshStore();
+    const core = new GameCore({ content: db, saves: store });
+    core.startNewGame('guided', core.premadeHouseholds()[0]!, 3);
+    core.setSpeed(0);
+    expect((await core.saveTo('slot-1', 'paused')).ok).toBe(true);
+    core.setSpeed(3);
+    expect((await core.saveTo('slot-2', 'fast')).ok).toBe(true);
+    await core.autosave();
+
+    const other = new GameCore({ content: db, saves: store });
+    expect((await other.loadFrom('slot-1')).ok).toBe(true);
+    expect(other.speed()).toBe(0);
+    expect(other.update(2).ticks).toBe(0);
+    other.togglePause(); // resuming goes to Normal, not stuck at paused
+    expect(other.speed()).toBe(1);
+    expect((await other.loadFrom('slot-2')).ok).toBe(true);
+    expect(other.speed()).toBe(3);
+    expect((await other.loadFrom('autosave')).ok).toBe(true); // continue loads the autosave
+    expect(other.speed()).toBe(3);
+
+    // a world saved before speed was stored
+    const legacy = JSON.parse(core.exportWorld()!) as { world?: { settings: { speed?: number } }; settings?: { speed?: number } };
+    const settings = (legacy.world ?? legacy).settings!;
+    delete settings.speed;
+    const imported = coreWithoutSaves();
+    expect((await imported.importWorld(JSON.stringify(legacy))).ok).toBe(true);
+    expect(imported.speed()).toBe(0);
+  });
+
   it('exports and imports a world; a broken file is refused with a report', async () => {
     const core = started(1, 'create');
     core.advanceTicks(300);

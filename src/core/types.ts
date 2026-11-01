@@ -71,6 +71,8 @@ export interface SimSettings {
   aging: 'off' | 'long' | 'normal';
   /** Allow neighbours to drop by on their own. */
   visitors: boolean;
+  /** Live speed when last saved (0 = paused). Absent in older saves, which load paused. */
+  speed?: 0 | 1 | 2 | 3;
 }
 
 // ---------------------------------------------------------------------------------------------

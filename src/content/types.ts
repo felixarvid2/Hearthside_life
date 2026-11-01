@@ -271,7 +271,7 @@ export type AspirationObjective =
   | { id: string; text: string; type: 'friends'; count: number; minFriendship: number }
   | { id: string; text: string; type: 'funds'; amount: Cents }
   | { id: string; text: string; type: 'careerLevel'; level: number }
-  | { id: string; text: string; type: 'ownObjects'; tag: string; count: number }
+  | { id: string; text: string; type: 'ownObjects'; tag: string; count: number; /** Count only objects the household bought after move-in (not the pre-owned starter furnishings). */ bought?: true }
   | { id: string; text: string; type: 'homeValue'; amount: Cents }
   | { id: string; text: string; type: 'bond'; status: BondStatus };
 

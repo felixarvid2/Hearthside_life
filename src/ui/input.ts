@@ -61,10 +61,10 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   const tip = h('div', { class: 'paint-tip', role: 'status', attrs: { 'aria-live': 'polite' } });
   tip.hidden = true;
   sh.layer.appendChild(tip);
-  const showTip = (text: string, at: { x: number; y: number }, ok: boolean) => {
+  const showTip = (text: string, at: { x: number; y: number }, ok: boolean, neutral = false) => {
     const p = sh.canvasToRoot(at);
     setText(tip, text);
-    tip.dataset.ok = String(ok);
+    tip.dataset.ok = neutral ? 'neutral' : String(ok); // 'neutral' keeps the default (non-error) colour
     tip.hidden = false;
     tip.style.left = `${Math.round(p.x)}px`;
     tip.style.top = `${Math.round(p.y)}px`;
@@ -166,7 +166,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
       const pv = api.paintPreview(pick);
       sh.paintPreviewShown(pv);
       touchPreviewKey = key;
-      if (pv) { showTip(`${previewText(tool, pv)}${pv.ok ? ' · tap again to apply' : ''}`, at, pv.ok); sh.sound(pv.ok ? 'tap' : 'error'); }
+      if (pv) { showTip(`${previewText(tool, pv)}${pv.ok ? ' · tap again to apply' : ''}`, at, pv.ok, !!pv.unchanged); sh.sound(pv.ok || pv.unchanged ? 'tap' : 'error'); }
       return;
     }
     const r = api.paintApply(pick);
@@ -205,7 +205,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
         hoverKey = key;
         const pv = api.paintPreview(pick);
         sh.paintPreviewShown(pv);
-        if (pv) showTip(previewText(tool, pv), at, pv.ok); else hideTip();
+        if (pv) showTip(previewText(tool, pv), at, pv.ok, !!pv.unchanged); else hideTip();
       } else if (!tip.hidden) {
         const p = sh.canvasToRoot(at);
         tip.style.left = `${Math.round(p.x)}px`;

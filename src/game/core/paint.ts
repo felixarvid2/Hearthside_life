@@ -21,6 +21,8 @@ export type PaintHighlight =
 
 /** Matches the reasons building gives for edits that would change nothing ("It already has that finish."). */
 const NO_OP = /already/i;
+/** Shown for an unchanged pick: neutral wording, not an error. */
+export const UNCHANGED_REASON = 'Already has this finish';
 
 /** The floor tile a wall side faces (null when it lies off the lot). */
 function facedTile(lot: Lot, wallId: string, side: 'a' | 'b'): Tile | null {
@@ -80,8 +82,8 @@ export interface PaintEvaluation {
 }
 
 /**
- * Preview of painting the pick with the tool. Edits that would change nothing are silent (ok false, no reason)
- * but still highlight what is pointed at; other problems carry their reason.
+ * Preview of painting the pick with the tool. Edits that would change nothing are flagged `unchanged` (ok false,
+ * a plain "Already has this finish" reason) and still highlight what is pointed at; other problems carry their reason.
  */
 export function evaluatePaint(
   state: WorldState, content: ContentDB, lotId: Id, householdId: Id, tool: PaintTool, pick: PickResult,
@@ -100,8 +102,10 @@ export function evaluatePaint(
       : { kind: 'floorTiles', level: target.level, tiles: p.tiles.map((t) => ({ x: t.x, z: t.z })) };
   } else highlight = targetGeometry(lot, target);
   const reason = p.reasons[0];
-  const silent = !p.ok && p.count === 0 && reason !== undefined && NO_OP.test(reason);
-  const preview: PaintPreview = { ok: p.ok, cost: p.cost, count: p.count, ...(!p.ok && reason && !silent ? { reason } : {}) };
+  const unchanged = !p.ok && p.count === 0 && reason !== undefined && NO_OP.test(reason);
+  const preview: PaintPreview = unchanged
+    ? { ok: false, unchanged: true, reason: UNCHANGED_REASON, cost: p.cost, count: p.count }
+    : { ok: p.ok, cost: p.cost, count: p.count, ...(!p.ok && reason ? { reason } : {}) };
   return { preview, highlight, target };
 }
 

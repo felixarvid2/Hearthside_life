@@ -7,7 +7,8 @@
 //   interaction carrying the tag) or 'category:<social category>' (any accepted social of that category).
 //   Counts completed (accepted, for socials) uses after the aspiration was chosen.
 // - friends: number of people whose friendship toward this person (and back) is at least minFriendship.
-// - ownObjects: placed objects owned by the household whose definition has `tag` in its tags.
+// - ownObjects: placed objects owned by the household whose definition has `tag` in its tags; with `bought`, only
+//   objects bought after move-in (the starter furnishings are pre-owned and do not count).
 // - homeValue: household home lot value (land + placed objects at purchase price).
 // - funds: household funds; careerLevel: current career level; bond: has at least one bond with that status.
 
@@ -124,17 +125,17 @@ export const ASPIRATIONS: AspirationDef[] = [
     description: 'Turn a house into a home worth showing off.',
     stages: [
       stage('Making It Home', [
-        { id: 'decor-5', text: 'Own 5 decorative pieces', type: 'ownObjects', tag: 'decor', count: 5 },
-        { id: 'plants-2', text: 'Own 2 plants', type: 'ownObjects', tag: 'plant', count: 2 },
+        { id: 'decor-5', text: 'Own 5 decorative pieces', type: 'ownObjects', tag: 'decor', count: 5, bought: true },
+        { id: 'plants-2', text: 'Own 2 plants', type: 'ownObjects', tag: 'plant', count: 2, bought: true },
       ], 250),
       stage('Room by Room', [
-        { id: 'decor-12', text: 'Own 12 decorative pieces', type: 'ownObjects', tag: 'decor', count: 12 },
-        { id: 'lamps-3', text: 'Own 3 lamps', type: 'ownObjects', tag: 'lamp', count: 3 },
-        { id: 'rugs-2', text: 'Own 2 rugs', type: 'ownObjects', tag: 'rug', count: 2 },
+        { id: 'decor-12', text: 'Own 12 decorative pieces', type: 'ownObjects', tag: 'decor', count: 12, bought: true },
+        { id: 'lamps-3', text: 'Own 3 lamps', type: 'ownObjects', tag: 'lamp', count: 3, bought: true },
+        { id: 'rugs-2', text: 'Own 2 rugs', type: 'ownObjects', tag: 'rug', count: 2, bought: true },
       ], 750),
       stage('Dream Home', [
         { id: 'value-150k', text: 'Raise your home value to $150,000', type: 'homeValue', amount: dollars(150000) },
-        { id: 'decor-25', text: 'Own 25 decorative pieces', type: 'ownObjects', tag: 'decor', count: 25 },
+        { id: 'decor-25', text: 'Own 25 decorative pieces', type: 'ownObjects', tag: 'decor', count: 25, bought: true },
       ], 2500, true),
     ],
   },

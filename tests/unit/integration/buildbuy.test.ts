@@ -236,13 +236,13 @@ describe('previews never change the state', () => {
     expect(JSON.stringify(s)).toBe(before);
   });
 
-  it('paint previews report cost and count, stay silent for no-ops and give the renderer a highlight', () => {
+  it('paint previews report cost and count, flag no-ops as unchanged (not an error) and give the renderer a highlight', () => {
     const core = guided();
     const s = core.state()!;
     const lot = s.lots[s.activeLotId]!;
     core.setMode('build');
     core.setPaintTool({ kind: 'wall', finish: lot.walls[LIVING_WALL]!.sideA, scope: 'side' });
-    expect(core.paintPreview(wallPick())).toEqual({ ok: false, cost: 0, count: 0 }); // already has it: no reason shown
+    expect(core.paintPreview(wallPick())).toEqual({ ok: false, unchanged: true, reason: 'Already has this finish', cost: 0, count: 0 }); // already has it: neutral note, not an error
     expect(core.paintPreviewTarget()).toEqual({ kind: 'wallSides', sides: [{ wallId: LIVING_WALL, side: 'a' }] });
     core.setPaintTool({ kind: 'wall', finish: STRIPES, scope: 'room' });
     const room = core.paintPreview(wallPick())!;

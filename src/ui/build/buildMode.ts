@@ -437,7 +437,8 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
     let iconName = 'info';
     if (preview) {
       const afford = preview.ok ? affordReason(api, preview.cost) : null;
-      if (!preview.ok) { state = 'bad'; iconName = 'warning'; text = preview.reason ?? "Can't paint here."; }
+      if (preview.unchanged) { text = preview.reason ?? 'Already has this finish'; }
+      else if (!preview.ok) { state = 'bad'; iconName = 'warning'; text = preview.reason ?? "Can't paint here."; }
       else if (preview.count === 0) { text = 'It already has this finish.'; }
       else if (afford) { state = 'bad'; iconName = 'warning'; text = afford; }
       else {

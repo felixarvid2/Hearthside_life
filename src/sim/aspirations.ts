@@ -2,6 +2,7 @@
 // career changes) and hourly; a completed stage advances once and pays its reward exactly once.
 
 import type { AspirationObjective } from '../content/types';
+import { START_MINUTE } from '../core/clock';
 import { addFeed, transact } from '../core/state';
 import type { Person, WorldState } from '../core/types';
 import type { ContentDB } from '../content/types';
@@ -36,6 +37,8 @@ export function objectiveProgress(state: WorldState, content: ContentDB, p: Pers
       let n = 0;
       if (lot) for (const obj of Object.values(lot.objects)) {
         if (obj.ownerHouseholdId !== p.householdId) continue;
+        // starter furnishings are pre-owned (stamped before the world's first minute), so they never count as bought
+        if (o.bought && obj.boughtAt < START_MINUTE) continue;
         const def = content.objects[obj.defId];
         if (def && (def.tags.includes(o.tag) || def.id === o.tag)) n++;
       }

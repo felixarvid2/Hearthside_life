@@ -52,6 +52,8 @@ export interface GameCoreOptions {
 const OK: Result = { ok: true };
 const fail = (reason: string): Result => ({ ok: false, reason });
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+/** Speed stored in a loaded world; worlds saved before speed was stored (or with a bad value) load paused. */
+const loadedSpeed = (s: WorldState): Speed => { const v = s.settings.speed; return v === 1 || v === 2 || v === 3 ? v : 0; };
 const isEditMode = (m: GameMode) => m === 'buy' || m === 'build';
 const RECENT_LIMIT = 8;
 const START_MODES: readonly StartMode[] = ['guided', 'create', 'sandbox'];
@@ -188,11 +190,13 @@ export class GameCore {
     for (const w of ['state', 'selection', 'placement', 'paint', 'undo'] as const) this.notify(w);
   }
 
-  private enterWorld(state: WorldState): void {
+  /** `speed`: where the clock starts (a new game runs at Normal; a loaded or imported world resumes `loadedSpeed`). */
+  private enterWorld(state: WorldState, speed: Speed = 1): void {
     this.sel = null;
     this.replaceState(state);
-    this.spd = 1;
-    this.lastRunning = 1;
+    this.spd = speed;
+    this.lastRunning = speed === 0 ? 1 : speed;
+    state.settings.speed = speed;
     this.setMode('live');
     this.notify('speed');
   }
@@ -225,7 +229,7 @@ export class GameCore {
     if (!isSlotId(slotId)) return fail(`"${slotId}" is not a save slot.`);
     const r = await this.saves.load(slotId, this.content);
     if (!r.ok) return fail(r.error);
-    this.enterWorld(r.state);
+    this.enterWorld(r.state, loadedSpeed(r.state));
     const report = describeReport(r.report);
     return report.length > 0 ? { ok: true, report } : OK;
   }
@@ -248,7 +252,7 @@ export class GameCore {
       const reason = first && second && first.endsWith(':') ? `${first} ${second}` : first ?? 'The file could not be imported.';
       return { ok: false, reason, report: r.errors };
     }
-    this.enterWorld(r.state);
+    this.enterWorld(r.state, loadedSpeed(r.state));
     const report = describeReport(r.report);
     return report.length > 0 ? { ok: true, report } : OK;
   }
@@ -271,6 +275,7 @@ export class GameCore {
     if (![0, 1, 2, 3].includes(s) || s === this.spd) return;
     if (s !== 0) this.lastRunning = s;
     this.spd = s;
+    if (this.world) this.world.settings.speed = s; // saved with the world
     this.notify('speed');
   }
 

@@ -31,7 +31,10 @@ function play(seed: number, drive: Driver, reload = false): string {
   const chat = core.options(sasha!.id, { kind: 'person', personId: theo!.id }).find((o) => o.enabled);
   if (chat) core.queue(sasha!.id, chat);
   drive(core, TICKS_PER_DAY / 2);
-  return JSON.stringify(core.state());
+  // the live speed is saved with the world but is a viewing choice (the frames driver changes it), not simulation state
+  const final = cloneState(core.state()!);
+  delete final.settings.speed;
+  return JSON.stringify(final);
 }
 
 const direct: Driver = (core, ticks) => core.advanceTicks(ticks);

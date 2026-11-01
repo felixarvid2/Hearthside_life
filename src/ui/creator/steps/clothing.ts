@@ -274,7 +274,7 @@ function layerSection(ctx: CreatorContext, b: Binder, cat: OutfitCategory, idx: 
         value: () => choice()?.pattern ?? 'solid',
         onPick: (id) => ctx.report(s().setGarmentPattern(cat, idx, layer, id)),
       })));
-    }
+    } else extra.push(hint('This garment has no patterns.'));
     if (cur.pattern !== 'solid') {
       extra.push(b.add(colorField({
         label: 'Pattern colour', swatches: FABRIC_COLORS, value: () => choice()?.patternColor ?? '#000000',
