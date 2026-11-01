@@ -260,20 +260,23 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       return;
     }
     done();
-    creatorLoading = false;
-    if (destroyed) return;
-    const ui = mod.mountCreator(root, api, {
-      mode,
-      onDone: (draft: HouseholdDraft) => { void finishCreator(mode, draft); },
-      onCancel: () => {
-        destroyCreator();
-        try { api.creator.hide(); } catch { /* ignore */ }
-        if (api.mode() !== 'menu') api.showMenu();
-        routeNow();
-      },
-    });
-    creator = { ui, mode };
-    ui.show();
+    if (destroyed) { creatorLoading = false; return; }
+    // creatorLoading stays set until `creator` is assigned: mounting drives the preview, which switches the game
+    // to creator mode and re-enters routeNow() before this function returns (it would open a second creator).
+    try {
+      const ui = mod.mountCreator(root, api, {
+        mode,
+        onDone: (draft: HouseholdDraft) => { void finishCreator(mode, draft); },
+        onCancel: () => {
+          destroyCreator();
+          try { api.creator.hide(); } catch { /* ignore */ }
+          if (api.mode() !== 'menu') api.showMenu();
+          routeNow();
+        },
+      });
+      creator = { ui, mode };
+    } finally { creatorLoading = false; }
+    creator?.ui.show();
     routeNow();
   };
 

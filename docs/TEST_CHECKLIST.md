@@ -11,6 +11,7 @@ Run the relevant checks after each milestone; do not repeat unrelated tests just
 | `npm run build` | Typecheck + production Vite build |
 | `npm run content:check` | Registry validation and distinct-design counts (CONTENT_STATUS numbers) |
 | `npm run e2e` | Playwright (Chromium, SwiftShader) smoke and acceptance run with screenshots in desktop, portrait and landscape |
+| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (takes about 15 minutes under SwiftShader) |
 
 Key automated areas (brief section 25):
 

@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "assets": "node tools/build-assets.mjs",
     "content:check": "node --experimental-strip-types tools/content-report.ts",
-    "e2e": "node tests/e2e/run-e2e.mjs"
+    "e2e": "node tests/e2e/run-e2e.mjs",
+    "e2e:acceptance": "node tests/e2e/acceptance.mjs"
   },
   "dependencies": {
     "three": "0.186.1"

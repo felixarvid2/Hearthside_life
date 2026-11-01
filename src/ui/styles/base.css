@@ -70,8 +70,8 @@ p { line-height: 1.45; margin: 0.4em 0; }
 .btn-ghost:hover:not(:disabled) { background: rgba(0, 0, 0, 0.05); }
 .btn-danger { background: var(--critical); border-color: var(--critical); color: #fff; }
 .btn-icon { padding: 0; width: var(--tap); }
-.btn-small { min-height: 40px; min-width: 40px; font-size: 0.875rem; }
-.btn-icon.btn-small { width: 40px; }
+.btn-small { min-height: var(--tap, 44px); min-width: var(--tap, 44px); font-size: 0.875rem; }
+.btn-icon.btn-small { width: var(--tap, 44px); }
 .is-flipped .icon { transform: rotate(180deg); }
 
 .tool-btn {
