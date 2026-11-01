@@ -8,3 +8,5 @@ tests/e2e/out/
 # Meshy experiment: generated decimation variants and screenshots are reproducible
 dev/meshy/variants/
 dev/meshy/shots/
+dev/hair-ai/raw/
+dev/surfaces-ai/raw/
