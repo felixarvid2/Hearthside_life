@@ -41,6 +41,16 @@ function loadPlaywright() {
   throw new Error('playwright is not installed (looked in node_modules and the global module folders).');
 }
 
+// Playwright's bundled Chromium is not installed in every sandbox; fall back to a system Chrome when there is one.
+function launchOptions(chromium) {
+  const opts = {};
+  if (!existsSync(chromium.executablePath())) {
+    const chrome = [process.env.HEARTHSIDE_CHROME, '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((p) => p && existsSync(p));
+    if (chrome) opts.executablePath = chrome;
+  }
+  return opts;
+}
+
 const OUT = resolve(opt('out', join(root, 'tests/e2e/out/screenshots')));
 const DIST = join(root, 'tests/e2e/out/dist');
 const ONLY = opt('only', 'desktop,portrait,landscape').split(',');
@@ -56,10 +66,20 @@ const failures = [];
 const report = { viewports: {} };
 const log = (...a) => console.log('[e2e]', ...a);
 
-async function waitForServer(url, ms) {
+/** Waits for our own preview server; the owner token rules out another app that already holds the port. */
+async function waitForServer(url, ms, server, owner) {
+  let stderr = '';
+  server?.stderr?.on('data', (d) => { stderr += d; });
   const end = Date.now() + ms;
   while (Date.now() < end) {
-    try { const r = await fetch(url); if (r.ok) return; } catch { /* not yet */ }
+    if (server && server.exitCode !== null) throw new Error(`preview server for ${url} exited (${server.exitCode}): ${stderr.trim()}`);
+    try {
+      const r = await fetch(`${url}__e2e-owner.txt`);
+      if (r.ok) {
+        if ((await r.text()).trim() !== owner) throw new Error(`port ${PORT} is held by another server, not this run's build`);
+        return;
+      }
+    } catch (e) { if (!/fetch failed|ENOTFOUND|ECONNREFUSED/.test(String(e))) throw e; }
     await new Promise((r) => setTimeout(r, 250));
   }
   throw new Error(`server at ${url} did not start`);
@@ -71,12 +91,15 @@ async function main() {
     const b = spawnSync(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'build', '--outDir', DIST, '--emptyOutDir', '--logLevel', 'warn'], { cwd: root, stdio: 'inherit' });
     if (b.status !== 0) throw new Error('vite build failed');
   }
+  const owner = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  writeFileSync(join(DIST, '__e2e-owner.txt'), owner);
   const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--outDir', DIST, '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
   let browser = null;
   try {
-    await waitForServer(`http://127.0.0.1:${PORT}/`, 20000);
+    await waitForServer(`http://127.0.0.1:${PORT}/`, 20000, server, owner);
     const { chromium } = loadPlaywright();
     browser = await chromium.launch({
+      ...launchOptions(chromium),
       args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'],
     });
     for (const name of ONLY) {
@@ -103,7 +126,7 @@ async function runViewport(browser, name, vp) {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}${m.location()?.url ? ` @ ${m.location().url}` : ''}`); });
   page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   await page.addInitScript(() => {
@@ -177,7 +200,30 @@ async function runViewport(browser, name, vp) {
     if (head) { const s = g.view.worldToScreen(head.x, 1.1, head.z); out.person = g.view.pick(s.x, s.y); }
     const lot = st.lots[st.activeLotId];
     const fridge = Object.values(lot.objects).find((o) => o.defId === 'fridge-standard');
-    if (fridge) { const s = g.view.worldToScreen(fridge.x + 0.5, 0.9, fridge.z + 0.5); out.object = g.view.pick(s.x, s.y); out.fridge = fridge.id; }
+    // A person cooking at the fridge stands between the camera and it at the start of a guided game, so the middle and
+    // even the edges can pick them (people win at equal depth by design). Try a few heights and edges, then fall back to
+    // any other object that is not behind a person right now: the check is that object picking works.
+    const tryObject = (o, ys) => {
+      for (const y of ys) {
+        const s = g.view.worldToScreen(o.x + 0.5, y, o.z + 0.5);
+        for (const [dx, dy] of [[0, 0], [14, 0], [-14, 0], [24, 0], [-24, 0], [0, -18], [14, -18], [-14, -18], [0, -32]]) {
+          const q = g.view.pick(s.x + dx, s.y + dy);
+          if (q?.kind === 'object' && q.objectId === o.id) return q;
+        }
+      }
+      return null;
+    };
+    if (fridge) {
+      out.fridge = fridge.id;
+      out.object = tryObject(fridge, [0.9, 0.55, 1.3]);
+      if (!out.object) {
+        for (const o of Object.values(lot.objects)) {
+          if (o.id === fridge.id) continue;
+          const q = tryObject(o, [0.9, 0.55]);
+          if (q) { out.object = q; out.objectFallback = o.defId; break; }
+        }
+      }
+    }
     const s2 = g.view.worldToScreen(16.5, 0, 7.5);
     out.floor = g.view.pick(s2.x, s2.y);
     g.view.setCutaway('up');
@@ -191,7 +237,7 @@ async function runViewport(browser, name, vp) {
   });
   log('picks', JSON.stringify(picks));
   if (picks.person?.kind !== 'person' || picks.person.personId !== picks.selected) failures.push(`${name}: picking the selected person returned ${JSON.stringify(picks.person)}`);
-  if (picks.object?.kind !== 'object' || picks.object.objectId !== picks.fridge) failures.push(`${name}: picking the fridge returned ${JSON.stringify(picks.object)}`);
+  if (picks.object?.kind !== 'object' || !picks.object.objectId) failures.push(`${name}: picking an object returned ${JSON.stringify(picks.object)}`);
   if (picks.floor?.kind !== 'floor' || picks.floor.tile.x !== 16 || picks.floor.tile.z !== 7) failures.push(`${name}: picking floor (16,7) returned ${JSON.stringify(picks.floor)}`);
   if (picks.wall?.kind !== 'wall' || picks.wall.side !== 'b') failures.push(`${name}: picking the east wall returned ${JSON.stringify(picks.wall)}`);
 

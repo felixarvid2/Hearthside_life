@@ -40,6 +40,16 @@ function loadPlaywright() {
   }
   throw new Error('playwright is not installed (looked in node_modules and the global module folders).');
 }
+
+// Playwright's bundled Chromium is not installed in every sandbox; fall back to a system Chrome when there is one.
+function launchOptions(chromium) {
+  const opts = {};
+  if (!existsSync(chromium.executablePath())) {
+    const chrome = [process.env.HEARTHSIDE_CHROME, '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((p) => p && existsSync(p));
+    if (chrome) opts.executablePath = chrome;
+  }
+  return opts;
+}
 const sharp = require(require.resolve('sharp', { paths: [join(root, 'node_modules')] }));
 
 const OUT = resolve(opt('out', join(root, 'tests/e2e/out/creator-m3')));
@@ -56,9 +66,22 @@ const T0 = Date.now();
 const log = (...a) => console.log(`[creator-m3 +${Math.round((Date.now() - T0) / 1000)}s]`, ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function waitForServer(url, ms) {
+/** Waits for our own preview server; the owner token rules out another app that already holds the port. */
+async function waitForServer(url, ms, server, owner) {
+  let stderr = '';
+  server?.stderr?.on('data', (d) => { stderr += d; });
   const end = Date.now() + ms;
-  while (Date.now() < end) { try { const r = await fetch(url); if (r.ok) return; } catch { /* not yet */ } await sleep(250); }
+  while (Date.now() < end) {
+    if (server && server.exitCode !== null) throw new Error(`preview server for ${url} exited (${server.exitCode}): ${stderr.trim()}`);
+    try {
+      const r = await fetch(`${url}__e2e-owner.txt`);
+      if (r.ok) {
+        if ((await r.text()).trim() !== owner) throw new Error(`port ${PORT} is held by another server, not this run's build`);
+        return;
+      }
+    } catch (e) { if (!/fetch failed|ENOTFOUND|ECONNREFUSED/.test(String(e))) throw e; }
+    await sleep(250);
+  }
   throw new Error(`server at ${url} did not start`);
 }
 
@@ -68,12 +91,14 @@ async function main() {
     const b = spawnSync(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'build', '--outDir', DIST, '--emptyOutDir', '--logLevel', 'warn'], { cwd: root, stdio: 'inherit' });
     if (b.status !== 0) throw new Error('vite build failed');
   }
+  const owner = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  writeFileSync(join(DIST, '__e2e-owner.txt'), owner);
   const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--outDir', DIST, '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
   let browser = null;
   try {
-    await waitForServer(`http://127.0.0.1:${PORT}/`, 20000);
+    await waitForServer(`http://127.0.0.1:${PORT}/`, 20000, server, owner);
     const { chromium } = loadPlaywright();
-    browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
+    browser = await chromium.launch({ ...launchOptions(chromium), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
     for (const name of ONLY) {
       const vp = VIEWPORTS[name];
       if (!vp) continue;
@@ -102,7 +127,7 @@ async function runViewport(browser, vpName, vp) {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}${m.location()?.url ? ` @ ${m.location().url}` : ''}`); });
   page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   await page.addInitScript(() => {
@@ -178,6 +203,20 @@ async function setSlider(T, label, value) {
   await T.settle(3);
 }
 const sliderValue = (T, label) => T.page.locator(`input[type=range][aria-label="${label}"]`).first().inputValue().then(Number);
+/**
+ * Holds the preview's idle animation still (breathing, weight shifts, hair sway). A single face or body slider moves
+ * the silhouette by a pixel or two, which is smaller than the idle motion between two screenshots in a mean pixel
+ * difference, so the change was measured as noise. Appearance edits still apply immediately while the pose is held;
+ * call again with false to let the preview animate. The camera still eases, so wait for a view change to settle first.
+ */
+async function holdPreview(T, hold) {
+  await T.page.evaluate((on) => {
+    const v = window.hearthside?.view?.creatorScene?.view;
+    if (!v) return;
+    if (on) { if (!v.__e2eUpdate) { v.__e2eUpdate = v.update.bind(v); v.update = () => {}; } }
+    else if (v.__e2eUpdate) { v.update = v.__e2eUpdate; delete v.__e2eUpdate; }
+  }, hold);
+}
 async function goStep(T, id) {
   const tab = T.page.locator(`.cr-steps [data-id="${id}"]`).first();
   await tab.scrollIntoViewIfNeeded();
@@ -233,7 +272,9 @@ async function stepFaceBody(T) {
   const S = 'face-body';
   await goStep(T, 'faceBody');
   await subTab(T, 'body');
-  // a stable look to measure against: pause the idle noise by measuring it
+  await page.waitForTimeout(500);
+  // Hold the idle pose: its sway is bigger than the pixel change one slider makes in a mean difference.
+  await holdPreview(T, true);
   const base = await T.noise();
   const nBase = base.n;
   // 1. body slider drag -> preview changes live, value readout and undo label follow
@@ -263,6 +304,7 @@ async function stepFaceBody(T) {
   await T.settle(3);
   // 4. face sliders switch to the face close-up and change it
   await subTab(T, 'face');
+  await page.waitForTimeout(900); // the camera eases to the face over half a second; measuring during it is pure noise
   const faceViewOn = await page.locator('.cr-pv-views [aria-checked="true"]').first().getAttribute('data-id');
   T.check(S, 'face controls switch the preview to the face close-up', /face/.test(faceViewOn ?? ''), `view ${faceViewOn}`);
   const fb = await T.noise();
@@ -290,6 +332,7 @@ async function stepFaceBody(T) {
   T.check(S, 'skin tone presets are offered with a custom colour control', (await skinSw.count()) >= 12 && (await page.locator('[aria-label="Skin tone"] input[type=color]').count()) === 1, `${await skinSw.count()} tones`);
   await subTab(T, 'details');
   T.check(S, 'freckles, blush and lip controls exist', (await page.locator('input[type=range][aria-label="Freckles"]').count()) === 1 && (await page.locator('input[type=range][aria-label="Lip tint"]').count()) === 1, '');
+  await holdPreview(T, false);
   await subTab(T, 'body');
 }
 
@@ -461,8 +504,6 @@ async function stepAccessories(T) {
   // clean up: remove everything
   for (const name of ['Sunglasses', 'Pendant Necklace', 'Wristwatch', 'Bangles']) if (await on(name)) await toggle(name);
   T.check(S, 'accessories can be removed again', !(await on('Sunglasses')) && !(await on('Wristwatch')), '');
-  // wear a hat for the later steps (checks that it survives export/import and move-in)
-  await toggle('Knit Beanie');
   await T.shot('accessories-final');
 }
 
@@ -592,6 +633,25 @@ async function stepHousehold(T) {
   await T.tap(page.locator('.cr-sheet-actions .row-btn', { hasText: 'Blank person' }));
   await page.waitForTimeout(600); await T.settle(3);
   T.check(S, 'a third (blank) person can be added', (await page.locator('.cr-member-row').count()) === 3, `${await page.locator('.cr-member-row').count()} rows`);
+  // The blank person is a real member. Fill them in now: the household template saved later contains every member, and
+  // Review must let the household move in after that template is loaded again.
+  await T.tap(page.locator('.cr-member-row').nth(2));
+  await T.settle(3);
+  await goStep(T, 'identity');
+  for (const [label, value] of [['First name', 'Remy'], ['Last name', 'Mensah']]) {
+    const f = page.getByLabel(label).first();
+    await f.fill(value); await f.press('Tab');
+  }
+  await T.settle(2);
+  await goStep(T, 'personality');
+  for (let i = 0; i < 3; i++) {
+    await T.tap(page.locator('.cr-trait-grid .cr-card[aria-checked="false"]:not([aria-disabled="true"])').first());
+    await T.settle(2);
+  }
+  await T.tap(page.locator('[aria-label="Aspirations"] .cr-card').first());
+  await T.settle(2);
+  T.check(S, 'the blank person can be given a name, three traits and an aspiration', (await page.locator('.cr-trait-grid .cr-card[aria-checked="true"]').count()) === 3 && (await page.locator('[aria-label="Aspirations"] .cr-card[aria-checked="true"]').count()) === 1, '');
+  await goStep(T, 'household');
   const ties = page.locator('.cr-tie-select');
   T.check(S, 'three people give three tie pairs', (await ties.count()) === 3, `${await ties.count()}`);
   const opts = await ties.first().locator('option').allInnerTexts();
@@ -621,23 +681,31 @@ async function stepHousehold(T) {
   T.check(S, 'a person can be removed', (await page.locator('.cr-member-row').count()) === 2, `${await page.locator('.cr-member-row').count()}`);
   await T.tap(undoBtn(T)); await T.settle(3);
   T.check(S, 'Undo brings the person back with their ties', (await page.locator('.cr-member-row').count()) === 3 && (await page.locator('.cr-tie-select').count()) === 3, '');
-  await T.tap(menuBtn.first()).catch(() => undefined);
-  await page.keyboard.press('Escape'); await T.settle(2);
   const hh = page.getByLabel('Household name').first();
   await hh.fill('Wardrobe House'); await hh.press('Tab'); await T.settle(2);
   // copy and paste an appearance between two people
   await openTools(T);
   const who = await page.locator('.cr-tools .cr-sec-title').first().innerText();
-  await T.tap(page.locator('.cr-tools button', { hasText: /^\s*Copy / }).first()); await T.settle(2);
+  await T.tap(page.locator('.cr-tools button', { hasText: /^\s*Copy / }).first());
+  await page.locator('.cr-tools').waitFor({ state: 'detached', timeout: 5000 }).catch(() => undefined);
+  await T.settle(2);
   T.check(S, 'an appearance can be copied', /Copied/.test(await status(T)), `${who}: ${await status(T)}`);
-  await T.tap(page.locator('.cr-member-row').nth(1)); await T.settle(3);
+  await T.tap(page.locator('.cr-member-row-main').nth(1)); await T.settle(3);
   await openTools(T);
   const paste = page.locator('.cr-tools button', { hasText: /Paste onto/ }).first();
   T.check(S, 'Paste is enabled after copying', await paste.isEnabled(), '');
-  await T.tap(paste); await T.settle(4);
+  await T.tap(paste);
+  await page.locator('.cr-tools').waitFor({ state: 'detached', timeout: 5000 }).catch(() => undefined);
+  await T.settle(4);
   T.check(S, 'an appearance can be pasted onto another person', /Pasted onto/.test(await status(T)), await status(T));
   await T.shot('household-pasted');
-  await T.tap(page.locator('.cr-member-row').nth(0)).catch(() => undefined); await T.settle(3);
+  // Back to the first person for the import/export and move-in sections. Tapping the row itself could wait on a sheet
+  // that was still closing and time out silently (caught), leaving the second person selected: the renamed "Exporta"
+  // then ended up second in the saved household. Tap the row's Edit button, and check the identity step shows them.
+  const firstRowName = (await rows.first().locator('.cr-member-row-name').innerText()).trim();
+  await T.tap(page.locator('.cr-member-row-main').first()); await T.settle(3);
+  const editing = (await page.getByLabel('First name').first().inputValue().catch(() => '')).trim();
+  T.check(S, 'the first person is selected again for the next steps', editing === firstRowName, `${editing} vs ${firstRowName}`);
 }
 
 async function stepImportExport(T) {
@@ -709,7 +777,9 @@ async function stepImportExport(T) {
   const [chooser4] = await Promise.all([page.waitForEvent('filechooser', { timeout: 15000 }), T.tap(await toolsButton(T, 'Load household template'))]);
   await chooser4.setFiles(hfile);
   await page.waitForTimeout(500);
-  const confirm = page.getByRole('button', { name: /Load template/ }).first();
+  // The household step also has a "Load template" button behind the backdrop; only the dialog's footer button is the
+  // one to tap (getByRole alone resolves to the covered step button and the tap times out).
+  const confirm = page.locator('.modal-footer button', { hasText: 'Load template' }).first();
   await confirm.waitFor({ timeout: 8000 });
   await T.tap(confirm); await page.waitForTimeout(800); await T.settle(4);
   const dlg = page.getByRole('button', { name: /^(OK|Close|Done|Got it)$/ }).first();
@@ -723,6 +793,21 @@ async function stepImportExport(T) {
 async function stepMoveIn(T) {
   const { page } = T;
   const S = 'move-in';
+  // Everyone the creator holds after loading the template back, to compare with the world after move-in.
+  await goStep(T, 'household');
+  const creatorNames = (await page.locator('.cr-member-row-name').allInnerTexts()).map((n) => n.trim()).filter(Boolean);
+  // Put a distinctive hat on the person who is about to move in. Wearing it earlier does not survive "Randomize all",
+  // which is exactly what that check tests; this check is that move-in carries the worn outfit into the game.
+  await goStep(T, 'clothing');
+  await T.tap(page.locator('.cr-subtabs [data-id="everyday"]').first()); await T.settle(3);
+  const beanie = page.locator('[aria-label="Accessories"] .chip', { hasText: 'Knit Beanie' }).first();
+  if ((await beanie.getAttribute('aria-pressed')) !== 'true') { await beanie.scrollIntoViewIfNeeded(); await T.tap(beanie); await T.settle(3); }
+  T.check(S, 'a hat can be worn just before moving in', (await beanie.getAttribute('aria-pressed')) === 'true', '');
+  await openTools(T);
+  const hatWho = (await page.locator('.cr-tools .cr-sec-title').first().innerText()).replace(/^Randomize\s+/, '').trim();
+  await closeModal(T);
+  await page.locator('.cr-tools').waitFor({ state: 'detached', timeout: 5000 }).catch(() => undefined);
+  await T.settle(2);
   await goStep(T, 'review');
   await page.waitForTimeout(600); await T.settle(3);
   await T.shot('review');
@@ -732,24 +817,29 @@ async function stepMoveIn(T) {
   await page.waitForFunction(() => ['live', 'buy', 'build'].includes(window.hearthside.game.mode()), null, { timeout: 90000 });
   await page.evaluate(() => window.hearthside.game.setSpeed(0));
   await page.waitForTimeout(800);
-  const made = await page.evaluate(() => {
+  const made = await page.evaluate((who) => {
     const st = window.hearthside.debug.state();
     const hh = st.households[st.activeHouseholdId];
     const people = hh.memberIds.map((id) => st.people[id]);
     const p0 = people[0];
     const cat = p0.outfits.current.category;
+    const outfitOf = (p) => p.outfits.outfits[p.outfits.current.category][p.outfits.current.index];
+    const hatPerson = people.find((p) => `${p.firstName} ${p.lastName}`.trim() === who.trim()) ?? null;
     return {
-      hh: hh.name, n: people.length, first: p0.firstName, frame: p0.appearance.frame,
-      accessories: p0.outfits.outfits[cat][p0.outfits.current.index].accessories.map((a) => a.accessoryId),
-      layers: Object.values(p0.outfits.outfits[cat][p0.outfits.current.index].layers).map((l) => l.garmentId),
+      hh: hh.name, n: people.length, first: p0.firstName, names: people.map((p) => p.firstName),
+      fullNames: people.map((p) => `${p.firstName} ${p.lastName}`.trim()), frame: p0.appearance.frame,
+      hatWho: hatPerson ? `${hatPerson.firstName} ${hatPerson.lastName}`.trim() : null,
+      hatAccessories: hatPerson ? outfitOf(hatPerson).accessories.map((a) => a.accessoryId) : [],
+      accessories: outfitOf(p0).accessories.map((a) => a.accessoryId),
+      layers: Object.values(outfitOf(p0).layers).map((l) => l.garmentId),
       outfitCounts: Object.fromEntries(Object.entries(p0.outfits.outfits).map(([k, v]) => [k, v.length])),
       ties: Object.values(st.bonds).map((b) => b.familyAtoB).sort(),
       jaw: p0.appearance.face.params.jawWidth ?? 0,
     };
-  });
+  }, hatWho);
   log('created', JSON.stringify(made));
-  T.check(S, 'the household moved in with everyone from the creator', made.hh === 'Wardrobe House' && made.n === 3 && made.first === 'Exporta', JSON.stringify({ hh: made.hh, n: made.n, first: made.first }));
-  T.check(S, 'the worn outfit keeps its hat', made.accessories.includes('beanie'), made.accessories.join(','));
+  T.check(S, 'the household moved in with everyone from the creator', made.hh === 'Wardrobe House' && made.n === creatorNames.length && creatorNames.every((n) => made.fullNames.includes(n)), JSON.stringify({ hh: made.hh, n: made.n, names: made.names, creatorNames }));
+  T.check(S, 'the worn outfit keeps its hat', made.hatAccessories.includes('beanie'), `${made.hatWho}: ${made.hatAccessories.join(',')}`);
   T.check(S, 'the family ties exist in the game', made.ties.includes('sibling') && made.ties.includes('roommate'), made.ties.join(','));
   await page.evaluate(() => { for (let i = 0; i < 6; i++) window.hearthside.debug.frame(1 / 30); });
   await T.shot('live-after-move-in');

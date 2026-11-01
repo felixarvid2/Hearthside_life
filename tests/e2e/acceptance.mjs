@@ -50,6 +50,16 @@ function loadPlaywright() {
   throw new Error('playwright is not installed (looked in node_modules and the global module folders).');
 }
 
+// Playwright's bundled Chromium is not installed in every sandbox; fall back to a system Chrome when there is one.
+function launchOptions(chromium) {
+  const opts = {};
+  if (!existsSync(chromium.executablePath())) {
+    const chrome = [process.env.HEARTHSIDE_CHROME, '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((p) => p && existsSync(p));
+    if (chrome) opts.executablePath = chrome;
+  }
+  return opts;
+}
+
 const OUT = resolve(opt('out', join(root, 'tests/e2e/out/acceptance')));
 const DIST = join(root, 'tests/e2e/out/dist');
 const ONLY = opt('only', 'portrait,landscape,desktop').split(',');
@@ -69,10 +79,25 @@ const T0 = Date.now();
 const log = (...a) => console.log(`[acceptance +${Math.round((Date.now() - T0) / 1000)}s]`, ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function waitForServer(url, ms) {
+/**
+ * Waits for our own preview server. `owner` is a random token written into the served directory: if another process
+ * already holds the port, `vite --strictPort` exits and the port would answer with someone else's app (this happened:
+ * a stale server on 5190 answered while the tests screenshotted and passed against it). The token proves the page we
+ * are about to drive is the build this run just made.
+ */
+async function waitForServer(url, ms, server, owner) {
+  let stderr = '';
+  server?.stderr?.on('data', (d) => { stderr += d; });
   const end = Date.now() + ms;
   while (Date.now() < end) {
-    try { const r = await fetch(url); if (r.ok) return; } catch { /* not yet */ }
+    if (server && server.exitCode !== null) throw new Error(`preview server for ${url} exited (${server.exitCode}): ${stderr.trim()}`);
+    try {
+      const r = await fetch(`${url}__e2e-owner.txt`);
+      if (r.ok) {
+        if ((await r.text()).trim() !== owner) throw new Error(`port ${PORT} is held by another server, not this run's build`);
+        return;
+      }
+    } catch (e) { if (!/fetch failed|ENOTFOUND|ECONNREFUSED/.test(String(e))) throw e; }
     await sleep(250);
   }
   throw new Error(`server at ${url} did not start`);
@@ -84,12 +109,15 @@ async function main() {
     const b = spawnSync(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'build', '--outDir', DIST, '--emptyOutDir', '--logLevel', 'warn'], { cwd: root, stdio: 'inherit' });
     if (b.status !== 0) throw new Error('vite build failed');
   }
+  const owner = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  writeFileSync(join(DIST, '__e2e-owner.txt'), owner);
   const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--outDir', DIST, '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
   let browser = null;
   try {
-    await waitForServer(`http://127.0.0.1:${PORT}/`, 20000);
+    await waitForServer(`http://127.0.0.1:${PORT}/`, 20000, server, owner);
     const { chromium } = loadPlaywright();
     browser = await chromium.launch({
+      ...launchOptions(chromium),
       args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'],
     });
     for (const name of ONLY) {
@@ -127,7 +155,7 @@ async function runViewport(browser, vpName, vp) {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}${m.location()?.url ? ` @ ${m.location().url}` : ''}`); });
   page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   // tutorial off: it is not part of the create flow and would cover the HUD; music off.
@@ -1606,22 +1634,6 @@ async function tapFooter(T, sel) {
   await T.frames(4);
 }
 
-/**
- * A free screen point for a world point while a drag tool is active (a one-finger drag would draw, not pan, so the camera
- * is moved with the rig instead of with drags).
- */
-async function freePoint(T, kind, a, b) {
-  for (let i = 0; i < 4; i++) {
-    const p = await T.page.evaluate(([k, x, z]) => window.__t[k](x, z), [kind, a, b]);
-    if (p?.free) return p;
-    const wx = kind === 'tile' ? a + 0.5 : a, wz = kind === 'tile' ? b + 0.5 : b;
-    await T.page.evaluate(([x, z]) => window.hearthside.view.rig.glideTo(x, z, undefined, 0.1), [wx, wz]);
-    await T.frames(12);
-    await settle(T);
-  }
-  return T.page.evaluate(([k, x, z]) => window.__t[k](x, z), [kind, a, b]);
-}
-
 /** Moves the camera so the north strip of the lot (where the new room goes) is in the middle of the free canvas, zoomed to fit it. */
 async function frameNorth(T, cx, cz, tilesWide) {
   const { w, h } = T.vpInfo;
@@ -1630,6 +1642,39 @@ async function frameNorth(T, cx, cz, tilesWide) {
   await T.page.evaluate(([x, z, p]) => window.hearthside.view.rig.glideTo(x, z, p, 0.15), [cx, cz, ppm]);
   await T.frames(20);
   await settle(T);
+}
+
+/**
+ * Screen points for two ground points, measured under one camera. Measuring each point after recentring the camera
+ * on it separately puts both in the middle of the free area, so a drag between them has zero length (this happened in
+ * portrait once the room was wider than the uncovered strip). Here the camera glides to their midpoint and, if needed,
+ * zooms out until both are free of UI and at least `minPx` apart, then both are measured under that single camera.
+ */
+async function framePair(T, kind, a, b, minPx = 24) {
+  const off = kind === 'tile' ? 0.5 : 0;
+  const cx = (a[0] + b[0]) / 2 + off, cz = (a[1] + b[1]) / 2 + off;
+  const measure = () => T.page.evaluate(([k, ax, az, bx, bz]) => [window.__t[k](ax, az), window.__t[k](bx, bz)], [kind, a[0], a[1], b[0], b[1]]);
+  const { ppm: start, yaw } = await T.page.evaluate(() => ({ ppm: Math.round(window.hearthside.view.rig.ppm), yaw: window.hearthside.view.rig.yaw }));
+  const sin = Math.sin(yaw), cos = Math.cos(yaw), sinPitch = Math.sin((37 * Math.PI) / 180);
+  // Panning by (ox, oy) screen px moves the world target by this much (cameraRig.pan). Trying a few offsets is what
+  // gets both points out of the HUD cards and the build sheet on a short portrait screen.
+  const place = async (ppm, ox, oy) => {
+    const mx = ox / ppm, my = oy / (ppm * sinPitch);
+    await T.page.evaluate(([x, z, p]) => window.hearthside.view.rig.glideTo(x, z, p, 0), [cx - cos * mx - sin * my, cz + sin * mx - cos * my, ppm]);
+    await T.frames(2);
+  };
+  const offsets = [[0, 0], [0, 30], [-70, 30], [-70, 0], [70, 0], [0, 60], [-70, 60], [0, -70], [-70, -70]];
+  const tried = [];
+  for (let ppm = start; ; ppm = Math.max(20, ppm - 6)) {
+    for (const [ox, oy] of offsets) {
+      await place(ppm, ox, oy);
+      const [pa, pb] = await measure();
+      const ok = !!(pa?.free && pb?.free && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx);
+      tried.push({ ppm, ox, oy, ok, a: pa && { x: Math.round(pa.x), y: Math.round(pa.y), free: pa.free }, b: pb && { x: Math.round(pb.x), y: Math.round(pb.y), free: pb.free } });
+      if (ok) return { a: pa, b: pb, ppm, tried };
+    }
+    if (ppm <= 20) { const [pa, pb] = await measure(); return { a: pa, b: pb, ppm, tried }; }
+  }
 }
 
 async function stepHomeEditor(T) {
@@ -1674,9 +1719,9 @@ async function stepHomeEditor(T) {
   // ---- draw the room on the empty north strip of the lot
   const X0 = 8, Z0 = 1, X1 = 14, Z1 = 4;
   await frameNorth(T, (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0 + Z1 - Z0);
-  const pa = await freePoint(T, 'vertex', X0, Z0);
-  const pc = await freePoint(T, 'vertex', X1, Z1);
-  T.check(S, 'both corners of the new room are visible and free of UI', !!pa?.free && !!pc?.free, JSON.stringify({ pa, pc }));
+  const corners = await framePair(T, 'vertex', [X0, Z0], [X1, Z1]);
+  const pa = corners.a, pc = corners.b;
+  T.check(S, 'both corners of the new room are visible, free of UI and apart', !!pa?.free && !!pc?.free && Math.hypot(pa.x - pc.x, pa.y - pc.y) >= 24, JSON.stringify(corners));
   const s0 = await lotSnap(T);
 
   if (!touch) {
@@ -1713,8 +1758,8 @@ async function stepHomeEditor(T) {
     await tapFooter(T, '.bb-cancel');
     T.check(S, 'Cancel clears the preview and the handles but keeps the tool', (await page.locator('.bb-handle:not([hidden])').count()) === 0 && (await page.evaluate(() => window.hearthside.game.buildTool()))?.kind === 'room' && JSON.stringify(await lotSnap(T)) === JSON.stringify(s0), '');
     // draw again, then rotate the device: the preview survives
-    const pa2 = await freePoint(T, 'vertex', X0, Z0);
-    const pc2 = await freePoint(T, 'vertex', X1, Z1);
+    const again = await framePair(T, 'vertex', [X0, Z0], [X1, Z1]);
+    const pa2 = again.a, pc2 = again.b;
     await drag(T, pa2, pc2);
     await T.frames(4);
     const before = await footerText(T);
@@ -1744,8 +1789,8 @@ async function stepHomeEditor(T) {
   const wantRoomCost = touch ? cents(costText) : null;
   if (touch) await tapFooter(T, '.bb-confirm');
   else {
-    const pa3 = await freePoint(T, 'vertex', X0, Z0);
-    const pc3 = await freePoint(T, 'vertex', X1, Z1);
+    const finalCorners = await framePair(T, 'vertex', [X0, Z0], [X1, Z1]);
+    const pa3 = finalCorners.a, pc3 = finalCorners.b;
     await drag(T, pa3, pc3);
     await T.frames(4);
   }
@@ -1864,8 +1909,8 @@ async function stepHomeEditor(T) {
   await page.waitForTimeout(300);
   const areaTool = await page.evaluate(() => ({ b: window.hearthside.game.buildTool(), p: window.hearthside.game.paintTool() }));
   T.check(S, 'the Area scope uses the floor build tool (rectangle) and ends the paint tool', areaTool.b?.kind === 'floor' && areaTool.b.shape === 'rect' && areaTool.p === null, JSON.stringify(areaTool));
-  const fa = await freePoint(T, 'tile', X0, Z0);
-  const fb = await freePoint(T, 'tile', X0 + 1, Z0 + 1);
+  const floorPair = await framePair(T, 'tile', [X0, Z0], [X0 + 1, Z0 + 1], 20);
+  const fa = floorPair.a, fb = floorPair.b;
   const s3 = await lotSnap(T);
   await drag(T, fa, fb);
   await T.frames(4);
