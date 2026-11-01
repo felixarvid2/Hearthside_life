@@ -11,7 +11,7 @@ State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite b
 - `npm run e2e:acceptance` (brief section 26 scenario through the real UI):
   - landscape 844x390: 122/122 passed.
   - desktop 1280x720: 122/122 passed.
-  - portrait 390x844: 124/124 passed before the character change. Being re-run after a test fix; result TODO.
+  - portrait 390x844: 124/124 passed (also after the character change and the neighbour-menu test fix).
 
 ## Acceptance fixes (11 issues, all fixed)
 
