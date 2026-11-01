@@ -51,7 +51,8 @@ const outfitOf = (id) => {
 };
 // [yaw, pitch, dist, ty] per layer: tops close on the torso, bottoms on the hips and legs, full outfits head to toe, shoes on the feet
 const FRAMING = { top: [2.3, 1.28], bottom: [3.0, 0.7], full: [4.3, 0.92], shoe: [1.7, 0.14] };
-const VIEWS = [['front', 0.0], ['three', 0.7]];
+const VIEWS = opt('yaws', '') ? opt('yaws', '').split(',').map((y) => [`y${y}`, Number(y)]) : [['front', 0.0], ['three', 0.7]];
+const DIST = opt('dist', ''), TY = opt('ty', ''), PITCH = Number(opt('pitch', '0.08'));
 
 function waitForServer(url, ms) {
   return (async () => {
@@ -82,16 +83,16 @@ try {
     for (const id of ids) {
       for (const f of ['a', 'b']) {
         const person = f === 'a' ? 0 : 1;
-        const [dist, ty] = FRAMING[layerOf(id)];
+        const [dist, ty] = [DIST ? Number(DIST) : FRAMING[layerOf(id)][0], TY ? Number(TY) : FRAMING[layerOf(id)][1]];
         for (const [vn, yaw] of VIEWS) {
-          await page.evaluate(([p, o, y, d, t]) => {
+          await page.evaluate(([p, o, y, d, t, pt]) => {
             const lab = window.lab;
             lab.only([p]); lab.place(p, 0, 0, 0);
             lab.set(p, { outfit: o, hair: 'none', skin: '#e8c39d' });
             lab.playOne(p, 'idle'); lab.step(0.05, 4);
             lab.orthoCam(false);
-            lab.cam(y, 0.08, d, 0, t, 0, 30);
-          }, [person, outfitOf(id), yaw, dist, ty]);
+            lab.cam(y, pt, d, 0, t, 0, 30);
+          }, [person, outfitOf(id), yaw, dist, ty, PITCH]);
           await page.waitForTimeout(120);
           const name = `${id}_${f}_${vn}.png`;
           await shoot(join(OUT, name));
@@ -102,6 +103,7 @@ try {
     }
     // contact sheets: one row per garment, four tiles (a front, a three, b front, b three)
     const per = 4;
+    if (VIEWS.length !== 2) { console.log('custom views: no sheets'); } else
     for (let s = 0; s * per < ids.length; s++) {
       const chunk = ids.slice(s * per, s * per + per);
       const comps = [];

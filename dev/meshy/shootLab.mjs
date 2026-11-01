@@ -95,7 +95,8 @@ if (['hair', 'hairlive'].includes(PLAN)) {
     for (const f of ['a', 'b']) {
       const set = { hair: h, outfit: TEE, hairColor: COLORS[k % COLORS.length], facial: null };
       if (PLAN === 'hair') {
-        for (const [v, yaw] of [['front', 0], ['three', 0.7], ['side', 1.57], ['back', Math.PI]]) shot(`${f}_h_${h}_${v}`, closeVp, { person: solo(f), set, cam: [yaw, 0.08, 2.3, 1.38, 28] });
+        for (const [v, yaw] of [['front', 0], ['three', 0.7], ['side', 1.57], ['back', Math.PI]]) shot(`${f}_h_${h}_${v}`, closeVp, { person: solo(f), set, cam: [yaw, 0.08, 1.55, 1.58, 28] });
+        shot(`${f}_h_${h}_drape`, closeVp, { person: solo(f), set, cam: [Math.PI - 0.6, 0.1, 2.3, 1.4, 28] });
       } else {
         shot(`${f}_hl_${h}_walk`, LIVE, { person: solo(f), set, anim: 'walk', steps: [0.05, 8], ortho: 2.6 });
         shot(`${f}_hl_${h}_sit`, LIVE, { person: solo(f), set, anim: 'sitIdle', posture: 'seated', steps: [0.05, 6], ortho: 2.6 });
