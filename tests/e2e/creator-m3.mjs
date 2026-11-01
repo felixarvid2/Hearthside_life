@@ -753,3 +753,5 @@ async function stepMoveIn(T) {
   await page.evaluate(() => { for (let i = 0; i < 6; i++) window.hearthside.debug.frame(1 / 30); });
   await T.shot('live-after-move-in');
 }
+
+main().catch((e) => { console.error(e); process.exit(1); });
