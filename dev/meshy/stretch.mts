@@ -17,11 +17,12 @@ const parse = (file: string) => new Promise<{ scene: THREE.Group; animations: TH
   new GLTFLoader().parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer, '', (g) => res(g as never), rej);
 });
 
-const body = await parse(`${root}public/assets/characters/body_a.glb`);
+const frame = (arg('frame') ?? 'a') as 'a' | 'b';
+const body = await parse(`${root}public/assets/characters/body_${frame}.glb`);
 let sm: THREE.SkinnedMesh | null = null;
 body.scene.traverse((o) => { if (!sm && (o as THREE.SkinnedMesh).isSkinnedMesh) sm = o as THREE.SkinnedMesh; });
 const mannequin = sm as unknown as THREE.SkinnedMesh;
-const raw = rawFromMesh('a', mannequin);
+const raw = rawFromMesh(frame, mannequin);
 const clips = new Map<string, THREE.AnimationClip>();
 for (const f of ['anims_1', 'anims_2']) for (const c of (await parse(`${root}public/assets/characters/${f}.glb`)).animations) clips.set(c.name, c);
 
@@ -29,14 +30,14 @@ const doc = await new NodeIO().read(arg('glb') ?? `${root}dev/meshy/base_male_te
 const prim = doc.getRoot().listMeshes()[0]!.listPrimitives()[0]!;
 const index = prim.getIndices()!.getArray()!;
 const opts: Record<string, number> = {};
-for (const a of process.argv.slice(2)) { const m = /^--(height|armScale|sigma|smooth|smoothAmount)=(.+)$/.exec(a); if (m) opts[m[1]!] = Number(m[2]); }
+for (const a of process.argv.slice(2)) { const m = /^--(height|girth|armScale|sigma|smooth|smoothAmount)=(.+)$/.exec(a); if (m) opts[m[1]!] = Number(m[2]); }
 const fit = fitMeshy({ positions: new Float32Array(prim.getAttribute('POSITION')!.getArray()!), normals: new Float32Array(prim.getAttribute('NORMAL')!.getArray()!), index }, raw, opts);
 
 const geo = new THREE.BufferGeometry();
 geo.setAttribute('position', new THREE.BufferAttribute(fit.positions, 3));
 geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(fit.joints, 4));
 geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(fit.weights, 4));
-geo.setIndex(new THREE.BufferAttribute(new Uint32Array(index), 1));
+geo.setIndex(new THREE.BufferAttribute(fit.index, 1));
 const skel = mannequin.skeleton;
 const mm = new THREE.SkinnedMesh(geo, new THREE.MeshBasicMaterial());
 body.scene.add(mm);
@@ -75,7 +76,7 @@ const dump = arg('dump');
 if (arg('edges')) {
   animator.play('idle' as never, { fade: 0 }); animator.update(0); animator.update(0.4); body.scene.updateMatrixWorld(true); skel.update();
   const bp = geo.getAttribute('position');
-  for (const w of stretch(mm, index).worst) console.log('edge', w.r.toFixed(1), [w.a, w.b!].map((i) => `(${[0, 1, 2].map((k) => bp.array[i * 3 + k]!.toFixed(3)).join(',')} ${bonesOf(i)})`).join(' - '));
+  for (const w of stretch(mm, fit.index).worst) console.log('edge', w.r.toFixed(1), [w.a, w.b!].map((i) => `(${[0, 1, 2].map((k) => bp.array[i * 3 + k]!.toFixed(3)).join(',')} ${bonesOf(i)})`).join(' - '));
 }
 if (dump) mkdirSync(dump, { recursive: true });
 
@@ -86,7 +87,7 @@ for (const [id, posture, t] of poses) {
   animator.update(t);
   body.scene.updateMatrixWorld(true);
   skel.update();
-  const a = stretch(mm, index), r = stretch(ref, refIdx);
+  const a = stretch(mm, fit.index), r = stretch(ref, refIdx);
   console.log(`${id.padEnd(9)} t=${t}  meshy max ${a.max.toFixed(2)} p99 ${a.p99.toFixed(2)} >2x ${a.over2} >3x ${a.over3} | mannequin max ${r.max.toFixed(2)} p99 ${r.p99.toFixed(2)} >2x ${r.over2}   worst: ${a.worst.slice(0, 3).map((w) => `${w.r.toFixed(1)}@y${mm.geometry.getAttribute('position').getY(w.a).toFixed(2)}x${mm.geometry.getAttribute('position').getX(w.a).toFixed(2)}/${bonesOf(w.a)}`).join(' ')}`);
   if (dump) {
     const n = geo.getAttribute('position').count, out = new Float32Array(n * 3), v = new THREE.Vector3();
@@ -96,7 +97,7 @@ for (const [id, posture, t] of poses) {
 }
 if (dump) {
   writeFileSync(`${dump}/bind_0.f32`, Buffer.from(fit.positions.buffer));
-  writeFileSync(`${dump}/index.u32`, Buffer.from(new Uint32Array(index).buffer));
+  writeFileSync(`${dump}/index.u32`, Buffer.from(fit.index.buffer));
   const n = geo.getAttribute('position').count, cols = new Uint8Array(n * 3);
   for (let i = 0; i < n; i++) { const bn = bonesOf(i) ?? ''; const h = [...bn].reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 7); cols.set([(h & 255), ((h >> 8) & 255), ((h >> 16) & 255)], i * 3); }
   writeFileSync(`${dump}/colors.u8`, Buffer.from(cols.buffer));

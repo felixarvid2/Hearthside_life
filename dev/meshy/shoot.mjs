@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Screenshots of dev/meshy.html (procedural character left, Meshy character right) -> dev/meshy/shots/.
-//   node dev/meshy/shoot.mjs [--only=name,name] [--out=DIR] [--q=extra&query]
+//   node dev/meshy/shoot.mjs [--only=male,female_live_idle,...] [--out=DIR] [--q=extra&query]
+// One page per model (male / female / test, and with generated garments over the Meshy body); scenario files are <model>_<scenario>.png.
 // Starts a vite dev server on port 5191 and runs Chromium (SwiftShader) under `flock /tmp/hearthside-browser.lock`
 // (only one browser at a time on this machine). Also prints window.lab.stretch() for every scenario with stretch: true.
 
@@ -37,27 +38,36 @@ mkdirSync(OUT, { recursive: true });
 
 const LIVE = { vp: [640, 400], dpr: 2 };
 const CLOSE = { vp: [1280, 720], dpr: 1 };
-/** ops: [method, ...args] calls on window.lab before the screenshot. */
-const S = (name, base, q, ops, extra = {}) => ({ name, ...base, q: `clean=1&freeze=1&${q}`, ops, ...extra });
+/** Scenario: name, viewport, ops = [lab method, ...args]. Every scenario starts from the standing scene. */
+const S = (name, base, ops, extra = {}) => ({ name, ...base, ops: [['scene', 'stand'], ['k', 0], ...ops], ...extra });
+const V = (v, over) => ['view', v, over ?? {}];
 const SCENARIOS = [
   // game distance (orthographic live camera, 66 px/m), procedural left / Meshy right
-  S('live_idle', LIVE, 'view=live', [['play', 'idle'], ['advance', 0.1, 6]]),
-  S('live_walk', LIVE, 'view=live', [['play', 'walk'], ['advance', 0.05, 8]], { stretch: true }),
-  S('live_sit', LIVE, 'view=live&scene=sit', [['play', 'sitIdle', 'seated'], ['advance', 0.1, 6]], { stretch: true }),
-  S('live_lie', LIVE, 'view=live&scene=lie', [['play', 'sleep', 'lying'], ['advance', 0.1, 4]], { stretch: true }),
-  S('live_eat', LIVE, 'view=live', [['play', 'eat'], ['advance', 0.05, 10]], { stretch: true }),
-  S('live_idle_k2', LIVE, 'view=live&k=2', [['play', 'idle'], ['advance', 0.1, 6]]),
-  S('live_max_zoom', { vp: [640, 400], dpr: 2 }, 'view=live&ppm=150', [['play', 'idle'], ['advance', 0.1, 6]]),
+  S('live_idle', LIVE, [V('live'), ['play', 'idle'], ['advance', 0.1, 6]]),
+  S('live_walk', LIVE, [V('live'), ['play', 'walk'], ['advance', 0.05, 8]], { stretch: true }),
+  S('live_sit', LIVE, [V('live'), ['play', 'sitIdle', 'seated'], ['advance', 0.1, 6]], { stretch: true }),
+  S('live_lie', LIVE, [V('live'), ['play', 'sleep', 'lying'], ['advance', 0.1, 4]], { stretch: true }),
+  S('live_eat', LIVE, [V('live'), ['play', 'eat'], ['advance', 0.05, 10]], { stretch: true }),
+  S('live_idle_k2', LIVE, [V('live'), ['k', 2], ['play', 'idle'], ['advance', 0.1, 6]]),
+  S('live_max_zoom', LIVE, [V('live', { ppm: 150 }), ['play', 'idle'], ['advance', 0.1, 6]]),
   // close-ups (portrait lighting as in the creator/portraits)
-  S('close_front', CLOSE, 'view=front', [['play', 'idle'], ['advance', 0.1, 6]]),
-  S('close_threeq', CLOSE, 'view=threeq', [['play', 'idle'], ['advance', 0.1, 6]]),
+  S('close_front', CLOSE, [V('front'), ['play', 'idle'], ['advance', 0.1, 6]]),
+  S('close_threeq', CLOSE, [V('threeq'), ['play', 'idle'], ['advance', 0.1, 6]]),
   // joints in bent poses
-  S('joints_shoulders_wave', CLOSE, 'view=shoulders', [['play', 'wave'], ['advance', 0.05, 8]], { stretch: true }),
-  S('joints_elbows_eat', CLOSE, 'view=elbows', [['play', 'eat'], ['advance', 0.05, 10]], { stretch: true }),
-  S('joints_hips_sit', CLOSE, 'view=hips&scene=sit&yaw=0.9', [['play', 'sitIdle', 'seated'], ['advance', 0.1, 6]], { stretch: true }),
-  S('joints_knees_sit', CLOSE, 'view=knees&scene=sit', [['play', 'sitIdle', 'seated'], ['advance', 0.1, 6]]),
-  S('joints_walk_hips_knees', CLOSE, 'view=hips', [['play', 'walk'], ['advance', 0.05, 8]]),
-  S('full_bind', CLOSE, 'view=full&bind=1', [['advance', 0.1, 2]]),
+  S('joints_shoulders_wave', CLOSE, [V('shoulders'), ['play', 'wave'], ['advance', 0.05, 8]], { stretch: true }),
+  S('joints_elbows_eat', CLOSE, [V('elbows'), ['play', 'eat'], ['advance', 0.05, 10]], { stretch: true }),
+  S('joints_hips_sit', CLOSE, [V('hips', { yaw: 0.9 }), ['play', 'sitIdle', 'seated'], ['advance', 0.1, 6]], { stretch: true }),
+  S('joints_knees_sit', CLOSE, [V('knees', { yaw: 0.9, dist: 2.2 }), ['play', 'sitIdle', 'seated'], ['advance', 0.1, 6]]),
+  S('joints_walk_hips_knees', CLOSE, [V('hips', { ty: 0.75, dist: 2.4 }), ['play', 'walk'], ['advance', 0.05, 8]]),
+  S('full_bind', CLOSE, [V('full'), ['bind', true], ['advance', 0.1, 2]]),
+];
+/** Models (see dev/meshy.ts MODELS) and the query each page is opened with. */
+const MODEL_PAGES = [
+  { prefix: 'male', q: 'model=male' },
+  { prefix: 'female', q: 'model=female' },
+  { prefix: 'test', q: 'model=test' },
+  { prefix: 'male_garments', q: 'model=male&garments=1', only: ['live_idle', 'live_sit', 'live_walk', 'close_front', 'joints_hips_sit'] },
+  { prefix: 'female_garments', q: 'model=female&garments=1', only: ['live_idle', 'live_sit', 'live_walk', 'close_front', 'joints_hips_sit'] },
 ];
 
 async function waitForServer(url, ms) {
@@ -75,27 +85,40 @@ try {
   await waitForServer(`http://127.0.0.1:${PORT}/dev/meshy.html`, 30000);
   const { chromium } = loadPlaywright();
   browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  for (const sc of SCENARIOS) {
-    if (ONLY.length && !ONLY.includes(sc.name)) continue;
-    const ctx = await browser.newContext({ viewport: { width: sc.vp[0], height: sc.vp[1] }, deviceScaleFactor: sc.dpr });
-    const page = await ctx.newPage();
-    const errors = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
-    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-    await page.goto(`http://127.0.0.1:${PORT}/dev/meshy.html?${sc.q}${EXTRA ? `&${EXTRA}` : ''}`);
-    await page.waitForFunction(() => window.ready === true, null, { timeout: 120000 });
-    for (const [m, ...a] of sc.ops) await page.evaluate(([mm, aa]) => window.lab[mm](...aa), [m, a]);
-    await page.waitForTimeout(400);
-    const file = join(OUT, `${sc.name}.png`);
-    await page.screenshot({ path: file });
-    let line = `[shoot] ${sc.name}`;
-    if (sc.stretch) {
-      const st = await page.evaluate(() => window.lab.stretch());
-      line += `  stretch max ${st.max.toFixed(2)} p99 ${st.p99.toFixed(2)} >2x: ${st.over2} >3x: ${st.over3}  worst ${JSON.stringify(st.worst.slice(0, 3))}`;
+  for (const mp of MODEL_PAGES) {
+    for (const dpr of [2, 1]) {
+      const list = SCENARIOS.filter((sc) => sc.dpr === dpr && (!mp.only || mp.only.includes(sc.name)) && (!ONLY.length || ONLY.includes(`${mp.prefix}_${sc.name}`) || ONLY.includes(mp.prefix)));
+      if (!list.length) continue;
+      const ctx = await browser.newContext({ viewport: { width: 640, height: 400 }, deviceScaleFactor: dpr });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+      await page.goto(`http://127.0.0.1:${PORT}/dev/meshy.html?clean=1&freeze=1&${mp.q}${EXTRA ? `&${EXTRA}` : ''}`);
+      try {
+        await page.waitForFunction(() => window.ready === true, null, { timeout: 180000 });
+      } catch (e) {
+        console.log(`[shoot] ${mp.prefix}: page not ready. info="${await page.evaluate(() => document.getElementById('info')?.textContent?.slice(0, 600))}" errors=${errors.slice(0, 3).join(' | ')}`);
+        await ctx.close();
+        continue;
+      }
+      if (dpr === 2 && !mp.reported) { mp.reported = true; console.log(`[shoot] ${mp.prefix} fit ${JSON.stringify(await page.evaluate(() => { const r = window.lab.report(); return { ...r.fit, head: undefined, skull: undefined }; }))}`); }
+      for (const sc of list) {
+        await page.setViewportSize({ width: sc.vp[0], height: sc.vp[1] });
+        for (const [m, ...a] of sc.ops) await page.evaluate(([mm, aa]) => window.lab[mm](...aa), [m, a]);
+        await page.waitForTimeout(500);
+        const file = join(OUT, `${mp.prefix}_${sc.name}.png`);
+        await page.screenshot({ path: file });
+        let line = `[shoot] ${mp.prefix}_${sc.name}`;
+        if (sc.stretch) {
+          const st = await page.evaluate(() => window.lab.stretch());
+          line += `  stretch max ${st.max.toFixed(2)} p99 ${st.p99.toFixed(2)} >2x: ${st.over2} >3x: ${st.over3}`;
+        }
+        if (errors.length) line += `  ERRORS: ${errors.slice(0, 3).join(' | ')}`;
+        console.log(line);
+      }
+      await ctx.close();
     }
-    if (errors.length) line += `  ERRORS: ${errors.slice(0, 3).join(' | ')}`;
-    console.log(line);
-    await ctx.close();
   }
 } finally {
   await browser?.close();

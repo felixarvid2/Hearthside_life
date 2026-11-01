@@ -14,6 +14,8 @@ import type { Appearance, BodyFrame, GarmentChoice, GarmentLayer, Outfit, Postur
 import type { ContentDB } from '../src/content/types';
 import * as CH from '../src/content/character';
 import { cloneSkeleton, loadCharacterAssets } from '../src/characters/assets';
+import { toGeometry } from '../src/characters/geometry';
+import { buildBodyTemplate } from '../src/characters/template';
 import type { CharacterAssets, FrameAssets } from '../src/characters/assets';
 import { Animator } from '../src/characters/animation';
 import { CharacterView, hairGeometry } from '../src/characters/CharacterView';
@@ -23,6 +25,7 @@ import { POSTURE_ANCHORS } from '../src/characters/posture';
 import { CameraRig, DEFAULT_PPM } from '../src/render/cameraRig';
 import { Lighting } from '../src/render/lighting';
 import { DEFAULT_FIT, fitMeshy } from './meshyFit';
+import { meshyRawBody } from './meshyRaw';
 import type { FitOptions, FitReport } from './meshyFit';
 
 const params = new URLSearchParams(location.search);
@@ -43,8 +46,19 @@ const content: ContentDB = {
   hairColors: CH.HAIR_COLORS, eyeColors: CH.EYE_COLORS,
 };
 
-const FRAME: BodyFrame = params.get('frame') === 'b' ? 'b' : 'a';
-const HAIR_ID = params.get('procHair') ?? 'crop-side-part';
+// models: the three Meshy bases (male/female wear base-layer underwear and are bald; 'test' has a tee, shorts and cropped hair)
+const MODELS = {
+  test: { glb: '/dev/meshy/base_male_test.glb', frame: 'a' as BodyFrame, outfit: ['tee-crew|#d7d4dc', 'shorts-casual|#3a3a3e', 'sneakers|#b9b5c8'] },
+  male: { glb: '/dev/meshy/base_male_underwear.glb', frame: 'a' as BodyFrame, outfit: [] as string[] },
+  female: { glb: '/dev/meshy/base_female_underwear.glb', frame: 'b' as BodyFrame, outfit: [] as string[] },
+};
+const MODEL = (params.get('model') as keyof typeof MODELS | null) ?? 'male';
+const MODEL_DEF = MODELS[MODEL in MODELS ? MODEL : 'male'];
+const FRAME: BodyFrame = (params.get('frame') as BodyFrame | null) ?? MODEL_DEF.frame;
+/** garments=1: the generated garments are fitted to the Meshy body (template built from the Meshy mesh) and drawn over it. */
+const GARMENTS = params.get('garments') === '1';
+const OUTFIT_IDS = (params.get('outfit') ?? (MODEL === 'female' ? 'tank-top|#c9c3d6,shorts-casual|#4a4a52,sandals-slide|#8a6a4a' : 'tee-crew|#d7d4dc,shorts-casual|#3a3a3e,sneakers|#b9b5c8')).split(',').filter(Boolean);
+const HAIR_ID = params.get('procHair') ?? (MODEL === 'female' ? 'bob-chin' : 'crop-side-part');
 
 function proceduralAppearance(): Appearance {
   const bp = CH.BODY_PRESETS.filter((b) => b.frame === FRAME)[0]!;
@@ -59,13 +73,16 @@ function proceduralAppearance(): Appearance {
   };
 }
 
-function proceduralOutfit(): Outfit {
-  // the Meshy model wears a light grey tee, dark shorts and trainers: match it as closely as the catalogue allows
-  const ids: Array<[string, string]> = [['tee-crew', '#d7d4dc'], ['shorts-casual', '#3a3a3e'], ['sneakers', '#b9b5c8']];
+/** Closest catalogue match of the Meshy base layer when garments=0: boxer briefs / tank top + bike shorts have no catalogue garment, so swimwear. */
+const PROC_BASE_IDS = (params.get('procOutfit') ?? (MODEL === 'test' ? OUTFIT_IDS.join(',') : MODEL === 'female' ? 'tank-top|#4d4a57,shorts-casual|#4d4a57' : 'swim-trunks|#3b4052')).split(',').filter(Boolean);
+
+function proceduralOutfit(ids: string[] = OUTFIT_IDS): Outfit {
+  // the procedural person wears the catalogue garments closest to the Meshy model's base layer (or the same garments when garments=1)
   const layers: Partial<Record<GarmentLayer, GarmentChoice>> = {};
-  for (const [id, color] of ids) {
-    const g = content.garments[id];
-    if (g) layers[g.layer] = { garmentId: id, color, pattern: 'solid', patternColor: '#f6f1e6' };
+  for (const spec of ids) {
+    const [id, color] = spec.split('|') as [string, string | undefined];
+    const g = content.garments[id!];
+    if (g) layers[g.layer] = { garmentId: g.id, color: color ?? g.defaultColor, pattern: 'solid', patternColor: '#f6f1e6' };
   }
   return { id: 'meshy-cmp', name: 'Compare', layers, accessories: [] };
 }
@@ -177,6 +194,8 @@ interface MeshyAsset {
   fileBytes: number;
   texSize: [number, number];
   sourceTris: number;
+  /** Fitted mesh as a RawBody (template / garment generators). */
+  meshyRaw: ReturnType<typeof meshyRawBody>;
 }
 
 function downscaleTexture(tex: THREE.Texture, size: number): THREE.Texture {
@@ -197,7 +216,7 @@ function downscaleTexture(tex: THREE.Texture, size: number): THREE.Texture {
 }
 
 async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
-  const url = params.get('glb') ?? '/dev/meshy/base_male_test.glb';
+  const url = params.get('glb') ?? MODEL_DEF.glb;
   const resp = await fetch(url);
   const buf = await resp.arrayBuffer();
   const gltf = await new GLTFLoader().parseAsync(buf, url.slice(0, url.lastIndexOf('/') + 1));
@@ -216,8 +235,8 @@ async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
   for (let i = 0; i < index.length; i++) index[i] = idx ? idx.getX(i) : i;
   const fit: FitOptions = {
     ...DEFAULT_FIT,
-    height: num('height', DEFAULT_FIT.height), armScale: num('armScale', DEFAULT_FIT.armScale),
-    sigma: num('sigma', DEFAULT_FIT.sigma), smooth: num('smooth', DEFAULT_FIT.smooth), smoothAmount: num('smoothAmount', DEFAULT_FIT.smoothAmount),
+    height: num('height', DEFAULT_FIT.height), girth: num('girth', DEFAULT_FIT.girth), armScale: num('armScale', DEFAULT_FIT.armScale),
+    splitLegs: params.get('split') !== '0', straightenLegs: params.get('legs') !== '0', sigma: num('sigma', DEFAULT_FIT.sigma), smooth: num('smooth', DEFAULT_FIT.smooth), smoothAmount: num('smoothAmount', DEFAULT_FIT.smoothAmount),
   };
   const res = fitMeshy({ positions: new Float32Array(pos.array), normals: new Float32Array(nor.array), index }, fa.raw, fit);
   const geo = new THREE.BufferGeometry();
@@ -226,7 +245,7 @@ async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
   geo.setAttribute('uv', g.getAttribute('uv').clone());
   geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(res.joints, 4));
   geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(res.weights, 4));
-  geo.setIndex(new THREE.BufferAttribute(index, 1));
+  geo.setIndex(new THREE.BufferAttribute(res.index, 1));
   geo.computeBoundingSphere();
   const src = (m.material as THREE.MeshStandardMaterial);
   let map = src.map ?? null;
@@ -234,40 +253,51 @@ async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
   if (map) map = downscaleTexture(map, num('tex', 0));
   if (map) { map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; }
   const material = new THREE.MeshStandardMaterial({ map, roughness: num('rough', 0.85), metalness: 0 });
-  return { geometry: geo, material, report: res.report, fit, fileBytes: buf.byteLength, texSize: map && num('tex', 0) ? [(map.image as { width: number }).width, (map.image as { height: number }).height] : texSize, sourceTris: index.length / 3 };
+  return { geometry: geo, material, report: res.report, fit, fileBytes: buf.byteLength, texSize: map && num('tex', 0) ? [(map.image as { width: number }).width, (map.image as { height: number }).height] : texSize, sourceTris: index.length / 3, meshyRaw: meshyRawBody(fa.raw, res) };
 }
 
 class MeshyCharacter {
-  readonly root = new THREE.Group();
-  readonly animator: Animator;
+  readonly root: THREE.Group;
+  private animator: Animator | null = null;
   readonly skeleton: THREE.Skeleton;
   readonly mesh: THREE.SkinnedMesh;
-  readonly bones: Map<string, THREE.Bone>;
   private extras: THREE.Object3D[] = [];
   private hairMat: { material: THREE.Material; uniforms: ReturnType<typeof createHairMaterial>['uniforms'] } | null = null;
   hairMesh: THREE.SkinnedMesh | null = null;
 
-  constructor(private fa: FrameAssets, assets: CharacterAssets, private asset: MeshyAsset, wire: boolean) {
-    const { root, skeleton, byName } = cloneSkeleton(fa);
-    this.skeleton = skeleton;
-    this.bones = byName;
-    this.root.add(root);
+  /** With `cv` the Meshy mesh replaces the skin of a CharacterView (whose garments were generated on the Meshy body). */
+  constructor(private fa: FrameAssets, assets: CharacterAssets, private asset: MeshyAsset, wire: boolean, private cv: CharacterView | null = null) {
+    if (cv) {
+      this.root = cv.root;
+      const skin = cv.root.getObjectByName('skin') as THREE.SkinnedMesh;
+      skin.visible = false;
+      this.skeleton = skin.skeleton;
+    } else {
+      this.root = new THREE.Group();
+      const { root, skeleton } = cloneSkeleton(fa);
+      this.skeleton = skeleton;
+      this.root.add(root);
+    }
     this.mesh = new THREE.SkinnedMesh(asset.geometry, asset.material);
     this.mesh.name = 'meshy';
-    this.mesh.bind(skeleton, new THREE.Matrix4());
+    this.mesh.bind(this.skeleton, new THREE.Matrix4());
     this.mesh.frustumCulled = false;
     this.mesh.castShadow = true;
     this.root.add(this.mesh);
     if (wire) {
       const w = new THREE.SkinnedMesh(asset.geometry, new THREE.MeshBasicMaterial({ color: '#10202a', wireframe: true, transparent: true, opacity: 0.55 }));
-      w.bind(skeleton, new THREE.Matrix4());
+      w.bind(this.skeleton, new THREE.Matrix4());
       w.frustumCulled = false;
       this.root.add(w);
       this.extras.push(w);
     }
-    this.animator = new Animator(this.root, assets.clips);
-    this.animator.play('idle', { fade: 0 });
+    if (!cv) {
+      this.animator = new Animator(this.root, assets.clips);
+      this.animator.play('idle', { fade: 0 });
+    }
   }
+
+  stopAnim(): void { this.animator?.mixer.stopAllAction(); this.cv?.update(0); }
 
   /** Adds the procedural hair geometry, refitted to the Meshy head box (see hairFit). */
   addHair(assets: CharacterAssets, hairId: string, color: string): { fit: Record<string, number> } {
@@ -289,6 +319,7 @@ class MeshyCharacter {
     const def = content.hair[hairId];
     uniforms.uStrand.value = STRAND_IDS[typeof def?.build.strand === 'string' ? def.build.strand : 'straight'] ?? 0;
     const hm = new THREE.SkinnedMesh(g, material);
+    hm.userData.hairFit = fit;
     hm.name = 'hair';
     hm.bind(this.skeleton, new THREE.Matrix4());
     hm.frustumCulled = false;
@@ -299,13 +330,13 @@ class MeshyCharacter {
     return { fit: fit as unknown as Record<string, number> };
   }
 
-  update(dt: number): void { this.animator.update(Math.min(dt, 0.1)); }
-  play(a: AnimId, posture?: Posture): void { this.animator.play(a, { fade: 0, posture }); }
+  update(dt: number): void { if (this.cv) this.cv.update(dt); else this.animator!.update(Math.min(dt, 0.1)); }
+  play(a: AnimId, posture?: Posture): void { if (this.cv) this.cv.play(a, { fade: 0, posture }); else this.animator!.play(a, { fade: 0, posture }); }
   stats(): { triangles: number; drawCalls: number } {
     const t = this.asset.geometry.getIndex()!.count / 3;
     return { triangles: t + (this.hairMesh ? this.hairMesh.geometry.getIndex()!.count / 3 : 0), drawCalls: 1 + (this.hairMesh ? 1 : 0) };
   }
-  dispose(): void { this.animator.dispose(); this.hairMat?.material.dispose(); this.root.removeFromParent(); }
+  dispose(): void { this.animator?.dispose(); this.cv?.dispose(); this.hairMat?.material.dispose(); this.root.removeFromParent(); }
 }
 
 /**
@@ -418,7 +449,7 @@ function setScene(s: SceneName): void {
 
 function play(a: AnimId, posture?: Posture): void {
   currentAnim = a;
-  const p = posture ?? (a === 'sleep' || a === 'lieDown' ? 'lying' : a === 'sitIdle' || a === 'sitDown' || a === 'sitTalk' ? 'seated' : undefined);
+  const p = posture ?? (a === 'sleep' || a === 'lieDown' ? 'lying' : a === 'sitIdle' || a === 'sitDown' || a === 'sitTalk' ? 'seated' : 'standing');
   proc.play(a, { fade: 0, posture: p });
   meshy.play(a, p);
   if (p === 'lying') setScene('lie'); else if (p === 'seated') setScene('sit'); else if (sceneName !== 'stand' && (a === 'idle' || a === 'walk')) setScene('stand');
@@ -437,15 +468,27 @@ function step(dt: number, n = 1): void {
   pose();
 }
 
+/** A CharacterView whose body template (and therefore garments, hair and morph targets) was built from the Meshy mesh. */
+function meshyGarmentView(base: CharacterAssets, fa: FrameAssets): CharacterView {
+  const template = buildBodyTemplate(asset.meshyRaw);
+  const derived: FrameAssets = { ...fa, raw: asset.meshyRaw, template, skinGeometry: toGeometry(template.skinMesh, 'skin-meshy') };
+  const assetsM: CharacterAssets = { frames: { a: derived, b: derived }, clips: base.clips, cache: new Map() };
+  const a = proceduralAppearance();
+  a.hair = { ...a.hair, styleId: '' }; // bald: hair comes from addHair (fitted)
+  const cv = new CharacterView(assetsM, content, a, proceduralOutfit());
+  cv.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
+  return cv;
+}
+
 async function main(): Promise<void> {
   const t0 = performance.now();
   assets = await loadCharacterAssets('/assets/');
   const fa = assets.frames[FRAME];
   asset = await loadMeshy(fa);
   loadMs = performance.now() - t0;
-  proc = new CharacterView(assets, content, proceduralAppearance(), proceduralOutfit());
+  proc = new CharacterView(assets, content, proceduralAppearance(), proceduralOutfit(GARMENTS ? OUTFIT_IDS : PROC_BASE_IDS));
   proc.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
-  meshy = new MeshyCharacter(fa, assets, asset, params.get('wire') === '1');
+  meshy = new MeshyCharacter(fa, assets, asset, params.get('wire') === '1', GARMENTS ? meshyGarmentView(assets, fa) : null);
   if (params.has('hair')) hairInfo = meshy.addHair(assets, params.get('hair')!, params.get('hairColor') ?? '#5b3824');
   slotP = makeSlot(proc.root);
   slotM = makeSlot(meshy.root);
@@ -468,7 +511,7 @@ async function main(): Promise<void> {
     timer.update();
     const dt = timer.getDelta();
     if (!frozen) step(dt);
-    if (bindPose) { meshy.animator.mixer.stopAllAction(); proc.update(0); }
+    if (bindPose) { meshy.stopAnim(); proc.update(0); }
     pose();
     const cam = activeCamera();
     layout();
@@ -549,7 +592,7 @@ function benchInstances(kind: 'proc' | 'meshy', n: number): { objs: THREE.Object
   for (let i = 0; i < n; i++) {
     const x = (i % cols) * 1.1 - cols * 0.55, z = Math.floor(i / cols) * 1.1 - cols * 0.55;
     if (kind === 'proc') {
-      const c = new CharacterView(assets, content, proceduralAppearance(), proceduralOutfit());
+      const c = new CharacterView(assets, content, proceduralAppearance(), proceduralOutfit(PROC_BASE_IDS));
       c.root.traverse((o) => { o.frustumCulled = false; });
       c.root.position.set(x, 0, z);
       c.play('walk', { fade: 0 });
