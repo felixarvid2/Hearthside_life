@@ -81,6 +81,14 @@ What was in progress when this note was written (WIP commits on the branch; chec
 - **AI surface maps.** `npm run assets:surfaces` builds them from `dev/surfaces-ai/raw/` (gitignored).
 - **Licences.** Check the Meshy, FLUX and TRELLIS output terms before distribution (see `public/assets/LICENSES.md`).
 
+## Running agents on DeepSeek (saves the Claude quota)
+
+`bash tools/ds-agent.sh <prompt-file> <log-file> [max-turns]` runs a headless Claude Code agent against OpenScale
+(`https://api.openscale.so`, Anthropic-compatible) with `deepseek/deepseek-v4.1-flash`. The key is read at run time from
+`/home/user/apis/Deepseek2` (repo felixarvid2/apis); it is never printed. The agent may edit files and run npm/npx/node checks
+only; git, curl and rm are blocked, so a supervising session commits its work. Task prompts live in `dev/ds-tasks/`
+(`01-finish-m2-m5.md` is the remaining Milestone 2-5 work; progress in `dev/ds-tasks/01-progress.md`, logs are gitignored).
+
 ## Working conventions
 
 - Browser runs share `/tmp/hearthside-browser.lock`. Wrap custom Playwright scripts in `flock /tmp/hearthside-browser.lock ...`,
