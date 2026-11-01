@@ -27,7 +27,7 @@ describe('character content registry', () => {
     expect(CH.FACIAL_HAIR.length).toBeGreaterThanOrEqual(4);
     expect(CH.BROW_STYLES.length).toBeGreaterThanOrEqual(6);
     expect(CH.FACE_PARAMS.length).toBeGreaterThanOrEqual(12);
-    expect(CH.FACE_PRESETS.length).toBeGreaterThanOrEqual(8);
+    expect(CH.FACE_PRESETS.length).toBeGreaterThanOrEqual(24);
     expect(CH.BODY_PARAMS.length).toBeGreaterThanOrEqual(8);
     expect(CH.BODY_PRESETS.filter((b) => b.frame === 'a').length).toBe(6);
     expect(CH.BODY_PRESETS.filter((b) => b.frame === 'b').length).toBe(6);

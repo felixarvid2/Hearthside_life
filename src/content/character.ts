@@ -702,6 +702,17 @@ export const FACE_PRESETS: FacePreset[] = [
   { id: 'face-strong', name: 'Strong Features', params: { noseWidth: 0.6, noseLength: 0.45, noseBridge: 0.75, jawWidth: 0.55, chin: 0.55, browHeight: -0.5, eyeSize: -0.35, mouthWidth: 0.35, earSize: 0.35 } },
   { id: 'face-bright', name: 'Bright-Eyed', params: { eyeSize: 0.8, eyeHeight: -0.2, browHeight: 0.45, cheeks: 0.25, noseLength: -0.25, mouthWidth: 0.1, faceLength: -0.15 } },
   { id: 'face-narrow', name: 'Narrow', params: { faceWidth: -0.7, jawWidth: -0.35, cheeks: -0.3, eyeSpacing: -0.4, noseWidth: -0.25, noseLength: 0.25, mouthWidth: -0.3, faceLength: 0.3 } },
+  { id: 'face-almond', name: 'Almond', params: { eyeTilt: 0.7, eyeSize: -0.1, eyeSpacing: 0.15, browTilt: 0.3, cheekbones: 0.35, noseWidth: -0.2, lipFullness: 0.2, chin: 0.1, faceLength: 0.1 } },
+  { id: 'face-broad', name: 'Broad', params: { faceWidth: 0.85, jawWidth: 0.5, cheeks: 0.3, cheekbones: 0.2, eyeSpacing: 0.35, noseWidth: 0.4, mouthWidth: 0.45, earSize: 0.25, faceLength: -0.25 } },
+  { id: 'face-delicate', name: 'Delicate', params: { faceWidth: -0.4, jawWidth: -0.55, chin: -0.15, cheekbones: 0.25, eyeSize: 0.35, noseWidth: -0.5, noseLength: -0.2, lipFullness: 0.15, mouthWidth: -0.25, earSize: -0.3 } },
+  { id: 'face-soft-square', name: 'Soft Square', params: { jawWidth: 0.55, chin: -0.1, faceWidth: 0.2, cheeks: 0.3, browHeight: -0.1, noseWidth: 0.15, lipFullness: 0.3, eyeSize: 0.1 } },
+  { id: 'face-high-cheeked', name: 'High-Cheeked', params: { cheekbones: 0.95, cheeks: -0.4, faceLength: -0.1, eyeTilt: 0.2, noseBridge: 0.2, chin: 0.15, jawWidth: -0.25, lipFullness: 0.1 } },
+  { id: 'face-full-lipped', name: 'Full-Lipped', params: { lipFullness: 0.95, mouthWidth: 0.35, noseWidth: 0.25, cheeks: 0.3, chin: -0.1, eyeSize: 0.2, browHeight: 0.1, faceLength: -0.1 } },
+  { id: 'face-button', name: 'Button', params: { noseWidth: -0.4, noseLength: -0.75, noseBridge: -0.3, eyeSize: 0.5, eyeSpacing: 0.1, cheeks: 0.55, chin: -0.5, faceLength: -0.55, mouthWidth: -0.2, earSize: 0.1 } },
+  { id: 'face-sleepy', name: 'Sleepy', params: { eyeSize: -0.3, eyeTilt: -0.5, eyeHeight: -0.35, browHeight: -0.2, browTilt: -0.35, lipFullness: 0.4, cheeks: 0.2, noseLength: 0.1 } },
+  { id: 'face-bold-brow', name: 'Bold Brow', params: { browHeight: -0.65, browTilt: 0.4, eyeSize: -0.15, eyeSpacing: -0.3, noseBridge: 0.5, noseLength: 0.35, jawWidth: 0.3, chin: 0.25, mouthWidth: 0.1 } },
+  { id: 'face-pointed', name: 'Pointed Chin', params: { chin: 0.85, jawWidth: -0.8, cheekbones: 0.3, faceLength: 0.35, faceWidth: 0.1, eyeSize: 0.3, eyeTilt: 0.25, noseLength: 0.1, mouthWidth: -0.15 } },
+  { id: 'face-elfin', name: 'Elfin', params: { earSize: 0.85, eyeSize: 0.6, eyeTilt: 0.55, eyeSpacing: 0.25, noseWidth: -0.6, noseLength: -0.3, jawWidth: -0.6, chin: 0.3, cheekbones: 0.5, faceWidth: -0.3 } },
 ];
 
 // ---------------------------------------------------------------------------------------------
