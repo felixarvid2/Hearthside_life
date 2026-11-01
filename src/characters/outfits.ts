@@ -7,12 +7,14 @@
 //   simulation (changeOutfit) and the renderer.
 // - Random outfits with colour harmony (randomOutfit, defaultWardrobe) for random and premade people.
 //
-// Garments are never restricted by body frame or pronouns: every garment fits every frame.
+// Garments are never restricted by body frame or pronouns: every garment fits every frame. Each garment has a
+// presentation affinity ('masc' | 'fem' | 'neutral') that only steers DEFAULT outfits (premades, random people);
+// the creator offers every garment to everyone.
 
-import type { AccessoryDef, ContentDB, GarmentDef } from '../content/types';
+import type { AccessoryDef, ContentDB, GarmentAffinity, GarmentDef } from '../content/types';
 import { Rng, seedRng } from '../core/rng';
 import { OUTFIT_CATEGORIES } from '../core/types';
-import type { GarmentChoice, GarmentLayer, Hex, Outfit, OutfitCategory, Wardrobe } from '../core/types';
+import type { BodyFrame, GarmentChoice, GarmentLayer, Hex, Outfit, OutfitCategory, Pronouns, Wardrobe } from '../core/types';
 
 /** Draw order of garment layers (inner to outer). */
 export const LAYER_DRAW_ORDER: readonly GarmentLayer[] = ['shoes', 'bottom', 'top', 'full', 'outer'];
@@ -318,6 +320,25 @@ export function addAccessory(
 }
 
 // ---------------------------------------------------------------------------------------------
+// Presentation affinity (defaults only)
+// ---------------------------------------------------------------------------------------------
+
+/** A garment's affinity ('neutral' when untagged). */
+export function garmentAffinity(def: GarmentDef | AccessoryDef): GarmentAffinity { return def.affinity ?? 'neutral'; }
+
+/**
+ * Affinities a person's default outfits are drawn from: he/him gets masc + neutral, she/her fem + neutral.
+ * Anyone else (they/them, custom pronouns) gets neutral plus the affinity of their body frame when known
+ * ('a' leans masc, 'b' leans fem). Used for premades, random people and "randomize"; never to restrict a choice.
+ */
+export function allowedAffinities(pronouns: Pronouns | undefined, frame?: BodyFrame): readonly GarmentAffinity[] {
+  const subject = pronouns?.subject.trim().toLowerCase();
+  if (subject === 'he') return ['masc', 'neutral'];
+  if (subject === 'she') return ['fem', 'neutral'];
+  return frame === 'a' ? ['neutral', 'masc'] : frame === 'b' ? ['neutral', 'fem'] : ['neutral'];
+}
+
+// ---------------------------------------------------------------------------------------------
 // Random outfits with colour harmony
 // ---------------------------------------------------------------------------------------------
 
@@ -330,18 +351,29 @@ const DARK_NEUTRALS: readonly Hex[] = ['#1f1f22', '#2b2d33', '#2f3a52', '#3b302a
 
 /** Saturation and lightness ranges per category: formal is deep, sleepwear pastel, athletic bright. */
 const TONE: Record<OutfitCategory, { s: [number, number]; l: [number, number] }> = {
-  everyday: { s: [0.3, 0.6], l: [0.35, 0.6] },
+  everyday: { s: [0.28, 0.52], l: [0.35, 0.6] },
   formal: { s: [0.2, 0.45], l: [0.18, 0.38] },
   work: { s: [0.15, 0.4], l: [0.3, 0.5] },
   athletic: { s: [0.55, 0.8], l: [0.42, 0.58] },
   sleep: { s: [0.2, 0.4], l: [0.7, 0.85] },
   swim: { s: [0.55, 0.85], l: [0.4, 0.6] },
 };
-const FULL_CHANCE: Record<OutfitCategory, number> = { everyday: 0.2, formal: 0.4, work: 0.2, athletic: 0.2, sleep: 0.5, swim: 0.5 };
+const FULL_CHANCE: Record<OutfitCategory, number> = { everyday: 0.2, formal: 0.4, work: 0.2, athletic: 0.2, sleep: 0.5, swim: 0.8 };
 const OUTER_CHANCE: Record<OutfitCategory, number> = { everyday: 0.3, formal: 0.5, work: 0.35, athletic: 0.1, sleep: 0.1, swim: 0 };
 const OPTIONAL_SHOES_CHANCE = 0.3;
 const ACCESSORY_CHANCE: Record<OutfitCategory, number> = { everyday: 0.45, formal: 0.6, work: 0.25, athletic: 0.15, sleep: 0, swim: 0.2 };
 const PATTERN_CHANCE = 0.2;
+
+/** Fixed colours for garments whose real-world colour range is narrow, so random outfits look plausible. */
+const DENIM_COLORS: readonly Hex[] = ['#3f5a85', '#4a6a96', '#2f4468', '#6d86a8', '#364a6b'];
+/** Tailored trousers: dark for formal, a wider range for work. */
+const SUIT_COLORS: readonly Hex[] = ['#2b2d33', '#2f3a52', '#3a3b44', '#3b302a', '#4a4f5c'];
+const WORK_TROUSER_COLORS: readonly Hex[] = ['#3a3b44', '#4a4f5c', '#6b6a63', '#8a7f66', '#2f3a52'];
+/** Chance that a sleep or swim outfit uses garments made for it (pyjamas, trunks) rather than everyday pieces. */
+const SPECIFIC_CHANCE = 0.85;
+const LEATHER_COLORS: readonly Hex[] = ['#3b2a22', '#6b4630', '#4a3426', '#2b2d33'];
+/** Minimum lightness gap between a top and a bottom worn together. */
+const MIN_PIECE_CONTRAST = 0.14;
 
 /** A harmonious palette around a base hue (analogous, complementary, monochrome or triad scheme). */
 export function harmonyPalette(rng: Rng, category: OutfitCategory, baseHue: number): OutfitPalette {
@@ -353,10 +385,10 @@ export function harmonyPalette(rng: Rng, category: OutfitCategory, baseHue: numb
   const dark = rng.pick(DARK_NEUTRALS);
   const main = hslToHex(h, s, l);
   switch (rng.int(0, 3)) {
-    case 0: return { main, second: hslToHex(h + 30, s * 0.9, l + 0.08), accent: hslToHex(h - 35, s, l - 0.05), neutral, dark };
+    case 0: return { main, second: hslToHex(h + 30, s * 0.9, Math.min(0.9, l + 0.08)), accent: hslToHex(h - 35, s, l - 0.05), neutral, dark };
     case 1: return { main, second: neutral, accent: hslToHex(h + 180, s, l), neutral, dark };
-    case 2: return { main, second: hslToHex(h, s * 0.8, l + 0.2), accent: hslToHex(h, s, l - 0.15), neutral, dark };
-    default: return { main, second: hslToHex(h + 120, s * 0.6, l + 0.05), accent: hslToHex(h + 240, s * 0.7, l), neutral, dark };
+    case 2: return { main, second: hslToHex(h, s * 0.8, Math.min(0.9, l + 0.2)), accent: hslToHex(h, s, l - 0.15), neutral, dark };
+    default: return { main, second: hslToHex(h + 120, s * 0.6, Math.min(0.9, l + 0.05)), accent: hslToHex(h + 240, s * 0.7, l), neutral, dark };
   }
 }
 
@@ -374,42 +406,92 @@ export interface RandomOutfitOptions {
   plain?: boolean;
   /** Glasses worn with this outfit (kept consistent across a person's wardrobe). */
   glassesId?: string | null;
+  /**
+   * Garment affinities to draw from (see allowedAffinities). Omitted = any garment. A layer with no matching
+   * garment falls back to any garment, so outfits stay valid; full garments are never taken from outside the set
+   * while top and bottom pieces exist.
+   */
+  affinities?: readonly GarmentAffinity[];
 }
 
 /** A random, valid (when the content allows it) outfit for a category with harmonised colours. */
 export function randomOutfit(rng: Rng, content: ContentDB, category: OutfitCategory, opts: RandomOutfitOptions = {}): Outfit {
   const hue = opts.hue ?? rng.range(0, 360);
   const pal = opts.plain ? plainPalette(category) : harmonyPalette(rng, category, hue);
-  const pick = (layer: GarmentLayer): GarmentDef | null => {
-    const list = garmentsFor(content, category, layer);
-    return list.length > 0 ? rng.pick(list) : null;
+  // Sleep and swim outfits mostly use garments made for them (pyjamas, swim trunks) when the pool has any.
+  const specificTag = category === 'sleep' ? 'sleepwear' : category === 'swim' ? 'swimwear' : null;
+  const specific = specificTag !== null && rng.chance(SPECIFIC_CHANCE);
+  const matching = (layer: GarmentLayer): GarmentDef[] => {
+    const all = garmentsFor(content, category, layer);
+    const fits = opts.affinities ? all.filter((g) => opts.affinities!.includes(garmentAffinity(g))) : all;
+    const made = specific ? fits.filter((g) => g.tags.includes(specificTag!)) : [];
+    return made.length > 0 ? made : fits;
   };
-  const choose = (def: GarmentDef, color: Hex): GarmentChoice => {
+  /** Matching garments of a layer, else (for pieces, shoes, outer) anything that fits the category. */
+  const lenient = (layer: GarmentLayer): GarmentDef[] => {
+    const m = matching(layer);
+    return m.length > 0 ? m : garmentsFor(content, category, layer);
+  };
+  const pick = (list: GarmentDef[]): GarmentDef | null => (list.length > 0 ? rng.pick(list) : null);
+  const choose = (def: GarmentDef, color: Hex, pattern?: string): GarmentChoice => {
     const patterns = def.patterns.filter((p) => p !== 'solid' && patternAllowed(def, p, content));
-    const patterned = !opts.plain && patterns.length > 0 && rng.chance(PATTERN_CHANCE);
-    const pattern = patterned ? rng.pick(patterns) : 'solid';
+    const patterned = pattern !== undefined ? pattern !== 'solid' && patterns.includes(pattern)
+      : !opts.plain && patterns.length > 0 && rng.chance(PATTERN_CHANCE);
+    const chosen = pattern !== undefined ? (patterned ? pattern : 'solid') : patterned ? rng.pick(patterns) : 'solid';
     const patternColor = pal.accent.toLowerCase() === color.toLowerCase() ? shadeHex(color, 0.25) : pal.accent;
-    return garmentChoice(def, color, pattern, patternColor);
+    return garmentChoice(def, color, chosen, patternColor);
   };
+  const isDenim = (def: GarmentDef) => def.tags.includes('denim');
+  /** Tops and bottoms that look odd together: collared tops with joggers, knitwear with shorts. */
+  const pairs = (top: GarmentDef, bottom: GarmentDef) =>
+    !(top.tags.includes('collar') && bottom.tags.includes('cosy')) && !(top.tags.includes('winter') && bottom.tags.includes('short'));
 
   const layers: Outfit['layers'] = {};
-  const canPieces = garmentsFor(content, category, 'top').length > 0 && garmentsFor(content, category, 'bottom').length > 0;
-  const hasFull = garmentsFor(content, category, 'full').length > 0;
-  if (hasFull && (!canPieces || rng.chance(FULL_CHANCE[category]))) {
-    const full = pick('full');
-    if (full) layers.full = choose(full, pal.main);
+  const strictPieces = matching('top').length > 0 && matching('bottom').length > 0;
+  const canPieces = lenient('top').length > 0 && lenient('bottom').length > 0;
+  const strictFull = matching('full');
+  const hasFull = strictFull.length > 0 || (!canPieces && garmentsFor(content, category, 'full').length > 0);
+  if (hasFull && (!canPieces || (strictFull.length > 0 && (!strictPieces || rng.chance(FULL_CHANCE[category]))))) {
+    const full = pick(strictFull.length > 0 ? strictFull : garmentsFor(content, category, 'full'));
+    if (full) layers.full = choose(full, !opts.plain && isDenim(full) ? rng.pick(DENIM_COLORS) : pal.main);
   } else {
-    const top = pick('top');
-    const bottom = pick('bottom');
-    if (top) layers.top = choose(top, pal.main);
-    if (bottom) layers.bottom = choose(bottom, rng.chance(0.6) ? pal.neutral : pal.second);
+    const top = pick(lenient('top'));
+    const bottoms = lenient('bottom');
+    const bottom = pick(top ? (bottoms.filter((b) => pairs(top, b)).length > 0 ? bottoms.filter((b) => pairs(top, b)) : bottoms) : bottoms);
+    let topChoice: GarmentChoice | null = null;
+    if (top) { topChoice = choose(top, pal.main); layers.top = topChoice; }
+    if (bottom) {
+      let color: Hex = rng.chance(0.6) ? pal.neutral : pal.second;
+      let pattern: string | undefined;
+      if (!opts.plain && isDenim(bottom)) color = rng.pick(DENIM_COLORS);
+      else if (!opts.plain && bottom.tags.includes('smart') && bottom.tags.includes('long')) {
+        color = rng.pick(category === 'formal' ? SUIT_COLORS : WORK_TROUSER_COLORS);
+      }
+      else if (!opts.plain && category === 'sleep') {
+        // Pyjamas come as a set: the same colour (or its partner) and the same pattern as the top.
+        color = rng.chance(0.7) ? pal.main : pal.second;
+        pattern = topChoice?.pattern;
+      } else if (!opts.plain && topChoice) {
+        // Keep a readable gap between top and bottom.
+        const lt = hexToHsl(topChoice.color)[2];
+        if (Math.abs(hexToHsl(color)[2] - lt) < MIN_PIECE_CONTRAST) color = lt > 0.5 ? pal.dark : rng.pick(LIGHT_NEUTRALS);
+      }
+      layers.bottom = choose(bottom, color, pattern);
+    }
   }
+  const wearsShorts = layers.bottom !== undefined && content.garments[layers.bottom.garmentId]?.tags.includes('short') === true;
   if (!SHOES_OPTIONAL.includes(category) || rng.chance(OPTIONAL_SHOES_CHANCE)) {
-    const shoes = pick('shoes');
-    if (shoes) layers.shoes = garmentChoice(shoes, category === 'athletic' && rng.chance(0.5) ? pal.accent : pal.dark);
+    const allShoes = lenient('shoes');
+    const dressy = allShoes.filter((g) => !(wearsShorts && g.tags.includes('boots')));
+    const shoes = pick(dressy.length > 0 ? dressy : allShoes);
+    if (shoes) {
+      const leather = shoes.tags.includes('leather') || shoes.tags.includes('boots');
+      layers.shoes = garmentChoice(shoes, leather && !opts.plain ? rng.pick(LEATHER_COLORS)
+        : category === 'athletic' && rng.chance(0.5) ? pal.accent : pal.dark);
+    }
   }
-  if (rng.chance(OUTER_CHANCE[category])) {
-    const outer = pick('outer');
+  if (rng.chance(OUTER_CHANCE[category]) && !wearsShorts) {
+    const outer = pick(lenient('outer'));
     if (outer) layers.outer = choose(outer, rng.chance(0.5) ? pal.second : pal.dark);
   }
 
@@ -419,7 +501,8 @@ export function randomOutfit(rng: Rng, content: ContentDB, category: OutfitCateg
   if (!opts.plain && rng.chance(ACCESSORY_CHANCE[category])) {
     const kinds = new Set(accessories.map((a) => content.accessories[a.accessoryId]?.kind));
     const pool = Object.values(content.accessories ?? {})
-      .filter((a) => a.status === 'ready' && a.kind !== 'glasses' && !kinds.has(a.kind));
+      .filter((a) => a.status === 'ready' && a.kind !== 'glasses' && !kinds.has(a.kind)
+        && (!opts.affinities || opts.affinities.includes(garmentAffinity(a))));
     if (pool.length > 0) {
       const acc = rng.pick(pool);
       accessories.push({ accessoryId: acc.id, color: rng.chance(0.5) ? acc.defaultColor : pal.accent });
@@ -440,6 +523,10 @@ export interface WardrobeOptions {
   plain?: boolean;
   /** Glasses for every daytime outfit: an accessory id, true (random glasses), false/null (none). Default: 20 % chance. */
   glasses?: string | boolean | null;
+  /** Garment affinities to draw from (see allowedAffinities). Omitted = any garment. */
+  affinities?: readonly GarmentAffinity[];
+  /** Chance (0..1, default 0) that an outfit ignores `affinities` and draws from every garment (full randomize only). */
+  crossover?: number;
 }
 
 /** One outfit per category (valid whenever the content can dress that category), worn: everyday. */
@@ -454,7 +541,9 @@ export function defaultWardrobe(content: ContentDB, rng: Rng, opts: WardrobeOpti
   const w = emptyWardrobe();
   for (const cat of OUTFIT_CATEGORIES) {
     const daytime = cat !== 'sleep' && cat !== 'swim';
+    const crossed = opts.affinities !== undefined && (opts.crossover ?? 0) > 0 && rng.chance(opts.crossover ?? 0);
     w.outfits[cat] = [randomOutfit(rng, content, cat, {
+      ...(opts.affinities && !crossed ? { affinities: opts.affinities } : {}),
       id: outfitId(cat, 1),
       name: OUTFIT_CATEGORY_NAMES[cat],
       hue: hue + rng.range(-25, 25),
@@ -488,7 +577,7 @@ export function cleanText(v: unknown, max: number): string {
 
 /** Neutral, pattern-free outfits for every category (the wardrobe of blank people). */
 export function plainWardrobe(content: ContentDB): Wardrobe {
-  return defaultWardrobe(content, new Rng(seedRng(PLAIN_SEED)), { plain: true });
+  return defaultWardrobe(content, new Rng(seedRng(PLAIN_SEED)), { plain: true, affinities: ['neutral'] });
 }
 
 /** Reads one outfit from untrusted JSON, replacing missing garments by the first fitting ready garment. */
@@ -537,7 +626,7 @@ export function normalizeWardrobe(raw: unknown, content: ContentDB, note: Note):
   for (const cat of OUTFIT_CATEGORIES) {
     asArr(outfits[cat]).slice(0, MAX_OUTFITS_PER_CATEGORY).forEach((o, i) => { w.outfits[cat].push(normalizeOutfit(o, cat, i, content, note, w)); });
     if (w.outfits[cat].length === 0) {
-      w.outfits[cat].push(randomOutfit(new Rng(seedRng(PLAIN_SEED)), content, cat, { id: nextOutfitId(w, cat), plain: true }));
+      w.outfits[cat].push(randomOutfit(new Rng(seedRng(PLAIN_SEED)), content, cat, { id: nextOutfitId(w, cat), plain: true, affinities: ['neutral'] }));
       missing.push(OUTFIT_CATEGORY_NAMES[cat]);
     }
   }

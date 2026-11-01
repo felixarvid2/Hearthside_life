@@ -10,7 +10,7 @@ import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { Rng, seedRng } from '../core/rng';
 import type { Appearance, BodyFrame, FamilyTie, Hex, LifeStage, Person, Pronouns } from '../core/types';
 import {
-  asArr, asNum, asObj, asStr, cleanText, defaultWardrobe, hexToHsl, isHex, mixHex, normalizeHex, normalizeWardrobe,
+  allowedAffinities, asArr, asNum, asObj, asStr, cleanText, defaultWardrobe, hexToHsl, isHex, mixHex, normalizeHex, normalizeWardrobe,
   plainWardrobe, shadeHex, type Note,
 } from './outfits';
 
@@ -401,7 +401,9 @@ export function randomPersonDraft(rng: Rng, content: ContentDB, opts: RandomPers
   randomizeBody(rng, content, p.appearance, opts.frame);
   randomizeHair(rng, content, p.appearance, p.lifeStage);
   randomizeFace(rng, content, p.appearance);
-  p.outfits = defaultWardrobe(content, rng, opts.hue === undefined ? {} : { hue: opts.hue });
+  p.outfits = defaultWardrobe(content, rng, {
+    affinities: allowedAffinities(p.pronouns, p.appearance.frame), ...(opts.hue === undefined ? {} : { hue: opts.hue }),
+  });
   randomizePersonality(rng, content, p, opts);
   return p;
 }

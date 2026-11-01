@@ -25,7 +25,7 @@ import {
   TRAITS_PER_ADULT, WALK_STYLES, DEFAULT_WALK_STYLE, type PronounPreset,
 } from './names';
 import {
-  addAccessory, asArr, asObj, cleanText, defaultWardrobe, garmentChoice, garmentsFor, isHex, LAYER_NAMES,
+  addAccessory, allowedAffinities, asArr, asObj, cleanText, defaultWardrobe, garmentChoice, garmentsFor, isHex, LAYER_NAMES,
   MAX_OUTFITS_PER_CATEGORY, nextOutfitId, normalizeHex, normalizeWardrobe, OUTFIT_CATEGORY_NAMES,
   OUTFIT_NAME_MAX_LENGTH, plainWardrobe, randomOutfit, setLayer, validateWardrobe, type Json,
 } from './outfits';
@@ -62,6 +62,8 @@ export const STEP_CATEGORIES: Record<CreatorStep, readonly LockCategory[]> = {
   personality: ['personality'], household: [], review: [],
 };
 /** Hair before face so brows can follow the new hair colour. */
+/** Chance per category that "Randomize all" dresses someone outside their usual presentation. */
+const CROSSOVER_CHANCE = 0.03;
 const RANDOMIZE_ORDER: readonly LockCategory[] = ['identity', 'body', 'hair', 'face', 'clothing', 'personality'];
 
 export const MAX_HOUSEHOLD_MEMBERS = 8;
@@ -726,7 +728,7 @@ export class CreatorSession {
       const id = nextOutfitId(p.outfits, category);
       const name = `${OUTFIT_CATEGORY_NAMES[category]} ${list.length + 1}`;
       const src = opts.copyOf !== undefined ? list[opts.copyOf] : undefined;
-      list.push(src ? { ...clone(src), id, name } : randomOutfit(this.rng, this.content, category, { id, name }));
+      list.push(src ? { ...clone(src), id, name } : randomOutfit(this.rng, this.content, category, { id, name, affinities: allowedAffinities(p.pronouns, p.appearance.frame) }));
     });
   }
   removeOutfit(category: OutfitCategory, index: number): CreatorResult {
@@ -755,7 +757,7 @@ export class CreatorSession {
   randomizeOutfit(category: OutfitCategory, index: number): CreatorResult {
     if (this.locks.has('clothing')) return fail('Clothing is locked.');
     return this.editOutfit('Randomize outfit', category, index, (o) => {
-      const r = randomOutfit(this.rng, this.content, category, { id: o.id, name: o.name });
+      const r = randomOutfit(this.rng, this.content, category, { id: o.id, name: o.name, affinities: this.affinities() });
       o.layers = r.layers; o.accessories = r.accessories;
     });
   }
@@ -937,6 +939,9 @@ export class CreatorSession {
     });
   }
 
+  /** Garment affinities for default outfits of the current member (derived from pronouns and frame). */
+  private affinities() { return allowedAffinities(this.current.pronouns, this.current.appearance.frame); }
+
   private randomizeCategories(label: string, cats: readonly LockCategory[]): CreatorResult {
     return this.mutateMember(label, (p, d, ctx) => {
       const others = d.members.filter((_, i) => i !== ctx.cur);
@@ -955,7 +960,12 @@ export class CreatorSession {
           case 'body': randomizeBody(this.rng, this.content, p.appearance); break;
           case 'hair': randomizeHair(this.rng, this.content, p.appearance, p.lifeStage); break;
           case 'face': randomizeFace(this.rng, this.content, p.appearance); break;
-          case 'clothing': p.outfits = defaultWardrobe(this.content, this.rng); break;
+          case 'clothing':
+            // Defaults follow the person's presentation; a full randomize may cross over now and then.
+            p.outfits = defaultWardrobe(this.content, this.rng, {
+              affinities: allowedAffinities(p.pronouns, p.appearance.frame), ...(label === 'Randomize all' ? { crossover: CROSSOVER_CHANCE } : {}),
+            });
+            break;
           case 'personality': randomizePersonality(this.rng, this.content, p); break;
         }
       }

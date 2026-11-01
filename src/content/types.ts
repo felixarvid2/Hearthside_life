@@ -357,6 +357,9 @@ export interface FacialHairDef { id: string; name: string; description: string; 
 
 export interface PatternDef { id: string; name: string; description: string }
 
+/** Who a garment is styled for by default: only random and premade outfits use it; the creator allows any garment for anyone. */
+export type GarmentAffinity = 'masc' | 'fem' | 'neutral';
+
 export interface GarmentDef {
   id: string;
   name: string;
@@ -364,6 +367,8 @@ export interface GarmentDef {
   layer: GarmentLayer;
   categories: OutfitCategory[];
   tags: string[];
+  /** Default presentation affinity (absent = 'neutral'). Never restricts what a person may wear. */
+  affinity?: GarmentAffinity;
   /** Allowed pattern ids ('solid' always allowed). */
   patterns: string[];
   defaultColor: Hex;
@@ -377,6 +382,8 @@ export interface AccessoryDef {
   name: string;
   description: string;
   kind: 'glasses' | 'hat' | 'earrings' | 'necklace' | 'bag' | 'watch' | 'scarf' | 'other';
+  /** Default presentation affinity for random and premade people (absent = 'neutral'). */
+  affinity?: GarmentAffinity;
   defaultColor: Hex;
   build: Record<string, number | string | boolean>;
   status: ContentStatus;

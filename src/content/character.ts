@@ -35,6 +35,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'tee-crew', name: 'Crew Tee', description: 'Relaxed short-sleeve tee with a ribbed crew neck.',
     layer: 'top', categories: ['everyday', 'athletic'], tags: ['casual', 'cotton', 'short-sleeve'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes', 'polka', 'chevron'], defaultColor: '#e9e4d8',
     build: { shape: 'shirt', fabric: 'cotton', sleeve: 0.34, sleeveLoose: 0.55, neck: 'crew', hem: 0.12, drape: 0.6, rib: true },
     status: 'ready',
@@ -42,13 +43,15 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'tee-long', name: 'Long-Sleeve Tee', description: 'Soft jersey tee with long fitted sleeves and cuffs.',
     layer: 'top', categories: ['everyday', 'work', 'athletic'], tags: ['casual', 'cotton', 'long-sleeve'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes', 'chevron'], defaultColor: '#7f97b2',
     build: { shape: 'shirt', fabric: 'cotton', sleeve: 1, sleeveLoose: 0.15, neck: 'crew', hem: 0.1, drape: 0.45, rib: true, cuffs: true },
     status: 'ready',
   },
   {
     id: 'tank-top', name: 'Tank Top', description: 'Sleeveless ribbed tank with a scooped neck.',
-    layer: 'top', categories: ['athletic', 'everyday', 'sleep'], tags: ['casual', 'sleeveless', 'summer'],
+    layer: 'top', categories: ['athletic', 'everyday', 'sleep', 'swim'], tags: ['casual', 'sleeveless', 'summer'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes'], defaultColor: '#d8694e',
     build: { shape: 'shirt', fabric: 'rib', sleeve: 0, neck: 'tank', hem: 0.14, drape: 0.35, strap: 0.045, rib: true },
     status: 'ready',
@@ -56,6 +59,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'shirt-button', name: 'Button-Up Shirt', description: 'Collared shirt with a button placket and long sleeves.',
     layer: 'top', categories: ['formal', 'work', 'everyday'], tags: ['smart', 'collar', 'long-sleeve'],
+    affinity: 'neutral',
     patterns: ['solid', 'pinstripe', 'gingham', 'plaid', 'stripes'], defaultColor: '#f2f0ea',
     build: { shape: 'shirt', fabric: 'poplin', sleeve: 1, sleeveLoose: 0.3, neck: 'collar', hem: 0.05, drape: 0.5, placket: 'buttons', cuffs: true },
     status: 'ready',
@@ -63,6 +67,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'polo-shirt', name: 'Polo Shirt', description: 'Short-sleeve pique polo with a soft collar and three buttons.',
     layer: 'top', categories: ['work', 'athletic', 'everyday'], tags: ['smart-casual', 'collar', 'short-sleeve'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes'], defaultColor: '#3f6b5a',
     build: { shape: 'shirt', fabric: 'pique', sleeve: 0.3, sleeveLoose: 0.4, neck: 'collar', hem: 0.1, drape: 0.5, placket: 'short', rib: true },
     status: 'ready',
@@ -70,6 +75,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'sweater-knit', name: 'Knit Sweater', description: 'Chunky knit with ribbed neck, cuffs and hem.',
     layer: 'top', categories: ['everyday', 'formal', 'work'], tags: ['cosy', 'knit', 'long-sleeve', 'winter'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes', 'chevron'], defaultColor: '#b8865a',
     build: { shape: 'shirt', fabric: 'knit', sleeve: 1, sleeveLoose: 0.35, neck: 'crew', hem: 0.16, drape: 0.7, thickness: 0.014, rib: true, cuffs: true, hemBand: true },
     status: 'ready',
@@ -77,6 +83,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'pajama-top', name: 'Pajama Top', description: 'Loose flannel sleep shirt with piped edges and a button front.',
     layer: 'top', categories: ['sleep'], tags: ['sleepwear', 'flannel', 'long-sleeve'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes', 'gingham', 'polka', 'plaid'], defaultColor: '#9fb7d9',
     build: { shape: 'shirt', fabric: 'flannel', sleeve: 0.95, sleeveLoose: 0.7, neck: 'v', hem: 0.1, drape: 0.8, placket: 'buttons', piping: true },
     status: 'ready',
@@ -85,6 +92,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'jacket-zip', name: 'Zip Jacket', description: 'Light zip-front jacket with a stand collar, worn over a top.',
     layer: 'outer', categories: ['everyday', 'work', 'athletic'], tags: ['jacket', 'outerwear', 'long-sleeve'],
+    affinity: 'neutral',
     patterns: ['solid', 'plaid'], defaultColor: '#5d6b4a',
     build: { shape: 'shirt', fabric: 'canvas', sleeve: 1, sleeveLoose: 0.45, neck: 'high', hem: 0.16, drape: 0.65, thickness: 0.019, placket: 'zip', cuffs: true, hemBand: true },
     status: 'ready',
@@ -93,6 +101,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'jeans-straight', name: 'Straight Jeans', description: 'Mid-rise denim with a straight leg and contrast stitching.',
     layer: 'bottom', categories: ['everyday', 'work'], tags: ['denim', 'casual', 'long'],
+    affinity: 'neutral',
     patterns: ['solid'], defaultColor: '#3f5a85',
     build: { shape: 'pants', fabric: 'denim', waist: 0.82, leg: 1, legLoose: 0.45, details: 'jeans' },
     status: 'ready',
@@ -100,6 +109,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'trousers-tailored', name: 'Tailored Trousers', description: 'Pressed trousers with a centre crease and a clean waistband.',
     layer: 'bottom', categories: ['formal', 'work'], tags: ['smart', 'long'],
+    affinity: 'neutral',
     patterns: ['solid', 'pinstripe', 'plaid'], defaultColor: '#3a3b44',
     build: { shape: 'pants', fabric: 'wool', waist: 0.92, leg: 1, legLoose: 0.6, details: 'crease', waistBand: true },
     status: 'ready',
@@ -107,6 +117,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'shorts-casual', name: 'Casual Shorts', description: 'Above-knee cotton shorts with rolled hems.',
     layer: 'bottom', categories: ['everyday', 'athletic', 'swim'], tags: ['summer', 'casual', 'short'],
+    affinity: 'neutral',
     patterns: ['solid', 'plaid', 'stripes', 'gingham'], defaultColor: '#c8b28a',
     build: { shape: 'pants', fabric: 'cotton', waist: 0.82, leg: 0.36, legLoose: 0.75, hemBand: true },
     status: 'ready',
@@ -114,6 +125,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'joggers', name: 'Joggers', description: 'Soft fleece joggers with an elastic waist and cuffed ankles.',
     layer: 'bottom', categories: ['athletic', 'everyday', 'sleep'], tags: ['sport', 'cosy', 'long'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes'], defaultColor: '#6d6f78',
     build: { shape: 'pants', fabric: 'fleece', waist: 0.86, leg: 0.97, legLoose: 0.7, cuff: true, sideStripe: true, waistBand: true },
     status: 'ready',
@@ -121,6 +133,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'skirt-aline', name: 'A-Line Skirt', description: 'Knee-length skirt that flares gently from the waist.',
     layer: 'bottom', categories: ['everyday', 'formal', 'work'], tags: ['skirt', 'knee-length'],
+    affinity: 'fem',
     patterns: ['solid', 'plaid', 'gingham', 'polka', 'pinstripe', 'chevron'], defaultColor: '#7b3f4f',
     build: { shape: 'skirt', fabric: 'cotton', waist: 0.95, length: 0.52, flare: 0.55, waistBand: true },
     status: 'ready',
@@ -128,6 +141,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'pajama-pants', name: 'Pajama Pants', description: 'Wide, relaxed flannel sleep trousers.',
     layer: 'bottom', categories: ['sleep'], tags: ['sleepwear', 'flannel', 'long'],
+    affinity: 'neutral',
     patterns: ['solid', 'stripes', 'gingham', 'plaid', 'polka'], defaultColor: '#9fb7d9',
     build: { shape: 'pants', fabric: 'flannel', waist: 0.86, leg: 0.95, legLoose: 0.95, waistBand: true },
     status: 'ready',
@@ -135,6 +149,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'swim-trunks', name: 'Swim Trunks', description: 'Quick-dry mid-thigh swim shorts with a drawstring waist.',
     layer: 'bottom', categories: ['swim'], tags: ['swimwear', 'summer', 'short'],
+    affinity: 'masc',
     patterns: ['solid', 'stripes', 'polka', 'chevron'], defaultColor: '#2f86a6',
     build: { shape: 'pants', fabric: 'nylon', waist: 0.78, leg: 0.3, legLoose: 0.8, waistBand: true },
     status: 'ready',
@@ -143,6 +158,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'sundress', name: 'Sundress', description: 'Light strappy dress with a fitted bodice and a full knee-length skirt.',
     layer: 'full', categories: ['everyday', 'formal'], tags: ['dress', 'summer', 'sleeveless'],
+    affinity: 'fem',
     patterns: ['solid', 'polka', 'gingham', 'stripes', 'chevron'], defaultColor: '#e7b44c',
     build: { shape: 'dress', fabric: 'cotton', sleeve: 0, neck: 'square', strap: 0.03, waist: 1.0, length: 0.55, flare: 0.8 },
     status: 'ready',
@@ -150,6 +166,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'dress-shirt', name: 'Shirt Dress', description: 'Collared midi dress with short sleeves, a button front and a belt line.',
     layer: 'full', categories: ['formal', 'work', 'everyday'], tags: ['dress', 'collar', 'midi'],
+    affinity: 'fem',
     patterns: ['solid', 'pinstripe', 'gingham', 'plaid'], defaultColor: '#41658a',
     build: { shape: 'dress', fabric: 'poplin', sleeve: 0.3, sleeveLoose: 0.4, neck: 'collar', placket: 'buttons', waist: 0.95, length: 0.68, flare: 0.45, belt: true },
     status: 'ready',
@@ -157,6 +174,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'overalls', name: 'Denim Overalls', description: 'Bib overalls with shoulder straps, worn over a built-in crew tee.',
     layer: 'full', categories: ['everyday', 'work'], tags: ['denim', 'workwear', 'casual'],
+    affinity: 'neutral',
     patterns: ['solid'], defaultColor: '#4a6a96',
     build: { shape: 'overalls', fabric: 'denim', leg: 1, legLoose: 0.55, shirtColor: '#f1ece2', sleeve: 0.32 },
     status: 'ready',
@@ -164,6 +182,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'swimsuit', name: 'One-Piece Swimsuit', description: 'Scoop-neck one-piece swimsuit with wide straps.',
     layer: 'full', categories: ['swim'], tags: ['swimwear', 'summer'],
+    affinity: 'fem',
     patterns: ['solid', 'stripes', 'polka', 'chevron'], defaultColor: '#c9405a',
     build: { shape: 'swimsuit', fabric: 'lycra', strap: 0.04, neck: 'scoop' },
     status: 'ready',
@@ -171,6 +190,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'nightgown', name: 'Nightgown', description: 'Long, loose cotton sleep dress with short sleeves.',
     layer: 'full', categories: ['sleep'], tags: ['sleepwear', 'dress'],
+    affinity: 'fem',
     patterns: ['solid', 'polka', 'gingham', 'stripes'], defaultColor: '#efe3ef',
     build: { shape: 'dress', fabric: 'cotton', sleeve: 0.22, sleeveLoose: 0.8, neck: 'scoop', waist: 1.25, length: 0.85, flare: 0.6, piping: true },
     status: 'ready',
@@ -179,6 +199,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'sneakers', name: 'Canvas Sneakers', description: 'Low canvas sneakers with white rubber soles and laces.',
     layer: 'shoes', categories: ['everyday', 'athletic'], tags: ['casual', 'sport'],
+    affinity: 'neutral',
     patterns: ['solid'], defaultColor: '#d65a4a',
     build: { shape: 'shoe', style: 'sneaker', height: 0.085, sole: 0.022, soleColor: '#f4f1ea', laces: true, toeCap: true },
     status: 'ready',
@@ -186,6 +207,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'boots-ankle', name: 'Ankle Boots', description: 'Sturdy leather boots that cover the ankle.',
     layer: 'shoes', categories: ['everyday', 'work', 'formal'], tags: ['leather', 'boots'],
+    affinity: 'neutral',
     patterns: ['solid'], defaultColor: '#6b4630',
     build: { shape: 'shoe', style: 'boot', height: 0.2, sole: 0.026, soleColor: '#2c2420', heel: 0.012 },
     status: 'ready',
@@ -193,6 +215,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'loafers', name: 'Loafers', description: 'Polished slip-on loafers with a low heel.',
     layer: 'shoes', categories: ['formal', 'work'], tags: ['smart', 'leather'],
+    affinity: 'neutral',
     patterns: ['solid'], defaultColor: '#3b2a22',
     build: { shape: 'shoe', style: 'loafer', height: 0.06, sole: 0.016, soleColor: '#201814', heel: 0.01, strap: true },
     status: 'ready',
@@ -200,6 +223,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'slippers', name: 'House Slippers', description: 'Plush closed-toe slippers for lounging and bedtime.',
     layer: 'shoes', categories: ['sleep'], tags: ['sleepwear', 'cosy'],
+    affinity: 'neutral',
     patterns: ['solid', 'gingham'], defaultColor: '#c9b6d9',
     build: { shape: 'shoe', style: 'slipper', height: 0.05, sole: 0.02, soleColor: '#efe8f2', fluffy: true },
     status: 'ready',
@@ -207,6 +231,7 @@ export const GARMENTS: GarmentDef[] = [
   {
     id: 'sandals-slide', name: 'Slide Sandals', description: 'Open-toe slide sandals with one wide strap.',
     layer: 'shoes', categories: ['swim', 'everyday'], tags: ['summer', 'open-toe'],
+    affinity: 'neutral',
     patterns: ['solid'], defaultColor: '#3e8c7a',
     build: { shape: 'shoe', style: 'sandal', height: 0.05, sole: 0.02, soleColor: '#e8dcc6' },
     status: 'ready',
@@ -220,8 +245,8 @@ export const GARMENTS: GarmentDef[] = [
 export const ACCESSORIES: AccessoryDef[] = [
   { id: 'glasses-round', name: 'Round Glasses', description: 'Thin round wire frames.', kind: 'glasses', defaultColor: '#3a3632', build: { shape: 'glasses', lens: 'round', rim: 0.0022, size: 1 }, status: 'ready' },
   { id: 'glasses-square', name: 'Square Glasses', description: 'Bold rectangular frames.', kind: 'glasses', defaultColor: '#1f1b19', build: { shape: 'glasses', lens: 'square', rim: 0.0036, size: 1.05 }, status: 'ready' },
-  { id: 'earrings-stud', name: 'Stud Earrings', description: 'Small round studs on both ears.', kind: 'earrings', defaultColor: '#e2c46b', build: { shape: 'earrings', style: 'stud', size: 0.004 }, status: 'ready' },
-  { id: 'earrings-hoop', name: 'Hoop Earrings', description: 'Medium hoops on both ears.', kind: 'earrings', defaultColor: '#d9b65a', build: { shape: 'earrings', style: 'hoop', size: 0.012 }, status: 'ready' },
+  { id: 'earrings-stud', name: 'Stud Earrings', description: 'Small round studs on both ears.', kind: 'earrings', affinity: 'neutral', defaultColor: '#e2c46b', build: { shape: 'earrings', style: 'stud', size: 0.004 }, status: 'ready' },
+  { id: 'earrings-hoop', name: 'Hoop Earrings', description: 'Medium hoops on both ears.', kind: 'earrings', affinity: 'fem', defaultColor: '#d9b65a', build: { shape: 'earrings', style: 'hoop', size: 0.012 }, status: 'ready' },
 ];
 
 // ---------------------------------------------------------------------------------------------
