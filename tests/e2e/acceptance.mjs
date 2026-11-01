@@ -604,7 +604,7 @@ async function settle(T, maxMs = 6000) {
   let stable = 0;
   while (Date.now() < end) {
     await T.page.waitForTimeout(250);
-    await T.frames(6);
+    await T.frames(3);
     const cur = await read();
     if (cur === prev) { if (++stable >= 2) return true; } else stable = 0;
     prev = cur;
@@ -646,15 +646,21 @@ async function closeAnyPanel(T) {
 
 /** Taps a person/object/tile on the canvas and returns the menu items. */
 async function tapAndOpenMenu(T, kind, id, S, label) {
-  // a person inside a shower stall or behind furniture cannot be tapped: let a few minutes pass and look again
-  for (let i = 0; i < 8 && kind === 'person'; i++) {
-    const q = await pointFor(T, kind, id);
-    const hit = q && (await T.page.evaluate(([x, y]) => { const pk = window.__t.pick(x, y); return pk.kind === 'person' ? pk.personId : null; }, [q.x, q.y]));
-    if (hit === id) break;
-    log(`${label}: person is not tappable right now (pick ${hit}); waiting 5 game minutes`);
-    await runUntil(T, 4 * 5, 'false');
+  // a person inside a shower stall or behind furniture cannot be tapped: try other heights, then let a few minutes pass and look again
+  let personY = 0.9;
+  for (let i = 0; i < 4 && kind === 'person'; i++) {
+    let found = false;
+    for (const y of [0.9, 1.3, 0.6, 1.6]) {
+      let q = await pointFor(T, kind, id, y);
+      if (!q?.free) { await T.page.evaluate((pid) => window.hearthside.game.view.focusPerson(pid), id); await settle(T); q = await T.page.evaluate(([a, b]) => window.__t.person(a, b), [id, y]); }
+      const hit = q && (await T.page.evaluate(([x, yy]) => { const pk = window.__t.pick(x, yy); return pk.kind === 'person' ? pk.personId : null; }, [q.x, q.y]));
+      if (hit === id && q.free) { personY = y; found = true; break; }
+    }
+    if (found) break;
+    log(`${label}: person is not tappable right now; waiting 3 game minutes`);
+    await runUntil(T, 4 * 3, 'false');
   }
-  let p = await pointFor(T, kind, id);
+  let p = await pointFor(T, kind, id, kind === 'person' ? personY : undefined);
   if (!p?.free) { T.bad(S, `${label}: visible to tap`, `point ${JSON.stringify(p)} not on free canvas`); return null; }
   let pick = await T.page.evaluate(([x, y]) => window.__t.pick(x, y), [p.x, p.y]);
   const keyOf = (pk) => (kind === 'person' ? pk.personId : kind === 'object' ? pk.objectId : null);
@@ -876,12 +882,12 @@ async function stepLive(T) {
     T.check(S, 'no wall crossing walking to bed', r9.viol.length === 0, JSON.stringify(r9.viol.slice(0, 3)));
     await runUntil(T, 4 * 10, 'false');
     await page.evaluate((m) => { const v = window.hearthside.view; const p = v.personPosition(m); if (p) v.rig.glideTo(p.x, p.z, 110, 0, 0.5); }, mira);
-    await T.frames(40);
+    await T.frames(20);
     await settle(T);
     await T.shot('live-sleeping');
     const e1 = (await needsOf(T, mira)).energy;
     await runUntil(T, 4 * 30, 'false');
-    await T.frames(30);
+    await T.frames(15);
     const e2 = (await needsOf(T, mira)).energy;
     T.check(S, 'energy rises while sleeping', e2 > e1 && e1 >= eBefore - 1, `energy ${eBefore.toFixed(1)} (before) / ${e1.toFixed(1)} (10 min in bed) -> ${e2.toFixed(1)} after another 30 min`);
     await T.shot('live-sleeping-later');
