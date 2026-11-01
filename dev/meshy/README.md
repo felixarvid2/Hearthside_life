@@ -7,6 +7,7 @@ Generated with Meshy (https://www.meshy.ai) on 2026-11-01 for the character feas
 | `base_male_test.glb` | text-to-3D, man in t-shirt and shorts, short hair | 30 |
 | `base_male_underwear.glb` | text-to-3D, bald man in boxer briefs | 30 |
 | `base_female_underwear.glb` | text-to-image (`base_female_reference.png`) then image-to-3D, bald woman in tank top and bike shorts | 3 + 30 |
+| `base_male_v2.glb` | text-to-image (`base_male_v2_reference.png`) then image-to-3D, bald man in tank top and bike shorts, average build, same style as the female body; replaces `base_male_underwear` (too muscular, feet turned out) | 3 + 30 |
 
 All are single textured meshes (~20k triangles, about 3 MB), unrigged, in T-pose. Text-to-3D ignored parts of the
 prompt for the female body twice (long hair, fantasy clothing; 40 credits lost); generating a reference image first
