@@ -2,6 +2,7 @@
 // Milestone 1 acceptance run of Hearthside Life (brief section 26) in a real browser, driving the real interface.
 //
 //   node tests/e2e/acceptance.mjs [--no-build] [--only=portrait,landscape,desktop] [--out=DIR] [--stop-after=STEP]
+//                                  [--steps=3,4] [--fast-start]   (development aids: run some steps; skip the creator UI)
 //   npm run e2e:acceptance
 //
 // Builds the game (vite build -> tests/e2e/out/dist), serves it with vite preview on port 5190 and plays the
@@ -12,7 +13,8 @@
 // Clicks and taps go through the real DOM (and the canvas at positions picked with view.worldToScreen/anchorOf);
 // window.hearthside.debug is only used to fast-forward time and to read state for assertions.
 // Fails on page errors, console errors and failed requests. Screenshots: tests/e2e/out/acceptance/<viewport>/.
-// A JSON report is written to tests/e2e/out/acceptance/report.json.
+// A JSON report is written to tests/e2e/out/acceptance/report.json. Runtime under SwiftShader: about 10 minutes for each
+// touch viewport and up to 30 minutes on desktop (run one viewport with --only=portrait).
 //
 // Only one browser runs at a time on this machine: the script re-runs itself under
 // `flock /tmp/hearthside-browser.lock`.
