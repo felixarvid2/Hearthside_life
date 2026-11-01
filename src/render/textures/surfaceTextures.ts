@@ -25,7 +25,9 @@
 import * as THREE from 'three';
 import type { SurfaceDesign } from '../../content/types';
 import { findPalette } from '../../content/surfaces';
+import { designMaps } from './mapKit';
 import { paintDesign, paintThumbnail, textureLayout, type TextureQuality } from './painters';
+import { surfaceMapsSettled, whenSurfaceMapsLoaded } from './surfaceMaps';
 
 export { MAX_PX_PER_REPEAT, WALL_TEXTURE_HEIGHT, type TextureQuality } from './painters';
 
@@ -107,6 +109,14 @@ function createTexture(design: SurfaceDesign, paletteId: string, quality: Textur
   };
   tex.userData.surface = info;
   tex.needsUpdate = true;
+  // designs built on a detail map are painted flat until the map has loaded, then repainted in place
+  const maps = designMaps(design);
+  if (!surfaceMapsSettled(maps)) {
+    void whenSurfaceMapsLoaded(maps).then(() => {
+      paintDesign(ctx, design, paletteId, layout);
+      tex.needsUpdate = true;
+    });
+  }
   // RGBA plus about one third for the mip chain
   const bytes = Math.round(layout.widthPx * layout.heightPx * 4 * 4 / 3);
   return { key: surfaceTextureKey(design, paletteId, quality), texture: tex, refs: 0, bytes };
@@ -215,6 +225,8 @@ export function surfaceThumbnail(design: SurfaceDesign, paletteId: string, px = 
   const ctx = context2d(canvas);
   paintThumbnail(ctx, design, paletteId, size);
   const url = canvas.toDataURL('image/png');
+  // a thumbnail painted before its detail map arrived is flat: do not keep it, the next call repaints it
+  if (!surfaceMapsSettled(designMaps(design))) return url;
   thumbs.set(key, url);
   if (thumbs.size > THUMB_LIMIT) {
     const oldest = thumbs.keys().next().value as string | undefined;

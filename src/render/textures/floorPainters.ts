@@ -16,9 +16,9 @@ const SQRT2 = Math.SQRT2;
 // Wood grain (shared by planks and parquet)
 // ---------------------------------------------------------------------------------------------
 
-interface WoodColors { base: string; light: string; dark: string; seam: string }
+export interface WoodColors { base: string; light: string; dark: string; seam: string }
 
-function woodTone(rng: Rng, c: WoodColors, variation: number): string {
+export function woodTone(rng: Rng, c: WoodColors, variation: number): string {
   const t = rng.next();
   let tone = c.base;
   if (t < 0.36) tone = mix(c.base, c.light, rng.next() * variation);
@@ -30,7 +30,7 @@ function woodTone(rng: Rng, c: WoodColors, variation: number): string {
  * Paints one board in local space: x along the grain from 0 to len, y across from 0 to wid. Clips to the
  * board, adds streaks, flat-sawn "cathedral" figure, straight grain, an optional knot and joint lines.
  */
-function drawBoard(
+export function drawBoard(
   ctx: Canvas2DLike, s: PaintSpec, rng: Rng, len: number, wid: number, tone: string, c: WoodColors,
   grain: number, knots: number, cathedral: boolean,
 ): void {
@@ -100,11 +100,11 @@ function drawBoard(
   ctx.fillRect(j, j, len - j, hair(s, 0.002));
 }
 
-function woodColors(s: PaintSpec): WoodColors {
+export function woodColors(s: PaintSpec): WoodColors {
   return { base: col(s, 0), light: col(s, 1), dark: col(s, 2), seam: col(s, 3) };
 }
 
-const WOOD_PARAMS = {
+export const WOOD_PARAMS = {
   grain: { type: 'number', min: 0, max: 1, default: 0.6, doc: 'Grain visibility.' },
   knots: { type: 'number', min: 0, max: 1, default: 0.3, doc: 'How often boards have knots.' },
   variation: { type: 'number', min: 0, max: 1, default: 0.5, doc: 'Board-to-board tone variation.' },

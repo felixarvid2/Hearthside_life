@@ -67,7 +67,18 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
   garments use (`src/characters/meshyBody.ts`), so clothing and body stay in step. Garments are built on a body template
   fitted to the scanned surface (no stylisation).
 - **Coverage**: the skin shader pushes body regions under worn garments inward (same `Coverage` data as the classic skin);
-  where nothing covers it, the baked base layer reads as plain underwear.
+  where nothing covers it, the baked base layer reads as plain underwear on the female frame and as bare skin on the male
+  frame (a man in swim trunks has a bare torso). Only skin and base layer exist on torso, legs and arms, so the
+  anti-aliased texels between them are split between the two instead of showing as dark seam lines.
+- **Garment fit** (`src/characters/clothing.ts`, `materials.ts`): necklines are not fixed heights. `neckline()` puts the back of
+  the opening where the template's torso has narrowed to the style's half width (`heightAtHalfWidth`), so the opening sits
+  on the shoulder slope of whatever body the garment is fitted to (the scanned shoulders are broader than the classic ones);
+  strap and armhole positions come from the shoulder width (`strapZone`), the armhole is a curve in the cloth shader.
+  Open ends (hems, cuffs, sleeve ends, skirt hems) get a rolled rim: three extra rings that curl the shell into a small
+  tube (`withRim`). Skirts flare in a bell with godet folds and a lower hem on the fold ridges; loose tops hang in soft
+  vertical folds below the chest. The cloth shader adds fabric relief (normal detail from the weave texture plus soft
+  drape wrinkles) and a sheen / fuzz rim per fabric (`FABRIC_FX`, `FABRIC_ROUGHNESS`). Patterns, colours and coverage are
+  unchanged; `tests/unit/characters3d/clothingFit.test.ts` checks the fit on both Meshy frames and both classic frames.
 - **Hair, facial hair, glasses and earrings** are built on the parametric head and carried onto the scanned head by
   `HeadMap` (eye line, brow line and crown mapped; inside the head the offset scales with the ratio of the heads' radii,
   outside it keeps its length and follows the surface).

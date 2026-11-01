@@ -7,8 +7,10 @@ import * as THREE from 'three';
 import type { AnimId } from '../core/anim';
 import type { Appearance, GarmentLayer, Outfit, Posture } from '../core/types';
 import type { AccessoryDef, ContentDB, GarmentDef } from '../content/types';
-import type { CharacterAssets, FrameAssets } from './assets';
-import { cachedGeometry, cloneSkeleton } from './assets';
+import type { AiHairData } from './aiHair';
+import { buildAiHair, isMeshHair, topOf } from './aiHair';
+import type { AiHairAsset, CharacterAssets, FrameAssets } from './assets';
+import { cachedGeometry, cloneSkeleton, loadAiHair } from './assets';
 import { Animator } from './animation';
 import { BODY_PARAM_IDS } from './bodyShape';
 import type { Coverage, CutParams } from './clothing';
@@ -19,7 +21,7 @@ import { PAINT_MORPH_IDS } from './meshyBody';
 import { STRAND_IDS, buildHair } from './hair';
 import { buildAccessory } from './accessories';
 import type { ClothUniforms, HairUniforms, MeshySkinUniforms, SkinUniforms } from './materials';
-import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
+import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
 import { resolveOutfit } from './outfits';
 import { clamp } from './rig';
 
@@ -54,6 +56,16 @@ export function hairGeometry(assets: CharacterAssets, frame: FrameAssets, conten
   });
 }
 
+/** Shared geometry of an AI hairstyle for a frame (built on first use from the loaded GLB data). */
+export function aiHairGeometry(assets: CharacterAssets, frame: FrameAssets, data: AiHairData): THREE.BufferGeometry {
+  return cachedGeometry(assets, `aihair:${frame.key}:${data.id}`, () => {
+    const mesh = buildAiHair(frame.template, data);
+    const g = toGeometry(mesh, `aihair-${frame.frame}-${data.id}`);
+    g.userData.topY = topOf(mesh);
+    return g;
+  });
+}
+
 let ringShared: { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } | null = null;
 /** Shared selection ring under the feet (one geometry and material for all characters). */
 function selectionRing(): { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } {
@@ -80,6 +92,8 @@ export class CharacterView {
   private garments = new Map<GarmentLayer, GarmentSlot>();
   private accessories: Array<{ mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial }> = [];
   private hair: { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: HairUniforms } | null = null;
+  /** The generated hairstyle (aiHair.ts), when the chosen style is one and its GLB is loaded; facial hair stays in `hair`. */
+  private aiHair: { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: HairUniforms } | null = null;
   private animator!: Animator;
   private appearance: Appearance;
   private outfit: Outfit;
@@ -145,7 +159,7 @@ export class CharacterView {
     if (!head || hi < 0) return target.copy(this.root.position).setY(this.root.position.y + 1.9);
     head.updateWorldMatrix(true, false);
     const O = this.frame.template.headOrigin;
-    const hairTop = (this.hair?.mesh.geometry.userData.topY as number | undefined) ?? 0;
+    const hairTop = Math.max((this.hair?.mesh.geometry.userData.topY as number | undefined) ?? 0, (this.aiHair?.mesh.geometry.userData.topY as number | undefined) ?? 0);
     const crownY = Math.max(this.frame.meshy?.extras.head.crownY ?? O[1] + HEAD_OFFSET[1] + CROWN_Y * HEAD_SCALE, hairTop);
     return target.set(O[0], crownY, O[2]).applyMatrix4(this.frame.boneInverses[hi]!).applyMatrix4(head.matrixWorld);
   }
@@ -163,6 +177,7 @@ export class CharacterView {
     this.skinU.uSelect.value = on ? 1 : 0;
     for (const s of this.garments.values()) s.uniforms.uSelect.value = on ? 1 : 0;
     if (this.hair) this.hair.uniforms.uSelect.value = on ? 1 : 0;
+    if (this.aiHair) this.aiHair.uniforms.uSelect.value = on ? 1 : 0;
   }
 
   /** Frees per-character resources (materials, mixer); shared geometry stays in the assets cache. */
@@ -217,6 +232,8 @@ export class CharacterView {
     this.garments.clear();
     this.hair?.material.dispose();
     this.hair = null;
+    this.aiHair?.material.dispose();
+    this.aiHair = null;
     for (const a of this.accessories) a.material.dispose();
     this.accessories = [];
     for (const child of [...this.root.children]) if (child !== this.ring) child.removeFromParent();
@@ -270,7 +287,47 @@ export class CharacterView {
 
   private applyHair(): void {
     const a = this.appearance;
-    const geometry = hairGeometry(this.assets, this.frame, this.content, a.hair.styleId, a.hair.facialHairId);
+    const def = this.content.hair[a.hair.styleId];
+    // a generated hairstyle draws its own mesh once its GLB is loaded; until then (or when it cannot load) the procedural
+    // parameters in its `build` stand in
+    let ai: AiHairAsset | undefined;
+    if (def && isMeshHair(def)) {
+      ai = this.assets.aiHair?.get(def.id);
+      if (!ai) {
+        const id = def.id;
+        void loadAiHair(this.assets, id, def.build.asset as string).then((r) => { if (r && !this.disposed && this.appearance.hair.styleId === id) this.applyHair(); });
+      }
+    }
+    this.applyProceduralHair(ai ? null : a.hair.styleId);
+    this.applyGeneratedHair(ai ?? null);
+  }
+
+  private applyGeneratedHair(asset: AiHairAsset | null): void {
+    if (!asset) {
+      if (this.aiHair) { this.aiHair.mesh.removeFromParent(); this.aiHair.material.dispose(); this.aiHair = null; }
+      return;
+    }
+    const a = this.appearance;
+    const geometry = aiHairGeometry(this.assets, this.frame, asset.data);
+    if (!this.aiHair) {
+      const { material, uniforms } = createAiHairMaterial(asset.map);
+      this.aiHair = { mesh: this.skinned(geometry, material, 'hair-mesh'), material, uniforms };
+    } else {
+      if (this.aiHair.mesh.geometry !== geometry) { this.aiHair.mesh.geometry = geometry; this.aiHair.mesh.updateMorphTargets(); }
+      this.aiHair.material.map = asset.map;
+    }
+    this.aiHair.material.color.set(a.hair.color);
+    const hl = a.hair.highlight;
+    if (hl) { const c = new THREE.Color(hl); this.aiHair.uniforms.uHighlight.value.set(c.r, c.g, c.b, 1); }
+    else this.aiHair.uniforms.uHighlight.value.set(0, 0, 0, 0);
+    this.aiHair.uniforms.uSelect.value = this.selected ? 1 : 0;
+    this.applyMorphs(this.aiHair.mesh);
+  }
+
+  /** The procedural hair mesh: a procedural style (with facial hair) or only the facial hair when `styleId` is null. */
+  private applyProceduralHair(styleId: string | null): void {
+    const a = this.appearance;
+    const geometry = hairGeometry(this.assets, this.frame, this.content, styleId, a.hair.facialHairId);
     if (!geometry) {
       if (this.hair) { this.hair.mesh.removeFromParent(); this.hair.material.dispose(); this.hair = null; }
       return;
@@ -282,7 +339,7 @@ export class CharacterView {
       this.hair.mesh.geometry = geometry;
       this.hair.mesh.updateMorphTargets();
     }
-    const def = this.content.hair[a.hair.styleId];
+    const def = styleId ? this.content.hair[styleId] : undefined;
     const strand = typeof def?.build.strand === 'string' ? def.build.strand : 'straight';
     this.hair.material.color.set(a.hair.color);
     this.hair.uniforms.uStrand.value = STRAND_IDS[strand] ?? 0;
@@ -368,6 +425,7 @@ export class CharacterView {
     }
     this.hairClear = clamp(clear, 0, 1);
     if (this.hair) this.applyMorphs(this.hair.mesh);
+    if (this.aiHair) this.applyMorphs(this.aiHair.mesh);
     const cov = mergeCoverage(coverage);
     const t = cov.torso;
     this.skinU.uCoverTorso.value.set(t?.yMin ?? 0, t?.yMaxBack ?? 0, t?.yMaxFront ?? 0, t ? 1 : 0);

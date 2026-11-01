@@ -8,9 +8,13 @@
 import type { Palette, SurfaceDesign } from '../../content/types';
 import { findPalette } from '../../content/surfaces';
 import { FLOOR_PAINTERS } from './floorPainters';
+import { FLOOR_PAINTERS_2 } from './floorPainters2';
+import { MAP_PAINTERS } from './mapPainters';
 import { hashString, mixSeed, resolveParams, type Canvas2DLike, type PainterDef, type PaintSpec } from './painterKit';
 import { WALL_MATERIAL_PAINTERS } from './wallMaterials';
+import { WALL_MATERIAL_PAINTERS_2 } from './wallMaterials2';
 import { WALL_PATTERN_PAINTERS } from './wallPatterns';
+import { WALL_PATTERN_PAINTERS_2 } from './wallPatterns2';
 
 export type { Canvas2DLike, PainterDef, PaintSpec, ParamSpec, ParamValue } from './painterKit';
 export { checkParams } from './painterKit';
@@ -25,7 +29,12 @@ export const MAX_PX_PER_REPEAT: Readonly<Record<TextureQuality, number>> = { low
 
 /** Every painter by id. Designs reference painters through `SurfaceDesign.painter`. */
 export const PAINTERS: Readonly<Record<string, PainterDef>> = Object.freeze(
-  Object.fromEntries([...WALL_PATTERN_PAINTERS, ...WALL_MATERIAL_PAINTERS, ...FLOOR_PAINTERS].map((p) => [p.id, p])),
+  Object.fromEntries(
+    [
+      ...WALL_PATTERN_PAINTERS, ...WALL_MATERIAL_PAINTERS, ...WALL_PATTERN_PAINTERS_2, ...WALL_MATERIAL_PAINTERS_2,
+      ...FLOOR_PAINTERS, ...FLOOR_PAINTERS_2, ...MAP_PAINTERS,
+    ].map((p) => [p.id, p]),
+  ),
 );
 
 export function painterFor(design: SurfaceDesign): PainterDef {

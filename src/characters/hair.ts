@@ -49,9 +49,9 @@ export function hairlineY(theta: number, kind: string, fringe: number): number {
   return y;
 }
 
-interface Ctx { t: BodyTemplate; m: MeshData; head: number; neck: number; spine3: number; spine2: number; O: Vec3; rnd: () => number }
+export interface Ctx { t: BodyTemplate; m: MeshData; head: number; neck: number; spine3: number; spine2: number; O: Vec3; rnd: () => number }
 
-function headSkinFor(c: Ctx, yBind: number, yLocal: number): Skin {
+export function headSkinFor(c: Ctx, yBind: number, yLocal: number): Skin {
   // Head above the jaw; neck below; upper spine below the shoulders
   const fNeck = smoothstep(0.0, -0.07, yLocal);
   const fSpine = smoothstep(c.t.lm.neckBaseY + 0.01, c.t.lm.neckBaseY - 0.09, yBind);
@@ -65,7 +65,7 @@ function headSkinFor(c: Ctx, yBind: number, yLocal: number): Skin {
   ]);
 }
 
-function morphs(c: Ctx, p: Vec3, skin: Skin, headLocal: Vec3 | null, theta: number): Record<string, Vec3> {
+export function hairMorphs(c: Ctx, p: Vec3, skin: Skin, headLocal: Vec3 | null, theta: number): Record<string, Vec3> {
   const out = bodyDeltas(c.t.ctx, p, skin) as unknown as Record<string, Vec3>;
   const hang = smoothstep(c.t.lm.neckBaseY + 0.03, c.t.lm.neckBaseY - 0.05, p[1]);
   if (hang > 0) out.hairClear = [Math.sign(p[0]) * HAIR_CLEAR * 0.2 * hang, 0, -HAIR_CLEAR * hang];
@@ -76,13 +76,19 @@ function morphs(c: Ctx, p: Vec3, skin: Skin, headLocal: Vec3 | null, theta: numb
   return out;
 }
 
+/** Build context of a hair mesh on `t` (used by modules that place their own geometry on the head, see aiHair.ts). */
+export function hairContext(t: BodyTemplate, m: MeshData): Ctx {
+  const raw = t.raw;
+  return { t, m, head: boneIndex(raw, 'Head'), neck: boneIndex(raw, 'neck_01'), spine3: boneIndex(raw, 'spine_03'), spine2: boneIndex(raw, 'spine_02'), O: t.headOrigin, rnd: rng(1) };
+}
+
 const LOCK_PLAIN: [number, number, number, number] = [0.5, 1, 1, 0];
 
 function emit(c: Ctx, local: Vec3, aHair: [number, number, number, number], flowLocal: Vec3, opts: { skinLocalY?: number; base?: Vec3 | null; theta?: number; bind?: Vec3; lock?: [number, number, number, number] } = {}): number {
   const p = opts.bind ?? headToBind(c.O, local);
   const skin = headSkinFor(c, p[1], opts.skinLocalY ?? local[1]);
   const base = opts.base === undefined ? null : opts.base;
-  return addVertex(c.m, p, skin, { aHair, aFlow: v3.norm(flowLocal), aLock: opts.lock ?? LOCK_PLAIN }, morphs(c, p, skin, base, opts.theta ?? 0));
+  return addVertex(c.m, p, skin, { aHair, aFlow: v3.norm(flowLocal), aLock: opts.lock ?? LOCK_PLAIN }, hairMorphs(c, p, skin, base, opts.theta ?? 0));
 }
 
 /** Small deterministic generator (mulberry32) so a style always builds the same strands. */
@@ -474,7 +480,7 @@ function tube(c: Ctx, pathBind: Vec3[], radii: number[], piece: number, segments
     const yl = (v.p[1] - c.O[1]) / HEAD_SCALE;
     const skin = headSkinFor(c, v.p[1], yl);
     const tdir = v3.norm(v3.sub(pathBind[Math.min(n - 1, Math.round(v.t * (n - 1)) + 1)] as Vec3, pathBind[Math.max(0, Math.round(v.t * (n - 1)) - 1)] as Vec3));
-    return addVertex(c.m, v.p, skin, { aHair: [v.around * 0.06, v.t * 0.4, v.t, piece], aFlow: tdir, aLock: [0.5, depth, 1, 0] }, morphs(c, v.p, skin, null, 0), v.n);
+    return addVertex(c.m, v.p, skin, { aHair: [v.around * 0.06, v.t * 0.4, v.t, piece], aFlow: tdir, aLock: [0.5, depth, 1, 0] }, hairMorphs(c, v.p, skin, null, 0), v.n);
   });
 }
 

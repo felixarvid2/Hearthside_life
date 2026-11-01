@@ -351,7 +351,7 @@ if (vCover > 0.5) discard;                            // under an opaque garment
   float refL = lt < uClothLum.z ? uClothLum.x : uClothLum.y;
   vec3 underCol = uUnder * pow(clamp(lt / max(refL, 1e-4), 0.3, 2.5), uDetail * 0.8);
   // a garment over the tank top (or the shorts) that does not hide all of it: what peeks out reads as bare skin, not as a second layer
-  vec3 bareCol = tone * pow(clamp(lt / max(refL, 1e-4), 0.75, 1.35), uDetail * 0.5);
+  vec3 bareCol = tone * 0.94 * vec3(1.0, 0.985, 0.97) * pow(clamp(lt / max(refL, 1e-4), 0.75, 1.35), uDetail * 0.5);
   underCol = mix(underCol, bareCol, mix(uBase.x, uBase.y, step(vBindY, uBase.z)));
   // iris and brow take the creator colours, keeping the baked dark/bright structure
   float isBrow = step(uSplitY, vBindY);
@@ -901,5 +901,50 @@ export function createHairMaterial(): { material: THREE.MeshStandardMaterial; un
     [['#include <common>', `#include <common>\n${HAIR_VERT_HEAD}`], ['#include <defaultnormal_vertex>', HAIR_VERT_FLOW]],
     [['#include <common>', `#include <common>\n${HAIR_FRAG_HEAD}`], ['#include <color_fragment>', HAIR_FRAG_PAINT],
       ['#include <emissivemap_fragment>', HAIR_FRAG_SHEEN]]);
+  return { material, uniforms };
+}
+
+// AI hairstyles (aiHair.ts): the generated strand detail lives in a greyscale tint map, the creator's hair colour multiplies it,
+// and the root-shade vertex colour darkens the hair near the scalp. Highlights lift the brightest strand clumps to the highlight colour.
+const AI_HAIR_FRAG_PAINT = /* glsl */ `
+#include <color_fragment>
+{
+  float tl = 1.0;
+  #ifdef USE_MAP
+    tl = texture2D(map, vMapUv).g;
+  #endif
+  vec3 col = diffuseColor.rgb;
+  if (uHighlight.w > 0.5) {
+    float clump = hhNoise(vMapUv * 26.0 + 3.7);
+    float streak = smoothstep(0.5, 0.72, clump) * smoothstep(0.62, 0.9, tl);
+    col = mix(col, uHighlight.rgb * mix(0.8, 1.1, tl), clamp(streak * 0.9 + smoothstep(0.55, 0.8, clump) * 0.25, 0.0, 0.85));
+  }
+  if (!gl_FrontFacing) col *= 0.8;
+  col = mix(col, col * 1.08 + vec3(0.03, 0.025, 0.0), uSelect);
+  diffuseColor.rgb = col;
+}
+`;
+
+const AI_HAIR_FRAG_HEAD = /* glsl */ `
+uniform vec4 uHighlight;
+uniform float uSelect;
+float hhHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float hhNoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hhHash(i), hhHash(i + vec2(1.0, 0.0)), u.x), mix(hhHash(i + vec2(0.0, 1.0)), hhHash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+`;
+
+/** Per-character material of an AI hairstyle: `map` is the style's tint map (shared), `color` the hair colour. */
+export function createAiHairMaterial(map: THREE.Texture): { material: THREE.MeshStandardMaterial; uniforms: HairUniforms } {
+  const material = new THREE.MeshStandardMaterial({ color: '#3d2a1f', map, vertexColors: true, roughness: 0.58, metalness: 0, side: THREE.DoubleSide });
+  const uniforms: HairUniforms = {
+    uHighlight: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uStrand: { value: 0 },
+    uSelect: { value: 0 },
+  };
+  patch(material, 'hs-aihair-v1', uniforms as unknown as Uniforms, [],
+    [['#include <common>', `#include <common>\n${AI_HAIR_FRAG_HEAD}`], ['#include <color_fragment>', AI_HAIR_FRAG_PAINT]]);
   return { material, uniforms };
 }

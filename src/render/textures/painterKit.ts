@@ -38,6 +38,8 @@ export interface Canvas2DLike {
   stroke(): void;
   fillRect(x: number, y: number, w: number, h: number): void;
   clip(): void;
+  /** Only present on real canvases; map painters (mapPainters.ts) fall back to flat paint without it. */
+  drawImage?(image: unknown, dx: number, dy: number, dw: number, dh: number): void;
 }
 
 export type ParamValue = number | string | boolean;

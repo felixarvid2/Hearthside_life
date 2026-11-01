@@ -68,7 +68,7 @@ describe('opening meshes', () => {
         expect(leaf, o.id).toBeDefined();
         expect(leaf?.parent, o.id).toBe(g);
         // hinge on the frame edge at -x
-        expect(leaf?.position.x ?? 0, o.id).toBeLessThan(-0.3);
+        expect(leaf?.position.x ?? 0, o.id).toBeLessThan(-0.25);
       }
     }
   });

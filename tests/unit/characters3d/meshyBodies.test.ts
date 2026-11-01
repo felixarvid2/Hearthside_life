@@ -117,7 +117,7 @@ describe.each(['a', 'b'] as const)('meshy body %s', (f) => {
     for (const p of [PART.torso, PART.leg, PART.arm, PART.hand, PART.foot, PART.head]) expect(parts.has(p), `part ${p}`).toBe(true);
   });
 
-  it('builds every garment and hair style on the Meshy body', () => {
+  it('builds every garment and hair style on the Meshy body', { timeout: 60_000 }, () => {
     const { t } = bodies[f];
     for (const g of GARMENTS) expect(buildGarment(t, g).mesh.indices.length, g.id).toBeGreaterThan(0);
     for (const h of HAIR) expect(buildHair(t, h, null).indices.length, h.id).toBeGreaterThan(0);

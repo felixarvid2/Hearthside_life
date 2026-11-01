@@ -29,9 +29,9 @@ describe('painter registry', () => {
     }
   });
 
-  it('every wall design uses its own painter (distinct structure, not recolours)', () => {
-    expect(new Set(WALL_DESIGNS.map((d) => d.painter)).size).toBe(WALL_DESIGNS.length);
-    expect(new Set(FLOOR_DESIGNS.map((d) => d.painter)).size).toBe(FLOOR_DESIGNS.length);
+  it('every painter is used by at least one design', () => {
+    const used = new Set(ALL.map((d) => d.painter));
+    for (const id of Object.keys(PAINTERS)) expect(used.has(id), id).toBe(true);
   });
 
   it('design params are known and in range', () => {

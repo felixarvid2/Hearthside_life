@@ -4,6 +4,7 @@ import {
   paletteTone, tierForPrice,
 } from '../../../src/content/surfaces';
 import type { SurfaceDesign } from '../../../src/content/types';
+import { MAP_IDS } from '../../../src/render/textures/mapKit';
 
 const HEX = /^#[0-9a-f]{6}$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -15,10 +16,11 @@ const PACKS = new Set([
 function unique(ids: string[]): boolean { return new Set(ids).size === ids.length; }
 
 describe('surface catalog', () => {
-  it('has the Milestone 1 counts', () => {
-    expect(WALL_DESIGNS.filter((d) => d.status === 'ready')).toHaveLength(12);
-    expect(FLOOR_DESIGNS.filter((d) => d.status === 'ready')).toHaveLength(8);
-    expect(OPENINGS.length).toBeGreaterThanOrEqual(4);
+  it('has the Milestone 2 counts', () => {
+    expect(WALL_DESIGNS.filter((d) => d.status === 'ready').length).toBeGreaterThanOrEqual(48);
+    expect(FLOOR_DESIGNS.filter((d) => d.status === 'ready').length).toBeGreaterThanOrEqual(32);
+    expect(OPENINGS.filter((o) => o.kind === 'door').length).toBeGreaterThanOrEqual(6);
+    expect(OPENINGS.filter((o) => o.kind === 'window').length).toBeGreaterThanOrEqual(8);
   });
 
   it('uses unique, kebab-case ids across walls, floors and openings', () => {
@@ -39,10 +41,12 @@ describe('surface catalog', () => {
     expect(byId['window-wide']?.kind).toBe('window');
   });
 
-  it('gives every wall design its own family (one per family) and a known family id', () => {
+  it('uses known family ids and covers every family of the brief', () => {
     const fam = new Set(WALL_FAMILIES.map((f) => f.id));
-    expect(unique(WALL_DESIGNS.map((d) => d.family))).toBe(true);
     for (const d of WALL_DESIGNS) expect(fam.has(d.family), d.id).toBe(true);
+    expect(new Set(WALL_DESIGNS.map((d) => d.family)).size).toBe(WALL_FAMILIES.length);
+    const ffamilies = new Set(FLOOR_DESIGNS.map((d) => d.family));
+    expect(ffamilies.size).toBe(FLOOR_FAMILIES.length);
     const ffam = new Set(FLOOR_FAMILIES.map((f) => f.id));
     for (const d of FLOOR_DESIGNS) expect(ffam.has(d.family), d.id).toBe(true);
   });
@@ -70,8 +74,26 @@ describe('surface catalog', () => {
     }
   };
 
-  it('walls: complete entries with at least 8 curated palettes', () => {
-    for (const d of WALL_DESIGNS) { expect(d.surface).toBe('wall'); checkDesign(d, 8); }
+  it('walls: complete entries with at least 8 curated palettes (murals keep a few art-directed ones)', () => {
+    for (const d of WALL_DESIGNS) {
+      expect(d.surface).toBe('wall');
+      checkDesign(d, d.paletteNote ? 4 : 8);
+      if (d.paletteNote) expect(d.paletteNote.length, d.id).toBeGreaterThan(20);
+    }
+  });
+
+  it('no two designs share a painter and params (distinct layouts, not recolours)', () => {
+    for (const list of [WALL_DESIGNS, FLOOR_DESIGNS]) {
+      const keys = list.map((d) => `${d.painter}:${JSON.stringify(Object.entries(d.params).sort())}`);
+      expect(unique(keys)).toBe(true);
+    }
+  });
+
+  it('keeps added detail maps and design ids in step', () => {
+    for (const d of [...WALL_DESIGNS, ...FLOOR_DESIGNS]) {
+      const map = d.params.map;
+      if (typeof map === 'string') expect(MAP_IDS as readonly string[], d.id).toContain(map);
+    }
   });
 
   it('floors: complete entries with at least 6 palette variants', () => {
@@ -81,7 +103,8 @@ describe('surface catalog', () => {
   it('every wall design offers light, dark, neutral and accent palettes', () => {
     for (const d of WALL_DESIGNS) {
       const tones = new Set(d.palettes.map(paletteTone));
-      expect([...tones].sort(), d.id).toEqual(['accent', 'dark', 'light', 'neutral']);
+      // art-directed murals only need a light, a dark and a mid scheme
+      expect([...tones].sort(), d.id).toEqual(d.paletteNote ? expect.arrayContaining(['dark', 'light']) : ['accent', 'dark', 'light', 'neutral']);
     }
   });
 
@@ -116,11 +139,11 @@ describe('surface catalog', () => {
       if (o.kind === 'door') {
         expect(o.height).toBeCloseTo(2.1, 5);
         expect(o.sill).toBe(0);
-        expect(['panel', 'glazed', 'plank']).toContain(o.style.leaf);
+        expect(['panel', 'glazed', 'plank', 'flush', 'fullglass', 'dutch', 'louvre']).toContain(o.style.leaf);
       } else {
-        expect(o.sill).toBeGreaterThan(0.5);
-        expect(o.sill + o.height).toBeLessThanOrEqual(2.2);
-        expect(['sash', 'casement', 'fixed']).toContain(o.style.window);
+        expect(o.sill).toBeGreaterThanOrEqual(0.5);
+        expect(o.sill + o.height).toBeLessThanOrEqual(2.2 + 1e-9);
+        expect(['sash', 'casement', 'fixed', 'slider']).toContain(o.style.window);
       }
       for (const k of ['frameColor', 'hardware', 'leafColor']) {
         const v = o.style[k];

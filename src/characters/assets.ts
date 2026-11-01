@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { BodyFrame } from '../core/types';
+import type { AiHairData } from './aiHair';
 import { HeadMap } from './headMap';
 import { buildMeshyMesh } from './meshyBody';
 import type { MeshyExtras } from './meshyBody';
@@ -51,6 +52,15 @@ export interface CharacterAssets {
   clips: Map<string, THREE.AnimationClip>;
   /** Generated geometry shared across characters, keyed by frame/style id. */
   cache: Map<string, THREE.BufferGeometry>;
+  /** AI hairstyles loaded so far (`loadAiHair`); the tint map belongs to the asset and is freed with it. */
+  aiHair?: Map<string, AiHairAsset>;
+  aiHairPending?: Map<string, Promise<AiHairAsset | null>>;
+}
+
+/** A loaded AI hairstyle: its mesh data (head-local) and greyscale tint map. */
+export interface AiHairAsset {
+  data: AiHairData;
+  map: THREE.Texture;
 }
 
 /**
@@ -205,6 +215,54 @@ export function cloneSkeleton(fa: FrameAssets): { root: THREE.Bone; skeleton: TH
   return { root, skeleton: new THREE.Skeleton(bones, fa.boneInverses), byName };
 }
 
+/**
+ * Loads `${baseUrl}characters/${asset}` (an AI hairstyle GLB, see aiHair.ts) once. Resolves to null when it cannot be
+ * loaded (the character then keeps the procedural look in the style's own `build`).
+ */
+export function loadAiHair(assets: CharacterAssets, id: string, asset: string): Promise<AiHairAsset | null> {
+  const loaded = (assets.aiHair ??= new Map()).get(id);
+  if (loaded) return Promise.resolve(loaded);
+  const pending = (assets.aiHairPending ??= new Map());
+  let p = pending.get(id);
+  if (!p) {
+    p = new GLTFLoader().loadAsync(`${assets.baseUrl}characters/${asset}`).then((gltf) => {
+      const a = aiHairFromScene(id, gltf.scene);
+      assets.aiHair!.set(id, a);
+      return a;
+    }).catch((e) => {
+      console.warn(`[characters] hairstyle ${id} unavailable, using its procedural fallback`, e);
+      return null;
+    });
+    pending.set(id, p);
+  }
+  return p;
+}
+
+/** Reads a hair GLB scene into mesh data and its tint map. */
+export function aiHairFromScene(id: string, scene: THREE.Object3D): AiHairAsset {
+  let mesh: THREE.Mesh | null = null;
+  scene.traverse((o) => { if (!mesh && (o as THREE.Mesh).isMesh) mesh = o as THREE.Mesh; });
+  if (!mesh) throw new Error(`hair ${id}: no mesh`);
+  const g = (mesh as THREE.Mesh).geometry;
+  const mat = (mesh as THREE.Mesh).material as THREE.MeshStandardMaterial;
+  const idx = g.getIndex();
+  if (!idx || !mat.map) throw new Error(`hair ${id}: missing index or tint map`);
+  const color = g.getAttribute('color');
+  const n = g.getAttribute('position').count;
+  const shade = new Float32Array(n);
+  for (let i = 0; i < n; i++) shade[i] = color ? color.getX(i) : 1;
+  const index = new Uint32Array(idx.count);
+  for (let i = 0; i < index.length; i++) index[i] = idx.getX(i);
+  const map = mat.map;
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping;
+  map.anisotropy = 4;
+  const data: AiHairData = { id, positions: attributeArray(g.getAttribute('position'), 3), normals: attributeArray(g.getAttribute('normal'), 3), uv: attributeArray(g.getAttribute('uv'), 2), shade, index };
+  g.dispose();
+  mat.dispose();
+  return { data, map };
+}
+
 /** Returns a cached generated geometry or builds and caches it. */
 export function cachedGeometry(assets: CharacterAssets, key: string, build: () => THREE.BufferGeometry): THREE.BufferGeometry {
   let g = assets.cache.get(key);
@@ -216,6 +274,9 @@ export function cachedGeometry(assets: CharacterAssets, key: string, build: () =
 export function disposeCharacterAssets(assets: CharacterAssets): void {
   for (const g of assets.cache.values()) g.dispose();
   assets.cache.clear();
+  for (const a of assets.aiHair?.values() ?? []) a.map.dispose();
+  assets.aiHair?.clear();
+  assets.aiHairPending?.clear();
   for (const set of Object.values(assets.sets)) {
     for (const f of Object.values(set)) {
       f.skinGeometry.dispose();

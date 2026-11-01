@@ -203,6 +203,57 @@ function buildLeaf(def: OpeningDef, p: Parts, leafW: number, y0: number, y1: num
   const kind = sStr(def, 'leaf', 'panel');
   const zc = -LEAF_T / 2;
   const full = (x0: number, ya: number, x1: number, yb: number) => p.box('leaf', x0, ya, -LEAF_T, x1, yb, 0);
+  if (kind === 'flush') {
+    // a plain slab with a shallow raised edge band and a recessed reveal line near the top
+    full(0, y0, leafW, y1);
+    p.box('leaf', 0.02, y0 + 0.02, 0, leafW - 0.02, y1 - 0.02, 0.004);
+    p.box('leaf', 0.02, y1 - 0.34, 0.004, leafW - 0.02, y1 - 0.332, 0.007);
+    return;
+  }
+  if (kind === 'fullglass') {
+    // slim stile-and-rail frame around one big glazed field with optional lites
+    const st = 0.07, top = 0.07, bot = 0.12;
+    full(0, y0, st, y1);
+    full(leafW - st, y0, leafW, y1);
+    full(st, y1 - top, leafW - st, y1);
+    full(st, y0, leafW - st, y0 + bot);
+    addGlazing(p, 'leaf', 'glass', st, y0 + bot, leafW - st, y1 - top,
+      Math.max(1, Math.round(sNum(def, 'litesX', 1))), Math.max(1, Math.round(sNum(def, 'litesY', 1))), zc, LEAF_T * 0.6);
+    return;
+  }
+  if (kind === 'dutch') {
+    // two plank halves with a gap between them, each on its own ledges
+    const split = 1.05, gap = 0.006;
+    const halves: Array<[number, number]> = [[y0, split - gap / 2], [split + gap / 2, y1]];
+    for (const [ya, yb] of halves) {
+      const n = 4, bw = leafW / n;
+      p.box('leaf', 0.004, ya, zc - LEAF_T * 0.22, leafW - 0.004, yb, zc + LEAF_T * 0.22);
+      for (let i = 0; i < n; i++) full(i * bw + 0.002, ya, (i + 1) * bw - 0.002, yb);
+      for (const ly of [ya + 0.14, yb - 0.14]) p.box('leaf', 0.03, ly - 0.06, -LEAF_T - 0.02, leafW - 0.03, ly + 0.06, -LEAF_T);
+    }
+    p.box('metal', leafW * 0.5 - 0.05, split - 0.02, -LEAF_T - 0.012, leafW * 0.5 + 0.05, split + 0.02, -LEAF_T);
+    return;
+  }
+  if (kind === 'louvre') {
+    // stile-and-rail frame filled with angled slats
+    const st = 0.1, top = 0.11, bot = 0.16;
+    full(0, y0, st, y1);
+    full(leafW - st, y0, leafW, y1);
+    full(st, y1 - top, leafW - st, y1);
+    full(st, y0, leafW - st, y0 + bot);
+    full(st, (y0 + y1) / 2 - 0.05, leafW - st, (y0 + y1) / 2 + 0.05);
+    const slatPitch = 0.045;
+    for (const [ya, yb] of [[y0 + bot, (y0 + y1) / 2 - 0.05], [(y0 + y1) / 2 + 0.05, y1 - top]] as const) {
+      const count = Math.max(2, Math.floor((yb - ya) / slatPitch));
+      for (let i = 0; i < count; i++) {
+        const g = new THREE.BoxGeometry(leafW - 2 * st, 0.007, 0.05);
+        g.rotateX(0.62);
+        g.translate(leafW / 2, ya + ((i + 0.5) * (yb - ya)) / count, zc);
+        p.add('leaf', g);
+      }
+    }
+    return;
+  }
   if (kind === 'plank') {
     const n = 5;
     const bw = leafW / n;
@@ -297,7 +348,7 @@ function buildDoor(def: OpeningDef): THREE.Group {
   const frameColor = sStr(def, 'frameColor', '#f1ede4');
   const leafKind = sStr(def, 'leaf', 'panel');
   const group = new THREE.Group();
-  const frameMesh = p.mesh('frame', material(leafKind === 'plank' ? 'wood' : 'paint', frameColor), 'frame');
+  const frameMesh = p.mesh('frame', material(leafKind === 'plank' || leafKind === 'dutch' ? 'wood' : 'paint', frameColor), 'frame');
   if (frameMesh) group.add(frameMesh);
 
   const gap = 0.003;
@@ -311,7 +362,7 @@ function buildDoor(def: OpeningDef): THREE.Group {
   leaf.position.set(-d.hw + d.fw + gap, 0, LEAF_T / 2);
   leaf.userData = { hinge: 'minX', maxSwing: Math.PI / 2, width: leafW };
   const leafColor = sStr(def, 'leafColor', frameColor);
-  const leafMesh = lp.mesh('leaf', material(leafKind === 'plank' ? 'wood' : 'paint', leafColor), 'leafBody');
+  const leafMesh = lp.mesh('leaf', material(leafKind === 'plank' || leafKind === 'dutch' ? 'wood' : 'paint', leafColor), 'leafBody');
   if (leafMesh) leaf.add(leafMesh);
   const glass = lp.mesh('glass', material(sStr(def, 'glass', 'clear') === 'frosted' ? 'frosted' : 'glass', '#ffffff'), 'glass');
   if (glass) leaf.add(glass);
@@ -353,8 +404,14 @@ function buildWindow(def: OpeningDef): THREE.Group {
   const ny = Math.max(1, Math.round(sNum(def, 'litesY', 1)));
   const ix0 = -d.hw + d.fw, ix1 = d.hw - d.fw;
   const iy0 = d.bottom + d.fw * 0.8, iy1 = d.top - d.fw;
-  const member = 0.04;
-  if (kind === 'sash') {
+  const member = sNum(def, 'member', 0.04);
+  if (kind === 'slider') {
+    // two panes in separate tracks, overlapping in the middle
+    const mx = (ix0 + ix1) / 2, overlap = 0.03;
+    addSash(p, ix0, iy0, mx + overlap, iy1, 0.016, member, nx, ny);
+    addSash(p, mx - overlap, iy0, ix1, iy1, -0.016, member, nx, ny);
+    p.box('metal', mx - overlap - 0.012, (iy0 + iy1) / 2 - 0.06, 0.016 + SASH_T / 2, mx - overlap, (iy0 + iy1) / 2 + 0.06, 0.016 + SASH_T / 2 + 0.012);
+  } else if (kind === 'sash') {
     const mid = (iy0 + iy1) / 2;
     const meet = 0.016;
     addSash(p, ix0, iy0, ix1, mid + meet, 0.014, member, nx, ny, member * 1.4);
@@ -374,12 +431,18 @@ function buildWindow(def: OpeningDef): THREE.Group {
       top = barY - 0.022;
     }
     const mx = (ix0 + ix1) / 2;
-    p.box('frame', mx - 0.02, iy0, -SASH_T / 2, mx + 0.02, top, SASH_T / 2);
-    addSash(p, ix0, iy0, mx - 0.02, top, 0.004, member, nx, ny);
-    addSash(p, mx + 0.02, iy0, ix1, top, 0.004, member, nx, ny);
     const hy = (iy0 + top) / 2;
-    for (const hx of [mx - 0.02 - member / 2, mx + 0.02 + member / 2]) {
-      p.box('metal', hx - 0.006, hy - 0.05, 0.004 + SASH_T / 2, hx + 0.006, hy + 0.05, 0.004 + SASH_T / 2 + 0.014);
+    if (sBool(def, 'single')) {
+      // one sash across the whole opening, a handle on its free edge
+      addSash(p, ix0, iy0, ix1, top, 0.004, member, nx, ny);
+      p.box('metal', ix1 - member - 0.006, hy - 0.05, 0.004 + SASH_T / 2, ix1 - member + 0.006, hy + 0.05, 0.004 + SASH_T / 2 + 0.014);
+    } else {
+      p.box('frame', mx - 0.02, iy0, -SASH_T / 2, mx + 0.02, top, SASH_T / 2);
+      addSash(p, ix0, iy0, mx - 0.02, top, 0.004, member, nx, ny);
+      addSash(p, mx + 0.02, iy0, ix1, top, 0.004, member, nx, ny);
+      for (const hx of [mx - 0.02 - member / 2, mx + 0.02 + member / 2]) {
+        p.box('metal', hx - 0.006, hy - 0.05, 0.004 + SASH_T / 2, hx + 0.006, hy + 0.05, 0.004 + SASH_T / 2 + 0.014);
+      }
     }
   } else {
     addSash(p, ix0, iy0, ix1, iy1, 0, member * 0.75, nx, ny);

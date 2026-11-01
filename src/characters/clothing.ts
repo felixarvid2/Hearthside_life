@@ -295,13 +295,13 @@ function merge(dst: MeshData, src: MeshData): void {
 // Pieces
 // ---------------------------------------------------------------------------------------------
 
-interface TorsoOpts { yBottom: number; yTop: number; thickness: number; drape: number; hullFrom?: number; panel?: number; overBottoms?: boolean; rim?: number }
+interface TorsoOpts { yBottom: number; yTop: number; thickness: number; drape: number; hullFrom?: number; panel?: number; overBottoms?: boolean; rim?: number; step?: number }
 
 /** Torso shell between two heights (rings ascending). Returns rings for further use. */
 function torsoPiece(m: MeshData, t: BodyTemplate, o: TorsoOpts): void {
   const lm = t.lm;
   const yc = lm.crotchY;
-  const ss = stations(o.yTop, Math.max(o.yBottom, yc), 0.024); // descending, for the drape envelope
+  const ss = stations(o.yTop, Math.max(o.yBottom, yc), o.step ?? 0.024); // descending, for the drape envelope
   const hullFrom = o.hullFrom ?? yc + t.junctionSpan;
   const slope = lerp(0.7, 0.04, clamp(o.drape, 0, 1));
   const tuckOut = o.overBottoms ? (s: number) => 0.012 + 0.012 * smoothstep(lm.waistY, lm.crotchY + 0.03, s) : undefined;
@@ -667,7 +667,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     cover.legMinY = yHem;
   } else if (shape === 'swimsuit') {
     const neck = neckline(t, str(b, 'neck', 'scoop'));
-    torsoPiece(m, t, { yBottom: lm.crotchY, yTop: Math.min(neckline(t, 'crew').backY + 0.02, (t.torso.s[t.torso.rows - 1] as number) - 0.01), thickness: 0.004, drape: 0 });
+    torsoPiece(m, t, { yBottom: lm.crotchY, yTop: Math.min(neckline(t, 'crew').backY + 0.02, (t.torso.s[t.torso.rows - 1] as number) - 0.01), thickness: 0.004, drape: 0, step: 0.013 });
     legPieces(m, t, lm.crotchY - 0.03, 0.004, 0, false);
     cuts.neck = [neck.backY, neck.depth, neck.halfW, neck.shape];
     const z = strapZone(t, num(b, 'strap', 0.04));

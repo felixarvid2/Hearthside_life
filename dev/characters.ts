@@ -7,7 +7,8 @@ import type { AnimId } from '../src/core/anim';
 import type { Appearance, BodyFrame, GarmentChoice, GarmentLayer, Outfit } from '../src/core/types';
 import type { ContentDB } from '../src/content/types';
 import * as CH from '../src/content/character';
-import { loadCharacterAssets, setCharacterStyle } from '../src/characters/assets';
+import { loadAiHair, loadCharacterAssets, setCharacterStyle } from '../src/characters/assets';
+import { isMeshHair } from '../src/characters/aiHair';
 import type { CharacterAssets } from '../src/characters/assets';
 import { CharacterView } from '../src/characters/CharacterView';
 
@@ -144,6 +145,8 @@ async function main(): Promise<void> {
   const t0 = performance.now();
   const assets = await loadCharacterAssets('/assets/', STYLE);
   labAssets = assets;
+  // generated hairstyles load on demand in the game; the lab loads them all first so screenshots never catch the procedural stand-in
+  await Promise.all(CH.HAIR.filter(isMeshHair).map((h) => loadAiHair(assets, h.id, h.build.asset as string)));
   const loadMs = performance.now() - t0;
   const hairs = CH.HAIR.map((h) => h.id);
   const count = Math.min(MAX_PEOPLE, Math.max(hairs.length, OUTFITS.length) + 3);

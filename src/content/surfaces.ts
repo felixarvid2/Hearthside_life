@@ -12,6 +12,7 @@
 
 import type { FinishRef } from '../core/types';
 import type { OpeningDef, Palette, PriceTier, SurfaceDesign } from './types';
+import { FLOOR_DESIGNS_2, OPENINGS_2, WALL_DESIGNS_2 } from './surfaces2';
 
 /** Brief section 14 wall families (id, display name, full-catalog target). */
 export const WALL_FAMILIES: ReadonlyArray<{ id: string; name: string; target: number }> = [
@@ -54,7 +55,7 @@ const floor = (d: DesignInput): SurfaceDesign => ({ ...d, surface: 'floor', stat
 // Wall designs
 // ---------------------------------------------------------------------------------------------
 
-export const WALL_DESIGNS: SurfaceDesign[] = [
+const WALL_DESIGNS_1: SurfaceDesign[] = [
   wall({
     id: 'plain-paint', name: 'Matt Emulsion',
     description: 'Smooth matt paint with a faint roller texture over a moulded skirting board. Goes with everything.',
@@ -289,11 +290,14 @@ export const WALL_DESIGNS: SurfaceDesign[] = [
   }),
 ];
 
+/** Every wall finish: the Milestone 1 set here, then the Milestone 2 set (surfaces2.ts). */
+export const WALL_DESIGNS: SurfaceDesign[] = [...WALL_DESIGNS_1, ...WALL_DESIGNS_2];
+
 // ---------------------------------------------------------------------------------------------
 // Floor designs
 // ---------------------------------------------------------------------------------------------
 
-export const FLOOR_DESIGNS: SurfaceDesign[] = [
+const FLOOR_DESIGNS_1: SurfaceDesign[] = [
   floor({
     id: 'oak-planks', name: 'Oak Planks',
     description: '18 cm solid boards of random length with flat-sawn grain, the odd knot and fine joints.',
@@ -434,6 +438,9 @@ export const FLOOR_DESIGNS: SurfaceDesign[] = [
   }),
 ];
 
+/** Every floor design: the Milestone 1 set here, then the Milestone 2 set (surfaces2.ts). */
+export const FLOOR_DESIGNS: SurfaceDesign[] = [...FLOOR_DESIGNS_1, ...FLOOR_DESIGNS_2];
+
 // ---------------------------------------------------------------------------------------------
 // Doors and windows
 // ---------------------------------------------------------------------------------------------
@@ -442,14 +449,16 @@ export const FLOOR_DESIGNS: SurfaceDesign[] = [
 //   all:     holeWidth (m, wall hole width inside the tile), frame (m, jamb lining face width),
 //            casing (m, architrave width; holeWidth / 2 + casing stays within half a tile),
 //            frameColor, hardware (metal colour)
-//   doors:   leaf 'panel' | 'glazed' | 'plank', leafColor, panelRows (panel/glazed lower part),
-//            litesX/litesY (glazed upper part), handle 'knob' | 'lever'
-//   windows: window 'sash' | 'casement' | 'fixed', litesX/litesY (per sash or casement),
-//            transom (casement: fixed top light), glass 'clear' | 'frosted'
+//   doors:   leaf 'panel' | 'glazed' | 'plank' | 'flush' | 'fullglass' | 'dutch' | 'louvre', leafColor,
+//            panelRows (panel/glazed lower part), litesX/litesY (glazed upper part or full glass),
+//            handle 'knob' | 'lever'
+//   windows: window 'sash' | 'casement' | 'fixed' | 'slider', litesX/litesY (per sash or casement),
+//            transom (casement: fixed top light), single (casement: one sash), member (m, member width),
+//            glass 'clear' | 'frosted'
 
 const opening = (d: Omit<OpeningDef, 'status'>): OpeningDef => ({ ...d, status: 'ready' });
 
-export const OPENINGS: OpeningDef[] = [
+const OPENINGS_1: OpeningDef[] = [
   opening({
     id: 'door-panel', kind: 'door', name: 'Four-Panel Door',
     description: 'A painted interior door with four raised panels and a brass knob.',
@@ -511,6 +520,9 @@ export const OPENINGS: OpeningDef[] = [
     },
   }),
 ];
+
+/** Every door and window: the Milestone 1 set here, then the Milestone 2 set (surfaces2.ts). */
+export const OPENINGS: OpeningDef[] = [...OPENINGS_1, ...OPENINGS_2];
 
 // ---------------------------------------------------------------------------------------------
 // Helpers

@@ -46,10 +46,12 @@ State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite b
 
 ## Known issues and next steps, in order
 
-1. Procedural garments are now the weakest visuals (hair was rebuilt from layered strand cards, see ASSET_GUIDE):
-   - necklines read off-shoulder on the broader scanned shoulders;
+1. Garments were refitted to the scanned bodies (necklines on the shoulder slope, rolled rims, bell skirts with folds, fabric
+   relief and sheen, bare male torso; see ASSET_GUIDE "Garment fit"). Still weak:
    - some premade men default to skirts or nightgowns;
-   - a man in swim trunks shows the baked base layer as an undershirt.
+   - where a garment leaves the baked shorts visible (swimsuit, trunks) their hem shows as a faint seam on the thigh (the base
+     layer is flatter than the baked skin around it); the swimsuit leg opening is a fragment cut on a coarse shell;
+   - cloth folds are static (geometry on skirts and loose tops, normal detail elsewhere), not simulated.
 2. Main chunk is over 1.2 MB; `content/index.ts` is imported both statically and dynamically.
 3. Boot progress bar is not driven.
 4. Social menu has 17+ entries in no relevance order.

@@ -305,6 +305,23 @@ export const HAIR: HairDef[] = [
     length: 'long', texture: 'braided', tags: ['braids', 'long'],
     build: { cap: 0.006, top: 0.008, hairline: 'natural', part: 'center', fringe: 0, piece: 'braids', length: 0.3, strand: 'braided' }, status: 'ready',
   },
+  // AI-HAIR-BEGIN (tools/build-ai-hair.mts content: generated hairstyles, drawn from public/assets/characters/hair/<id>.glb)
+  {
+    id: 'fade-crop', name: 'Skin Fade Crop', description: 'Closely faded sides and back with a short, textured crop on top.',
+    length: 'short', texture: 'straight', tags: ['short', 'fade'],
+    build: { kind: 'mesh', asset: 'hair/fade-crop.glb', cap: 0.004, top: 0.008, hairline: 'natural', fringe: 0.2, piece: 'none', strand: 'straight' }, status: 'ready',
+  },
+  {
+    id: 'waves-long', name: 'Long Waves', description: 'Long, soft beach waves with a gentle side part.',
+    length: 'long', texture: 'wavy', tags: ['long', 'waves'],
+    build: { kind: 'mesh', asset: 'hair/waves-long.glb', cap: 0.012, top: 0.016, hairline: 'natural', part: 'left', fringe: 0, piece: 'long', length: 0.3, wave: 0.014, strand: 'wavy' }, status: 'ready',
+  },
+  {
+    id: 'bun-messy', name: 'High Messy Bun', description: 'Hair twisted into a loose, high bun with a few loose strands.',
+    length: 'medium', texture: 'tied', tags: ['tied', 'updo'],
+    build: { kind: 'mesh', asset: 'hair/bun-messy.glb', cap: 0.006, top: 0.008, hairline: 'natural', fringe: 0, piece: 'bun', bunSize: 0.056, strand: 'straight' }, status: 'ready',
+  },
+  // AI-HAIR-END
 ];
 
 export const FACIAL_HAIR: FacialHairDef[] = [

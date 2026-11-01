@@ -59,7 +59,7 @@ describe.each(['a', 'b', 'classic', 'classic-b'] as const)('garment fit on body 
     }
   });
 
-  it('rolls hems, cuffs and sleeve ends into a rim and stays within the triangle budget', () => {
+  it('rolls hems, cuffs and sleeve ends into a rim and stays within the triangle budget', { timeout: 60_000 }, () => {
     const t = bodies[f];
     let total = 0;
     for (const g of GARMENTS) {

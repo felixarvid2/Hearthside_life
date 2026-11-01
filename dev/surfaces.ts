@@ -14,6 +14,7 @@ import type { OpeningDef, SurfaceDesign } from '../src/content/types';
 import { formatMoney } from '../src/core/money';
 import { WALL_THICKNESS, buildOpeningMesh, openingCutout, setDoorOpen } from '../src/render/openingMeshes';
 import { painterFor, textureLayout } from '../src/render/textures/painters';
+import { preloadSurfaceMaps, setSurfaceMapBase } from '../src/render/textures/surfaceMaps';
 import {
   WALL_TEXTURE_HEIGHT, getSurfaceTexture, paintSurfaceCanvas, releaseSurfaceTexture, surfaceTextureStats,
   surfaceThumbnail, type TextureQuality,
@@ -652,6 +653,8 @@ const api = {
 };
 (window as unknown as { surfacesDev: typeof api }).surfacesDev = api;
 
+setSurfaceMapBase('/assets/surfaces/');
+await preloadSurfaceMaps();
 renderSide();
 resize();
 buildRoom();
