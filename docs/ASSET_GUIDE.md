@@ -90,6 +90,29 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
   card tip into pointed strands and dissolves the scalp edge into strands with an alpha test (no blending, so no sorting),
   adds baked ambient occlusion (`aLock`), per-clump brightness and a two-lobe anisotropic highlight band. Strand cells
   smaller than a pixel are averaged so nothing shimmers at game distance.
+- **AI hairstyles** (`src/characters/aiHair.ts`, `tools/build-ai-hair.mts`, `tools/hair-ai/`): hairstyles whose `build` has
+  `kind: 'mesh'` and `asset: 'hair/<id>.glb'` are drawn from a generated mesh (`public/assets/characters/hair/<id>.glb`, about
+  4k triangles, 170-330 kB, one draw call, plus the procedural facial-hair mesh when worn). The rest of such a `build` is a
+  procedural stand-in that is drawn while the GLB loads and when it cannot load, so every consumer of `HairDef` keeps working.
+  Pipeline (`npm run hair:ai -- images|models|build|content`): (1) FLUX (schnell, or dev) draws the style on a smooth bald grey
+  mannequin head in a chromatic mid brown (`tools/hair-ai/styles.mts` holds the prompts); (2) TRELLIS (fal.ai) turns the image
+  into a textured GLB; both are cached with prompt, seed and model in `dev/hair-ai/raw/`, the spend is booked in
+  `dev/hair-ai/LEDGER.md` before every call and stops at 3 USD, and everything after this step is offline and free;
+  (3) `segment.mts` separates hair from mannequin by texel chroma (dark texels by their neighbours on the surface);
+  (4) `register.mts` fits the visible mannequin (face, ears, skull where the hair does not cover it) to the parametric head of
+  `headShape.ts` (trimmed distance-field fit over yaw, anisotropic scale and shift), so the hair keeps its place relative to the
+  face, and stores the hair in **head-local metres**; (5) the mannequin is removed, the hair is simplified with meshoptimizer
+  (uv ride along, so the tint map stays on the strands), given smooth normals and a root-shade vertex colour (darker near the
+  scalp), and a 512 px WebP **tint map** is baked from the generated albedo: luminance only, mannequin grey and baked large-scale
+  shading removed, strand detail boosted, mean about 0.8, so the creator's hair colour (the material colour) multiplies it
+  to any shade; highlights lift the brightest strand clumps to the highlight colour. A few styles add a thin scalp cap
+  (`scalp` in the style list) under the generated hair.
+  At run time (`CharacterView`, `loadAiHair` in `assets.ts`) the GLB loads on first use; the head-local vertices go through
+  `headToBind` (classic head) and `HeadMap` (Meshy heads of both frames), exactly like the procedural hair, so one file fits
+  frames a and b in both character styles. Skin weights are derived from the vertex height (head bone, blending to the neck and
+  upper spine below the skull), the body and face-sculpt sliders and `hairClear` are morph targets evaluated like the procedural
+  hair's, and vertices that end up inside the torso are pushed out to its surface (`clearBody`). The GLB itself carries no skin.
+  Material: `createAiHairMaterial` (`materials.ts`), metalness 0, double sided, no blending.
 - **Numbers** (per body): about 10,000 triangles (source 20,700), 6.7-6.9k vertices, one draw call, GLB 0.55 MB (1024 px
   WebP albedo 71-74 kB, 512 px mask 8 kB), about 7 MB of GPU texture memory per frame. A person (body, outfit, hair) costs
   about as much as a classic one (same draw calls, 5 % fewer triangles; a software-rendered frame with 8 people measured
@@ -111,11 +134,32 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
 
 ## Walls, floors, openings
 
-- Procedural, seeded Canvas2D painters (`src/render/textures/painters.ts`) generate seamless textures from
-  design parameters and curated palettes. A palette change is a variant, never a new design.
+- Procedural, seeded Canvas2D painters (`src/render/textures/`: `wallPatterns*.ts`, `wallMaterials*.ts`,
+  `floorPainters*.ts`) generate seamless textures from design parameters and curated palettes. One painter can
+  serve several designs when its parameters give a visibly different layout (stripe-set: candy, ticking, breton;
+  geo-motifs: chevron, tumbling blocks, scales, quatrefoil, dots; parquet-set: chevron, basket weave, cubes).
+  A palette change is a variant, never a new design.
+- **Detail maps** (`mapPainters.ts`, `mapKit.ts`, `surfaceMaps.ts`): where generated material beats procedural
+  drawing (oak grain, barnwood, stone, marble, slate, berber loops, sisal, pebbles, lawn, plaster, rubble, ledge
+  stone, board-formed concrete) the painters read a seamless 512 px greyscale map from `public/assets/surfaces/`
+  and tint it with the palette: map value 0 -> palette dark, 0.5 -> base, 1 -> light, so every palette still
+  works. `map-wall` fills a wall (plaster, grasscloth, rubble), `map-floor` fills a floor either continuously
+  (pebbles, lawn, fibre) or in grouted cells that each show a random part of the map (marble slabs),
+  `map-boards` lays staggered boards cut from a grain map (wide oak, narrow strip). Layout (boards, joints,
+  grout, skirting) is always procedural.
+- The maps are AI-generated (fal.ai FLUX.1 [dev], see LICENSES) and reproducible: `dev/surfaces-ai/generate.mjs`
+  fetches raw sources into `dev/surfaces-ai/raw/` (gitignored, cached, never fetched twice) and logs the spend to
+  `dev/surfaces-ai/LEDGER.md`; `npm run assets:surfaces` (`tools/build-surface-maps.mjs`) turns them into the
+  committed WebP maps (illumination flattened, made seamless by offset-and-blend, normalised). The maps load once
+  at start-up (`preloadSurfaceMaps`, started by `GameView`); until a map has arrived the painter draws a flat
+  fallback of the same layout, `surfaceTextures` repaints the texture in place when the map loads and does not
+  cache thumbnails painted without it.
 - UV convention: walls `u = world coordinate along the wall axis / repeat`, `v = height / 2.8`; floors
   `uv = (x, z) / repeat`. Patterns stay aligned along wall runs and across tiles.
-- Doors and windows are procedural meshes (`src/render/openingMeshes.ts`) with real wall holes.
+- Doors and windows are procedural meshes (`src/render/openingMeshes.ts`) with real wall holes. All openings are
+  one tile wide in the wall (the world model holds one opening per wall edge); variety comes from the hole width
+  (0.6-0.94 m), the height and sill, and the leaf or sash type: doors panel, glazed, plank, flush, full glass,
+  stable (split) and louvred; windows sash, casement (twin or single, with a transom), fixed, and sliding.
 - **Developer tool**: `dev/surfaces.html` previews every wall and floor design at room scale.
 
 ## Export and pipeline rules
@@ -123,7 +167,7 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
 - `tools/build-assets.mjs` is the only way third-party files enter `public/assets/` (the AI-generated Meshy bodies
   come in through `tools/build-meshy-bodies.mts`, see Characters); it records bounds, materials and sources in
   `public/assets/manifest.json`. Re-run it after changing the source selection.
-- Runtime models are GLB. Textures are generated at runtime (no large image files).
+- Runtime models are GLB. Wall and floor textures are painted at runtime; the only image files are the 14 detail maps in `public/assets/surfaces/` (about 1 MB in total).
 - Every visible default asset must fit this guide; temporary art is marked as such in CONTENT_STATUS.
 
 ## Licenses
@@ -134,6 +178,7 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
 | Detailed character bodies (`meshy_a.glb`, `meshy_b.glb`) | Generated with Meshy (meshy.ai) on 2026-11-01 | Meshy terms of the generating account (check before distribution) |
 | Furniture models and thumbnails | Kenney, Furniture Kit 2.0 | CC0 1.0 |
 | UI sounds and jingles | Kenney, Interface Sounds and Music Jingles | CC0 1.0 |
-| Faces, hair, clothing, wall and floor designs, doors, windows, icons | Original, generated by this project's code | Project license |
+| Detail maps for AI-textured walls and floors (`public/assets/surfaces/`) | Generated with fal.ai FLUX.1 [dev] on 2026-11-01 | fal.ai and FLUX.1 [dev] terms for outputs (check before distribution) |
+| Faces, hair, clothing, wall and floor layouts and palettes, doors, windows, icons | Original, generated by this project's code | Project license |
 
 See also `public/assets/LICENSES.md`.

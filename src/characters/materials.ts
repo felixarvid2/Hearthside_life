@@ -344,7 +344,8 @@ if (vCover > 0.5) discard;                            // under an opaque garment
   vec3 m = texture2D(uMask, vMsUv).rgb;               // skin, baked clothing, iris / brow
   float lt = max(hsLuma(tex), 1e-4);
   // skin: the chosen tone times the baked shading (luminance ratio to the mean baked skin), a little of the baked hue kept
-  float rs = pow(clamp(lt / max(hsLuma(uSkinMean), 1e-3), 0.6, 1.8), uDetail); // anti-aliased clothing edges are skin-warm but dark: keep them from drawing lines
+  float rsMin = vInfo.x < 2.5 ? 0.78 : 0.6; // darkest texels next to the baked clothing are its anti-aliased edge, not shadow
+  float rs = pow(clamp(lt / max(hsLuma(uSkinMean), 1e-3), rsMin, 1.8), uDetail); // anti-aliased clothing edges are skin-warm but dark: keep them from drawing lines
   vec3 hue = clamp(tex / max(uSkinMean, vec3(1e-3)) / max(lt / max(hsLuma(uSkinMean), 1e-3), 1e-3), vec3(0.8), vec3(1.25));
   vec3 skinCol = tone * rs * mix(vec3(1.0), hue, 0.35);
   // baked base layer: plain underwear with its own shading (dark and light parts are normalised separately)
