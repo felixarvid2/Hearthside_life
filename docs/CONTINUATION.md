@@ -1,6 +1,6 @@
 # Continuation note
 
-State on 2026-11-01. Work happens on branch `ccr-333d8ff5-slv7qa`, draft PR #1 (not merged, merge only after the user
+State on 2026-11-01. Work happens on branch `ccr-333d8ff5-slv7qa`, PR #1 (Milestones 1-5) is merged; Milestone 6 is on PR #2 (merge only after the user
 approves). **Milestones 1-6 are complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 7
 (neighbourhood and venues).
 
