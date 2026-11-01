@@ -186,6 +186,93 @@ const LEISURE: InteractionDef[] = [
 ];
 
 /**
+ * Hobbies, kids' play and quick kitchen bites, offered by the furniture of the hobby, kids, outdoor and small-appliance
+ * designs. They follow the same numbers as the activities above: practice gives 40-60 skill xp/h, fun about
+ * +12..+22 fun/h. Instrument and board-game interactions use the 'computer' behaviour (sit at a chair facing the object
+ * within 1.6 m, else stand at it); workouts and painting use the generic behaviour at a 'use' slot or a free side.
+ */
+const HOBBY: InteractionDef[] = [
+  def({
+    id: 'paintCanvas', name: 'Paint', description: 'Paint at the easel: creative fun that trains Painting.',
+    icon: 'roller', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 16, energy: -3 }, skill: { id: 'painting', xpPerHour: 50 },
+    moodletOnComplete: 'inspired',
+    autonomy: { enabled: true, ads: { fun: 16 }, tags: ['painting', 'creative', 'skill', 'fun'] },
+  }),
+  def({
+    id: 'playPiano', name: 'Play Piano', description: 'Sit at the piano (or stand at it) and play for 45 minutes. Fun, and trains Music.',
+    icon: 'sound', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 18, energy: -2 }, skill: { id: 'music', xpPerHour: 55 },
+    moodletOnComplete: 'goodTunes',
+    autonomy: { enabled: true, ads: { fun: 14 }, tags: ['music', 'instrument', 'creative', 'skill', 'fun'] },
+  }),
+  def({
+    id: 'workOut', name: 'Work Out', description: 'Run on the treadmill: trains Fitness but costs energy and hygiene.',
+    icon: 'energy', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'exercise' },
+    duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { energy: -10, hygiene: -8, fun: 6 }, skill: { id: 'fitness', xpPerHour: 60 },
+    moodletOnComplete: 'energized',
+    autonomy: { enabled: true, ads: { fun: 6 }, tags: ['active', 'fitness', 'skill'] },
+  }),
+  def({
+    id: 'liftWeights', name: 'Lift Weights', description: 'Press the barbell: a harder workout than a jog that trains Fitness.',
+    icon: 'energy', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'clean' }, // the push loop reads as pressing the bar
+    duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { energy: -12, hygiene: -7, fun: 4 }, skill: { id: 'fitness', xpPerHour: 70 },
+    moodletOnComplete: 'energized',
+    autonomy: { enabled: true, ads: { fun: 4 }, tags: ['active', 'fitness', 'skill'] },
+  }),
+  def({
+    id: 'playChess', name: 'Play Chess', description: 'Think a few moves ahead over the board, seated at a chair facing it when there is one. Trains Logic.',
+    icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 12, energy: -1 }, skill: { id: 'logic', xpPerHour: 50 },
+    moodletOnComplete: 'sharpMind',
+    autonomy: { enabled: true, ads: { fun: 12 }, tags: ['chess', 'game', 'skill', 'fun'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'playWithToys', name: 'Play with Toys', description: 'Dig through the toys and build, stack and make-believe for half an hour.',
+    icon: 'fun', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { fun: 22, energy: -2 },
+    moodletOnComplete: 'playtime',
+    autonomy: { enabled: true, ads: { fun: 20 }, tags: ['toys', 'play', 'fun'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'grillFood', name: 'Grill Some Food', description: 'Fire up the barbecue and grill a plateful outdoors (+40 hunger for $6). Practises Cooking.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 6 }, needsOnComplete: { hunger: 40 }, cost: dollars(6),
+    skill: { id: 'cooking', xpPerHour: 40 }, moodletOnComplete: 'goodMeal',
+    autonomy: { enabled: true, ads: { hunger: 40 }, tags: ['food', 'cooking', 'grill', 'outdoor'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'makeCoffee', name: 'Make Coffee', description: 'Brew a cup of coffee for $2: +12 energy and a little cheer.',
+    icon: 'energy', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 4 }, needsOnComplete: { energy: 12, fun: 2 }, cost: dollars(2),
+    moodletOnComplete: 'caffeinated',
+    autonomy: { enabled: true, ads: { energy: 12 }, tags: ['food', 'coffee', 'drink'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'makeToast', name: 'Make Toast', description: 'Pop a slice in the toaster for $1: +15 hunger.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 4 }, needsOnComplete: { hunger: 15 }, cost: dollars(1),
+    autonomy: { enabled: true, ads: { hunger: 15 }, tags: ['food', 'snack', 'toast'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'blendSmoothie', name: 'Blend a Smoothie', description: 'Whizz up a fruit smoothie for $3: +20 hunger and +6 energy.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 5 }, needsOnComplete: { hunger: 20, energy: 6 }, cost: dollars(3),
+    autonomy: { enabled: true, ads: { hunger: 20 }, tags: ['food', 'snack', 'drink'] }, allowVisitors: true,
+  }),
+];
+
+/**
  * Housework (cleaning and repairs). The object interactions are offered by tag (content/capabilities.ts), not listed
  * on objects: 'cleanable' objects offer cleanObject; 'plumbing', 'appliance' and 'electronics' objects offer
  * repairObject, serviceObject and callRepairperson. Durations, success chances and costs depend on skills and the
@@ -312,7 +399,21 @@ const SELF: InteractionDef[] = [
     duration: { kind: 'fixed', minutes: 20 }, needsPerHour: { social: 30, fun: 4 }, moodletOnComplete: 'caughtUp',
     autonomy: { enabled: true, ads: { social: 10 }, tags: ['social', 'phone'] },
   }),
+  def({
+    id: 'planEvent', name: 'Plan an Event', description: 'Open the phone planner: choose a date, dinner party, house party or celebration, the guests and the time.',
+    icon: 'phone', kind: 'self', behavior: 'planEvent', posture: 'standing',
+    anims: { perform: 'phone' },
+    duration: { kind: 'fixed', minutes: 1 },
+    autonomy: { enabled: false, ads: {}, tags: ['social', 'phone'] },
+  }),
+  def({
+    id: 'phoneDate', name: 'Ask on a Date', description: 'Phone someone you like (action data.personId) and invite them to a date at home this evening.',
+    icon: 'heart', kind: 'self', behavior: 'phoneDate', posture: 'standing',
+    anims: { perform: 'phone' },
+    duration: { kind: 'fixed', minutes: 4 }, needsOnComplete: { social: 4 },
+    autonomy: { enabled: false, ads: {}, tags: ['social', 'phone'] },
+  }),
 ];
 
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOUSEWORK, ...WARDROBE, ...SELF];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF];

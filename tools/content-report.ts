@@ -21,7 +21,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const markdown = process.argv.includes('--markdown');
 const strict = process.argv.includes('--strict');
 
-interface Row { label: string; ready: number; dev: number; variants?: number | string; m1?: number; m2?: number; m3?: number; target?: number }
+interface Row { label: string; ready: number; dev: number; variants?: number | string; m1?: number; m2?: number; m3?: number; m4?: number; target?: number }
 
 /** Full-project catalog targets per buy category (brief section 16). */
 const CATEGORY_TARGETS: Record<CatalogCategory, number> = {
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   const objTotals = count(objects);
   const readyObjects = objects.filter((o) => o.status === 'ready');
   furnRows.push({
-    label: 'TOTAL furniture', ...objTotals, variants: readyObjects.reduce((n, o) => n + o.finishes.reduce((m, r) => m + r.swatches.length, 0), 0), m1: 15, m2: 60, target: 560,
+    label: 'TOTAL furniture', ...objTotals, variants: readyObjects.reduce((n, o) => n + o.finishes.reduce((m, r) => m + r.swatches.length, 0), 0), m1: 15, m2: 60, m4: 100, target: 560,
   });
   sections.push({
     title: 'Buy-mode furniture (distinct designs)',
@@ -119,15 +119,15 @@ async function main(): Promise<void> {
 
   for (const s of sections) {
     if (markdown) {
-      console.log(`\n### ${s.title}\n\n| | ready | dev | variants | M1 min | M2 min | M3 min | full target |\n|---|---:|---:|---:|---:|---:|---:|---:|`);
-      for (const r of s.rows) console.log(`| ${r.label} | ${r.ready} | ${r.dev} | ${r.variants ?? '-'} | ${r.m1 ?? '-'} | ${r.m2 ?? '-'} | ${r.m3 ?? '-'} | ${r.target ?? '-'} |`);
+      console.log(`\n### ${s.title}\n\n| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | full target |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|`);
+      for (const r of s.rows) console.log(`| ${r.label} | ${r.ready} | ${r.dev} | ${r.variants ?? '-'} | ${r.m1 ?? '-'} | ${r.m2 ?? '-'} | ${r.m3 ?? '-'} | ${r.m4 ?? '-'} | ${r.target ?? '-'} |`);
       if (s.note) console.log(`\n${s.note}`);
     } else {
       console.log(`\n${s.title}`);
-      console.log(`  ${'category'.padEnd(40)}${'ready'.padStart(7)}${'dev'.padStart(6)}${'variants'.padStart(18)}${'M1'.padStart(6)}${'M2'.padStart(6)}${'M3'.padStart(6)}${'target'.padStart(8)}`);
+      console.log(`  ${'category'.padEnd(40)}${'ready'.padStart(7)}${'dev'.padStart(6)}${'variants'.padStart(18)}${'M1'.padStart(6)}${'M2'.padStart(6)}${'M3'.padStart(6)}${'M4'.padStart(6)}${'target'.padStart(8)}`);
       for (const r of s.rows) {
         console.log(`  ${r.label.padEnd(40)}${String(r.ready).padStart(7)}${String(r.dev).padStart(6)}${String(r.variants ?? '-').padStart(18)}` +
-          `${String(r.m1 ?? '-').padStart(6)}${String(r.m2 ?? '-').padStart(6)}${String(r.m3 ?? '-').padStart(6)}${String(r.target ?? '-').padStart(8)}`);
+          `${String(r.m1 ?? '-').padStart(6)}${String(r.m2 ?? '-').padStart(6)}${String(r.m3 ?? '-').padStart(6)}${String(r.m4 ?? '-').padStart(6)}${String(r.target ?? '-').padStart(8)}`);
       }
       if (s.note) console.log(`  (${s.note})`);
     }

@@ -6,7 +6,7 @@ import { INTERACTIONS } from '../../../src/content/interactions';
 import { TRAITS, describeTraitEffects } from '../../../src/content/traits';
 import { RECIPES, RECIPE_FOOD_TAGS } from '../../../src/content/recipes';
 import { M1_OBJECTS, validateContent, type ManifestModel } from '../../../src/content/validate';
-import { footprintTiles, rotateCell, rotateLocal, rotatedSize } from '../../../src/core/geometry';
+import { blockingTiles, rotateCell, rotateLocal, rotatedSize } from '../../../src/core/geometry';
 import type { Rot } from '../../../src/core/types';
 
 const manifest = JSON.parse(readFileSync(new URL('../../../public/assets/manifest.json', import.meta.url), 'utf8')) as {
@@ -26,7 +26,7 @@ describe('content registry', () => {
     expect(ready(db.objects).length).toBeGreaterThanOrEqual(40); // M1 needs 15; this build ships ~40
     expect(Object.keys(M1_OBJECTS).every((id) => db.objects[id]?.status === 'ready')).toBe(true);
     expect(ready(db.interactions).length).toBeGreaterThanOrEqual(24);
-    expect(ready(db.socials).length).toBeGreaterThanOrEqual(20);
+    expect(ready(db.socials).length).toBeGreaterThanOrEqual(24); // Milestone 5 minimum
     expect(ready(db.traits).length).toBeGreaterThanOrEqual(20);
     expect(ready(db.aspirations).length).toBeGreaterThanOrEqual(6);
     expect(Object.keys(db.skills)).toHaveLength(16);
@@ -79,7 +79,7 @@ describe('content registry', () => {
   it('keeps approach tiles outside blocking footprints and anchors inside at every rotation', () => {
     for (const o of OBJECTS.filter((x) => x.blocksMovement)) {
       for (const rot of [0, 1, 2, 3] as Rot[]) {
-        const tiles = footprintTiles(0, 0, o.footprint, rot);
+        const tiles = blockingTiles(0, 0, o, rot);
         const size = rotatedSize(o.footprint, rot);
         for (const s of o.slots) {
           const a = rotateCell(s.approach[0], s.approach[1], o.footprint, rot);

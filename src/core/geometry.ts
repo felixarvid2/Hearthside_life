@@ -43,6 +43,19 @@ export function footprintTiles(x: number, z: number, fp: Footprint, rot: Rot): A
   return out;
 }
 
+/**
+ * Tiles of a footprint that block walking: the footprint without its open cells (rot-0 cells the model leaves
+ * empty, e.g. the inside of an L-shaped sofa).
+ */
+export function blockingTiles(
+  x: number, z: number, def: { footprint: Footprint; openCells?: ReadonlyArray<readonly [number, number]> }, rot: Rot,
+): Array<{ x: number; z: number }> {
+  const all = footprintTiles(x, z, def.footprint, rot);
+  if (!def.openCells?.length) return all;
+  const open = new Set(def.openCells.map(([cx, cz]) => { const c = rotateCell(cx, cz, def.footprint, rot); return `${x + c.x},${z + c.z}`; }));
+  return all.filter((t) => !open.has(`${t.x},${t.z}`));
+}
+
 /** Tile containing a local tile cell (integer cell coordinates in rot-0 space), after rotation. */
 export function rotateCell(cx: number, cz: number, fp: Footprint, rot: Rot): { x: number; z: number } {
   // rotate the cell centre and floor it

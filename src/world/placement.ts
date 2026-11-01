@@ -14,7 +14,7 @@
 //   object never cuts off part of the lot and never takes the last usable slot of another object.
 
 import type { ContentDB, ObjectDef } from '../content/types';
-import { footprintTiles, rotateCell } from '../core/geometry';
+import { blockingTiles, footprintTiles, rotateCell } from '../core/geometry';
 import type { Tile } from '../core/nav';
 import type { Id, Lot, PlacedObject, Rot, WorldState } from '../core/types';
 import { hasLevel, inLot } from './lots';
@@ -150,7 +150,7 @@ export function validatePlacement(state: WorldState, content: ContentDB, lotId: 
     if (person) reasons.push(`${person.firstName} is standing there.`);
   }
 
-  if (reasons.length === 0) accessChecks(content, lot, req, def, tiles, supportId, reasons, warnings);
+  if (reasons.length === 0) accessChecks(content, lot, req, def, supportId, reasons, warnings);
   return { ok: reasons.length === 0, reasons, tiles, ...(supportId ? { supportId } : {}), warnings };
 }
 
@@ -202,7 +202,7 @@ function countReachable(points: Tile[], mask: Uint8Array, g: NavGrid): number {
 }
 
 function accessChecks(
-  content: ContentDB, lot: Lot, req: PlacementRequest, def: ObjectDef, tiles: Tile[], supportId: Id | undefined,
+  content: ContentDB, lot: Lot, req: PlacementRequest, def: ObjectDef, supportId: Id | undefined,
   reasons: string[], warnings: string[],
 ): void {
   const blocking = blocksMovement(def);
@@ -212,7 +212,7 @@ function accessChecks(
   };
   const after = buildNavGrid(lot, content, req.level, {
     ...(req.ignoreObjectId ? { ignoreObjectId: req.ignoreObjectId } : {}),
-    ...(blocking ? { extra: { id: PLACING_ID, tiles } } : {}),
+    ...(blocking ? { extra: { id: PLACING_ID, tiles: blockingTiles(req.x, req.z, def, req.rot) } } : {}),
   });
   const objAfter = (id: Id) => (id === PLACING_ID ? hypo : id === req.ignoreObjectId ? undefined : lot.objects[id]);
   const afterCtx: AccessContext = { grid: after, content, objectById: objAfter };

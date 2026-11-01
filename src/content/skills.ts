@@ -32,10 +32,10 @@ export const SKILLS: SkillDef[] = [
   skill('baking', 'Baking', 'hunger', 'dev', 'Breads, cakes and pastries from the oven.', [
     { level: 3, text: '(later) Bake bread and cakes in the oven.' },
   ]),
-  skill('logic', 'Logic', 'book', 'ready', 'Reasoning and problem solving. Practised by reading books.', [
+  skill('logic', 'Logic', 'book', 'ready', 'Reasoning and problem solving. Practised by reading books and playing chess.', [
     { level: 2, text: 'A quick study: every other skill gains 3% more experience per Logic level, and repairs succeed a little more often.' },
     { level: 10, text: `Other skills learn ${fx.logicStudy10} faster.` },
-    { level: 4, text: '(later) Play chess and solve puzzles with friends.' },
+    { level: 4, text: '(later) Solve puzzles with friends.' },
   ]),
   skill('programming', 'Programming', 'chart', 'ready', 'Writing software. Practised at a computer or from a programming book.', [
     { level: 2, text: 'Understands electronics: repairs of TVs, computers and audio gear succeed 3% more often per level and shock less.' },
@@ -52,13 +52,15 @@ export const SKILLS: SkillDef[] = [
     { level: 10, text: `Groceries cost ${fx.gardening10} less.` },
     { level: 3, text: '(later) Plant, tend and harvest garden crops.' },
   ]),
-  skill('painting', 'Painting', 'roller', 'dev', 'Putting brush to canvas.', [
+  skill('painting', 'Painting', 'roller', 'ready', 'Putting brush to canvas. Practised at an easel.', [
+    { level: 2, text: 'Painting is more fun: 4% more fun per level.' },
+    { level: 10, text: `Painting gives ${fx.painting10} more fun.` },
     { level: 3, text: '(later) Sell finished paintings.' },
   ]),
-  skill('music', 'Music', 'sound', 'ready', 'A trained ear for melody and rhythm. Practised by listening closely to music (instruments come later).', [
+  skill('music', 'Music', 'sound', 'ready', 'A trained ear for melody and rhythm. Practised by listening closely to music and by playing the piano.', [
     { level: 2, text: 'Music is more enjoyable: 4% more fun per level.' },
     { level: 10, text: `Music gives ${fx.music10} more fun.` },
-    { level: 3, text: '(later) Play an instrument.' },
+    { level: 3, text: '(later) Play more instruments.' },
   ]),
   skill('writing', 'Writing', 'book', 'dev', 'Turning ideas into prose.', [
     { level: 3, text: '(later) Write and sell books.' },
@@ -72,10 +74,10 @@ export const SKILLS: SkillDef[] = [
     { level: 2, text: 'Required for promotion in the Culinary career from Station Cook upward.' },
     { level: 5, text: '(later) Unlocks persuasive social interactions.' },
   ]),
-  skill('fitness', 'Fitness', 'energy', 'ready', 'Strength and stamina. Practised by jogging and dancing.', [
+  skill('fitness', 'Fitness', 'energy', 'ready', 'Strength and stamina. Practised by jogging, dancing, running on a treadmill and lifting weights.', [
     { level: 2, text: 'Energy drains 1.5% slower per level, and workouts tire and sweat less.' },
     { level: 10, text: `Energy drains ${fx.fitnessEnergy10} slower and workouts cost ${fx.fitnessSweat10} less hygiene.` },
-    { level: 4, text: '(later) Workout equipment routines.' },
+    { level: 4, text: '(later) Workout routines and classes.' },
   ]),
   skill('wellness', 'Wellness', 'heart', 'dev', 'Calm, balance and self-care.', [
     { level: 2, text: '(later) Meditate to recover mood.' },

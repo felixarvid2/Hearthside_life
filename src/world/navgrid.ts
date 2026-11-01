@@ -10,7 +10,7 @@
 //   the shared corner are completely open (no wall, no door frame), so no wall corner is ever cut.
 
 import type { ContentDB } from '../content/types';
-import { footprintTiles } from '../core/geometry';
+import { blockingTiles } from '../core/geometry';
 import type { Tile } from '../core/nav';
 import type { Id, Lot } from '../core/types';
 import { openingEdgeKeys } from './walls';
@@ -64,7 +64,7 @@ export function buildNavGrid(lot: Lot, content: ContentDB, level: number, o: Gri
     if (obj.level !== level || obj.id === o.ignoreObjectId) continue;
     const def = content.objects[obj.defId];
     if (!def) { block(obj.id, [{ x: obj.x, z: obj.z }]); continue; }
-    if (blocksMovement(def)) block(obj.id, footprintTiles(obj.x, obj.z, def.footprint, obj.rot));
+    if (blocksMovement(def)) block(obj.id, blockingTiles(obj.x, obj.z, def, obj.rot));
   }
   if (o.extra) block(o.extra.id, o.extra.tiles);
 

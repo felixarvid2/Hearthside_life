@@ -26,6 +26,13 @@
 // Clean; 'plumbing', 'appliance' and 'electronics' objects wear out, break (quality 1..5 sets how fast) and offer
 // Repair, Service and Call a Repairperson; 'sink' / 'dishes' objects are dish-washing stations. New furniture only needs the
 // right tags (no interaction list changes) to take part in cleaning and repairs.
+//
+// L-shaped sofas leave the inside of the L empty: `openCells` lists those rot-0 footprint cells. They do not block walking and
+// are the approach tile of the seats around them (only the other cells of the footprint block).
+//
+// Models come from the Kenney Furniture Kit (public/assets/furniture) or, for designs the kit lacks (easel, piano, treadmill,
+// dishwasher, barbecue, crib, ...), from the original low-poly models built by tools/furniture-extra: the same conventions, so
+// both are fitted and recoloured identically.
 
 import type { FinishRegion, ObjectDef, ObjectSlot, ObjectStats, Swatch } from './types';
 import { dollars } from '../core/money';
@@ -117,6 +124,40 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   rugSquare: [[0, 0, -0.92], [0.9043, 0.01, 0]],
   plantSmall2: [[-0.0473, 0, -0.0473], [0.0473, 0.14, 0.0473]],
   bear: [[0, 0, -0.2475], [0.3897, 0.45, 0]],
+  // Milestone 4 additions (the first 13 are original models built by tools/furniture-extra, the rest unused Kenney models)
+  dishwasher: [[0, 0, 0], [0.46, 0.45, 0.4725]],
+  easel: [[0.0875, -0.0026, 0.0477], [0.4125, 0.7526, 0.39]],
+  piano: [[0.065, 0, 0], [0.935, 0.625, 0.4]],
+  treadmill: [[0.0763, 0, 0.09], [0.4238, 0.6, 0.94]],
+  weightBench: [[0.01, 0, 0.15], [0.49, 0.635, 0.955]],
+  chessTable: [[0.04, 0, 0.04], [0.46, 0.395, 0.46]],
+  crib: [[0.035, 0, 0.085], [0.465, 0.5, 0.915]],
+  toyChest: [[0.04, 0, 0.13], [0.46, 0.41, 0.37]],
+  grill: [[0.06, -0.005, 0.1], [0.49, 0.595, 0.4075]],
+  patioSet: [[0.025, 0, 0.025], [0.975, 1.2, 0.975]],
+  gardenBed: [[0.03, 0, 0.04], [0.97, 0.405, 0.46]],
+  gardenBench: [[0.075, 0, 0.1027], [0.925, 0.495, 0.4]],
+  gardenChair: [[0.045, 0, 0.0266], [0.455, 0.5097, 0.4]],
+  kitchenCoffeeMachine: [[0, 0, -0.2402], [0.1895, 0.1775, 0]],
+  toaster: [[-0.094, 0, -0.05], [0.094, 0.13, 0.05]],
+  kitchenBlender: [[0, 0, -0.1091], [0.1358, 0.2275, 0]],
+  kitchenFridgeBuiltIn: [[0, 0, -0.45], [0.43, 0.8687, 0]],
+  laptop: [[0, 0, -0.2401], [0.264, 0.1618, 0]],
+  speakerSmall: [[0, 0, -0.1332], [0.148, 0.298, 0]],
+  books: [[0, 0, -0.0945], [0.1504, 0.1039, 0]],
+  bathroomSinkSquare: [[0, 0.0568, -0.45], [0.43, 0.6368, -0.15]],
+  loungeDesignSofaCorner: [[0, 0, -1.3498], [1.3498, 0.4, 0]],
+  loungeSofaOttoman: [[0.47, 0, -0.04], [0.9098, 0.23, 0.41]],
+  benchCushionLow: [[-0.01, 0, -0.21], [0.41, 0.2, 0.01]],
+  chairModernCushion: [[0, 0, -0.2], [0.2, 0.46, 0]],
+  chairModernFrameCushion: [[0, 0, -0.2], [0.2, 0.46, 0]],
+  cardboardBoxOpen: [[-0.0797, 0, -0.2125], [0.2922, 0.281, 0]],
+  bench: [[0, 0, -0.2], [0.4, 0.47, 0]],
+  tableCloth: [[0, 0, -0.4474], [0.8415, 0.3267, 0]],
+  plantSmall3: [[-0.049, 0, -0.0424], [0.049, 0.145, 0.0424]],
+  rugDoormat: [[0, 0, -0.237], [0.4293, 0.01, 0]],
+  kitchenCabinetCornerRound: [[0, 0, -0.45], [0.45, 0.45, 0]],
+  coatRack: [[0, 0, -0.1344], [0.448, 0.28, 0]],
 };
 
 /** Axis-aligned bounds in rot-0 local space. */
@@ -211,6 +252,8 @@ const METAL: Swatch[] = [
   sw('copper', 'Copper', '#b87350'), sw('white-enamel', 'White Enamel', '#f0eeea'), sw('graphite', 'Graphite', '#5c6168'),
 ];
 const METAL_MEDIUM: Swatch[] = [sw('slate', 'Slate Grey', '#5e7777'), ...METAL.slice(1), sw('steel', 'Brushed Steel', '#bdd2d6')];
+const METAL_DARK: Swatch[] = [sw('dark-slate', 'Dark Slate', '#4e6363'), ...METAL.slice(1), sw('steel', 'Brushed Steel', '#bdd2d6')];
+const FABRIC_BRICK: Swatch[] = [sw('brick', 'Brick Red', '#9b4c49'), ...FABRIC.slice(1)];
 const APPLIANCE: Swatch[] = [
   sw('white', 'Gloss White', '#effaf4'), sw('stainless', 'Stainless', '#c9d0d4'), sw('black', 'Black', '#2c2e31'),
   sw('mint', 'Retro Mint', '#a8d5c2'), sw('tomato', 'Tomato Red', '#c9433c'), sw('butter', 'Butter Yellow', '#ecd57a'),
@@ -225,6 +268,7 @@ const woodR = (materials = ['wood']) => region('wood', 'Wood', materials, WOOD);
 const fabricR = (materials = ['carpet'], label = 'Upholstery') => region('fabric', label, materials, materials[0] === 'carpetBlue' ? FABRIC_BLUE : FABRIC);
 const metalR = (materials = ['metal']) => region('metal', 'Metal', materials, materials[0] === 'metalMedium' ? METAL_MEDIUM : METAL);
 const applianceR = (materials = ['metalLight']) => region('body', 'Appliance Finish', materials, APPLIANCE);
+const darkMetalR = (label = 'Metal') => region('metal', label, ['metalDark'], METAL_DARK);
 const counterR = () => region('countertop', 'Countertop', ['metal'], COUNTERTOP);
 
 // ---------------------------------------------------------------------------------------------
@@ -657,8 +701,11 @@ const SEATING_2: ObjectDef[] = [
     description: 'A two-seat sofa with a long chaise end to stretch out on. Three people can sit; one can nap.',
     tags: ['sofa', 'seat', 'chaise'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'premium', price: dollars(1380), quality: 4, functional: true,
     footprint: FP22, layer: 'floor', blocksMovement: true,
+    // The model is an L: back row (cells 0,0 and 1,0) plus the chaise (1,1). Cell (0,1) inside the L is empty and walkable, so every
+    // seat is entered from it (the middle seat diagonally) and the chaise from the open front.
+    openCells: [[0, 1]],
     slots: [
-      sit('left', sofaChaise.at(0.18, 0.3), 0.23 * 2, [0, 2]), sit('middle', sofaChaise.at(0.5, 0.3), 0.23 * 2, [1, 2]),
+      sit('left', sofaChaise.at(0.25, 0.25), 0.23 * 2, [0, 1]), sit('middle', sofaChaise.at(0.75, 0.25), 0.23 * 2, [0, 1]),
       sit('chaise', sofaChaise.at(0.82, 0.62), 0.23 * 2, [1, 2]),
     ],
     interactions: ['sit', 'nap'], stats: { comfort: 7, energy: 0.8, environment: 2 }, finishes: [fabricR(['carpet']), woodR()],
@@ -668,9 +715,11 @@ const SEATING_2: ObjectDef[] = [
     description: 'An L-shaped sectional that turns a corner of the living room into a lounge. Three seats and a deep, comfortable corner.',
     tags: ['sofa', 'seat', 'sectional', 'corner'], packs: ['modern-minimal'], tier: 'premium', price: dollars(1720), quality: 4, functional: true,
     footprint: FP22, layer: 'floor', blocksMovement: true,
+    // Backs on the north and east sides, so the open inside of the L (cell 0,1) faces the room and is where everyone steps in from.
+    openCells: [[0, 1]],
     slots: [
-      sit('left', sofaCorner.at(0.2, 0.3), 0.23 * 2, [0, 2]), sit('corner', sofaCorner.at(0.5, 0.3), 0.23 * 2, [1, 2]),
-      sit('right', sofaCorner.at(0.82, 0.3), 0.23 * 2, [1, 2]),
+      sit('left', sofaCorner.at(0.25, 0.25), 0.23 * 2, [0, 1]), sit('corner', sofaCorner.at(0.75, 0.25), 0.23 * 2, [0, 1], -Math.PI / 4),
+      sit('right', sofaCorner.at(0.75, 0.75), 0.23 * 2, [0, 1], -Math.PI / 2),
     ],
     interactions: ['sit', 'nap'], stats: { comfort: 8, energy: 0.85, environment: 2 }, finishes: [fabricR(['carpet']), woodR()],
   }),
@@ -932,9 +981,304 @@ const DECOR_2: ObjectDef[] = [
   }),
 ];
 
+// =============================================================================================
+// Milestone 4 additions: hobby, kids and outdoor furniture, small kitchen appliances and a dishwasher.
+// Thirteen designs use original low-poly models built by tools/furniture-extra (the Kenney kit has no easel, piano,
+// treadmill, barbecue, crib, dishwasher, ...); the rest use Kenney models that were not yet used.
+// =============================================================================================
+
+// --- Hobby -------------------------------------------------------------------------------------
+const easelFit = fit('easel', FP11, 2);
+const pianoFit = fit('piano', FP21, 2, { back: WALL_GAP });
+const treadmillFit = fit('treadmill', FP12, 2);
+const weightBenchFit = fit('weightBench', FP12, 2);
+const chessFit = fit('chessTable', FP11, 2);
+const HOBBY_OBJECTS: ObjectDef[] = [
+  obj(easelFit, {
+    id: 'easel-studio', name: 'Studio Easel', category: 'hobby', subcategory: 'art', rooms: ['living', 'study', 'bedroom'], style: 'classic',
+    description: 'A folding wooden easel with a half-finished landscape and a tray of paint pots. Paint for fun, and the practice builds Painting.',
+    tags: ['easel', 'art', 'creative'], packs: ['creative-studio'], tier: 'budget', price: dollars(140), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, easelFit, 1)],
+    interactions: ['paintCanvas'], stats: { fun: 1, skill: 1, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+  obj(pianoFit, {
+    id: 'piano-upright', name: 'Upright Piano', category: 'hobby', subcategory: 'instrument', rooms: ['living', 'study'], style: 'classic',
+    description: 'A full-size upright piano. Play standing, or pull a chair or bench up in front of it and sit down: more fun and quicker progress in Music than a radio.',
+    tags: ['piano', 'instrument', 'music', 'creative'], packs: ['creative-studio', 'classic-townhouse'], tier: 'premium', price: dollars(1850), quality: 4, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.98, pianoFit, 1)],
+    interactions: ['playPiano'], stats: { fun: 1.15, skill: 1.2, environment: 3 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+  obj(treadmillFit, {
+    id: 'treadmill', name: 'Folding Treadmill', category: 'hobby', subcategory: 'fitness', rooms: ['living', 'bedroom', 'study'], style: 'modern',
+    description: 'A motorised treadmill with a handrail console. Step on from the open end and run: trains Fitness, but costs energy and hygiene.',
+    tags: ['exercise', 'treadmill', 'appliance', 'cleanable'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(900), quality: 3,
+    functional: true, footprint: FP12, layer: 'floor', blocksMovement: true,
+    slots: [{ id: 'run', kind: 'use', pos: treadmillFit.at(0.5, 0.7), height: r3(0.225), facing: Math.PI, approach: [0, 2], posture: 'standing' }],
+    interactions: ['workOut'], stats: { fun: 1, skill: 1.1 }, finishes: [darkMetalR('Frame')],
+  }),
+  obj(weightBenchFit, {
+    id: 'weight-bench', name: 'Weight Bench and Barbell', category: 'hobby', subcategory: 'fitness', rooms: ['living', 'bedroom', 'study'], style: 'industrial',
+    description: 'A padded bench with a loaded barbell on the rack and a pair of dumbbells. Press from the foot of the bench: a harder workout than a jog.',
+    tags: ['exercise', 'weights', 'cleanable'], packs: ['industrial-loft'], tier: 'budget', price: dollars(380), quality: 3, functional: true,
+    footprint: FP12, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, weightBenchFit, 2)],
+    interactions: ['liftWeights'], stats: { skill: 1.15 }, finishes: [region('pad', 'Pad', ['carpetDarker'], FABRIC_BRICK), darkMetalR('Frame')],
+  }),
+  obj(chessFit, {
+    id: 'table-chess', name: 'Chessboard Table', category: 'hobby', subcategory: 'games', rooms: ['living', 'study', 'dining'], style: 'classic',
+    description: 'A small square table with an inlaid chessboard and a game in progress. Sit at a chair facing it (or stand) and play: trains Logic.',
+    tags: ['table', 'game', 'chess'], packs: ['classic-townhouse'], tier: 'standard', price: dollars(260), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, chessFit, 1)],
+    interactions: ['playChess'], stats: { fun: 1, skill: 1, environment: 1 }, finishes: [woodR()],
+  }),
+];
+
+// --- Kids --------------------------------------------------------------------------------------
+const cribFit = fit('crib', FP12, 2);
+const toyChestFit = fit('toyChest', FP11, 2, { back: WALL_GAP });
+const playBoxFit = fit('cardboardBoxOpen', FP11, 2);
+const KIDS_OBJECTS: ObjectDef[] = [
+  obj(cribFit, {
+    id: 'crib-wood', name: 'Wooden Crib', category: 'kids', subcategory: 'crib', rooms: ['kids', 'bedroom'], style: 'cottage',
+    description: 'A slatted crib with a mattress, blanket and pillow, sized for the littlest sleepers. Sleep or nap; it is entered from the side.',
+    tags: ['bed', 'crib', 'sleep', 'cleanable'], packs: ['kids-storybook', 'cozy-cottage'], tier: 'standard', price: dollars(360), quality: 3, functional: true,
+    footprint: FP12, layer: 'floor', blocksMovement: true,
+    slots: [sleep('sleep', cribFit.at(0.5, 0.5), 0.46, [1, 1])],
+    interactions: ['sleep', 'nap'], stats: { energy: 0.7, comfort: 3, environment: 1 }, finishes: [woodR(['wood', 'woodDark']), fabricR(['carpetBlue'], 'Blanket')],
+  }),
+  obj(toyChestFit, {
+    id: 'toy-chest', name: 'Painted Toy Chest', category: 'kids', subcategory: 'toys', rooms: ['kids', 'bedroom', 'living'], style: 'cottage',
+    description: 'A wooden chest overflowing with blocks and a drum. Dig in and play for a while: great fun and a mood lift.',
+    tags: ['toys', 'storage', 'play'], packs: ['kids-storybook'], tier: 'budget', price: dollars(140), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, toyChestFit, 1)],
+    interactions: ['playWithToys'], stats: { fun: 1.1, environment: 1 }, finishes: [woodR(['wood', 'woodDark']), fabricR(['carpetBlue'], 'Trim')],
+  }),
+  obj(playBoxFit, {
+    id: 'play-box', name: 'Cardboard Play Box', category: 'kids', subcategory: 'toys', rooms: ['kids', 'bedroom', 'living'], style: 'playful',
+    description: 'A big open cardboard box that is a spaceship, a castle or a boat, depending on the day. Cheap, and still great fun.',
+    tags: ['toys', 'play', 'box'], packs: ['kids-storybook'], tier: 'budget', price: dollars(20), quality: 1, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, playBoxFit, 1)],
+    interactions: ['playWithToys'], stats: { fun: 0.9 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+];
+
+// --- Outdoor -----------------------------------------------------------------------------------
+const gardenBenchFit = fit('gardenBench', FP21, 2);
+const gardenChairFit = fit('gardenChair', FP11, 2);
+const slatChairFit = fit('bench', FP11, 2);
+const patioFit = fit('patioSet', FP22, 2);
+const grillFit = fit('grill', FP11, 2);
+const gardenBedFit = fit('gardenBed', FP21, 2);
+const doormatFit = fit('rugDoormat', FP11, 2);
+const OUTDOOR_OBJECTS: ObjectDef[] = [
+  obj(gardenBenchFit, {
+    id: 'bench-garden', name: 'Slatted Garden Bench', category: 'outdoor', subcategory: 'bench', rooms: ['outdoor'], style: 'cottage',
+    description: 'A two-seat bench of weathered wooden slats with arms and a slanted back: for the patio, the path or the end of the garden.',
+    tags: ['bench', 'seat', 'outdoor'], packs: ['garden-patio'], tier: 'standard', price: dollars(260), quality: 3, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true,
+    slots: [sit('left', gardenBenchFit.at(0.27, 0.6), 0.55, [0, 1]), sit('right', gardenBenchFit.at(0.73, 0.6), 0.55, [1, 1])],
+    interactions: ['sit'], stats: { comfort: 4, environment: 2 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+  obj(gardenChairFit, {
+    id: 'chair-adirondack', name: 'Adirondack Chair', category: 'outdoor', subcategory: 'chair', rooms: ['outdoor'], style: 'coastal',
+    description: 'A wide, reclined chair of painted slats with broad arms. Sink in with a view of the garden.',
+    tags: ['chair', 'seat', 'outdoor'], packs: ['garden-patio', 'coastal-home'], tier: 'standard', price: dollars(150), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', gardenChairFit.at(0.5, 0.6), 0.4, [0, 1])],
+    interactions: ['sit'], stats: { comfort: 5, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+  obj(slatChairFit, {
+    id: 'chair-slatted', name: 'Slatted Patio Chair', category: 'outdoor', subcategory: 'chair', rooms: ['outdoor', 'dining'], style: 'cottage',
+    description: 'A plain wooden patio chair with a high slatted back. Light enough to move around the garden table.',
+    tags: ['chair', 'seat', 'dining', 'outdoor'], packs: ['garden-patio'], tier: 'budget', price: dollars(80), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', slatChairFit.at(0.5, 0.6), 0.22 * 2, [0, -1])],
+    interactions: ['sit'], stats: { comfort: 3 }, finishes: [woodR()],
+  }),
+  obj(patioFit, {
+    id: 'table-patio', name: 'Patio Table with Parasol', category: 'outdoor', subcategory: 'table', rooms: ['outdoor', 'dining'], style: 'coastal',
+    description: 'A round garden table with a striped parasol through the middle. Meals can be served here; seat people on chairs around it.',
+    tags: ['table', 'dining', 'surface', 'outdoor', 'cleanable'], packs: ['garden-patio', 'coastal-home'], tier: 'standard', price: dollars(540), quality: 3, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true, surfaceHeight: 0.76, stats: { environment: 3 },
+    finishes: [region('canopy', 'Parasol', ['carpet'], FABRIC), woodR(['wood', 'woodDark'])],
+  }),
+  obj(grillFit, {
+    id: 'grill-kettle', name: 'Kettle Barbecue', category: 'outdoor', subcategory: 'grill', rooms: ['outdoor'], style: 'classic',
+    description: 'A charcoal kettle grill on legs with a wooden side shelf. Grill a plateful outdoors for $6: the quickest hot meal outside the kitchen.',
+    tags: ['grill', 'cooking', 'outdoor', 'cleanable'], packs: ['garden-patio'], tier: 'standard', price: dollars(320), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, grillFit, 1)],
+    interactions: ['grillFood'], stats: { cooking: 0 }, finishes: [darkMetalR('Kettle'), woodR()],
+  }),
+  obj(gardenBedFit, {
+    id: 'planter-raised', name: 'Raised Garden Bed', category: 'outdoor', subcategory: 'planter', rooms: ['outdoor'], style: 'botanical',
+    description: 'A long timber planter with rows of leafy greens and a few flowers. Water it to train Gardening.',
+    tags: ['plant', 'garden', 'decor', 'outdoor'], packs: ['garden-patio', 'botanical-living'], tier: 'standard', price: dollars(180), quality: 3, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true, interactions: ['waterPlant'], stats: { environment: 3 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+  obj(doormatFit, {
+    id: 'rug-doormat', name: 'Coir Doormat', category: 'outdoor', subcategory: 'mat', rooms: ['outdoor', 'living'], style: 'cottage',
+    description: 'A woven doormat to stop the garden coming indoors. Decorative; people walk over it.',
+    tags: ['rug', 'decor', 'outdoor'], packs: ['garden-patio', 'cozy-cottage'], tier: 'budget', price: dollars(25), quality: 2, functional: false,
+    footprint: FP11, layer: 'rug', blocksMovement: false, stats: { environment: 1 }, finishes: [region('mat', 'Mat', ['wood'], WOOD)],
+  }),
+];
+
+// --- Kitchen, appliances and electronics -----------------------------------------------------
+const dishwasherFit = fit('dishwasher', FP11, 2, { back: 0.02 });
+const fridgeBuiltIn = fit('kitchenFridgeBuiltIn', FP11, 2, { back: WALL_GAP });
+const cornerRound = fit('kitchenCabinetCornerRound', FP11, KITCHEN_SCALE, { back: 0.02 });
+const coffeeMachine = fit('kitchenCoffeeMachine', FP11, 2);
+const toasterFit = fit('toaster', FP11, 2);
+const blenderFit = fit('kitchenBlender', FP11, 2);
+const laptopFit = fit('laptop', FP11, 1.5);
+const shelfSpeaker = fit('speakerSmall', FP11, 1.5);
+const bookStack = fit('books', FP11, 2);
+const KITCHEN_3: ObjectDef[] = [
+  obj(dishwasherFit, {
+    id: 'dishwasher', name: 'Built-In Dishwasher', category: 'kitchen', subcategory: 'dishwasher', rooms: ['kitchen'], style: 'modern',
+    description: 'A front-loading dishwasher at counter height. Dirty plates are carried here and washed in half the time of a sink. Items can stand on its worktop.',
+    tags: ['dishwasher', 'dishes', 'appliance', 'plumbing', 'cleanable', 'surface'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(640), quality: 3,
+    functional: true, footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(0.9), slots: [useFront('use', 0.5, dishwasherFit, 1)],
+    interactions: [], stats: { hygiene: 1 }, finishes: [applianceR(['metalLight']), counterR()],
+  }),
+  obj(fridgeBuiltIn, {
+    id: 'fridge-built-in', name: 'Built-In Fridge Cabinet', category: 'kitchen', subcategory: 'fridge', rooms: ['kitchen'], style: 'classic',
+    description: 'A fridge-freezer hidden behind a wooden cabinet door. Grab a snack or gather ingredients to cook a meal.',
+    tags: ['fridge', 'appliance', 'food', 'cleanable'], packs: ['classic-townhouse', 'cozy-cottage'], tier: 'standard', price: dollars(960), quality: 4, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, fridgeBuiltIn, 1)],
+    interactions: ['grabSnack', 'cookMeal'], stats: { cooking: 0.5, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
+  }),
+  obj(cornerRound, {
+    id: 'counter-corner-round', name: 'Rounded Corner Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen'], style: 'classic',
+    description: 'A base cabinet with a rounded front that softens the corner of an L-shaped kitchen. Same worktop height as the other modules.',
+    tags: ['counter', 'surface', 'storage', 'corner', 'cleanable'], packs: ['everyday-essentials'], tier: 'budget', price: dollars(240), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(WORKTOP), finishes: [woodR(['wood']), counterR()],
+  }),
+  obj(coffeeMachine, {
+    id: 'coffee-machine', name: 'Espresso Coffee Machine', category: 'kitchen', subcategory: 'appliance', rooms: ['kitchen', 'dining', 'study'], style: 'modern',
+    description: 'A countertop coffee machine. Brew a cup for $2: a quick +12 energy and a little cheer. Stands on any counter.',
+    tags: ['appliance', 'coffee', 'cleanable'], packs: ['everyday-essentials'], tier: 'standard', price: dollars(180), quality: 3, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['makeCoffee'], stats: { environment: 1 }, finishes: [region('body', 'Body', ['metalMedium'], METAL_MEDIUM)],
+  }),
+  obj(toasterFit, {
+    id: 'toaster', name: 'Two-Slice Toaster', category: 'kitchen', subcategory: 'appliance', rooms: ['kitchen'], style: 'classic',
+    description: 'A chrome two-slice toaster. Pop a slice in for $1 and get a quick +15 hunger. Stands on any counter.',
+    tags: ['appliance', 'toaster'], packs: ['everyday-essentials'], tier: 'budget', price: dollars(40), quality: 2, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['makeToast'], stats: {}, finishes: [region('body', 'Body', ['metal'], METAL)],
+  }),
+  obj(blenderFit, {
+    id: 'blender', name: 'Smoothie Blender', category: 'kitchen', subcategory: 'appliance', rooms: ['kitchen'], style: 'modern',
+    description: 'A tall blender with a glass jug. Whizz up a smoothie for $3: +20 hunger and a little energy. Stands on any counter.',
+    tags: ['appliance', 'blender'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'budget', price: dollars(70), quality: 2, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['blendSmoothie'], stats: {}, finishes: [region('body', 'Body', ['metalMedium'], METAL_MEDIUM)],
+  }),
+];
+
+const ELECTRONICS_3: ObjectDef[] = [
+  obj(laptopFit, {
+    id: 'laptop', name: 'Laptop Computer', category: 'electronics', subcategory: 'computer', rooms: ['study', 'living', 'bedroom'], style: 'modern',
+    description: 'A slim laptop for games and programming practice that works on any table, desk or counter. Users take a chair in front of it.',
+    tags: ['computer', 'electronics', 'laptop'], packs: ['modern-minimal', 'creative-studio'], tier: 'standard', price: dollars(750), quality: 3, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['playComputerGames', 'practiceProgramming'], stats: { fun: 0.9, skill: 0.9 }, finishes: [darkMetalR('Case')],
+  }),
+  obj(shelfSpeaker, {
+    id: 'speaker-shelf', name: 'Bookshelf Speaker', category: 'electronics', subcategory: 'audio', rooms: ['living', 'study', 'bedroom'], style: 'classic',
+    description: 'A compact wooden speaker for a shelf or desk. Stand nearby and listen: a better sound than a radio, in half the space of a tower speaker.',
+    tags: ['speaker', 'music', 'electronics'], packs: ['everyday-essentials', 'creative-studio'], tier: 'standard', price: dollars(240), quality: 3, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false,
+    interactions: ['listenToMusic'], stats: { fun: 1.1, skill: 1.05 }, finishes: [woodR()],
+  }),
+  obj(bookStack, {
+    id: 'books-stack', name: 'Stack of Paperbacks', category: 'decor', subcategory: 'books', rooms: ['living', 'study', 'bedroom'], style: 'classic',
+    description: 'A neat pile of well-thumbed paperbacks for a coffee table or nightstand. Take one and read it in a nearby seat.',
+    tags: ['books', 'decor'], packs: ['everyday-essentials'], tier: 'budget', price: dollars(30), quality: 2, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['readBook'], stats: { fun: 0.8, skill: 0.8, environment: 1 }, finishes: [],
+  }),
+];
+
+// --- Seating, tables, bathroom and decor -------------------------------------------------------
+const sofaDesignCorner = fit('loungeDesignSofaCorner', FP22, 1.45);
+const ottomanFit = fit('loungeSofaOttoman', FP11, 2);
+const lowBenchFit = fit('benchCushionLow', FP11, 2);
+const chairModern = fit('chairModernCushion', FP11, 2);
+const chairFrame = fit('chairModernFrameCushion', FP11, 2);
+const clothTable = fit('tableCloth', FP21, 0.66 / 0.3267);
+const squareBasin = fit('bathroomSinkSquare', FP11, 1.7, { back: WALL_GAP });
+const smallPlant = fit('plantSmall3', FP11, 2);
+const wallCoatRack = fit('coatRack', FP11, 2, { back: WALL_GAP, lift: 1.5 });
+const HOME_3: ObjectDef[] = [
+  obj(sofaDesignCorner, {
+    id: 'sofa-corner-designer', name: 'Designer Corner Sofa', category: 'seating', subcategory: 'sofa', rooms: ['living'], style: 'modern',
+    description: 'A slim L-shaped sofa on steel legs with deep blue cushions. Three seats facing the open inside of the L.',
+    tags: ['sofa', 'seat', 'sectional', 'corner'], packs: ['modern-minimal', 'mid-century'], tier: 'luxury', price: dollars(2350), quality: 5, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true, openCells: [[0, 1]],
+    slots: [
+      sit('left', sofaDesignCorner.at(0.25, 0.19), 0.23 * 1.45, [0, 1]), sit('corner', sofaDesignCorner.at(0.82, 0.19), 0.23 * 1.45, [0, 1], -Math.PI / 4),
+      sit('right', sofaDesignCorner.at(0.82, 0.68), 0.23 * 1.45, [0, 1], -Math.PI / 2),
+    ],
+    interactions: ['sit', 'nap'], stats: { comfort: 9, energy: 0.9, environment: 3 }, finishes: [fabricR(['carpetBlue']), metalR(['metal'])],
+  }),
+  obj(ottomanFit, {
+    id: 'ottoman-cushion', name: 'Cushioned Ottoman', category: 'seating', subcategory: 'stool', rooms: ['living', 'bedroom', 'kids'], style: 'classic',
+    description: 'A big square footstool with a padded top on short legs: extra seating when friends come over, or a place to put your feet up.',
+    tags: ['ottoman', 'seat'], packs: ['everyday-essentials', 'kids-storybook'], tier: 'budget', price: dollars(110), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', ottomanFit.at(0.5, 0.5), 0.23 * 2, [0, 1])],
+    interactions: ['sit'], stats: { comfort: 3 }, finishes: [fabricR(['carpet'], 'Cushion'), woodR()],
+  }),
+  obj(lowBenchFit, {
+    id: 'bench-low-cushion', name: 'Low Cushioned Bench', category: 'seating', subcategory: 'bench', rooms: ['living', 'kids', 'bedroom'], style: 'mid-century',
+    description: 'A low bench with a thick cushion on tapered legs: for the foot of a bed, a play corner or a window nook.',
+    tags: ['bench', 'seat'], packs: ['mid-century', 'kids-storybook'], tier: 'budget', price: dollars(130), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', lowBenchFit.at(0.5, 0.55), 0.19 * 2, [0, 1])],
+    interactions: ['sit'], stats: { comfort: 3, environment: 1 }, finishes: [fabricR(['carpet'], 'Cushion'), woodR()],
+  }),
+  obj(chairModern, {
+    id: 'chair-modern-cushion', name: 'Modern Cushion Chair', category: 'seating', subcategory: 'chair', rooms: ['dining', 'kitchen', 'study'], style: 'modern',
+    description: 'A white-framed dining chair with a blue seat pad. Slip it under a table; diners come in from behind.',
+    tags: ['chair', 'seat', 'dining'], packs: ['modern-minimal'], tier: 'standard', price: dollars(130), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', chairModern.at(0.5, 0.6), 0.23 * 2, [0, -1])],
+    interactions: ['sit'], stats: { comfort: 4 }, finishes: [fabricR(['carpetBlue'], 'Seat pad'), metalR(['metal'])],
+  }),
+  obj(chairFrame, {
+    id: 'chair-modern-frame', name: 'Cantilever Frame Chair', category: 'seating', subcategory: 'chair', rooms: ['dining', 'kitchen', 'study'], style: 'modern',
+    description: 'A sculptural frame chair on a single curved leg with a padded seat. Slip it under a table; diners come in from behind.',
+    tags: ['chair', 'seat', 'dining'], packs: ['modern-minimal', 'mid-century'], tier: 'standard', price: dollars(150), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', chairFrame.at(0.5, 0.6), 0.23 * 2, [0, -1])],
+    interactions: ['sit'], stats: { comfort: 4, environment: 1 }, finishes: [fabricR(['carpetBlue'], 'Seat pad'), metalR(['metal'])],
+  }),
+  obj(clothTable, {
+    id: 'table-dining-cloth', name: 'Runner-Cloth Dining Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'cottage',
+    description: 'A four-seat table with a bright woven runner down the middle. Meals can be served here, and diners sit at chairs pushed up to it.',
+    tags: ['table', 'dining', 'surface', 'cleanable'], packs: ['cozy-cottage'], tier: 'standard', price: dollars(460), quality: 3, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.66, stats: { environment: 2 }, finishes: [woodR(), fabricR(['carpet'], 'Runner')],
+  }),
+  obj(squareBasin, {
+    id: 'bathroom-sink-square', name: 'Square Wall Basin', category: 'bathroom', subcategory: 'sink', rooms: ['bathroom'], style: 'modern',
+    description: 'A squared-off ceramic washbasin with a deep bowl. Wash your hands, or carry dirty dishes here when there is no kitchen sink.',
+    tags: ['sink', 'fixture', 'plumbing', 'cleanable'], packs: ['modern-minimal'], tier: 'standard', price: dollars(240), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, squareBasin, 1)],
+    interactions: ['washHands'], stats: { hygiene: 1, environment: 1 }, finishes: [],
+  }),
+  obj(smallPlant, {
+    id: 'plant-fern-pot', name: 'Potted Fern', category: 'decor', subcategory: 'plant', rooms: ['living', 'kitchen', 'bathroom', 'study', 'bedroom', 'outdoor'], style: 'botanical',
+    description: 'A little green fern in a wooden pot for sills, shelves and tables. Give it a drink now and then.',
+    tags: ['plant', 'decor', 'garden'], packs: ['botanical-living'], tier: 'budget', price: dollars(18), quality: 2, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, interactions: ['waterPlant'], stats: { environment: 1 }, finishes: [woodR()],
+  }),
+  obj(wallCoatRack, {
+    id: 'coat-rack-wall', name: 'Wall Coat Rack', category: 'storage', subcategory: 'coat-rack', rooms: ['living', 'bedroom'], style: 'cottage',
+    description: 'A wooden board with brass hooks and a little shelf, for the hallway wall. Decorative.',
+    tags: ['coat-rack', 'decor', 'wall'], packs: ['cozy-cottage', 'everyday-essentials'], tier: 'budget', price: dollars(55), quality: 2, functional: false,
+    footprint: FP11, layer: 'wall', needsWall: true, blocksMovement: false, stats: { environment: 1 }, finishes: [woodR(), metalR(['metalMedium'])],
+  }),
+];
+
 /** Every buy-mode object definition (ready and in development). */
 export const OBJECTS: ObjectDef[] = [
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
+  ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3,
 ];
 
