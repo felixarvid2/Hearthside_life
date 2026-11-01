@@ -1,7 +1,7 @@
 // A fitted Meshy mesh as a RawBody (the mannequin's skeleton facts + the Meshy surface and transferred skin), so the
 // body template, garment and hair generators can be pointed at the Meshy body. Pure module.
 
-import type { RawBody } from '../src/characters/rig';
+import type { RawBody } from './rig';
 import type { FitResult } from './meshyFit';
 
 export function meshyRawBody(mannequin: RawBody, fit: FitResult): RawBody {

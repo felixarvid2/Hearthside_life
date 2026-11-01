@@ -67,6 +67,7 @@ export function buildAccessory(t: BodyTemplate, def: AccessoryDef): MeshData {
       }
     }
   }
+  t.headMap?.apply(m);
   computeSmoothNormals(m, 1e-7);
   return m;
 }

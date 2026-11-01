@@ -10,8 +10,8 @@ import { buildBodyTemplate } from '../../src/characters/template';
 import { buildGarment } from '../../src/characters/clothing';
 import { buildHair } from '../../src/characters/hair';
 import { GARMENTS, HAIR } from '../../src/content/character';
-import { fitMeshy } from '../meshyFit';
-import { meshyRawBody } from '../meshyRaw';
+import { fitMeshy } from '../../src/characters/meshyFit';
+import { meshyRawBody } from '../../src/characters/meshyRaw';
 
 const arg = (k: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const root = `${process.cwd()}/`;

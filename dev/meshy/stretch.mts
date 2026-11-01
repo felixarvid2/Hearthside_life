@@ -8,7 +8,7 @@ import { NodeIO } from '@gltf-transform/core';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { Animator } from '../../src/characters/animation';
 import { rawFromMesh } from '../../src/characters/assets';
-import { fitMeshy } from '../meshyFit';
+import { fitMeshy } from '../../src/characters/meshyFit';
 
 const arg = (k: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const root = `${process.cwd()}/`; // run from the repository root

@@ -366,6 +366,7 @@ export function buildHair(t: BodyTemplate, def: HairDef | null, facial: FacialHa
     if (piece === 'braids') braids(c, len);
   }
   if (facial) buildFacialHair(c, facial);
+  t.headMap?.apply(m);
   computeSmoothNormals(m, 1e-6);
   return m;
 }

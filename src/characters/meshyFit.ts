@@ -7,9 +7,9 @@
 // chest -> Gaussian skin transfer per region (arm / trunk / head / leg, per side) -> weights shared across UV
 // seams and smoothed over the mesh.
 
-import type { RawBody, Skin, Vec3 } from '../src/characters/rig';
-import { blendSkins, bonePosition, clamp, skinFromMap, smoothstep } from '../src/characters/rig';
-import { SkinTransfer, armTest, sideTest } from '../src/characters/skinTransfer';
+import type { RawBody, Skin, Vec3 } from './rig';
+import { blendSkins, bonePosition, clamp, skinFromMap, smoothstep } from './rig';
+import { SkinTransfer, armTest, sideTest } from './skinTransfer';
 
 export interface FitOptions {
   /** Final height in metres (feet to crown). */

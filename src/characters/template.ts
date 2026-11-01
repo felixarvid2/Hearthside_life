@@ -10,6 +10,7 @@
 
 import type { BodyFrame } from '../core/types';
 import type { Landmarks, ShapeContext } from './bodyShape';
+import type { HeadMap } from './headMap';
 import { BODY_PARAM_IDS, bodyDeltas, shapeContext } from './bodyShape';
 import type { Profile } from './fit';
 import { fitProfile, profilePoint, sampleProfile } from './fit';
@@ -58,6 +59,8 @@ export interface BodyTemplate {
   boneMirror: number[];
   /** The complete skin mesh (body + head), bind space, with aInfo/aFace attributes and SKIN_MORPHS. */
   skinMesh: MeshData;
+  /** Set for Meshy bodies: carries hair, facial hair and accessories (built on the parametric head) onto the real head. */
+  headMap?: HeadMap;
 }
 
 /** Shape offsets baked into each frame's default body (values in BODY_PARAMS units). */
@@ -68,7 +71,14 @@ export const FRAME_BASE: Record<BodyFrame, Partial<Record<string, number>>> = {
 
 const TORSO_BONES = new Set(['pelvis', 'spine_01', 'spine_02', 'spine_03', 'clavicle_l', 'clavicle_r', 'neck_01']);
 
-export function buildBodyTemplate(raw: RawBody): BodyTemplate {
+export interface TemplateOptions {
+  /** Apply FRAME_BASE (softer shoulders and limbs than the mannequin). Off for Meshy bodies: their surface is the body. Default true. */
+  stylise?: boolean;
+  /** Build the procedural hands, feet and head as part of the skin mesh. Off for Meshy bodies (their own mesh is drawn). Default true. */
+  skinParts?: boolean;
+}
+
+export function buildBodyTemplate(raw: RawBody, opts: TemplateOptions = {}): BodyTemplate {
   const n = raw.positions.length / 3;
   const P = raw.positions;
   const transfer = new SkinTransfer(raw);
@@ -216,7 +226,7 @@ export function buildBodyTemplate(raw: RawBody): BodyTemplate {
   for (let j = 0; j < NT; j++) for (let i = 1; i < M; i++) torso.skin[j * C + (C - i)] = mirrorSkin(torso.skin[j * C + i] as Skin, boneMirror);
 
   // stylisation baked into the frame default (0 on every slider): softer shoulders and limbs than the source mannequins
-  const base = FRAME_BASE[raw.frame];
+  const base = opts.stylise === false ? {} : FRAME_BASE[raw.frame];
   for (const g of [torso, legL, armL]) {
     for (let k = 0; k < g.rows * g.cols; k++) {
       const p: Vec3 = [g.pos[k * 3] as number, g.pos[k * 3 + 1] as number, g.pos[k * 3 + 2] as number];
@@ -242,7 +252,7 @@ export function buildBodyTemplate(raw: RawBody): BodyTemplate {
     profiles: { torso: torsoProfile, leg: legProfile, arm: armProfile }, junctionSpan: H,
     headOrigin: head, boneMirror, skinMesh: emptyMesh(),
   };
-  t.skinMesh = buildSkinMesh(t);
+  t.skinMesh = buildSkinMesh(t, opts.skinParts !== false);
   return t;
 }
 
@@ -323,7 +333,7 @@ function emitGrid(m: MeshData, t: BodyTemplate, g: Grid, part: number, side: num
   return starts;
 }
 
-function buildSkinMesh(t: BodyTemplate): MeshData {
+function buildSkinMesh(t: BodyTemplate, parts = true): MeshData {
   const m = emptyMesh(SKIN_ATTRS, SKIN_MORPHS);
   const C = t.torso.cols;
   // torso: rows ascending y; angle increases toward +x on the front => (a, b, d) outward needs a flip check
@@ -360,6 +370,7 @@ function buildSkinMesh(t: BodyTemplate): MeshData {
   writeBackNormals(m, t.legL, legRingsL);
   writeBackNormals(m, t.armL, armRingsL);
 
+  if (!parts) return m;
   // hands, feet, head
   const handL = buildHand(t, 1);
   appendPart(m, handL);

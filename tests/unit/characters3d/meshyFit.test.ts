@@ -8,8 +8,8 @@ import { GARMENTS, HAIR } from '../../../src/content/character';
 import { buildGarment } from '../../../src/characters/clothing';
 import { buildHair } from '../../../src/characters/hair';
 import { buildBodyTemplate } from '../../../src/characters/template';
-import { fitMeshy } from '../../../dev/meshyFit';
-import { meshyRawBody } from '../../../dev/meshyRaw';
+import { fitMeshy } from '../../../src/characters/meshyFit';
+import { meshyRawBody } from '../../../src/characters/meshyRaw';
 import { loadRawBody } from './loadRaw';
 
 const dir = fileURLToPath(new URL('../../../dev/meshy/', import.meta.url));

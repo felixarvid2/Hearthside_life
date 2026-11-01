@@ -24,9 +24,9 @@ import { STRAND_IDS } from '../src/characters/hair';
 import { POSTURE_ANCHORS } from '../src/characters/posture';
 import { CameraRig, DEFAULT_PPM } from '../src/render/cameraRig';
 import { Lighting } from '../src/render/lighting';
-import { DEFAULT_FIT, fitMeshy } from './meshyFit';
-import { meshyRawBody } from './meshyRaw';
-import type { FitOptions, FitReport } from './meshyFit';
+import { DEFAULT_FIT, fitMeshy } from '../src/characters/meshyFit';
+import { meshyRawBody } from '../src/characters/meshyRaw';
+import type { FitOptions, FitReport } from '../src/characters/meshyFit';
 
 const params = new URLSearchParams(location.search);
 const num = (k: string, d: number) => (params.has(k) ? Number(params.get(k)) : d);
