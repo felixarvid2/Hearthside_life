@@ -175,7 +175,7 @@ export class CreatorScreen implements ModeUI {
     // layout and insets
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.scheduleMeasure()) : null;
     if (ro) { ro.observe(this.panel.el); ro.observe(this.top); ro.observe(this.el); this.disposer.add(() => ro.disconnect()); }
-    this.disposer.add(onLayoutChange(() => this.scheduleMeasure()));
+    this.disposer.add(onLayoutChange(() => { this.scheduleMeasure(); requestAnimationFrame(() => { if (!this.destroyed) this.keepStepTabVisible(); }); }));
     this.disposer.listen(window, 'resize', () => this.scheduleMeasure());
     this.disposer.add(this.preview.onChange(() => this.syncPreviewControls()));
 
@@ -352,10 +352,22 @@ export class CreatorScreen implements ModeUI {
     }
   }
 
+  /** Keeps the selected step tab inside the scrolling tab strip (the strip is re-laid out after adding a person or a rotation). */
+  private keepStepTabVisible(): void {
+    const bar = this.stepTabs?.el;
+    const sel = bar?.querySelector<HTMLElement>('.tab.is-selected');
+    if (!bar || !sel) return;
+    const b = bar.getBoundingClientRect(), t = sel.getBoundingClientRect();
+    if (b.width === 0) return;
+    if (t.left < b.left) bar.scrollLeft += t.left - b.left - 8;
+    else if (t.right > b.right) bar.scrollLeft += t.right - b.right + 8;
+  }
+
   private syncStepTabs(): void {
     if (!this.stepTabs) return;
     const s = this.session;
     if (this.stepTabs.current() !== s.step) this.stepTabs.select(s.step);
+    requestAnimationFrame(() => { if (!this.destroyed) this.keepStepTabVisible(); });
     const v = s.validate();
     const cur = v.members[s.currentIndex] ?? [];
     for (const step of CREATOR_STEPS) {
