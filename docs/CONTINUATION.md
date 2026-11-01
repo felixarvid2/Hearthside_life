@@ -1,8 +1,8 @@
 # Continuation note
 
 State on 2026-11-01. Work happens on branch `ccr-333d8ff5-slv7qa`, draft PR #1 (not merged, merge only after the user
-approves). **Milestones 1-5 are complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 6 (careers
-and economy).
+approves). **Milestones 1-6 are complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 7
+(neighbourhood and venues).
 
 ## Milestone status
 
@@ -13,28 +13,29 @@ and economy).
 | 3 Character creator | sliders, presets, outfit slots, locks, undo/redo, ties, import/export, hats squeeze hair | 28 hairstyles (24), 54 garments (48), 15 accessories (12), 20 traits (20), 24 face presets | `npm run e2e:creator` 288/288 (96 per viewport) |
 | 4 Daily life | six needs, cleaning, dishes, messes, repairs, repairperson, skill effects, chore autonomy | 111 furniture (100) incl. hobby, kids, outdoor, dishwasher | 7-day playtests (1/2/4 people), `npm run visual:m5` overlays |
 | 5 Relationships and events | friendship/trust/romance, labels, adult romance gating, memories, 8 event types, planner, goal card | 35 socials (24), 8 event types | acceptance social steps; `npm run visual:m5` goal card in landscape |
+| 6 Careers and economy | 7 career tracks with work effort, promotion/demotion and career decisions, freelance income, weekly bills with late fees and utility cut-offs, career/wealth aspirations | 7 careers x 10 levels (6), 10 ready skills (10), 8 aspirations (6) | M6 unit/integration tests; acceptance step 8 (career panel, bill payment, freelance sale) |
 
 Checks on the final state:
 
 | Check | Result |
 |---|---|
 | `npm run typecheck` | clean |
-| `npm test` | 80 files, 989 tests |
+| `npm test` | 84 files, 1020 tests |
 | `npm run content:check` | 0 errors, 0 warnings |
 | `npm run build` | passes (main chunk about 1.8 MB, warning only) |
 | `npm run e2e` | OK in desktop, portrait and landscape |
 | `npm run e2e:creator` | 288/288 |
-| `npm run e2e:acceptance`, portrait 390x844 | 160/160 |
-| `npm run e2e:acceptance`, landscape 844x390 | 160/160 |
-| `npm run e2e:acceptance`, desktop 1280x720 | 151/151 |
+| `npm run e2e:acceptance`, portrait 390x844 | 175/175 |
+| `npm run e2e:acceptance`, landscape 844x390 | 173/173 |
+| `npm run e2e:acceptance`, desktop 1280x720 | pending |
 | `npm run visual:m5` | 14/14 |
 
 All runs are SwiftShader emulation. Notes from the verification runs are in `dev/ds-tasks/01-progress.md`.
 
 ## Next steps, in order
 
-1. Milestone 6, careers and economy: career ladders, freelance income, bills and aspirations. Minimum content is 6 careers with
-   10 levels, 10 skills and 6 aspirations. There is 1 career today. Bills interact with the Milestone 4 repair costs.
+1. Milestone 7, neighbourhood and venues: lot travel, NPC households, venue activities, household switching. Needs 12 lot
+   records and 3 usable venues; build on the M6 economy (bills, careers) and the M5 social system.
 2. Performance:
    - Main chunk is about 1.8 MB. Lazy-load the build, creator and dev modules and split `content`.
    - Measure on a real phone.
@@ -49,7 +50,6 @@ All runs are SwiftShader emulation. Notes from the verification runs are in `dev
 - Garments: a faint seam on the thigh where swimwear leaves the baked shorts visible; folds are static; seated skirts open
   like a lampshade.
 - AI hair: box-braids and twin-tails have flat parts; some bangs stop at eye level; the backs are invented by TRELLIS.
-- Bookworm "own 2 bookcases" may count starter bookcases.
 - Weddings are not events, gifts are a $20 social, and dates happen at home until lot travel (Milestone 7).
 - Room move, resize and duplicate are not implemented. Delete room is.
 - Only SwiftShader emulation so far; record real devices in the TEST_CHECKLIST device log.

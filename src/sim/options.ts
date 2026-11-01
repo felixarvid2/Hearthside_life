@@ -198,6 +198,10 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
       }
       continue;
     }
+    if (beh === 'openBills' || beh === 'openCareers') {
+      out.push({ ...option(ctx, p, def.id, def.name, def.icon, 'self', self), section: 'phone' });
+      continue;
+    }
     if (beh === 'changeOutfit') {
       for (const cat of OUTFIT_CATEGORIES) {
         if ((p.outfits.outfits[cat]?.length ?? 0) === 0 || p.outfits.current.category === cat) continue;

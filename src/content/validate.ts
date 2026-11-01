@@ -402,9 +402,34 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
       if (!(l.start >= 0 && l.end <= 1440 && l.end > l.start)) err(`${lw}: shift must start and end on the same day`);
       if (!(l.promotion.performance >= -100 && l.promotion.performance <= 100)) err(`${lw}: promotion performance must be -100..100`);
       for (const [sk, lv] of Object.entries(l.promotion.skills)) if (!db.skills[sk] || !(lv >= 1 && lv <= 10)) err(`${lw}: bad promotion skill '${sk}'`);
+      for (const p of l.perks ?? []) if (blank(p)) err(`${lw}: blank perk`);
+      if (l.promotion.relationship) {
+        const rel = l.promotion.relationship;
+        if (!(rel.minFriendship >= 0 && rel.minFriendship <= 100) || blank(rel.label)) err(`${lw}: bad promotion relationship`);
+      }
     });
   }
   if (!db.careers.culinary || db.careers.culinary.levels.length !== 10) err(`missing M1 career 'culinary' with 10 levels`);
+
+  // ---- Career events ----
+  for (const e of Object.values(db.careerEvents ?? {})) {
+    const w = `career event '${e.id}'`;
+    if (blank(e.title) || blank(e.text)) err(`${w}: missing title or text`);
+    if (e.options.length < 2) err(`${w}: needs at least two options`);
+    const ids = new Set<string>();
+    for (const o of e.options) {
+      const ow = `${w} option '${o.id}'`;
+      if (blank(o.id) || blank(o.label) || blank(o.description) || blank(o.result)) err(`${ow}: missing text`);
+      if (ids.has(o.id)) err(`${ow}: duplicate option id`);
+      ids.add(o.id);
+      if (!finite(o.performance) || Math.abs(o.performance) > 100) err(`${ow}: bad performance`);
+      if (o.pay !== undefined && (!Number.isInteger(o.pay) || Math.abs(o.pay) > 100000)) err(`${ow}: pay must be signed integer cents`);
+      if (o.moodlet !== undefined) moodlet(ow, o.moodlet);
+      if (o.skill) {
+        if (!db.skills[o.skill.id] || !(o.skill.xp > 0)) err(`${ow}: bad skill reward`);
+      }
+    }
+  }
 
   // ---- Aspirations ----
   const objectTags = new Set<string>();

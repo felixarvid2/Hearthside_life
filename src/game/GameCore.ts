@@ -409,6 +409,60 @@ export class GameCore {
   }
 
   // ---------------------------------------------------------------------------------------------
+  // Careers and household economy (Milestone 6)
+  // ---------------------------------------------------------------------------------------------
+
+  private afterEconomy(r: { ok: boolean; reason?: string }): Result {
+    if (!r.ok) return fail(r.reason ?? 'That could not be done.');
+    this.notify('state');
+    this.autosaves.request();
+    return OK;
+  }
+
+  payBill(personId: Id, billId: Id): Result & { amount?: number } {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.payBill(personId, billId);
+    if (!r.ok) return fail(r.reason ?? 'The bill could not be paid.');
+    this.notify('state');
+    this.autosaves.request();
+    return { ok: true, amount: r.amount };
+  }
+
+  setAutoPayBills(personId: Id, on: boolean): Result {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.setAutoPay(personId, on);
+    if (!r.ok) return fail(r.reason ?? 'That could not be changed.');
+    this.notify('state');
+    this.notify('settings');
+    this.autosaves.request();
+    return OK;
+  }
+
+  joinCareer(personId: Id, careerId: string): Result {
+    if (!this.world) return fail('No game is running.');
+    return this.afterEconomy(this.sim.joinCareer(personId, careerId));
+  }
+
+  quitCareer(personId: Id): Result {
+    if (!this.world) return fail('No game is running.');
+    return this.afterEconomy(this.sim.quitCareer(personId));
+  }
+
+  setCareerEffort(personId: Id, effort: 'slack' | 'normal' | 'hard'): Result {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.setCareerEffort(personId, effort);
+    if (!r.ok) return fail(r.reason ?? 'That could not be changed.');
+    this.notify('state');
+    this.autosaves.request();
+    return OK;
+  }
+
+  resolveCareerEvent(personId: Id, optionId: string): Result {
+    if (!this.world) return fail('No game is running.');
+    return this.afterEconomy(this.sim.resolveCareerEvent(personId, optionId));
+  }
+
+  // ---------------------------------------------------------------------------------------------
   // Construction plumbing
   // ---------------------------------------------------------------------------------------------
 
@@ -734,6 +788,7 @@ export class GameCore {
     if (typeof patch.visitors === 'boolean') set('visitors', patch.visitors);
     if (patch.aging === 'off' || patch.aging === 'long' || patch.aging === 'normal') set('aging', patch.aging);
     if (typeof patch.unlimitedFunds === 'boolean' && state.startMode === 'sandbox') set('unlimitedFunds', patch.unlimitedFunds);
+    if (typeof patch.autoPayBills === 'boolean') set('autoPayBills', patch.autoPayBills);
     if (changed) { this.notify('state'); this.notify('settings'); }
   }
 

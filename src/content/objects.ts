@@ -530,7 +530,7 @@ const ELECTRONICS: ObjectDef[] = [
     description: 'A widescreen desktop computer for games and programming practice. Sits on a desk; users take the chair in front.',
     tags: ['computer', 'electronics'], tier: 'standard', price: dollars(900), quality: 3, functional: true,
     footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
-    interactions: ['playComputerGames', 'practiceProgramming'], stats: { fun: 1, skill: 1 }, finishes: [],
+    interactions: ['playComputerGames', 'practiceProgramming', 'writeArticle', 'writeBook', 'programGig', 'jobSearch'], stats: { fun: 1, skill: 1 }, finishes: [],
   }),
   obj(radio, {
     id: 'radio-retro', name: 'Retro Radio', category: 'electronics', subcategory: 'audio', rooms: ['living', 'kitchen', 'bedroom'], style: 'retro',
@@ -999,14 +999,14 @@ const HOBBY_OBJECTS: ObjectDef[] = [
     description: 'A folding wooden easel with a half-finished landscape and a tray of paint pots. Paint for fun, and the practice builds Painting.',
     tags: ['easel', 'art', 'creative'], packs: ['creative-studio'], tier: 'budget', price: dollars(140), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, easelFit, 1)],
-    interactions: ['paintCanvas'], stats: { fun: 1, skill: 1, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
+    interactions: ['paintCanvas', 'paintToSell'], stats: { fun: 1, skill: 1, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
   }),
   obj(pianoFit, {
     id: 'piano-upright', name: 'Upright Piano', category: 'hobby', subcategory: 'instrument', rooms: ['living', 'study'], style: 'classic',
     description: 'A full-size upright piano. Play standing, or pull a chair or bench up in front of it and sit down: more fun and quicker progress in Music than a radio.',
     tags: ['piano', 'instrument', 'music', 'creative'], packs: ['creative-studio', 'classic-townhouse'], tier: 'premium', price: dollars(1850), quality: 4, functional: true,
     footprint: FP21, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.98, pianoFit, 1)],
-    interactions: ['playPiano'], stats: { fun: 1.15, skill: 1.2, environment: 3 }, finishes: [woodR(['wood', 'woodDark'])],
+    interactions: ['playPiano', 'busk'], stats: { fun: 1.15, skill: 1.2, environment: 3 }, finishes: [woodR(['wood', 'woodDark'])],
   }),
   obj(treadmillFit, {
     id: 'treadmill', name: 'Folding Treadmill', category: 'hobby', subcategory: 'fitness', rooms: ['living', 'bedroom', 'study'], style: 'modern',

@@ -75,7 +75,7 @@ export const ASPIRATIONS: AspirationDef[] = [
       stage('Well Read', [
         { id: 'read-20', text: 'Read 20 books', type: 'interactionCount', match: 'readBook', count: 20 },
         { id: 'logic-5', text: 'Reach Logic level 5', type: 'skill', skillId: 'logic', level: 5 },
-        { id: 'bookcases-2', text: 'Own 2 bookcases', type: 'ownObjects', tag: 'bookcase', count: 2 },
+        { id: 'bookcases-2', text: 'Buy 2 bookcases', type: 'ownObjects', tag: 'bookcase', count: 2, bought: true },
       ], 500),
       stage('Living Library', [
         { id: 'read-50', text: 'Read 50 books', type: 'interactionCount', match: 'readBook', count: 50 },
@@ -99,6 +99,46 @@ export const ASPIRATIONS: AspirationDef[] = [
         { id: 'level-9', text: 'Reach career level 9', type: 'careerLevel', level: 9 },
         { id: 'funds-50k', text: 'Have $50,000 in household funds', type: 'funds', amount: dollars(50000) },
       ], 2500, true),
+    ],
+  },
+  {
+    id: 'successful-career', name: 'Successful Career', icon: 'briefcase', category: 'career', status: 'ready',
+    description: 'Build a reputation, keep getting promoted and become the person everyone asks for advice.',
+    stages: [
+      stage('Reliable', [
+        { id: 'level-2', text: 'Reach career level 2', type: 'careerLevel', level: 2 },
+        { id: 'charisma-2', text: 'Reach Charisma level 2', type: 'skill', skillId: 'charisma', level: 2 },
+      ], 300),
+      stage('Respected', [
+        { id: 'level-5', text: 'Reach career level 5', type: 'careerLevel', level: 5 },
+        { id: 'skill-4', text: 'Reach Logic level 4', type: 'skill', skillId: 'logic', level: 4 },
+        { id: 'funds-15k', text: 'Have $15,000 in household funds', type: 'funds', amount: dollars(15000) },
+      ], 800),
+      stage('Leader in the Field', [
+        { id: 'level-8', text: 'Reach career level 8', type: 'careerLevel', level: 8 },
+        { id: 'charisma-7', text: 'Reach Charisma level 7', type: 'skill', skillId: 'charisma', level: 7 },
+        { id: 'funds-40k', text: 'Have $40,000 in household funds', type: 'funds', amount: dollars(40000) },
+      ], 2500, true),
+    ],
+  },
+  {
+    id: 'fortune-builder', name: 'Fortune Builder', icon: 'money', category: 'wealth', status: 'ready',
+    description: 'Turn wages and freelance work into a comfortable cushion, then into real security.',
+    stages: [
+      stage('Nest Egg', [
+        { id: 'funds-10k', text: 'Save $10,000 in household funds', type: 'funds', amount: dollars(10000) },
+        { id: 'freelance-1', text: 'Sell 3 pieces of freelance work', type: 'interactionCount', match: 'tag:freelance', count: 3 },
+      ], 250),
+      stage('Comfortable', [
+        { id: 'funds-35k', text: 'Save $35,000 in household funds', type: 'funds', amount: dollars(35000) },
+        { id: 'freelance-12', text: 'Sell 12 pieces of freelance work', type: 'interactionCount', match: 'tag:freelance', count: 12 },
+        { id: 'value-70k', text: 'Raise your home value to $70,000', type: 'homeValue', amount: dollars(70000) },
+      ], 900),
+      stage('Old Money', [
+        { id: 'funds-120k', text: 'Save $120,000 in household funds', type: 'funds', amount: dollars(120000) },
+        { id: 'value-180k', text: 'Raise your home value to $180,000', type: 'homeValue', amount: dollars(180000) },
+        { id: 'freelance-30', text: 'Sell 30 pieces of freelance work', type: 'interactionCount', match: 'tag:freelance', count: 30 },
+      ], 4000, true),
     ],
   },
   {

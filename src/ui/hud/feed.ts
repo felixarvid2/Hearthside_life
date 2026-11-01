@@ -4,7 +4,7 @@
 import type { GameEvent } from '../../core/events';
 import { activeHousehold } from '../../core/state';
 import type { FeedEntry, LedgerKind } from '../../core/types';
-import { panel, toast, type Panel } from '../kit/components';
+import { button, panel, toast, type Panel } from '../kit/components';
 import { h, setChildren } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { formatGameTime, formatMoney, personName } from './format';
@@ -18,7 +18,7 @@ const FEED_LABELS: Record<FeedEntry['kind'], string> = {
   info: 'News', social: 'Social', money: 'Money', career: 'Career', need: 'Needs', warning: 'Warning', aspiration: 'Aspiration', build: 'Home',
 };
 const LEDGER_LABELS: Record<LedgerKind, string> = {
-  wage: 'Wage', purchase: 'Purchase', refund: 'Refund', sale: 'Sale', groceries: 'Groceries', bill: 'Bill', reward: 'Reward', build: 'Building', gift: 'Gift', start: 'Start', repair: 'Repair',
+  wage: 'Wage', purchase: 'Purchase', refund: 'Refund', sale: 'Sale', groceries: 'Groceries', bill: 'Bill', reward: 'Reward', build: 'Building', gift: 'Gift', start: 'Start', repair: 'Repair', career: 'Work',
 };
 
 export interface ListPanel { panel: Panel; open(): void; close(): void; refresh(): void }
@@ -56,7 +56,12 @@ export function createLedgerPanel(sh: Shell, onClosed: () => void): ListPanel {
   const p = panel({ title: 'Household funds', className: 'ledger-panel', initialHeight: 'half', onClose: onClosed });
   const total = h('div', { class: 'ledger-total' });
   const list = h('ol', { class: 'ledger-list' });
-  p.body.append(total, h('h3', { class: 'pp-subhead', text: 'Recent transactions' }), list);
+  const billsBtn = button({
+    icon: 'money', label: 'Bills and payments', small: true, variant: 'secondary',
+    title: 'Pay household bills or turn on automatic payment',
+    onClick: () => { sh.sound('open'); sh.openPanel('bills'); },
+  });
+  p.body.append(total, h('div', { class: 'ledger-actions' }, billsBtn), h('h3', { class: 'pp-subhead', text: 'Recent transactions' }), list);
   let sig = '';
   const refresh = () => {
     if (!p.isOpen()) return;

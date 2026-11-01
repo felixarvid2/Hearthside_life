@@ -6,7 +6,7 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-5 complete** (verified 2026-11-01, see CONTINUATION.md). Next: **Milestone 6 - Careers and economy**.
+**Milestones 1-6 complete** (verified 2026-11-01, see CONTINUATION.md). Next: **Milestone 7 - Neighbourhood and venues**.
 
 ## Completed-project targets (brief section 2)
 
@@ -70,7 +70,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 3. Creator depth (M3): 24 face presets, 18 face parameters, 54 garments, 15 accessories, hat and hair interaction, outfit slots, family tree editing are done; remaining depth (more garment variety, life-stage bodies, height) belongs to M8 and M10.
 4. Dirt, breakage, repair and cleaning are done (M4, see ARCHITECTURE.md "Daily life"); groceries/freshness depth and household routines remain (M4).
 5. Done in M5 (see ARCHITECTURE.md "Relationships and events"): romance ladder, dates, events with invitations, jealousy after exclusivity. Open: weddings as events, group conversations, gifts as objects, lot travel for dates (M7).
-6. Bills, rent/ownership, freelance work, more careers, aspiration rewards depth (M6).
+6. Done in M6 (see ARCHITECTURE.md "Careers and economy"): seven careers with promotions/demotions and work effort, freelance income, weekly bills with late fees and utility cut-offs, auto-pay, and career/wealth aspirations. Open: renting vs owning beyond property tax, more careers and aspiration stages (M11).
 7. Neighbourhood map, 12 lots, venues, household switching, off-lot reconciliation (M7).
 8. Life stages, school, aging, adoption (M8).
 9. Upper floors, stairs, roofs, fences, gardens, balconies (M9).

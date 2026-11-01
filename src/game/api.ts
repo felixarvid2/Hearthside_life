@@ -331,6 +331,22 @@ export interface GameAPI {
   /** Calls off a planned event that has not started. */
   cancelEvent?(eventId: Id): Result;
 
+  // ---- careers and household economy (Milestone 6) ----
+  // Optional like the event planner: standalone dev mocks of other screens may omit them. Money always moves
+  // through the simulation's transact with an occurrence id.
+  /** Pays one bill of the person's household; returns the amount paid. */
+  payBill?(personId: Id, billId: Id): Result & { amount?: Cents };
+  /** Turns automatic bill payment on or off for the person's household. */
+  setAutoPayBills?(personId: Id, on: boolean): Result;
+  /** Takes a job (level 1) for a household member. */
+  joinCareer?(personId: Id, careerId: string): Result;
+  /** Quits the member's current job (a shift in progress is cancelled without pay). */
+  quitCareer?(personId: Id): Result;
+  /** 'slack' | 'normal' | 'hard': affects performance and energy. */
+  setCareerEffort?(personId: Id, effort: 'slack' | 'normal' | 'hard'): Result;
+  /** Answers the current shift's on-the-job decision. */
+  resolveCareerEvent?(personId: Id, optionId: string): Result;
+
   // ---- modes ----
   /** Build and Buy pause the simulation; returning to live restores the previous speed. */
   setMode(m: 'live' | 'buy' | 'build'): void;

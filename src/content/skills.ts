@@ -35,11 +35,12 @@ export const SKILLS: SkillDef[] = [
   skill('logic', 'Logic', 'book', 'ready', 'Reasoning and problem solving. Practised by reading books and playing chess.', [
     { level: 2, text: 'A quick study: every other skill gains 3% more experience per Logic level, and repairs succeed a little more often.' },
     { level: 10, text: `Other skills learn ${fx.logicStudy10} faster.` },
+    { level: 2, text: 'Required for promotion in the Software, Medicine and Business careers.' },
     { level: 4, text: '(later) Solve puzzles with friends.' },
   ]),
   skill('programming', 'Programming', 'chart', 'ready', 'Writing software. Practised at a computer or from a programming book.', [
     { level: 2, text: 'Understands electronics: repairs of TVs, computers and audio gear succeed 3% more often per level and shock less.' },
-    { level: 4, text: '(later) Take freelance programming jobs for money.' },
+    { level: 2, text: 'Take freelance programming gigs at a computer for money.' },
   ]),
   skill('handiness', 'Handiness', 'build', 'ready', 'Fixing and maintaining things around the house. Practised by repairing and servicing objects, cleaning and reading repair manuals.', [
     { level: 1, text: `Repairs take ${fx.repairMinutes1} minutes and succeed ${fx.repairBase1} of the time; failures can waste time or give a shock.` },
@@ -50,20 +51,24 @@ export const SKILLS: SkillDef[] = [
   skill('gardening', 'Gardening', 'sparkle', 'ready', 'Caring for plants. Practised by watering houseplants or reading the gardening almanac.', [
     { level: 2, text: 'Home-grown herbs and vegetables cut grocery bills by 2% per level.' },
     { level: 10, text: `Groceries cost ${fx.gardening10} less.` },
+    { level: 2, text: 'Required for promotion in the Landscaping career.' },
     { level: 3, text: '(later) Plant, tend and harvest garden crops.' },
   ]),
   skill('painting', 'Painting', 'roller', 'ready', 'Putting brush to canvas. Practised at an easel.', [
     { level: 2, text: 'Painting is more fun: 4% more fun per level.' },
     { level: 10, text: `Painting gives ${fx.painting10} more fun.` },
-    { level: 3, text: '(later) Sell finished paintings.' },
+    { level: 3, text: 'Sell finished paintings at an easel.' },
   ]),
   skill('music', 'Music', 'sound', 'ready', 'A trained ear for melody and rhythm. Practised by listening closely to music and by playing the piano.', [
-    { level: 2, text: 'Music is more enjoyable: 4% more fun per level.' },
+    { level: 2, text: 'Music is more enjoyable: 4% more fun per level. Busking at a piano earns tips.' },
     { level: 10, text: `Music gives ${fx.music10} more fun.` },
     { level: 3, text: '(later) Play more instruments.' },
   ]),
-  skill('writing', 'Writing', 'book', 'dev', 'Turning ideas into prose.', [
-    { level: 3, text: '(later) Write and sell books.' },
+  skill('writing', 'Writing', 'book', 'ready', 'Turning ideas into prose. Practised by writing articles and books at a computer; better writers are paid more and finish sooner.', [
+    { level: 2, text: 'Freelance articles sell for more as Writing improves.' },
+    { level: 3, text: 'Write and sell books at a computer.' },
+    { level: 6, text: 'Book advances grow sharply; articles rarely come back rejected.' },
+    { level: 2, text: 'Required for promotion in the Journalism career from Copy Runner upward.' },
   ]),
   skill('photography', 'Photography', 'eyedropper', 'dev', 'Framing the perfect shot.', [
     { level: 3, text: '(later) Sell photographs.' },
@@ -71,12 +76,13 @@ export const SKILLS: SkillDef[] = [
   skill('charisma', 'Charisma', 'face', 'ready', 'Confidence and charm with people. Practised by rehearsing speeches at a mirror or from a public speaking guide.', [
     { level: 2, text: 'People accept social interactions more often (1.2% per level) and the repairperson gives a 2% discount per level.' },
     { level: 10, text: `Social interactions land ${fx.charismaAcceptance10} more often; repairperson fees drop ${fx.charismaDiscount10}.` },
-    { level: 2, text: 'Required for promotion in the Culinary career from Station Cook upward.' },
+    { level: 2, text: 'Required for promotion in the Culinary, Journalism, Medicine, Music, Business and Landscaping careers.' },
     { level: 5, text: '(later) Unlocks persuasive social interactions.' },
   ]),
   skill('fitness', 'Fitness', 'energy', 'ready', 'Strength and stamina. Practised by jogging, dancing, running on a treadmill and lifting weights.', [
     { level: 2, text: 'Energy drains 1.5% slower per level, and workouts tire and sweat less.' },
     { level: 10, text: `Energy drains ${fx.fitnessEnergy10} slower and workouts cost ${fx.fitnessSweat10} less hygiene.` },
+    { level: 2, text: 'Required for promotion in the Landscaping career from Gardener upward.' },
     { level: 4, text: '(later) Workout routines and classes.' },
   ]),
   skill('wellness', 'Wellness', 'heart', 'dev', 'Calm, balance and self-care.', [

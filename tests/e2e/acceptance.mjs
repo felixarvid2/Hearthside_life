@@ -226,6 +226,7 @@ async function runViewport(browser, vpName, vp) {
     ['5', 'Save, reload, load, compare', stepSaveLoad],
     ['6', 'Rotate the device during edits', stepRotate],
     ['7', 'Milestone 2 home editor: build a room, door, window, finishes, undo/redo, walk in', stepHomeEditor],
+    ['8', 'Milestone 6: career panel, pay a bill, sell freelance work', stepEconomy],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -721,7 +722,7 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
   if (keyOf(pick) !== id && (kind === 'object' || kind === 'person')) {
     // something else is drawn over the middle of the target (a person in the bed, two people standing together): try nearby points
     const offs = kind === 'object'
-      ? [[-16, 0], [16, 0], [0, -14], [0, 14], [-28, -8], [28, -8], [-28, 10], [28, 10], [0, -26], [0, 26]]
+      ? [[-16, 0], [16, 0], [0, -14], [0, 14], [-28, -8], [28, -8], [-28, 10], [28, 10], [0, -26], [0, 26], [0, -45], [0, 45], [-45, 0], [45, 0], [0, -65], [0, 65], [-60, -20], [60, -20]]
       : [[0, -12], [0, 10], [-6, 0], [6, 0], [-6, -14], [6, -14], [0, -20], [0, 18], [-10, 6], [10, 6]];
     for (const [dx, dy] of offs) {
       const pk = await T.page.evaluate(([x, y]) => window.__t.pick(x, y), [p.x + dx, p.y + dy]);
@@ -897,14 +898,31 @@ async function stepLive(T) {
   const r5 = await runUntil(T, 4 * 240, `st.people['${mira}'].location.kind === 'lot'`);
   const back = await needsOf(T, mira);
   T.check(S, 'first person is back on the lot after the shift', r5.done && !back.loc.startsWith('off:'), `${back.loc} at ${JSON.stringify(await simNow(T))}`);
+  // The roommate's shift can end later than the first person's (a 9-5 business day against an 8-4 kitchen shift),
+  // so let their own shift finish before checking that it was paid.
+  const sageShift = await page.evaluate(([s, d]) => {
+    const st = window.hearthside.debug.state();
+    const p = st.people[s];
+    const lvl = p?.career ? window.hearthside.game.content.careers[p.career.careerId]?.levels.find((l) => l.level === p.career.level) : null;
+    const works = !!lvl && lvl.days.includes(d % 7);
+    return { works, end: works ? d * 1440 + lvl.end + 5 : null, now: st.clock.minutes };
+  }, [sage, day0]);
+  if (sageShift.end !== null && sageShift.now < sageShift.end) await runUntil(T, 4 * 180, `st.clock.minutes >= ${sageShift.end}`);
   const wages = await page.evaluate(([m, s, d]) => {
     const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
     const count = (id) => hh.ledger.filter((e) => e.kind === 'wage' && e.occurrence === `pay:${id}:${d}`).length;
-    return { mira: count(m), sage: count(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
+    // A career only pays for a shift that is scheduled on this weekday (the roommate may not work on day 0).
+    const worksToday = (id) => {
+      const p = st.people[id]; if (!p.career) return false;
+      const def = window.hearthside.game.content.careers[p.career.careerId];
+      const lvl = def?.levels.find((l) => l.level === p.career.level);
+      return !!lvl && lvl.days.includes(Math.floor(st.clock.minutes / 1440) % 7);
+    };
+    return { mira: count(m), sage: count(s), sageWorksToday: worksToday(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
   }, [mira, sage, day0, wageBefore.ids]);
   log('wages', JSON.stringify(wages));
   T.check(S, 'exactly one wage ledger entry for the first person\'s shift', wages.mira === 1, JSON.stringify(wages.all));
-  T.check(S, 'the roommate (own shift) was paid exactly once as well', wages.sage === 1 || startInfo.sageCareer === null, `sage entries ${wages.sage}; career ${startInfo.sageCareer}`);
+  T.check(S, 'the roommate (own shift) was paid exactly once if they worked today', wages.sage === 1 || !wages.sageWorksToday, `sage entries ${wages.sage}; career ${startInfo.sageCareer}; works today ${wages.sageWorksToday}`);
   // Milestone 4 adds expenses during a shift (groceries, repairperson), so funds need not rise overall: check instead that the
   // wage was credited and that the funds change equals exactly the new ledger entries (no money appears or vanishes).
   const seen = new Set(wageBefore.ids);
@@ -927,17 +945,28 @@ async function stepLive(T) {
   await closeAnyPanel(T);
   await page.evaluate(() => window.hearthside.view.frameLot?.(true));
 
-  // ---- sleep on a bed (right after work, before the neighbour arrives)
+  // ---- sleep on a bed (right after work, before the neighbour arrives); use one the roommate is not lying on
   await dismissMenu(T);
   await selectMember(T, mira);
   const eBefore = (await needsOf(T, mira)).energy;
+  const freeBed = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId];
+    const beds = Object.values(lot.objects).filter((b) => /^bed-/.test(b.defId));
+    const near = (b, p) => p.location.kind === 'lot' && Math.hypot(p.location.x - (b.x + 1), p.location.z - (b.z + 1)) < 1.6;
+    const free = beds.find((b) => !Object.values(st.people).some((p) => near(b, p)));
+    return (free ?? beds[0])?.id ?? null;
+  }).catch(() => null);
+  if (freeBed) startInfo.bed = freeBed;
+  log('bed to use', JSON.stringify({ bed: startInfo.bed, freeBed }));
   const bm = await tapAndOpenMenu(T, 'object', startInfo.bed, S, 'bed');
   if (bm) {
     await T.shot('live-bed-menu');
     log('bed menu', JSON.stringify(bm.items));
     T.check(S, 'bed menu offers Sleep', bm.items.some((i) => /Sleep/.test(i.label ?? '') && !i.disabled), bm.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : '')).join(' | '));
     await chooseMenu(T, /^Sleep/);
-    const r9 = await runUntil(T, 4 * 150, `st.people['${mira}'].location.kind === 'lot' && st.people['${mira}'].location.posture === 'lying'`);
+    // The person may already be lying down from an autonomous nap (posture is "lying" anywhere), so "lying" alone can
+    // be true before the queued sleep starts. Wait until they are lying at the chosen bed instead.
+    const r9 = await runUntil(T, 4 * 150, `(() => { const st = window.hearthside.debug.state(); const p = st.people['${mira}']; if (p.location.kind !== 'lot' || p.location.posture !== 'lying') return false; const b = st.lots[st.activeLotId].objects['${startInfo.bed}']; return !!b && Math.hypot(b.x + 1 - p.location.x, b.z + 1 - p.location.z) < 3.5; })()`);
     const lying = await page.evaluate((m) => { const st = window.hearthside.debug.state(); const p = st.people[m]; const lot = st.lots[st.activeLotId]; const beds = Object.values(lot.objects).filter((o) => /^bed-/.test(o.defId)); const d = beds.map((b) => Math.hypot(b.x + 1 - p.location.x, b.z + 1 - p.location.z)); return { posture: p.location.posture, x: p.location.x, z: p.location.z, nearestBed: Math.min(...d), anim: p.anim.id, at: Math.round(st.clock.minutes) }; }, mira);
     T.check(S, 'sleeping person lies in a bed (posture lying, at a bed)', r9.done && lying.posture === 'lying' && lying.nearestBed < 3.5, `${JSON.stringify(lying)} after ${(r9.ticks / 4).toFixed(0)} game minutes`);
     T.check(S, 'no wall crossing walking to bed', r9.viol.length === 0, JSON.stringify(r9.viol.slice(0, 3)));
@@ -2047,6 +2076,156 @@ async function stepHomeEditor(T) {
   await settle(T);
   await T.shot('m2-person-in-room');
   void doorX; void doorZ;
+}
+
+// ===============================================================================================================
+// STEP 8 - Milestone 6: careers, bills and freelance income
+// ===============================================================================================================
+
+async function stepEconomy(T) {
+  const S = '8';
+  const { page } = T;
+  const [mira] = T.members;
+  await page.evaluate(() => window.hearthside.game.setSpeed(0));
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  // A quick run with --fast-start has not simulated a tick yet, so no bill has been issued.
+  const noBill = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    return (st.bills ?? []).every((b) => b.householdId !== hh.id);
+  });
+  if (noBill) await page.evaluate(() => window.hearthside.debug.step(4));
+
+  // ---- career panel: the employed first person, effort switch, promotion requirements
+  await selectMember(T, mira);
+  await T.tap(page.locator(`.member[data-person-id="${mira}"]`));
+  await page.waitForSelector('.person-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+  await T.tap(page.locator('.person-panel .tab[data-id="career"]'));
+  await page.waitForTimeout(450);
+  const careerBefore = await page.evaluate((id) => {
+    const st = window.hearthside.debug.state(); const p = st.people[id];
+    return { career: p.career ? p.career.careerId : null, level: p.career?.level ?? 0, effort: p.career?.effort ?? null, name: p.career ? window.hearthside.game.content.careers[p.career.careerId]?.name ?? null : null };
+  }, mira);
+  if (careerBefore.career) {
+    const head = await page.locator('.person-panel .career-head h3').first().innerText();
+    const title = await page.locator('.person-panel .career-title').first().innerText();
+    T.check(S, 'career panel opens with the job, level and title', head.includes(careerBefore.name) && /Level \d+/.test(title), `${head} / ${title}`);
+    T.check(S, 'career panel lists the effort choice and the next promotion requirements', (await page.locator('.person-panel .segmented .seg').count()) === 3 && (await page.locator('.person-panel .req-list .req').count()) > 0, `${await page.locator('.person-panel .req-list .req').count()} requirements`);
+  } else {
+    const cards = await page.locator('.person-panel .career-choice').count();
+    T.check(S, 'career panel offers careers when the person has no job', cards >= 6, `${cards} careers offered`);
+    if (cards) {
+      await T.tap(page.locator('.person-panel .career-choice button', { hasText: 'Take job' }).first());
+      await page.waitForTimeout(350);
+    }
+  }
+  const workHard = page.locator('.person-panel .segmented .seg[data-id="hard"]').first();
+  if (await workHard.count()) {
+    await T.tap(workHard);
+    await page.waitForTimeout(300);
+    const effort = await page.evaluate((id) => window.hearthside.debug.state().people[id].career?.effort ?? null, mira);
+    T.check(S, 'choosing "Work hard" changes the stored work effort', effort === 'hard', `effort ${effort}`);
+  }
+  await T.shot('m6-career-panel');
+  await T.audit('career panel');
+
+  // ---- bills: funds button -> ledger -> Bills and payments -> Pay
+  await closeAnyPanel(T);
+  await T.tap(page.locator('.funds-btn'));
+  await page.waitForSelector('.ledger-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+  const billsBtn = page.locator('.ledger-panel .ledger-actions button', { hasText: 'Bills and payments' }).first();
+  T.check(S, 'the ledger links to household bills', await billsBtn.count() === 1, `${await billsBtn.count()} buttons`);
+  if (await billsBtn.count()) await T.tap(billsBtn);
+  await page.waitForSelector('.bills-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+  const billBefore = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    const open = (st.bills ?? []).filter((b) => b.householdId === hh.id && b.status !== 'paid').sort((a, b) => b.week - a.week);
+    return { id: open[0]?.id ?? null, amount: open[0]?.amount ?? 0, funds: hh.funds, count: (st.bills ?? []).filter((b) => b.householdId === hh.id).length, itemCount: document.querySelectorAll('.bills-panel .bill-item').length };
+  });
+  log('bill before paying', JSON.stringify(billBefore));
+  T.check(S, 'the bills panel lists the household bill', billBefore.id !== null && billBefore.itemCount >= 1, JSON.stringify(billBefore));
+  const payBtn = page.locator('.bills-panel .bill-item button', { hasText: 'Pay' }).first();
+  T.check(S, 'an unpaid bill offers a Pay button', await payBtn.count() >= 1, `${await payBtn.count()} pay buttons`);
+  if (await payBtn.count()) {
+    await T.tap(payBtn);
+    await page.waitForTimeout(400);
+    const after = await page.evaluate((id) => {
+      const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+      const b = (st.bills ?? []).find((x) => x.id === id);
+      return { status: b?.status ?? null, funds: hh.funds, occurrence: b ? `billpay:${b.id}` : null, processed: b ? st.processed[`money:billpay:${b.id}`] !== undefined : false, paidTags: document.querySelectorAll('.bills-panel .bill-item.is-paid').length };
+    }, billBefore.id);
+    T.check(S, 'paying a bill charges exactly once and marks it paid', after.status === 'paid' && after.processed && after.funds === billBefore.funds - billBefore.amount, `status ${after.status}, funds ${fmtMoney(after.funds)} (was ${fmtMoney(billBefore.funds)}), occurrence ${after.occurrence}`);
+    T.check(S, 'the paid bill is shown as paid in the panel', after.paidTags >= 1, `${after.paidTags} paid rows`);
+  }
+  await T.shot('m6-bills-paid');
+  await T.audit('bills panel');
+
+  // ---- freelance: open the computer menu and write/sell an article
+  await closeAnyPanel(T);
+  // A member who is already busy (an autonomous nap after a long day, or any queued action) would push the
+  // freelance job behind that action; pick an idle one, waiting until somebody is free if needed.
+  const idleHomeMember = () => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    const lot = st.lots[st.activeLotId];
+    const computer = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop');
+    const p = hh.memberIds.map((id) => st.people[id])
+      .filter((x) => x.location.kind === 'lot' && x.queue.length === 0)
+      .sort((a, b) => (b.needs.energy - a.needs.energy) || (b.needs.fun - a.needs.fun))[0];
+    return { person: p?.id ?? null, computer: computer?.id ?? null };
+  };
+  let worker = await page.evaluate(idleHomeMember);
+  if (!worker.person) {
+    await runUntil(T, 4 * 600, `(() => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; const lot = st.lots[st.activeLotId]; return !!Object.values(lot.objects).find((o) => o.defId === 'computer-desktop') && hh.memberIds.some((id) => { const p = st.people[id]; return p.location.kind === 'lot' && p.queue.length === 0; }); })()`);
+    worker = await page.evaluate(idleHomeMember);
+  }
+  T.check(S, 'a household member is home and the computer is available', !!worker.person && !!worker.computer, JSON.stringify(worker));
+  if (worker.person && worker.computer) {
+    await page.evaluate((id) => {
+      window.__m6actions = [];
+      window.__m6off?.();
+      window.__m6off = window.hearthside.game.events.on('action.finished', (e) => { if (e.personId === id) window.__m6actions.push(e); });
+    }, worker.person);
+    await selectMember(T, worker.person);
+    await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), worker.person);
+    await settle(T);
+    const salesBefore = await page.evaluate(() => {
+      const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+      return hh.ledger.filter((l) => l.kind === 'sale').length;
+    });
+    const menu = await tapAndOpenMenu(T, 'object', worker.computer, S, 'computer');
+    if (menu) {
+      log('computer menu', JSON.stringify(menu.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : ''))));
+      T.check(S, 'the computer menu offers freelance writing', menu.items.some((i) => /Write an Article/.test(i.label ?? '') && !i.disabled), menu.items.map((i) => i.label).join(' | '));
+      const picked = await chooseMenu(T, /Write an Article/);
+      T.check(S, 'picking Write an Article queues the freelance action', picked, String(picked));
+      log('freelance queued', JSON.stringify(await page.evaluate((id) => {
+        const st = window.hearthside.debug.state(); const p = st.people[id];
+        return { queue: p.queue.map((a) => ({ id: a.id, what: a.interactionId, target: a.target })), needs: p.needs, location: p.location };
+      }, worker.person)));
+      const sale = await runUntil(T, 4 * 240, `st.households[st.activeHouseholdId].ledger.filter((l) => l.kind === 'sale').length > ${salesBefore}`);
+      log('freelance after', JSON.stringify(await page.evaluate((id) => {
+        const st = window.hearthside.debug.state(); const p = st.people[id]; const hh = st.households[st.activeHouseholdId];
+        return {
+          queue: p.queue.map((a) => ({ id: a.id, what: a.interactionId, target: a.target })),
+          needs: p.needs, location: p.location, anim: p.anim, attrs: p.career ? { career: p.career.careerId, effort: p.career.effort } : null,
+          sales: hh.ledger.filter((l) => l.kind === 'sale'),
+          processed: Object.keys(st.processed).filter((k) => /freelance|cost:/.test(k)).slice(-8),
+          actions: window.__m6actions ?? [],
+          feed: st.feed.slice(-10).map((f) => f.text),
+        };
+      }, worker.person)));
+      const after = await page.evaluate(() => {
+        const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+        const sales = hh.ledger.filter((l) => l.kind === 'sale');
+        return { sales: sales.map((l) => ({ amount: l.amount, occurrence: l.occurrence ?? null })), feed: st.feed.slice(-14).map((f) => f.text) };
+      });
+      T.check(S, 'the finished article was sold and paid once', sale.done && after.sales.length === salesBefore + 1 && after.sales.at(-1).amount > 0 && /^freelance:/.test(after.sales.at(-1).occurrence ?? ''), JSON.stringify(after.sales));
+      T.check(S, 'the sale is announced in the feed', after.feed.some((f) => /sold/i.test(f)), after.feed.filter((f) => /sold/i.test(f)).slice(0, 1).join(' | '));
+      await T.shot('m6-freelance-sold');
+      await T.audit('after freelance sale');
+    }
+  }
+  await closeAnyPanel(T);
 }
 
 main().catch((e) => { console.error('[acceptance] error', e); process.exit(1); });

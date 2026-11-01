@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { objectiveProgress } from '../../../src/sim/aspirations';
+import { MINUTES_PER_DAY, START_MINUTE } from '../../../src/core/clock';
+import { checkAspiration, objectiveProgress } from '../../../src/sim/aspirations';
 import { ensureRel } from '../../../src/sim/relationships';
-import { buildWorld, harness, lotLocation, runUntil, setNeeds } from './fixtures';
+import { buildWorld, harness, lotLocation, pureCtx, runUntil, setNeeds } from './fixtures';
 
 describe('aspiration objectives', () => {
   it('count only accepted socials', () => {
@@ -38,5 +39,48 @@ describe('aspiration objectives', () => {
     expect(objectiveProgress(w.state, h.content, mira, own).done).toBe(true);
     w.objects.stove!.ownerHouseholdId = null;
     expect(objectiveProgress(w.state, h.content, mira, own).done).toBe(false);
+  });
+
+  it('bought-only objectives ignore the starter furnishings', () => {
+    const w = buildWorld();
+    const h = harness(w.state);
+    const mira = w.state.people[w.mira]!;
+    const books = { id: 'books', text: 'Bookcases', type: 'ownObjects' as const, tag: 'bookcase-open', count: 1, bought: true as const };
+    w.objects.bookcase!.boughtAt = START_MINUTE - MINUTES_PER_DAY;
+    expect(objectiveProgress(w.state, h.content, mira, books).done).toBe(false);
+    w.objects.bookcase!.boughtAt = START_MINUTE + 60;
+    expect(objectiveProgress(w.state, h.content, mira, books).done).toBe(true);
+    // Without the bought rule the starter bookcase still counts (the Dream Home rule is opt-in).
+    const any = { ...books, id: 'any', bought: undefined as true | undefined };
+    w.objects.bookcase!.boughtAt = START_MINUTE - MINUTES_PER_DAY;
+    expect(objectiveProgress(w.state, h.content, mira, any).done).toBe(true);
+  });
+
+  it('pays a stage reward once and advances exactly one stage', () => {
+    const w = buildWorld();
+    const h = harness(w.state);
+    const mira = w.state.people[w.mira]!;
+    h.content.aspirations.homeChef!.stages = [
+      { name: 'First dishes', objectives: [{ id: 'any-funds', text: 'Have funds', type: 'funds', amount: 0 }], reward: { money: 50000, text: '$500' } },
+      { name: 'Second dishes', objectives: [{ id: 'second', text: 'Have funds', type: 'funds', amount: 0 }], reward: { money: 25000, text: '$250' } },
+    ];
+    const household = w.state.households[mira.householdId]!;
+    const before = household.funds;
+    checkAspiration(pureCtx(h), mira);
+    expect(mira.aspiration).toMatchObject({ stage: 1 });
+    expect(household.funds).toBe(before + 50000);
+    expect(mira.aspiration!.rewards).toEqual([`aspiration:${w.mira}:homeChef:0`]);
+    // Checking again pays the next stage once; the first stage is never paid again.
+    checkAspiration(pureCtx(h), mira);
+    expect(mira.aspiration).toMatchObject({ stage: 2 });
+    expect(household.funds).toBe(before + 75000);
+    checkAspiration(pureCtx(h), mira);
+    expect(household.funds).toBe(before + 75000);
+    // Replaying an old stage (an edited save) cannot pay it a second time.
+    mira.aspiration!.stage = 0;
+    mira.aspiration!.progress = {};
+    checkAspiration(pureCtx(h), mira);
+    expect(household.funds).toBe(before + 75000);
+    expect(household.ledger.filter((l) => l.kind === 'reward')).toHaveLength(2);
   });
 });

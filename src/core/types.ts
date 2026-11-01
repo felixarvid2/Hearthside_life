@@ -54,6 +54,8 @@ export interface WorldState {
    * (sim/events.ts EVENT_HISTORY). Optional in saves: absent = none (persistence/schema.ts fillSocialDefaults).
    */
   homeEvents?: HomeEvent[];
+  /** Weekly household bills, oldest first; bounded by sim/economy.ts BILL_LIMIT. Optional in older saves. */
+  bills?: Bill[];
 }
 
 export type StartMode = 'guided' | 'create' | 'sandbox';
@@ -78,6 +80,8 @@ export interface SimSettings {
   visitors: boolean;
   /** Live speed when last saved (0 = paused). Absent in older saves, which load paused. */
   speed?: 0 | 1 | 2 | 3;
+  /** Pay each new bill as soon as it is issued (Milestone 6). Absent = off. */
+  autoPayBills?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -95,10 +99,13 @@ export interface Household {
   /** Objects bought but not placed (inventory). */
   inventory: InventoryEntry[];
   isPlayable: boolean;
+  /** Utilities are cut off because a bill stayed unpaid past its grace period (Milestone 6). */
+  powerOff?: boolean;
 }
 
 export type LedgerKind =
-  | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start' | 'repair';
+  | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start' | 'repair'
+  | 'career';
 
 export interface LedgerEntry {
   id: Id;
@@ -315,6 +322,48 @@ export interface CareerState {
     workedMinutes: number;
     lateMinutes: number;
   } | null;
+  /** How hard the person works (chosen while employed). Absent = 'normal'. */
+  effort?: WorkEffort;
+  /** A small on-the-job decision waiting during the current shift (Milestone 6, content/careerEvents.ts). */
+  pendingEvent?: CareerEventState | null;
+}
+
+export type WorkEffort = 'slack' | 'normal' | 'hard';
+
+export interface CareerEventState {
+  eventId: string;
+  /** Day the shift started on (`shift:<personId>:<day>`). */
+  day: number;
+  /** Option id once the player (or the shift end) picked one. */
+  chosen?: string;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Bills (Milestone 6)
+// ---------------------------------------------------------------------------------------------
+
+export type BillStatus = 'due' | 'overdue' | 'paid' | 'cutoff';
+
+/**
+ * A weekly household bill. `amount` includes any late fee. Money moves only through transact (occurrence
+ * `billpay:<id>`); late fees and cut-offs use their own occurrence markers so save/load cannot repeat them.
+ */
+export interface Bill {
+  id: Id;
+  householdId: Id;
+  /** Week index since world start (0 = first week). */
+  week: number;
+  /** Amount owed now (base plus any late fee). */
+  amount: Cents;
+  /** Original utilities plus property tax before late fees. */
+  base: Cents;
+  lateFee: Cents;
+  issuedAt: GameMinutes;
+  dueAt: GameMinutes;
+  graceEndsAt: GameMinutes;
+  status: BillStatus;
+  paidAt?: GameMinutes;
+  cutOffAt?: GameMinutes;
 }
 
 export interface AspirationState {
@@ -491,7 +540,7 @@ export interface ScheduledEvent {
   /** Unique occurrence id, e.g. `visit:<personId>:<day>`; also used in WorldState.processed. */
   occurrence: string;
   at: GameMinutes;
-  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd';
+  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'careerEvent';
   personId?: Id;
   householdId?: Id;
   data?: Record<string, string | number | boolean | null>;

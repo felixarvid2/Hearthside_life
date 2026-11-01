@@ -208,6 +208,50 @@ const HOBBY: InteractionDef[] = [
     moodletOnComplete: 'goodTunes',
     autonomy: { enabled: true, ads: { fun: 14 }, tags: ['music', 'instrument', 'creative', 'skill', 'fun'] },
   }),
+  // Freelance work: paid once by the simulation when the piece is finished (occurrence `freelance:<person>:<action>`).
+  def({
+    id: 'writeArticle', name: 'Write an Article', description: 'Write and sell a freelance article at the computer. Paid on completion; better Writing earns more.',
+    icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 4, energy: -3 }, skill: { id: 'writing', xpPerHour: 65 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'writing', 'creative', 'skill'] },
+  }),
+  def({
+    id: 'writeBook', name: 'Write a Book', description: 'Write a full book at the computer. It takes three hours but pays far more than an article.',
+    icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 180 }, needsPerHour: { fun: 2, energy: -4 }, skill: { id: 'writing', xpPerHour: 45 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'writing', 'creative', 'skill'] },
+  }),
+  def({
+    id: 'programGig', name: 'Take a Programming Gig', description: 'Finish a small freelance programming job at the computer. Paid on completion.',
+    icon: 'chart', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 90 }, needsPerHour: { fun: 3, energy: -4 }, skill: { id: 'programming', xpPerHour: 65 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'programming', 'skill'] },
+  }),
+  def({
+    id: 'paintToSell', name: 'Paint to Sell', description: 'Paint a canvas at the easel and sell it when it is finished. Better Painting earns more.',
+    icon: 'roller', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 75 }, needsPerHour: { fun: 14, energy: -3 }, skill: { id: 'painting', xpPerHour: 60 },
+    moodletOnComplete: 'inspired',
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'painting', 'creative', 'skill'] },
+  }),
+  def({
+    id: 'busk', name: 'Busk for Tips', description: 'Play at the piano for passers-by and collect tips. Better Music earns more.',
+    icon: 'sound', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 14, energy: -2 }, skill: { id: 'music', xpPerHour: 60 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'music', 'creative', 'skill'] },
+  }),
+  def({
+    id: 'jobSearch', name: 'Job Search', description: 'Browse job listings at the computer and open the career panel to apply, quit or change effort.',
+    icon: 'briefcase', kind: 'object', slotKinds: ['use'], behavior: 'openCareers', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 10 },
+    autonomy: { enabled: false, ads: {}, tags: ['career', 'computer'] },
+  }),
   def({
     id: 'workOut', name: 'Work Out', description: 'Run on the treadmill: trains Fitness but costs energy and hygiene.',
     icon: 'energy', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
@@ -412,6 +456,27 @@ const SELF: InteractionDef[] = [
     anims: { perform: 'phone' },
     duration: { kind: 'fixed', minutes: 4 }, needsOnComplete: { social: 4 },
     autonomy: { enabled: false, ads: {}, tags: ['social', 'phone'] },
+  }),
+  def({
+    id: 'phoneBills', name: 'Bills and Payments', description: 'Open the household bills on the phone: see what is due, pay a bill or turn automatic payment on or off.',
+    icon: 'money', kind: 'self', behavior: 'openBills', posture: 'standing',
+    anims: { perform: 'phone' },
+    duration: { kind: 'fixed', minutes: 2 },
+    autonomy: { enabled: false, ads: {}, tags: ['money', 'phone'] },
+  }),
+  def({
+    id: 'checkMailbox', name: 'Check the Mailbox', description: 'Collect the post and open the household bills: see what is due and pay it.',
+    icon: 'money', kind: 'self', behavior: 'openBills', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 3 },
+    autonomy: { enabled: false, ads: {}, tags: ['money', 'home'] },
+  }),
+  def({
+    id: 'phoneJobs', name: 'Find a Job or Quit', description: 'Open the career panel on the phone: apply for a job, quit the current one or change how hard to work.',
+    icon: 'briefcase', kind: 'self', behavior: 'openCareers', posture: 'standing',
+    anims: { perform: 'phone' },
+    duration: { kind: 'fixed', minutes: 3 },
+    autonomy: { enabled: false, ads: {}, tags: ['career', 'phone'] },
   }),
 ];
 

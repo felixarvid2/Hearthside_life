@@ -110,4 +110,128 @@ describe('careers', () => {
     expect(careerEvents(h, 'promoted')).toHaveLength(1);
     expect(h.holder.state.people[w.mira]!.memories.some((m) => m.kind === 'promotion')).toBe(true);
   });
+
+  it('promotion also needs the level\'s days worked in the career', () => {
+    const { w, h } = workday();
+    h.content.careers.culinary!.levels[0]!.promotion = { performance: 0, skills: {}, days: 2 };
+    const mira = h.holder.state.people[w.mira]!;
+    mira.career!.performance = 50;
+    until(h, atDayMinute(0, 17 * 60) + 1);
+    expect(mira.career!.daysWorked).toBe(1);
+    expect(mira.career!.level).toBe(1);
+    expect(careerEvents(h, 'promoted')).toHaveLength(0);
+    until(h, atDayMinute(1, 17 * 60) + 1);
+    expect(mira.career!.daysWorked).toBe(2);
+    expect(mira.career!.level).toBe(2);
+    expect(careerEvents(h, 'promoted')).toHaveLength(1);
+  });
+
+  it('promotion also needs a friendship outside the household when the level asks for one', () => {
+    const { w, h } = workday();
+    h.content.careers.culinary!.levels[0]!.promotion = { performance: 0, skills: {}, relationship: { minFriendship: 20, label: 'A friendly colleague' } };
+    const mira = h.holder.state.people[w.mira]!;
+    mira.career!.performance = 10;
+    until(h, atDayMinute(0, 17 * 60) + 1);
+    expect(h.holder.state.people[w.mira]!.career!.level).toBe(1);
+    expect(careerEvents(h, 'promoted')).toHaveLength(0);
+  });
+
+  it('a person near the bottom of the ladder is demoted after a bad shift', () => {
+    const { w, h } = workday();
+    const mira = h.holder.state.people[w.mira]!;
+    mira.career!.level = 2;
+    mira.career!.performance = -100;
+    until(h, atDayMinute(0, 17 * 60) + 1);
+    expect(h.holder.state.people[w.mira]!.career!.level).toBe(1);
+    expect(careerEvents(h, 'demoted')).toHaveLength(1);
+  });
+});
+
+describe('career choices', () => {
+  it('joining a career starts at level 1; quitting cancels the next shift and pays nothing', () => {
+    const w = buildWorld({ autonomy: false, visitors: false, neighbour: false });
+    setNeeds(w.state, w.mira, 80);
+    const h = harness(w.state);
+    expect(h.sim.joinCareer(w.mira, 'culinary')).toEqual({ ok: true });
+    const mira = () => h.holder.state.people[w.mira]!;
+    expect(mira().career).toMatchObject({ careerId: 'culinary', level: 1, performance: 0, effort: 'normal', daysWorked: 0 });
+    expect(careerEvents(h, 'joined')).toHaveLength(1);
+    expect(h.sim.joinCareer(w.mira, 'culinary')).toMatchObject({ ok: false });
+    h.sim.setCareerEffort(w.mira, 'hard');
+    expect(mira().career!.effort).toBe('hard');
+    expect(h.sim.quitCareer(w.mira)).toEqual({ ok: true });
+    expect(mira().career).toBeNull();
+    expect(careerEvents(h, 'quit')).toHaveLength(1);
+    until(h, atDayMinute(0, 18 * 60));
+    expect(wages(h)).toHaveLength(0);
+    expect(mira().career).toBeNull();
+  });
+
+  it('quitting mid-shift returns the person home and stops a later payment', () => {
+    const { w, h } = workday();
+    runUntil(h, () => h.holder.state.people[w.mira]!.location.kind === 'offlot', 4 * 60);
+    expect(h.holder.state.people[w.mira]!.location.kind).toBe('offlot');
+    expect(h.sim.quitCareer(w.mira)).toEqual({ ok: true });
+    expect(h.holder.state.people[w.mira]!.career).toBeNull();
+    expect(h.holder.state.people[w.mira]!.location.kind).toBe('lot');
+    until(h, atDayMinute(0, 18 * 60));
+    expect(wages(h)).toHaveLength(0);
+  });
+
+  it('working hard builds more performance than slacking off', () => {
+    const run = (effort: 'slack' | 'hard') => {
+      const { w, h } = workday();
+      h.sim.setCareerEffort(w.mira, effort);
+      until(h, atDayMinute(0, 17 * 60) + 1);
+      return h.holder.state.people[w.mira]!;
+    };
+    const slack = run('slack');
+    const hard = run('hard');
+    expect(hard.career!.performance).toBeGreaterThan(slack.career!.performance);
+    expect(hard.needs.energy).toBeLessThan(slack.needs.energy);
+  });
+
+  it('an on-the-job decision can be answered once and pays its bonus once', () => {
+    const { w, h } = workday();
+    h.content.careerEvents = {
+      'test-bonus': {
+        id: 'test-bonus', title: 'Extra order', text: 'A table asks for a special dish.',
+        options: [
+          { id: 'cook', label: 'Cook it', description: '', performance: 5, pay: 2500, result: 'cooked a special order.', moodlet: 'goodTunes' },
+          { id: 'refuse', label: 'Refuse', description: '', performance: -5, result: 'turned the table away.' },
+        ],
+      },
+    };
+    until(h, atDayMinute(0, 9 * 60));
+    const mira = () => h.holder.state.people[w.mira]!;
+    mira().career!.pendingEvent = { eventId: 'test-bonus', day: 0 };
+    const before = mira().career!.performance;
+    const funds = Object.values(h.holder.state.households).find((x) => x.isPlayable)!.funds;
+    expect(h.sim.resolveCareerEvent(w.mira, 'cook')).toEqual({ ok: true });
+    expect(mira().career!.performance).toBe(before + 5);
+    expect(Object.values(h.holder.state.households).find((x) => x.isPlayable)!.funds).toBe(funds + 2500);
+    expect(h.sim.resolveCareerEvent(w.mira, 'cook')).toMatchObject({ ok: false });
+    expect(Object.values(h.holder.state.households).find((x) => x.isPlayable)!.funds).toBe(funds + 2500);
+    // Losing the "chosen" marker (an edited or older save) cannot pay the same decision twice either.
+    mira().career!.pendingEvent!.chosen = undefined;
+    expect(h.sim.resolveCareerEvent(w.mira, 'cook')).toEqual({ ok: true });
+    expect(mira().career!.performance).toBe(before + 5);
+    expect(Object.values(h.holder.state.households).find((x) => x.isPlayable)!.funds).toBe(funds + 2500);
+  });
+
+  it('an unanswered decision resolves to its first option at the end of the shift', () => {
+    const { w, h } = workday();
+    h.content.careerEvents = {
+      'test-bonus': {
+        id: 'test-bonus', title: 'Extra order', text: 'A table asks for a special dish.',
+        options: [{ id: 'cook', label: 'Cook it', description: '', performance: 5, pay: 2500, result: 'cooked a special order.' }],
+      },
+    };
+    until(h, atDayMinute(0, 9 * 60));
+    h.holder.state.people[w.mira]!.career!.pendingEvent = { eventId: 'test-bonus', day: 0 };
+    until(h, atDayMinute(0, 18 * 60));
+    expect(h.holder.state.people[w.mira]!.career!.pendingEvent).toBeNull();
+    expect(h.holder.state.people[w.mira]!.career!.performance).toBeGreaterThan(0);
+    expect(Object.values(h.holder.state.households).find((x) => x.isPlayable)!.ledger.filter((l) => l.kind === 'career')).toHaveLength(1);
+  });
 });

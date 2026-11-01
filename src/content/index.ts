@@ -10,6 +10,7 @@ import { TRAITS } from './traits';
 import { ASPIRATIONS } from './aspirations';
 import { SKILLS } from './skills';
 import { CAREERS } from './careers';
+import { CAREER_EVENTS } from './careerEvents';
 import { MOODLETS } from './moodlets';
 import { RECIPES } from './recipes';
 import { PACKS } from './packs';
@@ -42,6 +43,7 @@ export function buildContentDB(): ContentDB {
     aspirations: byId('aspiration', ASPIRATIONS),
     skills: byId('skill', SKILLS),
     careers: byId('career', CAREERS),
+    careerEvents: byId('career event', CAREER_EVENTS),
     moodlets: byId('moodlet', MOODLETS),
     recipes: byId('recipe', RECIPES),
     packs: byId('pack', PACKS),

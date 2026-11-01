@@ -5,7 +5,7 @@ import type { Id } from '../../core/types';
 import type { BuildSession } from '../build/buildSession';
 import type { TutorialSignal } from './tutorialSteps';
 
-export type ShellPanelKind = 'person' | 'feed' | 'ledger';
+export type ShellPanelKind = 'person' | 'feed' | 'ledger' | 'bills';
 export type PersonTab = 'needs' | 'queue' | 'relationships' | 'career' | 'skills' | 'aspiration' | 'traits';
 
 export interface Shell {

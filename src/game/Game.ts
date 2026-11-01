@@ -434,6 +434,15 @@ export class Game implements GameAPI {
   planEvent(req: PlanEventRequest): Result & { eventId?: Id } { return this.core.planEvent(req); }
   cancelEvent(eventId: Id): Result { return this.core.cancelEvent(eventId); }
 
+  // ---- careers and household economy (Milestone 6) ----
+
+  payBill(personId: Id, billId: Id): Result & { amount?: number } { return this.core.payBill(personId, billId); }
+  setAutoPayBills(personId: Id, on: boolean): Result { return this.core.setAutoPayBills(personId, on); }
+  joinCareer(personId: Id, careerId: string): Result { return this.core.joinCareer(personId, careerId); }
+  quitCareer(personId: Id): Result { return this.core.quitCareer(personId); }
+  setCareerEffort(personId: Id, effort: 'slack' | 'normal' | 'hard'): Result { return this.core.setCareerEffort(personId, effort); }
+  resolveCareerEvent(personId: Id, optionId: string): Result { return this.core.resolveCareerEvent(personId, optionId); }
+
   setMode(m: 'live' | 'buy' | 'build'): void { this.core.setMode(m); }
 
   // ---- buy ----

@@ -38,7 +38,7 @@ export interface Hud {
   onPortraits(): void;
   markFeedSeen(): void;
   /** Reflects which shell panel is open on the feed and funds buttons. */
-  setOpenPanel(kind: 'person' | 'feed' | 'ledger' | null): void;
+  setOpenPanel(kind: 'person' | 'feed' | 'ledger' | 'bills' | null): void;
   resetFeed(): void;
   destroy(): void;
 }
@@ -264,7 +264,7 @@ export function createHud(sh: Shell): Hud {
     markFeedSeen: () => { feedSeen = api.state()?.feed.at(-1)?.id ?? ''; refresh(); },
     setOpenPanel: (kind) => {
       feedBtn.setAttribute('aria-expanded', String(kind === 'feed'));
-      fundsBtn.setAttribute('aria-expanded', String(kind === 'ledger'));
+      fundsBtn.setAttribute('aria-expanded', String(kind === 'ledger' || kind === 'bills'));
     },
     resetFeed: () => { feedSeen = null; },
     destroy: () => { unsubLayout(); el.remove(); },

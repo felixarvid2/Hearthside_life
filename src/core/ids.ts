@@ -4,7 +4,7 @@
 import type { WorldState } from './types';
 
 export type IdPrefix =
-  | 'hh' | 'per' | 'lot' | 'obj' | 'opn' | 'act' | 'mem' | 'led' | 'feed' | 'itm' | 'out' | 'evt';
+  | 'hh' | 'per' | 'lot' | 'obj' | 'opn' | 'act' | 'mem' | 'led' | 'feed' | 'itm' | 'out' | 'evt' | 'bill';
 
 export function newId(state: Pick<WorldState, 'nextId'>, prefix: IdPrefix): string {
   const n = state.nextId++;

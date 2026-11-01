@@ -250,15 +250,27 @@ export function shiftStatusText(state: WorldState, career: CareerState, lvl: Car
 
 export interface PromotionReq { text: string; met: boolean }
 
-export function promotionRequirements(db: ContentDB, person: Person, career: CareerState): PromotionReq[] | null {
+export function promotionRequirements(db: ContentDB, person: Person, career: CareerState, state?: WorldState): PromotionReq[] | null {
   const def = db.careers[career.careerId];
   const lvl = def?.levels.find((l) => l.level === career.level);
   if (!def || !lvl) return null;
   if (career.level >= def.levels.length) return [];
   const reqs: PromotionReq[] = [{ text: `Performance ${lvl.promotion.performance} or higher (now ${Math.round(career.performance)})`, met: career.performance >= lvl.promotion.performance }];
+  const days = lvl.promotion.days ?? 0;
+  if (days > 0) reqs.push({ text: `Work ${days} days in this career (now ${career.daysWorked})`, met: career.daysWorked >= days });
   for (const [skillId, level] of Object.entries(lvl.promotion.skills)) {
     const have = person.skills[skillId]?.level ?? 0;
     reqs.push({ text: `${db.skills[skillId]?.name ?? humanize(skillId)} level ${level} (now ${have})`, met: have >= level });
+  }
+  const rel = lvl.promotion.relationship;
+  if (rel) {
+    const household = state?.households[person.householdId];
+    const met = !!state && Object.values(state.relationships).some((r) => {
+      if (r.from !== person.id || r.friendship < rel.minFriendship) return false;
+      if (!state.people[r.to] || household?.memberIds.includes(r.to)) return false;
+      return (state.relationships[pairKey(r.to, person.id)]?.friendship ?? 0) >= rel.minFriendship;
+    });
+    reqs.push({ text: `${rel.label} (friendship ${rel.minFriendship}+)`, met });
   }
   return reqs;
 }

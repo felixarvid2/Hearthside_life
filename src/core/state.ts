@@ -21,7 +21,7 @@ export function createEmptyWorld(seed: number, startMode: StartMode): WorldState
     rng: seedRng(seed),
     nextId: 1,
     clock: { minutes: START_MINUTE, ticks: 0 },
-    settings: { autonomy: true, autonomyLevel: 1, unlimitedFunds: startMode === 'sandbox', aging: 'off', visitors: true },
+    settings: { autonomy: true, autonomyLevel: 1, unlimitedFunds: startMode === 'sandbox', aging: 'off', visitors: true, autoPayBills: false },
     startMode,
     activeHouseholdId: '',
     activeLotId: '',
@@ -35,6 +35,7 @@ export function createEmptyWorld(seed: number, startMode: StartMode): WorldState
     feed: [],
     items: {},
     homeEvents: [],
+    bills: [],
   };
 }
 

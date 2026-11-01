@@ -2,71 +2,71 @@
 
 Generated with `npm run content:check -- --markdown` (tools/content-report.ts). Counts are **distinct designs**; palettes, swatches and colours are variants and never counted as designs. Entries with status `dev` are not selectable in the game and are not counted toward targets.
 
-Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met, as are the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows), the Milestone 3 character minimums (24 hairstyles, 48 garments, 12 accessories, 20 traits), the Milestone 4 furniture minimum (100 distinct furniture designs) and the Milestone 5 social minimum (24 social interactions). Full-project targets are delivered in Milestone 10.
+Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met, as are the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows), the Milestone 3 character minimums (24 hairstyles, 48 garments, 12 accessories, 20 traits), the Milestone 4 furniture minimum (100 distinct furniture designs), the Milestone 5 social minimum (24 social interactions) and the Milestone 6 career minimum (6 careers with 10 levels each, 10 ready skills and 6 aspirations). Full-project targets are delivered in Milestone 10.
 
 ### Buy-mode furniture (distinct designs)
 
-| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | full target |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| seating | 19 | 0 | 288 | - | - | - | - | 64 |
-| beds | 5 | 0 | 70 | - | - | - | - | 40 |
-| tables | 11 | 0 | 110 | - | - | - | - | 48 |
-| storage | 9 | 0 | 91 | - | - | - | - | 48 |
-| kitchen | 19 | 0 | 163 | - | - | - | - | 56 |
-| bathroom | 9 | 0 | 16 | - | - | - | - | 36 |
-| lighting | 7 | 0 | 44 | - | - | - | - | 64 |
-| electronics | 7 | 0 | 45 | - | - | - | - | 28 |
-| hobby | 5 | 0 | 46 | - | - | - | - | 36 |
-| decor | 10 | 0 | 72 | - | - | - | - | 64 |
-| outdoor | 7 | 0 | 71 | - | - | - | - | 40 |
-| kids | 3 | 0 | 42 | - | - | - | - | 36 |
-| TOTAL furniture | 111 | 0 | 1058 | 15 | 60 | - | 100 | 560 |
+| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| seating | 19 | 0 | 288 | - | - | - | - | - | 64 |
+| beds | 5 | 0 | 70 | - | - | - | - | - | 40 |
+| tables | 11 | 0 | 110 | - | - | - | - | - | 48 |
+| storage | 9 | 0 | 91 | - | - | - | - | - | 48 |
+| kitchen | 19 | 0 | 163 | - | - | - | - | - | 56 |
+| bathroom | 9 | 0 | 16 | - | - | - | - | - | 36 |
+| lighting | 7 | 0 | 44 | - | - | - | - | - | 64 |
+| electronics | 7 | 0 | 45 | - | - | - | - | - | 28 |
+| hobby | 5 | 0 | 46 | - | - | - | - | - | 36 |
+| decor | 10 | 0 | 72 | - | - | - | - | - | 64 |
+| outdoor | 7 | 0 | 71 | - | - | - | - | - | 40 |
+| kids | 3 | 0 | 42 | - | - | - | - | - | 36 |
+| TOTAL furniture | 111 | 0 | 1058 | 15 | 60 | - | 100 | - | 560 |
 
 variants = finish swatches summed over all regions of ready objects; 19 ready designs are decorative, 102 offer at least 6 swatches in a region; distinct models used: 111.
 
 ### Construction surfaces
 
-| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | full target |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| wall finishes | 50 | 0 | 433 | 12 | 48 | - | - | 360 |
-| floor designs | 32 | 0 | 224 | 8 | 32 | - | - | 200 |
-| doors | 9 | 0 | - | - | 6 | - | - | 48 |
-| windows | 11 | 0 | - | - | 8 | - | - | 64 |
+| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| wall finishes | 50 | 0 | 433 | 12 | 48 | - | - | - | 360 |
+| floor designs | 32 | 0 | 224 | 8 | 32 | - | - | - | 200 |
+| doors | 9 | 0 | - | - | 6 | - | - | - | 48 |
+| windows | 11 | 0 | - | - | 8 | - | - | - | 64 |
 
 variants = curated palettes of ready designs (a design counts once however many palettes it has).
 
 ### Character content
 
-| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | full target |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| hairstyles | 28 | 0 | 18 colours | 8 | - | 24 | - | 60 |
-| facial hair | 5 | 0 | - | - | - | - | - | 16 |
-| garments | 54 | 0 | 154 | 12 | - | 48 | - | 132 |
-| accessories | 15 | 0 | 7 kinds | - | - | 12 | - | 32 |
-| patterns | 7 | 0 | - | - | - | - | - | - |
-| face presets | 24 | 0 | 18 sliders | - | - | - | - | - |
-| body presets | 12 | 0 | 10 sliders | - | - | - | - | - |
-| brow styles | 8 | 0 | - | - | - | - | - | - |
-| voices | 6 | 0 | - | - | - | - | - | - |
-| skin tones | 16 | 0 | - | - | - | - | - | - |
-| eye colours | 12 | 0 | - | - | - | - | - | - |
+| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| hairstyles | 28 | 0 | 18 colours | 8 | - | 24 | - | - | 60 |
+| facial hair | 5 | 0 | - | - | - | - | - | - | 16 |
+| garments | 54 | 0 | 154 | 12 | - | 48 | - | - | 132 |
+| accessories | 15 | 0 | 7 kinds | - | - | 12 | - | - | 32 |
+| patterns | 7 | 0 | - | - | - | - | - | - | - |
+| face presets | 24 | 0 | 18 sliders | - | - | - | - | - | - |
+| body presets | 12 | 0 | 10 sliders | - | - | - | - | - | - |
+| brow styles | 8 | 0 | - | - | - | - | - | - | - |
+| voices | 6 | 0 | - | - | - | - | - | - | - |
+| skin tones | 16 | 0 | - | - | - | - | - | - | - |
+| eye colours | 12 | 0 | - | - | - | - | - | - | - |
 
 garment variants = solid plus allowed patterns per ready garment (colours are free choice).
 
 ### Gameplay content
 
-| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | full target |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| activities | 42 | 0 | - | - | - | - | - | 40 |
-| social interactions | 35 | 0 | 0 also activities | - | - | - | - | 40 |
-| traits | 20 | 0 | - | - | - | 20 | - | 40 |
-| aspirations | 6 | 0 | 18 stages | - | - | - | - | 12 |
-| skills | 9 | 7 | - | - | - | - | - | 16 |
-| careers (10 levels) | 1 | 0 | 10 levels | 1 | - | - | - | 12 |
-| recipes | 6 | 0 | - | - | - | - | - | - |
-| moodlets | 83 | 0 | - | - | - | - | - | - |
-| packs | 12 | 0 | - | - | - | - | - | 12 |
-| preferences | 34 | 0 | 5 groups | - | - | - | - | - |
+| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| activities | 51 | 0 | - | - | - | - | - | - | 40 |
+| social interactions | 35 | 0 | 0 also activities | - | - | - | - | - | 40 |
+| traits | 20 | 0 | - | - | - | 20 | - | - | 40 |
+| aspirations | 8 | 0 | 24 stages | - | - | - | - | 6 | 12 |
+| skills | 10 | 6 | - | - | - | - | - | 10 | 16 |
+| careers (10 levels) | 7 | 0 | 70 levels | 1 | - | - | - | 6 | 12 |
+| recipes | 6 | 0 | - | - | - | - | - | - | - |
+| moodlets | 86 | 0 | - | - | - | - | - | - | - |
+| packs | 12 | 0 | - | - | - | - | - | - | 12 |
+| preferences | 34 | 0 | 5 groups | - | - | - | - | - | - |
 
 activities exclude moves and menus (behaviors goHere, goToWork, leaveLot, editOutfits); no social is also counted as an activity.
 

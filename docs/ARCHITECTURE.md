@@ -53,10 +53,10 @@ Read `src/core/types.ts`, `src/content/types.ts` and the files in `src/core/` be
 |---|---|---|
 | `src/core/` | main session | types, ids, rng, clock, money, geometry, events, commands, state helpers, nav contract, drafts, anim ids |
 | `src/content/types.ts`, `src/content/index.ts` | main session | definition types and the registry aggregator |
-| `src/content/{objects,interactions,socials,traits,aspirations,skills,careers,moodlets,recipes,packs,preferences}.ts`, `src/content/validate.ts`, `tools/content-report.ts` | content | gameplay data and validation |
+| `src/content/{objects,interactions,socials,traits,aspirations,skills,careers,careerEvents,moodlets,recipes,packs,preferences}.ts`, `src/content/validate.ts`, `tools/content-report.ts` | content | gameplay data and validation |
 | `src/content/surfaces.ts`, `surfaces2.ts`, `src/render/textures/` | surfaces | wall and floor designs, door/window defs, procedural and detail-map painters (`public/assets/surfaces`), texture cache, thumbnails |
 | `src/world/`, `src/building/` | world | lots, walls, rooms, navigation, placement, starter lots, build/buy commands |
-| `src/sim/` | sim | people, needs, moods, actions, reservations, autonomy, social, relationships, careers, skills, aspirations, visitors |
+| `src/sim/` | sim | people, needs, moods, actions, reservations, autonomy, social, relationships, careers, skills, aspirations, economy and bills, visitors |
 | `src/characters/`, `src/content/character.ts` | characters | rig assembly, body/face deformation, procedural hair and clothing, animation, creator model |
 | `src/persistence/` | persistence | IndexedDB saves, slots, autosave, backup, migrations, import/export, templates |
 | `src/render/` (except textures), `src/game/` | render | renderer, camera, lot/object/people views, picking, overlays, game loop and GameAPI |
@@ -304,15 +304,20 @@ and floor designs `oak-planks`, `checker-tile`, `carpet-plush`, `hex-mosaic`, `s
 (with `palettes[0]` as the default). Openings `door-panel` (door), `door-glazed` (door), `window-sash`,
 `window-wide` (windows), all 1 tile wide.
 
-**Careers**: `culinary` with 10 levels (M1's off-lot career). **Skills**: all 16 defined; M1 activities train
-cooking, logic, programming, charisma, fitness, gardening, music.
+**Careers**: seven 10-level tracks - `culinary`, `journalism`, `software`, `medicine`, `music`, `business` and
+`landscaping` - each with its own schedule, wage curve and promotion requirements (see below). **Skills**: 16
+defined, 10 of them `ready` (cooking, logic, programming, handiness, gardening, painting, music, writing,
+charisma, fitness); activities, work and freelance jobs train them.
 
 ## Simulation flow per tick
 
 1. Advance clock by `TICK_MINUTES`.
 2. Process due `state.schedule` entries in time order (each occurrence once).
 3. Careers: start commutes for shifts starting within 60 min (autonomy or player `goToWork`), mark missed
-   shifts, return people whose shift ended, pay once per completed/partial shift.
+   shifts, return people whose shift ended, pay once per completed/partial shift. At most one on-the-job
+   decision per shift is offered (answered in the Career tab, defaults to its first option at shift end).
+3b. Bills: issue this week's household bill, apply a late fee once past the due date, cut utilities off once
+   past the grace period, and repair a stale power flag.
 4. Needs decay for everyone (traits, posture, object quality); off-lot people decay at a reduced rate.
 5. Run each on-lot person's current action through its phases:
    validate -> reserve -> route -> prepare -> perform -> apply -> cleanup.
@@ -416,3 +421,76 @@ Pure code (no three, no DOM), tested in `tests/unit/sim/{relationships,romance,m
 **Saves**: all new fields are optional (`Relationship.label`, `Relationship.romanceBlocked`, `Memory.resolved`, `WorldState.homeEvents`,
 `ScheduledEvent.kind` `eventStart`/`eventEnd`). `persistence/schema.ts fillSocialDefaults` drops unknown labels and malformed events;
 the schema version stays 1.
+
+## Careers and economy (Milestone 6)
+
+Pure code (no three, no DOM), tested in `tests/unit/sim/{careers,freelance,economy,aspirations}.test.ts`,
+`tests/unit/persistence/economy.test.ts` and the headless playtest `tests/unit/integration/economy.test.ts`.
+The acceptance run drives the career tab, a bill payment and a freelance sale through the real UI (step 8).
+
+**Content**: seven 10-level careers - culinary, journalism, software, medicine, music, business and landscaping -
+each with a title, hourly wage, weekly work days, start/end time, promotion requirements (performance, skill
+levels, days worked, sometimes a friendly colleague outside the household) and perks. Ten ready skills cover
+them; every career's skills are trained by at least one in-game activity or freelance job. Eight aspirations
+include `successful-career` (reach a career level) and `fortune-builder` (household funds), plus the M6 objective
+kinds `careerLevel`, `ownObjects` with `bought: true` and `homeValue`. Five `CareerEventDef`s
+(`src/content/careerEvents.ts`) are small on-the-job decisions with a performance change, optional pay (positive
+or negative) and an optional skill or moodlet effect.
+
+**Careers** (`src/sim/careers.ts`, state in `Person.career: CareerState`)
+- `CareerState { careerId, level, performance -100..100, joinedAt, daysWorked, shift, effort, pendingEvent }`.
+   `Shift` is `{ occurrence, status: upcoming | commuting | atWork | done | missed, workedMinutes, lateMinutes }`.
+- A shift occurrence is `shift:<personId>:<day>`; the person autonomously queues `goToWork`
+  `COMMUTE_LEAD_MINUTES` (45) before the start while on the lot, and the player may cancel or start it from the
+  phone/computer. Reaching the lot entry goes off-lot; a shift counts once it was already open when the person
+  joined. Not arriving by the shift's midpoint is a missed shift (`MISSED_SHIFT_PERFORMANCE` -15 plus a moodlet).
+- Pay is `hourlyWage x workedMinutes / 60`, paid once at shift end with occurrence `pay:<personId>:<day>`
+  through `transact`; lateness shortens the paid time. The shift also trains the career's skills.
+- Performance is added at the start of a shift from mood, traits, relevant skill levels, an energy/fun penalty
+  and the chosen effort (`hard` +3, `normal` 0, `slack` -4), and again at the end from completion, lateness,
+  effort and skill fit. Hard work costs 8 energy, slacking leaves 4 more.
+- Promotion is checked after each shift against the current level's `promotion` (performance, skills, days and
+  an optional mutual friendship outside the household); on success the person moves up and performance resets
+  to 10. Performance at or below `DEMOTION_PERFORMANCE` (-60) demotes one level (not below 1), checked on
+  promotion failure and on a missed shift.
+- Player commands: `joinCareer` (level 1, effort normal), `quitCareer` (cancels an upcoming/running shift
+  without pay and brings an at-work person home), `setCareerEffort`, `resolveCareerEvent`. A pending career
+  event is shown in the Career tab; if unanswered it resolves to its first option at the end of the shift.
+  Occurrences `careerevent:<personId>:<day>` / `careereventpay:<personId>:<day>` make the outcome once-only.
+- `careerInfo()` gives the UI the title, level, performance, next shift, expected pay and lateness; `shiftText()`
+  formats the schedule.
+
+**Freelance income** (`src/sim/behaviors.ts`, behavior `freelance`)
+- Interactions: `writeArticle`, `writeBook`, `programGig`, `paintToSell`, `busk`, each training its skill.
+  Base fees are 1800 / 9000 / 3200 / 2400 / 600 cents; the fee is
+  `max(100, round(base x (0.55 + skillLevel x 0.12)))`, so a better skill pays more. At completion the fee is
+  paid once through `transact` with occurrence `freelance:<personId>:<actionId>` and a feed line; an interrupted
+  action pays nothing and replay/save cannot pay twice.
+
+**Bills** (`src/sim/economy.ts`, `Bill[]` in `WorldState.bills`)
+- One bill per playable household per game week (`billWeek`, 7 days from the start), occurrence
+  `bill:<householdId>:<week>`. The amount is property tax (0.25 % of land value plus placed objects and
+  openings, minimum $45) plus utilities ($22 base + $5 per electronics + $9 per appliance on the home lot).
+  Bills are due after 3 days and go overdue with a 10 % late fee (minimum $5) once (`billlate:<id>`); after two
+  more days the utilities are cut off (`billcut:<id>`), `Household.powerOff` is set and a feed warning is posted.
+  The bill list is capped at 16, dropping paid old bills first.
+- Payment is `payBill` -> `transact(..., -amount, 'bill', ..., { occurrence: 'billpay:<billId>' })`, so the
+  charge applies at most once across save/load; paying restores power when no cut-off bill remains. Auto-pay
+  (`settings.autoPayBills`, toggled in the Bills panel) pays each bill as it is issued and reports a failure in
+  the feed. `powerIsOff`/`needsPower` block electronics and appliances with the reason `Power is off`;
+  `updateBills` also repairs a stale `powerOff` flag on load.
+- API/UI: `GameAPI.bills/payBill/setAutoPayBills`; `ui/hud/billsPanel.ts` (opened from the funds/ledger panel,
+  the phone's "Bills and payments", or the mailbox) shows owed total, due dates, late fees, power state,
+  auto-pay and Pay buttons. The Career tab of the person panel (`ui/hud/personPanel.ts`) shows the job, level,
+  performance bar, next requirements, schedule, pay, effort segmented control, pending decision, join list and
+  Quit. The phone/computer offer job search; the phone and mailbox open bills.
+
+**Aspirations**: stage rewards are paid once through `transact` with occurrence
+`aspiration:<personId>:<aspirationId>:<stage>`. `ownObjects` objectives may set `bought: true`, which ignores
+objects present in the starter house (`boughtAt` before `START_MINUTE`), so Bookworm no longer counts the
+starter bookcases.
+
+**Saves**: all M6 fields are optional additions to schema 1 - `Bill` (with `paidAt`/`cutOffAt`), `WorldState.bills`,
+`Household.powerOff`, `settings.autoPayBills`, `CareerState.effort`/`pendingEvent`. `fillEconomyDefaults` in
+`persistence/schema.ts` drops malformed bills, unknown efforts, bad pending decisions and non-boolean flags;
+old saves load unchanged.
