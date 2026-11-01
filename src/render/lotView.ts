@@ -12,12 +12,12 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ContentDB, OpeningDef, SurfaceDesign } from '../content/types';
-import { edgeKey, tileKey } from '../core/ids';
+import { edgeKey, parseEdgeKey, tileKey } from '../core/ids';
 import type { CutawayMode } from '../game/api';
 import type { PaintHighlight } from '../game/GameCore';
-import type { FinishRef, Lot, Wall } from '../core/types';
+import type { FinishRef, Lot, Opening, Wall } from '../core/types';
 import { computeRooms } from '../world/rooms';
-import { tileOnSide } from '../world/walls';
+import { openingEdgeKeys, openingsByWall, tileOnSide } from '../world/walls';
 import { buildOpeningMesh, openingCutout, setDoorOpen, WALL_THICKNESS } from './openingMeshes';
 import { getSurfaceTexture, releaseSurfaceTexture, type TextureQuality } from './textures/surfaceTextures';
 import { GeoBuilder, type V3 } from './geo';
@@ -46,6 +46,8 @@ export class LotView {
   /** Wall ids currently drawn lowered. */
   private lowered = new Set<string>();
   private indoor: Uint8Array = new Uint8Array(0);
+  /** Wall edge -> the opening covering it (every spanned edge of a wide opening maps to the same opening). */
+  private openingByEdge: Record<string, Opening> = {};
   private mode: CutawayMode = 'cutaway';
   private viewDir = new THREE.Vector3(1, 0, 1);
   private readonly materials = new Map<string, { mat: THREE.MeshStandardMaterial; tex: THREE.Texture | null }>();
@@ -111,6 +113,7 @@ export class LotView {
   /** Full rebuild for a lot (floors, walls, openings). */
   build(lot: Lot): void {
     this.lot = lot;
+    this.openingByEdge = openingsByWall(lot);
     this.computeIndoor();
     this.computeLowered();
     this.buildFloors();
@@ -239,17 +242,36 @@ export class LotView {
   // Walls
   // ---------------------------------------------------------------------------------------------
 
+  /** The hole an opening cuts, in coordinates along its wall run (start edge + width / 2 is the centre). */
+  private holeOf(o: Opening, H: number): Hole | null {
+    const def = this.content.openings[o.defId];
+    if (!def) return null;
+    const c = openingCutout(def);
+    if (c.bottom >= H - 0.01) return null;
+    const e = parseEdgeKey(o.wallId);
+    const centre = (e.dir === 'h' ? e.x : e.z) + def.width / 2;
+    return { a: centre - c.halfWidth, b: centre + c.halfWidth, bottom: c.bottom, top: Math.min(c.top, H) };
+  }
+
+  /** Holes in one wall edge. A wide opening cuts every edge it spans (the hole is clipped to each edge when drawn). */
   private holesFor(w: Wall, H: number): Hole[] {
-    const lot = this.lot!;
-    const out: Hole[] = [];
-    for (const o of Object.values(lot.openings)) {
-      if (o.wallId !== w.id) continue;
-      const def = this.content.openings[o.defId];
-      if (!def) continue;
-      const c = openingCutout(def);
-      if (c.bottom >= H - 0.01) continue;
-      const centre = (w.dir === 'h' ? w.x : w.z) + def.width / 2;
-      out.push({ a: centre - c.halfWidth, b: centre + c.halfWidth, bottom: c.bottom, top: Math.min(c.top, H) });
+    const o = this.openingByEdge[w.id];
+    const hole = o ? this.holeOf(o, H) : null;
+    return hole ? [hole] : [];
+  }
+
+  /** Holes through the posts at grid vertices strictly inside a wide opening, keyed `x,z`. */
+  private postHoles(H: number): Map<string, Hole> {
+    const out = new Map<string, Hole>();
+    for (const o of Object.values(this.lot!.openings)) {
+      const keys = openingEdgeKeys(o);
+      if (keys.length < 2) continue;
+      const hole = this.holeOf(o, H);
+      if (!hole) continue;
+      for (let i = 1; i < keys.length; i++) {
+        const e = parseEdgeKey(keys[i]!);
+        out.set(`${e.x},${e.z}`, hole);
+      }
     }
     return out;
   }
@@ -290,13 +312,15 @@ export class LotView {
             [[q.s0 / r, q.y0 / TEX_H], [q.s1 / r, q.y0 / TEX_H], [q.s1 / r, q.y1 / TEX_H], [q.s0 / r, q.y1 / TEX_H]]);
         }
       }
-      // hole reveals
+      // hole reveals (clipped to this edge: a wide opening continues in the next one)
       for (const h of holes) {
         const lo = plane - HT, hi = plane + HT;
-        trim.quad(P(h.a, h.bottom, lo), P(h.a, h.bottom, hi), P(h.a, h.top, hi), P(h.a, h.top, lo), S(1));
-        trim.quad(P(h.b, h.bottom, lo), P(h.b, h.bottom, hi), P(h.b, h.top, hi), P(h.b, h.top, lo), S(-1));
-        if (h.top < H - 0.001) trim.quad(P(h.a, h.top, lo), P(h.b, h.top, lo), P(h.b, h.top, hi), P(h.a, h.top, hi), [0, -1, 0]);
-        if (h.bottom > 0) trim.quad(P(h.a, h.bottom, lo), P(h.b, h.bottom, lo), P(h.b, h.bottom, hi), P(h.a, h.bottom, hi), [0, 1, 0]);
+        if (h.a >= along - 1e-6 && h.a < along + 1) trim.quad(P(h.a, h.bottom, lo), P(h.a, h.bottom, hi), P(h.a, h.top, hi), P(h.a, h.top, lo), S(1));
+        if (h.b > along && h.b <= along + 1 + 1e-6) trim.quad(P(h.b, h.bottom, lo), P(h.b, h.bottom, hi), P(h.b, h.top, hi), P(h.b, h.top, lo), S(-1));
+        const ra = Math.max(h.a, along), rb = Math.min(h.b, along + 1);
+        if (rb - ra < 1e-6) continue;
+        if (h.top < H - 0.001) trim.quad(P(ra, h.top, lo), P(rb, h.top, lo), P(rb, h.top, hi), P(ra, h.top, hi), [0, -1, 0]);
+        if (h.bottom > 0) trim.quad(P(ra, h.bottom, lo), P(rb, h.bottom, lo), P(rb, h.bottom, hi), P(ra, h.bottom, hi), [0, 1, 0]);
       }
       // cap (skip over a door hole that reaches the top of a stub)
       const capRanges = capSpans(s0 + CAP_OUT, s1 - CAP_OUT, holes.filter((h) => h.top >= H - 0.001));
@@ -318,11 +342,17 @@ export class LotView {
       verts.add(`${w.x},${w.z}`);
       verts.add(w.dir === 'h' ? `${w.x + 1},${w.z}` : `${w.x},${w.z + 1}`);
     }
+    const wide = this.postHoles(2.8);
     for (const key of verts) {
       const [vx, vz] = key.split(',').map(Number) as [number, number];
       const px = has('h', vx, vz), nx = has('h', vx - 1, vz), pz = has('v', vx, vz), nz = has('v', vx, vz - 1);
       const attached = [px, nx, pz, nz].filter((w): w is Wall => !!w);
       const H = Math.max(...attached.map((w) => this.wallHeight(w)));
+      // a post inside a wide door or window gets the same hole as the walls beside it
+      const inner = wide.size ? this.postHoles(H).get(key) : undefined;
+      const spans: Array<[number, number]> = inner
+        ? [...(inner.bottom > 0 ? [[0, Math.min(inner.bottom, H)] as [number, number]] : []), ...(inner.top < H ? [[inner.top, H] as [number, number]] : [])]
+        : [[0, H]];
       const x0 = vx - HT, x1 = vx + HT, z0 = vz - HT, z1 = vz + HT;
       const vWalls = [pz, nz].filter((w): w is Wall => !!w).sort((a, b) => this.wallHeight(b) - this.wallHeight(a));
       const hWalls = [px, nx].filter((w): w is Wall => !!w).sort((a, b) => this.wallHeight(b) - this.wallHeight(a));
@@ -334,16 +364,18 @@ export class LotView {
         const f = source ? (sign > 0 ? source.sideB : source.sideA) : null;
         const b = f ? bucket(f) : trim;
         const r = f ? this.repeatOf('wall', f) : 1;
-        if (alongX) {
-          const z = sign > 0 ? z1 : z0;
-          b.quad([x0, 0, z], [x1, 0, z], [x1, H, z], [x0, H, z], [0, 0, sign], [[x0 / r, 0], [x1 / r, 0], [x1 / r, H / TEX_H], [x0 / r, H / TEX_H]]);
-        } else {
-          const x = sign > 0 ? x1 : x0;
-          b.quad([x, 0, z0], [x, 0, z1], [x, H, z1], [x, H, z0], [sign, 0, 0], [[z0 / r, 0], [z1 / r, 0], [z1 / r, H / TEX_H], [z0 / r, H / TEX_H]]);
+        for (const [y0, y1] of spans) {
+          if (alongX) {
+            const z = sign > 0 ? z1 : z0;
+            b.quad([x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], [0, 0, sign], [[x0 / r, y0 / TEX_H], [x1 / r, y0 / TEX_H], [x1 / r, y1 / TEX_H], [x0 / r, y1 / TEX_H]]);
+          } else {
+            const x = sign > 0 ? x1 : x0;
+            b.quad([x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0], [sign, 0, 0], [[z0 / r, y0 / TEX_H], [z1 / r, y0 / TEX_H], [z1 / r, y1 / TEX_H], [z0 / r, y1 / TEX_H]]);
+          }
         }
       };
       face('px', px); face('nx', nx); face('pz', pz); face('nz', nz);
-      caps.box(x0 - CAP_OUT, H, z0 - CAP_OUT, x1 + CAP_OUT, H + CAP_H, z1 + CAP_OUT, SKIP_BOTTOM);
+      if (!inner || inner.top < H - 0.001) caps.box(x0 - CAP_OUT, H, z0 - CAP_OUT, x1 + CAP_OUT, H + CAP_H, z1 + CAP_OUT, SKIP_BOTTOM);
     }
 
     for (const { f, b } of tex.values()) {
@@ -383,7 +415,7 @@ export class LotView {
       const w = lot.walls[o.wallId];
       const def: OpeningDef | undefined = this.content.openings[o.defId];
       if (!w || !def || w.level !== 0) continue;
-      if (this.lowered.has(w.id)) continue; // lowered walls show the hole only
+      if (openingEdgeKeys(o).some((k) => this.lowered.has(k))) continue; // lowered walls show the hole only
       const g = buildOpeningMesh(def, { flip: o.flip });
       const holder = new THREE.Group();
       holder.add(g);

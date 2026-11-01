@@ -53,3 +53,23 @@ export async function loadMeshyBody(frame: 'a' | 'b') {
     albedo: mat.getBaseColorTexture()!, mask: mat.getOcclusionTexture()!,
   };
 }
+
+/** A built AI hair GLB (public/assets/characters/hair/<id>.glb) as the runtime's AiHairData plus its tint map bytes and extras. */
+export async function loadAiHairFile(id: string) {
+  const doc = await new NodeIO().registerExtensions([EXTTextureWebP]).read(`${root}hair/${id}.glb`);
+  const r = doc.getRoot();
+  const prim = r.listMeshes()[0]!.listPrimitives()[0]!;
+  const color = prim.getAttribute('COLOR_0')!;
+  const shade = new Float32Array(color.getCount());
+  const tmp: number[] = [0, 0, 0, 0];
+  for (let i = 0; i < shade.length; i++) shade[i] = color.getElement(i, tmp)[0]!;
+  const mat = prim.getMaterial()!;
+  return {
+    data: {
+      id, positions: new Float32Array(prim.getAttribute('POSITION')!.getArray()!), normals: new Float32Array(prim.getAttribute('NORMAL')!.getArray()!),
+      uv: new Float32Array(prim.getAttribute('TEXCOORD_0')!.getArray()!), shade, index: new Uint32Array(prim.getIndices()!.getArray()!),
+    },
+    material: mat, texture: mat.getBaseColorTexture()!, extras: r.listNodes().find((n) => n.getMesh())!.getExtras().aiHair as Record<string, unknown>,
+    bytes: (await new NodeIO().registerExtensions([EXTTextureWebP]).writeBinary(doc)).length,
+  };
+}

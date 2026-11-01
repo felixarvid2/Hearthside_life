@@ -6,7 +6,7 @@
 import { loadCharacterAssets } from '../characters/assets';
 import { NEIGHBOR_HOUSEHOLD } from '../characters/creator';
 import { outfitFor } from '../characters/outfits';
-import type { ContentDB } from '../content/types';
+import type { ContentDB, OpeningDef } from '../content/types';
 import type { Speed } from '../core/clock';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import type { EventBus } from '../core/events';
@@ -19,6 +19,7 @@ import { portraitKey } from '../render/portraits';
 import { hasWebGL2 } from '../render/renderer';
 import { surfaceThumbnail } from '../render/textures/surfaceTextures';
 import { resolveSlots } from '../world/slots';
+import { DEFAULT_WALL_HEIGHT } from '../world/walls';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings,
   MenuOption, PaintPreview, PaintTool, PickResult, PlacementState, Result, RoomInfo, SaveSlotInfo, SoundId, UiChange,
@@ -85,7 +86,9 @@ export class Game implements GameAPI {
         if (!d) return '';
         try { return surfaceThumbnail(d, paletteId, 96); } catch { return ''; }
       },
+      opening: (defId) => this.gameView.openingThumbs.request(defId),
     };
+    this.gameView.openingThumbs.onReady = () => this.emit('thumbnails');
     this.cleanups.push(core.onChange((w) => this.onCoreChange(w)));
     this.cleanups.push(core.events.onAny((e) => {
       const v = this.gameView;
@@ -95,7 +98,7 @@ export class Game implements GameAPI {
           if (isWorldMode(core.mode())) this.showCoreWorld(true);
           this.portraitPending.clear();
           break;
-        case 'lot.changed': if (live) v.lotChanged(e.what); break;
+        case 'lot.changed': if (live) { v.lotChanged(e.what); if (this.roomHighlight) this.drawRoomHighlight(); } break;
         case 'item.changed': if (live) v.itemsChanged(); break;
         case 'person.changed':
           if (live && (e.what === 'appearance' || e.what === 'outfit' || e.what === 'all')) v.personChanged(e.personId);
@@ -223,6 +226,7 @@ export class Game implements GameAPI {
         break;
       }
       case 'paint': this.refreshPaintPreview(); break;
+      case 'build': this.refreshBuildPreview(); break;
       default: break;
     }
     this.emit(what);
@@ -247,7 +251,8 @@ export class Game implements GameAPI {
     }
     v.setObjectHighlight(m === 'buy' ? this.core.selectedObject() : null);
     if (m !== 'buy') v.setPlacement(null);
-    if (m !== 'build') { this.lastPreview = null; v.setPaintPreview(null, null, true); }
+    if (m !== 'build') { this.lastPreview = null; v.setPaintPreview(null, null, true); this.roomHighlight = null; }
+    v.setBuildGrid(m === 'build');
   }
 
   /** Shows the core's world; frames the house when the world is new to the view. */
@@ -273,6 +278,37 @@ export class Game implements GameAPI {
     const h = this.core.paintPreviewTarget();
     const finish = tool && tool.kind !== 'eyedropper' ? tool.finish : null;
     this.gameView.setPaintPreview(h, finish, this.lastPreview?.ok ?? true);
+  }
+
+  /** Draws the build tool's preview (ghost walls, tiles, openings, conflicts) for the current highlight. */
+  private refreshBuildPreview(): void {
+    const hl = this.core.buildHighlight();
+    const tool = this.core.buildTool();
+    const lot = this.core.state()?.lots[this.core.state()?.activeLotId ?? ''];
+    const openings: Array<{ def: OpeningDef; flip: boolean }> = [];
+    if (tool?.kind === 'opening') {
+      const def = this.content.openings[tool.defId];
+      if (def) openings.push({ def, flip: !!tool.flip });
+    } else if (tool?.kind === 'moveOpening' && tool.openingId) {
+      const o = lot?.openings[tool.openingId];
+      const def = o ? this.content.openings[o.defId] : undefined;
+      if (o && def) openings.push({ def, flip: tool.flip ?? o.flip });
+    } else if (tool?.kind === 'room') {
+      for (const d of tool.doors ?? []) { const def = this.content.openings[d.defId]; if (def) openings.push({ def, flip: false }); }
+    }
+    this.gameView.setBuildPreview(hl?.highlight ?? null, hl?.ok ?? true, {
+      wallHeight: (tool?.kind === 'wall' || tool?.kind === 'room') && tool.spec?.height ? tool.spec.height : DEFAULT_WALL_HEIGHT,
+      tileMode: tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' ? 'remove' : 'add',
+      openings,
+    });
+  }
+
+  private roomHighlight: { uid: string; style: 'hover' | 'selected' } | null = null;
+
+  private drawRoomHighlight(): void {
+    const h = this.roomHighlight;
+    const room = h ? this.core.rooms(0).find((r) => r.uid === h.uid) : undefined;
+    this.gameView.setRoomOutline(room && h ? { outlines: room.outlines, tiles: room.tiles } : null, h?.style ?? 'hover');
   }
 
   /** A throwaway furnished starter house for the main-menu backdrop (never saved). */
@@ -457,6 +493,12 @@ export class Game implements GameAPI {
   rooms(level?: number): RoomInfo[] { return this.core.rooms(level); }
   roomAt(tile: Tile, level?: number): RoomInfo | null { return this.core.roomAt(tile, level); }
   openingAt(wallId: string): ReturnType<GameAPI['openingAt']> { return this.core.openingAt(wallId); }
+  highlightRoom(uid: string | null, style: 'hover' | 'selected' = 'hover'): void {
+    const next = uid && this.core.mode() === 'build' ? { uid, style } : null;
+    if (next?.uid === this.roomHighlight?.uid && next?.style === this.roomHighlight?.style) return;
+    this.roomHighlight = next;
+    this.drawRoomHighlight();
+  }
 
   // ---- camera and view ----
 

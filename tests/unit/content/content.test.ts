@@ -70,8 +70,9 @@ describe('content registry', () => {
       expect(b.z0).toBeGreaterThanOrEqual(-0.001);
       expect(b.z1).toBeLessThanOrEqual(o.footprint.d + 0.001);
       expect(Math.abs((b.x0 + b.x1) / 2 - o.footprint.w / 2)).toBeLessThan(0.001);
-      if (o.layer !== 'wall') expect(Math.abs(b.y0)).toBeLessThan(0.001);
+      if (o.layer !== 'wall' && o.layer !== 'ceiling') expect(Math.abs(b.y0)).toBeLessThan(0.001);
       else expect(b.y0).toBeGreaterThan(0.5);
+      if (o.layer === 'ceiling') expect(b.y1, o.id).toBeCloseTo(2.8, 2);
     }
   });
 

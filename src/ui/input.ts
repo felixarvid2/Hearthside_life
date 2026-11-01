@@ -6,6 +6,10 @@
 //          selects the object under it (api.selectObject).
 //   build: with a paint tool, hover (mouse) previews and a click applies; on touch the first tap previews and a
 //          second tap on the same target applies. The eyedropper samples a finish and returns to the paint tool.
+//          With a structure tool (walls, rooms, doors, windows, floors: src/ui/build/buildSession.ts) a tap or a drag
+//          sets the preview and the panel's Confirm applies it on touch; a drag tool draws with one finger (two fingers
+//          still pan and zoom). A mouse click applies click tools, a mouse drag applies on release (Esc cancels).
+//          With no tool a tap selects the room under it.
 // Pan with one finger or any mouse button drag, pinch to zoom (two-finger twist rotates in 90-degree steps),
 // wheel zooms at the cursor. Keyboard shortcuts per docs/UI_SPEC.md. Only active in live/buy/build; the
 // creator may use the canvas freely while mode is 'creator'.
@@ -18,6 +22,7 @@ import { formatMoney, humanize } from './hud/format';
 import type { Shell } from './hud/shell';
 import { InputMachine, type InputEffect, type PointerKind } from './input/machine';
 import { isTypingTarget, mapKey } from './input/keys';
+import { toolMode } from './build/buildSession';
 
 export interface WorldInput { destroy(): void; reset(): void }
 
@@ -83,7 +88,9 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   let touchPreviewKey: string | null = null;
   let hoverKey: string | null = null;
   const lastTool: { wall: Extract<PaintTool, { kind: 'wall' }> | null; floor: Extract<PaintTool, { kind: 'floor' }> | null } = { wall: null, floor: null };
+  const syncDraw = () => machine.setDrawMode(api.mode() === 'build' && toolMode(api.buildTool()) === 'drag');
   const unsubChange = api.onChange((w) => {
+    if (w === 'build' || w === 'mode') syncDraw();
     if (w === 'paint') {
       const t = api.paintTool();
       if (t?.kind === 'wall') lastTool.wall = t;
@@ -92,8 +99,9 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
       hoverKey = null;
       hideTip();
     }
-    if (w === 'mode') { reset(); hideTip(); }
+    if (w === 'mode') { reset(); hideTip(); sh.build.clearRoomSelection(); }
   });
+  syncDraw();
 
   const designName = (kind: 'wall' | 'floor', f: FinishRef) => (kind === 'wall' ? api.content.wallDesigns[f.designId]?.name : api.content.floorDesigns[f.designId]?.name) ?? humanize(f.designId);
 
@@ -148,8 +156,9 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   };
 
   const buildTap = (pick: PickResult, at: { x: number; y: number }, kind: PointerKind) => {
+    if (api.buildTool()) { sh.build.tap(at.x, at.y, kind, pick); return; }
     const tool = api.paintTool();
-    if (!tool) return;
+    if (!tool) { sh.build.selectRoomAt(at.x, at.y); return; }
     if (tool.kind === 'eyedropper') {
       const f = api.eyedrop(pick);
       if (!f) { toast(`Nothing to pick up there. Tap a ${tool.target === 'wall' ? 'wall' : 'floor'}.`, 'info', 2400); sh.sound('error'); return; }
@@ -197,8 +206,10 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
     const m = api.mode();
     if (m === 'buy' && api.placement()) { api.placementAt(at.x, at.y); return; }
     if (m === 'build') {
+      if (api.buildTool()) { sh.build.hover(at.x, at.y); return; }
       const tool = api.paintTool();
-      if (!tool || tool.kind === 'eyedropper') { hideTip(); return; }
+      if (!tool) { sh.build.hoverRoom(at.x, at.y); return; }
+      if (tool.kind === 'eyedropper') { hideTip(); return; }
       const pick = api.view.pick(at.x, at.y);
       const key = pickKey(pick);
       if (key !== hoverKey) {
@@ -228,6 +239,9 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
         case 'rotate': api.view.rotate(e.dir); sh.sound('click'); break;
         case 'panStart': sh.closeContextMenu(); canvas.classList.add('is-dragging'); touchPreviewKey = null; break;
         case 'panEnd': canvas.classList.remove('is-dragging'); break;
+        case 'drawStart': sh.closeContextMenu(); sh.build.drawStart(e.x, e.y); break;
+        case 'draw': sh.build.draw(e.x, e.y); break;
+        case 'drawEnd': sh.build.drawEnd(e.x, e.y, e.interrupted, e.kind === 'mouse'); break;
         default: break;
       }
     }
@@ -252,9 +266,16 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
     const fx = machine.up({ id: e.pointerId, x: p.x, y: p.y, t: e.timeStamp, kind: kindOf(e), button: e.button });
     if (active()) run(fx); else canvas.classList.remove('is-dragging');
   });
-  on(canvas, 'pointercancel', (e) => { run(machine.cancel(e.pointerId).filter((x) => x.type === 'panEnd')); });
-  on(canvas, 'lostpointercapture', (e) => { run(machine.cancel(e.pointerId).filter((x) => x.type === 'panEnd')); });
-  on(canvas, 'pointerleave', (e) => { if (e.pointerType !== 'touch' && machine.pointerCount === 0 && api.mode() === 'build') { hoverKey = null; hideTip(); api.paintPreview(null); sh.paintPreviewShown(null); } });
+  // a cancelled pointer ends the gesture; a drawn shape stays as a preview on touch
+  const cancelled = (x: InputEffect) => x.type === 'panEnd' || x.type === 'drawEnd';
+  on(canvas, 'pointercancel', (e) => { run(machine.cancel(e.pointerId).filter(cancelled)); });
+  on(canvas, 'lostpointercapture', (e) => { run(machine.cancel(e.pointerId).filter(cancelled)); });
+  on(canvas, 'pointerleave', (e) => {
+    if (e.pointerType !== 'touch' && machine.pointerCount === 0 && api.mode() === 'build') {
+      hoverKey = null; hideTip(); api.paintPreview(null); sh.paintPreviewShown(null);
+      sh.build.leave();
+    }
+  });
   on(canvas, 'wheel', (e) => {
     if (!active()) return;
     e.preventDefault();
@@ -289,6 +310,11 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
 
   onWin('keydown', (e) => {
     if (!active() || modalOpen() || isTypingTarget(e.target as HTMLElement | null)) return;
+    if (e.key === 'Enter' && api.mode() === 'build' && sh.build.state().canConfirm && !(e.target as HTMLElement | null)?.closest('button, a, [role="tab"], [role="radio"]')) {
+      e.preventDefault();
+      sh.build.confirm();
+      return;
+    }
     const cmd = mapKey(e);
     if (!cmd) return;
     const m = api.mode();
@@ -316,6 +342,9 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
         if (m === 'buy' && api.placement()) { api.cancelPlacement(); sh.sound('close'); e.preventDefault(); return; }
         if (m === 'buy' && api.selectedObject()) { api.selectObject(null); e.preventDefault(); return; }
         if (m === 'build') {
+          if (sh.build.cancel()) { hideTip(); e.preventDefault(); return; }
+          if (api.buildTool()) { sh.build.setTool(null); sh.sound('close'); e.preventDefault(); return; }
+          sh.build.clearRoomSelection();
           const t = api.paintTool();
           if (t?.kind === 'eyedropper') { const prev = lastTool[t.target]; api.setPaintTool(prev); sh.sound('close'); e.preventDefault(); return; }
           if (touchPreviewKey || !tip.hidden) { api.paintPreview(null); sh.paintPreviewShown(null); touchPreviewKey = null; hideTip(); e.preventDefault(); return; }
@@ -334,6 +363,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
       }
       case 'rotatePlacement':
         if (m === 'buy' && api.placement()) { api.rotatePlacement(e.shiftKey ? -1 : 1); sh.sound('click'); e.preventDefault(); }
+        else if (m === 'build' && api.buildTool()) { sh.build.flip(); e.preventDefault(); }
         return;
       case 'delete': {
         if (m !== 'buy' || api.placement()) return;

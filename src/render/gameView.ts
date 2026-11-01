@@ -13,7 +13,9 @@ import { rotatedSize } from '../core/geometry';
 import type { Id, Lot, WorldState } from '../core/types';
 import type { CutawayMode, GameMode, PickResult, PlacementState } from '../game/api';
 import type { PaintHighlight } from '../game/GameCore';
+import type { BuildHighlight } from '../building/buildPlans';
 import { tileOnSide } from '../world/walls';
+import { BuildView, type BuildViewExtras, type RoomOutline } from './buildView';
 import { CameraRig, DEFAULT_PPM, type Insets } from './cameraRig';
 import { CreatorScene } from './creatorScene';
 import { EnvironmentView, GROUND_Y } from './environment';
@@ -21,6 +23,7 @@ import { Lighting } from './lighting';
 import { LotView } from './lotView';
 import { ObjectAssets } from './objectAssets';
 import { ObjectsView } from './objectsView';
+import { OpeningThumbs } from './openingThumbs';
 import { PeopleView } from './peopleView';
 import { PortraitRenderer } from './portraits';
 import { PlacementPreview } from './previews';
@@ -45,6 +48,9 @@ export class GameView {
   private readonly objects: ObjectsView;
   private people: PeopleView | null = null;
   private readonly placement: PlacementPreview;
+  private readonly buildView: BuildView;
+  readonly openingThumbs: OpeningThumbs;
+  private buildGrid = false;
   private creator: CreatorScene | null = null;
   private portraits: PortraitRenderer | null = null;
   private charAssets: CharacterAssets | null = null;
@@ -91,7 +97,9 @@ export class GameView {
     this.objects.groundAt = (x, z) => this.groundAt(x, z);
     this.objects.onModelsLoaded = () => { if (this.lot) this.objects.applyWallVisibility((id) => this.lotView.isLowered(id)); };
     this.placement = new PlacementPreview(content, this.objectAssets);
-    this.scene.add(this.env.group, this.lotView.group, this.objects.group, this.placement.group);
+    this.buildView = new BuildView(content);
+    this.openingThumbs = new OpeningThumbs(content);
+    this.scene.add(this.env.group, this.lotView.group, this.objects.group, this.placement.group, this.buildView.group);
     this.rig.reducedMotion = opts.reducedMotion;
     this.applyOptions(opts);
     canvas.addEventListener('pointermove', this.onPointerMove, { passive: true });
@@ -155,6 +163,7 @@ export class GameView {
     this.people?.clear();
     this.placement.set(null, null, () => 0);
     this.pendingReveal = null;
+    this.buildView.setGrid(this.buildGrid ? lot : null);
     if (!state || !lot) return;
     this.env.build(lot);
     this.lotView.setCutaway(this.cutaway, this.rig.viewDir(this.tmpV));
@@ -199,6 +208,22 @@ export class GameView {
 
   setPaintPreview(h: PaintHighlight | null, finish: { designId: string; paletteId: string } | null, ok: boolean): void {
     this.lotView.setPaintPreview(h, finish, ok);
+  }
+
+  /** Build mode: the grid over the lot (off hides it, the construction preview and the room outline too). */
+  setBuildGrid(on: boolean): void {
+    this.buildGrid = on;
+    this.buildView.setGrid(on ? this.lot : null);
+  }
+
+  /** The construction preview of the current build tool (null clears it). */
+  setBuildPreview(h: BuildHighlight | null, ok: boolean, extras: BuildViewExtras): void {
+    this.buildView.setHighlight(h, ok, extras, this.lot, this.world);
+  }
+
+  /** Outline of a hovered or selected room (null clears it). */
+  setRoomOutline(room: RoomOutline | null, style: 'hover' | 'selected'): void {
+    this.buildView.setRoom(room, style);
   }
 
   /** Floor height at a point: floors at 0, grass slightly lower. */
@@ -370,7 +395,7 @@ export class GameView {
 
   /** Renders one queued portrait (after the main frame so it never delays the world). */
   private processPortrait(): boolean {
-    return this.portraits?.process(this.ctx.renderer) ?? false;
+    return (this.portraits?.process(this.ctx.renderer) ?? false) || this.openingThumbs.process(this.ctx.renderer);
   }
 
   stats(): RenderStats { return this.lastStats; }
@@ -508,6 +533,8 @@ export class GameView {
     this.people?.dispose();
     this.creator?.dispose();
     this.portraits?.dispose();
+    this.openingThumbs.dispose();
+    this.buildView.dispose();
     this.placement.dispose();
     this.objects.dispose();
     this.lotView.dispose();

@@ -1,7 +1,7 @@
 // Generates raw surface texture sources with fal.ai (flux/dev) and caches them in raw/ (gitignored).
 // A cached file is never fetched again, so rebuilds are free. Appends every real call to LEDGER.md.
 // The key is read at runtime from /home/user/apis/Fal.ai (or $FAL_KEY_FILE) and is never printed.
-//   node dev/surfaces-ai/generate.mjs [id ...]      (no ids = every missing map)
+//   node dev/surfaces-ai/generate.mjs [id ...]      (no ids = every missing shipped source)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,6 +43,12 @@ export const MAPS = {
   'wall-concrete': 'close up of raw concrete surface with subtle horizontal wood-grain impressions and small pores, one continuous surface, no joints, no panels, no tie holes',
 };
 
+/** Sources behind the shipped maps (see LEDGER.md); the other prompts above were superseded and are only kept for the record. */
+export const SHIPPED = [
+  'floor-slate', 'floor-berber', 'floor-gravel', 'floor-grass', 'wall-roughcast', 'wall-grasscloth', 'wall-rubble', 'wall-slate',
+  'grain-oak', 'grain-barn', 'stone-marble', 'fibre-sisal', 'concrete-aggregate', 'wall-concrete',
+];
+
 const readKey = () => {
   let k = fs.readFileSync(process.env.FAL_KEY_FILE || '/home/user/apis/Fal.ai', 'utf8').trim();
   return k.replace(/^[A-Za-z_]+=/, '');
@@ -51,7 +57,7 @@ const readKey = () => {
 async function main() {
   fs.mkdirSync(RAW, { recursive: true });
   const ids = process.argv.slice(2);
-  const todo = (ids.length ? ids : Object.keys(MAPS)).filter((id) => MAPS[id]);
+  const todo = (ids.length ? ids : SHIPPED).filter((id) => MAPS[id]);
   const key = readKey();
   const model = 'fal-ai/flux/dev';
   for (const id of todo) {

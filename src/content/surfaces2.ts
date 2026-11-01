@@ -489,7 +489,7 @@ export const WALL_DESIGNS_2: SurfaceDesign[] = [
     description: 'Polished marble with bold dark veining, book-matched like a hotel lobby feature wall.',
     family: 'luxury', tags: ['marble', 'stone', 'polished', 'veined', 'luxury', 'bathroom', 'feature-wall', 'hall'],
     packs: ['art-deco', 'modern-minimal'], price: 46,
-    painter: 'map-wall', params: { map: 'marble-veined', tiles: 1, skirt: 0.1 }, repeat: 1.2,
+    painter: 'map-wall', params: { map: 'stone-marble', tiles: 2, skirt: 0.1 }, repeat: 1.2,
     // roles: base, light, dark (the veins), trim
     palettes: ([
       ['carrara', 'Carrara', '#e8e5de', '#fbfaf7', '#6f7075'], ['calacatta-gold', 'Calacatta Gold', '#ece6d8', '#fbf8ef', '#a98c52'], ['nero-marquina', 'Nero Marquina', '#2b2b2e', '#6a6a70', '#0f0f10'],
@@ -664,7 +664,7 @@ export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
     description: 'Tiny glazed penny rounds packed in offset rows with a scatter of accent tiles. A classic bathroom floor.',
     family: 'tile', tags: ['tile', 'mosaic', 'penny', 'round', 'retro', 'bathroom', 'kitchen', 'washable'],
     packs: ['mid-century', 'everyday-essentials'], price: 20,
-    painter: 'penny-round', params: { size: 0.032, accent: 0.12, variation: 0.4 }, repeat: 0.64,
+    painter: 'penny-round', params: { size: 0.05, accent: 0.1, variation: 0.4 }, repeat: 0.8,
     // roles: field, accent, grout
     palettes: plain([
       ['white-penny', 'White and Black', '#f2f1ec', '#26272a', '#cfccc4'], ['mint-penny', 'Mint and White', '#bfdccf', '#f4f4f0', '#e4e2d6'], ['pink-penny', 'Pink and Cream', '#eec3c0', '#f4e8d4', '#f4eee6'],
@@ -702,7 +702,7 @@ export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
     description: 'Polished 60 cm marble slabs, each cut from a different part of the block so the veining never repeats, in fine joints.',
     family: 'stone', tags: ['marble', 'stone', 'polished', 'veined', 'luxury', 'hall', 'bathroom', 'living', 'elegant'],
     packs: ['art-deco', 'classic-townhouse'], price: 52,
-    painter: 'map-floor', params: { map: 'stone-marble', cell: 0.6, scale: 0.8, grout: 0.004, variation: 0.35, bevel: 0.3 }, repeat: 1.2,
+    painter: 'map-floor', params: { map: 'stone-marble', cell: 0.6, scale: 1.4, grout: 0.004, variation: 0.35, bevel: 0.3 }, repeat: 1.2,
     // roles: base, light, dark (veins), grout
     palettes: plain([
       ['carrara-floor', 'Carrara', '#e6e3dc', '#fbfaf7', '#6b6c70', '#cfcac0'], ['calacatta-floor', 'Calacatta Gold', '#ece6d8', '#fbf8ef', '#a98c52', '#cfc8b4'],
@@ -738,7 +738,7 @@ export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
     description: 'Natural sisal fibre in a coarse basket weave. Hard-wearing, earthy and a little scratchy.',
     family: 'carpet', tags: ['carpet', 'sisal', 'natural', 'woven', 'fibre', 'coastal', 'living', 'hall', 'study'],
     packs: ['coastal-home', 'cozy-cottage'], price: 12,
-    painter: 'map-floor', params: { map: 'fibre-sisal', tiles: 2, cell: 0 }, repeat: 1.0,
+    painter: 'map-floor', params: { map: 'fibre-sisal', tiles: 1, cell: 0 }, repeat: 1.0,
     palettes: fibreP([
       ['sisal-natural', 'Natural Sisal', '#c4a876'], ['sisal-bleached', 'Bleached', '#dcd0b4'], ['sisal-grey', 'Grey Wash', '#a8a498'], ['sisal-chocolate', 'Chocolate', '#6f523a'],
       ['sisal-sage', 'Sage', '#98a68a'], ['sisal-navy', 'Indigo', '#3f4d6e'],
@@ -759,7 +759,7 @@ export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
     description: 'Riveted steel tread plate with raised diamond lugs, scuffed and worn. Workshops, garages and loft kitchens.',
     family: 'concrete', tags: ['metal', 'steel', 'tread-plate', 'diamond-plate', 'industrial', 'garage', 'workshop', 'loft'],
     packs: ['industrial-loft'], price: 30,
-    painter: 'diamond-plate', params: { lug: 0.045, wear: 0.5 }, repeat: 0.9,
+    painter: 'diamond-plate', params: { lug: 0.07, wear: 0.5 }, repeat: 0.84,
     // roles: base, light, dark
     palettes: plain([
       ['bare-steel', 'Bare Steel', '#8d9296', '#d8dcdf', '#464a4e'], ['dark-steel', 'Gunmetal', '#5a5e63', '#9aa0a5', '#26292c'], ['galvanised-plate', 'Galvanised', '#d6dadd', '#f6f8f8', '#8a9094'],
@@ -794,7 +794,7 @@ export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
     description: 'Rounded granite setts in offset rows with sandy joints, each with its own tone and pitting.',
     family: 'exterior', tags: ['cobbles', 'setts', 'granite', 'paving', 'street', 'courtyard', 'exterior', 'path', 'drive'],
     packs: ['garden-patio', 'classic-townhouse'], price: 19,
-    painter: 'cobbles', params: { size: 0.11, variation: 0.6 }, repeat: 1.0,
+    painter: 'cobbles', params: { size: 0.14, variation: 0.6 }, repeat: 1.0,
     // roles: stone A, stone B, stone C, joint
     palettes: plain([
       ['cobble-grey', 'Grey Granite', '#8f8d8a', '#a3a09c', '#7a7874', '#a8a090'], ['cobble-pink', 'Pink Granite', '#b08a80', '#c4a096', '#9a7a70', '#b8aa98'], ['cobble-blue', 'Blue Setts', '#6f7a80', '#808b90', '#5f6a70', '#9a9a92'],

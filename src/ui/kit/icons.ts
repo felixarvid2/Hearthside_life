@@ -80,6 +80,7 @@ const P: Record<string, string> = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
   moon: '<path d="M20 14A8 8 0 1110 4a6 6 0 0010 10z"/>',
   sound: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>',
+  window: '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16"/>',
   door: '<rect x="6" y="3" width="12" height="18" rx="1"/><path d="M15 12h.01"/>',
   tag: '<path d="M3 12l9-9h9v9l-9 9z"/>',
 };

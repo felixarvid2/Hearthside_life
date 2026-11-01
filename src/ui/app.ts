@@ -10,6 +10,8 @@ import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
 import type { Id, StartMode } from '../core/types';
 import { mountBuildMode, type BuildModeUI } from './build/buildMode';
+import { mountBuildOverlay } from './build/buildOverlay';
+import { BuildSession } from './build/buildSession';
 import { mountBuyMode } from './buy/buyMode';
 import { h, toggleClass } from './kit/dom';
 import { installLayoutTracking, onLayoutChange } from './kit/layout';
@@ -66,8 +68,11 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   let ledgerPanel: ReturnType<typeof createLedgerPanel> | null = null;
   let tutorial: ReturnType<typeof createTutorial> | null = null;
 
+  const buildSession = new BuildSession(api, sound);
+  cleanups.push(() => buildSession.destroy());
+
   const sh: Shell = {
-    api, root, layer, sound,
+    api, root, layer, sound, build: buildSession,
     openPanel: (kind, opts) => openPanel(kind, opts),
     closePanels: () => closePanels(),
     isPanelOpen: (kind) => panelOf(kind)?.panel.isOpen() ?? false,
@@ -164,7 +169,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   const mo = new MutationObserver((records) => {
     for (const r of records) {
       const t = r.target as HTMLElement;
-      if (t.closest?.('.ctx-menu, .toasts, .tap-ripple, .paint-tip, .dev-overlay')) continue;
+      if (t.closest?.('.ctx-menu, .toasts, .tap-ripple, .paint-tip, .dev-overlay, .bb-handles')) continue;
       scheduleMeasure();
       return;
     }
@@ -362,7 +367,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     if (inGame) {
       hud.setMode(m);
       if (m === 'buy') { buyUI ??= mountBuyMode(root, api); buyUI.show(); } else buyUI?.hide();
-      if (m === 'build') { buildUI ??= mountBuildMode(root, api); buildUI.show(); } else buildUI?.hide();
+      if (m === 'build') { buildUI ??= mountBuildMode(root, api, buildSession); buildUI.show(); } else buildUI?.hide();
       if (m !== 'live') closePanels();
       if (lastMode !== m) { ctx.close(); lastMode = m; }
       hud.onSpeed(); hud.onCamera(); hud.refresh();
@@ -449,6 +454,8 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
 
   // world input
   if (canvas) {
+    const overlay = mountBuildOverlay({ api, session: buildSession, layer, canvas, canvasToRoot });
+    cleanups.push(() => overlay.destroy());
     const input = attachWorldInput(sh, canvas, () => route !== 'game');
     cleanups.push(() => input.destroy());
   }

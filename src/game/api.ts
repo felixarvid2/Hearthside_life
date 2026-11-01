@@ -14,6 +14,7 @@
 //   buildCancel()           clears the preview and highlight (Esc once); setBuildTool(null) ends the tool.
 //   buildHighlight()        what the renderer draws for the current preview (see BuildHighlight).
 //   rooms()                 enclosed rooms with stable uids and outline loops; roomAt(tile); openingAt(wallId).
+//   highlightRoom(uid)      outlines and tints a room in the world (hover or selection); null clears it.
 //   view.groundPoint(x, y)  screen point -> lot coordinates, to feed BuildTarget.
 //
 // Coordinates: BuildPoint is in tile units, lot space (x east, z south; (0,0) is the lot's north-west corner).
@@ -239,7 +240,7 @@ export interface DevStats {
 
 /** What changed in UI-relevant game state (not world events, which come through `events`). */
 export type UiChange =
-  | 'mode' | 'selection' | 'speed' | 'placement' | 'paint' | 'build' | 'undo' | 'camera' | 'settings' | 'state' | 'portraits' | 'creator';
+  | 'mode' | 'selection' | 'speed' | 'placement' | 'paint' | 'build' | 'undo' | 'camera' | 'settings' | 'state' | 'portraits' | 'thumbnails' | 'creator';
 
 export interface CreatorPreviewOptions {
   /** Outfit category shown in the preview. */
@@ -361,6 +362,8 @@ export interface GameAPI {
   roomAt(tile: Tile, level?: number): RoomInfo | null;
   /** The door or window on a wall edge (including edges only spanned by a wide opening), or null. */
   openingAt(wallId: string): { openingId: Id; defId: string; kind: 'door' | 'window'; wallId: string; span: number; flip: boolean } | null;
+  /** Outlines and tints a room of the active level (hover is light, selected stronger); null clears it. Build mode only. */
+  highlightRoom(uid: string | null, style?: 'hover' | 'selected'): void;
 
   // ---- camera and view ----
   // All screen coordinates are canvas-relative CSS pixels. pan(dx, dy) receives the pointer movement and the
@@ -392,6 +395,8 @@ export interface GameAPI {
   thumbnails: {
     furniture(defId: string): string;
     surface(kind: 'wall' | 'floor', designId: string, paletteId: string): string;
+    /** Door or window picture; '' until rendered (the game then reports onChange('thumbnails')). */
+    opening(defId: string): string;
   };
 
   // ---- settings, sound, diagnostics ----

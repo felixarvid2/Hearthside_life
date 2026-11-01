@@ -1,9 +1,11 @@
-// OWNER: UI editors agent. Build mode panel (M1: finishes): Walls / Floors tabs, design grid from
-// content.wallDesigns / floorDesigns ('ready' only) with family tabs, search and style filter, palette
-// swatches, scope (one side or tile / whole room), eyedropper, recently used finishes, live preview result,
-// walls up/cutaway/down, undo/redo and funds.
-// The panel sets the paint tool (api.setPaintTool); the shell's input state machine routes canvas taps to
-// api.paintPreview / api.paintApply / api.eyedrop. The panel follows api.paintTool() through onChange('paint').
+// OWNER: UI editors agent. Build mode panel. Tool tabs: Paint (M1 finishes: Walls / Floors tabs, design grid from
+// content.wallDesigns / floorDesigns ('ready' only) with family tabs, search and style filter, palette swatches,
+// scope (one side or tile / floor area / whole room), eyedropper, recently used finishes, live preview result)
+// and the structure tools of Milestone 2 (structureTools.ts: Walls, Room, Doors, Windows, Erase) with their
+// footer (live preview text, Confirm / Cancel). Also walls up/cutaway/down, undo/redo and funds.
+// The panel sets the paint tool (api.setPaintTool) or the build tool through the BuildSession (buildSession.ts);
+// the shell's input state machine routes canvas taps and drags to api.paintPreview / api.paintApply / api.eyedrop or
+// to the session. The panel follows api.paintTool() through onChange('paint') and the session's changes.
 
 import type { CutawayMode, GameAPI, PaintPreview } from '../../game/api';
 import type { FinishRef } from '../../core/types';
@@ -12,6 +14,8 @@ import type { ModeUI } from '../modes/types';
 import { button, cardGrid, panel, segmented, tabs, toast, type CardGrid, type Tabs } from '../kit/components';
 import { h, setChildren, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
+import { BuildSession } from './buildSession';
+import { createStructureTools, type StructureId } from './structureTools';
 import {
   affordReason, editorStatus, fundsInfo, formatMoney, humanize, matchesQuery, panelInsets, play, Refresher, reopenButton,
   searchField, selectField, setAttr, setBadge, setHidden, stripes, thumbImg, undoRedo, type Insets,
@@ -31,6 +35,8 @@ type Part = 'all' | 'content' | 'funds' | 'undo' | 'tool' | 'recent' | 'camera' 
 interface KindState {
   finish: FinishRef | null;
   scopeRoom: boolean;
+  /** Floors only: drag a rectangle (the build tool 'floor' with shape 'rect'). */
+  scopeArea: boolean;
   query: string;
   family: string;
   tag: string;
@@ -45,7 +51,8 @@ const UNIT: Record<Kind, { one: string; many: string; short: string }> = {
 type PreviewSource = GameAPI & { lastPaintPreview?: () => PaintPreview | null };
 
 /** Build mode panels: wall and floor finish catalogs, palettes, scope, eyedropper, undo/redo. */
-export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
+export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: BuildSession): BuildModeUI {
+  const session = sessionIn ?? new BuildSession(api, (id) => { try { api.sound(id); } catch { /* optional */ } });
   const el = h('div', { class: 'bb-mode bb-build-mode' });
   el.hidden = true;
   root.appendChild(el);
@@ -60,8 +67,8 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
 
   let kind: Kind = 'wall';
   const st: Record<Kind, KindState> = {
-    wall: { finish: null, scopeRoom: false, query: '', family: '', tag: '' },
-    floor: { finish: null, scopeRoom: false, query: '', family: '', tag: '' },
+    wall: { finish: null, scopeRoom: false, scopeArea: false, query: '', family: '', tag: '' },
+    floor: { finish: null, scopeRoom: false, scopeArea: false, query: '', family: '', tag: '' },
   };
   let eyedropper = false;
   let preview: PaintPreview | null = null;
@@ -71,14 +78,38 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
   let showFilters = false;
   const designs: Record<Kind, SurfaceDesign[]> = { wall: [], floor: [] };
 
-  // ---- sticky sub bar: Walls / Floors + undo/redo ----
+  // ---- sticky sub bar: tool tabs + undo/redo ----
+  type Section = 'paint' | StructureId;
+  let section: Section = 'paint';
+  const SECTION_TABS: Array<{ id: string; section: Section; label: string; icon: string }> = [
+    { id: 'tool-paint', section: 'paint', label: 'Paint', icon: 'roller' },
+    { id: 'tool-wall', section: 'wall', label: 'Walls', icon: 'wall' },
+    { id: 'tool-room', section: 'room', label: 'Room', icon: 'home' },
+    { id: 'tool-door', section: 'door', label: 'Doors', icon: 'door' },
+    { id: 'tool-window', section: 'window', label: 'Windows', icon: 'window' },
+    { id: 'tool-erase', section: 'erase', label: 'Erase', icon: 'trash' },
+  ];
+  const toolTabs = tabs({
+    label: 'Build tools',
+    value: 'tool-paint',
+    items: SECTION_TABS.map(({ id, label, icon: ic }) => ({ id, label, icon: ic })),
+    onChange: (id) => setSection(SECTION_TABS.find((t) => t.id === id)?.section ?? 'paint'),
+  });
+  toolTabs.el.classList.add('bb-tool-tabs');
   const kindTabs = tabs({
     label: 'Finish type',
     value: kind,
     items: [{ id: 'wall', label: 'Walls', icon: 'wall' }, { id: 'floor', label: 'Floors', icon: 'floor' }],
     onChange: (id) => switchKind(id === 'floor' ? 'floor' : 'wall'),
   });
-  const subbar = h('div', { class: 'bb-subbar' }, h('div', { class: 'bb-top-tabs' }, kindTabs.el), ur.el);
+  const subbar = h('div', { class: 'bb-subbar' }, h('div', { class: 'bb-top-tabs' }, toolTabs.el), ur.el);
+  const kindBar = h('div', { class: 'bb-kindbar' }, kindTabs.el);
+
+  // ---- a room selected in the world (tap with no tool) ----
+  const roomText = h('span', { class: 'bb-room-text' });
+  const roomDelete = button({ icon: 'trash', label: 'Demolish room', variant: 'secondary', onClick: () => { session.deleteSelectedRoom(); } });
+  const roomInfo = h('div', { class: 'bb-room-info', role: 'status' }, icon('home', 20), roomText, roomDelete);
+  roomInfo.hidden = true;
 
   // ---- current finish card (eyedropper lives here) ----
   const eyeFull = button({ icon: 'eyedropper', label: 'Eyedropper', onClick: () => toggleEyedropper() });
@@ -140,9 +171,17 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
   });
   cutaway.el.classList.add('bb-cutaway');
 
-  p.body.append(subbar, current, recentSec, browse, cutaway.el);
+  const structure = createStructureTools({
+    api, session,
+    selectedFinish: (k) => st[k].finish,
+    designName: (k, ref) => design(k, ref.designId)?.name ?? humanize(ref.designId),
+  });
+  const paintSection = h('div', { class: 'bb-paint-section', dataset: { section: 'paint' } }, kindBar, roomInfo, current, recentSec, browse);
+  p.body.append(subbar, paintSection, structure.sections.wall, structure.sections.room, structure.sections.door, structure.sections.window, structure.sections.erase, cutaway.el);
+  p.el.append(structure.footer);
+  for (const k of ['wall', 'room', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = true;
 
-  const reopen = reopenButton('Finishes', 'roller', () => { userClosed = false; reopen.hidden = true; p.open(); });
+  const reopen = reopenButton('Build tools', 'build', () => { userClosed = false; reopen.hidden = true; p.open(); });
   el.appendChild(reopen);
 
   let grid: CardGrid<SurfaceDesign> | null = null;
@@ -258,9 +297,35 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
     const s = st[kind];
     preview = null;
     eyedropper = false;
-    if (!s.finish) api.setPaintTool(null);
-    else if (kind === 'wall') api.setPaintTool({ kind: 'wall', finish: { ...s.finish }, scope: s.scopeRoom ? 'room' : 'side' });
-    else api.setPaintTool({ kind: 'floor', finish: { ...s.finish }, scope: s.scopeRoom ? 'room' : 'tile' });
+    if (section !== 'paint') { refresher.mark('tool', 'current'); return; }
+    if (!s.finish) { session.setTool(null); api.setPaintTool(null); }
+    else if (kind === 'floor' && s.scopeArea) { api.setPaintTool(null); session.setTool({ kind: 'floor', finish: { ...s.finish }, shape: 'rect' }); }
+    else {
+      if (api.buildTool()) session.setTool(null);
+      if (kind === 'wall') api.setPaintTool({ kind: 'wall', finish: { ...s.finish }, scope: s.scopeRoom ? 'room' : 'side' });
+      else api.setPaintTool({ kind: 'floor', finish: { ...s.finish }, scope: s.scopeRoom ? 'room' : 'tile' });
+    }
+    refresher.mark('tool', 'current');
+  }
+
+  /** Switches between the Paint tab and the structure tools. */
+  function setSection(next: Section): void {
+    if (next === section && (next === 'paint' || structure.active() === next)) return;
+    section = next;
+    toolTabs.select(SECTION_TABS.find((t) => t.section === next)?.id ?? 'tool-paint');
+    preview = null;
+    eyedropper = false;
+    paintSection.hidden = next !== 'paint';
+    for (const k of ['wall', 'room', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = next !== k;
+    if (next === 'paint') {
+      structure.leave();
+      session.setTool(null);
+      applyTool();
+    } else {
+      structure.enter(next);
+    }
+    p.body.scrollTo?.({ top: 0 });
+    play(api, 'tap');
     refresher.mark('tool', 'current');
   }
 
@@ -340,6 +405,8 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
     } else if (t && t.kind === 'eyedropper') {
       eyedropper = true;
       if (t.target !== kind) switchKind(t.target);
+    } else if (api.buildTool() || section !== 'paint') {
+      eyedropper = false; // a structure tool (or its tab) is in use: the chosen finishes stay
     } else {
       eyedropper = false;
       if (st[kind].finish) { st[kind].finish = null; preview = null; grid?.refresh(); }
@@ -347,22 +414,29 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
   }
 
   function syncScope(): void {
+    type Scope = 'one' | 'area' | 'room';
     if (scopeFor !== kind || !scopeCtl) {
       scopeFor = kind;
-      scopeCtl = segmented<'one' | 'room'>({
+      const c = segmented<Scope>({
         label: kind === 'wall' ? 'Paint walls' : 'Paint floor',
-        value: st[kind].scopeRoom ? 'room' : 'one',
+        value: scopeValue(),
         options: kind === 'wall'
           ? [{ id: 'one', label: 'One side', icon: 'wall' }, { id: 'room', label: 'Whole room', icon: 'home' }]
-          : [{ id: 'one', label: 'One tile', icon: 'floor' }, { id: 'room', label: 'Whole room', icon: 'home' }],
-        onChange: (v) => { st[kind].scopeRoom = v === 'room'; play(api, 'toggle'); applyTool(); },
+          : [{ id: 'one', label: 'One tile', icon: 'floor' }, { id: 'area', label: 'Area', icon: 'move' }, { id: 'room', label: 'Whole room', icon: 'home' }],
+        onChange: (v) => { st[kind].scopeRoom = v === 'room'; st[kind].scopeArea = v === 'area'; play(api, 'toggle'); applyTool(); },
       });
-      scopeCtl.el.classList.add('bb-scope');
-      setChildren(scopeHost, scopeCtl.el);
+      scopeCtl = c as unknown as typeof scopeCtl;
+      scopeCtl!.el.classList.add('bb-scope');
+      setChildren(scopeHost, scopeCtl!.el);
       delete scopeHost.dataset.value;
     }
-    const v = st[kind].scopeRoom ? 'room' : 'one';
-    if (scopeHost.dataset.value !== v) { scopeHost.dataset.value = v; scopeCtl.set(v); }
+    const v = scopeValue();
+    if (scopeHost.dataset.value !== v) { scopeHost.dataset.value = v; scopeCtl!.set(v as 'one' | 'room'); }
+  }
+
+  function scopeValue(): 'one' | 'area' | 'room' {
+    const s = st[kind];
+    return s.scopeRoom ? 'room' : s.scopeArea ? 'area' : 'one';
   }
 
   function renderCurrent(): void {
@@ -489,14 +563,36 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
     if (all || parts.has('undo')) ur.refresh();
     if (all || parts.has('camera')) cutaway.set(safeCutaway());
     if (all || parts.has('tool')) syncFromTool();
+    renderRoomInfo();
     renderCurrent();
     if (all || parts.has('recent') || parts.has('tool')) renderRecent();
   }
 
+  /** The room selected in the world, with a demolish shortcut (Paint tab, no tool in use). */
+  function renderRoomInfo(): void {
+    const sel = section === 'paint' && !api.buildTool() ? session.selection() : null;
+    setHidden(roomInfo, !sel);
+    if (sel) setText(roomText, `Room selected: ${sel.area} m2`);
+  }
+
+  structure.onDone = () => {
+    if (section !== 'paint') setSection('paint');
+    else if (st.floor.scopeArea) { st.floor.scopeArea = false; applyTool(); }
+    refresher.mark('tool', 'current');
+  };
+
   const getPreview = (api as PreviewSource).lastPaintPreview;
   const offs: Array<() => void> = [
+    session.onChange(() => {
+      if (!visible) return;
+      // the tool ended (Esc in the world): back to the Paint tab
+      if (!api.buildTool() && section !== 'paint') setSection('paint');
+      structure.refresh();
+      renderRoomInfo();
+    }),
     api.onChange((what) => {
       switch (what) {
+        case 'thumbnails': structure.thumbnailsChanged(); break;
         case 'paint':
           if (typeof getPreview === 'function') { try { preview = getPreview.call(api); } catch { /* optional */ } }
           refresher.mark('tool', 'recent');
@@ -517,6 +613,7 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
     show() {
       visible = true;
       el.hidden = false;
+      if (section !== 'paint') setSection('paint');
       if (!userClosed) p.open();
       reopen.hidden = !userClosed;
       refresher.mark('all');
@@ -531,6 +628,7 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI): BuildModeUI {
       visible = false;
       refresher.cancel();
       for (const off of offs.splice(0)) off();
+      if (!sessionIn) session.destroy();
       p.destroy();
       el.remove();
     },

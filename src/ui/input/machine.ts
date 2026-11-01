@@ -9,8 +9,12 @@
 //   After a pinch the remaining finger pans; no tap is issued until every pointer is up.
 // - Right or middle mouse drag pans; no tap.
 // - cancel()/reset() return to idle without effects (pointercancel, lostpointercapture, blur).
+// - Draw mode (Build tools that drag out a shape): a primary press (touch finger or left mouse button) that moves
+//   >= TAP_SLOP px starts drawing instead of panning: drawStart at the press point, draw for every move, drawEnd when it
+//   is lifted. Right/middle mouse drags and two-finger gestures still pan and zoom; a second finger ends the drawing
+//   (drawEnd with `interrupted`) and the preview stays, and so does a cancelled pointer.
 
-export type InputState = 'idle' | 'pressing' | 'panning' | 'pinching';
+export type InputState = 'idle' | 'pressing' | 'panning' | 'pinching' | 'drawing';
 export type PointerKind = 'mouse' | 'touch' | 'pen';
 
 export interface PointerSample {
@@ -31,7 +35,11 @@ export type InputEffect =
   | { type: 'zoom'; factor: number; x: number; y: number }
   | { type: 'rotate'; dir: 1 | -1 }
   | { type: 'panStart' }
-  | { type: 'panEnd' };
+  | { type: 'panEnd' }
+  | { type: 'drawStart'; x: number; y: number; kind: PointerKind }
+  | { type: 'draw'; x: number; y: number; kind: PointerKind }
+  /** `interrupted`: the gesture did not end with a lift (second finger, pointer cancel). */
+  | { type: 'drawEnd'; x: number; y: number; kind: PointerKind; interrupted: boolean };
 
 export interface InputMachineOptions {
   tapSlop?: number;
@@ -42,7 +50,7 @@ export interface InputMachineOptions {
   minPinchRatio?: number;
 }
 
-interface Tracked { id: number; x: number; y: number; startX: number; startY: number; t0: number; kind: PointerKind }
+interface Tracked { id: number; x: number; y: number; startX: number; startY: number; t0: number; kind: PointerKind; button: number }
 
 export const TAP_SLOP = 8;
 export const TAP_MAX_MS = 500;
@@ -64,6 +72,8 @@ export class InputMachine {
   private twist = 0;
   /** True once a gesture used more than one pointer: no tap until all pointers are up. */
   private multi = false;
+  /** A primary drag draws instead of panning (Build tools that drag out a shape). */
+  private drawing = false;
 
   constructor(o: InputMachineOptions = {}) {
     this.tapSlop = o.tapSlop ?? TAP_SLOP;
@@ -73,6 +83,9 @@ export class InputMachine {
   }
 
   get state(): InputState { return this.st; }
+  /** Switches draw mode on or off. A drawing in progress is not affected until it ends. */
+  setDrawMode(on: boolean): void { this.drawing = on; }
+  get drawMode(): boolean { return this.drawing; }
   /** Number of pointers currently held. */
   get pointerCount(): number { return this.pointers.size; }
   isTracking(id: number): boolean { return this.pointers.has(id); }
@@ -101,10 +114,13 @@ export class InputMachine {
     // second pointer: start pinching (a press or pan in progress turns into a pinch, never a tap)
     if (this.mouseHeld()) return [];
     const wasPanning = this.st === 'panning';
+    const wasDrawing = this.st === 'drawing';
+    const first = wasDrawing ? this.pointers.get(this.primary ?? -1) : undefined;
     this.track(p);
     this.multi = true;
     this.st = 'pinching';
     this.resetPinchRef();
+    if (wasDrawing && first) return [{ type: 'drawEnd', x: first.x, y: first.y, kind: first.kind, interrupted: true }, { type: 'panStart' }];
     return wasPanning ? [] : [{ type: 'panStart' }];
   }
 
@@ -122,6 +138,10 @@ export class InputMachine {
         if (p.id !== this.primary) return [];
         const dist = Math.hypot(p.x - tr.startX, p.y - tr.startY);
         if (dist < this.tapSlop) return [];
+        if (this.drawing && tr.button === 0) {
+          this.st = 'drawing';
+          return [{ type: 'drawStart', x: tr.startX, y: tr.startY, kind: tr.kind }, { type: 'draw', x: p.x, y: p.y, kind: tr.kind }];
+        }
         this.st = 'panning';
         // The first pan step covers the whole distance from the start so the world follows the finger exactly.
         return [{ type: 'panStart' }, { type: 'pan', dx: p.x - tr.startX, dy: p.y - tr.startY }];
@@ -131,6 +151,8 @@ export class InputMachine {
         const dx = p.x - px, dy = p.y - py;
         return dx || dy ? [{ type: 'pan', dx, dy }] : [];
       }
+      case 'drawing':
+        return p.id === this.primary && (p.x !== px || p.y !== py) ? [{ type: 'draw', x: p.x, y: p.y, kind: tr.kind }] : [];
       case 'pinching':
         return this.pinchStep();
       default:
@@ -158,6 +180,10 @@ export class InputMachine {
         if (p.id === this.primary || this.pointers.size === 0) { out.push({ type: 'panEnd' }); this.finish(); }
         return out;
       }
+      case 'drawing': {
+        if (p.id === this.primary) { out.push({ type: 'drawEnd', x: p.x, y: p.y, kind: tr.kind, interrupted: false }); this.finish(); }
+        return out;
+      }
       case 'pinching': {
         const active = this.activePinchPointers();
         if (active.length >= 2) { this.resetPinchRef(); return out; } // a third finger was down: keep pinching
@@ -183,7 +209,9 @@ export class InputMachine {
   cancel(id?: number): InputEffect[] {
     if (id !== undefined && !this.pointers.has(id)) return [];
     const wasMoving = this.st === 'panning' || this.st === 'pinching';
+    const drawn = this.st === 'drawing' ? this.pointers.get(this.primary ?? -1) : undefined;
     this.reset();
+    if (drawn) return [{ type: 'drawEnd', x: drawn.x, y: drawn.y, kind: drawn.kind, interrupted: true }];
     return wasMoving ? [{ type: 'panEnd' }] : [];
   }
 
@@ -205,7 +233,7 @@ export class InputMachine {
   // ---------------------------------------------------------------------------------------------
 
   private track(p: PointerSample): void {
-    this.pointers.set(p.id, { id: p.id, x: p.x, y: p.y, startX: p.x, startY: p.y, t0: p.t, kind: p.kind });
+    this.pointers.set(p.id, { id: p.id, x: p.x, y: p.y, startX: p.x, startY: p.y, t0: p.t, kind: p.kind, button: p.button ?? 0 });
   }
 
   private mouseHeld(): boolean {

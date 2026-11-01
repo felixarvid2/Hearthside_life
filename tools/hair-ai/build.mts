@@ -7,7 +7,7 @@ import { readModel } from './mesh.mts';
 import { plotViews } from './plot.mts';
 import { DistanceField, applyTransform, fitHead } from './register.mts';
 import type { Transform } from './register.mts';
-import { extractHair, orientNormals, rootShade, simplifyHair, smoothNormals, writeHairGlb } from './process.mts';
+import { extractHair, freeUvBlock, mergeMeshes, orientNormals, rootShade, scalpCap, simplifyHair, smoothNormals, writeHairGlb } from './process.mts';
 import { segment } from './segment.mts';
 import type { AiStyle } from './styles.mts';
 
@@ -23,6 +23,7 @@ export async function buildAll(styles: AiStyle[], root: string, opts: { debug?: 
     surf.push(...p);
     if (Math.abs(th) < 0.9 || h > 0.15) face.push(...p);
   }
+  const hairMod = (await runnerImport(`${root}/src/characters/hair.ts`)).module as Record<string, any>;
   const surfaceField = new DistanceField(surf, [-0.14, -0.1, -0.14], [0.14, 0.3, 0.16], 0.004);
   if (opts.debug) mkdirSync(`${root}/dev/hair-ai/debug`, { recursive: true });
   const report: string[] = [];
@@ -40,15 +41,22 @@ export async function buildAll(styles: AiStyle[], root: string, opts: { debug?: 
     for (let b = Math.floor(B * 0.25); b < B; b++) if ((xw[b] as number) > ew) { ew = xw[b] as number; yE = b / B - 0.5 + 0.5 / B; }
     const head: number[] = [];
     for (let i = 0; i < n; i++) if (!seg.hair[i] && (m.pos[i * 3 + 1] as number) > yE - 1.25 * ew) head.push(m.pos[i * 3] as number, m.pos[i * 3 + 1] as number, m.pos[i * 3 + 2] as number);
-    const s0 = 0.17 / (2 * ew);
-    const fit = fitHead({ head: new Float32Array(head), surface: new Float32Array(surf), face: new Float32Array(face) }, { scale: s0, ty: 0.083 - s0 * yE });
+    const fit = fitHead({ head: new Float32Array(head), all: m.pos, surface: new Float32Array(surf), face: new Float32Array(face) }, { yE });
     const T: Transform = fit.T;
     const raw = extractHair(m, seg.keepTri, T);
-    const simp = await simplifyHair(raw, TARGET_TRIS);
+    const capTris = s.scalp ? 30 * 9 * 2 : 0;
+    let simp = await simplifyHair(raw, TARGET_TRIS - capTris);
+    let paint: { u: number; v: number; size: number } | undefined;
+    if (s.scalp) {
+      const block = freeUvBlock(simp, TINT_SIZE, 20);
+      if (!block) throw new Error(`${s.id}: no free texel block for the scalp cap`);
+      paint = { ...block, size: 20 };
+      simp = mergeMeshes(simp, scalpCap(hs, hairMod, { hairline: s.scalp.hairline, fringe: s.scalp.fringe ?? 0, offset: 0.0035, block, blockSize: 20, size: TINT_SIZE }));
+    }
     const normals = smoothNormals(simp);
     orientNormals(simp, normals);
     const colors = rootShade(simp, surfaceField);
-    const tint = await bakeTint(m.tex, { size: TINT_SIZE });
+    const tint = await bakeTint(m.tex, { size: TINT_SIZE, paint });
     const file = `${root}/public/assets/characters/hair/${s.id}.glb`;
     const bytes = await writeHairGlb(file, {
       id: s.id, mesh: simp, normals, colors, tint: tint.rgb, tintSize: TINT_SIZE,

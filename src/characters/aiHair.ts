@@ -64,11 +64,12 @@ export function buildAiHair(t: BodyTemplate, data: AiHairData): MeshData {
 
 /** Pushes vertices that ended up inside the torso (long hair over the shoulders) out to its surface plus a margin. */
 export function clearBody(t: BodyTemplate, m: MeshData): void {
-  const top = t.lm.neckBaseY + 0.02;
+  const top = t.lm.neckBaseY + 0.03;
   for (let i = 0; i < m.positions.length; i += 3) {
     const y = m.positions[i + 1] as number;
     if (y > top) continue;
-    const w = smoothstep(top, top - 0.03, y);
+    // full push below the neck base, fading out over the next 3 cm (hair behind the neck is meant to touch it)
+    const w = smoothstep(top, t.lm.neckBaseY - 0.0, y);
     const q = sampleProfile(t.profiles.torso, y, 0);
     const da = (m.positions[i] as number) - q.ca, db = (m.positions[i + 2] as number) - q.cb;
     const a = planeAngle('y', da, db);

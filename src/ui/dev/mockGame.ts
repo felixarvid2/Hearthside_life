@@ -664,6 +664,7 @@ export class MockGame implements GameAPI {
   rooms(level?: number): RoomInfo[] { return this.buildTools.rooms(level); }
   roomAt(tile: Tile, level?: number): RoomInfo | null { return this.buildTools.roomAt(tile, level); }
   openingAt(wallId: string): ReturnType<GameAPI['openingAt']> { return this.buildTools.openingAt(wallId); }
+  highlightRoom(): void { /* the mock draws nothing */ }
 
   undo(): string | null {
     const e = this.undoStack.pop();
@@ -760,6 +761,7 @@ export class MockGame implements GameAPI {
       const c = d?.palettes.find((p) => p.id === paletteId)?.colors ?? ['#ccc'];
       return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${c[0]}"/><rect width="32" height="32" fill="${c[1] ?? c[0]}"/></svg>`);
     },
+    opening: (defId: string) => svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#efe3d0"/><rect x="18" y="8" width="28" height="50" rx="3" fill="${pastel(defId)}"/></svg>`),
   };
 
   // ---------------------------------------------------------------------------------------------

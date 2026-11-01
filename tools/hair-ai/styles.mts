@@ -11,6 +11,8 @@ export interface AiStyle {
   hair: string;
   /** Camera wording when a plain front view hides the style (ponytails). */
   view?: string;
+  /** Adds a thin scalp cap from this hairline over the crown (for generations that leave the skull bare between the strands). */
+  scalp?: { hairline: 'natural' | 'high' | 'fringe'; fringe?: number };
   /** Procedural parameters (src/characters/hair.ts) drawn while the GLB loads and when it cannot: the nearest procedural look. */
   fallback: Record<string, number | string | boolean>;
 }

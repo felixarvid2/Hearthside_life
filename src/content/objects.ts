@@ -77,6 +77,41 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   speaker: [[0, 0, -0.148], [0.148, 0.6364, 0]],
   trashcan: [[-0.1038, 0, -0.1116], [0.1038, 0.4279, 0.1225]],
   coatRackStanding: [[-0.1364, 0, -0.1364], [0.1364, 0.77, 0.1364]],
+  // Milestone 2 additions
+  loungeSofaLong: [[0, 0, -0.41], [0.98, 0.46, 0.41]],
+  loungeSofaCorner: [[0, 0, -0.98], [0.98, 0.46, 0]],
+  loungeChairRelax: [[0, 0, -0.6747], [0.49, 0.63, 0]],
+  loungeDesignChair: [[0, 0, -0.41], [0.7296, 0.4, 0]],
+  chairCushion: [[0, 0, -0.2], [0.2, 0.46, 0]],
+  chairRounded: [[0, 0, -0.2], [0.2, 0.455, 0]],
+  benchCushion: [[0, 0, -0.2], [0.4, 0.46, 0]],
+  stoolBarSquare: [[0.056, 0, -0.1888], [0.2095, 0.405, -0.0411]],
+  tableGlass: [[0, 0, -0.4474], [0.8415, 0.3267, 0]],
+  tableCross: [[0, 0, -0.4474], [0.8521, 0.3474, 0]],
+  deskCorner: [[0, 0, -0.9745], [0.9745, 0.3844, 0]],
+  sideTableDrawers: [[-0.01, 0, -0.21], [0.5245, 0.3844, 0.0123]],
+  bookcaseOpenLow: [[0, 0, -0.25], [0.4, 0.4, 0]],
+  bookcaseClosed: [[0, 0, -0.25], [0.4, 0.85, 0]],
+  cabinetTelevisionDoors: [[0, 0, -0.25], [0.8, 0.31, 0.01]],
+  cabinetBed: [[-0.01, 0, -0.205], [0.256, 0.2332, 0.01]],
+  kitchenBar: [[0, 0, -0.21], [0.43, 0.42, 0]],
+  kitchenStoveElectric: [[0, 0, -0.45], [0.43, 0.45, 0]],
+  kitchenFridgeSmall: [[0, 0, -0.2819], [0.43, 0.6002, 0.01]],
+  kitchenMicrowave: [[0, 0, -0.22], [0.29, 0.18, 0.01]],
+  washer: [[0, 0, -0.35], [0.39, 0.47, 0.04]],
+  dryer: [[0, 0, -0.35], [0.39, 0.47, 0.03]],
+  toiletSquare: [[0, 0, -0.3872], [0.3036, 0.451, 0]],
+  bathroomCabinetDrawer: [[0, 0.0582, -0.45], [0.43, 0.53, -0.13]],
+  showerRound: [[0, 0, -0.5618], [0.5618, 1.094, 0]],
+  lampRoundTable: [[-0.016, 0, -0.1478], [0.136, 0.3142, 0.0278]],
+  lampSquareTable: [[0, 0, -0.12], [0.12, 0.29, 0]],
+  lampWall: [[-0.1133, 0, 0], [0.1133, 0.0928, 0.1503]],
+  lampSquareCeiling: [[0, 0, -0.12], [0.12, 0.23, 0]],
+  ceilingFan: [[-0.1719, -0.1337, -0.2637], [0.2828, 0, 0.2613]],
+  rugRounded: [[0, 0, -0.92], [1.57, 0.01, 0]],
+  rugSquare: [[0, 0, -0.92], [0.9043, 0.01, 0]],
+  plantSmall2: [[-0.0473, 0, -0.0473], [0.0473, 0.14, 0.0473]],
+  bear: [[0, 0, -0.2475], [0.3897, 0.45, 0]],
 };
 
 /** Axis-aligned bounds in rot-0 local space. */
@@ -595,5 +630,306 @@ const DECOR: ObjectDef[] = [
   }),
 ];
 
+
+// =============================================================================================
+// Milestone 2 additions: more of the Kenney Furniture Kit, one model per design
+// =============================================================================================
+
+const CEILING = 2.8; // wall height (M1); ceiling items hang from it
+
+// --- Seating ---------------------------------------------------------------------------------
+const sofaChaise = fit('loungeSofaLong', FP22, 2);
+const sofaCorner = fit('loungeSofaCorner', FP22, 2);
+const recliner = fit('loungeChairRelax', FP11, 1.4);
+const designerChair = fit('loungeDesignChair', FP11, 1.35);
+const chairCushion = fit('chairCushion', FP11, 2);
+const chairRounded = fit('chairRounded', FP11, 2);
+const benchCushion = fit('benchCushion', FP11, 2, { back: WALL_GAP });
+const stoolSquare = fit('stoolBarSquare', FP11, 2);
+const SEATING_2: ObjectDef[] = [
+  obj(sofaChaise, {
+    id: 'sofa-chaise', name: 'Chaise Lounge Sofa', category: 'seating', subcategory: 'sofa', rooms: ['living'], style: 'classic',
+    description: 'A two-seat sofa with a long chaise end to stretch out on. Three people can sit; one can nap.',
+    tags: ['sofa', 'seat', 'chaise'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'premium', price: dollars(1380), quality: 4, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true,
+    slots: [
+      sit('left', sofaChaise.at(0.18, 0.3), 0.23 * 2, [0, 2]), sit('middle', sofaChaise.at(0.5, 0.3), 0.23 * 2, [1, 2]),
+      sit('chaise', sofaChaise.at(0.82, 0.62), 0.23 * 2, [1, 2]),
+    ],
+    interactions: ['sit', 'nap'], stats: { comfort: 7, energy: 0.8, environment: 2 }, finishes: [fabricR(['carpet']), woodR()],
+  }),
+  obj(sofaCorner, {
+    id: 'sofa-corner', name: 'Corner Sectional', category: 'seating', subcategory: 'sofa', rooms: ['living'], style: 'modern',
+    description: 'An L-shaped sectional that turns a corner of the living room into a lounge. Three seats and a deep, comfortable corner.',
+    tags: ['sofa', 'seat', 'sectional', 'corner'], packs: ['modern-minimal'], tier: 'premium', price: dollars(1720), quality: 4, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true,
+    slots: [
+      sit('left', sofaCorner.at(0.2, 0.3), 0.23 * 2, [0, 2]), sit('corner', sofaCorner.at(0.5, 0.3), 0.23 * 2, [1, 2]),
+      sit('right', sofaCorner.at(0.82, 0.3), 0.23 * 2, [1, 2]),
+    ],
+    interactions: ['sit', 'nap'], stats: { comfort: 8, energy: 0.85, environment: 2 }, finishes: [fabricR(['carpet']), woodR()],
+  }),
+  obj(recliner, {
+    id: 'armchair-recliner', name: 'Reclining Armchair', category: 'seating', subcategory: 'armchair', rooms: ['living', 'bedroom'], style: 'retro',
+    description: 'A big padded chair with a footrest that kicks out. The best seat for a long evening in front of the television.',
+    tags: ['armchair', 'seat', 'recliner'], packs: ['mid-century'], tier: 'standard', price: dollars(690), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', recliner.at(0.5, 0.4), 0.2 * 1.4, [0, 1])],
+    interactions: ['sit', 'nap'], stats: { comfort: 7, energy: 0.75, environment: 1 }, finishes: [fabricR(['carpet']), woodR(), metalR()],
+  }),
+  obj(designerChair, {
+    id: 'armchair-designer', name: 'Designer Tub Chair', category: 'seating', subcategory: 'armchair', rooms: ['living', 'study', 'bedroom'], style: 'modern',
+    description: 'A low, deep tub chair on slim legs: sculpted and surprisingly comfortable.',
+    tags: ['armchair', 'seat'], packs: ['modern-minimal', 'mid-century'], tier: 'premium', price: dollars(840), quality: 4, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', designerChair.at(0.5, 0.55), 0.2 * 1.35, [0, 1])],
+    interactions: ['sit'], stats: { comfort: 7, environment: 2 }, finishes: [fabricR(['carpetBlue']), metalR()],
+  }),
+  obj(chairCushion, {
+    id: 'chair-dining-cushion', name: 'Cushioned Dining Chair', category: 'seating', subcategory: 'chair', rooms: ['dining', 'kitchen'], style: 'cottage',
+    description: 'A ladder-back chair with a padded seat pad. Slip it under a table; diners come in from behind.',
+    tags: ['chair', 'seat', 'dining'], packs: ['everyday-essentials', 'cozy-cottage'], tier: 'budget', price: dollars(120), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', chairCushion.at(0.5, 0.6), 0.24 * 2, [0, -1])],
+    interactions: ['sit'], stats: { comfort: 4 }, finishes: [woodR(), fabricR(['carpet'], 'Seat pad')],
+  }),
+  obj(chairRounded, {
+    id: 'chair-rounded', name: 'Arch-Back Chair', category: 'seating', subcategory: 'chair', rooms: ['dining', 'kitchen', 'bedroom'], style: 'cottage',
+    description: 'A plain wooden chair with a rounded back, light enough to carry from room to room.',
+    tags: ['chair', 'seat', 'dining'], packs: ['everyday-essentials', 'cozy-cottage'], tier: 'budget', price: dollars(70), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', chairRounded.at(0.5, 0.6), 0.24 * 2, [0, -1])],
+    interactions: ['sit'], stats: { comfort: 2 }, finishes: [woodR()],
+  }),
+  obj(benchCushion, {
+    id: 'bench-cushion', name: 'Cushioned Hall Bench', category: 'seating', subcategory: 'bench', rooms: ['living', 'bedroom', 'dining'], style: 'cottage',
+    description: 'A small padded bench for the end of a bed, a hallway or a window nook.',
+    tags: ['bench', 'seat'], packs: ['cozy-cottage'], tier: 'budget', price: dollars(140), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', benchCushion.at(0.5, 0.55), 0.22 * 2, [0, 1])],
+    interactions: ['sit'], stats: { comfort: 3, environment: 1 }, finishes: [woodR(), fabricR(['carpet'], 'Cushion')],
+  }),
+  obj(stoolSquare, {
+    id: 'stool-bar-square', name: 'Square-Seat Bar Stool', category: 'seating', subcategory: 'stool', rooms: ['kitchen', 'dining'], style: 'cottage',
+    description: 'A tall wooden stool with a square padded seat, made to tuck under a counter.',
+    tags: ['stool', 'seat'], packs: ['cozy-cottage'], tier: 'budget', price: dollars(65), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', stoolSquare.at(0.5, 0.5), 0.405 * 2, [0, -1])],
+    interactions: ['sit'], stats: { comfort: 2 }, finishes: [woodR(), fabricR(['carpet'], 'Cushion')],
+  }),
+];
+
+// --- Tables, desks and storage -----------------------------------------------------------------
+const glassDining = fit('tableGlass', FP21, 0.66 / 0.3267);
+const trestle = fit('tableCross', FP21, 0.7 / 0.3474);
+const cornerDesk = fit('deskCorner', FP22, 2);
+const consoleDrawers = fit('sideTableDrawers', FP11, 1.8, { back: WALL_GAP });
+const lowBookcase = fit('bookcaseOpenLow', FP11, 2, { back: WALL_GAP });
+const tallBookcase = fit('bookcaseClosed', FP11, 2, { back: WALL_GAP });
+const mediaDoors = fit('cabinetTelevisionDoors', FP21, 0.6 / 0.31, { back: WALL_GAP });
+const bedsideCupboard = fit('cabinetBed', FP11, 2);
+const TABLES_STORAGE_2: ObjectDef[] = [
+  obj(glassDining, {
+    id: 'table-dining-glass', name: 'Glass-Top Dining Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'modern',
+    description: 'A four-seat table with a clear glass top on a slim steel frame. Meals can be served here.',
+    tags: ['table', 'dining', 'surface'], packs: ['modern-minimal'], tier: 'premium', price: dollars(760), quality: 4, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.66, stats: { environment: 2 }, finishes: [metalR()],
+  }),
+  obj(trestle, {
+    id: 'table-trestle', name: 'Trestle Farm Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'cottage',
+    description: 'A sturdy scrubbed-wood table on crossed trestle legs. Seats four and has seen a lot of dinners.',
+    tags: ['table', 'dining', 'surface'], packs: ['cozy-cottage'], tier: 'standard', price: dollars(540), quality: 3, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.7, stats: { environment: 1 }, finishes: [woodR()],
+  }),
+  obj(cornerDesk, {
+    id: 'desk-corner', name: 'Corner Writing Desk', category: 'tables', subcategory: 'desk', rooms: ['study', 'bedroom'], style: 'classic',
+    description: 'An L-shaped desk that wraps a corner and gives two work surfaces. Put a computer on it and a chair beside it.',
+    tags: ['desk', 'surface', 'corner'], packs: ['classic-townhouse', 'creative-studio'], tier: 'standard', price: dollars(620), quality: 3, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true, surfaceHeight: 0.77, stats: { environment: 1 }, finishes: [woodR(), metalR()],
+  }),
+  obj(consoleDrawers, {
+    id: 'console-drawers', name: 'Hall Table with Drawers', category: 'tables', subcategory: 'side', rooms: ['living', 'bedroom', 'study'], style: 'classic',
+    description: 'A narrow table with two drawers for keys and letters. A good stand for a lamp.',
+    tags: ['table', 'side', 'surface', 'storage'], tier: 'standard', price: dollars(210), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(consoleDrawers.box.y1), finishes: [woodR(), metalR()],
+  }),
+  obj(lowBookcase, {
+    id: 'bookcase-low', name: 'Low Open Bookcase', category: 'storage', subcategory: 'bookcase', rooms: ['study', 'living', 'bedroom', 'kids'], style: 'modern',
+    description: 'A waist-high open shelf for paperbacks and plants. Its top is a surface for lamps and small things.',
+    tags: ['bookcase', 'books', 'storage', 'surface'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'budget', price: dollars(150), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(lowBookcase.box.y1), slots: [useFront('use', 0.5, lowBookcase, 1)],
+    interactions: ['readBook'], stats: { skill: 0.9, fun: 0.9 }, finishes: [woodR()],
+  }),
+  obj(tallBookcase, {
+    id: 'bookcase-tall', name: 'Tall Shelving Unit', category: 'storage', subcategory: 'bookcase', rooms: ['study', 'living', 'bedroom'], style: 'classic',
+    description: 'A floor-to-top shelving unit with five levels. Holds a small library and rewards long reading sessions.',
+    tags: ['bookcase', 'books', 'storage'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, tallBookcase, 1)],
+    interactions: ['readBook'], stats: { skill: 1.1, fun: 1.05, environment: 1 }, finishes: [woodR()],
+  }),
+  obj(mediaDoors, {
+    id: 'media-cabinet-doors', name: 'Media Cabinet with Doors', category: 'storage', subcategory: 'media', rooms: ['living', 'bedroom'], style: 'classic',
+    description: 'A long, low cabinet with closed doors that hides the cables and clutter. A television stands on top.',
+    tags: ['tv-stand', 'surface', 'storage'], packs: ['classic-townhouse'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.6, finishes: [woodR(), metalR()],
+  }),
+  obj(bedsideCupboard, {
+    id: 'cupboard-bedside', name: 'Bedside Cupboard', category: 'beds', subcategory: 'nightstand', rooms: ['bedroom'], style: 'cottage',
+    description: 'A small single-door cupboard to stand beside the bed. Lamps and alarm clocks fit on top.',
+    tags: ['nightstand', 'surface', 'storage'], packs: ['cozy-cottage'], tier: 'budget', price: dollars(90), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(bedsideCupboard.box.y1), finishes: [woodR(), metalR()],
+  }),
+];
+
+// --- Kitchen and laundry -----------------------------------------------------------------------
+const barCounter = fit('kitchenBar', FP11, KITCHEN_SCALE, { back: 0.02 });
+const stoveElectric = fit('kitchenStoveElectric', FP11, KITCHEN_SCALE, { back: 0.02 });
+const fridgeCompact = fit('kitchenFridgeSmall', FP11, KITCHEN_SCALE, { back: WALL_GAP });
+const microwave = fit('kitchenMicrowave', FP11, 2);
+const washer = fit('washer', FP11, KITCHEN_SCALE, { back: 0.02 });
+const dryer = fit('dryer', FP11, KITCHEN_SCALE, { back: 0.02 });
+const KITCHEN_2: ObjectDef[] = [
+  obj(barCounter, {
+    id: 'counter-bar', name: 'Breakfast Bar Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen', 'dining'], style: 'classic',
+    description: 'A shallow counter module for a breakfast bar: a worktop at the same height as the other modules, with room for stools on the open side.',
+    tags: ['counter', 'surface', 'bar'], packs: ['everyday-essentials', 'mid-century'], tier: 'budget', price: dollars(190), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(WORKTOP), finishes: [woodR(['wood', 'woodDark']), counterR()],
+  }),
+  obj(stoveElectric, {
+    id: 'stove-electric', name: 'Electric Hob Range', category: 'kitchen', subcategory: 'stove', rooms: ['kitchen'], style: 'modern',
+    description: 'Four ceramic hotplates over a fan oven. Cooks use it when they make a meal from the fridge, and a good range lifts the result a little.',
+    tags: ['stove', 'appliance', 'cooking'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(780), quality: 4, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, stoveElectric, 1)],
+    interactions: [], stats: { cooking: 1 }, finishes: [woodR(['wood'])],
+  }),
+  obj(fridgeCompact, {
+    id: 'fridge-compact', name: 'Compact Fridge', category: 'kitchen', subcategory: 'fridge', rooms: ['kitchen', 'bedroom', 'study'], style: 'modern',
+    description: 'A counter-height fridge for small kitchens and studies. Grab a snack or gather ingredients to cook a meal.',
+    tags: ['fridge', 'appliance', 'food'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, fridgeCompact, 1)],
+    interactions: ['grabSnack', 'cookMeal'], stats: { cooking: 0 }, finishes: [applianceR()],
+  }),
+  obj(microwave, {
+    id: 'microwave', name: 'Microwave Oven', category: 'kitchen', subcategory: 'appliance', rooms: ['kitchen'], style: 'modern',
+    description: 'A countertop microwave with a glass door. Decorative for now; it stands on any counter.',
+    tags: ['appliance', 'decor', 'kitchen'], tier: 'budget', price: dollars(110), quality: 2, functional: false,
+    footprint: FP11, layer: 'surface', blocksMovement: false, stats: { environment: 1 }, finishes: [metalR(['metalMedium'])],
+  }),
+  obj(washer, {
+    id: 'washing-machine', name: 'Front-Loading Washer', category: 'kitchen', subcategory: 'laundry', rooms: ['kitchen', 'bathroom'], style: 'modern',
+    description: 'A front-loading washing machine with a round porthole door. Decorative for now; laundry arrives with housework.',
+    tags: ['laundry', 'appliance', 'washer'], tier: 'standard', price: dollars(620), quality: 3, functional: false,
+    footprint: FP11, layer: 'floor', blocksMovement: true, stats: { environment: 1 }, finishes: [applianceR(['metalLight'])],
+  }),
+  obj(dryer, {
+    id: 'tumble-dryer', name: 'Tumble Dryer', category: 'kitchen', subcategory: 'laundry', rooms: ['kitchen', 'bathroom'], style: 'modern',
+    description: 'A matching tumble dryer with a large door. Decorative for now; laundry arrives with housework.',
+    tags: ['laundry', 'appliance', 'dryer'], tier: 'standard', price: dollars(560), quality: 3, functional: false,
+    footprint: FP11, layer: 'floor', blocksMovement: true, stats: { environment: 1 }, finishes: [applianceR(['metalLight'])],
+  }),
+];
+
+// --- Bathroom ---------------------------------------------------------------------------------
+const toiletSquare = fit('toiletSquare', FP11, 2);
+const vanity = fit('bathroomCabinetDrawer', FP11, 2, { back: WALL_GAP });
+const showerRound = fit('showerRound', FP11, 1.7);
+const BATHROOM_2: ObjectDef[] = [
+  obj(toiletSquare, {
+    id: 'toilet-square', name: 'Square-Line Toilet', category: 'bathroom', subcategory: 'toilet', rooms: ['bathroom'], style: 'modern',
+    description: 'A squared-off close-coupled toilet with a slim cistern. A little more comfortable than the basic one.',
+    tags: ['toilet', 'fixture'], packs: ['modern-minimal'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', toiletSquare.at(0.5, 0.45), 0.248 * 2, [0, 1])],
+    interactions: ['useToilet'], stats: { comfort: 3 }, finishes: [],
+  }),
+  obj(vanity, {
+    id: 'vanity-basin', name: 'Vanity Unit with Basin', category: 'bathroom', subcategory: 'sink', rooms: ['bathroom'], style: 'modern',
+    description: 'A washbasin set into a vanity cabinet with two drawers for towels and toiletries. Pairs with a mirror above it.',
+    tags: ['sink', 'fixture', 'storage'], packs: ['modern-minimal', 'everyday-essentials'], tier: 'standard', price: dollars(420), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, vanity, 1)],
+    interactions: ['washHands'], stats: { hygiene: 1, environment: 1 }, finishes: [woodR()],
+  }),
+  obj(showerRound, {
+    id: 'shower-round', name: 'Quadrant Shower', category: 'bathroom', subcategory: 'shower', rooms: ['bathroom'], style: 'modern',
+    description: 'A curved corner shower enclosure with a glass screen and a deep tray. Showers until fully clean (at most 30 minutes).',
+    tags: ['shower', 'fixture'], packs: ['modern-minimal'], tier: 'premium', price: dollars(980), quality: 4, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true,
+    slots: [{ id: 'inside', kind: 'use', pos: showerRound.at(0.45, 0.55), height: r3(0.079 * 1.7), facing: Math.PI, approach: [0, 1], posture: 'standing' }],
+    interactions: ['takeShower'], stats: { hygiene: 1.1, environment: 1 }, finishes: [],
+  }),
+];
+
+// --- Lighting ---------------------------------------------------------------------------------
+// Every model with a 'lamp' material glows at night (ObjectsView adds a warm point light near the camera).
+const tableLampRound = fit('lampRoundTable', FP11, 1.6);
+const tableLampSquare = fit('lampSquareTable', FP11, 1.8);
+const wallLamp = fit('lampWall', FP11, 2, { back: WALL_GAP, lift: 1.7 });
+const ceilingLight = fit('lampSquareCeiling', FP11, 2, { lift: CEILING - 0.23 * 2 });
+const ceilingFan = fit('ceilingFan', FP11, 1.8, { lift: CEILING - 0.1337 * 1.8 });
+const LIGHTING_2: ObjectDef[] = [
+  obj(tableLampRound, {
+    id: 'lamp-table-round', name: 'Round Table Lamp', category: 'lighting', subcategory: 'table-lamp', rooms: ['living', 'bedroom', 'study'], style: 'classic',
+    description: 'A table lamp with a tapered shade that gives off a soft yellow glow at night. Stands on a table, nightstand or shelf.',
+    tags: ['lamp', 'light', 'decor'], packs: ['everyday-essentials', 'cozy-cottage'], tier: 'budget', price: dollars(45), quality: 2, functional: false,
+    footprint: FP11, layer: 'surface', blocksMovement: false, stats: { environment: 1 }, finishes: [metalR()],
+  }),
+  obj(tableLampSquare, {
+    id: 'lamp-table-square', name: 'Square Table Lamp', category: 'lighting', subcategory: 'table-lamp', rooms: ['living', 'bedroom', 'study'], style: 'modern',
+    description: 'A boxy-shaded table lamp that glows from every side at night. Stands on a table, nightstand or shelf.',
+    tags: ['lamp', 'light', 'decor'], packs: ['modern-minimal', 'mid-century'], tier: 'budget', price: dollars(60), quality: 2, functional: false,
+    footprint: FP11, layer: 'surface', blocksMovement: false, stats: { environment: 1 }, finishes: [metalR()],
+  }),
+  obj(wallLamp, {
+    id: 'lamp-wall', name: 'Wall Sconce', category: 'lighting', subcategory: 'wall-lamp', rooms: ['living', 'bedroom', 'bathroom', 'study'], style: 'classic',
+    description: 'A curved wall sconce that washes the wall with warm light at night. Hangs on any free stretch of wall.',
+    tags: ['lamp', 'light', 'decor', 'wall'], packs: ['classic-townhouse', 'art-deco'], tier: 'budget', price: dollars(75), quality: 3, functional: false,
+    footprint: FP11, layer: 'wall', needsWall: true, blocksMovement: false, stats: { environment: 2 }, finishes: [metalR()],
+  }),
+  obj(ceilingLight, {
+    id: 'light-ceiling-square', name: 'Square Ceiling Light', category: 'lighting', subcategory: 'ceiling-light', rooms: ['living', 'bedroom', 'kitchen', 'bathroom', 'study'], style: 'modern',
+    description: 'A flush square ceiling fitting that lights the whole room at night.',
+    tags: ['lamp', 'light', 'ceiling', 'decor'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'budget', price: dollars(55), quality: 2, functional: false,
+    footprint: FP11, layer: 'ceiling', blocksMovement: false, stats: { environment: 1 }, finishes: [metalR()],
+  }),
+  obj(ceilingFan, {
+    id: 'ceiling-fan', name: 'Ceiling Fan', category: 'lighting', subcategory: 'ceiling-light', rooms: ['living', 'bedroom', 'kitchen', 'study'], style: 'cottage',
+    description: 'Three wooden blades and a lamp: a ceiling fan with a light in the middle. Decorative; people stay cool anyway.',
+    tags: ['lamp', 'light', 'ceiling', 'fan', 'decor'], packs: ['coastal-home', 'cozy-cottage'], tier: 'standard', price: dollars(240), quality: 3, functional: false,
+    footprint: FP11, layer: 'ceiling', blocksMovement: false, stats: { environment: 2 }, finishes: [woodR()],
+  }),
+];
+
+// --- Decor ------------------------------------------------------------------------------------
+const rugRounded = fit('rugRounded', { w: 3, d: 2 }, 1.9);
+const rugSquare = fit('rugSquare', FP22, 2);
+const cactus = fit('plantSmall2', FP11, 2);
+const bearTrophy = fit('bear', FP11, 1.6, { back: WALL_GAP, lift: 1.5 });
+const DECOR_2: ObjectDef[] = [
+  obj(rugRounded, {
+    id: 'rug-rounded', name: 'Racetrack Rug', category: 'decor', subcategory: 'rug', rooms: ['living', 'bedroom', 'dining'], style: 'modern',
+    description: 'A large oval rug with a border ring. Decorative; people walk over it.',
+    tags: ['rug', 'decor'], packs: ['modern-minimal', 'mid-century'], tier: 'standard', price: dollars(260), quality: 3, functional: false,
+    footprint: { w: 3, d: 2 }, layer: 'rug', blocksMovement: false, stats: { environment: 2 },
+    finishes: [region('rug', 'Rug', ['carpet', 'carpetDarker'], FABRIC)],
+  }),
+  obj(rugSquare, {
+    id: 'rug-square', name: 'Square Bordered Rug', category: 'decor', subcategory: 'rug', rooms: ['living', 'bedroom', 'kids', 'study'], style: 'classic',
+    description: 'A square rug with a double border, sized to sit under a coffee table or a desk chair. Decorative.',
+    tags: ['rug', 'decor'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'budget', price: dollars(140), quality: 2, functional: false,
+    footprint: FP22, layer: 'rug', blocksMovement: false, stats: { environment: 2 },
+    finishes: [region('rug', 'Rug', ['carpet', 'carpetDarker'], FABRIC)],
+  }),
+  obj(cactus, {
+    id: 'plant-cactus', name: 'Potted Cactus', category: 'decor', subcategory: 'plant', rooms: ['living', 'kitchen', 'bathroom', 'study', 'bedroom'], style: 'botanical',
+    description: 'A little cactus in a wooden pot for sills, desks and shelves. Hardly needs watering, but can be.',
+    tags: ['plant', 'decor', 'garden'], packs: ['botanical-living', 'creative-studio'], tier: 'budget', price: dollars(20), quality: 2, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false,
+    interactions: ['waterPlant'], stats: { environment: 1 }, finishes: [woodR()],
+  }),
+  obj(bearTrophy, {
+    id: 'bear-head-trophy', name: 'Bear Head Mount', category: 'decor', subcategory: 'wall-art', rooms: ['living', 'study'], style: 'rustic',
+    description: 'A carved wooden bear head on a plaque: a lodge-style piece to hang over a fireplace or a desk. Decorative.',
+    tags: ['wall-art', 'decor', 'rustic'], packs: ['cozy-cottage'], tier: 'standard', price: dollars(180), quality: 3, functional: false,
+    footprint: FP11, layer: 'wall', needsWall: true, blocksMovement: false, stats: { environment: 2 }, finishes: [woodR()],
+  }),
+];
+
 /** Every buy-mode object definition (ready and in development). */
-export const OBJECTS: ObjectDef[] = [...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR];
+export const OBJECTS: ObjectDef[] = [
+  ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
+  ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
+];
+

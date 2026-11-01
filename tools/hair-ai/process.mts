@@ -43,7 +43,7 @@ export function extractHair(m: RawModel, keep: Uint8Array, T: Transform): HairMe
 export async function simplifyHair(h: HairMesh, tris: number): Promise<HairMesh> {
   await MeshoptSimplifier.ready;
   const n = h.pos.length / 3;
-  const [idx] = MeshoptSimplifier.simplifyWithAttributes(h.index, h.pos, 3, h.uv, 2, [0.6, 0.6], new Uint8Array(n), tris * 3, 0.02, ['Prune', 'ErrorAbsolute']);
+  const [idx] = MeshoptSimplifier.simplifyWithAttributes(h.index, h.pos, 3, h.uv, 2, [0.6, 0.6], new Uint8Array(n), Math.min(tris * 3, h.index.length), 0.02, ['Prune', 'ErrorAbsolute']);
   const map = new Map<number, number>();
   const pos: number[] = [], uv: number[] = [];
   const index = new Uint32Array(idx.length);
@@ -94,7 +94,9 @@ export function smoothNormals(h: HairMesh): Float32Array {
   for (let i = 0; i < n; i++) {
     const g = group[i] as number;
     const x = acc[g * 3] as number, y = acc[g * 3 + 1] as number, z = acc[g * 3 + 2] as number;
-    const l = Math.hypot(x, y, z) || 1;
+    const l = Math.hypot(x, y, z);
+    // a vertex of degenerate triangles only: face outward from the head centre
+    if (l < 1e-9) { const px = h.pos[i * 3] as number, py = (h.pos[i * 3 + 1] as number) - 0.09, pz = h.pos[i * 3 + 2] as number, pl = Math.hypot(px, py, pz) || 1; out[i * 3] = px / pl; out[i * 3 + 1] = py / pl; out[i * 3 + 2] = pz / pl; continue; }
     out[i * 3] = x / l; out[i * 3 + 1] = y / l; out[i * 3 + 2] = z / l;
   }
   return out;
@@ -122,6 +124,72 @@ export function rootShade(h: HairMesh, surface: DistanceField): Uint8Array {
     out[i * 4 + 3] = 255;
   }
   return out;
+}
+
+/** Texel block (size px at `size` resolution) that no triangle of the mesh uses; null when the map is full. */
+export function freeUvBlock(h: HairMesh, size: number, block: number): { u: number; v: number } | null {
+  const used = new Uint8Array(size * size);
+  for (let t = 0; t < h.index.length; t += 3) {
+    const p = [0, 1, 2].map((k) => [(h.uv[(h.index[t + k] as number) * 2] as number) * size, (h.uv[(h.index[t + k] as number) * 2 + 1] as number) * size]);
+    const x0 = Math.max(0, Math.floor(Math.min(p[0]![0]!, p[1]![0]!, p[2]![0]!)) - 1), x1 = Math.min(size - 1, Math.ceil(Math.max(p[0]![0]!, p[1]![0]!, p[2]![0]!)) + 1);
+    const y0 = Math.max(0, Math.floor(Math.min(p[0]![1]!, p[1]![1]!, p[2]![1]!)) - 1), y1 = Math.min(size - 1, Math.ceil(Math.max(p[0]![1]!, p[1]![1]!, p[2]![1]!)) + 1);
+    const [a, b, c] = p as [number[], number[], number[]];
+    const den = (b[1]! - c[1]!) * (a[0]! - c[0]!) + (c[0]! - b[0]!) * (a[1]! - c[1]!);
+    if (Math.abs(den) < 1e-9) continue;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const px = x + 0.5, py = y + 0.5;
+      const l1 = ((b[1]! - c[1]!) * (px - c[0]!) + (c[0]! - b[0]!) * (py - c[1]!)) / den;
+      const l2 = ((c[1]! - a[1]!) * (px - c[0]!) + (a[0]! - c[0]!) * (py - c[1]!)) / den;
+      const m = -0.12;
+      if (l1 >= m && l2 >= m && 1 - l1 - l2 >= m) used[y * size + x] = 1;
+    }
+  }
+  // dilate by the block margin through a summed-area table, then take the first free block
+  const sat = new Int32Array((size + 1) * (size + 1));
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) sat[(y + 1) * (size + 1) + x + 1] = (used[y * size + x] as number) + (sat[y * (size + 1) + x + 1] as number) + (sat[(y + 1) * (size + 1) + x] as number) - (sat[y * (size + 1) + x] as number);
+  const pad = 3;
+  for (let y = pad; y + block + pad <= size; y += 4) for (let x = pad; x + block + pad <= size; x += 4) {
+    const x0 = x - pad, y0 = y - pad, x1 = x + block + pad, y1 = y + block + pad;
+    const n = (sat[y1 * (size + 1) + x1] as number) - (sat[y0 * (size + 1) + x1] as number) - (sat[y1 * (size + 1) + x0] as number) + (sat[y0 * (size + 1) + x0] as number);
+    if (n === 0) return { u: x / size, v: y / size };
+  }
+  return null;
+}
+
+/**
+ * A thin scalp cap on the head surface from a hairline up over the crown, UV-mapped into a free block of the tint map: it
+ * keeps the skull covered under generated hair that leaves bare patches (puffs, ponytails, short crops).
+ */
+export function scalpCap(hs: Record<string, any>, hair: Record<string, any>, opts: { hairline: string; fringe: number; offset: number; block: { u: number; v: number }; blockSize: number; size: number; cols?: number; rows?: number }): HairMesh {
+  const cols = opts.cols ?? 30, rows = opts.rows ?? 9;
+  const pos: number[] = [], uv: number[] = [], index: number[] = [];
+  const hx = hs.H_MAX as number, dome = hs.DOME_START as number;
+  for (let i = 0; i < cols; i++) {
+    const th = -Math.PI + ((i + 0.5) / cols) * Math.PI * 2;
+    const y0 = hair.hairlineY(th, opts.hairline, opts.fringe) as number;
+    for (let j = 0; j <= rows; j++) {
+      const h = Math.min(y0, dome) + ((hx - Math.min(y0, dome)) * j) / rows;
+      const p = hs.headPoint(th, h) as number[], n = hs.headNormal(th, h) as number[];
+      pos.push(p[0]! + n[0]! * opts.offset, p[1]! + n[1]! * opts.offset, p[2]! + n[2]! * opts.offset);
+      // one block texel row per cap row: the block holds a flat tint, so the exact coordinates do not matter
+      const u = opts.block.u + (opts.blockSize / opts.size) * (0.15 + 0.7 * ((i % 4) / 3)), v = opts.block.v + (opts.blockSize / opts.size) * (0.15 + 0.7 * (j / rows));
+      uv.push(u, v);
+    }
+  }
+  const W = rows + 1;
+  for (let i = 0; i < cols; i++) {
+    const i2 = (i + 1) % cols;
+    for (let j = 0; j < rows; j++) { const a = i * W + j, b = i2 * W + j, c = i * W + j + 1, d = i2 * W + j + 1; index.push(a, b, c, b, d, c); }
+  }
+  return { pos: new Float32Array(pos), uv: new Float32Array(uv), index: Uint32Array.from(index) };
+}
+
+export function mergeMeshes(a: HairMesh, b: HairMesh): HairMesh {
+  const n = a.pos.length / 3;
+  const pos = new Float32Array(a.pos.length + b.pos.length); pos.set(a.pos); pos.set(b.pos, a.pos.length);
+  const uv = new Float32Array(a.uv.length + b.uv.length); uv.set(a.uv); uv.set(b.uv, a.uv.length);
+  const index = new Uint32Array(a.index.length + b.index.length); index.set(a.index); for (let i = 0; i < b.index.length; i++) index[a.index.length + i] = (b.index[i] as number) + n;
+  return { pos, uv, index };
 }
 
 export interface HairGlb { id: string; mesh: HairMesh; normals: Float32Array; colors: Uint8Array; tint: Buffer; tintSize: number; extras: Record<string, unknown> }

@@ -207,7 +207,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
         err(`${w}: scaled model (${b.x0.toFixed(2)}..${b.x1.toFixed(2)} x ${b.z0.toFixed(2)}..${b.z1.toFixed(2)}) leaves its ${fw}x${fd} footprint`);
       }
       if (b && b.y0 < -tol) err(`${w}: model sinks below the floor (${b.y0.toFixed(3)})`);
-      if (b && o.layer !== 'wall' && b.y0 > tol) warn(`${w}: model floats ${b.y0.toFixed(3)} m above the floor`);
+      if (b && o.layer !== 'wall' && o.layer !== 'ceiling' && b.y0 > tol) warn(`${w}: model floats ${b.y0.toFixed(3)} m above the floor`);
       if (b && Math.abs(b.y1 - o.height) > 0.03) warn(`${w}: height ${o.height} differs from the model top ${b.y1.toFixed(3)}`);
     }
 

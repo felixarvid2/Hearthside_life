@@ -556,7 +556,7 @@ const cobbles: PainterDef = {
         const cx = (i + 0.5 + (j % 2) * 0.5) * cw, cy = (j + 0.5) * rh;
         const rng = rngFor(s.seed, wrappedKey(s, cx, cy));
         const fill = shade(stones[Math.floor(rng.next() * 3)] ?? joint, (rng.next() - 0.5) * 0.14 * variation);
-        const rx = cw * (0.4 + rng.next() * 0.06), ry = rh * (0.4 + rng.next() * 0.06);
+        const rx = cw * (0.44 + rng.next() * 0.05), ry = rh * (0.45 + rng.next() * 0.05);
         const jx = (rng.next() - 0.5) * cw * 0.06, jy = (rng.next() - 0.5) * rh * 0.06;
         const rot = (rng.next() - 0.5) * 0.25;
         drawWrapped(ctx, s, cx - rx - 0.01, cy - ry - 0.01, cx + rx + 0.01, cy + ry + 0.01, () => {

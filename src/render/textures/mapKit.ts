@@ -13,7 +13,7 @@ import type { Canvas2DLike } from './painterKit';
 export const MAP_IDS = [
   'grain-oak', 'grain-barn', 'stone-marble', 'stone-slate', 'fibre-berber', 'fibre-sisal',
   'concrete-aggregate', 'gravel', 'lawn',
-  'plaster-rough', 'grasscloth', 'rubble-stone', 'slate-ledge', 'concrete-board', 'marble-veined',
+  'plaster-rough', 'grasscloth', 'rubble-stone', 'slate-ledge', 'concrete-board',
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 

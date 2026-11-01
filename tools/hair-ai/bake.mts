@@ -48,7 +48,7 @@ export function fillUnknown(v: Float32Array, known: Uint8Array, w: number, h: nu
   }
 }
 
-export interface BakeOptions { size: number; mean?: number; detail?: number; flatten?: number }
+export interface BakeOptions { size: number; mean?: number; detail?: number; flatten?: number; /** Texel block (fractions of the map) painted with the mean tint, for the scalp cap. */ paint?: { u: number; v: number; size: number } }
 
 /** The tint map as 8-bit RGB (grey) pixels, `size` x `size`. */
 export async function bakeTint(m: RawModel['tex'], o: BakeOptions): Promise<{ rgb: Buffer; stats: { mean: number; p5: number; p95: number; unknownShare: number } }> {
@@ -90,5 +90,17 @@ export async function bakeTint(m: RawModel['tex'], o: BakeOptions): Promise<{ rg
     sum += v;
   }
   const resized = await sharp(buf, { raw: { width: w, height: h, channels: 3 } }).resize(o.size, o.size, { kernel: 'lanczos3' }).sharpen({ sigma: 0.7, m1: 0.2, m2: 1.2 }).raw().toBuffer();
+  if (o.paint) {
+    // strand-like streaks around the mean tint of the hair
+    let mu = 0, nn = 0;
+    for (let i = 0; i < resized.length; i += 3) { if (resized[i]! > 70) { mu += resized[i]!; nn++; } }
+    mu = nn ? mu / nn : 200;
+    const x0 = Math.round(o.paint.u * o.size), y0 = Math.round(o.paint.v * o.size);
+    for (let y = y0; y < y0 + o.paint.size; y++) for (let x = x0; x < x0 + o.paint.size; x++) {
+      const v = Math.max(0, Math.min(255, Math.round(mu * (0.9 + 0.1 * Math.sin(x * 2.1 + Math.sin(y * 0.37) * 2) ))));
+      const k = (y * o.size + x) * 3;
+      resized[k] = resized[k + 1] = resized[k + 2] = v;
+    }
+  }
   return { rgb: resized, stats: { mean: sum / (w * h), p5, p95, unknownShare: unknown / (w * h) } };
 }

@@ -54,3 +54,14 @@ Cached results in dev/hair-ai/raw/ are reused, so rebuilding costs nothing.
 | 2026-11-01 08:48 | fal-ai/trellis | 3D model slick-back | 0.020 |
 | 2026-11-01 08:49 | fal-ai/trellis | 3D model curly-crop | 0.020 |
 | 2026-11-01 08:50 | fal-ai/trellis | 3D model locs-medium | 0.020 |
+| 2026-11-01 08:50 | fal-ai/trellis | 3D model bob-bangs | 0.020 |
+| 2026-11-01 08:51 | fal-ai/trellis | 3D model pixie | 0.020 |
+| 2026-11-01 08:51 | fal-ai/trellis | 3D model ponytail-low | 0.020 |
+| 2026-11-01 08:52 | fal-ai/trellis | 3D model box-braids | 0.020 |
+| 2026-11-01 08:52 | fal-ai/trellis | 3D model layered-shoulder | 0.020 |
+| 2026-11-01 08:52 | fal-ai/trellis | 3D model afro-puffs | 0.020 |
+| 2026-11-01 08:53 | fal-ai/trellis | 3D model wolf-cut | 0.020 |
+| 2026-11-01 08:53 | fal-ai/trellis | 3D model man-bun | 0.020 |
+| 2026-11-01 08:53 | fal-ai/trellis | 3D model space-buns | 0.020 |
+| 2026-11-01 08:54 | fal-ai/trellis | 3D model pompadour | 0.020 |
+| 2026-11-01 08:54 | fal-ai/trellis | 3D model twin-tails | 0.020 |

@@ -184,6 +184,7 @@ export class MockCreatorApi implements GameAPI {
   rooms(): never[] { return []; }
   roomAt(): null { return null; }
   openingAt(): null { return null; }
+  highlightRoom(): void { /* no world */ }
   undo(): string | null { return null; }
   redo(): string | null { return null; }
   canUndo(): boolean { return false; }
@@ -207,7 +208,7 @@ export class MockCreatorApi implements GameAPI {
     },
   };
   portrait(): string | null { return null; }
-  thumbnails = { furniture: (): string => '', surface: (): string => '' };
+  thumbnails = { furniture: (): string => '', surface: (): string => '', opening: (): string => '' };
   settings(): GameSettings { return this.settingsValue; }
   setSettings(patch: Partial<GameSettings>): void { this.settingsValue = { ...this.settingsValue, ...patch }; this.emit('settings'); }
   setSimSettings(): void {}

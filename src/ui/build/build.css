@@ -54,3 +54,55 @@
 /* ---------- Walls control at the end of the body ---------- */
 .bb-cutaway.field { margin: 14px 0 4px; padding-top: 10px; border-top: 1px solid var(--line); }
 .bb-cutaway .seg { padding: 0 10px; }
+
+/* ---------- Tool tabs (Paint, Walls, Room, Doors, Windows, Erase) ---------- */
+.bb-tool-tabs .tab { padding: 0 12px; }
+.bb-kindbar { margin: 0 0 8px; }
+.bb-kindbar .tabs { padding: 0; }
+.bb-tool-section { display: flex; flex-direction: column; gap: 10px; margin: 0 0 6px; }
+.bb-tool-section[hidden], .bb-paint-section[hidden] { display: none; }
+.bb-tool-section .bb-hint { margin: 0; }
+.bb-tool-section .field { margin: 0; }
+.bb-style { display: flex; flex-direction: column; gap: 8px; }
+.bb-style .bb-note { margin: 0; }
+.bb-seg-tight .seg { padding: 0 8px; font-size: 0.88rem; }
+.bb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bb-chips .chip { min-height: var(--tap); }
+.bb-open-host .card-grid { grid-template-columns: repeat(auto-fill, minmax(6.3rem, 1fr)); }
+.bb-open-host .card .thumb { object-fit: cover; background: var(--paper-2); }
+.bb-room-info {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; margin: 0 0 8px; border-radius: 14px;
+  background: #e2f0ee; color: #1f4f49; font-weight: 700;
+}
+.bb-room-info .bb-room-text { flex: 1 1 8rem; }
+
+/* ---------- Footer: live preview text and Confirm / Cancel ---------- */
+.bb-build-footer { display: flex; flex-direction: column; gap: 8px; }
+.bb-build-status { padding: 6px 10px; font-size: 0.9rem; align-items: flex-start; }
+.bb-build-status .icon-wrap { margin-top: 1px; flex: none; }
+.bb-build-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.bb-build-text strong { font-weight: 800; overflow-wrap: anywhere; }
+.bb-build-detail { font-weight: 600; font-size: 0.85rem; overflow-wrap: anywhere; }
+.bb-build-buttons { display: flex; gap: 8px; }
+.bb-build-buttons .btn { flex: 1 1 0; min-width: 0; width: auto; padding: 0 10px; }
+.bb-build-buttons .bb-confirm { flex: 2 1 0; }
+.bb-build-buttons [hidden] { display: none; }
+body.is-landscape.is-compact .bb-build-footer { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px 8px; }
+body.is-landscape.is-compact .bb-build-footer .bb-build-status { padding: 3px 8px; font-size: 0.8rem; }
+body.is-landscape.is-compact .bb-build-footer .bb-build-detail { font-size: 0.78rem; }
+body.is-landscape.is-compact .bb-build-buttons .btn { flex-direction: row; min-height: var(--tap); padding: 0 8px; border-radius: 999px; font-size: 0.85rem; gap: 4px; }
+
+/* ---------- Handles for resizing the shape before confirming ---------- */
+.bb-handles { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+.bb-handle {
+  position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; padding: 0; border: none; background: transparent; border-radius: 50%;
+  pointer-events: auto; touch-action: none; cursor: grab;
+}
+.bb-handle .bb-handle-dot {
+  position: absolute; inset: 8px; border-radius: 50%; background: #fff; border: 4px solid var(--accent-2);
+  box-shadow: 0 0 0 2px rgba(47, 42, 38, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.bb-handle:focus-visible .bb-handle-dot, .bb-handle.is-active .bb-handle-dot { border-color: var(--accent); transform: scale(1.12); }
+.bb-handle[hidden] { display: none; }
+.bb-build-tip { z-index: 36; transform: translate(-50%, calc(-100% - 46px)); max-width: min(78vw, 22rem); white-space: normal; text-align: center; }
+.bb-build-tip[hidden] { display: none; }

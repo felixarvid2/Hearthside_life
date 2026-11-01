@@ -101,6 +101,8 @@ export function nelderMead(f: (x: number[]) => number, x0: number[], step: numbe
 export interface FitInput {
   /** Visible mannequin surface points (xyz triples, model space), the neck included. */
   head: Float32Array;
+  /** Every vertex of the model, hair included: the skull top must lie inside the hair, not poke out of it. */
+  all?: Float32Array;
   /** Head surface samples (head-local metres) and the face subset used for the reverse term. */
   surface: Float32Array;
   face: Float32Array;
@@ -120,9 +122,10 @@ function trimmedMean(v: number[], keep: number): number {
  * Fits the transform mannequin -> head-local. Forward term: each visible mannequin point should lie on the head surface (the
  * worst 35 % are ignored: neck, ears, stand, hair fragments). Reverse term: the face of the head should lie on mannequin points.
  */
-export function fitHead(inp: FitInput, init: { scale: number; ty: number }): FitResult {
+export function fitHead(inp: FitInput, init: { yE: number }): FitResult {
   const field = new DistanceField(inp.surface, [-0.14, -0.1, -0.14], [0.14, 0.3, 0.16], 0.004);
   const mfield = new DistanceField(inp.head, [-0.7, -0.7, -0.7], [0.7, 0.7, 0.7], 0.012);
+  const afield = inp.all ? new DistanceField(inp.all, [-0.7, -0.7, -0.7], [0.7, 0.7, 0.7], 0.012) : mfield;
   const step = Math.max(1, Math.floor(inp.head.length / 3 / 700));
   const sub: number[] = [];
   for (let i = 0; i < inp.head.length / 3; i += step) sub.push(inp.head[i * 3]!, inp.head[i * 3 + 1]!, inp.head[i * 3 + 2]!);
@@ -145,16 +148,20 @@ export function fitHead(inp: FitInput, init: { scale: number; ty: number }): Fit
       const x0 = inp.face[i * 3]! - T.t[0], y0 = inp.face[i * 3 + 1]! - T.t[1], z0 = inp.face[i * 3 + 2]! - T.t[2];
       const mx = (ci * x0 + si * z0) / T.s[0], my = y0 / T.s[1], mz = (-si * x0 + ci * z0) / T.s[2];
       const w = dome ? 0.5 : 1;
-      r += Math.min(mfield.at(mx, my, mz), dome ? 0.05 : 0.3) * mean * w;
+      r += Math.min((dome ? afield : mfield).at(mx, my, mz), dome ? 0.08 : 0.3) * mean * w;
       rw += w;
     }
     r /= rw;
-    return { c: f + 0.8 * r + 0.004 * aniso, f, r };
+    // priors: TRELLIS normalises the model to a unit box and FLUX draws the mannequin at a similar size, so the scale stays in 0.25 .. 0.47; the mannequin looks at the camera within about 30 degrees, and sy / sx stays near 1
+    const out = Math.max(0, mean - 0.47) * 6 + Math.max(0, 0.25 - mean) * 6;
+    const yawOut = Math.max(0, Math.abs(T.yaw) - 0.5);
+    const asp = Math.max(0, Math.abs(T.s[1] / T.s[0] - 1) - 0.25) + Math.max(0, Math.abs(T.s[2] / T.s[0] - 1) - 0.2) * 2;
+    return { c: f + 0.8 * r + 0.004 * aniso + 0.02 * out + 0.02 * yawOut + 0.003 * Math.abs(T.yaw) + 0.02 * asp, f, r };
   };
   let best: { x: number[]; fx: number } | null = null;
-  for (const k of [0.8, 1, 1.25]) for (const dy of [-0.03, 0, 0.03]) {
-    const s0 = init.scale * k;
-    const res = nelderMead((x) => cost(x).c, [s0, s0, s0, 0, init.ty + dy, 0, 0], [s0 * 0.1, s0 * 0.1, s0 * 0.1, 0.01, 0.01, 0.01, 0.08], 220);
+  // several starts: scale, height and a turned mannequin (three-quarter views)
+  for (const s0 of [0.28, 0.34, 0.41]) for (const dy of [-0.03, 0, 0.03]) for (const yaw of [-0.4, 0, 0.4]) {
+    const res = nelderMead((x) => cost(x).c, [s0, s0, s0, 0, 0.083 - s0 * init.yE + dy, 0, yaw], [s0 * 0.1, s0 * 0.1, s0 * 0.1, 0.01, 0.01, 0.01, 0.08], 160);
     if (!best || res.fx < best.fx) best = res;
   }
   const fin = nelderMead((x) => cost(x).c, best!.x, [best!.x[0]! * 0.04, best!.x[1]! * 0.04, best!.x[2]! * 0.04, 0.004, 0.004, 0.004, 0.03], 300);

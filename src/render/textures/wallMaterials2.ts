@@ -225,7 +225,7 @@ const wallTileSet: PainterDef = {
             const prng = rngFor(s.seed, wrappedKey(s, x, 0), j, 3);
             for (let q = 0; q < 3; q++) {
               softBlob(ctx, (prng.next() - 0.5) * t * 0.7, (prng.next() - 0.5) * t * 0.7, t * (0.2 + prng.next() * 0.3), t * (0.15 + prng.next() * 0.25),
-                prng.next() * Math.PI, prng.next() < 0.5 ? alt : '#000000', 0.14 * variation, 4);
+                prng.next() * Math.PI, prng.next() < 0.5 ? alt : '#000000', 0.08 * variation, 4);
             }
             softBlob(ctx, -t * 0.18, -t * 0.2, t * 0.3, t * 0.14, -0.6, '#ffffff', 0.16, 4);
             ctx.fillStyle = rgba('#ffffff', 0.22);

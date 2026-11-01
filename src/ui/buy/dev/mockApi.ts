@@ -555,6 +555,7 @@ export class MockGame {
       rooms: (level?: number): RoomInfo[] => this.buildTools.rooms(level),
       roomAt: (tile, level) => this.buildTools.roomAt(tile, level),
       openingAt: (wallId) => this.buildTools.openingAt(wallId),
+      highlightRoom: () => { /* the mock draws nothing */ },
       undo: () => {
         const s = this.done.pop();
         if (!s) return null;
@@ -599,6 +600,7 @@ export class MockGame {
           const pal = d?.palettes.find((p) => p.id === paletteId) ?? d?.palettes[0];
           return d && pal ? this.thumb(`s:${kind}:${designId}:${pal.id}`, () => surfaceThumb(d, pal)) : '';
         },
+        opening: (defId) => this.thumb(`o:${defId}`, () => `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#efe3d0"/><rect x="18" y="8" width="28" height="50" rx="3" fill="#a77b52"/></svg>')}`),
       },
       settings: () => ({ ...this.settingsValue }),
       setSettings: (patch) => { this.settingsValue = { ...this.settingsValue, ...patch }; this.emit('settings'); },

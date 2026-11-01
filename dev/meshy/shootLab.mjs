@@ -6,7 +6,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -88,7 +88,11 @@ if (['hairside', 'all'].includes(PLAN)) {
 }
 if (['hair', 'hairlive'].includes(PLAN)) {
   // every hairstyle on both frames: close views (front / three-quarter / side / back) or game distance (walk, sit)
-  const ids = (opt('hairs', '') || 'buzz,crop-side-part,curly-top,bob-chin,waves-shoulder,long-straight,ponytail-high,bun-top,afro-coily,braids-twin').split(',');
+  // --hairs=a,b | ai (the generated styles in public/assets/characters/hair) | all (procedural and generated)
+  const PROC = 'buzz,crop-side-part,curly-top,bob-chin,waves-shoulder,long-straight,ponytail-high,bun-top,afro-coily,braids-twin'.split(',');
+  const AI = readdirSync(join(root, 'public/assets/characters/hair')).filter((f) => f.endsWith('.glb')).map((f) => f.slice(0, -4)).sort();
+  const hairsOpt = opt('hairs', '');
+  const ids = hairsOpt === 'ai' ? AI : hairsOpt === 'all' ? [...PROC, ...AI] : (hairsOpt || PROC.join(',')).split(',');
   const viewSel = (opt('views', '') || 'front,three,side,back,drape').split(',');
   const frames = (opt('frames', '') || 'a,b').split(',');
   const COLORS = ['#6b4528', '#2b221e', '#c8a064', '#7c3a22', '#3d2a1f'];
