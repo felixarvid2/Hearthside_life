@@ -86,11 +86,23 @@ Brief references: sections 6.1, 16, 20, 22 (overlay), 23 (save UI), 26 (Mileston
      Cost shown before confirming; unaffordable is disabled with the reason.
    - Tap a placed object: Move, Rotate, Sell (shows the refund), Store in inventory, finish swatches.
    - Inventory tab: stored objects, place from inventory. Undo / Redo buttons.
-6. **Build mode** (M1 scope: finishes)
+6. **Build mode** (M1 finishes, M2 construction)
+   - Tool tabs: **Paint** (finishes), **Walls**, **Room**, **Doors**, **Windows**, **Erase**. The grid is drawn over the lot while
+     building. With no tool chosen, hovering (mouse) or tapping a room outlines it and offers "Demolish room".
    - Wall finishes: design grid (thumbnails), palette swatches, scope (one wall side / whole room), live
      in-world preview on hover/tap before committing, eyedropper, recently used.
-   - Floors: design grid, palettes, scope (tile / drag rectangle / whole room), eyedropper.
-   - Walls up/down/cutaway control stays available. Undo / Redo.
+   - Floors: design grid, palettes, scope (one tile / area by dragging a rectangle / whole room), eyedropper.
+   - Walls: a run (drag) or one piece (tap), height presets, plain paint or the chosen finish on both sides.
+   - Room: drag a rectangle; options for the floor (the chosen one or none), a door and a window with their side.
+   - Doors / Windows: catalog with pictures, names and prices (width in tiles for wide ones); actions Place, Move, Turn around, Remove.
+   - Erase: wall piece, wall run, walls in an area, door or window, floor tile, floor area, floor of a room, delete a room.
+   - Preview: ghost walls (translucent), demolition hatched, blocked things hatched with a red marker (never colour alone), tiles tinted,
+     a ghost door/window in its wall. The footer states the action, measurement, counts, money (cost, "money back") or the first reason.
+   - **Touch**: a tap or a one-finger drag only sets the preview; large round handles resize the shape; **Confirm** applies it, **Cancel**
+     clears it ("Done" when nothing is pending). Two fingers pan and zoom. The preview survives rotating the device and pointer cancel.
+     **Desktop**: hover previews click tools and a click applies; a drag applies on release; Esc cancels (then ends the tool); R turns an
+     opening around; Enter confirms; right-drag pans.
+   - Walls up/down/cutaway control stays available. Undo / Redo. The simulation stays paused.
 7. **Game menu**: Save (5 named slots + autosave/backup display, overwrite confirmation), Load, Export world
    (download JSON), Import world (file picker; errors shown clearly, current save untouched), Settings,
    Quit to main menu. The backup export is easy to find ("Download a backup of this world").
@@ -107,7 +119,7 @@ Brief references: sections 6.1, 16, 20, 22 (overlay), 23 (save UI), 26 (Mileston
 ## Input state machine (world canvas)
 
 States: `idle`, `pressing` (pointer down, < 8 px movement, < 500 ms), `panning`, `pinching`, `placing`
-(Buy placement), `painting` (Build). Rules:
+(Buy placement), `painting` (Build; with a structure tool that drags out a shape, `drawing`). Rules:
 - A press that moves >= 8 px becomes a pan and never issues a tap/walk command.
 - Two pointers -> pinch zoom (and optional two-finger rotate snapped to 90 degrees).
 - `pointercancel`, `lostpointercapture` and `blur` reset to idle without side effects.

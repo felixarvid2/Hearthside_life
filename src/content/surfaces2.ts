@@ -492,7 +492,7 @@ export const WALL_DESIGNS_2: SurfaceDesign[] = [
     painter: 'map-wall', params: { map: 'stone-marble', tiles: 2, skirt: 0.1 }, repeat: 1.2,
     // roles: base, light, dark (the veins), trim
     palettes: ([
-      ['carrara', 'Carrara', '#e8e5de', '#fbfaf7', '#6f7075'], ['calacatta-gold', 'Calacatta Gold', '#ece6d8', '#fbf8ef', '#a98c52'], ['nero-marquina', 'Nero Marquina', '#2b2b2e', '#6a6a70', '#0f0f10'],
+      ['carrara', 'Carrara', '#e8e5de', '#fbfaf7', '#6f7075'], ['calacatta-gold', 'Calacatta Gold', '#ece6d8', '#fbf8ef', '#a98c52'], ['nero-marquina', 'Nero Marquina', '#2b2b2e', '#3c3c40', '#e6e3dc'],
       ['emerald-marble', 'Emerald', '#2f5d4e', '#9fc2b4', '#0f2a22'], ['rosa-marble', 'Rosa', '#e6c6bd', '#f8e9e4', '#a8695d'], ['bardiglio', 'Bardiglio Grey', '#9a9da1', '#d3d5d7', '#4a4d52'],
       ['breccia', 'Breccia Terracotta', '#c88a5e', '#e6c6a4', '#6b3f26'], ['blue-marble', 'Azul Blue', '#4f6a86', '#a9bdd0', '#1c2a3a'],
     ] as Tuple[]).map(([id, name, ...c]) => pal(id, name, ...c, '#f5f1e8')),
@@ -706,7 +706,7 @@ export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
     // roles: base, light, dark (veins), grout
     palettes: plain([
       ['carrara-floor', 'Carrara', '#e6e3dc', '#fbfaf7', '#6b6c70', '#cfcac0'], ['calacatta-floor', 'Calacatta Gold', '#ece6d8', '#fbf8ef', '#a98c52', '#cfc8b4'],
-      ['nero-floor', 'Nero Marquina', '#2b2b2e', '#6a6a70', '#0f0f10', '#4a4a4e'], ['emerald-floor', 'Verde Emerald', '#2f5d4e', '#9fc2b4', '#0f2a22', '#4a6a5e'],
+      ['nero-floor', 'Nero Marquina', '#2b2b2e', '#3c3c40', '#e6e3dc', '#5a5a5e'], ['emerald-floor', 'Verde Emerald', '#2f5d4e', '#9fc2b4', '#0f2a22', '#4a6a5e'],
       ['rosa-floor', 'Rosa Portogallo', '#e6c6bd', '#f8e9e4', '#a8695d', '#d4b4aa'], ['grey-floor', 'Bardiglio Grey', '#9a9da1', '#d3d5d7', '#4a4d52', '#7a7d80'],
       ['travertine-floor', 'Honed Travertine', '#d6c4a4', '#eee2c8', '#9a835a', '#b8a888'],
     ]),

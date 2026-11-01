@@ -2,72 +2,71 @@
 
 Generated with `npm run content:check -- --markdown` (tools/content-report.ts). Counts are **distinct designs**; palettes, swatches and colours are variants and never counted as designs. Entries with status `dev` are not selectable in the game and are not counted toward targets.
 
-Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met. Full-project targets are delivered in Milestone 10.
-
+Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) and the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows) are met. Full-project targets are delivered in Milestone 10.
 
 ### Buy-mode furniture (distinct designs)
 
-| | ready | dev | variants | M1 min | full target |
-|---|---:|---:|---:|---:|---:|
-| seating | 6 | 0 | 86 | - | 64 |
-| beds | 4 | 0 | 56 | - | 40 |
-| tables | 6 | 0 | 52 | - | 48 |
-| storage | 5 | 0 | 46 | - | 48 |
-| kitchen | 7 | 0 | 62 | - | 56 |
-| bathroom | 5 | 0 | 8 | - | 36 |
-| lighting | 2 | 0 | 12 | - | 64 |
-| electronics | 5 | 0 | 30 | - | 28 |
-| hobby | 0 | 0 | 0 | - | 36 |
-| decor | 4 | 0 | 32 | - | 64 |
-| outdoor | 0 | 0 | 0 | - | 40 |
-| kids | 0 | 0 | 0 | - | 36 |
-| TOTAL furniture | 44 | 0 | 384 | 15 | 560 |
+| | ready | dev | variants | M1 min | M2 min | full target |
+|---|---:|---:|---:|---:|---:|---:|
+| seating | 14 | 0 | 211 | - | - | 64 |
+| beds | 5 | 0 | 70 | - | - | 40 |
+| tables | 10 | 0 | 94 | - | - | 48 |
+| storage | 8 | 0 | 76 | - | - | 48 |
+| kitchen | 13 | 0 | 109 | - | - | 56 |
+| bathroom | 8 | 0 | 16 | - | - | 36 |
+| lighting | 7 | 0 | 44 | - | - | 64 |
+| electronics | 5 | 0 | 30 | - | - | 28 |
+| hobby | 0 | 0 | 0 | - | - | 36 |
+| decor | 8 | 0 | 64 | - | - | 64 |
+| outdoor | 0 | 0 | 0 | - | - | 40 |
+| kids | 0 | 0 | 0 | - | - | 36 |
+| TOTAL furniture | 78 | 0 | 714 | 15 | 60 | 560 |
 
-variants = finish swatches summed over all regions of ready objects; 6 ready designs are decorative, 39 offer at least 6 swatches in a region; distinct models used: 44.
+variants = finish swatches summed over all regions of ready objects; 17 ready designs are decorative, 71 offer at least 6 swatches in a region; distinct models used: 78.
 
 ### Construction surfaces
 
-| | ready | dev | variants | M1 min | full target |
-|---|---:|---:|---:|---:|---:|
-| wall finishes | 12 | 0 | 112 | 12 | 360 |
-| floor designs | 8 | 0 | 58 | 8 | 200 |
-| doors | 3 | 0 | - | - | 48 |
-| windows | 3 | 0 | - | - | 64 |
+| | ready | dev | variants | M1 min | M2 min | full target |
+|---|---:|---:|---:|---:|---:|---:|
+| wall finishes | 50 | 0 | 433 | 12 | 48 | 360 |
+| floor designs | 32 | 0 | 224 | 8 | 32 | 200 |
+| doors | 9 | 0 | - | - | 6 | 48 |
+| windows | 11 | 0 | - | - | 8 | 64 |
 
 variants = curated palettes of ready designs (a design counts once however many palettes it has).
 
 ### Character content
 
-| | ready | dev | variants | M1 min | full target |
-|---|---:|---:|---:|---:|---:|
-| hairstyles | 10 | 0 | 18 colours | 8 | 60 |
-| facial hair | 5 | 0 | - | - | 16 |
-| garments | 25 | 0 | 75 | 12 | 132 |
-| accessories | 4 | 0 | - | - | 32 |
-| patterns | 7 | 0 | - | - | - |
-| face presets | 12 | 0 | 18 sliders | - | - |
-| body presets | 12 | 0 | 10 sliders | - | - |
-| brow styles | 8 | 0 | - | - | - |
-| voices | 6 | 0 | - | - | - |
-| skin tones | 16 | 0 | - | - | - |
-| eye colours | 12 | 0 | - | - | - |
+| | ready | dev | variants | M1 min | M2 min | full target |
+|---|---:|---:|---:|---:|---:|---:|
+| hairstyles | 28 | 0 | 18 colours | 8 | - | 60 |
+| facial hair | 5 | 0 | - | - | - | 16 |
+| garments | 25 | 0 | 75 | 12 | - | 132 |
+| accessories | 4 | 0 | - | - | - | 32 |
+| patterns | 7 | 0 | - | - | - | - |
+| face presets | 12 | 0 | 18 sliders | - | - | - |
+| body presets | 12 | 0 | 10 sliders | - | - | - |
+| brow styles | 8 | 0 | - | - | - | - |
+| voices | 6 | 0 | - | - | - | - |
+| skin tones | 16 | 0 | - | - | - | - |
+| eye colours | 12 | 0 | - | - | - | - |
 
 garment variants = solid plus allowed patterns per ready garment (colours are free choice).
 
 ### Gameplay content
 
-| | ready | dev | variants | M1 min | full target |
-|---|---:|---:|---:|---:|---:|
-| activities | 22 | 0 | - | - | 40 |
-| social interactions | 20 | 0 | 0 also activities | - | 40 |
-| traits | 20 | 0 | - | - | 40 |
-| aspirations | 6 | 0 | 18 stages | - | 12 |
-| skills | 7 | 9 | - | - | 16 |
-| careers (10 levels) | 1 | 0 | 10 levels | 1 | 12 |
-| recipes | 6 | 0 | - | - | - |
-| moodlets | 47 | 0 | - | - | - |
-| packs | 12 | 0 | - | - | 12 |
-| preferences | 34 | 0 | 5 groups | - | - |
+| | ready | dev | variants | M1 min | M2 min | full target |
+|---|---:|---:|---:|---:|---:|---:|
+| activities | 22 | 0 | - | - | - | 40 |
+| social interactions | 20 | 0 | 0 also activities | - | - | 40 |
+| traits | 20 | 0 | - | - | - | 40 |
+| aspirations | 6 | 0 | 18 stages | - | - | 12 |
+| skills | 7 | 9 | - | - | - | 16 |
+| careers (10 levels) | 1 | 0 | 10 levels | 1 | - | 12 |
+| recipes | 6 | 0 | - | - | - | - |
+| moodlets | 47 | 0 | - | - | - | - |
+| packs | 12 | 0 | - | - | - | 12 |
+| preferences | 34 | 0 | 5 groups | - | - | - |
 
 activities exclude moves and menus (behaviors goHere, goToWork, leaveLot, editOutfits); no social is also counted as an activity.
 
@@ -76,5 +75,6 @@ Validation: 0 errors, 0 warnings
 ## Assets and art status
 
 - Furniture uses Kenney Furniture Kit models (CC0); one distinct model per design. No missing assets.
-- Walls, floors, doors, windows, faces, hair and clothing are generated by the game's code (original). No temporary placeholder art is shown as finished content.
+- Walls and floors: 44 of the 50 wall finishes and 22 of the 32 floors are painted entirely by the game's code (original); 16 designs (6 walls, 10 floors) are built on tinted AI-generated detail maps (14 maps) (fal.ai FLUX.1 [dev], `public/assets/surfaces/`, about 1 MB, see `dev/surfaces-ai/LEDGER.md` and `public/assets/LICENSES.md`); palettes tint the maps, so every palette still works.
+- Doors, windows, faces, hair and clothing are generated by the game's code (original). No temporary placeholder art is shown as finished content.
 - Packs are organisational tags; no pack is complete yet.

@@ -50,7 +50,7 @@ Read `src/core/types.ts`, `src/content/types.ts` and the files in `src/core/` be
 | `src/core/` | main session | types, ids, rng, clock, money, geometry, events, commands, state helpers, nav contract, drafts, anim ids |
 | `src/content/types.ts`, `src/content/index.ts` | main session | definition types and the registry aggregator |
 | `src/content/{objects,interactions,socials,traits,aspirations,skills,careers,moodlets,recipes,packs,preferences}.ts`, `src/content/validate.ts`, `tools/content-report.ts` | content | gameplay data and validation |
-| `src/content/surfaces.ts`, `src/render/textures/` | surfaces | wall and floor designs, door/window defs, procedural painters, texture cache, thumbnails |
+| `src/content/surfaces.ts`, `surfaces2.ts`, `src/render/textures/` | surfaces | wall and floor designs, door/window defs, procedural and detail-map painters (`public/assets/surfaces`), texture cache, thumbnails |
 | `src/world/`, `src/building/` | world | lots, walls, rooms, navigation, placement, starter lots, build/buy commands |
 | `src/sim/` | sim | people, needs, moods, actions, reservations, autonomy, social, relationships, careers, skills, aspirations, visitors |
 | `src/characters/`, `src/content/character.ts` | characters | rig assembly, body/face deformation, procedural hair and clothing, animation, creator model |
@@ -149,6 +149,15 @@ The UI talks to it only through the build section of `GameAPI` (documented at th
   moved. reapply re-validates against the lot and re-charges the captured amount.
 - `src/game/core/build.ts`: `BuildTools` (tool state, snapping, `resolveBuild`, preview, apply, `rooms()`, `roomAt()`, `openingAt()`), used
   by `GameCore` and by the UI mock APIs (`src/ui/dev/mockGame.ts`, `src/ui/buy/dev/mockApi.ts`), which run the real planner on their mock world.
+- **Build mode UI (Milestone 2)**: `src/ui/build/buildSession.ts` (no DOM) turns pointer points into `BuildTarget`s, previews them through
+  `buildPreview` and applies through `buildApply`; `buildOverlay.ts` draws the corner/end handles (48 px) and the tip next to the shape;
+  `structureTools.ts` holds the Wall / Room / Door / Window / Erase sections and the footer (live text, Confirm, Cancel, Turn around);
+  `buildMode.ts` is the panel with the tool tabs (Paint = the M1 finishes). `ui/input.ts` routes taps and drags to the session; the input
+  machine has a draw mode (one-finger or left-mouse drag draws, two fingers pan and zoom). Touch: a tap or drag only sets the preview and
+  Confirm applies; desktop: click tools apply on click, drag tools on mouse-up (Esc cancels). Rendering: `render/buildView.ts` (grid, ghost
+  walls, hatched demolition/conflicts, floor tiles, ghost door/window, room outline), fed by `Game.refreshBuildPreview` from
+  `buildHighlight()`; `GameAPI.highlightRoom(uid)` outlines a room; `thumbnails.opening(defId)` renders door/window pictures
+  (`render/openingThumbs.ts`, one per frame). `render/lotView.ts` cuts a hole in every edge a wide opening spans (and in the posts between).
 - Not done yet: move/resize/duplicate whole rooms (delete room exists), wall height change on existing walls, diagonal walls, upper floors.
 
 ### sim (`src/sim`)

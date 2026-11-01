@@ -359,7 +359,7 @@ export const HAIR: HairDef[] = [
   {
     id: 'box-braids', name: 'Box Braids', description: 'Long box braids that hang down the back and shoulders.',
     length: 'long', texture: 'braided', tags: ['braids', 'long'],
-    build: { kind: 'mesh', asset: 'hair/box-braids.glb', cap: 0.006, top: 0.008, hairline: 'natural', part: 'center', fringe: 0, piece: 'braids', length: 0.36, strand: 'braided' }, status: 'ready',
+    build: { kind: 'mesh', asset: 'hair/box-braids.glb', cap: 0.006, top: 0.008, hairline: 'natural', part: 'center', fringe: 0, piece: 'braids', length: 0.3, strand: 'braided' }, status: 'ready',
   },
   {
     id: 'layered-shoulder', name: 'Layered Shoulder-Length', description: 'Soft layers that end at the shoulders with face-framing pieces.',
