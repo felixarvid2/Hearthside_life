@@ -1147,7 +1147,8 @@ async function stepBuy(T) {
     for (let k = 0; k < 3 && !okNow; k++) {
       await T.tap(page.locator('.bb-place-footer button[aria-label="Rotate right"]'));
       await T.frames(2);
-      okNow = await page.evaluate(() => window.hearthside.game.placement().ok);
+      // fits AND really turned: after a failed full circle the ghost's turn is back at the original one
+      okNow = await page.evaluate((r0) => { const pl = window.hearthside.game.placement(); return pl.ok && pl.rot !== r0; }, bed2.rot);
     }
     if (!okNow) {
       const more = (await validTiles(T, 4)).filter((t) => t.px !== bed2.x || t.pz !== bed2.z);
