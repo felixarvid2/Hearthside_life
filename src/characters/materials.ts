@@ -295,8 +295,11 @@ vBindY = transformed.y;
   float mg = uCoverLimbs.w;
   float cover = 0.0;
   if (part < 0.5) {
-    float yMax = mix(uCoverTorso.y, uCoverTorso.z, smoothstep(-0.3, 0.3, aInfo.z));
-    cover = uCoverTorso.w * smoothstep(uCoverTorso.x + mg - 0.012, uCoverTorso.x + mg + 0.012, sAx) * (1.0 - smoothstep(yMax - mg - 0.012, yMax - mg + 0.012, sAx));
+    // the front neckline dip only exists near the neck: further out the opening stays at the back height (the shoulder slope)
+    float yMax = mix(uCoverTorso.y, uCoverTorso.z, smoothstep(-0.3, 0.3, aInfo.z) * (1.0 - smoothstep(0.06, 0.11, abs(position.x))));
+    // a narrow margin below the neckline: the scanned shoulder slope rises close to the opening and would poke through the shell in motion
+    float mt = mg * 0.3;
+    cover = uCoverTorso.w * smoothstep(uCoverTorso.x + mg - 0.012, uCoverTorso.x + mg + 0.012, sAx) * (1.0 - smoothstep(yMax - mt - 0.006, yMax - mt + 0.006, sAx));
   } else if (part < 1.5) {
     cover = smoothstep(uCoverLimbs.y + mg - 0.012, uCoverLimbs.y + mg + 0.012, sAx);
   } else if (part < 2.5) {
@@ -348,7 +351,7 @@ if (vCover > 0.5) discard;                            // under an opaque garment
   float refL = lt < uClothLum.z ? uClothLum.x : uClothLum.y;
   vec3 underCol = uUnder * pow(clamp(lt / max(refL, 1e-4), 0.3, 2.5), uDetail * 0.8);
   // a garment over the tank top (or the shorts) that does not hide all of it: what peeks out reads as bare skin, not as a second layer
-  vec3 bareCol = tone * pow(clamp(lt / max(refL, 1e-4), 0.6, 1.5), uDetail * 0.4);
+  vec3 bareCol = tone * pow(clamp(lt / max(refL, 1e-4), 0.75, 1.35), uDetail * 0.5);
   underCol = mix(underCol, bareCol, mix(uBase.x, uBase.y, step(vBindY, uBase.z)));
   // iris and brow take the creator colours, keeping the baked dark/bright structure
   float isBrow = step(uSplitY, vBindY);
@@ -357,6 +360,13 @@ if (vCover > 0.5) discard;                            // under an opaque garment
   vec3 featCol = mix(irisCol, browCol, isBrow);
   float rest = clamp(1.0 - m.r - m.g - m.b, 0.0, 1.0);
   vec3 col = tex * rest + skinCol * m.r + underCol * m.g + featCol * m.b;
+  if (vInfo.x < 2.5) {
+    // torso, legs, arms: only skin and the baked base layer exist there. The anti-aliased edge texels between them are neither,
+    // so they would show as dark seam lines along the baked hems and straps: split them between the two instead.
+    float sg = m.r + m.g;
+    vec2 w = sg > 0.02 ? vec2(m.r, m.g) / sg : vec2(1.0, 0.0);
+    col = skinCol * w.x + underCol * w.y;
+  }
   // face paint on the head: blush, freckles and stubble use the parametric face layout (aFace = head-local coordinates)
   if (vInfo.x > 4.5 && vInfo.x < 5.5) {
     vec3 fp = vFace;
@@ -415,7 +425,7 @@ export function createMeshySkinMaterial(): { material: THREE.MeshStandardMateria
     uDetail: { value: 0.75 },
     uBase: { value: new THREE.Vector3(0, 0, 0.9) },
   };
-  patch(material, 'hs-meshy-skin-v1', uniforms as unknown as Uniforms,
+  patch(material, 'hs-meshy-skin-v2', uniforms as unknown as Uniforms,
     [['#include <common>', `#include <common>\n${MSKIN_VERT_HEAD}`], ['#include <morphtarget_vertex>', MSKIN_VERT_COVER]],
     [['#include <common>', `#include <common>\n${MSKIN_FRAG_HEAD}`], ['#include <color_fragment>', MSKIN_FRAG_PAINT]]);
   return { material, uniforms };
@@ -431,6 +441,26 @@ export const FABRIC_IDS: Record<string, number> = {
 };
 export const FABRIC_ROUGHNESS: Record<string, number> = {
   cotton: 0.88, knit: 0.95, denim: 0.85, poplin: 0.72, pique: 0.9, flannel: 0.93, canvas: 0.86, wool: 0.9, fleece: 0.97, nylon: 0.55, lycra: 0.48, rib: 0.9, leather: 0.45, plush: 1,
+};
+/**
+ * Per fabric: relief of the weave (normal detail from the texture), strength of the soft drape wrinkles, sheen (smooth
+ * synthetics catch light at grazing angles) and fuzz (a soft light rim on brushed and knitted cloth).
+ */
+export const FABRIC_FX: Record<string, { bump: number; fold: number; sheen: number; fuzz: number }> = {
+  cotton: { bump: 0.25, fold: 0.5, sheen: 0, fuzz: 0.08 },
+  knit: { bump: 1, fold: 0.5, sheen: 0, fuzz: 0.4 },
+  denim: { bump: 0.9, fold: 0.75, sheen: 0, fuzz: 0.05 },
+  poplin: { bump: 0.25, fold: 0.5, sheen: 0.12, fuzz: 0 },
+  pique: { bump: 0.9, fold: 0.4, sheen: 0, fuzz: 0.1 },
+  flannel: { bump: 0.5, fold: 0.55, sheen: 0, fuzz: 0.3 },
+  canvas: { bump: 0.7, fold: 0.45, sheen: 0, fuzz: 0.05 },
+  wool: { bump: 0.7, fold: 0.5, sheen: 0, fuzz: 0.3 },
+  fleece: { bump: 0.5, fold: 0.65, sheen: 0, fuzz: 0.5 },
+  nylon: { bump: 0.1, fold: 0.6, sheen: 0.55, fuzz: 0 },
+  lycra: { bump: 0.1, fold: 0.25, sheen: 0.45, fuzz: 0 },
+  rib: { bump: 1, fold: 0.4, sheen: 0, fuzz: 0.2 },
+  leather: { bump: 0.5, fold: 0.35, sheen: 0.35, fuzz: 0 },
+  plush: { bump: 0.6, fold: 0.5, sheen: 0, fuzz: 0.6 },
 };
 export const PATTERN_IDS: Record<string, number> = { solid: 0, stripes: 1, pinstripe: 2, plaid: 3, polka: 4, gingham: 5, chevron: 6 };
 
@@ -449,6 +479,8 @@ export interface ClothUniforms {
   uHem: THREE.IUniform<THREE.Vector4>;
   /** crotchY, chestY, neckBaseY, foot centre |x| */
   uBody: THREE.IUniform<THREE.Vector4>;
+  /** fabric relief, drape wrinkles, sheen, fuzz (see FABRIC_FX) */
+  uFx: THREE.IUniform<THREE.Vector4>;
   uSelect: THREE.IUniform<number>;
 }
 
@@ -472,7 +504,9 @@ uniform vec4 uCutArm;
 uniform vec4 uCutMisc;
 uniform vec4 uHem;
 uniform vec4 uBody;
+uniform vec4 uFx;
 uniform float uSelect;
+float hcH = 0.0; // fabric height for the normal detail, set in the colour pass
 
 float hcHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float hcNoise(vec2 p) {
@@ -503,6 +537,11 @@ float hcNeckY(float ax, float front) {
   else if (shape < 3.5) dip = 1.0 - smoothstep(0.85, 1.0, r);
   return uCutNeck.x - uCutNeck.y * front * dip;
 }
+// lower edge of the armhole of a strapped top: vertical beside the strap, rounding out to the armpit
+float hcArmholeY(float ax) {
+  float k = 1.0 - clamp((ax - uCutArm.z) / 0.075, 0.0, 1.0);
+  return uCutArm.x + 0.2 * (1.0 - sqrt(max(1.0 - k * k, 0.0)));
+}
 `;
 
 const CLOTH_FRAG_PAINT = /* glsl */ `
@@ -520,12 +559,12 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
   if (torsoLike && uCutNeck.w < 3.5) neckY = hcNeckY(ax, front);
   if (torsoLike) {
     bool strapZone = uCutArm.w > 0.5 && ax >= uCutArm.y && ax <= uCutArm.z;
-    if (uCutArm.w > 0.5 && b.y > uCutArm.x && ax > uCutArm.z) discard;
+    if (uCutArm.w > 0.5 && ax > uCutArm.z && b.y > hcArmholeY(ax)) discard;
     if (!strapZone && b.y > neckY) discard;
   }
   if (panel > 7.5 && panel < 8.5 && b.y > uHem.w) {
     bool bib = front > 0.5 && ax < uCutMisc.z && b.y < uCutMisc.y;
-    bool strap = ax > 0.05 && ax < 0.082;
+    bool strap = ax > uCutArm.y && ax < uCutArm.z;
     if (!(bib || strap)) discard;
   }
   if (uCutMisc.x > 0.0) {
@@ -578,6 +617,10 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
   else if (fab < 12.5) tex = 0.96 + 0.06 * hcNoise(uv * 60.0);
   else tex = 0.88 + 0.16 * hcNoise(uv * 260.0);
   col *= tex;
+  // fabric relief: the weave from the texture, soft vertical drape wrinkles that follow the cloth coordinates
+  float wr = hcNoise(vec2(uv.x * 40.0, uv.y * 6.5)) - 0.5 + 0.5 * (hcNoise(vec2(uv.x * 95.0 + 3.1, uv.y * 14.0)) - 0.5);
+  float weaveFade = 1.0 - smoothstep(0.08, 0.3, (fwidth(uv.x) + fwidth(uv.y)) * 150.0); // sub-pixel weave would only add noise
+  hcH = (tex - 1.0) * 5.0 * uFx.x * weaveFade + wr * 0.55 * uFx.y * (isShoe ? 0.3 : 1.0);
   // ---- trims and details ----
   float rib = 0.0;
   float dNeck = neckY - b.y;
@@ -659,9 +702,29 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
     }
     if (uFlags.x > 4.5) col = mix(col, col * 0.6, hcLine(b.z - 0.075, 0.006) * step(0.045, b.y));
   }
-  if (!gl_FrontFacing) col *= 0.55;
+  if (!gl_FrontFacing) col *= 0.7;
   col = mix(col, col * 1.08 + vec3(0.03, 0.025, 0.0), uSelect);
   diffuseColor.rgb = col;
+}
+`;
+
+// Relief of the fabric: the height from the colour pass tilts the normal (three's bump-map derivative method).
+const CLOTH_FRAG_BUMP = /* glsl */ `
+{
+  vec3 sx = normalize(dFdx(-vViewPosition)), sy = normalize(dFdy(-vViewPosition));
+  vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
+  float det = dot(sx, r1) * faceDirection;
+  vec3 grad = sign(det) * (dFdx(hcH) * r1 + dFdy(hcH) * r2);
+  normal = normalize(abs(det) * normal - grad);
+}
+`;
+
+// Soft rim light at grazing angles: sheen on smooth synthetics, fuzz on brushed and knitted cloth.
+const CLOTH_FRAG_SHEEN = /* glsl */ `
+{
+  float ndv = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
+  float rimF = pow(1.0 - ndv, 3.0);
+  outgoingLight += mix(diffuseColor.rgb, vec3(1.0), 0.35) * rimF * uFx.w * 0.3 + vec3(1.0) * rimF * uFx.z * 0.22 * (0.4 + 0.6 * ndv);
 }
 `;
 
@@ -680,11 +743,17 @@ export function createClothMaterial(): { material: THREE.MeshStandardMaterial; u
     uCutMisc: { value: new THREE.Vector4() },
     uHem: { value: new THREE.Vector4() },
     uBody: { value: new THREE.Vector4() },
+    uFx: { value: new THREE.Vector4(0.5, 0.5, 0, 0) },
     uSelect: { value: 0 },
   };
-  patch(material, 'hs-cloth-v1', uniforms as unknown as Uniforms,
+  patch(material, 'hs-cloth-v2', uniforms as unknown as Uniforms,
     [['#include <common>', `#include <common>\n${CLOTH_VERT_HEAD}`], ['#include <begin_vertex>', '#include <begin_vertex>\nvCloth = aCloth;\nvBind = position;']],
-    [['#include <common>', `#include <common>\n${CLOTH_FRAG_HEAD}`], ['#include <color_fragment>', CLOTH_FRAG_PAINT]]);
+    [
+      ['#include <common>', `#include <common>\n${CLOTH_FRAG_HEAD}`],
+      ['#include <color_fragment>', CLOTH_FRAG_PAINT],
+      ['#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${CLOTH_FRAG_BUMP}`],
+      ['#include <opaque_fragment>', `${CLOTH_FRAG_SHEEN}\n#include <opaque_fragment>`],
+    ]);
   return { material, uniforms };
 }
 
@@ -702,13 +771,16 @@ export interface HairUniforms {
 const HAIR_VERT_HEAD = /* glsl */ `
 attribute vec4 aHair;
 attribute vec3 aFlow;
+attribute vec4 aLock;
 varying vec4 vHair;
+varying vec4 vLock;
 varying vec3 vFlowView;
 `;
 
 const HAIR_VERT_FLOW = /* glsl */ `
 #include <defaultnormal_vertex>
 vHair = aHair;
+vLock = aLock;
 {
   vec3 fl = aFlow;
   #ifdef USE_SKINNING
@@ -720,6 +792,7 @@ vHair = aHair;
 
 const HAIR_FRAG_HEAD = /* glsl */ `
 varying vec4 vHair;
+varying vec4 vLock;
 varying vec3 vFlowView;
 uniform vec4 uHighlight;
 uniform float uStrand;
@@ -732,57 +805,101 @@ float hhNoise(vec2 p) {
 }
 `;
 
+// Strand paint. vHair = (across m, along m, root-to-tip, piece), vLock = (clump seed, baked light, edge fade, tooth).
+// Strands are 3.3 mm cells across the card: each cell gets its own brightness, its own length (the tip is cut into pointed
+// teeth by alpha test, so no sorting is needed) and, at the hairline, its own fade-out. Far away (cells under a pixel)
+// the per-strand pattern is replaced by its average so nothing shimmers.
 const HAIR_FRAG_PAINT = /* glsl */ `
 #include <color_fragment>
-vec3 hairSheen = vec3(0.0);
+float hairLight = 1.0;
+float hairStrandN = 0.5;
 {
   vec2 hv = vHair.xy;
   float tip = vHair.z;
   float piece = vHair.w;
+  float seed = vLock.x;
+  float light = vLock.y;
+  float fade = vLock.z;
+  float tooth = vLock.w;
   vec3 base = diffuseColor.rgb;
-  float fadeHi = 1.0 - smoothstep(0.15, 0.5, fwidth(hv.x * 300.0));
-  float st = uStrand;
+  float cellsX = hv.x * 300.0;
+  float far = smoothstep(0.35, 0.9, fwidth(cellsX));
+  float cell = floor(cellsX);
+  float cr = mix(hhHash(vec2(cell, seed * 91.0 + 3.0)), 0.5, far);
+  float within = mix(abs(fract(cellsX) - 0.5) * 2.0, 0.5, far);
+  // the plait pattern belongs to the braid beads and tufts only; the scalp around them is straight hair
+  float st = (uStrand > 3.5 && uStrand < 4.5 && !(piece > 2.5 && piece < 3.5)) ? 0.0 : uStrand;
   float n;
   if (st < 0.5) n = hhNoise(vec2(hv.x * 420.0, hv.y * 12.0));
   else if (st < 1.5) n = hhNoise(vec2((hv.x + sin(hv.y * 70.0) * 0.004) * 420.0, hv.y * 12.0));
   else if (st < 3.5) { float k = st < 2.5 ? 260.0 : 520.0; n = hhNoise(hv * k) * 0.6 + hhNoise(hv * k * 2.7) * 0.4; }
   else if (st < 4.5) n = 0.5 + 0.5 * sin((hv.y * 140.0 + abs(fract(hv.x * 30.0) - 0.5) * 8.0));
   else n = hhHash(floor(hv * 900.0));
-  float strands = mix(0.9, 0.72 + 0.4 * n, fadeHi);
-  vec3 col = base * strands;
-  if (piece > 5.5) col *= 0.92;
-  // lighter ends on curtains and tails
-  if (piece > 1.5 && piece < 3.5) col = mix(col, col * 1.12, smoothstep(0.6, 1.0, tip));
-  if (piece > 4.5 && piece < 5.5) col = col * 0.55;
+  float fadeHi = 1.0 - far;
+  float strands = mix(0.9, 0.7 + 0.42 * n, fadeHi);
+  // clump brightness: broad bands across and along the card, so neighbouring locks differ a little
+  float clump = hhNoise(vec2(hv.x * 80.0 + seed * 23.0, hv.y * 6.0 + seed * 7.0));
+  float isLock = (piece > 1.5 && piece < 3.5) || piece > 6.5 ? 1.0 : 0.0;
+  vec3 col = base * strands * (0.84 + 0.3 * clump);
+  // baked light (ambient occlusion: roots and inner layers are darker), warmer in the shade
+  col *= mix(0.55, 1.0, light);
+  col = mix(col, col * vec3(1.06, 0.97, 0.9), (1.0 - light) * 0.6);
+  // sun-lightened ends
+  if (isLock > 0.5) col = mix(col, col * 1.14 + vec3(0.02, 0.014, 0.0), smoothstep(0.55, 1.0, tip) * 0.7);
+  if (piece > 4.5 && piece < 5.5) col = base * 0.5;
+  if (piece > 5.5 && piece < 6.5) col *= 0.92;
+  hairStrandN = n;
   if (uHighlight.w > 0.5) {
-    float streak = smoothstep(0.55, 0.78, hhNoise(vec2(hv.x * 38.0, hv.y * 1.5)));
-    float ends = (piece > 1.5 && piece < 3.5) ? smoothstep(0.55, 1.0, tip) : 0.0;
+    float streak = smoothstep(0.55, 0.78, hhNoise(vec2(hv.x * 38.0 + seed * 9.0, hv.y * 1.5)));
+    float ends = isLock > 0.5 ? smoothstep(0.55, 1.0, tip) : 0.0;
     col = mix(col, uHighlight.rgb * mix(0.85, 1.05, n), clamp(streak * 0.75 + ends * 0.6, 0.0, 0.85));
   }
   if (!gl_FrontFacing) col *= 0.78;
   col = mix(col, col * 1.08 + vec3(0.03, 0.025, 0.0), uSelect);
   diffuseColor.rgb = col;
-  // anisotropic sheen (fixed key light in view space)
+  hairLight = light;
+  // alpha test: strands end at their own length in pointed teeth; the scalp edge dissolves into strands
+  float tipEdge = 1.0 - tooth * (cr * 1.25 + within * 0.9);
+  float alive = step(tip, tipEdge);
+  float thr = 0.04 + 0.8 * cr;
+  alive *= step(thr, fade * 1.08);
+  diffuseColor.a = alive;
+}
+`;
+
+// Anisotropic highlight band (Kajiya-Kay along the strand direction, two lobes, shifted per strand so the band breaks into
+// streaks) from a fixed view-space key light, added as emissive on the lit side only.
+const HAIR_FRAG_SHEEN = /* glsl */ `
+#include <emissivemap_fragment>
+{
   vec3 T = vFlowView / max(length(vFlowView), 1e-4);
   vec3 V = normalize(vViewPosition);
-  vec3 H = normalize(normalize(vec3(0.35, 0.85, 0.4)) + V);
-  float th = dot(T, H);
-  float spec = pow(sqrt(max(0.0, 1.0 - th * th)), 48.0);
-  hairSheen = mix(base, vec3(1.0), 0.35) * spec * 0.22 * (gl_FrontFacing ? 1.0 : 0.0) * (piece > 5.5 ? 0.3 : 1.0);
+  vec3 Lk = normalize(vec3(0.35, 0.85, 0.4));
+  vec3 H = normalize(Lk + V);
+  float shift = (hairStrandN - 0.5) * 0.3;
+  float t1 = clamp(dot(T, H) + shift, -1.0, 1.0);
+  float t2 = clamp(dot(T, H) - 0.12 + shift * 1.6, -1.0, 1.0);
+  float sp1 = pow(sqrt(max(0.0, 1.0 - t1 * t1)), 80.0);
+  float sp2 = pow(sqrt(max(0.0, 1.0 - t2 * t2)), 14.0);
+  float lit = smoothstep(-0.05, 0.45, dot(normal, Lk));
+  float k = (gl_FrontFacing ? 1.0 : 0.0) * lit * mix(0.35, 1.0, hairLight) * (vHair.w > 5.5 && vHair.w < 6.5 ? 0.3 : 1.0);
+  vec3 base = diffuseColor.rgb;
+  totalEmissiveRadiance += (mix(base, vec3(1.0), 0.4) * sp1 * 0.3 + base * sp2 * 0.16) * k;
 }
 `;
 
 /** Creates a per-character hair material (hair and facial hair share it). */
 export function createHairMaterial(): { material: THREE.MeshStandardMaterial; uniforms: HairUniforms } {
-  const material = new THREE.MeshStandardMaterial({ color: '#3d2a1f', roughness: 0.62, metalness: 0, side: THREE.DoubleSide });
+  // alphaTest (not blending): strand tips and the scalp edge are cut per pixel, so one opaque draw needs no sorting
+  const material = new THREE.MeshStandardMaterial({ color: '#3d2a1f', roughness: 0.62, metalness: 0, side: THREE.DoubleSide, alphaTest: 0.5 });
   const uniforms: HairUniforms = {
     uHighlight: { value: new THREE.Vector4(0, 0, 0, 0) },
     uStrand: { value: 0 },
     uSelect: { value: 0 },
   };
-  patch(material, 'hs-hair-v1', uniforms as unknown as Uniforms,
+  patch(material, 'hs-hair-v2', uniforms as unknown as Uniforms,
     [['#include <common>', `#include <common>\n${HAIR_VERT_HEAD}`], ['#include <defaultnormal_vertex>', HAIR_VERT_FLOW]],
     [['#include <common>', `#include <common>\n${HAIR_FRAG_HEAD}`], ['#include <color_fragment>', HAIR_FRAG_PAINT],
-      ['#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += hairSheen;']]);
+      ['#include <emissivemap_fragment>', HAIR_FRAG_SHEEN]]);
   return { material, uniforms };
 }

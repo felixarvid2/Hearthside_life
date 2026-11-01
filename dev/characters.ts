@@ -265,6 +265,8 @@ const lab = {
   person(i: number): { x: number; z: number } { const p = people[i]!; return { x: p.root.position.x, z: p.root.position.z }; },
   count(): number { return people.length; },
   stats(): { calls: number; triangles: number } { return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }; },
+  /** Debug: hides the skin mesh of person i (shows garment shells alone). */
+  hideSkin(i: number, hide = true): void { const m = people[i]!.root.getObjectByName('skin'); if (m) m.visible = !hide; },
   only(indices: number[] | null): void { people.forEach((p, i) => { p.root.visible = !indices || indices.includes(i); }); },
   place(i: number, x: number, z: number, rotY = 0, y = 0): void { const p = people[i]!; p.root.position.set(x, y, z); p.root.rotation.y = rotY; },
   step(dt: number, n = 1): void { for (let k = 0; k < n; k++) for (const p of people) p.update(dt); },

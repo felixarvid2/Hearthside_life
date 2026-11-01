@@ -41,7 +41,9 @@ const SHOES = ['sneakers', 'boots-ankle', 'loafers', 'slippers', 'sandals-slide'
 const ALL = [...TOPS, ...BOTTOMS, ...FULLS, ...SHOES];
 const ids = opt('ids', '') ? opt('ids', '').split(',') : ALL;
 const layerOf = (id) => (TOPS.includes(id) ? 'top' : BOTTOMS.includes(id) ? 'bottom' : FULLS.includes(id) ? 'full' : 'shoe');
+const OUTFIT = opt('outfit', '');
 const outfitOf = (id) => {
+  if (OUTFIT) return OUTFIT.split(',');
   switch (layerOf(id)) {
     case 'top': return id === 'jacket-zip' ? ['tee-crew', id, 'jeans-straight', 'sneakers'] : [id, 'jeans-straight', 'sneakers'];
     case 'bottom': return ['tee-crew', id, 'sneakers'];
@@ -85,14 +87,15 @@ try {
         const person = f === 'a' ? 0 : 1;
         const [dist, ty] = [DIST ? Number(DIST) : FRAMING[layerOf(id)][0], TY ? Number(TY) : FRAMING[layerOf(id)][1]];
         for (const [vn, yaw] of VIEWS) {
-          await page.evaluate(([p, o, y, d, t, pt]) => {
+          await page.evaluate(([p, o, y, d, t, pt, NS]) => {
             const lab = window.lab;
             lab.only([p]); lab.place(p, 0, 0, 0);
             lab.set(p, { outfit: o, hair: 'none', skin: '#e8c39d' });
             lab.playOne(p, 'idle'); lab.step(0.05, 4);
+            lab.hideSkin(p, NS);
             lab.orthoCam(false);
             lab.cam(y, pt, d, 0, t, 0, 30);
-          }, [person, outfitOf(id), yaw, dist, ty, PITCH]);
+          }, [person, outfitOf(id), yaw, dist, ty, PITCH, opt('noskin', '') === '1']);
           await page.waitForTimeout(120);
           const name = `${id}_${f}_${vn}.png`;
           await shoot(join(OUT, name));

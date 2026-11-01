@@ -19,7 +19,7 @@ import { PAINT_MORPH_IDS } from './meshyBody';
 import { STRAND_IDS, buildHair } from './hair';
 import { buildAccessory } from './accessories';
 import type { ClothUniforms, HairUniforms, MeshySkinUniforms, SkinUniforms } from './materials';
-import { FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
+import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
 import { resolveOutfit } from './outfits';
 import { clamp } from './rig';
 
@@ -327,6 +327,8 @@ export class CharacterView {
       u.uAltColor.value.set(typeof b.soleColor === 'string' ? b.soleColor : typeof b.shirtColor === 'string' ? b.shirtColor : '#ffffff');
       u.uPattern.value = PATTERN_IDS[choice.pattern] ?? 0;
       u.uFabric.value = FABRIC_IDS[fabric] ?? 0;
+      const fx = FABRIC_FX[fabric] ?? FABRIC_FX.cotton!;
+      u.uFx.value.set(fx.bump, fx.fold, fx.sheen, fx.fuzz);
       const details = b.details === 'jeans' ? 1 : b.details === 'crease' ? 2 : b.sideStripe ? 3 : b.laces || b.toeCap ? 4 : b.strap === true ? 5 : 0;
       const placket = b.placket === 'buttons' ? 1 : b.placket === 'zip' ? 2 : b.placket === 'short' ? 3 : 0;
       u.uFlags.value.set(details, placket, b.rib ? 1 : 0, b.piping ? 1 : 0);
@@ -374,7 +376,9 @@ export class CharacterView {
     const base = (this.skinU as Partial<MeshySkinUniforms>).uBase;
     if (base) {
       const worn = (layers: GarmentLayer[]) => (resolved.layers.some((l) => layers.includes(l.layer)) ? 1 : 0);
-      base.value.set(worn(['top', 'outer', 'full']), worn(['bottom', 'full']), lm.crotchY + 0.12);
+      // a bare male torso reads as skin; the female frame keeps the baked top as a minimal top
+      const topWorn = this.appearance.frame === 'a' ? 1 : worn(['top', 'outer', 'full']);
+      base.value.set(topWorn, worn(['bottom', 'full']), lm.crotchY + 0.12);
     }
   }
 }
