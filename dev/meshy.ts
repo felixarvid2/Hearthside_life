@@ -98,7 +98,7 @@ renderer.setPixelRatio(PR);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.shadowMap.enabled = params.get('shadows') !== '0';
 app.appendChild(renderer.domElement);
 const scene = new THREE.Scene();

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Screenshots of dev/meshy.html (procedural character left, Meshy character right) -> dev/meshy/shots/.
-//   node dev/meshy/shoot.mjs [--only=male,female_live_idle,...] [--out=DIR] [--q=extra&query]
+//   node dev/meshy/shoot.mjs [--bench] [--only=male,female_live_idle,...] [--out=DIR] [--q=extra&query]
 // One page per model (male / female / test, and with generated garments over the Meshy body); scenario files are <model>_<scenario>.png.
-// Starts a vite dev server on port 5191 and runs Chromium (SwiftShader) under `flock /tmp/hearthside-browser.lock`
+// Starts a vite dev server on port 5391 and runs Chromium (SwiftShader) under `flock /tmp/hearthside-browser.lock`
 // (only one browser at a time on this machine). Also prints window.lab.stretch() for every scenario with stretch: true.
 
 import { spawn, spawnSync } from 'node:child_process';
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const LOCK = '/tmp/hearthside-browser.lock';
-const PORT = 5191;
+const PORT = 5391;
 const args = process.argv.slice(2);
 const opt = (name, def) => { const a = args.find((x) => x.startsWith(`--${name}=`)); return a ? a.slice(name.length + 3) : def; };
 
@@ -33,10 +33,11 @@ function loadPlaywright() {
 
 const OUT = resolve(opt('out', join(here, 'shots')));
 const EXTRA = opt('q', '');
+const BENCH = args.includes('--bench');
 const ONLY = opt('only', '').split(',').filter(Boolean);
 mkdirSync(OUT, { recursive: true });
 
-const LIVE = { vp: [640, 400], dpr: 2 };
+const LIVE = { vp: [320, 240], dpr: 2 };
 const CLOSE = { vp: [1280, 720], dpr: 1 };
 /** Scenario: name, viewport, ops = [lab method, ...args]. Every scenario starts from the standing scene. */
 const S = (name, base, ops, extra = {}) => ({ name, ...base, ops: [['scene', 'stand'], ['k', 0], ...ops], ...extra });
@@ -68,6 +69,14 @@ const MODEL_PAGES = [
   { prefix: 'test', q: 'model=test' },
   { prefix: 'male_garments', q: 'model=male&garments=1', only: ['live_idle', 'live_sit', 'live_walk', 'close_front', 'joints_hips_sit'] },
   { prefix: 'female_garments', q: 'model=female&garments=1', only: ['live_idle', 'live_sit', 'live_walk', 'close_front', 'joints_hips_sit'] },
+  // procedural hair (src/characters/hair.ts) refitted to the Meshy head
+  { prefix: 'male_hair', q: 'model=male&hair=crop-side-part', only: ['live_idle', 'close_front', 'close_threeq'] },
+  { prefix: 'male_hair_curly', q: 'model=male&hair=curly-top&hairColor=%233d2a1f', only: ['close_front', 'close_threeq'] },
+  { prefix: 'female_hair', q: 'model=female&hair=bob-chin', only: ['live_idle', 'close_front', 'close_threeq'] },
+  { prefix: 'female_hair_long', q: 'model=female&hair=long-straight', only: ['close_threeq', 'live_idle'] },
+  // mobile budget: decimated meshes / smaller textures (dev/meshy/decimate.mjs writes variants/)
+  { prefix: 'male_8k_1024', q: 'model=male&glb=/dev/meshy/variants/base_male_underwear_8k_1024.glb', only: ['live_idle', 'close_front', 'joints_hips_sit'] },
+  { prefix: 'male_5k_512', q: 'model=male&glb=/dev/meshy/variants/base_male_underwear_5k_512.glb', only: ['live_idle', 'close_front', 'joints_hips_sit'] },
 ];
 
 async function waitForServer(url, ms) {
@@ -81,8 +90,11 @@ async function waitForServer(url, ms) {
 
 const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
 let browser = null;
+let serverDied = false;
+server.on('exit', () => { serverDied = true; });
 try {
   await waitForServer(`http://127.0.0.1:${PORT}/dev/meshy.html`, 30000);
+  if (serverDied) throw new Error(`vite exited (port ${PORT} busy?)`);
   const { chromium } = loadPlaywright();
   browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   for (const mp of MODEL_PAGES) {
@@ -103,6 +115,15 @@ try {
         continue;
       }
       if (dpr === 2 && !mp.reported) { mp.reported = true; console.log(`[shoot] ${mp.prefix} fit ${JSON.stringify(await page.evaluate(() => { const r = window.lab.report(); return { ...r.fit, head: undefined, skull: undefined }; }))}`); }
+      if (dpr === 2 && BENCH && ['male', 'male_8k_1024'].includes(mp.prefix)) {
+        await page.setViewportSize({ width: 320, height: 240 });
+        await page.evaluate(() => { window.lab.view('live'); window.lab.freeze(false); });
+        for (const n of [1, 12, 40]) for (const kind of mp.prefix === 'male' ? ['proc', 'meshy'] : ['meshy']) {
+          const r = await page.evaluate(([k, nn]) => window.lab.bench(k, nn, 12), [kind, n]);
+          console.log(`[bench] ${mp.prefix} ${kind} x${n}: ${JSON.stringify(r)}`);
+        }
+        await page.evaluate(() => window.lab.freeze(true));
+      }
       for (const sc of list) {
         await page.setViewportSize({ width: sc.vp[0], height: sc.vp[1] });
         for (const [m, ...a] of sc.ops) await page.evaluate(([mm, aa]) => window.lab[mm](...aa), [m, a]);
