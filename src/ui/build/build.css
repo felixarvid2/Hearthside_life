@@ -130,3 +130,5 @@ body.is-landscape.is-compact .bb-build-buttons .bb-lbl-short { display: inline; 
 .bb-pair { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 8px; }
 .bb-pair .bb-select-field .field-label { font-size: 0.8rem; }
 .bb-pair[hidden] { display: none; }
+.bb-open-tags .tabs { padding: 0; }
+.bb-open-tags[hidden] { display: none; }

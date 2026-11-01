@@ -7,7 +7,7 @@ import type { OpeningDef } from '../../content/types';
 import type { FinishRef } from '../../core/types';
 import { WALL_HEIGHT_PRESETS, type BuildTool, type GameAPI, type RoomDoorSpec } from '../../game/api';
 import { affordReason, formatMoney, humanize, selectField, setHidden, setLabel, thumbImg } from '../buy/editorCommon';
-import { button, cardGrid, chip, segmented, type CardGrid } from '../kit/components';
+import { button, cardGrid, chip, segmented, tabs, type CardGrid } from '../kit/components';
 import { h, setChildren, setText } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { layout } from '../kit/layout';
@@ -75,6 +75,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     windowSide: 'n' as Side,
     opening: { door: 'place', window: 'place' } as Record<'door' | 'window', OpeningMode>,
     pick: { door: '', window: '' } as Record<'door' | 'window', string>,
+    tag: { door: '', window: '' } as Record<'door' | 'window', string>,
     erase: 'wall-one' as EraseWhat,
   };
 
@@ -196,7 +197,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
 
   // ---- Door and Window sections ----
 
-  const openingSections = {} as Record<'door' | 'window', { el: HTMLElement; mode: { set(v: OpeningMode): void }; host: HTMLElement; hint: HTMLElement; grid: CardGrid<OpeningDef> | null }>;
+  const openingSections = {} as Record<'door' | 'window', { el: HTMLElement; mode: { set(v: OpeningMode): void }; host: HTMLElement; hint: HTMLElement; grid: CardGrid<OpeningDef> | null; gridKey: string; tags: HTMLElement }>;
   for (const kind of ['door', 'window'] as const) {
     const noun = kind === 'door' ? 'door' : 'window';
     const mode = segmented<OpeningMode>({
@@ -207,8 +208,9 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     });
     const hint = h('span', { class: 'bb-sr' });
     const host = h('div', { class: 'bb-open-host' });
-    const el = h('section', { class: 'bb-tool-section', ariaLabel: `${humanize(noun)}s`, dataset: { section: kind } }, mode.el, host, hint);
-    openingSections[kind] = { el, mode, host, hint, grid: null };
+    const tagHost = h('div', { class: 'bb-open-tags' });
+    const el = h('section', { class: 'bb-tool-section', ariaLabel: `${humanize(noun)}s`, dataset: { section: kind } }, mode.el, tagHost, host, hint);
+    openingSections[kind] = { el, mode, host, hint, grid: null, gridKey: '', tags: tagHost };
   }
 
   function renderOpening(kind: 'door' | 'window'): void {
@@ -223,13 +225,30 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     o.mode.set(m);
     if (m !== 'place') { o.host.hidden = true; return; }
     o.host.hidden = false;
-    const list = defs(kind);
-    if (!st.pick[kind] || !list.some((d) => d.id === st.pick[kind])) st.pick[kind] = list[0]?.id ?? '';
-    if (!o.grid) {
+    const all = defs(kind);
+    if (!st.pick[kind] || !all.some((d) => d.id === st.pick[kind])) st.pick[kind] = all[0]?.id ?? '';
+    // filter by style tag (the catalog grows: pages of a few cards, never every model at once)
+    const tags = [...new Set(all.flatMap((d) => d.tags))].sort();
+    if (st.tag[kind] && !tags.includes(st.tag[kind])) st.tag[kind] = '';
+    const tagKey = tags.join(',');
+    if (o.tags.dataset.key !== `${tagKey}|${st.tag[kind]}`) {
+      o.tags.dataset.key = `${tagKey}|${st.tag[kind]}`;
+      o.tags.hidden = tags.length < 2;
+      const t = tabs({
+        label: `${humanize(kind)} styles`, value: st.tag[kind] || 'all',
+        items: [{ id: 'all', label: 'All' }, ...tags.map((x) => ({ id: x, label: humanize(x) }))],
+        onChange: (id) => { st.tag[kind] = id === 'all' ? '' : id; renderOpening(kind); },
+      });
+      setChildren(o.tags, t.el);
+    }
+    const list = st.tag[kind] ? all.filter((d) => d.tags.includes(st.tag[kind])) : all;
+    const gridKey = `build:${kind}:${st.tag[kind]}`;
+    if (!o.grid || o.gridKey !== gridKey) {
+      o.gridKey = gridKey;
       o.grid = cardGrid<OpeningDef>({
-        key: `build:${kind}`,
+        key: gridKey,
         pageSize: () => (layout().compact ? 6 : 8),
-        empty: `No ${noun}s are available yet.`,
+        empty: `No ${noun}s match.`,
         render: (d) => {
           const on = st.pick[kind] === d.id;
           return h('button', {

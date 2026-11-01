@@ -75,6 +75,8 @@ export class GameView {
   private lastCutawayKey = '';
   /** Called when the camera moved (UI anchors). */
   onCamera: (() => void) | null = null;
+  /** Called when the detail maps of the surface designs finished loading (flat thumbnails can be repainted). */
+  onSurfaceMaps: (() => void) | null = null;
 
   constructor(canvas: HTMLCanvasElement, readonly content: ContentDB, readonly overlay: HTMLElement | null, opts: ViewOptions, assetBase: string) {
     this.opts = { ...opts };
@@ -87,7 +89,7 @@ export class GameView {
     };
     this.objectAssets = new ObjectAssets(assetBase);
     setSurfaceMapBase(`${assetBase}surfaces/`); // detail maps for AI-textured walls and floors
-    void preloadSurfaceMaps();
+    void preloadSurfaceMaps().then(() => this.onSurfaceMaps?.());
     this.lighting = new Lighting(this.scene);
     this.fog = new THREE.Fog(0xefe7da, 85, 150);
     this.scene.fog = this.fog;

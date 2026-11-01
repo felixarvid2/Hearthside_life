@@ -51,7 +51,7 @@ export async function buildAll(styles: AiStyle[], root: string, opts: { debug?: 
       const block = freeUvBlock(simp, TINT_SIZE, 20);
       if (!block) throw new Error(`${s.id}: no free texel block for the scalp cap`);
       paint = { ...block, size: 20 };
-      simp = mergeMeshes(simp, scalpCap(hs, hairMod, { hairline: s.scalp.hairline, fringe: s.scalp.fringe ?? 0, offset: 0.0035, block, blockSize: 20, size: TINT_SIZE }));
+      simp = mergeMeshes(simp, scalpCap(hs, hairMod, { hairline: s.scalp.hairline, fringe: s.scalp.fringe ?? 0, offset: 0.007, block, blockSize: 20, size: TINT_SIZE }));
     }
     const normals = smoothNormals(simp);
     orientNormals(simp, normals);

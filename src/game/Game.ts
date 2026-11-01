@@ -89,6 +89,7 @@ export class Game implements GameAPI {
       opening: (defId) => this.gameView.openingThumbs.request(defId),
     };
     this.gameView.openingThumbs.onReady = () => this.emit('thumbnails');
+    this.gameView.onSurfaceMaps = () => this.emit('thumbnails');
     this.cleanups.push(core.onChange((w) => this.onCoreChange(w)));
     this.cleanups.push(core.events.onAny((e) => {
       const v = this.gameView;

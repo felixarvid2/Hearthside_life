@@ -594,7 +594,14 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     }),
     api.onChange((what) => {
       switch (what) {
-        case 'thumbnails': structure.thumbnailsChanged(); break;
+        case 'thumbnails':
+          // surface detail maps or opening pictures arrived: repaint the thumbnails that came out flat or empty
+          structure.thumbnailsChanged();
+          curThumb.dataset.key = '';
+          recentKey = '\u0000';
+          grid?.refresh();
+          refresher.mark('current', 'recent');
+          break;
         case 'paint':
           if (typeof getPreview === 'function') { try { preview = getPreview.call(api); } catch { /* optional */ } }
           refresher.mark('tool', 'recent');
