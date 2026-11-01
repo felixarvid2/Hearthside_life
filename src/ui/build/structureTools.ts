@@ -300,7 +300,9 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
   const flip = button({ icon: 'rotateRight', label: 'Turn around', onClick: () => session.flip() });
   const cancel = button({ icon: 'close', label: 'Cancel', variant: 'secondary', onClick: () => { if (!session.cancel()) { session.setTool(null); leaveSelf(); } } });
   const confirm = button({ icon: 'check', label: 'Build', variant: 'primary', onClick: () => { session.confirm(); } });
-  setLabel(flip, 'Turn around', 'Turn');
+  setLabel(flip, 'Turn', 'Turn');
+  flip.setAttribute('aria-label', 'Turn around');
+  flip.title = 'Turn the door or window around (R)';
   confirm.classList.add('bb-confirm');
   flip.classList.add('bb-flip');
   cancel.classList.add('bb-cancel');
@@ -331,6 +333,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
   function renderFooter(): void {
     const s = session.state();
     footer.hidden = !s.tool;
+    footer.closest('.panel')?.classList.toggle('has-footer', !footer.hidden);
     if (footer.hidden) return;
     const pv = s.preview;
     let kind: 'ok' | 'bad' | 'info' = 'info';
@@ -348,6 +351,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     if (status.dataset.key !== key) {
       status.dataset.key = key;
       status.dataset.state = kind;
+      status.title = title;
       setChildren(status, icon(iconName, 20), h('span', { class: 'bb-build-text' }, h('strong', { text: title }), detail ? h('span', { class: 'bb-build-detail', text: detail }) : null));
     }
     const erasing = s.tool?.kind === 'eraseWall' || s.tool?.kind === 'eraseOpening' || s.tool?.kind === 'eraseFloor' || s.tool?.kind === 'deleteRoom';

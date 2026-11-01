@@ -54,7 +54,7 @@ State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite b
    - cloth folds are static (geometry on skirts and loose tops, normal detail elsewhere), not simulated.
 2. Main chunk is over 1.2 MB; `content/index.ts` is imported both statically and dynamically.
 3. Boot progress bar is not driven.
-4. Social menu has 17+ entries in no relevance order.
+4. (Fixed in M5) The social menu is grouped Friendly / Romantic / Mean / Special and ordered by relevance; unavailable entries fold away on small screens.
 5. Bookworm "own 2 bookcases" may count the starter bookcases.
 6. Tests so far are on SwiftShader only. Record real-device runs in the device log in
    `docs/TEST_CHECKLIST.md`.

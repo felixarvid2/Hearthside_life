@@ -22,6 +22,13 @@ export interface InteractionOption {
   reason?: string;
   target: ActionInstance['target'];
   data?: ActionData;
+  /**
+   * Sub-group inside the group: socials use 'friendly' | 'romantic' | 'mean' | 'special' (listed most relevant first,
+   * unavailable ones last); phone interactions use 'phone'.
+   */
+  section?: string;
+  /** Short odds text for socials ("Good odds"), never shown for romantic options. */
+  hint?: string;
 }
 
 export type QueueResult = { ok: true; actionId: string } | { ok: false; reason: string };

@@ -1,19 +1,22 @@
 // Visitors and the world schedule. Neighbours live off-lot at home. On day 0 at 17:00 the first
 // neighbour visits (occurrence `visit:<personId>:0`, when settings.visitors) and introduces themself;
 // later random drop-ins happen at most once every two days; phoneInvite schedules a visit in 60 minutes.
-// Visitors walk in from the lot entry, socialise and sit, leave after 2-3 hours to the entry and go home.
+// Visitors walk in from the lot entry, socialise and sit, leave after 2-3 hours to the entry and go home. Event
+// guests (sim/events.ts) stay until the event ends. Every visit is an event (a visit, welcome wagon, drop-in or
+// reconciliation) with goals and a small reward; before leaving, a visitor says goodbye to somebody they know.
 
 import { atDayMinute, dayIndex } from '../core/clock';
 import { facingTo } from '../core/geometry';
 import { addFeed, isProcessed, markProcessed } from '../core/state';
 import type { GameMinutes, Id, Person, ScheduledEvent, WorldState } from '../core/types';
 import { requestCancel } from './actions';
+import { guestArrived, runEventEntry, startAmbientEvent } from './events';
 import { runScheduledTask } from './housework';
 import type { SimCtx } from './context';
 import { lotLoc, setAnim } from './context';
 import { insertAction, makeAction } from './queue';
 import { peekRel } from './relationships';
-import { personAvailable } from './social';
+import { personAvailable, socialRequirementReason } from './social';
 import { walkInTile } from './travel';
 import {
   DROP_IN_CHANCE, DROP_IN_EARLIEST, DROP_IN_LATEST, FIRST_VISIT_MINUTE, VISIT_MAX_MINUTES, VISIT_MIN_MINUTES,
@@ -58,7 +61,13 @@ export function dailyDropIn(ctx: SimCtx, day: number): void {
   const candidates = neighbours(ctx.state).filter((p) => p.location.kind === 'offlot' && p.location.place === 'home' && !isVisitPending(ctx.state, p.id));
   if (candidates.length === 0) return;
   if (!ctx.rng.chance(DROP_IN_CHANCE)) return;
-  const who = ctx.rng.pick(candidates);
+  // Friends drop by more often than people one barely knows.
+  const hh = ctx.state.households[ctx.state.activeHouseholdId];
+  const weight = (p: Person) => 1 + Math.max(0, ...(hh?.memberIds ?? []).map((m) => peekRel(ctx.state, p.id, m).friendship)) / 25;
+  const total = candidates.reduce((s, p) => s + weight(p), 0);
+  let r = ctx.rng.next() * total;
+  let who = candidates[candidates.length - 1]!;
+  for (const c of candidates) { r -= weight(c); if (r <= 0) { who = c; break; } }
   const minute = ctx.rng.int(DROP_IN_EARLIEST / 15, DROP_IN_LATEST / 15) * 15;
   scheduleVisit(ctx.state, who.id, atDayMinute(day, minute), `visit:${who.id}:${day}`);
   markProcessed(ctx.state, `visitday:${day}`);
@@ -76,6 +85,7 @@ export function processSchedule(ctx: SimCtx): void {
     const p = e.personId ? ctx.state.people[e.personId] : undefined;
     if (e.kind === 'visitArrive' && p) arrive(ctx, p, e);
     else if (e.kind === 'visitLeave' && p) depart(ctx, p);
+    else if (e.kind === 'eventStart' || e.kind === 'eventEnd') runEventEntry(ctx, e);
     else if (e.kind === 'custom') runScheduledTask(ctx, e);
     // Other kinds (bills) are handled by later milestones; returns from work use career state.
   }
@@ -92,9 +102,15 @@ function arrive(ctx: SimCtx, p: Person, e: ScheduledEvent): void {
   p.queue = [];
   setAnim(p, 'idle', ctx.now);
   ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'location' });
-  const stay = ctx.rng.int(VISIT_MIN_MINUTES, VISIT_MAX_MINUTES);
-  ctx.state.schedule.push({ occurrence: `leave:${p.id}:${Math.round(ctx.now)}`, at: ctx.now + stay, kind: 'visitLeave', personId: p.id });
-  addFeed(ctx.state, ctx.events, 'social', invited ? `${p.firstName} came over.` : `${p.firstName} dropped by.`, p.id);
+  const eventId = typeof e.data?.eventId === 'string' ? e.data.eventId : null;
+  let leaveAt = eventId ? guestArrived(ctx, p, eventId) : null;
+  if (leaveAt === null) {
+    leaveAt = ctx.now + ctx.rng.int(VISIT_MIN_MINUTES, VISIT_MAX_MINUTES);
+    const type = e.data?.first === true ? 'welcomeWagon' : e.data?.reconcile === true ? 'reconciliation' : invited ? 'visit' : 'dropIn';
+    startAmbientEvent(ctx, type, p, leaveAt);
+    addFeed(ctx.state, ctx.events, 'social', invited ? `${p.firstName} came over.` : `${p.firstName} dropped by.`, p.id);
+  }
+  ctx.state.schedule.push({ occurrence: `leave:${p.id}:${Math.round(ctx.now)}`, at: leaveAt, kind: 'visitLeave', personId: p.id });
   // A newcomer introduces themself right away when someone is free; otherwise they walk in and greet
   // people later through visitor autonomy (strangers prefer greetings).
   if (!(e.data?.first === true && introduce(ctx, p))) {
@@ -133,9 +149,30 @@ function depart(ctx: SimCtx, p: Person): void {
   if (!lotLoc(p)) return;
   for (const a of [...p.queue]) requestCancel(ctx, p, a.id);
   p.queue = p.queue.filter((a) => a.phase !== 'queued');
+  // Leave politely: say goodbye to the household member they know best (if one is free), then go.
+  const bye = goodbyeTarget(ctx, p);
+  if (bye) p.queue.push(makeAction(ctx, p, { interactionId: 'waveGoodbye', target: { kind: 'person', personId: bye.id } }, 'schedule'));
   const leave = makeAction(ctx, p, { interactionId: 'leaveLot', target: { kind: 'self' } }, 'schedule');
   p.queue.push(leave);
   ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'queue' });
+}
+
+/** The household member a leaving guest says goodbye to: the one they know best who is free and nearby. */
+function goodbyeTarget(ctx: SimCtx, p: Person): Person | null {
+  const def = ctx.content.socials.waveGoodbye;
+  const loc = lotLoc(p);
+  if (!def || !loc || !p.isNpc) return null;
+  const hh = ctx.state.households[ctx.state.activeHouseholdId];
+  let best: Person | null = null, bestScore = -Infinity;
+  for (const id of hh?.memberIds ?? []) {
+    const m = ctx.state.people[id];
+    const ml = m ? lotLoc(m) : null;
+    if (!m || !ml || ml.lotId !== loc.lotId || m.id === p.id) continue;
+    if (personAvailable(ctx, m, p) !== null || socialRequirementReason(ctx, p, m, def) !== null) continue;
+    const score = peekRel(ctx.state, p.id, m.id).familiarity - Math.hypot(ml.x - loc.x, ml.z - loc.z);
+    if (score > bestScore) { bestScore = score; best = m; }
+  }
+  return best;
 }
 
 /** Safety net: a visitor on the lot with no pending departure gets one (e.g. after an old save). */

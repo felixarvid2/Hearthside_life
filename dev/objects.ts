@@ -197,7 +197,11 @@ const placed: Placed[] = [];
 function buildLocal(def: ObjectDef, group: THREE.Group): THREE.Object3D[] {
   const { w, d } = def.footprint;
   const color = def.blocksMovement ? 0x2f6fd9 : 0x2fa36b;
-  for (let i = 0; i < w; i++) for (let j = 0; j < d; j++) group.add(rectOutline(i + 0.04, j + 0.04, i + 0.96, j + 0.96, 0.006, color, !def.blocksMovement));
+  for (let i = 0; i < w; i++) for (let j = 0; j < d; j++) {
+    // open cells (the inside of an L-shaped sofa) are walkable: drawn like a non-blocking footprint
+    const open = !def.blocksMovement || (def.openCells ?? []).some(([cx, cz]) => cx === i && cz === j);
+    group.add(rectOutline(i + 0.04, j + 0.04, i + 0.96, j + 0.96, 0.006, open ? 0x2fa36b : 0x2f6fd9, open));
+  }
   group.add(rectOutline(0, 0, w, d, 0.008, color));
   group.add(new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(w / 2, 0.03, d - 0.15), 0.55, 0xd9774b, 0.18, 0.12));
   if (def.layer === 'wall' || def.needsWall) {

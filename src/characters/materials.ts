@@ -738,7 +738,6 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
         st = max(st, hcLine(ax - 0.07, 0.0009) * step(uHem.x + 0.02, b.y) * step(b.y, uBody.y + 0.075));
       }
     }
-    if (panel > 0.5 && panel < 1.5) st = max(st, hcLine(abs(b.z) - 0.0, 0.0012) * step(0.2, ax));
     col = mix(col, thread, clamp(st, 0.0, 1.0) * dash);
   }
   // pockets (stitched outlines and flaps; the drawing sits on the cloth, no extra geometry)

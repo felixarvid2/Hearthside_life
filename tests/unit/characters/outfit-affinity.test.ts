@@ -67,11 +67,16 @@ describe('premade people', () => {
       const swim = p.outfits.outfits.swim[0]!;
       const ids = [...Object.values(sleep.layers), ...Object.values(swim.layers)].map((c) => c.garmentId);
       if (p.pronouns.subject === 'he') {
-        expect(ids).toEqual(expect.arrayContaining(['pajama-top', 'pajama-pants', 'swim-trunks']));
-        expect(sleep.layers.full).toBeUndefined();
-        expect(swim.layers.full).toBeUndefined();
+        // never a fem full garment (nightgown, swimsuit); a bathrobe is neutral and fine
+        for (const l of [sleep.layers.full, swim.layers.full]) if (l) expect(content.garments[l.garmentId]!.affinity ?? 'neutral').not.toBe('fem');
+        expect(ids.length).toBeGreaterThanOrEqual(2);
       }
     }
+    // outfits made for the category are chosen most of the time (85 %): most men sleep in pyjamas and swim in trunks
+    const men = people.filter((p) => p.pronouns.subject === 'he');
+    const ids = (p: (typeof people)[number]) => [...Object.values(p.outfits.outfits.sleep[0]!.layers), ...Object.values(p.outfits.outfits.swim[0]!.layers)].map((c) => c.garmentId);
+    expect(men.filter((p) => ids(p).includes('swim-trunks')).length).toBeGreaterThanOrEqual(Math.ceil(men.length * 0.6));
+    expect(men.filter((p) => ids(p).includes('pajama-top') && ids(p).includes('pajama-pants')).length).toBeGreaterThanOrEqual(Math.ceil(men.length * 0.6));
   });
 
   it('is varied: not everyone wears the same everyday top and colour', () => {

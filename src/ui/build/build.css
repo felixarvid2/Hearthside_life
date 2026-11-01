@@ -132,3 +132,8 @@ body.is-landscape.is-compact .bb-build-buttons .bb-lbl-short { display: inline; 
 .bb-pair[hidden] { display: none; }
 .bb-open-tags .tabs { padding: 0; }
 .bb-open-tags[hidden] { display: none; }
+
+/* Portrait: a taller sheet while a structure tool is in use (options above, the action footer below) */
+body.is-portrait .bb-build-panel.has-footer[data-height='half'] { height: 58%; }
+/* before anything is drawn the hint is one line; the full text is the tooltip */
+body.is-portrait .bb-build-status[data-state='info'] .bb-build-text strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

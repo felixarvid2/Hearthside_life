@@ -5,6 +5,7 @@
 import './styles/base.css';
 import './styles/screens.css';
 import './styles/hud.css';
+import './styles/social.css';
 import type { GameAPI, GameMode, SoundId } from '../game/api';
 import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
@@ -20,6 +21,8 @@ import type { ModeUI } from './modes/types';
 import { createContextMenu } from './hud/contextMenu';
 import { createDevOverlay } from './hud/devOverlay';
 import { createFeedPanel, createLedgerPanel, createToaster } from './hud/feed';
+import { createEventTracker } from './hud/eventTracker';
+import { openEventPlanner } from './hud/eventPlanner';
 import { createHud } from './hud/hud';
 import { ZERO_INSETS, computeInsets, sameInsets, type Insets, type Rect } from './hud/insets';
 import { createPersonPanel } from './hud/personPanel';
@@ -79,6 +82,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     isPanelOpen: (kind) => panelOf(kind)?.panel.isOpen() ?? false,
     openGameMenu: () => { ctx.close(); openGameMenu(sh); },
     openSettings: () => openSettings(sh),
+    openEventPlanner: (hostId) => { ctx.close(); openEventPlanner(sh, hostId); },
     openContextMenu: (personId, pick, at) => ctx.open(personId, pick, at),
     closeContextMenu: () => ctx.close(),
     isContextMenuOpen: () => ctx.isOpen(),
@@ -189,6 +193,10 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   const hud = createHud(sh);
   layer.appendChild(hud.el);
   cleanups.push(() => hud.destroy());
+
+  const evTracker = createEventTracker(sh);
+  layer.appendChild(evTracker.el);
+  cleanups.push(() => evTracker.destroy());
 
   const onPanelClosed = () => { hud.setOpenPanel(openKind()); scheduleMeasure(); };
   const openKind = (): ShellPanelKind | null => (personPanel?.panel.isOpen() ? 'person' : feedPanel?.panel.isOpen() ? 'feed' : ledgerPanel?.panel.isOpen() ? 'ledger' : null);
@@ -399,8 +407,9 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       if (m === 'build') showBuildPanel(); else buildUI?.hide();
       if (m !== 'live') closePanels();
       if (lastMode !== m) { ctx.close(); lastMode = m; }
-      hud.onSpeed(); hud.onCamera(); hud.refresh();
+      hud.onSpeed(); hud.onCamera(); hud.refresh(); evTracker.refresh();
     } else {
+      evTracker.refresh();
       buyUI?.hide(); buildUI?.hide();
       closePanels();
       ctx.close();
@@ -441,7 +450,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       case 'camera': hud.onCamera(); ctx.reposition(); break;
       case 'portraits': hud.onPortraits(); personPanel?.refresh(); break;
       case 'settings': applySettings(); break;
-      case 'state': hud.refresh(); personPanel?.refresh(); feedPanel?.refresh(); ledgerPanel?.refresh(); tutorial?.update(api.mode()); break;
+      case 'state': hud.refresh(); evTracker.refresh(); personPanel?.refresh(); feedPanel?.refresh(); ledgerPanel?.refresh(); tutorial?.update(api.mode()); break;
       default: break;
     }
   }));
@@ -454,9 +463,11 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
         hud.resetFeed();
         tutorial?.onStateReplaced();
         hud.refresh();
+        evTracker.refresh();
         break;
       case 'ui.request':
         if (e.what === 'editOutfits') void openWardrobe(e.personId);
+        else if (e.what === 'planEvent') openEventPlanner(sh, e.personId);
         else if (e.what === 'focusPerson') {
           const st = api.state();
           const p = st?.people[e.personId];
@@ -467,6 +478,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       case 'person.removed':
         if (personPanel?.personId() === e.personId) personPanel.close();
         break;
+      case 'homeEvent': evTracker.refresh(); break;
       default: break;
     }
   }));
@@ -475,6 +487,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   const timer = setInterval(() => {
     if (document.hidden || route !== 'game') return;
     hud.refresh();
+    evTracker.refresh();
     personPanel?.refresh();
     feedPanel?.refresh();
     ledgerPanel?.refresh();

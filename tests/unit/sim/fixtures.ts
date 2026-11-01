@@ -170,7 +170,7 @@ export function fixtureContent(): ContentDB {
   }];
   const byId = <T extends { id: string }>(l: T[]) => Object.fromEntries(l.map((x) => [x.id, x])) as Record<string, T>;
   return {
-    objects: byId(objects), openings: {}, wallDesigns: {}, floorDesigns: {}, interactions: byId(interactions), socials: byId(socials),
+    objects: byId(objects), openings: {}, wallDesigns: {}, floorDesigns: {}, interactions: byId(interactions), socials: byId(socials), events: {},
     traits: byId(traits), aspirations: byId(aspirations), skills: byId(skills), careers: byId(careers), moodlets: byId(moodlets),
     recipes: byId(recipes), packs: {}, hair: {}, facialHair: {}, garments: {}, accessories: {}, patterns: {}, facePresets: {},
     bodyPresets: {}, browStyles: {}, voices: {}, faceParams: [], bodyParams: [], skinTones: [], hairColors: [], eyeColors: [], preferences: [],

@@ -17,6 +17,7 @@ import { defOf, interactionCheckNoCost, reservePrimary, seatCandidates, targetOb
 import { addDirtyDishes, breakObject, dirtOf, housekeepingOn, isBroken, spawnMess, useObject } from './housekeeping';
 import { addMoodlet } from './mood';
 import { changeNeed } from './needs';
+import { noteEat } from './events';
 import { insertAction, makeAction } from './queue';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
@@ -377,6 +378,7 @@ export const eatMealBehavior: Behavior = {
     if (!table && typeof a.data.mealSurface === 'string') table = objectRef(ctx, loc.lotId, a.data.mealSurface);
     addDirtyDishes(ctx, loc.lotId, loc.level, table, loc.x, loc.z, 1, typeof a.data.recipeId === 'string' ? a.data.recipeId : 'meal', p.householdId);
     if (table) useObject(ctx, p, loc.lotId, table);
+    noteEat(ctx, p);
   },
 };
 

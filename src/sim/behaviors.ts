@@ -22,7 +22,7 @@ import {
   candidateFree, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
   clearUsePoint,
 } from './steps';
-import { goHereBehavior, goToWorkBehavior, inviteBehavior, leaveLotBehavior, phoneChatBehavior } from './travel';
+import { goHereBehavior, goToWorkBehavior, inviteBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior } from './travel';
 import {
   READ_SEAT_RADIUS, SLEEP_NIGHT_BEDTIME, SLEEP_NIGHT_END, SLEEP_WAKE_BEFORE_SHIFT, SLEEP_WAKE_MINUTE, SLEEP_WAKE_SPREAD,
   TV_SEAT_RADIUS,
@@ -455,6 +455,8 @@ function buildRegistry(): Record<string, Behavior> {
     leaveLot: leaveLotBehavior,
     invite: inviteBehavior,
     phoneChat: phoneChatBehavior,
+    phoneDate: phoneDateBehavior,
+    planEvent: planEventBehavior,
     social: socialBehavior,
   };
 }

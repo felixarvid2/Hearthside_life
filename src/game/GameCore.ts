@@ -27,7 +27,7 @@ import { Simulation } from '../sim/simulation';
 import { LotNav } from '../world/nav';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, DevStats, GameMode, MenuOption, PaintPreview, PaintTool, PickResult,
-  PlacementState, Result, RoomInfo, SaveSlotInfo, UiChange,
+  PlacementState, PlanEventRequest, Result, RoomInfo, SaveSlotInfo, UiChange,
 } from './api';
 import { AutosavePolicy } from './core/autosave';
 import { BuildTools } from './core/build';
@@ -374,6 +374,35 @@ export class GameCore {
     if (issues.length > 0) return fail(issues[0]!);
     p.outfits = clone(wardrobe);
     this.events.emit({ type: 'person.changed', personId, what: 'outfit' });
+    this.notify('state');
+    this.autosaves.request();
+    return OK;
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Social events
+  // ---------------------------------------------------------------------------------------------
+
+  eventProblem(req: PlanEventRequest): string | null {
+    if (!this.world) return 'No game is running.';
+    return this.sim.eventProblem(req);
+  }
+
+  planEvent(req: PlanEventRequest): Result & { eventId?: Id } {
+    const state = this.world;
+    if (!state) return fail('No game is running.');
+    if (state.people[req.hostId]?.householdId !== state.activeHouseholdId) return fail('Only your own household can host.');
+    const r = this.sim.planEvent(req);
+    if (!r.ok) return fail(r.reason);
+    this.notify('state');
+    this.autosaves.request();
+    return { ok: true, eventId: r.eventId };
+  }
+
+  cancelEvent(eventId: Id): Result {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.cancelEvent(eventId);
+    if (!r.ok) return fail(r.reason ?? 'Could not cancel.');
     this.notify('state');
     this.autosaves.request();
     return OK;

@@ -474,9 +474,9 @@ const COLLAR_PROFILES: Record<CollarKind, number[][]> = {
   shirt: [[-0.004, -0.001, 0], [0.008, 0.002, 0], [0.0105, 0.012, 0], [-0.004, 0.024, 1]],
   stand: [[-0.004, -0.002, 0], [0.014, -0.004, 0], [0.024, -0.005, 0], [0.027, -0.001, 1]],
   // turtleneck: a tall tube that folds over at the top
-  roll: [[-0.012, 0.0, 0], [0.01, 0.0075, 0], [0.036, 0.0105, 0], [0.058, 0.0105, 0], [0.071, 0.0085, 0], [0.073, 0.0, 0], [0.062, -0.0075, 0]],
+  roll: [[-0.012, 0.0, 0], [0.006, 0.0075, 0], [0.022, 0.0105, 0], [0.036, 0.0105, 0], [0.046, 0.0085, 0], [0.048, 0.0, 0], [0.04, -0.0075, 0]],
   // hood worn down: a thick rolled cowl, pulled down into a pouch on the back
-  hood: [[-0.006, 0.0, 0], [0.012, 0.014, 0], [0.032, 0.03, 0], [0.056, 0.036, 0], [0.07, 0.024, 0], [0.066, 0.006, 0], [0.04, -0.004, 0]],
+  hood: [[-0.006, 0.0, 0], [0.008, 0.014, 0], [0.02, 0.028, 0], [0.036, 0.032, 0], [0.044, 0.02, 0], [0.04, 0.004, 0], [0.024, -0.004, 0]],
   // shawl collar of a robe: a round roll along the V opening
   shawl: [[-0.006, 0.0, 0], [0.006, 0.01, 0], [0.018, 0.02, 0], [0.026, 0.016, 0], [0.026, 0.004, 0], [0.012, -0.002, 0]],
   // jacket lapel: a flat fold lying on the chest
@@ -490,7 +490,7 @@ const COLLAR_PROFILES: Record<CollarKind, number[][]> = {
 function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: number, neckY: number, frontDepth: number, halfW = 0.09, panel: number = PANEL.collar): void {
   const K = kind === 'hood' ? 36 : 32;
   const closed = kind === 'roll';
-  const gap = closed ? 0 : kind === 'shirt' ? 0.18 : kind === 'hood' ? 0.32 : kind === 'shawl' || kind === 'lapel' ? 0.04 : 0.06;
+  const gap = closed ? 0 : kind === 'shirt' ? 0.18 : kind === 'hood' ? 0.8 : kind === 'shawl' || kind === 'lapel' ? 0.04 : 0.06;
   const profile = COLLAR_PROFILES[kind];
   const rows: Ring[] = profile.map(() => []);
   const vEdge = kind === 'shawl' || kind === 'lapel';
@@ -498,7 +498,7 @@ function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: 
     const a = gap + ((Math.PI * 2 - 2 * gap) * k) / K; // from front-left around the back to front-right
     const th = a; // torso angle convention: 0 = front, increasing toward +x
     const frontness = Math.max(0, Math.cos(th));
-    let y = neckY - (closed ? 0 : frontDepth * Math.pow(frontness, 1.6));
+    let y = neckY - (kind === 'hood' ? 0.03 : 0) - (closed ? 0 : frontDepth * Math.pow(frontness, 1.6));
     let smp = sampleRing(t.torso, y, 'y');
     let best = 0;
     const nearest = () => {
@@ -524,7 +524,7 @@ function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: 
     const back = Math.max(0, -Math.cos(th));
     const pouch = kind === 'hood' ? Math.pow(back, 1.4) : 0;
     profile.forEach(([up, outward, tip], r) => {
-      const sag = pouch * (r === 0 ? 0 : 0.085 * (0.4 + 0.6 * Math.min(1, r / 3)));
+      const sag = pouch * (r === 0 ? 0 : 0.07 * (0.4 + 0.6 * Math.min(1, r / 3)));
       let p: Vec3 = [base[0] + out[0] * (outward as number), base[1] + (up as number) - sag, base[2] + out[2] * (outward as number)];
       if (pouch > 0) p = [p[0] + out[0] * pouch * 0.012 * r, p[1], p[2] + out[2] * pouch * 0.012 * r];
       if (kind === 'shirt' && (tip as number) > 0) {
@@ -637,14 +637,14 @@ function neckline(t: BodyTemplate, neck: string): { backY: number; depth: number
     case 'tank': return { backY: at(0.16), depth: 0.125, halfW: 0.1, shape: 1 };
     case 'square': return { backY: t.lm.chestY + 0.02, depth: 0.03, halfW: 0.085, shape: 3 };
     // roll neck: the opening is a plain ring where the torso has narrowed to the neck; the roll collar stands on it
-    case 'turtle': return { backY: at(0.115), depth: 0, halfW: 0.115, shape: 0 };
+    case 'turtle': return { backY: at(0.125), depth: 0, halfW: 0.125, shape: 0 };
     // deep V openings: the garment is open (or lapelled) down to the chest, whatever is worn beneath shows in the V
     case 'cardigan': return { backY: at(0.125), depth: 0.3, halfW: 0.13, shape: 2 };
     case 'lapel': return { backY: at(0.105), depth: 0.2, halfW: 0.12, shape: 2 };
     case 'shawl': return { backY: at(0.11), depth: 0.26, halfW: 0.125, shape: 2 };
     case 'wrap': return { backY: at(0.105), depth: 0.17, halfW: 0.11, shape: 2 };
     case 'vest': return { backY: at(0.1), depth: 0.2, halfW: 0.095, shape: 2 };
-    case 'boat': return { backY: at(0.17), depth: 0.04, halfW: 0.15, shape: 1 };
+    case 'boat': return { backY: at(0.135), depth: 0.035, halfW: 0.125, shape: 1 };
     default: return { backY: at(0.09), depth: 0.03, halfW: 0.09, shape: 4 };
   }
 }
@@ -721,7 +721,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     const yW = yWaist(num(b, 'waist', 1));
     const yHem = yLeg(num(b, 'length', 0.55));
     shirtTop(yW - 0.03, true, true);
-    skirtPiece(m, t, yW, yHem, num(b, 'flare', 0.6), thickness + 0.002, PANEL.skirt, hemRim, { pleats: num(b, 'pleats', 0), taper: num(b, 'taper', 0) });
+    skirtPiece(m, t, yW, yHem, num(b, 'flare', 0.6), thickness + (def.layer === 'outer' ? 0.028 : 0.002), PANEL.skirt, hemRim, { pleats: num(b, 'pleats', 0), taper: num(b, 'taper', 0) });
     cuts.hem[0] = 0;
     cuts.hem[2] = yHem;
     cuts.hem[3] = yW;

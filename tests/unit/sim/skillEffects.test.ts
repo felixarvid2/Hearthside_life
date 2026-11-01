@@ -90,6 +90,24 @@ describe('effects in the simulation', () => {
     expect(performRates(ctx, mira, listen, null, null, 'standing').fun!).toBeCloseTo(low * fx.musicFun(10), 5);
   });
 
+  it('painting makes painting more fun, and fitness makes workouts at the treadmill and bench cheaper', () => {
+    const s = setup();
+    const ctx = pureCtx(s.h);
+    const mira = s.w.state.people[s.w.mira]!;
+    const paint = db.interactions.paintCanvas!;
+    mira.skills.painting = { level: 1, xp: 0 };
+    const low = performRates(ctx, mira, paint, null, null, 'standing').fun!;
+    mira.skills.painting = { level: 10, xp: 3200 };
+    expect(performRates(ctx, mira, paint, null, null, 'standing').fun!).toBeCloseTo(low * fx.paintingFun(10), 5);
+    expect(fx.paintingFun(10)).toBeGreaterThan(1.3);
+    for (const id of ['workOut', 'liftWeights']) {
+      const def = db.interactions[id]!;
+      const rates = (level: number) => { mira.skills.fitness = { level, xp: 0 }; return performRates(ctx, mira, def, null, null, 'standing'); };
+      expect(rates(10).energy!, id).toBeGreaterThan(rates(1).energy!);
+      expect(rates(10).hygiene!, id).toBeGreaterThan(rates(1).hygiene!);
+    }
+  });
+
   it('logic makes other skills grow faster but not logic itself', () => {
     const s = setup();
     const ctx = pureCtx(s.h);

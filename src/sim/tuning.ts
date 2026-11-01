@@ -202,3 +202,66 @@ export const DIRTY_KITCHEN_SCORE = 2;
 /** Minimum cleanable objects before a home can be called "fresh and clean". */
 export const FRESH_HOME_MIN_OBJECTS = 3;
 export const FRESH_HOME_MAX_DIRT = 0.25;
+
+// ---------------------------------------------------------------------------------------------
+// Relationships, memories and events (Milestone 5; sim/relationships.ts, sim/social.ts, sim/events.ts)
+// ---------------------------------------------------------------------------------------------
+
+/** Contact: after this many days without an interaction a relationship starts to fade (daily, bounded by a floor). */
+export const DECAY_GRACE_DAYS = 3;
+/** Per day beyond the grace period: friendship, trust and romance lost (positive values only). */
+export const DECAY_FRIENDSHIP_PER_DAY = 1;
+export const DECAY_TRUST_PER_DAY = 0.5;
+export const DECAY_ROMANCE_PER_DAY = 1;
+/** Resentment (negative values) fades back toward zero by this much per day without conflict. */
+export const FORGIVE_PER_DAY = 0.75;
+/** Decay never takes a value below these floors, by shared bond (a bond is a commitment that does not just evaporate). */
+export const DECAY_FLOOR: Readonly<Record<string, { friendship: number; trust: number; romance: number }>> = {
+  none: { friendship: 0, trust: 0, romance: 0 },
+  acquaintance: { friendship: 5, trust: 0, romance: 0 },
+  friend: { friendship: 22, trust: 8, romance: 0 },
+  closeFriend: { friendship: 45, trust: 25, romance: 0 },
+  partner: { friendship: 40, trust: 25, romance: 30 },
+  engaged: { friendship: 45, trust: 30, romance: 40 },
+  spouse: { friendship: 45, trust: 30, romance: 35 },
+  exPartner: { friendship: 0, trust: 0, romance: 0 },
+  rival: { friendship: -100, trust: -100, romance: 0 },
+};
+
+/** Memories: at most this many per other person below importance 3, and the hard cap on everything. */
+export const MEMORY_PER_PERSON = 8;
+export const MEMORY_HARD_LIMIT = 64;
+
+/** Social context: people closer than this (metres) to a romantic moment can see it. */
+export const WITNESS_RADIUS = 8;
+/** A witnessing partner loses this much trust (and friendship) in the cheater, and likes the other person less. */
+export const JEALOUSY_TRUST = 14;
+export const JEALOUSY_FRIENDSHIP = 6;
+export const JEALOUSY_RIVAL_FRIENDSHIP = 8;
+/** Romantic socials need the target's mood above this (a person in a foul mood is not receptive). */
+export const ROMANCE_MIN_MOOD = -20;
+/** A partner who is this unhappy makes romantic socials with someone else impossible in their sight. */
+export const ANGRY_MOOD = -15;
+/** Acceptance penalty for flirting with somebody who is in a relationship with someone else, and a bonus between partners. */
+export const TAKEN_PENALTY = 0.3;
+
+/** Events: history kept, the longest notice, and how long before the start guests begin to arrive. */
+export const EVENT_HISTORY = 8;
+export const EVENT_MAX_LEAD_DAYS = 3;
+export const EVENT_ARRIVE_EARLY = 10;
+export const EVENT_ARRIVE_SPREAD = 12;
+/** Ending guests leave within this many minutes after the end, spread by person. */
+export const EVENT_LEAVE_SPREAD = 14;
+/** Extra autonomy appetite for talking (and eating) during a running event. */
+export const EVENT_SOCIAL_BONUS = 0.9;
+export const EVENT_EAT_SCORE = 1.6;
+/** Score thresholds of the rating (0..100) and the multiplier each gives the reward. */
+export const EVENT_RATING: ReadonlyArray<readonly [min: number, rating: 'poor' | 'fair' | 'good' | 'great', mult: number]> = [
+  [85, 'great', 1.5], [60, 'good', 1], [30, 'fair', 0.5], [0, 'poor', -0.25],
+];
+/** Share of the score from goals and from the guests' mood at the end. */
+export const EVENT_GOAL_SHARE = 0.7;
+/** Reconciliation: how long an argument memory invites a visit, the cooldown per pair (days) and the daily chance. */
+export const RECONCILE_WINDOW_DAYS = 3;
+export const RECONCILE_COOLDOWN_DAYS = 7;
+export const RECONCILE_CHANCE = 0.6;

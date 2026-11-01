@@ -36,12 +36,16 @@ Read `src/core/types.ts`, `src/content/types.ts` and the files in `src/core/` be
 - Objects: footprint origin = min corner tile after rotation. Local space at rot 0 has the object front
   facing +z. `rot` = quarter turns counter-clockwise from above (three.js `rotation.y = rot * PI/2`).
   Use `src/core/geometry.ts` (`rotateLocal`, `rotateFacing`, `rotationOriginShift`, `footprintTiles`) for every
-  conversion so footprints, slots and models rotate together.
+  conversion so footprints, slots and models rotate together. `ObjectDef.openCells` lists rot-0 footprint cells the model
+  leaves empty (the inside of an L-shaped sofa): `blockingTiles` (not `footprintTiles`) is what blocks walking, so people step
+  through those cells and use them as approach tiles, while nothing else can be placed there.
 - Facing angle: 0 looks toward +z, PI/2 toward +x (`facingDir`). A model facing +z gets `rotation.y = facing`.
 - Characters: feet at y = 0, height about 1.8 m, facing +z at rotation 0.
 - Third-party furniture models (Kenney Furniture Kit) are roughly half scale: typical uniform scale 2.0
   (beds about 1.75). `public/assets/manifest.json` lists measured bounds (`min`, `max` before scaling) and
-  material names for every model.
+  material names for every model. Designs the kit lacks (easel, piano, treadmill, dishwasher, grill, crib, ...) are original
+  models built by `tools/furniture-extra` in the same style, with the kit's material names and colours, written at half scale
+  (scale 2.0), front towards +z, and a software-rendered isometric thumbnail (`npm run assets` or `node tools/build-extra-furniture.mjs`).
 
 ## Module map and ownership
 
@@ -180,7 +184,8 @@ The UI talks to it only through the build section of `GameAPI` (documented at th
   type ActionRequest = { interactionId: string; target: ActionInstance['target']; data?: Record<string, string | number | boolean | null>; source?: ActionInstance['source'] };
   type InteractionOption = { interactionId: string; label: string; icon: string; group: 'object' | 'social' | 'self' | 'move'; enabled: boolean; reason?: string; target: ActionInstance['target']; data?: Record<string, string | number | boolean | null> };
   ```
-- Visitors: neighbours visit through `state.schedule` (`visitArrive`/`visitLeave`), arriving at `lot.entry`.
+- Visitors: neighbours visit through `state.schedule` (`visitArrive`/`visitLeave`), arriving at `lot.entry`. Every visit is an event
+  (see "Relationships and events" below); event guests stay until it ends.
 
 ### characters (`src/characters`)
 - `assets.ts`: `loadCharacterAssets(baseUrl = './assets/', style = 'detailed'): Promise<CharacterAssets>` (bodies + clips) and
@@ -275,6 +280,14 @@ These ids are used across modules and must exist with these meanings.
 | `goHere` | `goHere` | tile target; walk there |
 | `danceSolo` | `generic` | self; fun |
 | `jogInPlace` | `generic` | self; fitness xp, energy cost |
+| `paintCanvas` | `generic` | easel; painting xp (+4% fun per level), moodlet inspired |
+| `playPiano` | `computer` | piano; sits at a chair facing it within 1.6 m, else stands; music xp |
+| `workOut` | `generic` | treadmill (slot on the belt); fitness xp, energy and hygiene cost, `active` |
+| `liftWeights` | `generic` | weight bench; fitness xp, bigger energy cost, `active` |
+| `playChess` | `computer` | chess table; logic xp |
+| `playWithToys` | `generic` | toy chest, play box; fun |
+| `grillFood` | `snack` | barbecue; $6, hunger +40, cooking xp |
+| `makeCoffee` / `makeToast` / `blendSmoothie` | `snack` | counter appliances; $2 energy +12 / $1 hunger +15 / $3 hunger +20 energy +6 |
 | `phoneInvite` | `invite` | self; data.personId = neighbour; schedules a visit in 60 min |
 | `phoneChat` | `phoneChat` | self; data.personId; social +, small friendship gain |
 | `readSkillBook` | `read` | bookcase; data.skillId (cooking, handiness, gardening, charisma, programming); trains that skill up to level 5 |
@@ -337,3 +350,69 @@ Implemented generically by object **tags** (`src/content/capabilities.ts`): `cle
 - Rendering: `render/objectsView.ts` draws a grime decal (dirt >= 0.35), stink lines (>= 0.6), a warning marker with
   spark flicker (electronics/appliances) or a puddle (plumbing) on broken objects, plus dirty plates and floor messes.
   `object.changed` events refresh the overlays.
+
+## Relationships and events (Milestone 5)
+
+Pure code (no three, no DOM), tested in `tests/unit/sim/{relationships,romance,memories,events,socialMenu}.test.ts`,
+`tests/unit/persistence/social.test.ts`, `tests/unit/ui/social.test.ts` and the headless playtest
+`tests/unit/integration/social.test.ts`.
+
+**Relationship model** (`core/relations.ts` pure rules, `sim/relationships.ts` state changes)
+- `Relationship` is directed: friendship, trust, romance (-100..100) and familiarity (0..100). Friendship and trust are separate
+  axes: trust gates depth (`SocialDef.requires.minTrust`: deep conversation 10, ask for a favour 25, share a secret 30, close friends 25),
+  insults, arguments and betrayal cut it hard (Insult -18, Spill Their Secret -45 and a permanent memory).
+- `Relationship.label` (`RelLabel`: stranger, acquaintance, friend, close friend, best friend, rival, enemy, crush, partner, engaged,
+  spouse, ex-partner) is derived by `relationshipLabel()` from the values and the shared bond, with hysteresis (entered at a higher value
+  than kept, `LABEL_RULES`), and refreshed by every `applyRelDelta`, `setBondStatus` and the daily upkeep. Commitments come from
+  the bond only; a crush needs an interested adult. The People tab shows the label with the friendship, trust and romance bars.
+- Time (once per game day, `Simulation.dailyRollover`): `decayRelationships` fades friendship (1/day), trust (0.5/day) and romance (1/day)
+  after `DECAY_GRACE_DAYS` (3) without contact, never below the floor of the bond (`DECAY_FLOOR`: friend 22, close friend 45, partner
+  romance 30...), resentment softens toward 0; housemates do not decay; familiarity never does. `syncBonds` demotes friends who drifted
+  apart to acquaintances and turns mutual hostility into `rival` (upgrades always need an accepted interaction).
+
+**Socials** (`content/socials.ts`, 35 of them in four menu sections: Friendly 16, Romantic 8, Mean 4, Special 7)
+- New fields: `requires.minTrust/maxTrust/exclusive/private/memory`, `section`, `cost`, `unilateral`, `startsEvent`, `outcome.resolves`.
+- `socialRequirementReason` (sim/social.ts) holds the rules and the readable reasons. Romantic socials need both people to be adults
+  (`isAdult`), `romance.open`, no family tie and the actor's interest (`romanceInterest`); `socialAcceptance` is 0 unless the target
+  is interested in the actor too, and the first refusal for lack of interest sets `Relationship.romanceBlocked` so the options stay off
+  (no pestering). Context: the target's mood (`ROMANCE_MIN_MOOD`), exclusivity (`commitmentOf`: partner, engaged, spouse), privacy
+  (kiss/propose with more than one onlooker), "not in front of an upset partner". Declines are gentle: no friendship or trust loss, a
+  small moodlet (`flustered`/`rebuffed`) and a short-lived `rejected` memory.
+- Cheating: a partnered person who gets romantic with someone else within sight of their partner costs them trust, friendship and
+  romance with that partner (`JEALOUSY_*`), gives the partner a `jealous` moodlet and a `jealousy` memory and lowers the partner's
+  liking for the third person (`witnessCheating`).
+- Menu: `Simulation.options` returns socials with `section` and an odds `hint`, sorted Friendly / Romantic / Mean / Special, enabled
+  before disabled, then by `socialRelevance` (fit x10 + chance x5; an introduction between strangers, a status step that just became
+  possible and making up after a quarrel rank first; saying goodbye last). The phone entries (invite, call, plan an event, ask on a
+  date) have `section: 'phone'`.
+
+**Memories** (`sim/relationships.ts addMemory`, `core/relations.ts MEMORY_EFFECTS`)
+- Bounded: repeats of the same kind and person are merged (`count`, newest text, newest time); at most `MEMORY_PER_PERSON` (8) below
+  importance 3 per other person; `MEMORY_LIMIT` (40) in total, oldest importance 1 then 2 go first; a `MEMORY_HARD_LIMIT` (64) that
+  spares permanent milestones. `resolved` memories (an apology, a make-up) stay but stop acting.
+- Behaviour: for a duration after the last occurrence a memory shifts the remembering person's acceptance of social categories from the
+  person it concerns (`memoryModifier`: argument -0.2 for a day, insult -0.25 for two days, betrayal -0.4 for a week, rejected -0.15 for
+  12 hours, great date +0.12...). Autonomy avoids small talk after a quarrel and prefers apologising.
+
+**Events** (`content/events.ts` types, `sim/events.ts` system, `state.homeEvents`)
+- Types: `date`, `dinnerParty`, `houseParty`, `celebration` (planned from the phone: `planEvent` / `Simulation.planEvent`) and
+  `visit`, `welcomeWagon`, `dropIn`, `reconciliation` (start by themselves when the visitor arrives). One gathering per household at a time.
+- Lifecycle: `planEvent` validates (`canPlanEvent`: host adult, guests known and reachable, notice, money, romance interest and the
+  guest's consent for a date), records a `HomeEvent` (`invited`), schedules the guests' arrivals (`evarrive:<event>:<guest>`) and
+  `eventStart` / `eventEnd` entries; `startEvent` sets out catering on a table (money through `transact`, occurrence
+  `event:<id>:food`) and goes `running`; guests stay until the end, then leave politely (a goodbye social, then `leaveLot`); `endEvent`
+  scores and rates, pays once and marks `processed['eventdone:<id>']`. Every step is behind a status check or a processed occurrence, so
+  save/load, fast-forward and replay cannot apply anything twice. `ensureEventEnds` repairs an edited save.
+- Goals (`chat`, `eat`, `romantic`, `laugh`, `mingle`, `reconcile`) are counted from resolved socials (`noteSocial`) and meals
+  (`noteEat`). Score = attendance x (70 % weighted goal progress + 30 % guests' mood); rating poor / fair / good / great scales
+  friendship, trust, romance, needs, moodlets and memories (`EventDef.reward`). A first good date also records `firstDate`.
+- Autonomy during an event: participants get `EVENT_SOCIAL_BONUS` for talking, may eat the catering even when not hungry, and a date
+  pair prefers romantic socials. Reconciliation: `dailyReconciliation` sends somebody who recently argued with the household to clear
+  the air (visible condition: an unsettled argument/insult memory, at most once a week per pair).
+- API: `GameAPI.eventProblem/planEvent/cancelEvent` (optional in dev mocks). UI: `ui/hud/eventPlanner.ts` (phone -> Plan an Event, or
+  People tab -> Plan an event), `ui/hud/eventTracker.ts` (goal card on the HUD), pure helpers in `ui/hud/socialModel.ts`.
+- Dates happen at home (no lot travel before Milestone 7).
+
+**Saves**: all new fields are optional (`Relationship.label`, `Relationship.romanceBlocked`, `Memory.resolved`, `WorldState.homeEvents`,
+`ScheduledEvent.kind` `eventStart`/`eventEnd`). `persistence/schema.ts fillSocialDefaults` drops unknown labels and malformed events;
+the schema version stays 1.

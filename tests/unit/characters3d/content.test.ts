@@ -76,6 +76,16 @@ describe('character content registry', () => {
     }
   });
 
+  it('face presets are distinct faces (no two within a hair of each other)', () => {
+    const ids = CH.FACE_PARAMS.map((p) => p.id);
+    const vec = (p: (typeof CH.FACE_PRESETS)[number]) => ids.map((id) => p.params[id] ?? 0);
+    for (let i = 0; i < CH.FACE_PRESETS.length; i++) for (let j = i + 1; j < CH.FACE_PRESETS.length; j++) {
+      const a = vec(CH.FACE_PRESETS[i]!), b = vec(CH.FACE_PRESETS[j]!);
+      const d = Math.sqrt(a.reduce((acc, v, k) => acc + (v - b[k]!) ** 2, 0));
+      expect(d, `${CH.FACE_PRESETS[i]!.id} vs ${CH.FACE_PRESETS[j]!.id}`).toBeGreaterThan(0.5);
+    }
+  });
+
   it('garments have valid layers, categories, patterns and fabrics', () => {
     const patterns = new Set(CH.PATTERNS.map((p) => p.id));
     for (const g of CH.GARMENTS) {

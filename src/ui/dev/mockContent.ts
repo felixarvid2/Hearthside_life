@@ -170,7 +170,7 @@ const FLOORS: SurfaceDesign[] = [
 export function mockContent(): ContentDB {
   return {
     objects: byId(OBJECTS), openings: {}, wallDesigns: byId(WALLS), floorDesigns: byId(FLOORS),
-    interactions: byId(INTERACTIONS), socials: byId(SOCIALS), traits: byId(TRAITS), aspirations: byId(ASPIRATIONS),
+    interactions: byId(INTERACTIONS), socials: byId(SOCIALS), events: {}, traits: byId(TRAITS), aspirations: byId(ASPIRATIONS),
     skills: byId(SKILLS), careers: byId(CAREERS), moodlets: byId(MOODLETS), recipes: {}, packs: { base: { id: 'base', name: 'Base', description: 'Base game' } },
     hair: {}, facialHair: {}, garments: {}, accessories: {}, patterns: {}, facePresets: {}, bodyPresets: {}, browStyles: {}, voices: {},
     faceParams: [], bodyParams: [], skinTones: [], hairColors: [], eyeColors: [], preferences: [],

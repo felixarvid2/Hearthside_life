@@ -49,6 +49,11 @@ export interface WorldState {
   feed: FeedEntry[];
   /** Short-lived transient world items such as served meals. */
   items: Record<Id, WorldItem>;
+  /**
+   * Social events at home (dates, parties, visits), planned, running and recently finished; bounded
+   * (sim/events.ts EVENT_HISTORY). Optional in saves: absent = none (persistence/schema.ts fillSocialDefaults).
+   */
+  homeEvents?: HomeEvent[];
 }
 
 export type StartMode = 'guided' | 'create' | 'sandbox';
@@ -331,11 +336,16 @@ export interface Memory {
   importance: 1 | 2 | 3; // 3 = major milestone, kept forever
   /** Low-importance repetitions are summarised: this counts merged occurrences. */
   count: number;
+  /** Set when the matter was settled (an apology, a make-up): the memory stays but no longer changes behaviour. */
+  resolved?: boolean;
 }
 
 export type MemoryKind =
   | 'met' | 'greatChat' | 'argument' | 'helped' | 'firstDate' | 'becameFriends' | 'becamePartners' | 'promotion'
-  | 'fired' | 'aspiration' | 'movedIn' | 'gift' | 'joke' | 'insult' | 'comforted' | 'other';
+  | 'fired' | 'aspiration' | 'movedIn' | 'gift' | 'joke' | 'insult' | 'comforted' | 'other'
+  // Milestone 5: romance, trust, conflict and events
+  | 'kiss' | 'rejected' | 'engaged' | 'married' | 'breakup' | 'betrayal' | 'secretShared' | 'reconciled'
+  | 'greatDate' | 'badDate' | 'party' | 'visit' | 'advice' | 'jealousy';
 
 // ---------------------------------------------------------------------------------------------
 // Appearance (character creator)
@@ -446,7 +456,19 @@ export interface Relationship {
   lastInteractionAt: GameMinutes | null;
   /** Social interaction id -> uses in the recent window, used to dampen spam. */
   recent: Record<string, number>;
+  /**
+   * How `from` sees `to` (derived from the values and the bond with hysteresis, sim/relationships.ts
+   * relationshipLabel). Absent in older saves; recomputed on the next change.
+   */
+  label?: RelLabel;
+  /** `to` made clear they are not interested in romance with `from`: romantic options stay off (consent respected). */
+  romanceBlocked?: boolean;
 }
+
+/** How a person sees another, derived from friendship, trust, romance and the shared bond. */
+export type RelLabel =
+  | 'stranger' | 'acquaintance' | 'friend' | 'closeFriend' | 'bestFriend' | 'rival' | 'enemy' | 'crush'
+  | 'partner' | 'engaged' | 'spouse' | 'exPartner';
 
 export type BondStatus =
   | 'acquaintance' | 'friend' | 'closeFriend' | 'rival' | 'partner' | 'engaged' | 'spouse' | 'exPartner';
@@ -469,7 +491,7 @@ export interface ScheduledEvent {
   /** Unique occurrence id, e.g. `visit:<personId>:<day>`; also used in WorldState.processed. */
   occurrence: string;
   at: GameMinutes;
-  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom';
+  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd';
   personId?: Id;
   householdId?: Id;
   data?: Record<string, string | number | boolean | null>;
@@ -481,4 +503,54 @@ export interface FeedEntry {
   kind: 'info' | 'social' | 'money' | 'career' | 'need' | 'warning' | 'aspiration' | 'build';
   text: string;
   personId?: Id;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Social events at home (Milestone 5; sim/events.ts)
+// ---------------------------------------------------------------------------------------------
+
+export type HomeEventType =
+  | 'date' | 'dinnerParty' | 'houseParty' | 'celebration' | 'visit' | 'welcomeWagon' | 'dropIn' | 'reconciliation';
+export type HomeEventStatus = 'invited' | 'running' | 'done' | 'cancelled';
+export type EventGoalKind = 'chat' | 'eat' | 'romantic' | 'laugh' | 'mingle' | 'reconcile';
+export type EventRating = 'poor' | 'fair' | 'good' | 'great';
+
+export interface EventGoal {
+  kind: EventGoalKind;
+  /** Display text, e.g. "Chat with each other". */
+  text: string;
+  target: number;
+  progress: number;
+  done: boolean;
+  /** Weight in the final score. */
+  weight: number;
+}
+
+/** A planned, running or finished social event. Rewards are applied once (status 'done' + processed `eventdone:<id>`). */
+export interface HomeEvent {
+  id: Id;
+  type: HomeEventType;
+  title: string;
+  status: HomeEventStatus;
+  /** The host (a member of the hosting household). */
+  hostId: Id;
+  householdId: Id;
+  lotId: Id;
+  /** Invited guests (people of other households, or the date's partner). */
+  guestIds: Id[];
+  /** Guests who actually showed up. */
+  arrivedIds: Id[];
+  createdAt: GameMinutes;
+  startAt: GameMinutes;
+  endAt: GameMinutes;
+  goals: EventGoal[];
+  /** Person pairs (pairKey) who talked, for the 'mingle' goal. */
+  pairs: string[];
+  /** People who ate at the event (ids). */
+  ate: Id[];
+  /** Final score 0..100 and rating, set when the event ends. */
+  score?: number;
+  rating?: EventRating;
+  /** Catering charged (cents), 0 when none was served. */
+  catered?: Cents;
 }

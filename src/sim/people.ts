@@ -8,7 +8,7 @@ import type {
   BondStatus, FamilyTie, Id, Needs, Person, PersonLocation, WorldState,
 } from '../core/types';
 import { NEED_IDS } from '../core/types';
-import { addMemory, ensureRel, invertTie } from './relationships';
+import { addMemory, ensureRel, invertTie, refreshLabel } from './relationships';
 
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
@@ -114,6 +114,7 @@ export function applyHouseholdTies(state: WorldState, memberIds: Id[], ties: Hou
         rel.trust = Math.max(rel.trust, start.trust);
         rel.romance = Math.max(rel.romance, start.romance);
         rel.lastInteractionAt = now;
+        refreshLabel(state, from, to);
       }
       const pa = state.people[a], pb = state.people[b];
       if (pa && pb) {

@@ -4,8 +4,9 @@
 import type { AspirationObjective, CareerLevelDef, ContentDB } from '../../content/types';
 import { DAY_NAMES, START_MINUTE, dayIndex, formatClock, formatDuration } from '../../core/clock';
 import { pairKey } from '../../core/ids';
+import { LABEL_TEXT, MEMORY_EFFECTS } from '../../core/relations';
 import { formatMoney } from '../../core/money';
-import type { ActionInstance, BondStatus, CareerState, FamilyTie, NeedId, Person, WorldState } from '../../core/types';
+import type { ActionInstance, BondStatus, CareerState, FamilyTie, Memory, NeedId, Person, RelLabel, WorldState } from '../../core/types';
 
 export { formatMoney };
 
@@ -104,14 +105,61 @@ export const BOND_LABELS: Record<BondStatus, string> = {
 
 const TIE_LABELS: Record<FamilyTie, string> = { parent: 'Parent', child: 'Child', sibling: 'Sibling', partner: 'Partner', spouse: 'Spouse', roommate: 'Roommate', none: '' };
 
+export interface MemoryRow {
+  id: string;
+  text: string;
+  /** Importance 3 = milestone, kept for good. */
+  importance: 1 | 2 | 3;
+  /** Merged repetitions (x3). */
+  count: number;
+  /** "Day 3, 2:10 PM". */
+  when: string;
+  at: number;
+  resolved: boolean;
+}
+
 export interface RelationshipRow {
   otherId: string;
   name: string;
   friendship: number;
+  trust: number;
   romance: number;
+  /** Shared bond ("Friend", "Spouse"), "Acquaintance" or "Stranger". */
   status: string;
+  /** How this person sees the other (derived with hysteresis): the label shown next to the bars. */
+  label: RelLabel;
+  labelText: string;
   family: string;
   sameHousehold: boolean;
+  /** Romance bar is shown when there is any, or a commitment. */
+  showRomance: boolean;
+  /** Memories involving the other person, newest first (at most MEMORY_ROWS), and how many more there are. */
+  memories: MemoryRow[];
+  moreMemories: number;
+  /** Plain-words effects memories still have ("less receptive after the argument, 3 h left"). */
+  effects: string[];
+}
+
+export const MEMORY_ROWS = 5;
+
+export function memoryRow(m: Memory): MemoryRow {
+  return { id: m.id, text: m.text, importance: m.importance, count: m.count, when: formatGameTime(m.at), at: m.at, resolved: m.resolved === true };
+}
+
+/** Memory effects still running at `now` for memories of `other`, as short texts with the time left. */
+export function memoryEffects(me: Person | undefined, other: string, now: number): string[] {
+  if (!me) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const m of [...(me.memories ?? [])].sort((a, b) => b.at - a.at)) {
+    if (m.withId !== other || m.resolved) continue;
+    const fx = MEMORY_EFFECTS[m.kind];
+    const left = fx ? m.at + fx.minutes - now : 0;
+    if (!fx || left <= 0 || seen.has(m.kind)) continue;
+    seen.add(m.kind);
+    out.push(`${fx.text.charAt(0).toUpperCase()}${fx.text.slice(1)} (${formatDuration(left)} left)`);
+  }
+  return out;
 }
 
 /** People `personId` knows (directed relationships from them), best friendship first. */
@@ -129,10 +177,16 @@ export function relationshipRows(state: WorldState, personId: string): Relations
       const tie: FamilyTie = bond.a === personId ? bond.familyAtoB : invertTie(bond.familyAtoB);
       family = TIE_LABELS[tie];
     }
+    const label: RelLabel = r.label ?? (bond && ['partner', 'engaged', 'spouse', 'exPartner'].includes(bond.status) ? bond.status as RelLabel : r.familiarity > 0 ? 'acquaintance' : 'stranger');
+    const mems = (me?.memories ?? []).filter((m) => m.withId === r.to).sort((a, b) => b.at - a.at);
     rows.push({
-      otherId: r.to, name: `${other.firstName} ${other.lastName}`.trim(), friendship: r.friendship, romance: r.romance,
+      otherId: r.to, name: `${other.firstName} ${other.lastName}`.trim(), friendship: r.friendship, trust: r.trust ?? 0, romance: r.romance,
       status: bond ? BOND_LABELS[bond.status] ?? humanize(bond.status) : r.familiarity > 0 ? 'Acquaintance' : 'Stranger',
+      label, labelText: LABEL_TEXT[label] ?? humanize(label),
       family, sameHousehold: !!me && other.householdId === me.householdId,
+      showRomance: r.romance !== 0 || label === 'crush' || ['partner', 'engaged', 'spouse'].includes(label),
+      memories: mems.slice(0, MEMORY_ROWS).map(memoryRow), moreMemories: Math.max(0, mems.length - MEMORY_ROWS),
+      effects: memoryEffects(me, r.to, state.clock.minutes),
     });
   }
   rows.sort((a, b) => Number(b.sameHousehold) - Number(a.sameHousehold) || b.friendship - a.friendship || a.name.localeCompare(b.name));

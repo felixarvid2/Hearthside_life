@@ -7,8 +7,9 @@ import { BuildTools } from '../../game/core/build';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, RoomInfo,
   CutawayMode, DevStats, GameAPI, GameMode, GameSettings, MenuOption, PaintPreview, PaintTool, PickResult,
-  PlacementState, Result, SaveSlotInfo, SoundId, UiChange,
+  PlacementState, PlanEventRequest, Result, SaveSlotInfo, SoundId, UiChange,
 } from '../../game/api';
+import { socialSection } from '../../content/capabilities';
 import type { ContentDB } from '../../content/types';
 import { EventBus } from '../../core/events';
 import { MINUTES_PER_DAY, SPEED_MINUTES_PER_SECOND, START_MINUTE, formatClock, minuteOfDay, type Speed } from '../../core/clock';
@@ -17,7 +18,7 @@ import { edgeKey, newId, pairKey, relKey, tileKey } from '../../core/ids';
 import { addFeed, addHousehold, createEmptyWorld, householdMembers, transact } from '../../core/state';
 import type { Tile } from '../../core/nav';
 import type {
-  ActionInstance, Appearance, CareerState, Cents, FinishRef, Id, Lot, NeedId, Needs, Person, PersonLocation, Pronouns,
+  ActionInstance, Appearance, CareerState, Cents, FinishRef, HomeEvent, Id, Lot, NeedId, Needs, Person, PersonLocation, Pronouns,
   Rot, SimSettings, StartMode, Wardrobe, WorldState,
 } from '../../core/types';
 import { NEED_IDS } from '../../core/types';
@@ -340,8 +341,9 @@ export class MockGame implements GameAPI {
         const minute = minuteOfDay(w.clock.minutes);
         return [
           opt('danceSolo', 'self'), opt('jogInPlace', 'self', me.needs.energy > 15, 'Too tired to exercise.'),
-          opt('phoneChat', 'self', true, undefined, { personId: 'neighbour' }),
-          opt('phoneInvite', 'self', !visiting, 'June is already here.'),
+          { ...opt('phoneChat', 'self', true, undefined, { personId: 'neighbour' }), section: 'phone' },
+          { ...opt('phoneInvite', 'self', !visiting, 'June is already here.'), section: 'phone' },
+          { ...opt('planEvent', 'self'), label: 'Plan an Event...', section: 'phone' },
           opt('goToWork', 'self', !!shift && minute >= shift.start - 120 && minute < shift.end, me.career ? `Work starts at ${formatClock(shift?.start ?? 540)}.` : 'Needs a job first.'),
         ];
       }
@@ -349,14 +351,25 @@ export class MockGame implements GameAPI {
       const rel = w.relationships[relKey(personId, pick.personId)];
       if (!other) return [];
       if (other.location.kind !== 'lot') return [];
-      const fam = rel?.familiarity ?? 0, fr = rel?.friendship ?? 0;
-      return [
-        opt('introduce', 'social', fam === 0, 'Already introduced.'),
-        opt('chat', 'social'), opt('tellJoke', 'social'), opt('compliment', 'social', fam > 0, 'Introduce yourselves first.'),
-        opt('deepTalk', 'social', fr >= 30, 'Needs a closer friendship (30 or more).'),
-        opt('flirt', 'social', other.householdId === me.householdId, `${other.firstName} is not interested in romance right now.`),
-        opt('hug', 'social', fr >= 40, 'Needs a good friendship (40 or more).'),
-      ];
+      const fam = rel?.familiarity ?? 0, fr = rel?.friendship ?? 0, tr = rel?.trust ?? 0, ro = rel?.romance ?? 0;
+      // Plausible stand-in for the simulation's rules: every social of the content, with the same kind of reasons.
+      const list = Object.values(this.content.socials).filter((d) => d.status === 'ready').map((d): MenuOption => {
+        const r = d.requires;
+        let reason: string | undefined;
+        if (r.minFamiliarity !== undefined && fam < r.minFamiliarity) reason = fam <= 0 ? 'Needs an introduction first.' : `Needs to know ${other.firstName} better.`;
+        else if (r.maxFamiliarity !== undefined && fam > r.maxFamiliarity) reason = 'Already introduced.';
+        else if (r.minFriendship !== undefined && fr < r.minFriendship) reason = 'Needs a closer friendship first.';
+        else if (r.minTrust !== undefined && tr < r.minTrust) reason = `${other.firstName} doesn't trust ${me.firstName} enough yet.`;
+        else if (r.minRomance !== undefined && ro < r.minRomance) reason = 'Needs more romantic interest first.';
+        else if (r.status && !(other.householdId === me.householdId)) reason = `Needs to be ${r.status[0]} first.`;
+        else if (r.memory) reason = 'Nothing to make up for.';
+        else if (r.romantic && other.householdId !== me.householdId && d.id !== 'flirt') reason = `${other.firstName} is with someone else.`;
+        const section = socialSection(d);
+        const o = opt(d.id, 'social', reason === undefined, reason);
+        return { ...o, section, ...(reason === undefined && section !== 'romantic' && !d.unilateral ? { hint: d.acceptance >= 0.7 ? 'Good odds' : d.acceptance >= 0.5 ? 'Fair odds' : 'Long shot' } : {}) };
+      });
+      const order = ['friendly', 'romantic', 'mean', 'special'];
+      return list.sort((a, b) => order.indexOf(a.section ?? '') - order.indexOf(b.section ?? '') || Number(b.enabled) - Number(a.enabled));
     }
     if (pick.kind === 'object') {
       const lot = w.lots[w.activeLotId];
@@ -383,6 +396,10 @@ export class MockGame implements GameAPI {
     if (p.location.kind !== 'lot') return { ok: false, reason: `${p.firstName} is not home.` };
     if (option.interactionId === 'editOutfits') {
       setTimeout(() => this.events.emit({ type: 'ui.request', what: 'editOutfits', personId }), 50);
+      return { ok: true };
+    }
+    if (option.interactionId === 'planEvent') {
+      setTimeout(() => this.events.emit({ type: 'ui.request', what: 'planEvent', personId }), 50);
       return { ok: true };
     }
     if (p.queue.length >= 8) return { ok: false, reason: 'The queue is full (8 actions).' };
@@ -775,6 +792,44 @@ export class MockGame implements GameAPI {
     try { localStorage.setItem('hearthside.mock.settings', JSON.stringify(this.cfg)); } catch { /* ignore */ }
     this.emit('settings');
   }
+  eventProblem(req: PlanEventRequest): string | null {
+    const w = this.world;
+    const def = this.content.events?.[req.type];
+    if (!w || !def) return 'That kind of gathering is not available.';
+    if ((w.homeEvents ?? []).some((e) => e.status === 'invited' || e.status === 'running')) return 'Another gathering is already planned.';
+    if (req.guestIds.length < def.minGuests) return def.minGuests === 1 ? 'Choose a guest.' : `Invite at least ${def.minGuests} guests.`;
+    if (req.guestIds.length > def.maxGuests) return `At most ${def.maxGuests} guests.`;
+    return null;
+  }
+
+  planEvent(req: PlanEventRequest): Result & { eventId?: Id } {
+    this.log('planEvent', req);
+    const w = this.world, def = this.content.events?.[req.type];
+    const problem = this.eventProblem(req);
+    if (!w || !def) return { ok: false, reason: 'No game is running.' };
+    if (problem) return { ok: false, reason: problem };
+    const ev: HomeEvent = {
+      id: newId(w, 'evt'), type: req.type, title: def.name, status: 'invited', hostId: req.hostId, householdId: w.activeHouseholdId, lotId: w.activeLotId,
+      guestIds: [...req.guestIds], arrivedIds: [], createdAt: w.clock.minutes, startAt: req.startAt, endAt: req.startAt + def.minutes,
+      goals: def.goals.map((g) => ({ kind: g.kind, text: g.text, weight: g.weight, target: Math.max(g.target, Math.round((g.perGuest ?? 0) * req.guestIds.length)), progress: 0, done: false })),
+      pairs: [], ate: [],
+    };
+    (w.homeEvents ??= []).push(ev);
+    addFeed(w, this.events, 'social', `Invitations sent for the ${def.name.toLowerCase()}.`);
+    this.events.emit({ type: 'homeEvent', eventId: ev.id, what: 'planned' });
+    this.emit('state');
+    return { ok: true, eventId: ev.id };
+  }
+
+  cancelEvent(eventId: Id): Result {
+    const ev = this.world?.homeEvents?.find((e) => e.id === eventId);
+    if (!ev || ev.status !== 'invited') return { ok: false, reason: 'It has already started.' };
+    ev.status = 'cancelled';
+    this.events.emit({ type: 'homeEvent', eventId, what: 'cancelled' });
+    this.emit('state');
+    return { ok: true };
+  }
+
   setSimSettings(patch: Partial<SimSettings>): void {
     this.log('setSimSettings', patch);
     if (!this.world) return;
@@ -848,6 +903,23 @@ export class MockGame implements GameAPI {
       w.bonds[pairKey(ada.id, june.id)] = { a: ada.id < june.id ? ada.id : june.id, b: ada.id < june.id ? june.id : ada.id, status: 'acquaintance', familyAtoB: 'none', since: 0 };
     }
     if (demo && ada) {
+      // Relationship detail for the People tab: a quarrel with June (still unsettled) and a milestone.
+      const now = w.clock.minutes;
+      ada.memories.push(
+        { id: newId(w, 'mem'), at: now - 600, kind: 'met', withId: june.id, text: 'Ada and June introduced themselves.', importance: 1, count: 1 },
+        { id: newId(w, 'mem'), at: now - 90, kind: 'argument', withId: june.id, text: 'Ada and June had a heated argument.', importance: 2, count: 2 },
+        { id: newId(w, 'mem'), at: now - 1200, kind: 'movedIn', text: 'Moved into Willow Lane.', importance: 3, count: 1 });
+      const jr = w.relationships[relKey(ada.id, june.id)];
+      if (jr) { jr.friendship = 34; jr.trust = 12; jr.romance = 8; jr.label = 'friend'; }
+      const def = this.content.events?.dinnerParty;
+      if (def && theo) {
+        (w.homeEvents ??= []).push({
+          id: newId(w, 'evt'), type: 'dinnerParty', title: def.name, status: 'running', hostId: ada.id, householdId: hh.id, lotId: lot.id,
+          guestIds: [june.id], arrivedIds: [june.id], createdAt: now - 60, startAt: now - 30, endAt: now + 120,
+          goals: def.goals.map((g, i) => ({ kind: g.kind, text: g.text, weight: g.weight, target: Math.max(g.target, Math.round((g.perGuest ?? 0) * 3)), progress: i === 0 ? 2 : i === 1 ? 1 : 0, done: false })),
+          pairs: [], ate: [], catered: 3600,
+        });
+      }
       ada.needs = { hunger: 34, energy: 72, hygiene: 58, bladder: 81, fun: 46, social: 18 };
       ada.moodlets = [{ id: 'wellRested', value: 15, until: START_MINUTE + 240 }];
       ada.skills = { cooking: { level: 2, xp: 180 }, charisma: { level: 1, xp: 40 }, logic: { level: 1, xp: 10 } };

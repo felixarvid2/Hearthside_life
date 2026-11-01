@@ -17,6 +17,8 @@ import { runAutonomy } from './autonomy';
 import { behaviorFor } from './behaviors';
 import { updateCareers } from './careers';
 import { spoilMeals } from './cooking';
+import { cancelEvent, canPlanEvent, dailyReconciliation, ensureEventEnds, planEvent } from './events';
+import type { PlanRequest, PlanResult } from './events';
 import { runHousekeeping } from './housekeeping';
 import type { SimCtx } from './context';
 import { behaviorOf, dist, lotLoc } from './context';
@@ -25,6 +27,7 @@ import { unstick } from './movement';
 import { decayNeeds } from './needs';
 import { optionsFor, requestReason } from './options';
 import { insertAction, isStarted, makeAction } from './queue';
+import { decayRelationships, syncBonds } from './relationships';
 import { RESERVING_PHASES, Reservations, reservationKeys } from './reservations';
 import { recentUses } from './social';
 import { dailyDropIn, ensureDepartures, ensureFirstVisit, processSchedule } from './visitors';
@@ -111,6 +114,7 @@ export class Simulation {
     if (minuteOfDay(ctx.now) % 60 === 0) {
       for (const p of people) if (!p.isNpc) checkAspiration(ctx, p);
       ensureDepartures(ctx);
+      ensureEventEnds(ctx);
     }
     spoilMeals(ctx);
     this.events.emit({ type: 'tick', minutes: ctx.now });
@@ -126,7 +130,11 @@ export class Simulation {
     for (const rel of Object.values(ctx.state.relationships)) {
       for (const k of Object.keys(rel.recent)) if (recentUses(rel, k, ctx.now) === 0) delete rel.recent[k];
     }
+    // Relationships fade without contact (bounded), bond statuses follow how people feel, visitors may call.
+    decayRelationships(ctx.state, ctx.now);
+    syncBonds(ctx.state, ctx.events, ctx.now);
     dailyDropIn(ctx, day);
+    dailyReconciliation(ctx, day);
   }
 
   /** Queues an interaction or social. Player orders precede autonomous ones and cancel a running autonomous action. */
@@ -257,6 +265,25 @@ export class Simulation {
         if (!this.res.acquire(a.id, reservationKeys(a), () => Infinity)) this.endCleanly(ctx, p.id, a, 'Someone else is using it.');
       }
     }
+  }
+
+  /** Plans a home event (date, party, celebration) for the player's household; see sim/events.ts. */
+  planEvent(req: PlanRequest): PlanResult {
+    const ctx = this.ctx();
+    return planEvent(ctx, req);
+  }
+
+  /** Why an event cannot be planned like this (host, guests, notice, money), or null. Pure. */
+  eventProblem(req: PlanRequest): string | null {
+    const ctx = this.ctx();
+    const host = ctx.state.people[req.hostId];
+    return host ? canPlanEvent(ctx, host, req.guestIds, req.type, req.startAt) : 'Unknown host.';
+  }
+
+  /** Cancels a planned (not yet started) event. */
+  cancelEvent(eventId: Id): { ok: boolean; reason?: string } {
+    const ctx = this.ctx();
+    return cancelEvent(ctx, eventId);
   }
 
   /** Current mood with its reasons. */

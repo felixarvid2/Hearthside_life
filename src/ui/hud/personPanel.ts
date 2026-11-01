@@ -11,8 +11,8 @@ import { h, setChildren, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import {
   NEED_LABELS, actionProgress, actionTarget, formatDays, formatMoney, formatShiftHours, humanize, initials, interactionIcon,
-  interactionName, moodTone, objectiveProgress, phaseLabel, promotionRequirements, relationshipRows, shiftPay, shiftStatusText,
-  skillProgress,
+  interactionName, memoryRow, moodTone, objectiveProgress, phaseLabel, promotionRequirements, relationshipRows, shiftPay, shiftStatusText,
+  skillProgress, type MemoryRow, type RelationshipRow,
 } from './format';
 import { awayText } from './strip';
 import type { PersonTab, Shell } from './shell';
@@ -36,7 +36,7 @@ export interface PersonPanel {
 }
 
 /** Bar for -100..100 values: fills from the centre, with a signed number (never colour alone). */
-function signedBar(label: string, value: number, kind: 'friend' | 'romance' | 'perf'): HTMLElement {
+function signedBar(label: string, value: number, kind: 'friend' | 'trust' | 'romance' | 'perf'): HTMLElement {
   const v = Math.max(-100, Math.min(100, Math.round(value)));
   const fill = h('div', { class: ['sbar-fill', v < 0 && 'is-neg'] });
   fill.style.left = v >= 0 ? '50%' : `${50 + v / 2}%`;
@@ -173,25 +173,50 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     }
   };
 
+  /** Rows whose memory list is expanded; kept across rebuilds. */
+  const openMemories = new Set<string>();
+
+  const memoryList = (rows: MemoryRow[], more: number): HTMLElement => h('ul', { class: 'mem-list' }, ...rows.map((m) => h('li', { class: ['mem', `mem-${m.importance}`, m.resolved && 'is-resolved'] },
+    h('span', { class: 'mem-when', text: m.when }),
+    h('span', { class: 'mem-text' },
+      m.importance === 3 ? h('span', { class: 'mem-star', title: 'Milestone, kept for good', ariaLabel: 'Milestone' }, icon('star', 14)) : null,
+      h('span', { text: `${m.text}${m.count > 1 ? ` (x${m.count})` : ''}${m.resolved ? ' - settled' : ''}` })))),
+    more > 0 ? h('li', { class: 'mem mem-more', text: `and ${more} older` }) : null);
+
+  const relationRow = (st: WorldState, r: RelationshipRow): HTMLElement => {
+    const other = st.people[r.otherId];
+    const url = api.portrait(r.otherId);
+    const av = url ? h('img', { class: 'rel-avatar', attrs: { src: url, alt: '' } }) : h('span', { class: 'rel-avatar rel-initials', text: other ? initials(other) : '?', attrs: { 'aria-hidden': 'true' } });
+    const details = h('details', { class: 'rel-more' }, h('summary', { class: 'rel-more-sum' }, icon('clock', 14), h('span', { text: `Memories (${r.memories.length + r.moreMemories})` })), memoryList(r.memories, r.moreMemories));
+    details.open = openMemories.has(r.otherId);
+    details.addEventListener('toggle', () => { if (details.open) openMemories.add(r.otherId); else openMemories.delete(r.otherId); });
+    return h('li', { class: 'rel-row', dataset: { label: r.label } },
+      av,
+      h('div', { class: 'rel-main' },
+        h('div', { class: 'rel-head' }, h('span', { class: 'rel-name', text: r.name }),
+          h('span', { class: 'rel-tags' },
+            h('span', { class: ['tag', 'tag-label', `tag-${r.label}`], title: `How ${other?.firstName ?? 'they'} ${r.sameHousehold ? 'and you' : 'feel'}`, text: r.labelText }),
+            r.family && r.family !== r.labelText ? h('span', { class: 'tag tag-family', text: r.family }) : null,
+            r.sameHousehold ? h('span', { class: 'tag tag-home', text: 'Household' }) : null)),
+        signedBar('Friendship', r.friendship, 'friend'),
+        signedBar('Trust', r.trust, 'trust'),
+        r.showRomance ? signedBar('Romance', r.romance, 'romance') : null,
+        r.effects.length ? h('ul', { class: 'rel-effects' }, ...r.effects.map((e) => h('li', {}, icon('clock', 13), h('span', { text: e })))) : null,
+        r.memories.length ? details : null));
+  };
+
   const renderRelationships = (st: WorldState, pr: Person) => {
     const rows = relationshipRows(st, pr.id);
-    const sig = `rel:${pr.id}:${rows.map((r) => `${r.otherId}/${Math.round(r.friendship)}/${Math.round(r.romance)}/${r.status}/${r.family}`).join(',')}|${portraitsKey(rows.map((r) => r.otherId))}`;
+    const life = pr.memories.filter((m) => !m.withId).sort((a, b) => b.at - a.at).slice(0, 6).map(memoryRow);
+    const sig = `rel:${pr.id}:${rows.map((r) => `${r.otherId}/${Math.round(r.friendship)}/${Math.round(r.trust)}/${Math.round(r.romance)}/${r.label}/${r.family}/${r.memories.map((m) => `${m.id}.${m.count}.${m.resolved ? 1 : 0}`).join('+')}/${r.moreMemories}/${r.effects.join('|')}`).join(',')}|${life.map((m) => m.id).join('')}|${portraitsKey(rows.map((r) => r.otherId))}`;
     if (sigs.get('relationships') === sig) return;
     sigs.set('relationships', sig);
-    if (!rows.length) { content.replaceChildren(empty(`${pr.firstName} does not know anyone yet. Say hello to a neighbour!`, 'people')); return; }
-    content.replaceChildren(h('ul', { class: 'rel-list' }, ...rows.map((r) => {
-      const other = st.people[r.otherId];
-      const url = api.portrait(r.otherId);
-      const av = url ? h('img', { class: 'rel-avatar', attrs: { src: url, alt: '' } }) : h('span', { class: 'rel-avatar rel-initials', text: other ? initials(other) : '?', attrs: { 'aria-hidden': 'true' } });
-      const showRomance = r.romance !== 0 || ['Partner', 'Engaged', 'Spouse'].includes(r.status);
-      return h('li', { class: 'rel-row' },
-        av,
-        h('div', { class: 'rel-main' },
-          h('div', { class: 'rel-head' }, h('span', { class: 'rel-name', text: r.name }),
-            h('span', { class: 'rel-tags' }, h('span', { class: 'tag', text: r.status }), r.family && r.family !== r.status ? h('span', { class: 'tag tag-family', text: r.family }) : null, r.sameHousehold ? h('span', { class: 'tag tag-home', text: 'Household' }) : null)),
-          signedBar('Friendship', r.friendship, 'friend'),
-          showRomance ? signedBar('Romance', r.romance, 'romance') : null));
-    })));
+    const canPlan = pr.householdId === st.activeHouseholdId && !pr.isNpc && ['youngAdult', 'adult', 'elder'].includes(pr.lifeStage);
+    const toolbar = canPlan ? h('div', { class: 'rel-toolbar' }, button({ icon: 'phone', label: 'Plan an event', small: true, variant: 'secondary', title: 'Date, dinner party, house party or celebration', onClick: () => { sh.sound('open'); sh.openEventPlanner(pr.id); } })) : null;
+    if (!rows.length) { content.replaceChildren(...(toolbar ? [toolbar] : []), empty(`${pr.firstName} does not know anyone yet. Say hello to a neighbour!`, 'people')); return; }
+    const nodes: HTMLElement[] = [...(toolbar ? [toolbar] : []), h('ul', { class: 'rel-list' }, ...rows.map((r) => relationRow(st, r)))];
+    if (life.length) nodes.push(h('h3', { class: 'pp-subhead', text: 'Life events' }), memoryList(life, 0));
+    content.replaceChildren(...nodes);
   };
 
   const renderCareer = (st: WorldState, pr: Person) => {

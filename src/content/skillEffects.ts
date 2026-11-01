@@ -48,6 +48,8 @@ export const charismaDiscount = (level: number): number => Math.min(0.18, 0.02 *
 export const gardeningGroceries = (level: number): number => Math.min(0.18, 0.02 * lv(level));
 /** Music: multiplier on the fun gained from music. */
 export const musicFun = (level: number): number => 1 + 0.04 * lv(level);
+/** Painting: multiplier on the fun gained from painting. */
+export const paintingFun = (level: number): number => 1 + 0.04 * lv(level);
 
 /** Highest skill level a skill book can teach. */
 export const BOOK_MAX_LEVEL = 5;
@@ -68,4 +70,5 @@ export const effectText = {
   charismaDiscount10: pct(charismaDiscount(10)),
   gardening10: pct(gardeningGroceries(10)),
   music10: pct(musicFun(10) - 1),
+  painting10: pct(paintingFun(10) - 1),
 };

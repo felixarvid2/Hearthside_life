@@ -28,6 +28,7 @@ const POSTURES: readonly Posture[] = ['standing', 'walking', 'seated', 'lying'];
 const SOCIAL_CATEGORIES: readonly SocialCategory[] = ['greeting', 'friendly', 'funny', 'deep', 'support', 'mean', 'romantic', 'family', 'status'];
 const TRAIT_CATEGORIES: readonly TraitCategory[] = ['social', 'tidiness', 'energy', 'creativity', 'leisure', 'lifestyle'];
 const BOND_STATUSES: readonly BondStatus[] = ['acquaintance', 'friend', 'closeFriend', 'rival', 'partner', 'engaged', 'spouse', 'exPartner'];
+const SOCIAL_SECTIONS = ['friendly', 'romantic', 'mean', 'special'];
 const PREFERENCE_GROUPS = ['activity', 'music', 'decor', 'food', 'topic'];
 /** Source materials that are never recoloured (they carry light, glass or foliage). */
 const FIXED_MATERIALS = ['glass', 'lamp', 'plant'];
@@ -105,7 +106,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     object: db.objects, opening: db.openings, 'wall design': db.wallDesigns, 'floor design': db.floorDesigns, interaction: db.interactions,
     social: db.socials, trait: db.traits, aspiration: db.aspirations, skill: db.skills, career: db.careers, moodlet: db.moodlets,
     recipe: db.recipes, pack: db.packs, hair: db.hair, 'facial hair': db.facialHair, garment: db.garments, accessory: db.accessories,
-    pattern: db.patterns, 'face preset': db.facePresets, 'body preset': db.bodyPresets, 'brow style': db.browStyles, voice: db.voices,
+    event: db.events ?? {}, pattern: db.patterns, 'face preset': db.facePresets, 'body preset': db.bodyPresets, 'brow style': db.browStyles, voice: db.voices,
   })) checkKeyIds(kind, rec as Record<string, { id: string }>);
 
   // Interactions and socials share the ActionInstance.interactionId namespace.
@@ -212,6 +213,11 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
       if (b && Math.abs(b.y1 - o.height) > 0.03) warn(`${w}: height ${o.height} differs from the model top ${b.y1.toFixed(3)}`);
     }
 
+    for (const [cx, cz] of o.openCells ?? []) {
+      if (!Number.isInteger(cx) || !Number.isInteger(cz) || cx < 0 || cz < 0 || cx >= fw || cz >= fd) err(`${w}: open cell (${cx},${cz}) is outside the footprint`);
+    }
+    if (o.openCells?.length && (o.layer !== 'floor' || !o.blocksMovement)) err(`${w}: open cells only make sense on blocking floor objects`);
+
     // slots
     const slotIds = new Set<string>();
     for (const s of o.slots) {
@@ -224,7 +230,8 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
       const [ax, az] = s.approach;
       if (!Number.isInteger(ax) || !Number.isInteger(az)) err(`${sw}: approach must be a whole tile`);
       const inside = ax >= 0 && ax < fw && az >= 0 && az < fd;
-      if (inside && o.blocksMovement) err(`${sw}: approach tile (${ax},${az}) is inside the blocking footprint`);
+      const openCell = (o.openCells ?? []).some(([cx, cz]) => cx === ax && cz === az);
+      if (inside && o.blocksMovement && !openCell) err(`${sw}: approach tile (${ax},${az}) is inside the blocking footprint`);
       if (ax < -1 || az < -1 || ax > fw || az > fd) warn(`${sw}: approach tile (${ax},${az}) is not next to the footprint`);
       if ((s.kind === 'sit' || s.kind === 'sleep') && (s.pos[0] < 0 || s.pos[0] > fw || s.pos[1] < 0 || s.pos[1] > fd)) err(`${sw}: seat/bed anchor outside the footprint`);
       if (s.kind === 'sleep' && s.posture !== 'lying') err(`${sw}: sleep slots are lying`);
@@ -311,6 +318,33 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     }
     for (const t of s.topics) if (t.startsWith('topic:') && !preferenceIds.has(t)) err(`${w}: unknown topic preference '${t}'`);
     if (!(s.autonomy.weight >= 0)) err(`${w}: autonomy weight must be >= 0`);
+    for (const k of ['minTrust', 'maxTrust'] as const) if (r[k] !== undefined && !finite(r[k])) err(`${w}: ${k} is not a number`);
+    if (r.minTrust !== undefined && r.maxTrust !== undefined && r.minTrust > r.maxTrust) err(`${w}: trust range is empty`);
+    if (r.memory && (r.memory.kinds.length === 0 || !(r.memory.withinMinutes > 0))) err(`${w}: bad memory requirement`);
+    if (s.section !== undefined && !has(SOCIAL_SECTIONS, s.section)) err(`${w}: bad menu section '${s.section}'`);
+    if (s.cost !== undefined && !(Number.isInteger(s.cost) && s.cost > 0)) err(`${w}: cost must be a positive whole number of cents`);
+    if (s.startsEvent !== undefined && !db.events?.[s.startsEvent]) err(`${w}: unknown event '${s.startsEvent}'`);
+    if (r.romantic && s.category !== 'romantic' && s.category !== 'status') err(`${w}: romantic requirement outside the romantic and status categories`);
+    if (s.category === 'romantic' && ready && !r.romantic && !r.status) err(`${w}: romantic socials must require romantic: true (adults and interest)`);
+  }
+
+  // ---- Events ----
+  const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile'];
+  for (const e of Object.values(db.events ?? {})) {
+    const w = `event '${e.id}'`;
+    if (e.status === 'ready' && (blank(e.name) || blank(e.description) || blank(e.icon))) err(`${w}: missing name, description or icon`);
+    if (!(e.minGuests >= 1 && e.maxGuests >= e.minGuests)) err(`${w}: bad guest range`);
+    if (!(e.minutes >= 30) || !(e.leadMinutes >= 0)) err(`${w}: bad duration`);
+    if (!Number.isInteger(e.cateringPerPerson) || e.cateringPerPerson < 0) err(`${w}: cateringPerPerson must be whole cents`);
+    if (e.goals.length === 0) err(`${w}: needs at least one goal`);
+    for (const g of e.goals) {
+      if (!GOAL_KINDS.includes(g.kind)) err(`${w}: bad goal kind '${g.kind}'`);
+      if (blank(g.text) || !(g.target > 0) || !(g.weight > 0)) err(`${w}: incomplete goal '${g.kind}'`);
+      if (g.kind === 'eat' && e.cateringPerPerson === 0) warn(`${w}: has an eat goal but serves no food`);
+    }
+    moodlet(`${w} reward`, e.reward.moodlet);
+    moodlet(`${w} reward`, e.reward.badMoodlet);
+    if (blank(e.reward.memory.text) || blank(e.reward.memory.badText)) err(`${w}: memory texts missing`);
   }
 
   // ---- Traits ----

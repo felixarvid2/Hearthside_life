@@ -26,6 +26,10 @@ const ACTIVITY: MoodletDef[] = [
   m('freshOutfit', 'Fresh Outfit', 3, 120, 'shirt', 'Feeling good in the right clothes.'),
   m('caughtUp', 'Caught Up', 6, 180, 'phone', 'A good phone call with someone who matters.'),
   m('sparkling', 'Sparkling Clean', 5, 180, 'sparkle', 'Scrubbed something until it shone.'),
+  m('inspired', 'Inspired', 8, 180, 'star', 'Put a little of yourself onto the canvas.'),
+  m('sharpMind', 'Sharp Mind', 6, 180, 'book', 'Worked out a few clever moves.'),
+  m('caffeinated', 'Caffeinated', 4, 90, 'energy', 'A fresh cup of coffee.'),
+  m('playtime', 'Playtime', 7, 120, 'fun', 'Lost an afternoon in make-believe.'),
   m('fixedIt', 'Fixed It!', 8, 240, 'build', 'Got a broken thing working again.'),
 ];
 
@@ -66,6 +70,29 @@ const SOCIAL: MoodletDef[] = [
   m('furious', 'Furious', -14, 240, 'warning', 'Still fuming after a heated argument.'),
   m('insulted', 'Insulted', -15, 360, 'warning', 'Someone was needlessly cruel.'),
   m('remorseful', 'Remorseful', -6, 180, 'warning', 'Said something that should have stayed unsaid.'),
+  // Romance, trust and conflict (Milestone 5)
+  m('handsHeld', 'Hand in Hand', 6, 180, 'heart', 'Held hands with someone special.'),
+  m('sweetKiss', 'Sweet Kiss', 14, 360, 'heart', 'A kiss that was worth waiting for.'),
+  m('newPartner', 'In Love', 22, 1440, 'heart', 'Started something wonderful with a partner.'),
+  m('engagedGlow', 'Engaged!', 25, 2880, 'sparkle', 'A proposal was accepted.'),
+  m('newlywed', 'Just Married', 30, 2880, 'sparkle', 'Married the person they love.'),
+  m('heartbroken', 'Heartbroken', -25, 2880, 'warning', 'A relationship has ended.'),
+  m('flustered', 'Flustered', -4, 90, 'warning', 'Had to turn down a romantic advance.'),
+  m('jealous', 'Jealous', -12, 240, 'warning', 'Saw a partner getting close to someone else.'),
+  m('betrayed', 'Betrayed', -25, 1440, 'warning', 'A secret was used against them.'),
+  m('trusted', 'Trusted', 10, 360, 'heart', 'Someone trusted them with a secret.'),
+  m('goodAdvice', 'Good Advice', 6, 240, 'star', 'Got helpful advice from a friend.'),
+  m('favourDone', 'Favour Done', 8, 240, 'check', 'A friend came through with a favour.'),
+  m('giftReceived', 'Thoughtful Gift', 10, 360, 'star', 'Received a gift.'),
+  // Home events
+  m('greatDateGlow', 'Wonderful Date', 20, 720, 'heart', 'An evening to remember.'),
+  m('awkwardDate', 'Awkward Date', -8, 240, 'warning', 'The date never really took off.'),
+  m('partyGlow', 'Great Party', 15, 480, 'social', 'A gathering that went really well.'),
+  m('flatParty', 'Flat Party', -6, 240, 'warning', 'The gathering never really got going.'),
+  m('goodVisit', 'Nice Visit', 6, 180, 'social', 'It was good to have company.'),
+  m('coldVisit', 'Cold Visit', -5, 180, 'warning', 'The visit left a chill.'),
+  m('reconciledGlow', 'Relief', 14, 360, 'check', 'Cleared the air after a falling-out.'),
+  m('unresolved', 'Unresolved', -8, 360, 'warning', 'A quarrel is still hanging in the air.'),
 ];
 
 /** Moodlets for progression events (careers, skills, aspirations). */

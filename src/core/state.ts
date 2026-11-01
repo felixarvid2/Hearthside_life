@@ -34,6 +34,7 @@ export function createEmptyWorld(seed: number, startMode: StartMode): WorldState
     schedule: [],
     feed: [],
     items: {},
+    homeEvents: [],
   };
 }
 

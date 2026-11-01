@@ -67,9 +67,9 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 
 1. Wall/room/door drawing tools (pure systems done, see ARCHITECTURE.md "Build mode construction"; Build-mode UI and rendering pending); move/resize/duplicate rooms still open (M2).
 2. More finishes and furniture through the content pipeline, decor packs, room presets (M2, M10).
-3. Creator depth: 24 face presets, 16+ face parameters, accessories, outfit presets, family tree editing (M3).
+3. Creator depth (M3): 24 face presets, 18 face parameters, 54 garments, 15 accessories, hat and hair interaction, outfit slots, family tree editing are done; remaining depth (more garment variety, life-stage bodies, height) belongs to M8 and M10.
 4. Dirt, breakage, repair and cleaning are done (M4, see ARCHITECTURE.md "Daily life"); groceries/freshness depth and household routines remain (M4).
-5. Romance ladder, dates, events with invitations, jealousy rules after exclusivity (M5).
+5. Done in M5 (see ARCHITECTURE.md "Relationships and events"): romance ladder, dates, events with invitations, jealousy after exclusivity. Open: weddings as events, group conversations, gifts as objects, lot travel for dates (M7).
 6. Bills, rent/ownership, freelance work, more careers, aspiration rewards depth (M6).
 7. Neighbourhood map, 12 lots, venues, household switching, off-lot reconciliation (M7).
 8. Life stages, school, aging, adoption (M8).

@@ -37,7 +37,7 @@ export function toMenuOption(o: InteractionOption): MenuOption {
   const token: MenuToken = { interactionId: o.interactionId, target: o.target, ...(o.data ? { data: o.data } : {}) };
   return {
     interactionId: o.interactionId, label: o.label, icon: o.icon, group: o.group, enabled: o.enabled,
-    ...(o.reason ? { reason: o.reason } : {}), token,
+    ...(o.reason ? { reason: o.reason } : {}), ...(o.section ? { section: o.section } : {}), ...(o.hint ? { hint: o.hint } : {}), token,
   };
 }
 

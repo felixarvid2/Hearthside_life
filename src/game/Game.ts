@@ -22,7 +22,7 @@ import { resolveSlots } from '../world/slots';
 import { DEFAULT_WALL_HEIGHT } from '../world/walls';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings,
-  MenuOption, PaintPreview, PaintTool, PickResult, PlacementState, Result, RoomInfo, SaveSlotInfo, SoundId, UiChange,
+  MenuOption, PaintPreview, PaintTool, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo, SaveSlotInfo, SoundId, UiChange,
 } from './api';
 import { GameAudio } from './audio';
 import type { GameCore } from './GameCore';
@@ -430,6 +430,9 @@ export class Game implements GameAPI {
   reorder(personId: Id, actionId: Id, toIndex: number): void { this.core.reorder(personId, actionId, toIndex); }
   mood(personId: Id): { value: number; label: string; reasons: string[] } { return this.core.mood(personId); }
   updateWardrobe(personId: Id, wardrobe: Wardrobe): Result { return this.core.updateWardrobe(personId, wardrobe); }
+  eventProblem(req: PlanEventRequest): string | null { return this.core.eventProblem(req); }
+  planEvent(req: PlanEventRequest): Result & { eventId?: Id } { return this.core.planEvent(req); }
+  cancelEvent(eventId: Id): Result { return this.core.cancelEvent(eventId); }
 
   setMode(m: 'live' | 'buy' | 'build'): void { this.core.setMode(m); }
 

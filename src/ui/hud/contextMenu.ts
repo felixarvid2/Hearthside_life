@@ -7,9 +7,11 @@ import type { Id } from '../../core/types';
 import { avoidToasts, toast } from '../kit/components';
 import { h, shieldWorld } from '../kit/dom';
 import { icon } from '../kit/icons';
+import { layout } from '../kit/layout';
 import { humanize } from './format';
 import { placeAbove, type Rect } from './insets';
 import type { Shell } from './shell';
+import { sectionsOf } from './socialModel';
 
 const GROUPS: Array<{ id: MenuOption['group']; label: string }> = [
   { id: 'self', label: 'For themselves' },
@@ -112,18 +114,35 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
     closeBtn.addEventListener('click', () => { close(); sh.sound('close'); });
     const sections: HTMLElement[] = [];
     const groups = GROUPS.map((g) => ({ g, items: options.filter((o) => o.group === g.id) })).filter((x) => x.items.length);
+    const compact = layout().compact;
+    const itemButton = (o: MenuOption): HTMLButtonElement => {
+      const b = h('button', { type: 'button', class: ['ctx-item', o.hint && 'has-hint'], role: 'menuitem', disabled: !o.enabled },
+        h('span', { class: 'ctx-icon' }, icon(o.icon || 'info', 20)),
+        h('span', { class: 'ctx-text' },
+          h('span', { class: 'ctx-label-row' }, h('span', { class: 'ctx-label', text: o.label }), o.hint ? h('span', { class: ['ctx-hint', `hint-${o.hint.split(' ')[0]!.toLowerCase()}`], text: o.hint }) : null),
+          !o.enabled && o.reason ? h('span', { class: 'ctx-reason' }, icon('lock', 13), h('span', { text: o.reason })) : null));
+      if (!o.enabled) b.setAttribute('aria-label', `${o.label}, unavailable: ${o.reason ?? 'not possible right now'}`);
+      // Ignore the synthetic click a touch tap on the world can fire on the menu that just opened under the
+      // finger ("ghost click"): only clicks that began inside the menu, or keyboard activation, count.
+      b.addEventListener('click', (e) => { if (e.detail !== 0 && !armed) return; choose(personId, o); });
+      return b;
+    };
     for (const { g, items } of groups) {
       const list = h('div', { class: 'ctx-group', role: 'group', ariaLabel: g.label });
       if (groups.length > 1) list.appendChild(h('div', { class: 'ctx-group-label', text: g.label }));
-      for (const o of items) {
-        const b = h('button', { type: 'button', class: 'ctx-item', role: 'menuitem', disabled: !o.enabled },
-          h('span', { class: 'ctx-icon' }, icon(o.icon || 'info', 20)),
-          h('span', { class: 'ctx-text' }, h('span', { class: 'ctx-label', text: o.label }), !o.enabled && o.reason ? h('span', { class: 'ctx-reason' }, icon('lock', 13), h('span', { text: o.reason })) : null));
-        if (!o.enabled) b.setAttribute('aria-label', `${o.label}, unavailable: ${o.reason ?? 'not possible right now'}`);
-        // Ignore the synthetic click a touch tap on the world can fire on the menu that just opened under the
-        // finger ("ghost click"): only clicks that began inside the menu, or keyboard activation, count.
-        b.addEventListener('click', (e) => { if (e.detail !== 0 && !armed) return; choose(personId, o); });
-        list.appendChild(b);
+      const parts = sectionsOf(g.id, items);
+      for (const part of parts) {
+        const sec = h('div', { class: 'ctx-section', role: 'group', ariaLabel: part.label || g.label });
+        if (part.label && (parts.length > 1 || g.id === 'social')) sec.appendChild(h('div', { class: 'ctx-section-label', text: part.label }));
+        const on = part.items.filter((o) => o.enabled), off = part.items.filter((o) => !o.enabled);
+        for (const o of on) sec.appendChild(itemButton(o));
+        if (off.length > 0) {
+          // Unavailable entries keep their reasons but fold away on small screens so the usable ones stay in reach.
+          const fold = h('details', { class: 'ctx-unavail' }, h('summary', { class: 'ctx-unavail-sum' }, icon('lock', 13), h('span', { text: `Unavailable (${off.length})` })), ...off.map(itemButton));
+          fold.open = !compact || on.length === 0 && off.length <= 2;
+          sec.appendChild(fold);
+        }
+        list.appendChild(sec);
       }
       sections.push(list);
     }

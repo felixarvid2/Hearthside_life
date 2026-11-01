@@ -12,6 +12,7 @@ import type { MeshData, SweepVertex } from './meshData';
 import { addVertex, computeSmoothNormals, emptyMesh, stitchRings, sweep, v3 } from './meshData';
 import type { Skin, Vec3 } from './rig';
 import { boneIndex, clamp, lerp, rigidSkin, smoothstep } from './rig';
+import { heightAtHalfWidth } from './clothing';
 import type { BodyTemplate } from './template';
 
 export const ACC_ATTRS = { aAcc: 1, color: 3 };
@@ -185,7 +186,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     crownFan(starts, false);
     if (b.pom === true) sphere(m, headToBind(O, skullPoint(0, H_MAX, 0.03)), 0.017 * HEAD_SCALE, 0.017 * HEAD_SCALE, 0.017 * HEAD_SCALE, (p, n) => addVertex(m, p, skin, { aAcc: [0], color: [1, 1, 1] }, {}, n), 14);
   } else if (style === 'cap') {
-    const hb = (th: number) => lerp(0.096, 0.122, smoothstep(-0.2, 0.9, Math.cos(th)));
+    const hb = (th: number) => lerp(0.096, 0.128, smoothstep(-0.2, 0.9, Math.cos(th)));
     const rows: Array<(th: number) => [number, number, number]> = [];
     rows.push((th) => [hb(th) - 0.005, 0.005, 0.7]);
     rows.push((th) => [hb(th), 0.0125, 0.8]);
@@ -215,7 +216,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
         const base = skullPoint(phi, hb(phi) + 0.002, 0.0125);
         const dir: Vec3 = v3.norm([Math.sin(phi), 0, Math.cos(phi)]);
         const reach = d * (1 - 0.3 * (phi / 1.05) ** 2);
-        const droop = 0.012 * (d / L) ** 1.6 - 0.004 * Math.sin(Math.PI * Math.min(1, d / L)) * 0;
+        const droop = 0.006 * (d / L) ** 1.6;
         const p: Vec3 = [base[0] + dir[0] * reach, base[1] - droop + 0.004 * Math.sin(Math.PI * d / L), base[2] + dir[2] * reach];
         const id = addVertex(m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.92 : 1, r === rowsN ? 0.92 : 1, r === rowsN ? 0.92 : 1] }, { faceWidth: widthMorph(phi, hb(phi)) });
         if (c === 0) vStarts.push(id);
@@ -223,7 +224,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     }
     stitchRings(m, vStarts, cols, false, false);
   } else if (style === 'sunhat') {
-    const hb = 0.1;
+    const hb = 0.108;
     const rows: Array<(th: number) => [number, number, number]> = [];
     rows.push(() => [hb - 0.006, 0.012, 0.6]);
     rows.push(() => [hb, 0.0165, 0.55]);
@@ -253,7 +254,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
         const base = skullPoint(th, hb - 0.002, 0.0165);
         const dir: Vec3 = v3.norm([Math.sin(th), 0, Math.cos(th)]);
         const wave = 0.007 * Math.sin(th * 3 + 0.6) * f * f;
-        const p: Vec3 = [base[0] + dir[0] * d, base[1] - 0.026 * f ** 1.5 + 0.007 * f ** 6 + wave, base[2] + dir[2] * d];
+        const p: Vec3 = [base[0] + dir[0] * d, base[1] - 0.016 * f ** 1.5 + 0.007 * f ** 6 + wave, base[2] + dir[2] * d];
         const id = addVertex(m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1] }, { faceWidth: widthMorph(th, hb) });
         if (first < 0) first = id;
       });
@@ -296,8 +297,8 @@ function torsoRingPoint(t: BodyTemplate, y: number, a: number, off: number): Vec
 function buildScarf(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
   const b = def.build;
   const filter = t.transfer.boneFilter((n) => NECK_BONES.test(n));
-  // the base of the neck, below the jaw (the garment necklines sit higher at the back, where the shoulders slope up to the skull)
-  const yRing = t.lm.neckBaseY + 0.012;
+  // where the shoulder slope has narrowed to the neck (below the jaw at the front; the ring follows the scanned neck and trapezius)
+  const yRing = heightAtHalfWidth(t, 0.105) - 0.012;
   const turns = num(b, 'turns', 2);
   const put = (grey: number) => (v: SweepVertex) => {
     const skin = t.transfer.skinAt(v.p, filter, 0.03);
@@ -342,7 +343,7 @@ function buildNecklace(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     const skin = t.transfer.skinAt(v.p, filter, 0.03);
     return addVertex(m, v.p, skin, { aAcc: [0], color: [grey, grey, grey] }, bodyMorphs(t, v.p, skin), v.n);
   };
-  const yTop = t.lm.neckBaseY - 0.004;
+  const yTop = heightAtHalfWidth(t, 0.105) - 0.03;
   const drop = style === 'pearls' ? 0.05 : style === 'choker' ? 0.0 : 0.11;
   const loop: Vec3[] = [];
   const K = 44;
@@ -350,25 +351,25 @@ function buildNecklace(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     const a = (i / K) * TAU;
     const front = Math.max(0, Math.cos(a));
     const y = yTop - drop * Math.pow(front, 2.2);
-    loop.push(torsoRingPoint(t, y, a, 0.013 + 0.012 * Math.pow(front, 2)));
+    loop.push(torsoRingPoint(t, y, a, 0.009 + 0.012 * Math.pow(front, 2)));
   }
   if (style === 'pearls') {
     // a string of beads along the loop
-    const r = num(b, 'bead', 0.0072);
+    const r = num(b, 'bead', 0.0085);
     for (let i = 0; i < K; i++) {
       const c = loop[i] as Vec3;
       sphere(m, c, r, r, r, (p, n) => { const skin = t.transfer.skinAt(p, filter, 0.03); return addVertex(m, p, skin, { aAcc: [0], color: [1, 1, 1] }, bodyMorphs(t, p, skin), n); }, 8);
     }
   } else {
-    const rr = style === 'choker' ? 0.0042 : 0.0016;
+    const rr = style === 'choker' ? 0.0042 : 0.0024;
     sweep(m, { path: loop, rx: loop.map(() => rr), ry: loop.map(() => style === 'choker' ? 0.0075 : rr), segments: 6, up: [0, 1, 0], closeStart: false, closeEnd: false }, put(1));
   }
   if (style === 'pendant') {
     // a teardrop pendant at the lowest point
     const c = loop[0] as Vec3;
     const n = v3.norm([0, 0, 1]);
-    const path: Vec3[] = [[c[0], c[1] - 0.004, c[2] + 0.002], [c[0], c[1] - 0.026, c[2] + 0.004]];
-    sweep(m, { path, rx: [0.0065, 0.0012], ry: [0.0028, 0.0011], segments: 10, up: [0, 0, 1], capStart: 2, capEnd: 2, exponent: 2 }, put(1));
+    const path: Vec3[] = [[c[0], c[1] - 0.004, c[2] + 0.003], [c[0], c[1] - 0.034, c[2] + 0.005]];
+    sweep(m, { path, rx: [0.0095, 0.0016], ry: [0.0038, 0.0014], segments: 10, up: [0, 0, 1], capStart: 2, capEnd: 2, exponent: 2 }, put(1));
     void n;
   }
 }

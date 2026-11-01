@@ -22,8 +22,10 @@ export type GameEvent =
   | { type: 'feed'; entryId: Id }
   | { type: 'notify'; text: string; kind: 'info' | 'warning' | 'error' }
   /** The simulation asks the UI to open a screen (e.g. the wardrobe editor after `editOutfits`). */
-  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson'; personId: Id }
+  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent'; personId: Id }
   | { type: 'item.changed'; itemId: Id; lotId: Id }
+  /** A home event was planned, started, progressed, ended or cancelled (the HUD tracker refreshes). */
+  | { type: 'homeEvent'; eventId: Id; what: 'planned' | 'started' | 'goal' | 'ended' | 'cancelled' }
   /** An object became dirtier or cleaner (visible stages only), broke or was repaired. The renderer refreshes its overlays. */
   | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' };
 

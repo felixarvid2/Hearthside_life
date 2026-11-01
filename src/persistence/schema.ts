@@ -56,6 +56,54 @@ export function fillDailyLifeDefaults(raw: Record<string, unknown>): void {
   }
 }
 
+const REL_LABELS = ['stranger', 'acquaintance', 'friend', 'closeFriend', 'bestFriend', 'rival', 'enemy', 'crush', 'partner', 'engaged', 'spouse', 'exPartner'];
+const EVENT_TYPES = ['date', 'dinnerParty', 'houseParty', 'celebration', 'visit', 'welcomeWagon', 'dropIn', 'reconciliation'];
+const EVENT_STATUSES = ['invited', 'running', 'done', 'cancelled'];
+const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile'];
+
+/**
+ * Defaults for fields added to schema 1 by Milestone 5 (relationships and events): a relationship may carry a derived
+ * `label` and `romanceBlocked`, a memory may be `resolved`, and the world may hold `homeEvents`. Old saves have none of
+ * them and the game reads absent as "not set" (labels are recomputed on the next change), so nothing has to be added;
+ * this only repairs values that would confuse the simulation: unknown labels are dropped, malformed or unreadable
+ * events are removed, and counters are made whole numbers. It touches the data only when something needs fixing, and
+ * is applied to every loaded world, whatever its version.
+ */
+export function fillSocialDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const str = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
+  if (isRecord(raw.relationships)) {
+    for (const rel of Object.values(raw.relationships)) {
+      if (!isRecord(rel)) continue;
+      if (rel.label !== undefined && !(typeof rel.label === 'string' && REL_LABELS.includes(rel.label))) delete rel.label;
+      if (rel.romanceBlocked !== undefined && typeof rel.romanceBlocked !== 'boolean') delete rel.romanceBlocked;
+    }
+  }
+  if (isRecord(raw.people)) {
+    for (const p of Object.values(raw.people)) {
+      if (!isRecord(p) || !Array.isArray(p.memories)) continue;
+      for (const m of p.memories) {
+        if (isRecord(m) && m.resolved !== undefined && typeof m.resolved !== 'boolean') delete m.resolved;
+      }
+    }
+  }
+  if (raw.homeEvents === undefined) return;
+  if (!Array.isArray(raw.homeEvents)) { delete raw.homeEvents; return; }
+  raw.homeEvents = raw.homeEvents.filter((e): e is Record<string, unknown> => {
+    if (!isRecord(e)) return false;
+    if (!str(e.id) || !str(e.hostId) || !str(e.householdId) || !str(e.lotId) || !str(e.title)) return false;
+    if (!EVENT_TYPES.includes(String(e.type)) || !EVENT_STATUSES.includes(String(e.status))) return false;
+    if (!num(e.startAt) || !num(e.endAt) || !num(e.createdAt)) return false;
+    for (const key of ['guestIds', 'arrivedIds', 'pairs', 'ate'] as const) {
+      const list = e[key];
+      e[key] = Array.isArray(list) ? list.filter(str) : [];
+    }
+    e.goals = (Array.isArray(e.goals) ? e.goals : []).filter((g): g is Record<string, unknown> =>
+      isRecord(g) && GOAL_KINDS.includes(String(g.kind)) && str(g.text) && num(g.target) && num(g.progress) && num(g.weight) && typeof g.done === 'boolean');
+    return true;
+  });
+}
+
 /** Oldest schema version this build can still upgrade. */
 export const OLDEST_SUPPORTED_VERSION = 1;
 
@@ -126,6 +174,7 @@ export function migrate(raw: unknown, opts: MigrateOptions = {}): MigrateResult 
   );
   if (!r.ok) return r;
   fillDailyLifeDefaults(r.data);
+  fillSocialDefaults(r.data);
   return { ok: true, state: r.data as unknown as WorldState, fromVersion: r.fromVersion, toVersion: r.toVersion, migrated: r.migrated };
 }
 

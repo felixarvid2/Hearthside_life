@@ -5,6 +5,7 @@ import type { ContentDB } from './types';
 import { OBJECTS } from './objects';
 import { INTERACTIONS } from './interactions';
 import { SOCIALS } from './socials';
+import { EVENTS } from './events';
 import { TRAITS } from './traits';
 import { ASPIRATIONS } from './aspirations';
 import { SKILLS } from './skills';
@@ -36,6 +37,7 @@ export function buildContentDB(): ContentDB {
     floorDesigns: byId('floor design', FLOOR_DESIGNS),
     interactions: byId('interaction', INTERACTIONS),
     socials: byId('social', SOCIALS),
+    events: byId('event', EVENTS),
     traits: byId('trait', TRAITS),
     aspirations: byId('aspiration', ASPIRATIONS),
     skills: byId('skill', SKILLS),

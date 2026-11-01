@@ -6,7 +6,7 @@ An original single-player life simulation for the browser, built with Three.js 0
 
 Milestone 1 of 13, "Creator and playable foundation". See [docs/ROADMAP.md](docs/ROADMAP.md) for the milestone plan and [docs/CONTINUATION.md](docs/CONTINUATION.md) for the current state and next steps.
 
-Milestone 1 minimums are met: 12 wall finishes, 8 floor designs, 15 furniture designs, 8 hairstyles and 12 garments. The Milestone 2 content minimums are met as well (48 wall finishes, 32 floor designs, 60 furniture designs, 6 doors and 8 windows). Full-project content targets are scheduled for Milestone 10. Current counts are in [docs/CONTENT_STATUS.md](docs/CONTENT_STATUS.md).
+Milestone 1 minimums are met: 12 wall finishes, 8 floor designs, 15 furniture designs, 8 hairstyles and 12 garments. The Milestone 2 content minimums are met as well (48 wall finishes, 32 floor designs, 60 furniture designs, 6 doors and 8 windows). The Milestone 3 creator minimums are met too (28 hairstyles, 54 garments, 15 accessories, 20 traits, 24 face presets). Full-project content targets are scheduled for Milestone 10. Current counts are in [docs/CONTENT_STATUS.md](docs/CONTENT_STATUS.md).
 
 ## What you can do now
 
@@ -22,9 +22,9 @@ Milestone 1 minimums are met: 12 wall finishes, 8 floor designs, 15 furniture de
   - an action queue, with cancel;
   - autonomy;
   - cooking meals and sleeping;
-  - socialising, with 20 social interactions;
-  - a visiting neighbour;
-  - relationships and memories.
+  - socialising, with 35 social interactions in four menu groups (friendly, romantic, mean, special);
+  - friendship and trust as separate bars with relationship labels, adult romance with consent and exclusivity, memories that change behaviour;
+  - visitors who stay, eat and leave politely, and events with goals: dates at home, dinner and house parties, celebrations, welcome visits.
 - Work one off-lot career, Culinary (10 levels), paid once per shift.
 - Track skills and aspirations.
 - Use buy mode with 44 furniture designs: move, rotate, sell and store items; choose finishes; undo/redo.

@@ -1,7 +1,9 @@
 // Context-menu options for a person and a picked target, with readable reasons for disabled entries.
 // Pure: building options never changes the world.
 
-import { isRepairable, offeredInteractionIds } from '../content/capabilities';
+import { isRepairable, offeredInteractionIds, socialSection } from '../content/capabilities';
+import type { SocialDef } from '../content/types';
+import { isAdult, romanceInterest } from '../core/relations';
 import { OUTFIT_CATEGORIES } from '../core/types';
 import type { ActionInstance, OutfitCategory, Person } from '../core/types';
 import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
@@ -10,7 +12,9 @@ import { repairFee } from './housework';
 import type { SimCtx } from './context';
 import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef } from './context';
 import { NEED_LABELS } from './needs';
-import { knownPeople } from './relationships';
+import { socialFit } from './autonomy';
+import { hasRecentMemory, knownPeople, peekRel } from './relationships';
+import { socialAcceptance } from './social';
 import { QUEUE_MAX, SERVICE_MIN_WEAR } from './tuning';
 import type { ActionData, ActionRequest, InteractionOption } from './types';
 
@@ -18,7 +22,8 @@ const OUTFIT_LABELS: Record<OutfitCategory, string> = {
   everyday: 'Everyday', formal: 'Formal', work: 'Work', athletic: 'Athletic', sleep: 'Sleepwear', swim: 'Swimwear',
 };
 
-const SOCIAL_ORDER = ['greeting', 'friendly', 'funny', 'deep', 'support', 'family', 'romantic', 'status', 'mean'];
+/** Social menu sections in display order. */
+const SECTION_ORDER = ['friendly', 'romantic', 'mean', 'special'];
 
 /** An unsaved action used to run checks (never added to state; its id is never allocated). */
 export function previewAction(ctx: SimCtx, p: Person, req: ActionRequest): ActionInstance {
@@ -119,14 +124,42 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
   }
 }
 
+/**
+ * How relevant a social is right now between these two (higher = nearer the top of its section): how naturally it
+ * fits the relationship, the chance it works, a boost for a status step that has just become possible, for an
+ * introduction between strangers and for making up after a quarrel; saying goodbye sits last.
+ */
+export function socialRelevance(ctx: SimCtx, p: Person, other: Person, def: SocialDef): number {
+  const rel = peekRel(ctx.state, p.id, other.id);
+  let r = socialFit(ctx, p, other, def) * 10 + socialAcceptance(ctx, p, other, def) * 5 + def.autonomy.weight;
+  if (def.success.setStatus) r += 8;
+  if (def.id === 'introduce' && rel.familiarity < 10) r += 30;
+  if (def.id === 'waveGoodbye') r -= 12;
+  if ((def.id === 'apologize' || def.id === 'makeUp') && hasRecentMemory(p, other.id, ['argument', 'insult', 'betrayal'], 3 * 1440, ctx.now)) r += 15;
+  return r;
+}
+
+function oddsHint(chance: number): string {
+  return chance >= 0.7 ? 'Good odds' : chance >= 0.45 ? 'Fair odds' : 'Long shot';
+}
+
 function socialOptions(ctx: SimCtx, p: Person, otherId: string): InteractionOption[] {
   const other = ctx.state.people[otherId];
   if (!other) return [];
-  const defs = Object.values(ctx.content.socials)
-    .filter((d) => d.status === 'ready')
-    .sort((a, b) => SOCIAL_ORDER.indexOf(a.category) - SOCIAL_ORDER.indexOf(b.category) || a.name.localeCompare(b.name));
   const t: ActionInstance['target'] = { kind: 'person', personId: otherId };
-  return defs.map((d) => option(ctx, p, d.id, d.name, d.icon, 'social', t));
+  const rows = Object.values(ctx.content.socials)
+    .filter((d) => d.status === 'ready')
+    .map((d) => {
+      const o = option(ctx, p, d.id, d.name, d.icon, 'social', t);
+      const section = socialSection(d);
+      o.section = section;
+      // Odds are shown for ordinary socials only: for romance they would reveal what the other person feels.
+      if (o.enabled && section !== 'romantic' && !d.unilateral && !d.requires.romantic) o.hint = oddsHint(socialAcceptance(ctx, p, other, d));
+      return { o, d, rank: socialRelevance(ctx, p, other, d) };
+    });
+  rows.sort((a, b) => SECTION_ORDER.indexOf(a.o.section!) - SECTION_ORDER.indexOf(b.o.section!)
+    || Number(b.o.enabled) - Number(a.o.enabled) || b.rank - a.rank || a.d.name.localeCompare(b.d.name));
+  return rows.map((x) => x.o);
 }
 
 function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
@@ -141,14 +174,27 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
     if (beh === 'invite') {
       for (const other of Object.values(ctx.state.people)) {
         if (other.householdId === p.householdId || !ctx.state.households[other.householdId] || ctx.state.households[other.householdId]!.isPlayable) continue;
-        out.push(option(ctx, p, def.id, `Invite ${other.firstName} Over`, def.icon, 'self', self, { personId: other.id }));
+        out.push({ ...option(ctx, p, def.id, `Invite ${other.firstName} Over`, def.icon, 'self', self, { personId: other.id }), section: 'phone' });
       }
       continue;
     }
     if (beh === 'phoneChat') {
       for (const id of knownPeople(ctx.state, p.id)) {
         const other = ctx.state.people[id];
-        if (other) out.push(option(ctx, p, def.id, `Call ${other.firstName}`, def.icon, 'self', self, { personId: id }));
+        if (other) out.push({ ...option(ctx, p, def.id, `Call ${other.firstName}`, def.icon, 'self', self, { personId: id }), section: 'phone' });
+      }
+      continue;
+    }
+    if (beh === 'planEvent') {
+      if (isAdult(p)) out.push({ ...option(ctx, p, def.id, 'Plan an Event...', def.icon, 'self', self), section: 'phone' });
+      continue;
+    }
+    if (beh === 'phoneDate') {
+      // Only people the caller could be attracted to and already knows are listed (nobody is pestered with options).
+      for (const id of knownPeople(ctx.state, p.id)) {
+        const other = ctx.state.people[id];
+        if (!other || other.householdId === p.householdId || !romanceInterest(p, other) || peekRel(ctx.state, p.id, id).romanceBlocked) continue;
+        out.push({ ...option(ctx, p, def.id, `Ask ${other.firstName} on a Date`, def.icon, 'self', self, { personId: id }), section: 'phone' });
       }
       continue;
     }

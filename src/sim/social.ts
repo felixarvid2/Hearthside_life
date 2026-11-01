@@ -6,8 +6,9 @@
 import { charismaAcceptance } from '../content/skillEffects';
 import type { SocialDef } from '../content/types';
 import { facingTo } from '../core/geometry';
-import { addFeed } from '../core/state';
-import type { ActionInstance, LifeStage, Person, Relationship } from '../core/types';
+import { isAdult, romanceInterest } from '../core/relations';
+import { addFeed, transact } from '../core/state';
+import type { ActionInstance, Person, Relationship } from '../core/types';
 import { endAction } from './actions';
 import { behaviorFor } from './behaviors';
 import type { SimCtx } from './context';
@@ -16,28 +17,64 @@ import { addMoodlet, computeMood } from './mood';
 import { changeNeed } from './needs';
 import { makeAction } from './queue';
 import {
-  addMemory, applyRelDelta, bondOf, decayRecent, ensureRel, familyTie, peekRel, setBondStatus, statusLabel,
+  addMemory, applyRelDelta, bondOf, commitmentOf, decayRecent, ensureRel, familyTie, hasRecentMemory, memoryModifier, peekRel,
+  refreshLabel, resolveMemories, setBondStatus, statusLabel,
 } from './relationships';
 import { personKey } from './reservations';
 import type { Behavior, Step } from './steps';
+import { canPlanEvent, noteSocial, planEventFromSocial } from './events';
 import {
-  SOCIAL_ACCEPT_MAX, SOCIAL_ACCEPT_MIN, SOCIAL_RECENT_DECAY_MINUTES, SOCIAL_SPAM_PENALTY, SOCIAL_WAIT_MINUTES,
+  ANGRY_MOOD, JEALOUSY_FRIENDSHIP, JEALOUSY_RIVAL_FRIENDSHIP, JEALOUSY_TRUST, ROMANCE_MIN_MOOD, SOCIAL_ACCEPT_MAX,
+  SOCIAL_ACCEPT_MIN, SOCIAL_RECENT_DECAY_MINUTES, SOCIAL_SPAM_PENALTY, SOCIAL_WAIT_MINUTES, TAKEN_PENALTY, WITNESS_RADIUS,
 } from './tuning';
 
-const ADULT_STAGES: readonly LifeStage[] = ['youngAdult', 'adult', 'elder'];
-
-/** Whether `a` could be romantically interested in `b` (adult stages and declared interest). */
-export function romanceInterest(a: Person, b: Person): boolean {
-  if (!ADULT_STAGES.includes(a.lifeStage) || !ADULT_STAGES.includes(b.lifeStage)) return false;
-  const want = a.romance.interestedIn;
-  return want.includes('any') || want.includes(b.appearance.frame);
-}
+export { romanceInterest } from '../core/relations';
 
 /** Recent uses of a social after the time-based decay (pure). */
 export function recentUses(rel: Relationship, socialId: string, now: number): number {
   const v = rel.recent[socialId] ?? 0;
   if (v === 0 || rel.lastInteractionAt === null) return v;
   return Math.max(0, v - Math.floor((now - rel.lastInteractionAt) / SOCIAL_RECENT_DECAY_MINUTES));
+}
+
+/** Awake people (besides the two) on the same lot and level within WITNESS_RADIUS: they can see what happens. */
+export function witnessesOf(ctx: SimCtx, a: Person, b: Person): Person[] {
+  const la = lotLoc(a);
+  if (!la) return [];
+  const out: Person[] = [];
+  for (const o of Object.values(ctx.state.people)) {
+    if (o.id === a.id || o.id === b.id) continue;
+    const lo = lotLoc(o);
+    if (!lo || lo.lotId !== la.lotId || lo.level !== la.level || lo.posture === 'lying') continue;
+    if (Math.hypot(lo.x - la.x, lo.z - la.z) <= WITNESS_RADIUS) out.push(o);
+  }
+  return out;
+}
+
+/** Readable reason why a romantic social is not possible between these two beyond the plain requirements, or null. */
+function romanceContextReason(ctx: SimCtx, actor: Person, target: Person, def: SocialDef): string | null {
+  const r = def.requires;
+  const rel = peekRel(ctx.state, actor.id, target.id);
+  if (!isAdult(actor) || !isAdult(target)) return 'Only between adults.';
+  const tie = familyTie(ctx.state, actor.id, target.id);
+  if (tie === 'parent' || tie === 'child' || tie === 'sibling') return 'Not with family.';
+  if (!actor.romance.open) return `${actor.firstName} isn't looking for romance.`;
+  if (rel.romanceBlocked) return `${target.firstName} isn't interested in that.`;
+  if (computeMood(ctx.content, target).value < ROMANCE_MIN_MOOD) return `${target.firstName} isn't in the mood.`;
+  const mine = commitmentOf(ctx.state, actor.id), theirs = commitmentOf(ctx.state, target.id);
+  if (r.exclusive) {
+    if (mine && mine.otherId !== target.id) return `${actor.firstName} is already with ${ctx.state.people[mine.otherId]?.firstName ?? 'someone'}.`;
+    if (theirs && theirs.otherId !== actor.id) return `${target.firstName} is with ${ctx.state.people[theirs.otherId]?.firstName ?? 'someone'}.`;
+  }
+  // Not in front of a partner who is already upset (flirting elsewhere is possible otherwise, at a cost to trust).
+  if (mine && mine.otherId !== target.id) {
+    const partner = ctx.state.people[mine.otherId];
+    if (partner && witnessesOf(ctx, actor, target).some((w) => w.id === partner.id) && computeMood(ctx.content, partner).value < ANGRY_MOOD) {
+      return `Not in front of ${partner.firstName}, who is upset.`;
+    }
+  }
+  if (r.private && witnessesOf(ctx, actor, target).length > 1) return 'Not with people watching.';
+  return null;
 }
 
 /** Readable reason why a social is not possible between these two (relationship rules), or null. */
@@ -50,10 +87,11 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
     return rel.familiarity <= 0 ? 'Needs an introduction first.' : `Needs to know ${target.firstName} better.`;
   }
   if (r.maxFamiliarity !== undefined && rel.familiarity > r.maxFamiliarity) return 'Already introduced.';
-  if (r.romantic) {
-    if (!ADULT_STAGES.includes(actor.lifeStage) || !ADULT_STAGES.includes(target.lifeStage)) return 'Only between adults.';
+  if (r.romantic || def.category === 'romantic') {
+    if (!isAdult(actor) || !isAdult(target)) return 'Only between adults.';
     const tie = familyTie(ctx.state, actor.id, target.id);
     if (tie === 'parent' || tie === 'child' || tie === 'sibling') return 'Not with family.';
+    if (!actor.romance.open) return `${actor.firstName} isn't looking for romance.`;
     if (!romanceInterest(actor, target)) return `${actor.firstName} isn't interested in ${target.firstName} that way.`;
   }
   if (r.status && r.status.length > 0 && !(bond && r.status.includes(bond.status))) {
@@ -62,6 +100,25 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
   if (r.minFriendship !== undefined && rel.friendship < r.minFriendship) return 'Needs a closer friendship first.';
   if (r.maxFriendship !== undefined && rel.friendship > r.maxFriendship) return 'They get along too well for that.';
   if (r.minRomance !== undefined && rel.romance < r.minRomance) return 'Needs more romantic interest first.';
+  if (r.minTrust !== undefined && rel.trust < r.minTrust) return `${target.firstName} doesn't trust ${actor.firstName} enough yet.`;
+  if (r.maxTrust !== undefined && rel.trust > r.maxTrust) return 'They trust each other too much for that.';
+  if (r.memory) {
+    const now = ctx.now;
+    if (!hasRecentMemory(actor, target.id, r.memory.kinds, r.memory.withinMinutes, now) && !hasRecentMemory(target, actor.id, r.memory.kinds, r.memory.withinMinutes, now)) {
+      return 'Nothing to make up for.';
+    }
+  }
+  if (def.cost !== undefined && (ctx.state.households[actor.householdId]?.funds ?? 0) < def.cost && !ctx.state.settings.unlimitedFunds) {
+    return `Not enough money ($${(def.cost / 100).toFixed(0)}).`;
+  }
+  if (r.romantic || def.category === 'romantic') {
+    const reason = romanceContextReason(ctx, actor, target, def);
+    if (reason) return reason;
+  }
+  if (def.startsEvent) {
+    const reason = canPlanEvent(ctx, actor, [target.id], def.startsEvent);
+    if (reason) return reason;
+  }
   return null;
 }
 
@@ -85,14 +142,19 @@ export function personAvailable(ctx: SimCtx, target: Person, actor: Person): str
   return null;
 }
 
-/** Chance (0..1) that `target` accepts `def` from `actor` right now (pure). */
+/** Chance (0..1) that `target` accepts `def` from `actor` right now (pure). Romance is never accepted without mutual interest. */
 export function socialAcceptance(ctx: SimCtx, actor: Person, target: Person, def: SocialDef): number {
+  if (def.unilateral) return 1;
+  const romantic = def.requires.romantic === true || def.category === 'romantic';
+  if (romantic && !(isAdult(actor) && isAdult(target) && romanceInterest(target, actor))) return 0;
   const toActor = peekRel(ctx.state, target.id, actor.id);
   const toTarget = peekRel(ctx.state, actor.id, target.id);
   let p = def.acceptance;
-  p += (toActor.friendship / 100) * 0.25 + (toActor.familiarity / 100) * 0.05 + (toActor.trust / 100) * 0.05;
+  const trustWeight = def.category === 'deep' || def.category === 'support' ? 0.15 : 0.05;
+  p += (toActor.friendship / 100) * 0.25 + (toActor.familiarity / 100) * 0.05 + (toActor.trust / 100) * trustWeight;
   if (def.category === 'romantic') p += (toActor.romance / 100) * 0.3;
   p += (computeMood(ctx.content, target).value / 100) * 0.2;
+  p += (computeMood(ctx.content, actor).value / 100) * 0.08;
   for (const t of actor.traits) p += def.actorTraits[t] ?? 0;
   for (const t of target.traits) {
     p += def.targetTraits[t] ?? 0;
@@ -100,10 +162,46 @@ export function socialAcceptance(ctx: SimCtx, actor: Person, target: Person, def
   }
   p -= recentUses(toTarget, def.id, ctx.now) * SOCIAL_SPAM_PENALTY;
   p += charismaAcceptance(actor.skills.charisma?.level ?? 1);
+  p += memoryModifier(target, actor.id, def.category, ctx.now);
+  const label = toActor.label;
+  if (label === 'enemy') p -= def.category === 'mean' ? 0 : 0.15;
+  else if (label === 'rival') p -= def.category === 'mean' ? 0 : 0.08;
+  else if (label === 'bestFriend') p += 0.05;
+  if (romantic) {
+    const theirs = commitmentOf(ctx.state, target.id);
+    if (theirs && theirs.otherId !== actor.id) p -= TAKEN_PENALTY;
+    else if (theirs) p += 0.1;
+  }
   return clamp(p, SOCIAL_ACCEPT_MIN, SOCIAL_ACCEPT_MAX);
 }
 
 const fill = (s: string, a: Person, b: Person) => s.replaceAll('{a}', a.firstName).replaceAll('{b}', b.firstName);
+
+/**
+ * A person in a commitment who gets romantic with someone else in front of their partner: the partner loses trust in
+ * them (and some liking for the third person), feels jealous and remembers it. Only what the partner can see counts.
+ */
+function witnessCheating(ctx: SimCtx, actor: Person, target: Person, def: SocialDef, accepted: boolean): void {
+  if (def.category !== 'romantic') return;
+  const cases: Array<{ cheater: Person; third: Person }> = [];
+  const mine = commitmentOf(ctx.state, actor.id), theirs = commitmentOf(ctx.state, target.id);
+  if (mine && mine.otherId !== target.id) cases.push({ cheater: actor, third: target });
+  if (accepted && theirs && theirs.otherId !== actor.id) cases.push({ cheater: target, third: actor });
+  for (const { cheater, third } of cases) {
+    const partnerId = commitmentOf(ctx.state, cheater.id)!.otherId;
+    const partner = ctx.state.people[partnerId];
+    if (!partner || partner.id === third.id) continue;
+    const seen = witnessesOf(ctx, actor, target).some((w) => w.id === partner.id);
+    if (!seen) continue;
+    applyRelDelta(ctx.state, partner.id, cheater.id, { trust: -JEALOUSY_TRUST, friendship: -JEALOUSY_FRIENDSHIP, romance: -4 }, ctx.now);
+    applyRelDelta(ctx.state, partner.id, third.id, { friendship: -JEALOUSY_RIVAL_FRIENDSHIP }, ctx.now);
+    addMoodlet(ctx.content, partner, 'jealous', ctx.now, def.id);
+    addMemory(ctx.state, partner, { kind: 'jealousy', importance: 2, withId: cheater.id, text: `Saw ${cheater.firstName} getting close to ${third.firstName}.` });
+    if (householdOf(ctx, partner)?.isPlayable || householdOf(ctx, cheater)?.isPlayable) {
+      addFeed(ctx.state, ctx.events, 'social', `${partner.firstName} saw ${cheater.firstName} getting close to ${third.firstName} and is hurt.`, partner.id);
+    }
+  }
+}
 
 /** Resolves a social once: relationships, needs, moodlets, memories, status, feed line and event. */
 export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: SocialDef): boolean {
@@ -111,7 +209,16 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   decayRecent(relA, ctx.now, SOCIAL_RECENT_DECAY_MINUTES);
   const recent = relA.recent[def.id] ?? 0;
   const chance = socialAcceptance(ctx, actor, target, def);
-  const accepted = ctx.rng.next() < chance;
+  let accepted = ctx.rng.next() < chance;
+  // A gift is paid for when it is accepted; if the money is gone by now it is simply not given.
+  if (accepted && def.cost) {
+    const paid = transact(ctx.state, ctx.events, actor.householdId, -def.cost, 'gift', `${def.name}: ${target.firstName}`, { occurrence: `gift:${actor.id}:${target.id}:${Math.round(ctx.now)}` });
+    if (!paid.ok) accepted = false;
+  }
+  const romantic = def.requires.romantic === true || def.category === 'romantic';
+  // Consent: somebody who is not interested (or not open to it) is never moved by a romantic advance. The advance is
+  // declined kindly, and from then on the option stays off for this pair (no pestering).
+  if (romantic && !def.unilateral && !romanceInterest(target, actor)) relA.romanceBlocked = true;
   const out = accepted ? def.success : def.failure;
   const dampen = 1 / (1 + recent);
   applyRelDelta(ctx.state, actor.id, target.id, { ...out.actor, familiarity: (out.actor.familiarity ?? 0) + 2 }, ctx.now, dampen);
@@ -126,6 +233,10 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
     addMemory(ctx.state, actor, { kind: m.kind, importance: m.importance, withId: target.id, text: fill(m.text, actor, target) });
     addMemory(ctx.state, target, { kind: m.kind, importance: m.importance, withId: actor.id, text: fill(m.text, target, actor) });
   }
+  if (out.resolves) {
+    resolveMemories(actor, target.id, out.resolves);
+    resolveMemories(target, actor.id, out.resolves);
+  }
   if (accepted && out.setStatus) {
     if (setBondStatus(ctx.state, ctx.events, actor.id, target.id, out.setStatus, ctx.now)) {
       const kind = out.setStatus === 'friend' || out.setStatus === 'closeFriend' ? 'becameFriends'
@@ -137,12 +248,17 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
       }
     }
   }
+  refreshLabel(ctx.state, actor.id, target.id);
+  refreshLabel(ctx.state, target.id, actor.id);
   const lines = accepted ? def.lines.success : def.lines.failure;
   const line = lines.length > 0 ? fill(ctx.rng.pick(lines), actor, target)
     : accepted ? `${actor.firstName} and ${target.firstName}: ${def.name}.` : `${target.firstName} didn't respond well to ${actor.firstName}.`;
   ctx.events.emit({ type: 'social', actorId: actor.id, targetId: target.id, socialId: def.id, accepted, line });
   ctx.events.emit({ type: 'relationship', fromId: actor.id, toId: target.id, what: 'value' });
   if (householdOf(ctx, actor)?.isPlayable || householdOf(ctx, target)?.isPlayable) addFeed(ctx.state, ctx.events, 'social', line, actor.id);
+  witnessCheating(ctx, actor, target, def, accepted);
+  if (accepted && def.startsEvent) planEventFromSocial(ctx, actor, target, def.startsEvent);
+  noteSocial(ctx, actor, target, def, accepted);
   return accepted;
 }
 

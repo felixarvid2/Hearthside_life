@@ -48,7 +48,7 @@ import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import type { EventBus } from '../core/events';
 import type { AnimId } from '../core/anim';
 import type { Tile } from '../core/nav';
-import type { Cents, FinishRef, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
+import type { Cents, FinishRef, HomeEventType, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 import type { RoomDelta, Vertex } from '../world/roomTracker';
 
@@ -77,8 +77,20 @@ export interface MenuOption {
   group: 'object' | 'social' | 'self' | 'move';
   enabled: boolean;
   reason?: string;
+  /** Sub-group: socials 'friendly' | 'romantic' | 'mean' | 'special' (most relevant first, unavailable last), phone entries 'phone'. */
+  section?: string;
+  /** Short odds text for socials ("Good odds"); absent for romantic options. */
+  hint?: string;
   /** Opaque payload passed back to queue(). */
   token: unknown;
+}
+
+/** A request to plan a home event. */
+export interface PlanEventRequest {
+  type: HomeEventType;
+  hostId: Id;
+  guestIds: Id[];
+  startAt: number;
 }
 
 export interface PlacementState {
@@ -307,6 +319,17 @@ export interface GameAPI {
   mood(personId: Id): { value: number; label: string; reasons: string[] };
   /** Replaces a household member's wardrobe (wardrobe editor). */
   updateWardrobe(personId: Id, wardrobe: Wardrobe): Result;
+
+  // ---- social events (Milestone 5; sim/events.ts) ----
+  // The planner lists known people and event types from state()/content (content.events). `startAt` is an absolute
+  // game minute (at least the type's notice from now, at most three days ahead). A date asks for the guest's consent.
+  // The game implements these; the standalone dev mocks of other screens (buy, creator) may omit them.
+  /** Why this event cannot be planned like this, or null when it can (nothing changes). */
+  eventProblem?(req: PlanEventRequest): string | null;
+  /** Plans the event and sends the invitations. */
+  planEvent?(req: PlanEventRequest): Result & { eventId?: Id };
+  /** Calls off a planned event that has not started. */
+  cancelEvent?(eventId: Id): Result;
 
   // ---- modes ----
   /** Build and Buy pause the simulation; returning to live restores the previous speed. */

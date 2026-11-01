@@ -11,6 +11,8 @@
 //
 // A tag only counts on a functional object (decorative objects never offer interactions).
 
+import type { SocialDef, SocialSection } from './types';
+
 export const CLEANABLE_TAG = 'cleanable';
 /** Tags that make an object break with use and repairable. */
 export const REPAIR_TAGS: readonly string[] = ['plumbing', 'appliance', 'electronics'];
@@ -41,4 +43,15 @@ export function offeredInteractionIds(d: Capable & { interactions: readonly stri
   const out = [...d.interactions];
   for (const id of capabilityInteractions(d)) if (!out.includes(id)) out.push(id);
   return out;
+}
+
+/** Social menu section of a social: its explicit `section`, else from the category. */
+export function socialSection(def: Pick<SocialDef, 'category' | 'section'>): SocialSection {
+  if (def.section) return def.section;
+  switch (def.category) {
+    case 'romantic': return 'romantic';
+    case 'mean': return 'mean';
+    case 'status': return 'special';
+    default: return 'friendly';
+  }
 }

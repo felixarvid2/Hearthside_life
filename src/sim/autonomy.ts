@@ -17,12 +17,13 @@ import type { SimCtx } from './context';
 import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter } from './context';
 import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
-import { familyTie, peekRel } from './relationships';
+import { eventMealsFor, eventSocialBonus, onDateTogether } from './events';
+import { commitmentOf, familyTie, hasRecentMemory, peekRel } from './relationships';
 import { personKey } from './reservations';
 import { isVisitPending, neighbours } from './visitors';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
-  LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
+  EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
 } from './tuning';
 import type { ActionRequest } from './types';
 
@@ -146,6 +147,13 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
     }
   }
   const eat = ctx.content.interactions.eatMeal;
+  // Guests (and hosts) at a running event take the food that was set out for it, hungry or not.
+  if (eat && eat.status === 'ready') {
+    for (const m of eventMealsFor(ctx, p)) {
+      const score = EVENT_EAT_SCORE / (1 + dist(loc.x, loc.z, m.position.x, m.position.z) / 15) * cooldownMult(ctx, p, eat.id, m.id);
+      if (score > 0) out.push({ req: { interactionId: eat.id, target: { kind: 'item', itemId: m.id } }, score, key: `${eat.id}@${m.id}`, addresses: [] });
+    }
+  }
   if (eat && eat.autonomy.enabled !== false) {
     for (const m of meals) {
       const addresses: NeedId[] = [];
@@ -236,15 +244,24 @@ function phoneFriend(ctx: SimCtx, p: Person): string | null {
 }
 
 /** How well a social fits a relationship (higher = more natural). */
-function socialFit(ctx: SimCtx, p: Person, other: Person, def: SocialDef): number {
+export function socialFit(ctx: SimCtx, p: Person, other: Person, def: SocialDef): number {
   const rel = peekRel(ctx.state, p.id, other.id);
+  // After a quarrel people avoid small talk and either make up or keep fighting.
+  const sore = hasRecentMemory(p, other.id, ['argument', 'insult', 'betrayal'], 1440, ctx.now);
+  if (sore && (def.id === 'apologize' || def.id === 'makeUp')) return 2.5;
+  if (sore && def.category !== 'mean' && def.category !== 'support') return 0.2;
   switch (def.category) {
     case 'greeting': return rel.familiarity < 10 ? 3 : 0.15;
     case 'friendly': return rel.familiarity >= 10 ? 1.2 : 0.6;
     case 'funny': return rel.familiarity >= 10 ? 1 : 0.4;
     case 'deep': case 'support': return rel.friendship >= 30 ? 1.2 : 0.3;
-    case 'romantic': return romanceInterest(p, other) && rel.romance >= 30 && rel.friendship >= 30 ? 0.6 : 0;
-    case 'mean': return rel.friendship < -20 ? 1 : 0.02;
+    case 'romantic': {
+      if (onDateTogether(ctx, p, other) && romanceInterest(p, other) && rel.romance >= 10) return 1.5;
+      const committed = commitmentOf(ctx.state, p.id)?.otherId === other.id;
+      if (committed) return 1;
+      return romanceInterest(p, other) && rel.romance >= 30 && rel.friendship >= 30 ? 0.6 : 0;
+    }
+    case 'mean': return rel.friendship < -20 || sore ? 1 : 0.02;
     case 'family': return familyTie(ctx.state, p.id, other.id) !== 'none' ? 1 : 0.1;
     case 'status': return 0.4;
   }
@@ -256,7 +273,7 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
   if (!loc) return null;
   const level = isVisitor(ctx, p) ? 1 : ctx.state.settings.autonomyLevel;
   const addresses: NeedId[] = [];
-  const base = needScore(ctx, p, { social: 35 }, addresses) + (level === 2 ? 0.05 : 0) + (isVisitor(ctx, p) ? VISITOR_BASE * 1.5 : 0);
+  const base = needScore(ctx, p, { social: 35 }, addresses) + (level === 2 ? 0.05 : 0) + (isVisitor(ctx, p) ? VISITOR_BASE * 1.5 : 0) + eventSocialBonus(ctx, p);
   let best: Candidate | null = null;
   for (const other of Object.values(ctx.state.people)) {
     if (other.id === p.id) continue;

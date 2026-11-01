@@ -55,6 +55,7 @@ export function validateStructure(state: unknown): StructureResult {
   for (const [id, lot] of Object.entries(lots)) checkLot(id, lot, households, errors, warnings);
   checkRelationships(s.relationships as Obj, s.bonds as Obj, people, warnings);
   checkScheduleAndItems(s, people, lots, warnings);
+  checkHomeEvents(s.homeEvents, people, households, warnings);
   checkNextId(s, warnings);
   return { errors, warnings };
 }
@@ -240,6 +241,25 @@ function checkRelationships(relationships: Obj, bonds: Obj, people: Obj, warning
     if (key !== pairKey(b.a, b.b)) addProblem(warnings, `bonds.${key} does not match its people (${pairKey(b.a, b.b)})`);
     if (!has(people, b.a) || !has(people, b.b)) addProblem(warnings, `bonds.${key} refers to a person who does not exist`);
   }
+}
+
+/** Home events (Milestone 5) are optional; odd ones are reported, never fatal. */
+function checkHomeEvents(events: unknown, people: Obj, households: Obj, warnings: string[]): void {
+  if (events === undefined) return;
+  if (!Array.isArray(events)) { addProblem(warnings, 'homeEvents must be a list'); return; }
+  events.forEach((e, i) => {
+    if (!isRecord(e) || !isStr(e.id) || !isStr(e.type) || !isStr(e.status) || !isNum(e.startAt) || !isNum(e.endAt)) {
+      addProblem(warnings, `homeEvents[${i}] is not an event`);
+      return;
+    }
+    if (!isStr(e.hostId) || !has(people, e.hostId)) addProblem(warnings, `homeEvents[${i}] (${e.id}) has a host who does not exist`);
+    if (!isStr(e.householdId) || !has(households, e.householdId)) addProblem(warnings, `homeEvents[${i}] (${e.id}) belongs to a household that does not exist`);
+    for (const key of ['guestIds', 'arrivedIds'] as const) {
+      const list = e[key];
+      if (!Array.isArray(list)) { addProblem(warnings, `homeEvents[${i}].${key} must be a list`); continue; }
+      for (const id of list) if (!isStr(id) || !has(people, id)) addProblem(warnings, `homeEvents[${i}] (${e.id}) refers to a person who does not exist`);
+    }
+  });
 }
 
 function checkScheduleAndItems(s: Obj, people: Obj, lots: Obj, warnings: string[]): void {

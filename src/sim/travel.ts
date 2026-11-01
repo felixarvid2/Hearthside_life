@@ -10,6 +10,8 @@ import type { SimCtx } from './context';
 import { clamp, interactionDef, lotLoc, setAnim, tileOfLoc } from './context';
 import { addMoodlet } from './mood';
 import { applyRelDelta, decayRecent, ensureRel, peekRel } from './relationships';
+import { isAdult } from '../core/relations';
+import { resolveSocial, socialRequirementReason } from './social';
 import type { Behavior, Step } from './steps';
 import { defDuration, performRates } from './steps';
 import { INVITE_DELAY_MINUTES, PHONE_FRIENDSHIP_CAP, SOCIAL_RECENT_DECAY_MINUTES } from './tuning';
@@ -184,5 +186,37 @@ export const phoneChatBehavior: Behavior = {
     ctx.events.emit({ type: 'relationship', fromId: p.id, toId: other.id, what: 'value' });
     const greatChat = ctx.content.moodlets.greatChat ? 'greatChat' : null;
     if (greatChat && peekRel(ctx.state, p.id, other.id).friendship >= 40) addMoodlet(ctx.content, p, greatChat, ctx.now, 'phoneChat');
+  },
+};
+
+/** Opens the event planner in the interface (a UI request, like the wardrobe). Only adults plan gatherings. */
+export const planEventBehavior: Behavior = {
+  check(_ctx, p) { return isAdult(p) ? null : 'Only adults can plan gatherings.'; },
+  reserve: () => null,
+  step: (ctx, p, a) => phoneStep(ctx, p, a, 1),
+  apply(ctx, p) { ctx.events.emit({ type: 'ui.request', what: 'planEvent', personId: p.id }); },
+};
+
+/**
+ * Phone someone and ask them on a date at home (data.personId). It is the same social as asking in person
+ * ('askOnDate'): the answer depends on feelings, mood, traits and memories; a "no" is kind and an accepted
+ * invitation plans the date for this evening.
+ */
+export const phoneDateBehavior: Behavior = {
+  check(ctx, p, a) {
+    const other = phoneTarget(ctx, a);
+    const def = ctx.content.socials.askOnDate;
+    if (!other || other.id === p.id) return 'Choose someone to call.';
+    if (!def) return 'That is not available.';
+    if (other.householdId === p.householdId) return 'Ask in person instead.';
+    if (other.location.kind === 'offlot' && other.location.place === 'work') return `${other.firstName} is at work.`;
+    return socialRequirementReason(ctx, p, other, def);
+  },
+  reserve: () => null,
+  step: (ctx, p, a) => phoneStep(ctx, p, a, 4),
+  apply(ctx, p, a) {
+    const other = phoneTarget(ctx, a);
+    const def = ctx.content.socials.askOnDate;
+    if (other && def) resolveSocial(ctx, p, other, def);
   },
 };

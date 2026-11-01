@@ -3,7 +3,8 @@
 // Entries with status 'dev' are never shown as selectable finished content and never counted.
 
 import type {
-  BodyFrame, BondStatus, Cents, GarmentLayer, Hex, MemoryKind, NeedId, OutfitCategory, Posture, WorldItemKind,
+  BodyFrame, BondStatus, Cents, EventGoalKind, GarmentLayer, HomeEventType, Hex, MemoryKind, NeedId, OutfitCategory, Posture,
+  WorldItemKind,
 } from '../core/types';
 import type { AnimId } from '../core/anim';
 
@@ -129,6 +130,11 @@ export interface ObjectDef {
   needsWall?: boolean;
   /** Blocks walking on its footprint (rugs and wall decor do not). */
   blocksMovement: boolean;
+  /**
+   * Rot-0 footprint cells that the model leaves empty (the inside of an L-shaped sofa): people can walk through them and
+   * use them as approach tiles, but nothing else can be placed there. Only for blocking floor objects.
+   */
+  openCells?: Array<[number, number]>;
   /** Top surface height if surface items can be placed on it (counters, tables, desks). */
   surfaceHeight?: number;
   /** Height of the object (metres) for clearance and picking. */
@@ -197,7 +203,12 @@ export interface SocialOutcome {
   memory?: { kind: MemoryKind; importance: 1 | 2 | 3; text: string };
   /** Shared status set on acceptance. */
   setStatus?: BondStatus;
+  /** Marks the actor's or target's earlier memories of these kinds with the other person as settled (they stop affecting behaviour). */
+  resolves?: MemoryKind[];
 }
+
+/** Social menu section: Friendly / Romantic / Mean / Special (sim/options.ts orders entries inside a section by relevance). */
+export type SocialSection = 'friendly' | 'romantic' | 'mean' | 'special';
 
 export interface SocialDef {
   id: string;
@@ -217,7 +228,24 @@ export interface SocialDef {
     romantic?: boolean;
     status?: BondStatus[];
     notStatus?: BondStatus[];
+    /** Trust gates (-100..100): deep conversations, secrets and favours need it. */
+    minTrust?: number;
+    maxTrust?: number;
+    /** Romantic commitment: neither person may be partnered with somebody else (exclusivity is explicit). */
+    exclusive?: boolean;
+    /** Needs privacy: no more than one other awake person within sight. */
+    private?: boolean;
+    /** Needs a recent memory (of either person) of one of these kinds involving the other. */
+    memory?: { kinds: MemoryKind[]; withinMinutes: number };
   };
+  /** Menu section; default from the category (status -> special, romantic -> romantic, mean -> mean, else friendly). */
+  section?: SocialSection;
+  /** Cost to the actor's household (cents) charged on use, e.g. a gift. */
+  cost?: Cents;
+  /** Always accepted (a decision one person can make alone, e.g. breaking up). */
+  unilateral?: boolean;
+  /** On acceptance, plan this home event with the two of them (an invitation to a date). */
+  startsEvent?: HomeEventType;
   /** Base chance the target accepts, 0..1, before mood, relationship and trait modifiers. */
   acceptance: number;
   /** Target trait id -> additive acceptance modifier. */
@@ -432,6 +460,54 @@ export interface ContentDB {
   skinTones: Swatch[];
   hairColors: Swatch[];
   eyeColors: Swatch[];
+  /** Social event types (dates, parties, visits), content/events.ts. Optional so older content fixtures stay valid. */
+  events?: Record<string, EventDef>;
   /** Likes/dislikes the creator offers, grouped: 'activity' | 'music' | 'decor' | 'food' | 'topic'. */
   preferences: Array<{ id: string; group: string; name: string }>;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Social events (Milestone 5)
+// ---------------------------------------------------------------------------------------------
+
+export interface EventGoalDef {
+  kind: EventGoalKind;
+  text: string;
+  /** The target is at least this, and at least `perGuest` x the number of guests (rounded). */
+  target: number;
+  perGuest?: number;
+  weight: number;
+}
+
+export interface EventRewardDef {
+  /** Friendship / trust / romance given to the host and each guest who attended, both ways, at rating 'good' (scaled by rating). */
+  friendship: number;
+  trust: number;
+  romance: number;
+  social: number;
+  fun: number;
+  moodlet: string;
+  badMoodlet: string;
+  memory: { kind: MemoryKind; badKind?: MemoryKind; text: string; badText: string; importance: 1 | 2 | 3 };
+}
+
+export interface EventDef {
+  id: HomeEventType;
+  name: string;
+  description: string;
+  icon: string;
+  /** The player can plan it from the phone (visits and drop-ins just happen). */
+  planned: boolean;
+  minGuests: number;
+  maxGuests: number;
+  /** Event length in game minutes, and the least notice when planning. */
+  minutes: number;
+  leadMinutes: number;
+  /** Food put out at the start, per person (cents); 0 = none. */
+  cateringPerPerson: Cents;
+  /** Adults who are attracted to each other only. */
+  romantic: boolean;
+  goals: EventGoalDef[];
+  reward: EventRewardDef;
+  status: ContentStatus;
 }

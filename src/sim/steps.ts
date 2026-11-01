@@ -1,7 +1,7 @@
 // Building blocks for interaction behaviors: the Behavior contract, Step descriptions, use-point
 // selection (specific slots or stand tiles, reserved and reachable) and need-rate computation.
 
-import { fitnessEnergyCost, fitnessSweat, musicFun } from '../content/skillEffects';
+import { fitnessEnergyCost, fitnessSweat, musicFun, paintingFun } from '../content/skillEffects';
 import type { InteractionDef } from '../content/types';
 import type { AnimId } from '../core/anim';
 import type { Tile, WorldSlot } from '../core/nav';
@@ -274,6 +274,7 @@ export function performRates(
       if (posture === 'seated' || posture === 'lying') v *= comfortMult(seat ?? primary);
       v *= enjoy;
       if (need === 'fun' && def.autonomy.tags.includes('music')) v *= musicFun(p.skills.music?.level ?? 1);
+      if (need === 'fun' && def.autonomy.tags.includes('painting')) v *= paintingFun(p.skills.painting?.level ?? 1);
     } else if (v < 0 && def.autonomy.tags.includes('active')) {
       // Fit people tire less and sweat less from workouts.
       const fit = p.skills.fitness?.level ?? 1;
