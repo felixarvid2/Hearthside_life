@@ -4,7 +4,7 @@
 // A wall's id is its edge key. Openings (doors, windows) sit in a wall and reference it by that key.
 
 import type { ContentDB, OpeningDef } from '../content/types';
-import { edgeKey, newId } from '../core/ids';
+import { edgeKey, newId, parseEdgeKey } from '../core/ids';
 import type { Tile } from '../core/nav';
 import type { EdgeDir, FinishRef, Lot, Opening, Wall, WorldState } from '../core/types';
 
@@ -115,11 +115,11 @@ export function setWall(
   return wall;
 }
 
-/** Removes a wall and any opening in it. Returns the removed wall, if there was one. */
+/** Removes a wall and any opening that sits in it (also one that only passes over it). Returns the removed wall, if there was one. */
 export function removeWall(lot: Lot, wallId: string): Wall | undefined {
   const wall = lot.walls[wallId];
   if (!wall) return undefined;
-  for (const o of Object.values(lot.openings)) if (o.wallId === wallId) delete lot.openings[o.id];
+  for (const o of Object.values(lot.openings)) if (openingEdgeKeys(o).includes(wallId)) delete lot.openings[o.id];
   delete lot.walls[wallId];
   return wall;
 }
@@ -156,16 +156,37 @@ export function addRectWalls(
   ];
 }
 
-/** The opening in a wall, if any (M1 openings are one tile wide). */
+/** Number of wall edges an opening spans (1 unless it is a multi-tile opening). */
+export function openingSpan(opening: Pick<Opening, 'span'>): number {
+  return opening.span !== undefined && opening.span > 1 ? Math.floor(opening.span) : 1;
+}
+
+/**
+ * Edge keys an opening covers, first edge first. A multi-tile opening starts at `wallId` (the edge with the
+ * smallest x/z) and continues along +x on 'h' edges or +z on 'v' edges.
+ */
+export function openingEdgeKeys(opening: Pick<Opening, 'wallId' | 'span'>): string[] {
+  const n = openingSpan(opening);
+  if (n === 1) return [opening.wallId];
+  const e = parseEdgeKey(opening.wallId);
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) out.push(e.dir === 'h' ? edgeKey(e.level, 'h', e.x + i, e.z) : edgeKey(e.level, 'v', e.x, e.z + i));
+  return out;
+}
+
+/** The opening that covers a wall edge (its first edge or any edge it spans), if any. */
 export function openingOnWall(lot: Lot, wallId: string): Opening | undefined {
-  for (const o of Object.values(lot.openings)) if (o.wallId === wallId) return o;
+  for (const o of Object.values(lot.openings)) {
+    if (o.wallId === wallId) return o;
+    if (openingSpan(o) > 1 && openingEdgeKeys(o).includes(wallId)) return o;
+  }
   return undefined;
 }
 
-/** Map of wall id -> opening for fast lookups (navigation grids, placement). */
+/** Map of wall id -> opening for fast lookups (every spanned edge of a multi-tile opening maps to it). */
 export function openingsByWall(lot: Lot): Record<string, Opening> {
   const out: Record<string, Opening> = {};
-  for (const o of Object.values(lot.openings)) out[o.wallId] = o;
+  for (const o of Object.values(lot.openings)) for (const k of openingEdgeKeys(o)) out[k] = o;
   return out;
 }
 

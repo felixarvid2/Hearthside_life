@@ -175,12 +175,22 @@ export class MockCreatorApi implements GameAPI {
   paintApply(): Result { return { ok: false, reason: 'mock' }; }
   eyedrop(): null { return null; }
   recentFinishes(): [] { return []; }
+  setBuildTool(): void {}
+  buildTool(): null { return null; }
+  buildPreview(): null { return null; }
+  buildApply(): Result { return { ok: false, reason: 'mock' }; }
+  buildCancel(): void {}
+  buildHighlight(): null { return null; }
+  rooms(): never[] { return []; }
+  roomAt(): null { return null; }
+  openingAt(): null { return null; }
   undo(): string | null { return null; }
   redo(): string | null { return null; }
   canUndo(): boolean { return false; }
   canRedo(): boolean { return false; }
   view = {
     pick: (): PickResult => ({ kind: 'none' }),
+    groundPoint: (): null => null,
     pan: (): void => {},
     zoomAt: (): void => {},
     rotate: (): void => {},

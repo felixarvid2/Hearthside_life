@@ -3,6 +3,7 @@
 // screen-space questions (picking, projection, anchors). It never changes the world state.
 
 import * as THREE from 'three';
+import { preloadSurfaceMaps, setSurfaceMapBase } from './textures/surfaceMaps';
 import type { CharacterAssets, CharacterStyle } from '../characters/assets';
 import { setCharacterStyle } from '../characters/assets';
 import type { ContentDB } from '../content/types';
@@ -79,6 +80,8 @@ export class GameView {
       else this.keepInView();
     };
     this.objectAssets = new ObjectAssets(assetBase);
+    setSurfaceMapBase(`${assetBase}surfaces/`); // detail maps for AI-textured walls and floors
+    void preloadSurfaceMaps();
     this.lighting = new Lighting(this.scene);
     this.fog = new THREE.Fog(0xefe7da, 85, 150);
     this.scene.fog = this.fog;
@@ -432,6 +435,13 @@ export class GameView {
     this.rig.update(0);
     const g = this.rig.groundAt(sx, sy, this.tmpV, 0);
     return g ? { x: Math.floor(g.x), z: Math.floor(g.z) } : null;
+  }
+
+  /** Ground-plane point under a screen point in lot tile units (not snapped; may be outside the lot). */
+  groundPointAt(sx: number, sy: number): { x: number; z: number } | null {
+    this.rig.update(0);
+    const g = this.rig.groundAt(sx, sy, this.tmpV, 0);
+    return g ? { x: g.x, z: g.z } : null;
   }
 
   worldToScreen(x: number, y: number, z: number): { x: number; y: number; visible: boolean } {

@@ -26,9 +26,11 @@ import { isManualSlot, isSlotId } from '../persistence/types';
 import { Simulation } from '../sim/simulation';
 import { LotNav } from '../world/nav';
 import type {
-  DevStats, GameMode, MenuOption, PaintPreview, PaintTool, PickResult, PlacementState, Result, SaveSlotInfo, UiChange,
+  BuildApplyResult, BuildPreview, BuildTarget, BuildTool, DevStats, GameMode, MenuOption, PaintPreview, PaintTool, PickResult,
+  PlacementState, Result, RoomInfo, SaveSlotInfo, UiChange,
 } from './api';
 import { AutosavePolicy } from './core/autosave';
+import { BuildTools } from './core/build';
 import { readToken, targetForPick, toMenuOption } from './core/menu';
 import { evaluatePaint, finishAt, paintCommand, paintTargetFor, sameFinish, type PaintHighlight } from './core/paint';
 import { evaluatePlacement, isUnchangedMove, placementCommand } from './core/placement';
@@ -74,6 +76,7 @@ export class GameCore {
   private readonly accumulator = new TickAccumulator();
   private readonly autosaves: AutosavePolicy;
   private readonly listeners = new Set<(what: UiChange) => void>();
+  private readonly buildTools: BuildTools;
 
   private currentMode: GameMode = 'boot';
   private spd: Speed = 1;
@@ -95,10 +98,18 @@ export class GameCore {
     const getState = () => this.world ?? this.placeholder;
     this.nav = new LotNav(getState, o.content, this.events);
     this.sim = new Simulation({ getState, content: o.content, nav: this.nav, events: this.events });
+    this.buildTools = new BuildTools({
+      content: o.content,
+      events: this.events,
+      world: () => this.world,
+      run: (cmd) => { const w = this.world; return w ? this.runCommand(w, cmd) : fail('No game is running.'); },
+      blocked: () => (this.world ? (this.currentMode === 'build' ? null : 'Open Build mode first.') : 'No game is running.'),
+      changed: () => { this.notify('build'); },
+    });
     this.autosaves = new AutosavePolicy({
       saves: o.saves,
       getState: () => this.world,
-      isBusy: () => this.place !== null || this.highlight !== null,
+      isBusy: () => this.place !== null || this.highlight !== null || this.buildTools.active(),
       delayMs: o.autosaveDelayMs ?? 3000,
       everySeconds: (o.autosaveEveryMinutes ?? 5) * 60,
       onError: (text) => this.events.emit({ type: 'notify', kind: 'warning', text }),
@@ -134,7 +145,7 @@ export class GameCore {
       this.cancelPlacement();
       if (this.selObj !== null) { this.selObj = null; this.notify('selection'); }
     }
-    if (prev === 'build') this.clearPaint();
+    if (prev === 'build') { this.clearPaint(); this.buildTools.clear(); }
     if (isEditMode(prev) && !isEditMode(m) && (this.undoStack.canUndo() || this.undoStack.canRedo())) {
       this.undoStack.clear();
       this.notify('undo');
@@ -178,6 +189,7 @@ export class GameCore {
     this.place = null;
     this.tool = null;
     this.highlight = null;
+    this.buildTools.reset();
     this.selObj = null;
     this.undoStack.clear();
     this.accumulator.reset();
@@ -187,7 +199,7 @@ export class GameCore {
     this.autosaves.reset(state.clock.minutes);
     const members = state.households[state.activeHouseholdId]?.memberIds ?? [];
     if (this.sel === null || !members.includes(this.sel)) this.sel = members[0] ?? null;
-    for (const w of ['state', 'selection', 'placement', 'paint', 'undo'] as const) this.notify(w);
+    for (const w of ['state', 'selection', 'placement', 'paint', 'build', 'undo'] as const) this.notify(w);
   }
 
   /** `speed`: where the clock starts (a new game runs at Normal; a loaded or imported world resumes `loadedSpeed`). */
@@ -407,6 +419,7 @@ export class GameCore {
     const state = this.world;
     if (!state || !this.undoStack.canUndo()) return null;
     this.cancelPlacement();
+    this.buildTools.cancel();
     const label = this.undoStack.undo(this.commandContext(state));
     if (label !== null) this.afterConstruction();
     return label;
@@ -416,6 +429,7 @@ export class GameCore {
     const state = this.world;
     if (!state || !this.undoStack.canRedo()) return null;
     this.cancelPlacement();
+    this.buildTools.cancel();
     const label = this.undoStack.peekRedo();
     const r = this.undoStack.redo(this.commandContext(state));
     if (!r) return null;
@@ -652,6 +666,28 @@ export class GameCore {
 
   /** Last 8 finishes painted with, most recent first. */
   recentFinishes(kind: 'wall' | 'floor'): FinishRef[] { return this.recent[kind].map((f) => ({ ...f })); }
+
+  // ---------------------------------------------------------------------------------------------
+  // Build mode (structure: walls, rooms, doors, windows, floors). See the notes at the top of api.ts.
+  // ---------------------------------------------------------------------------------------------
+
+  setBuildTool(tool: BuildTool | null): void { this.buildTools.setTool(tool); }
+  buildTool(): BuildTool | null { return this.buildTools.tool(); }
+
+  /** Pure preview of the tool at the target (cost, counts, measurement, reasons, highlight). null clears it. */
+  buildPreview(target: BuildTarget | null): BuildPreview | null { return this.buildTools.preview(target); }
+
+  /** Runs the tool at the target as one undoable command; a failure changes nothing. */
+  buildApply(target: BuildTarget): Result & Partial<BuildApplyResult> {
+    if (this.currentMode !== 'build') return fail('Open Build mode first.');
+    return this.buildTools.apply(target);
+  }
+
+  buildCancel(): void { this.buildTools.cancel(); }
+  buildHighlight(): ReturnType<BuildTools['highlight']> { return this.buildTools.highlight(); }
+  rooms(level = 0): RoomInfo[] { return this.buildTools.rooms(level); }
+  roomAt(tile: Tile, level = 0): RoomInfo | null { return this.buildTools.roomAt(tile, level); }
+  openingAt(wallId: string): ReturnType<BuildTools['openingAt']> { return this.buildTools.openingAt(wallId); }
 
   // ---------------------------------------------------------------------------------------------
   // Settings and diagnostics

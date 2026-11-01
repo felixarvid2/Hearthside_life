@@ -20,8 +20,8 @@ import { hasWebGL2 } from '../render/renderer';
 import { surfaceThumbnail } from '../render/textures/surfaceTextures';
 import { resolveSlots } from '../world/slots';
 import type {
-  CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings, MenuOption, PaintPreview, PaintTool,
-  PickResult, PlacementState, Result, SaveSlotInfo, SoundId, UiChange,
+  BuildApplyResult, BuildPreview, BuildTarget, BuildTool, CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings,
+  MenuOption, PaintPreview, PaintTool, PickResult, PlacementState, Result, RoomInfo, SaveSlotInfo, SoundId, UiChange,
 } from './api';
 import { GameAudio } from './audio';
 import type { GameCore } from './GameCore';
@@ -446,12 +446,25 @@ export class Game implements GameAPI {
   canUndo(): boolean { return this.core.canUndo(); }
   canRedo(): boolean { return this.core.canRedo(); }
 
+  // ---- build mode (structure) ----
+
+  setBuildTool(tool: BuildTool | null): void { this.core.setBuildTool(tool); }
+  buildTool(): BuildTool | null { return this.core.buildTool(); }
+  buildPreview(target: BuildTarget | null): BuildPreview | null { return this.core.buildPreview(target); }
+  buildApply(target: BuildTarget): Result & Partial<BuildApplyResult> { return this.core.buildApply(target); }
+  buildCancel(): void { this.core.buildCancel(); }
+  buildHighlight(): ReturnType<GameAPI['buildHighlight']> { return this.core.buildHighlight(); }
+  rooms(level?: number): RoomInfo[] { return this.core.rooms(level); }
+  roomAt(tile: Tile, level?: number): RoomInfo | null { return this.core.roomAt(tile, level); }
+  openingAt(wallId: string): ReturnType<GameAPI['openingAt']> { return this.core.openingAt(wallId); }
+
   // ---- camera and view ----
 
   private makeViewApi(): GameAPI['view'] {
     const v = () => this.gameView;
     return {
       pick: (x, y, opts) => v().pick(x, y, this.core.mode(), opts?.cycle === true),
+      groundPoint: (x, y) => v().groundPointAt(x, y),
       pan: (dx, dy) => { v().rig.pan(dx, dy); this.emit('camera'); },
       zoomAt: (f, x, y) => { v().rig.zoomAt(f, x, y); this.emit('camera'); },
       rotate: (dir) => { v().rig.rotate(dir === -1 ? -1 : 1); this.emit('camera'); },

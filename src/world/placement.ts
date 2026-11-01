@@ -20,7 +20,7 @@ import type { Id, Lot, PlacedObject, Rot, WorldState } from '../core/types';
 import { hasLevel, inLot } from './lots';
 import { blocksMovement, buildNavGrid, reachableMask, type NavGrid } from './navgrid';
 import { slotAccess, standTiles, type AccessContext } from './slots';
-import { edgeBetween, edgeOnSide, edgeTiles, openingOnWall, type TileSide } from './walls';
+import { edgeBetween, edgeOnSide, edgeTiles, openingEdgeKeys, openingOnWall, type TileSide } from './walls';
 
 export { resolveSlots } from './slots';
 
@@ -158,9 +158,11 @@ export function validatePlacement(state: WorldState, content: ContentDB, lotId: 
 export function doorTiles(lot: Lot, content: ContentDB, level: number): Tile[] {
   const out: Tile[] = [];
   for (const op of Object.values(lot.openings)) {
-    const wall = lot.walls[op.wallId];
-    if (!wall || wall.level !== level || content.openings[op.defId]?.kind !== 'door') continue;
-    out.push(...edgeTiles(wall));
+    if (content.openings[op.defId]?.kind !== 'door') continue;
+    for (const k of openingEdgeKeys(op)) {
+      const wall = lot.walls[k];
+      if (wall && wall.level === level) out.push(...edgeTiles(wall));
+    }
   }
   return out;
 }

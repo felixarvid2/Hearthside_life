@@ -157,9 +157,13 @@ export interface Wall {
   dir: EdgeDir;
   x: number;
   z: number;
-  height: number; // metres, M1 always 2.8
+  height: number; // metres; building presets 1.2 / 2.8 / 3.6 (building/buildPlans.ts WALL_HEIGHT_PRESETS)
   sideA: FinishRef;
   sideB: FinishRef;
+  /** Cents actually paid when the player built it (0 in the sandbox). Absent on walls that came with the lot. */
+  purchasePrice?: Cents;
+  /** Game minute it was built; with purchasePrice it decides the refund when demolished (building/buildPlans.ts). */
+  boughtAt?: GameMinutes;
 }
 
 /** Reference to a wall or floor design plus the curated palette variant. */
@@ -171,11 +175,15 @@ export interface FinishRef {
 export interface Opening {
   id: Id;
   defId: string; // OpeningDef id
-  /** Edge key of the wall this opening sits in (first edge for multi-tile openings). */
+  /** Edge key of the wall this opening sits in (first edge, the one with the smallest x/z, for multi-tile openings). */
   wallId: string;
   /** Doors: which side the leaf swings toward. */
   flip: boolean;
   purchasePrice: Cents;
+  /** Number of consecutive wall edges it spans along +x ('h') or +z ('v') from `wallId`; absent = 1. */
+  span?: number;
+  /** Game minute it was bought; absent on openings that came with the lot (sold as old). */
+  boughtAt?: GameMinutes;
 }
 
 export interface PlacedObject {

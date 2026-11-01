@@ -23,12 +23,12 @@ type LotWhat = Extract<GameEvent, { type: 'lot.changed' }>['what'];
 const fail = (reasons: string[] | string): CommandResult => ({ ok: false, reason: Array.isArray(reasons) ? reasons.join(' ') : reasons });
 const OK: CommandResult = { ok: true };
 
-function emit(ctx: CommandContext, lotId: Id, what: LotWhat): void {
+export function emit(ctx: CommandContext, lotId: Id, what: LotWhat): void {
   ctx.events.emit({ type: 'lot.changed', lotId, what });
 }
 
 /** Charges an expense; returns the amount actually taken (0 in the sandbox or for free items). */
-function charge(ctx: CommandContext, householdId: Id, price: Cents, kind: 'purchase' | 'build', label: string): { ok: true; charged: Cents } | { ok: false; reason: string } {
+export function charge(ctx: CommandContext, householdId: Id, price: Cents, kind: 'purchase' | 'build', label: string): { ok: true; charged: Cents } | { ok: false; reason: string } {
   if (price <= 0) return { ok: true, charged: 0 };
   const hh = ctx.state.households[householdId];
   if (!hh) return { ok: false, reason: 'Unknown household.' };
@@ -38,7 +38,7 @@ function charge(ctx: CommandContext, householdId: Id, price: Cents, kind: 'purch
   return { ok: true, charged: before - hh.funds };
 }
 
-function refund(ctx: CommandContext, householdId: Id, charged: Cents, label: string): void {
+export function refund(ctx: CommandContext, householdId: Id, charged: Cents, label: string): void {
   if (charged > 0) transact(ctx.state, ctx.events, householdId, charged, 'refund', label);
 }
 

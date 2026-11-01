@@ -3,7 +3,9 @@
 // paint flow, in-memory saves, and a 2D top-down canvas "renderer" with a camera, picking and insets so the
 // world input and anchored menus can be exercised. Never used by the real game.
 
+import { BuildTools } from '../../game/core/build';
 import type {
+  BuildApplyResult, BuildPreview, BuildTarget, BuildTool, RoomInfo,
   CutawayMode, DevStats, GameAPI, GameMode, GameSettings, MenuOption, PaintPreview, PaintTool, PickResult,
   PlacementState, Result, SaveSlotInfo, SoundId, UiChange,
 } from '../../game/api';
@@ -96,6 +98,8 @@ type Cam = { tx: number; tz: number; scale: number; rot: Rot };
 export class MockGame implements GameAPI {
   readonly content: ContentDB;
   readonly events = new EventBus();
+  /** Build mode structure tools (walls, rooms, doors, windows, floors) running the real pure planner on the mock world. */
+  private readonly buildTools: BuildTools;
   readonly soundLog: SoundId[] = [];
   /** Calls the UI made, for tests: [method, args]. */
   readonly calls: Array<[string, unknown[]]> = [];
@@ -127,6 +131,25 @@ export class MockGame implements GameAPI {
 
   constructor(private o: MockOptions) {
     this.content = o.content;
+    this.buildTools = new BuildTools({
+    content: this.content,
+    events: this.events,
+    world: () => this.world,
+    run: (cmd) => {
+      const w = this.world;
+      if (!w) return { ok: false, reason: 'No game is running.' };
+      const before = this.snapshot();
+      const r = cmd.apply({ state: w, content: this.content, events: this.events });
+      if (!r.ok) return r;
+      this.undoStack.push({ label: cmd.label, before, after: this.snapshot() });
+      if (this.undoStack.length > 50) this.undoStack.shift();
+      this.redoStack = [];
+      this.emit('undo');
+      return r;
+    },
+    blocked: () => (!this.world ? 'No game is running.' : this.m === 'build' ? null : 'Open Build mode first.'),
+    changed: () => this.emit('build'),
+  });
     this.cfg = { ...DEFAULT_SETTINGS };
     try {
       const raw = localStorage.getItem('hearthside.mock.settings');
@@ -453,6 +476,7 @@ export class MockGame implements GameAPI {
     }
     if (this.place) { this.place = null; this.emit('placement'); }
     if (next !== 'build' && this.tool) { this.tool = null; this.preview = null; this.emit('paint'); }
+    if (next !== 'build') this.buildTools.clear();
     if (next !== 'buy' && this.selObj) { this.selObj = null; }
     this.setModeInternal(next);
   }
@@ -630,6 +654,17 @@ export class MockGame implements GameAPI {
 
   recentFinishes(kind: 'wall' | 'floor'): FinishRef[] { return this.recent[kind]; }
 
+  // ---- build mode (structure) ----
+  setBuildTool(tool: BuildTool | null): void { this.log('setBuildTool', tool); this.buildTools.setTool(tool); }
+  buildTool(): BuildTool | null { return this.buildTools.tool(); }
+  buildPreview(target: BuildTarget | null): BuildPreview | null { return this.buildTools.preview(target); }
+  buildApply(target: BuildTarget): Result & Partial<BuildApplyResult> { this.log('buildApply', target); return this.buildTools.apply(target); }
+  buildCancel(): void { this.buildTools.cancel(); }
+  buildHighlight(): ReturnType<GameAPI['buildHighlight']> { return this.buildTools.highlight(); }
+  rooms(level?: number): RoomInfo[] { return this.buildTools.rooms(level); }
+  roomAt(tile: Tile, level?: number): RoomInfo | null { return this.buildTools.roomAt(tile, level); }
+  openingAt(wallId: string): ReturnType<GameAPI['openingAt']> { return this.buildTools.openingAt(wallId); }
+
   undo(): string | null {
     const e = this.undoStack.pop();
     if (!e || !this.world) return null;
@@ -657,6 +692,7 @@ export class MockGame implements GameAPI {
 
   view = {
     pick: (sx: number, sy: number): PickResult => this.pickAt(sx, sy),
+    groundPoint: (sx: number, sy: number): { x: number; z: number } | null => { const p = this.screenToWorld(sx, sy); return { x: p.x, z: p.z }; },
     pan: (dx: number, dy: number): void => {
       this.log('pan', dx, dy);
       const r = this.unrotate(dx, dy);

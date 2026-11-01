@@ -112,6 +112,45 @@ Tests live in `tests/unit/<module>/*.test.ts`.
   authored approach is blocked; TVs/computers may be used from the chair in front). Set
   `lot.ownerHouseholdId` before `furnishStarterHouse`; starter furnishings count as bought a day earlier.
 
+### Build mode construction (Milestone 2: walls, rooms, doors, windows, floors)
+
+Pure code (no three, no DOM), tested in `tests/unit/building/build*.test.ts` and `tests/unit/integration/buildmode.test.ts`.
+The UI talks to it only through the build section of `GameAPI` (documented at the top of `src/game/api.ts`).
+
+- **Data**: `Wall` may carry `purchasePrice` + `boughtAt` (what the player paid; absent on walls that came with the lot);
+  `Opening` may carry `span` (edges covered, absent = 1) + `boughtAt`. A wide opening starts at `wallId` (the edge with the smallest
+  x/z) and covers `openingEdgeKeys(opening)` along +x ('h') or +z ('v'). `openingOnWall`/`openingsByWall`/nav grids/door clearance all
+  use the spanned edges. Optional fields: no save migration needed.
+- `src/world/structure.ts`: `BuildDiff` (exact walls/openings/floors before -> after), `virtualLot`, `applyDiff`/`revertDiff`/`diffMatchesLot`,
+  and `validateDiff(state, content, lot, diff) -> { reasons, conflicts }`, the construction-safety rules (brief 17): lot bounds, no wall through
+  an object footprint, no wall within 0.3 m of a person (0.15 m seated/lying; people are never pushed), no wall that walls a person in or
+  seals furniture off from the lot entry, every previously usable object slot stays usable, wall-mounted objects keep their wall,
+  openings need walls on every spanned edge, no overlap, enough wall height (sill + height), no wall joining the middle of a wide
+  opening, nothing hung on the edges, doors keep both side tiles free of blocking furniture. Removing/moving the last door out of a room
+  with people or furniture in it is refused. Parts of the lot that were already cut off are not judged.
+- `src/world/roomTracker.ts`: `RoomTracker.update(lot, level) -> TrackedRoom[]` (`Room` + runtime `uid`, matched to the previous result by
+  shared tiles, so unchanged rooms keep their uid and the biggest part of a split/resized room keeps it), `RoomTracker.delta(before, after)`,
+  `roomOutlines(tiles) -> Vertex[][]` (closed grid-vertex loops, collinear points merged, holes after the outer loop).
+- `src/building/buildPlans.ts`: pure planning. `planBuild(state, content, lotId, householdId, req: BuildRequest) -> BuildPlan`
+  (`ok, reasons, noop, label, cost, charge, refund, counts, measure, highlight, rooms {before, after}, diff`). Requests: `walls` (segment,
+  run or rectangle perimeter, optional `floor` fill and bundled `openings`, so a sealed room and its door are one transaction),
+  `eraseWalls` (segment/run/rect), `placeOpening`, `moveOpening`, `eraseOpening`, `eraseFloor` (tiles or a room), `deleteRoom`.
+  Builders: `wallSegmentRequest`, `wallRunRequest`, `wallRectRequest`, `eraseSegmentRequest/RunRequest/RectRequest`, `runEdges`,
+  `rectPerimeter`, `straightenRun`. Constants `WALL_HEIGHT_PRESETS` (1.2 / 2.8 / 3.6 m), `WALL_SEGMENT_PRICE`, `structurePrice(height)`.
+  Prices: wall segment = structure (scaled by height) + design price of each side (existing segments are kept with their finishes and
+  cost nothing); floor = design price per changed tile; opening = definition price. Sandbox: 0 charge, 0 recorded price. Demolition
+  returns the paid price on the day it was built, else 80 % (`RESALE_RATE`); things that came with the lot return 80 % of today's
+  structure/design price (nothing in the sandbox). Deleting a wall deletes (and refunds) the opening in it in the same command.
+- `src/building/buildCommands.ts`: `buildCommand(lotId, householdId, req): BuildCommand` (an `UndoableCommand` with `.plan`) and factories
+  `placeWallSegment/placeWallRun/placeRoom`, `eraseWallSegment/eraseWallRun/eraseWallRect`, `placeOpening/moveOpening/deleteOpening`,
+  `placeFloorTiles/placeFloorRect/fillRoomFloor` (the paint commands), `eraseFloorTiles/eraseRoomFloor`, `deleteRoom`. apply = plan, one
+  `transact()` for the net cost, ids for new openings, write the diff, emit `lot.changed` (nav invalidation and `Simulation.onLotChanged`
+  follow). A rejected apply changes nothing (not even `nextId`). revert restores the captured records and reverses the money that actually
+  moved. reapply re-validates against the lot and re-charges the captured amount.
+- `src/game/core/build.ts`: `BuildTools` (tool state, snapping, `resolveBuild`, preview, apply, `rooms()`, `roomAt()`, `openingAt()`), used
+  by `GameCore` and by the UI mock APIs (`src/ui/dev/mockGame.ts`, `src/ui/buy/dev/mockApi.ts`), which run the real planner on their mock world.
+- Not done yet: move/resize/duplicate whole rooms (delete room exists), wall height change on existing walls, diagonal walls, upper floors.
+
 ### sim (`src/sim`)
 - `people.ts`: `createPerson(state, content, draft: PersonDraft, householdId, location: PersonLocation): Person`
   (adds to `state.people` and the household), `applyHouseholdTies(state, memberIds, ties)`.

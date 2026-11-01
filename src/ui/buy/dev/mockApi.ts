@@ -3,7 +3,9 @@
 // a fake placement flow with validity reasons, selling/storing, paint tools with previews, an eyedropper,
 // recent finishes and snapshot-based undo/redo. Screen coordinates come from the dev page's 2D view.
 
+import { BuildTools } from '../../../game/core/build';
 import type {
+  BuildApplyResult, BuildPreview, BuildTarget, BuildTool, RoomInfo,
   CutawayMode, DevStats, GameAPI, GameMode, GameSettings, PaintPreview, PaintTool, PickResult, PlacementState, Result,
   SaveSlotInfo, SoundId, UiChange,
 } from '../../../game/api';
@@ -59,11 +61,29 @@ export class MockGame {
   private settingsValue: GameSettings = { ...DEFAULT_SETTINGS };
   private thumbCache = new Map<string, string>();
   readonly api: GameAPI;
+  /** Build mode structure tools running the real pure planner on the mock world. */
+  private readonly buildTools: BuildTools;
 
   constructor(opts: MockOptions = {}) {
     this.content = devContent(content(), opts.contentMode ?? 'auto');
     this.mode = opts.mode ?? 'buy';
     this.world = this.buildWorld(opts);
+    this.buildTools = new BuildTools({
+      content: this.content,
+      events: this.events,
+      world: () => this.world,
+      run: (cmd) => {
+        const before = cloneState(this.world);
+        const r = cmd.apply({ state: this.world, content: this.content, events: this.events });
+        if (!r.ok) return r;
+        this.done.push({ label: cmd.label, before, after: cloneState(this.world) });
+        this.undone = [];
+        this.emit('state', 'undo');
+        return r;
+      },
+      blocked: () => (this.mode === 'build' ? null : 'Open Build mode first.'),
+      changed: () => this.emit('build'),
+    });
     this.api = this.makeApi();
   }
 
@@ -432,6 +452,7 @@ export class MockGame {
         if (this.mode === m) return;
         if (this.mode === 'buy' && this.placement) { this.placement = null; this.emit('placement'); }
         if (this.mode === 'buy' && this.selectedObj) { this.selectedObj = null; this.emit('selection'); }
+        if (this.mode === 'build') this.buildTools.clear();
         this.mode = m;
         this.emit('mode', 'speed');
       },
@@ -525,6 +546,15 @@ export class MockGame {
       paintApply: (pick) => this.paintApply(pick),
       eyedrop: (pick) => this.eyedrop(pick),
       recentFinishes: (kind) => this.recent[kind].map((f) => ({ ...f })),
+      setBuildTool: (tool: BuildTool | null) => this.buildTools.setTool(tool),
+      buildTool: () => this.buildTools.tool(),
+      buildPreview: (target: BuildTarget | null): BuildPreview | null => this.buildTools.preview(target),
+      buildApply: (target: BuildTarget): Result & Partial<BuildApplyResult> => this.buildTools.apply(target),
+      buildCancel: () => this.buildTools.cancel(),
+      buildHighlight: () => this.buildTools.highlight(),
+      rooms: (level?: number): RoomInfo[] => this.buildTools.rooms(level),
+      roomAt: (tile, level) => this.buildTools.roomAt(tile, level),
+      openingAt: (wallId) => this.buildTools.openingAt(wallId),
       undo: () => {
         const s = this.done.pop();
         if (!s) return null;
@@ -549,6 +579,7 @@ export class MockGame {
       canRedo: () => this.undone.length > 0,
       view: {
         pick: (sx, sy) => this.pickAt(sx, sy, this.mode === 'build'),
+        groundPoint: (sx, sy) => this.screenToWorld(sx, sy),
         pan: () => {},
         zoomAt: () => {},
         rotate: () => { this.emit('camera'); },

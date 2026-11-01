@@ -65,7 +65,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 
 ## Unfinished systems after M1 (by dependency)
 
-1. Wall/room/door drawing tools with move/resize rooms and atomic room transactions (M2).
+1. Wall/room/door drawing tools (pure systems done, see ARCHITECTURE.md "Build mode construction"; Build-mode UI and rendering pending); move/resize/duplicate rooms still open (M2).
 2. More finishes and furniture through the content pipeline, decor packs, room presets (M2, M10).
 3. Creator depth: 24 face presets, 16+ face parameters, accessories, outfit presets, family tree editing (M3).
 4. Dirt, breakage, repair, cleaning, groceries/freshness depth, household routines (M4).

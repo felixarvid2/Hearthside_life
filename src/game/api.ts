@@ -2,6 +2,44 @@
 // GameCore (pure: state, simulation, navigation, commands, saves, tool logic) with GameView (three.js:
 // rendering, camera, picking, previews, portraits). The UI never imports three, sim internals or the DOM
 // of the renderer; it reads state through state() and selectors, and changes it only through these methods.
+//
+// ---------------------------------------------------------------------------------------------------------
+// Build mode construction API (walls, rooms, doors, windows, floors). Mirrors the paint tool pattern:
+//
+//   setBuildTool(tool)      choose what the pointer does (null = none). Only in Build mode.
+//   buildPreview(target)    pure: validates the tool at the target and returns cost, counts, measurement,
+//                           reasons and the highlight; never changes the world or money. null clears it.
+//   buildApply(target)      runs the same operation as one atomic, undoable command (undo()/redo() in this API).
+//                           A failed apply changes nothing, money included.
+//   buildCancel()           clears the preview and highlight (Esc once); setBuildTool(null) ends the tool.
+//   buildHighlight()        what the renderer draws for the current preview (see BuildHighlight).
+//   rooms()                 enclosed rooms with stable uids and outline loops; roomAt(tile); openingAt(wallId).
+//   view.groundPoint(x, y)  screen point -> lot coordinates, to feed BuildTarget.
+//
+// Coordinates: BuildPoint is in tile units, lot space (x east, z south; (0,0) is the lot's north-west corner).
+// Fractions are allowed and the core snaps them per tool: wall runs and rooms to grid VERTICES (round),
+// single walls to the nearest EDGE, floors to the TILE (floor). Wall runs are straightened to the dominant
+// axis. Edge keys are `level:dir:x:z` (core/ids.ts edgeKey); 'h' edge (x, z) runs (x,z)-(x+1,z), 'v' edge
+// (x, z) runs (x,z)-(x,z+1).
+//
+// Drag tools (wall run, room, rect erase, rect floor): call buildPreview({ from, to }) while dragging and
+// buildApply({ from, to }) on release. Click tools (segment, opening, floor tile, room fill, delete room) use
+// { from } only; openings may pass { wallId } from a view.pick wall result instead.
+//
+// Rules the core enforces (reasons come back in BuildPreview.reasons, first one is the main one):
+//  - walls cannot run through furniture, within reach of a person, or wall a person in / seal furniture off
+//    from the lot entry (use the room tool's `doors` to build a sealed room and its door in one step);
+//  - doors/windows need a wall on every spanned edge, no other opening, a wall high enough, no wall joining the
+//    middle of a wide opening, nothing hung on the edge, and doors a clear tile on both sides;
+//  - deleting a wall deletes the door/window in it (refunded) in the same command; deleting a wall that holds
+//    a wall-mounted object, or the last way out for someone, is refused;
+//  - walls that already exist are kept as they are (finishes too) and are not charged again.
+// Money: BuildPreview.cost is the net charge (negative = money back); 0 charge in the sandbox. See
+// building/buildPlans.ts for the price list (wall segment = structure + two side finishes, floor = design price
+// per tile, openings = definition price, demolition returns the paid price the same day, 80 % later).
+// Doors and windows spanning several tiles (OpeningDef.width > 1) are stored as one Opening with `span`.
+// The renderer should draw an opening over world/walls.ts openingEdgeKeys(opening) starting at its wallId edge.
+// ---------------------------------------------------------------------------------------------------------
 
 import type { ContentDB } from '../content/types';
 import type { Speed } from '../core/clock';
@@ -10,6 +48,12 @@ import type { EventBus } from '../core/events';
 import type { AnimId } from '../core/anim';
 import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
+import type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
+import type { RoomDelta, Vertex } from '../world/roomTracker';
+
+export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
+export { WALL_HEIGHT_PRESETS } from '../building/buildPlans';
+export type { RoomDelta, Vertex } from '../world/roomTracker';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
 export type CutawayMode = 'up' | 'cutaway' | 'down';
@@ -59,6 +103,97 @@ export type PaintTool =
 /** `unchanged`: the pick already has the chosen finish (not an error; `reason` says so for display). */
 export interface PaintPreview { ok: boolean; reason?: string; unchanged?: true; cost: Cents; count: number }
 
+/** A point on the lot in tile units (fractions allowed; the tool snaps). */
+export interface BuildPoint { x: number; z: number }
+
+/** A door or window built together with the room tool, centred on one side of the room. */
+export interface RoomDoorSpec {
+  defId: string;
+  /** Side of the room: north (-z), east (+x), south (+z), west (-x). */
+  side: 'n' | 'e' | 's' | 'w';
+  /** Tiles to shift from the middle of that side (default 0). */
+  offset?: number;
+}
+
+/**
+ * What the pointer does in Build mode (structure tools; finishes are the PaintTool).
+ * - wall: shape 'segment' (one edge) or 'run' (drag between vertices). `spec` sets finishes and height.
+ * - room: rectangular room between two corners; `floor` fills the inside, `doors` adds doors/windows.
+ * - eraseWall: demolish one segment, along a run, or everything inside a dragged rectangle.
+ * - opening: place the door/window `defId` on the wall under the pointer (`flip` swings it the other way).
+ * - moveOpening: move the opening `openingId` (pick it with openingAt) to the wall under the pointer.
+ * - eraseOpening: remove the door/window under the pointer (the wall stays).
+ * - floor / eraseFloor: tile, dragged rectangle, or the whole room under the pointer.
+ * - deleteRoom: remove the room under the pointer (outer walls, their openings and the floor).
+ */
+export type BuildTool =
+  | { kind: 'wall'; shape: 'segment' | 'run'; spec?: WallSpec }
+  | { kind: 'room'; spec?: WallSpec; floor?: FinishRef | null; doors?: RoomDoorSpec[] }
+  | { kind: 'eraseWall'; shape: 'segment' | 'run' | 'rect' }
+  | { kind: 'opening'; defId: string; flip?: boolean }
+  | { kind: 'moveOpening'; openingId: Id | null; flip?: boolean }
+  | { kind: 'eraseOpening' }
+  | { kind: 'floor'; finish: FinishRef; shape: 'tile' | 'rect' | 'room' }
+  | { kind: 'eraseFloor'; shape: 'tile' | 'rect' | 'room' }
+  | { kind: 'deleteRoom' };
+
+/** Where the tool acts: `from` (press) and `to` (current drag point), or the wall under the pointer for openings. */
+export interface BuildTarget {
+  from: BuildPoint;
+  to?: BuildPoint | null;
+  /** Edge key of the wall under the pointer (view.pick 'wall' result); overrides `from` for opening tools. */
+  wallId?: string;
+  /** Floor level (default 0). */
+  level?: number;
+}
+
+/**
+ * Result of previewing a build operation. `ok` false carries reasons; `unchanged` means it would change nothing
+ * (already built, nothing to erase), which is not an error to show in red.
+ */
+export interface BuildPreview {
+  ok: boolean;
+  /** Main reason when not ok. */
+  reason?: string;
+  reasons: string[];
+  unchanged?: true;
+  /** Short action text such as "Build 6 m of wall" (also the undo label). */
+  label: string;
+  /** Net money now: charge - refund (negative = money back). */
+  cost: Cents;
+  charge: Cents;
+  refund: Cents;
+  counts: BuildCounts;
+  measure: BuildMeasure;
+  /** Indoor room counts before/after, e.g. before 1, after 2 = the wall splits a room. */
+  rooms: { before: number; after: number };
+  highlight: BuildHighlight | null;
+}
+
+/** An enclosed (or outdoor) region of the lot. `uid` survives edits that leave the room unchanged. */
+export interface RoomInfo {
+  uid: string;
+  level: number;
+  /** Tiles in row-major order. */
+  tiles: Tile[];
+  /** Square metres (one per tile). */
+  area: number;
+  /** True for the region open to the lot border (the yard). */
+  outdoor: boolean;
+  /** Closed vertex loops around the room (outer boundary first, holes after) for highlighting. */
+  outlines: Vertex[][];
+}
+
+export interface BuildApplyResult {
+  cost: Cents;
+  label: string;
+  counts: BuildCounts;
+  /** Rooms created/removed/kept by the change (uids as in rooms()). */
+  rooms: RoomDelta;
+  /** Id of the opening placed or moved, when the tool was an opening tool. */
+  openingId?: Id;
+}
+
 export interface GameSettings {
   masterVolume: number; // 0..1
   soundVolume: number;
@@ -104,7 +239,7 @@ export interface DevStats {
 
 /** What changed in UI-relevant game state (not world events, which come through `events`). */
 export type UiChange =
-  | 'mode' | 'selection' | 'speed' | 'placement' | 'paint' | 'undo' | 'camera' | 'settings' | 'state' | 'portraits' | 'creator';
+  | 'mode' | 'selection' | 'speed' | 'placement' | 'paint' | 'build' | 'undo' | 'camera' | 'settings' | 'state' | 'portraits' | 'creator';
 
 export interface CreatorPreviewOptions {
   /** Outfit category shown in the preview. */
@@ -208,6 +343,25 @@ export interface GameAPI {
   canUndo(): boolean;
   canRedo(): boolean;
 
+  // ---- build mode (structure: walls, rooms, doors, windows, floors) ----
+  // See the Build mode construction API notes at the top of this file. Only valid in Build mode.
+  setBuildTool(tool: BuildTool | null): void;
+  buildTool(): BuildTool | null;
+  /** Validates and prices the tool at the target; null (or no tool) clears the preview and highlight. */
+  buildPreview(target: BuildTarget | null): BuildPreview | null;
+  /** Runs the tool at the target as one undoable command. Nothing changes when it fails. */
+  buildApply(target: BuildTarget): Result & Partial<BuildApplyResult>;
+  /** Clears the preview and highlight but keeps the tool. */
+  buildCancel(): void;
+  /** What the renderer should draw for the current preview (null when none). */
+  buildHighlight(): { highlight: BuildHighlight; ok: boolean } | null;
+  /** Rooms of the active lot level (stable uids, outlines). */
+  rooms(level?: number): RoomInfo[];
+  /** The room containing a tile, if any. */
+  roomAt(tile: Tile, level?: number): RoomInfo | null;
+  /** The door or window on a wall edge (including edges only spanned by a wide opening), or null. */
+  openingAt(wallId: string): { openingId: Id; defId: string; kind: 'door' | 'window'; wallId: string; span: number; flip: boolean } | null;
+
   // ---- camera and view ----
   // All screen coordinates are canvas-relative CSS pixels. pan(dx, dy) receives the pointer movement and the
   // content follows the finger (keyboard "pan right" sends a negative dx). zoomAt(factor > 1) zooms in around
@@ -215,6 +369,8 @@ export interface GameAPI {
   view: {
     /** `cycle`: a repeated tap at the same spot steps through people standing together (taps only, not hover). */
     pick(screenX: number, screenY: number, opts?: { cycle?: boolean }): PickResult;
+    /** Ground-plane point under a screen point in lot tile units (not snapped), for BuildTarget; null off the ground. */
+    groundPoint(screenX: number, screenY: number): { x: number; z: number } | null;
     pan(dxPixels: number, dyPixels: number): void;
     zoomAt(factor: number, screenX: number, screenY: number): void;
     rotate(dir: 1 | -1): void;

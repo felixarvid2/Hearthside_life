@@ -13,6 +13,7 @@ import type { ContentDB } from '../content/types';
 import { footprintTiles } from '../core/geometry';
 import type { Tile } from '../core/nav';
 import type { Id, Lot } from '../core/types';
+import { openingEdgeKeys } from './walls';
 
 /** Edge states stored in NavGrid.hEdges / vEdges. */
 export const EDGE_OPEN = 0;
@@ -68,7 +69,7 @@ export function buildNavGrid(lot: Lot, content: ContentDB, level: number, o: Gri
   if (o.extra) block(o.extra.id, o.extra.tiles);
 
   const doors = new Set<string>();
-  for (const op of Object.values(lot.openings)) if (content.openings[op.defId]?.kind === 'door') doors.add(op.wallId);
+  for (const op of Object.values(lot.openings)) if (content.openings[op.defId]?.kind === 'door') for (const k of openingEdgeKeys(op)) doors.add(k);
   for (const wall of Object.values(lot.walls)) {
     if (wall.level !== level) continue;
     const state = doors.has(wall.id) ? EDGE_DOOR : EDGE_WALL;
