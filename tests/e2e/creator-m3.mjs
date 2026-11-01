@@ -281,7 +281,9 @@ async function stepFaceBody(T) {
   await setSlider(T, 'Shoulder width', 0.9);
   const a1 = await T.pv();
   const d1 = await T.diff(base.a, a1);
-  T.check(S, 'dragging Shoulder width changes the live preview', d1 > nBase * 1.1 + 0.1, `diff ${d1.toFixed(2)} vs noise ${nBase.toFixed(2)}`);
+  // With the idle pose held the unchanged preview is pixel-identical (noise 0.00), so any real redraw clears 0.05 even
+  // though one shoulder slider moves only a sliver of the frame.
+  T.check(S, 'dragging Shoulder width changes the live preview', d1 > nBase * 1.1 + 0.05, `diff ${d1.toFixed(2)} vs noise ${nBase.toFixed(2)}`);
   T.check(S, 'the slider shows +90 and Undo names the edit', (await page.locator('input[aria-label="Shoulder width"]').first().inputValue()) === '0.9' && /Undo: /.test((await undoBtn(T).getAttribute('aria-label')) ?? ''), (await undoBtn(T).getAttribute('aria-label')) ?? '');
   await setSlider(T, 'Waist', -0.8); await setSlider(T, 'Hips', 0.8); await setSlider(T, 'Build', 0.7);
   const a2 = await T.pv();
@@ -294,13 +296,17 @@ async function stepFaceBody(T) {
   await T.settle(2);
   const after = await sliderValue(T, 'Chest');
   T.check(S, 'the plus button steps a slider (3 taps = +0.15)', Math.abs(after - before - 0.15) < 0.011, `${before} -> ${after}`);
-  // 3. frame switch
+  // 3. frame switch: the new household's first person may start on either frame, so tap the other one (tapping the frame
+  // already selected is a no-op, and with the idle pose held that is now correctly measured as "nothing changed").
+  const frameA = page.locator('[aria-label="Body frame"] [data-id="a"]').first();
+  const frameB = page.locator('[aria-label="Body frame"] [data-id="b"]').first();
+  const startB = (await frameB.getAttribute('aria-checked')) === 'true';
   const f0 = await T.pv();
-  await T.tap(page.locator('[aria-label="Body frame"] [data-id="b"]').first());
+  await T.tap(startB ? frameA : frameB);
   await T.settle(4);
   const f1 = await T.pv();
-  T.check(S, 'switching the body frame redraws the person', (await T.diff(f0, f1)) > nBase * 1.1 + 0.15, `diff ${(await T.diff(f0, f1)).toFixed(2)}`);
-  await T.tap(page.locator('[aria-label="Body frame"] [data-id="a"]').first());
+  T.check(S, 'switching the body frame redraws the person', (await T.diff(f0, f1)) > nBase * 1.1 + 0.15, `diff ${(await T.diff(f0, f1)).toFixed(2)} from frame ${startB ? 'b' : 'a'}`);
+  await T.tap(startB ? frameB : frameA);
   await T.settle(3);
   // 4. face sliders switch to the face close-up and change it
   await subTab(T, 'face');
@@ -312,7 +318,7 @@ async function stepFaceBody(T) {
   await setSlider(T, 'Face width', 0.8);
   const fa = await T.pv();
   const fd = await T.diff(fb.a, fa);
-  T.check(S, 'face width and jaw width sliders change the face close-up live', fd > fb.n * 1.1 + 0.1, `diff ${fd.toFixed(2)} vs noise ${fb.n.toFixed(2)}`);
+  T.check(S, 'face width and jaw width sliders change the face close-up live', fd > fb.n * 1.1 + 0.05, `diff ${fd.toFixed(2)} vs noise ${fb.n.toFixed(2)}`);
   // every facial parameter named in the brief exists (16+ editable parameters)
   const labels = await page.locator('input[type=range]').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
   await page.locator('details.cr-group:not([open]) summary').evaluateAll((els) => els.forEach((e) => e.click())).catch(() => undefined);
@@ -406,12 +412,16 @@ async function stepOutfits(T) {
     return chip;
   };
   const title = (layer) => page.locator(`.cr-layer[data-layer="${layer}"] .cr-sec-title`).first().innerText();
-  // outfit slots: top + bottom
+  // outfit slots: top + bottom. Hold the idle pose across the three picks so the measured difference is the clothes
+  // and not the breathing that happens between two taps.
+  await holdPreview(T, true);
+  const frozenNoise = await T.noise();
   const base = await T.pv();
   await pick('top', 'Pullover Hoodie'); await pick('bottom', 'Cargo Shorts'); await pick('shoes', 'Running Shoes');
   T.check(S, 'top, bottom and shoes slots show the chosen garments', /Pullover Hoodie/.test(await title('top')) && /Cargo Shorts/.test(await title('bottom')) && /Running Shoes/.test(await title('shoes')), `${await title('top')} | ${await title('bottom')} | ${await title('shoes')}`);
   const dressed = await T.pv();
-  T.check(S, 'the preview wears the chosen garments live', (await T.diff(base, dressed)) > noise.n * 1.1 + 0.15, `diff ${(await T.diff(base, dressed)).toFixed(2)}`);
+  await holdPreview(T, false);
+  T.check(S, 'the preview wears the chosen garments live', (await T.diff(base, dressed)) > frozenNoise.n * 1.1 + 0.15, `diff ${(await T.diff(base, dressed)).toFixed(2)} vs noise ${frozenNoise.n.toFixed(2)}`);
   await T.shot('hoodie-cargo-runners');
   // a pattern on the hoodie, and a colour
   const patChips = page.locator('.cr-layer[data-layer="top"] [aria-label="Pattern"] .chip');
@@ -463,8 +473,27 @@ async function stepAccessories(T) {
   T.check(S, 'at least 12 accessories are offered, each with a thumbnail', n >= 12 && (await page.locator('[aria-label="Accessories"] .chip .cr-glyph svg').count()) === n, `${n} accessories`);
   const chip = (name) => page.locator('[aria-label="Accessories"] .chip', { hasText: name }).first();
   const on = async (name) => (await chip(name).getAttribute('aria-pressed')) === 'true';
-  const toggle = async (name) => { await chip(name).scrollIntoViewIfNeeded(); await T.tap(chip(name)); await T.settle(4); };
-  const noise = await T.noise();
+  const worn = () => page.locator('[aria-label="Accessories"] .chip[aria-pressed="true"]');
+  const takeOffAll = async () => {
+    for (let i = 0; i < 10 && (await worn().count()) > 0; i++) {
+      const el = worn().first();
+      await el.scrollIntoViewIfNeeded();
+      await T.tap(el);
+      await T.settle(3);
+    }
+    return worn().count();
+  };
+  const toggle = async (name) => {
+    const want = !(await on(name));
+    // The step re-renders after every change; if a tap lands while it does, repeat once rather than silently skipping it.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const el = chip(name);
+      await el.scrollIntoViewIfNeeded();
+      await T.tap(el);
+      await T.settle(4);
+      if ((await on(name)) === want) return;
+    }
+  };
   // hair that stands high, then a hat that must squeeze it
   await goStep(T, 'hair');
   const cards = page.locator('.cr-hair-grid .cr-card');
@@ -472,9 +501,19 @@ async function stepAccessories(T) {
   if (await bun.count()) { await T.tap(bun); await T.settle(4); }
   await goStep(T, 'clothing');
   await T.tap(page.locator('.cr-subtabs [data-id="everyday"]').first()); await T.settle(3);
+  // The identity randomiser can already dress the person in glasses, a hat or a necklace, which would change the slot
+  // counts below. Take everything off so the test starts from a known state.
+  const stillWorn = await takeOffAll();
+  T.check(S, 'the accessory test starts with nothing worn', stillWorn === 0, `${stillWorn} still worn`);
+  // A beanie changes a small part of the frame; the idle sway between two shots was larger than that change. Hold the
+  // pose for this one comparison so the difference is the hat, not the animation.
+  await holdPreview(T, true);
+  const noise = await T.noise();
   const p0 = await T.pv();
   await toggle('Knit Beanie');
-  T.check(S, 'a beanie can be worn and shows in the preview', (await on('Knit Beanie')) && (await T.diff(p0, await T.pv())) > noise.n * 1.1 + 0.1, `diff ${(await T.diff(p0, await T.pv())).toFixed(2)}`);
+  const beanieDiff = await T.diff(p0, await T.pv());
+  await holdPreview(T, false);
+  T.check(S, 'a beanie can be worn and shows in the preview', (await on('Knit Beanie')) && beanieDiff > noise.n * 1.1 + 0.05, `diff ${beanieDiff.toFixed(2)} vs noise ${noise.n.toFixed(2)}`);
   await T.shot('beanie');
   await toggle('Baseball Cap');
   T.check(S, 'a second hat replaces the first (one hat at a time)', (await on('Baseball Cap')) && !(await on('Knit Beanie')), '');
@@ -502,8 +541,8 @@ async function stepAccessories(T) {
   if (await accSw.count()) { await accSw.nth(Math.min(6, (await accSw.count()) - 1)).scrollIntoViewIfNeeded(); await T.tap(accSw.nth(Math.min(6, (await accSw.count()) - 1))); await T.settle(4); }
   T.check(S, 'accessories are recolourable', (await accSw.count()) >= 10 && (await T.diff(c0, await T.pv())) > 0.05, `${await accSw.count()} swatches`);
   // clean up: remove everything
-  for (const name of ['Sunglasses', 'Pendant Necklace', 'Wristwatch', 'Bangles']) if (await on(name)) await toggle(name);
-  T.check(S, 'accessories can be removed again', !(await on('Sunglasses')) && !(await on('Wristwatch')), '');
+  const leftWorn = await takeOffAll();
+  T.check(S, 'accessories can be removed again', leftWorn === 0 && !(await on('Sunglasses')) && !(await on('Wristwatch')), `${leftWorn} still worn`);
   await T.shot('accessories-final');
 }
 
@@ -590,8 +629,10 @@ async function stepUndo(T) {
   // undo across steps: a clothing edit is undone from the hair step
   await goStep(T, 'clothing');
   const topBefore = await page.locator('.cr-layer[data-layer="top"] .cr-sec-title').first().innerText();
-  const chips = page.locator('.cr-layer[data-layer="top"] [aria-label$=" garments"] .chip');
-  const other = chips.filter({ hasNotText: /None/ }).nth(2);
+  // Pick a garment that is not the one already worn: picking the current one is a no-op (`setGarment` returns early),
+  // so there would be no undo step to test. Which of the first few chips is worn varies with the random identity.
+  const chips = page.locator('.cr-layer[data-layer="top"] [aria-label$=" garments"] .chip[aria-checked="false"]:not([data-id="__none"])');
+  const other = chips.nth(2);
   await other.scrollIntoViewIfNeeded(); await T.tap(other); await T.settle(3);
   const topChanged = await page.locator('.cr-layer[data-layer="top"] .cr-sec-title').first().innerText();
   await goStep(T, 'hair');
@@ -699,13 +740,14 @@ async function stepHousehold(T) {
   await T.settle(4);
   T.check(S, 'an appearance can be pasted onto another person', /Pasted onto/.test(await status(T)), await status(T));
   await T.shot('household-pasted');
-  // Back to the first person for the import/export and move-in sections. Tapping the row itself could wait on a sheet
-  // that was still closing and time out silently (caught), leaving the second person selected: the renamed "Exporta"
-  // then ended up second in the saved household. Tap the row's Edit button, and check the identity step shows them.
-  const firstRowName = (await rows.first().locator('.cr-member-row-name').innerText()).trim();
+  // Back to the first person for the import/export and move-in sections. The Edit button in a member row opens the
+  // identity step for that person; the old test tapped the row while on another step, waited 30 s, swallowed the
+  // timeout and left the second person selected (so the renamed "Exporta" ended up second in the saved household).
+  await goStep(T, 'household');
+  const firstRowName = (await page.locator('.cr-member-row-name').first().innerText()).trim();
   await T.tap(page.locator('.cr-member-row-main').first()); await T.settle(3);
   const editing = (await page.getByLabel('First name').first().inputValue().catch(() => '')).trim();
-  T.check(S, 'the first person is selected again for the next steps', editing === firstRowName, `${editing} vs ${firstRowName}`);
+  T.check(S, 'the first person is selected again for the next steps', editing === firstRowName.split(' ')[0], `${editing} vs ${firstRowName}`);
 }
 
 async function stepImportExport(T) {

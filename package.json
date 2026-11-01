@@ -19,6 +19,8 @@
     "e2e:acceptance": "node tests/e2e/acceptance.mjs",
     "e2e:creator": "node tests/e2e/creator-m3.mjs",
     "visual:m5": "node dev/ds-tasks/visual-m5.mjs",
+    "debug:creator": "node dev/ds-tasks/debug-creator.mjs",
+    "debug:pixels": "node dev/ds-tasks/pixels.mjs",
     "hair:ai": "node --experimental-strip-types --no-warnings tools/build-ai-hair.mts"
   },
   "dependencies": {
