@@ -58,6 +58,7 @@ What was in progress when this note was written (WIP commits on the branch; chec
 - Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.
 - Boot progress bar is not driven.
+- Creator M3 run (`npm run e2e:creator`, `tests/e2e/creator-m3.mjs`): portrait ran once (73 checks passed); the script fixes made afterwards (suit picked in the wrong category, tie, export, substitution-dialog selectors, preview-change threshold) and the landscape and desktop viewports have not been run. Open: after Load household template the confirm button tap times out, and the Review tab was not reachable after that, which may be a real dialog or stacking bug. Hats: the sun hat brim hides the eyes in the forward-tilted idle pose; scarf tails and necklaces were retuned after the last screenshots.
 - Garments: a faint seam on the thigh where swimwear leaves the baked shorts visible; folds are static; seated skirts open
   like a lampshade.
 - AI hair: box-braids and twin-tails have flat parts; some bangs stop at eye level; the backs are invented by TRELLIS.
