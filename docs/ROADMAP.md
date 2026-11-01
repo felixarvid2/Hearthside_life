@@ -6,7 +6,7 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestone 1 - Creator and playable foundation** (in progress / see CONTINUATION.md for the exact state).
+**Milestones 2-5** in progress (systems and content done; final browser verification pending). See CONTINUATION.md.
 
 ## Completed-project targets (brief section 2)
 
