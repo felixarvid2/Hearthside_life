@@ -187,6 +187,7 @@ export class MockCreatorApi implements GameAPI {
     cutaway: () => 'up' as const,
     setCutaway: (): void => {},
     focusPerson: (): void => {},
+    reveal: (): void => {},
     worldToScreen: () => ({ x: 0, y: 0, visible: false }),
     anchorOf: () => null,
     setInsets: (i: { left: number; right: number; top: number; bottom: number }): void => {

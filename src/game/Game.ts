@@ -206,16 +206,30 @@ export class Game implements GameAPI {
     const v = this.gameView;
     switch (what) {
       case 'mode': this.onModeChanged(); break;
-      case 'selection':
+      case 'selection': {
         v.setSelected(this.core.selected());
-        v.setObjectHighlight(this.core.mode() === 'buy' ? this.core.selectedObject() : null);
+        const so = this.core.mode() === 'buy' ? this.core.selectedObject() : null;
+        v.setObjectHighlight(so);
+        // a newly selected object that is small or off-screen: bring it into view
+        if (so !== this.revealedObject) { this.revealedObject = so; if (so) v.reveal({ kind: 'object', objectId: so }); }
         break;
-      case 'placement': v.setPlacement(this.core.placement()); break;
+      }
+      case 'placement': {
+        const p = this.core.placement();
+        v.setPlacement(p);
+        // a new placement (not a ghost nudge): bring the ghost into view
+        const key = p ? `${p.source}|${p.defId}|${p.objectId}|${p.inventoryIndex}` : '';
+        if (key !== this.placementKey) { this.placementKey = key; if (p) v.reveal(p); }
+        break;
+      }
       case 'paint': this.refreshPaintPreview(); break;
       default: break;
     }
     this.emit(what);
   }
+
+  private placementKey = '';
+  private revealedObject: Id | null = null;
 
   private onModeChanged(): void {
     const m = this.core.mode();
@@ -246,8 +260,10 @@ export class Game implements GameAPI {
       this.framedWorld = st;
       v.rig.setYawStep(0);
       v.frameLot(true);
+      // close on the selected person (else on whoever of the household is home), not on the whole lot
+      const members = st.households[st.activeHouseholdId]?.memberIds ?? [];
       const sel = this.core.selected();
-      const p = sel ? v.personPosition(sel) : null;
+      const p = [sel, ...members].map((id) => (id ? v.personPosition(id) : null)).find((q) => q !== null && q !== undefined);
       if (p) v.rig.glideTo(p.x, p.z, DEFAULT_PPM, 0);
     }
   }
@@ -435,7 +451,7 @@ export class Game implements GameAPI {
   private makeViewApi(): GameAPI['view'] {
     const v = () => this.gameView;
     return {
-      pick: (x, y) => v().pick(x, y, this.core.mode()),
+      pick: (x, y, opts) => v().pick(x, y, this.core.mode(), opts?.cycle === true),
       pan: (dx, dy) => { v().rig.pan(dx, dy); this.emit('camera'); },
       zoomAt: (f, x, y) => { v().rig.zoomAt(f, x, y); this.emit('camera'); },
       rotate: (dir) => { v().rig.rotate(dir === -1 ? -1 : 1); this.emit('camera'); },
@@ -451,6 +467,7 @@ export class Game implements GameAPI {
         this.emit('camera');
       },
       worldToScreen: (x, y, z) => v().worldToScreen(x, y, z),
+      reveal: (pick) => v().reveal(pick),
       anchorOf: (pick) => v().anchorOf(pick),
       setInsets: (i) => v().setInsets(i),
     };

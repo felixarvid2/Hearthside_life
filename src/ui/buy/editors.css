@@ -151,3 +151,30 @@ body.is-landscape .bb-reopen { right: calc(10px + var(--safe-r)); top: calc(64px
   .bb-status:has(.bb-funds.is-unlimited) .bb-paused { padding: 0 7px; }
   .bb-status:has(.bb-funds.is-unlimited) .bb-paused > span:not(.icon-wrap) { display: none; }
 }
+
+/* ---------- Short landscape screens (phones turned sideways): a usable side sheet ----------
+   The side panel is only ~250 px tall between the bars, so the chrome is compacted (one slim header, no "Paused" pill,
+   tighter body and category rows, horizontal cards: thumbnail left, text right) and the Expand control comes back:
+   expanded, the sheet takes the full height and covers the right ends of the bars until it is shrunk again. */
+@media (max-height: 520px) {
+  body.is-landscape .panel.bb-panel:not(.bb-auto) [aria-label='Expand panel'],
+  body.is-landscape .panel.bb-panel:not(.bb-auto) [aria-label='Shrink panel'] { display: inline-flex; }
+  body.shell-hud-on.is-landscape #ui-root .panel.bb-panel:not(.bb-auto)[data-height='full'] { top: calc(6px + var(--safe-t)); bottom: calc(6px + var(--safe-b)); }
+
+  body.is-landscape .bb-panel .panel-header { padding: 0 4px 0 12px; }
+  body.is-landscape .bb-panel .panel-title { font-size: 1rem; }
+  body.is-landscape .bb-panel .bb-paused { display: none; }
+  body.is-landscape .bb-panel .panel-body { padding: 6px 12px calc(10px + var(--safe-b)); }
+  body.is-landscape .bb-panel .bb-subbar { margin: -6px -12px 4px; padding: 0 8px 0 10px; }
+  body.is-landscape .bb-panel .bb-catbar { margin-bottom: 4px; }
+  body.is-landscape .bb-panel .bb-buy-row { bottom: -10px; margin: 8px -12px 0; padding: 10px 12px 6px; }
+
+  body.is-landscape .bb-panel .card-grid, body.is-landscape .bb-panel .bb-browse .card-grid, body.is-landscape .bb-panel .bb-designs .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(8.6rem, 1fr)); gap: 6px;
+  }
+  body.is-landscape .bb-panel .card {
+    display: grid; grid-template-columns: 52px minmax(0, 1fr); align-content: center; align-items: center; column-gap: 8px; row-gap: 0; padding: 4px 6px 4px 4px;
+  }
+  body.is-landscape .bb-panel .card > :first-child { grid-row: 1 / span 3; width: 52px; height: 52px; aspect-ratio: auto; }
+  body.is-landscape .bb-panel .card .card-name, body.is-landscape .bb-panel .card .card-meta { min-width: 0; }
+}

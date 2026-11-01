@@ -676,6 +676,7 @@ export class MockGame implements GameAPI {
     rotate: (dir: 1 | -1): void => { this.log('rotate', dir); this.cam.rot = (((this.cam.rot + dir) % 4 + 4) % 4) as Rot; this.emit('camera'); },
     cutaway: (): CutawayMode => this.cut,
     setCutaway: (mode: CutawayMode): void => { this.log('setCutaway', mode); this.cut = mode; this.emit('camera'); },
+    reveal: (): void => {},
     focusPerson: (personId: Id): void => {
       this.log('focusPerson', personId);
       const loc = this.world?.people[personId]?.location;

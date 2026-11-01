@@ -4,7 +4,7 @@
 
 import type { MenuOption, PickResult } from '../../game/api';
 import type { Id } from '../../core/types';
-import { toast } from '../kit/components';
+import { avoidToasts, toast } from '../kit/components';
 import { h, shieldWorld } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { humanize } from './format';
@@ -100,6 +100,7 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
     }
     current = { personId, pick, ...(at ? { at } : {}) };
     armed = false;
+    if (pick.kind === 'person' || pick.kind === 'object' || pick.kind === 'item') api.view.reveal(pick); // small or off-screen: bring it into view
     const title = targetTitle(pick);
     const closeBtn = h('button', { type: 'button', class: 'btn btn-ghost btn-icon ctx-close', ariaLabel: 'Close menu', title: 'Close menu' }, icon('close', 20));
     closeBtn.addEventListener('click', () => { close(); sh.sound('close'); });
@@ -145,6 +146,7 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
     el.style.left = `${pos.left}px`;
     el.style.top = `${pos.top}px`;
     el.dataset.side = pos.below ? 'below' : 'above';
+    avoidToasts(el.getBoundingClientRect());
   };
 
   const close = (): boolean => {
@@ -152,12 +154,13 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
     current = null;
     el.hidden = true;
     el.replaceChildren();
+    avoidToasts(null);
     return true;
   };
 
   return {
     open, close, reposition,
     isOpen: () => current !== null,
-    destroy: () => { document.removeEventListener('pointerdown', onDocDown, true); window.removeEventListener('keydown', onKey, true); el.remove(); },
+    destroy: () => { avoidToasts(null); document.removeEventListener('pointerdown', onDocDown, true); window.removeEventListener('keydown', onKey, true); el.remove(); },
   };
 }

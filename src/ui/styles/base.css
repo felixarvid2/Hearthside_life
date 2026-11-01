@@ -177,6 +177,7 @@ body.is-portrait .sheet-handle::after { content: ''; position: absolute; left: 5
 .toast-success .icon { color: #9be0a6; }
 .toast-warning .icon, .toast-error .icon { color: #ffb08a; }
 .toast.is-leaving { opacity: 0; transition: opacity 0.3s; }
+.toasts.is-hidden { visibility: hidden; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(-6px); } }
 
 /* ---------- Card grid ---------- */

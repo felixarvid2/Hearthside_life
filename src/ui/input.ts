@@ -179,7 +179,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   const onTap = (x: number, y: number, kind: PointerKind) => {
     if (sh.closeContextMenu()) { sh.sound('close'); return; }
     const at = { x, y };
-    const pick = api.view.pick(x, y);
+    const pick = api.view.pick(x, y, { cycle: true });
     const m = api.mode();
     if (m === 'live') liveTap(pick, at);
     else if (m === 'buy') buyTap(pick, at, kind);

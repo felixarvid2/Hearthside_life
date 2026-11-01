@@ -270,12 +270,14 @@ export class CreatorScreen implements ModeUI {
     const key = `${step}|${def.key(this.ctx)}`;
     if (!stepChanged && key === this.viewKey && this.view) { this.view.sync(); return; }
     const scroll = stepChanged ? 0 : body.scrollTop;
+    const panelScroll = stepChanged ? 0 : this.panel.el.scrollTop; // short landscape screens scroll the whole panel
     const focus = !stepChanged ? focusKey(document.activeElement, body) : null;
     this.view?.destroy?.();
     this.view = def.build(this.ctx);
     this.viewKey = key;
     body.replaceChildren(this.view.el);
     body.scrollTop = scroll;
+    this.panel.el.scrollTop = panelScroll;
     if (focus) restoreFocus(body, focus);
     if (stepChanged) {
       this.viewStep = step;

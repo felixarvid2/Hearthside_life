@@ -211,13 +211,16 @@ export interface GameAPI {
   // content follows the finger (keyboard "pan right" sends a negative dx). zoomAt(factor > 1) zooms in around
   // the given point. mood().value ranges about -100..100; reasons carry signed numbers, e.g. "Lonely (-12)".
   view: {
-    pick(screenX: number, screenY: number): PickResult;
+    /** `cycle`: a repeated tap at the same spot steps through people standing together (taps only, not hover). */
+    pick(screenX: number, screenY: number, opts?: { cycle?: boolean }): PickResult;
     pan(dxPixels: number, dyPixels: number): void;
     zoomAt(factor: number, screenX: number, screenY: number): void;
     rotate(dir: 1 | -1): void;
     cutaway(): CutawayMode;
     setCutaway(mode: CutawayMode): void;
     focusPerson(personId: Id): void;
+    /** Eases the camera to a picked person, object or item if it is off-screen, hidden behind panels or small. */
+    reveal(pick: PickResult): void;
     /** Screen position (CSS px, relative to the canvas) of a world point. */
     worldToScreen(x: number, y: number, z: number): { x: number; y: number; visible: boolean };
     /** Anchor above a person's head or on top of an object, for menus. */

@@ -327,17 +327,63 @@ export function promptDialog(o: { title: string; label: string; value: string; c
 }
 
 let toastHost: HTMLElement | null = null;
+let toastObserver: MutationObserver | null = null;
+let avoid: { left: number; top: number; right: number; bottom: number } | null = null;
+
 /** Short, auto-hiding notification. */
 export function toast(text: string, kind: 'info' | 'success' | 'warning' | 'error' = 'info', ms = 3500): void {
   if (!toastHost || !toastHost.isConnected) {
+    toastObserver?.disconnect();
     toastHost = h('div', { class: 'toasts', role: 'status', attrs: { 'aria-live': 'polite' } });
     (document.getElementById('ui-root') ?? document.body).appendChild(toastHost);
+    toastObserver = typeof MutationObserver !== 'undefined' ? new MutationObserver(layoutToasts) : null;
+    toastObserver?.observe(toastHost, { childList: true });
   }
   const iconName = kind === 'warning' || kind === 'error' ? 'warning' : kind === 'success' ? 'check' : 'info';
   const t = h('div', { class: ['toast', `toast-${kind}`] }, icon(iconName, 18), h('span', { text }));
   toastHost.appendChild(t);
   while (toastHost.children.length > 4) toastHost.firstElementChild?.remove();
   setTimeout(() => { t.classList.add('is-leaving'); setTimeout(() => t.remove(), 300); }, ms);
+}
+
+/**
+ * Keeps the toast stack clear of a floating element (the context menu), given as a viewport rectangle, or null when
+ * nothing needs avoiding. The stack moves below or above it, else beside it, and hides while there is no room.
+ */
+export function avoidToasts(rect: { left: number; top: number; right: number; bottom: number } | null): void {
+  const same = avoid && rect && avoid.left === rect.left && avoid.top === rect.top && avoid.right === rect.right && avoid.bottom === rect.bottom;
+  if (same || (!avoid && !rect)) return;
+  avoid = rect ? { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom } : null;
+  layoutToasts();
+}
+
+function layoutToasts(): void {
+  const host = toastHost;
+  if (!host || !host.isConnected) return;
+  host.classList.remove('is-hidden');
+  for (const prop of ['top', 'left', 'width', 'transform']) host.style.removeProperty(prop);
+  const a = avoid;
+  if (!a || !host.children.length) return;
+  const gap = 8;
+  const hit = (r: DOMRect) => r.left < a.right + 4 && r.right > a.left - 4 && r.top < a.bottom + 4 && r.bottom > a.top - 4;
+  const home = host.getBoundingClientRect();
+  if (!hit(home)) return;
+  const origin = (host.offsetParent ?? document.body).getBoundingClientRect();
+  const floorY = window.innerHeight - (Number.parseFloat(document.documentElement.style.getPropertyValue('--shell-bottom')) || 0) - gap;
+  // below the menu, else above it (never above the stack's own top edge)
+  if (a.bottom + gap + home.height <= floorY) { host.style.top = `${a.bottom + gap - origin.top}px`; return; }
+  if (a.top - gap - home.height >= home.top) { host.style.top = `${a.top - gap - home.height - origin.top}px`; return; }
+  // beside it, where there is room for a readable column
+  const left = a.left - gap - 2 * gap, right = window.innerWidth - a.right - gap - 2 * gap;
+  if (Math.max(left, right) >= 200) {
+    const w = Math.min(420, Math.max(left, right));
+    const x = right >= left ? a.right + gap : a.left - gap - w;
+    host.style.left = `${x - origin.left}px`;
+    host.style.width = `${w}px`;
+    host.style.transform = 'none';
+    return;
+  }
+  host.classList.add('is-hidden'); // no room: the feed keeps the story
 }
 
 // ---------------------------------------------------------------------------------------------

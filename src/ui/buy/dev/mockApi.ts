@@ -555,6 +555,7 @@ export class MockGame {
         cutaway: () => this.cutawayMode,
         setCutaway: (m) => { this.cutawayMode = m; this.emit('camera'); },
         focusPerson: () => {},
+        reveal: () => {},
         worldToScreen: () => ({ x: 0, y: 0, visible: false }),
         anchorOf: () => null,
         setInsets: (i) => { this.insets = { ...i }; this.emit('camera'); },

@@ -16,6 +16,10 @@ export const MIN_PPM = 14;
 export const MAX_PPM = 150;
 /** Default zoom: a 1.8 m person is ~95 px tall (projected height 1.8 * cos(pitch)). */
 export const DEFAULT_PPM = 66;
+/** Below this zoom a 1 m object is under ~40 px wide: too small to tap, so revealing it zooms in. */
+export const REVEAL_SMALL_PPM = 40;
+/** Zoom a reveal moves to when its target is small (a 1 m object is ~56 px wide). */
+export const REVEAL_PPM = 56;
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -46,12 +50,14 @@ export class CameraRig {
 
   setSize(w: number, h: number): void { this.width = w; this.height = h; this.dirty = true; }
 
-  setInsets(i: Insets): void {
+  /** Returns true when the covered area changed. */
+  setInsets(i: Insets): boolean {
     const clamp = (v: number, max: number) => Math.max(0, Math.min(max, Number.isFinite(v) ? v : 0));
     const n = { left: clamp(i.left, this.width * 0.7), right: clamp(i.right, this.width * 0.7), top: clamp(i.top, this.height * 0.7), bottom: clamp(i.bottom, this.height * 0.75) };
-    if (n.left === this.insets.left && n.right === this.insets.right && n.top === this.insets.top && n.bottom === this.insets.bottom) return;
+    if (n.left === this.insets.left && n.right === this.insets.right && n.top === this.insets.top && n.bottom === this.insets.bottom) return false;
     this.insets = n;
     this.dirty = true;
+    return true;
   }
 
   setBounds(x0: number, z0: number, x1: number, z1: number): void {
@@ -140,6 +146,32 @@ export class CameraRig {
       return;
     }
     this.glide = { from: this.target.clone(), to, ppmFrom: this.ppm, ppmTo, t: 0, dur };
+  }
+
+  /**
+   * Brings a world box into comfortable view: when it is outside the uncovered screen area (or cut by its edge) the
+   * camera glides to it, and when the zoom is so far out that it is small (< REVEAL_SMALL_PPM) it also zooms in to
+   * REVEAL_PPM, but never so far that the box stops fitting. Does nothing when the box is fully visible and big enough.
+   * Returns true when the camera started moving. With `zoomIn` false only an off-screen target moves the camera
+   * (used after a layout change, so a deliberate zoom-out is kept).
+   */
+  reveal(min: THREE.Vector3, max: THREE.Vector3, dur = 0.5, zoomIn = true): boolean {
+    this.update(0);
+    const sizeX = max.x - min.x, sizeZ = max.z - min.z, sizeY = max.y - min.y;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const p = { x: 0, y: 0, visible: false };
+    for (let i = 0; i < 8; i++) {
+      this.project(i & 1 ? max.x : min.x, i & 2 ? max.y : min.y, i & 4 ? max.z : min.z, p);
+      x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
+    }
+    const m = 16, i = this.insets;
+    const inView = x0 >= i.left + m && x1 <= this.width - i.right - m && y0 >= i.top + m && y1 <= this.height - i.bottom - m;
+    const small = zoomIn && this.ppm < REVEAL_SMALL_PPM && Math.max(sizeX, sizeZ) < 4;
+    if (inView && !small) return false;
+    const fit = this.fitPpm(sizeX, sizeZ, sizeY, 1.5);
+    const ppmTo = Math.min(Math.max(this.ppm, small ? REVEAL_PPM : 0), Math.max(fit, MIN_PPM));
+    this.glideTo((min.x + max.x) / 2, (min.z + max.z) / 2, ppmTo, dur, Math.min(1, Math.max(0, (min.y + max.y) / 2)));
+    return true;
   }
 
   /** Zoom that fits a box of the given ground extent into the visible area. */

@@ -7,6 +7,7 @@ import type { CharacterAssets } from '../characters/assets';
 import type { ContentDB } from '../content/types';
 import { hourOfDay } from '../core/clock';
 import { tileKey } from '../core/ids';
+import { rotatedSize } from '../core/geometry';
 import type { Id, Lot, WorldState } from '../core/types';
 import type { CutawayMode, GameMode, PickResult, PlacementState } from '../game/api';
 import type { PaintHighlight } from '../game/GameCore';
@@ -59,6 +60,9 @@ export class GameView {
   private hoverAt: { x: number; y: number } | null = null;
   private hoverTimer = 0;
   private lastCameraVersion = -1;
+  private cycleState: { key: string; index: number; x: number; y: number; at: number; version: number } | null = null;
+  private pendingReveal: { box: THREE.Box3; wait: number; zoomIn: boolean } | null = null;
+  private ghost: PlacementState | null = null;
   private lastCutawayKey = '';
   /** Called when the camera moved (UI anchors). */
   onCamera: (() => void) | null = null;
@@ -66,7 +70,12 @@ export class GameView {
   constructor(canvas: HTMLCanvasElement, readonly content: ContentDB, readonly overlay: HTMLElement | null, opts: ViewOptions, assetBase: string) {
     this.opts = { ...opts };
     this.ctx = new RenderContext(canvas, opts.quality);
-    this.ctx.onResize = (w, h) => { this.rig.setSize(w, h); this.creator?.setSize(w, h); if (this.orbiting) this.frameLot(true); };
+    this.ctx.onResize = (w, h) => {
+      this.rig.setSize(w, h);
+      this.creator?.setSize(w, h);
+      if (this.orbiting) this.frameLot(true);
+      else if (this.ghost) this.reveal(this.ghost, false);
+    };
     this.objectAssets = new ObjectAssets(assetBase);
     this.lighting = new Lighting(this.scene);
     this.fog = new THREE.Fog(0xefe7da, 85, 150);
@@ -129,6 +138,7 @@ export class GameView {
     this.objects.clear();
     this.people?.clear();
     this.placement.set(null, null, () => 0);
+    this.pendingReveal = null;
     if (!state || !lot) return;
     this.env.build(lot);
     this.lotView.setCutaway(this.cutaway, this.rig.viewDir(this.tmpV));
@@ -166,6 +176,7 @@ export class GameView {
   setObjectHighlight(id: Id | null): void { this.objects.setHighlight(id); }
 
   setPlacement(p: PlacementState | null): void {
+    this.ghost = p;
     this.placement.set(p, this.lot, (x, z) => this.groundAt(x, z));
     this.objects.setHidden(p?.source === 'move' ? p.objectId : null);
   }
@@ -211,6 +222,44 @@ export class GameView {
     this.rig.glideTo((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2, ppm, instant ? 0 : 0.6);
   }
 
+  /**
+   * Brings a picked thing or the placement ghost into view (see CameraRig.reveal), a moment later: the UI panels that
+   * open together with it report their covered area first, so the decision uses the final visible area.
+   */
+  reveal(target: PickResult | PlacementState | null, zoomIn = true): void {
+    const box = target ? this.revealBox(target) : null;
+    this.pendingReveal = box ? { box, wait: 0.2, zoomIn } : null;
+  }
+
+  private revealBox(t: PickResult | PlacementState): THREE.Box3 | null {
+    if (!this.lot) return null;
+    if (!('kind' in t)) {
+      const def = this.content.objects[t.defId];
+      if (!def) return null;
+      const s = rotatedSize(def.footprint, t.rot);
+      const y = this.groundAt(t.x, t.z);
+      return new THREE.Box3(new THREE.Vector3(t.x, y, t.z), new THREE.Vector3(t.x + s.w, y + Math.max(0.5, def.height), t.z + s.d));
+    }
+    switch (t.kind) {
+      case 'person': {
+        const p = this.people?.positionOf(t.personId);
+        return p ? new THREE.Box3(new THREE.Vector3(p.x - 0.3, 0, p.z - 0.3), new THREE.Vector3(p.x + 0.3, 1.8, p.z + 0.3)) : null;
+      }
+      case 'object':
+      case 'item': return this.objects.boxOf(t.kind === 'object' ? t.objectId : t.itemId)?.clone() ?? null;
+      default: return null;
+    }
+  }
+
+  private runPendingReveal(dt: number): void {
+    const r = this.pendingReveal;
+    if (!r) return;
+    r.wait -= dt;
+    if (r.wait > 0) return;
+    this.pendingReveal = null;
+    this.rig.reveal(r.box.min, r.box.max, 0.5, r.zoomIn);
+  }
+
   focusOn(x: number, z: number, closeUp = false): void {
     this.rig.glideTo(x, z, closeUp ? Math.max(this.rig.ppm, DEFAULT_PPM) : undefined, 0.55, 0.8); // aim at the chest, not the feet
   }
@@ -253,6 +302,7 @@ export class GameView {
       this.rig.yaw += dt * (this.opts.reducedMotion ? 0.012 : 0.06);
       this.rig.setZoom(this.rig.ppm); // marks dirty
     }
+    this.runPendingReveal(dt);
     this.rig.update(dt);
     this.updateCutaway();
     // clock-driven lighting
@@ -309,7 +359,12 @@ export class GameView {
   // Picking and projection
   // ---------------------------------------------------------------------------------------------
 
-  pick(sx: number, sy: number, mode: GameMode): PickResult {
+  /**
+   * What is under a screen point. People are picked forgivingly: anyone whose body passes within a finger's width
+   * (24-36 px, scaled with the zoom) counts, the nearest wins, and with `cycle` a repeated tap at the same spot
+   * steps to the next of several people standing together.
+   */
+  pick(sx: number, sy: number, mode: GameMode, cycle = false): PickResult {
     const lot = this.lot;
     if (!lot || !Number.isFinite(sx) || !Number.isFinite(sy)) return { kind: 'none' };
     this.rig.update(0);
@@ -317,8 +372,12 @@ export class GameView {
     let best: { d: number; r: PickResult } | null = null;
     const consider = (d: number, r: PickResult) => { if (!best || d < best.d) best = { d, r }; };
     if (mode === 'live' && this.people) {
-      const h = this.people.pick(ray, this.tmpV2);
-      if (h) consider(h.distance, { kind: 'person', personId: h.id });
+      const near = this.people.pickNear(ray, this.rig, sx, sy, Math.max(24, Math.min(36, this.rig.ppm * 0.4)));
+      // only people that cannot be told apart (about as near to the tap as the best one) take part in cycling
+      const tied = near.filter((n) => n.px <= near[0]!.px + 10);
+      const h = tied.length ? tied[this.cyclePick(tied.map((n) => n.id), sx, sy, cycle)] : null;
+      // exact hits keep the old small bias over furniture they use; near misses win against anything but a clearly nearer object
+      if (h) consider(h.depth - (h.exact ? 0.25 : 1), { kind: 'person', personId: h.id });
     }
     if (mode === 'live' || mode === 'buy') {
       const h = this.objects.pick(ray, mode === 'buy', this.tmpV2);
@@ -335,6 +394,18 @@ export class GameView {
       if (tx >= 0 && tz >= 0 && tx < lot.width && tz < lot.depth) consider(g.distanceTo(ray.origin) + 0.001, { kind: 'floor', tile: { x: tx, z: tz }, level: 0 });
     }
     return best ? (best as { d: number; r: PickResult }).r : { kind: 'none' };
+  }
+
+  /** Index into `ids` (nearest first): 0, or the next one when `cycle` and the same people were picked at the same spot just before. */
+  private cyclePick(ids: Id[], sx: number, sy: number, cycle: boolean): number {
+    const key = ids.join('|');
+    const c = this.cycleState;
+    if (!cycle || ids.length < 2) { this.cycleState = null; return 0; }
+    const now = performance.now();
+    const again = c && c.key === key && c.version === this.rig.version && now - c.at < 4000 && Math.hypot(sx - c.x, sy - c.y) <= 14;
+    const index = again ? (c.index + 1) % ids.length : 0;
+    this.cycleState = { key, index, x: sx, y: sy, at: now, version: this.rig.version };
+    return index;
   }
 
   /** Ground tile under a screen point (may be outside the lot). */
@@ -380,7 +451,8 @@ export class GameView {
   }
 
   setInsets(i: Insets): void {
-    this.rig.setInsets(i);
+    const changed = this.rig.setInsets(i);
+    if (changed && this.ghost && !this.pendingReveal) this.reveal(this.ghost, false); // panels or the device turned: keep the ghost on screen
     if (this.orbiting) { this.rig.update(0); this.frameLot(true); }
     this.creator?.setInsets(i);
   }

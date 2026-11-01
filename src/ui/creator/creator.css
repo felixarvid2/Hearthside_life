@@ -311,3 +311,21 @@ body.is-portrait .cr-pv-right { right: calc(8px + var(--safe-r)); }
   .cr-two { grid-template-columns: 1fr; }
   .cr-tie-row { grid-template-columns: 1fr; }
 }
+
+/* ---------- Short landscape screens (phones turned sideways) ----------
+   The panel is the full 374 px of height, but tabs, toolbar and footer used to take more than half of it. Here the whole
+   panel scrolls (tabs and footer stay put, the toolbar and the status line scroll with the step), the rows are slimmer
+   and the panel a little wider, which leaves most of the height to the step content. */
+@media (max-height: 520px) {
+  .cr { --cr-panel-w: clamp(340px, 50vw, 480px); }
+  body.is-landscape .cr-panel { overflow: hidden auto; overscroll-behavior: contain; touch-action: pan-y; }
+  body.is-landscape .cr-panel > * { flex: none; }
+  body.is-landscape .cr-panel .panel-body.cr-body { flex: 1 0 auto; overflow: visible; padding: 6px 12px 10px; }
+  body.is-landscape .cr-panel .panel-header { position: sticky; top: 0; z-index: 4; background: var(--paper); padding: 0 6px; }
+  body.is-landscape .cr-steps { padding: 0 2px; }
+  body.is-landscape .cr-toolbar { padding: 2px 6px 2px 8px; }
+  body.is-landscape .cr-status { position: sticky; bottom: 56px; z-index: 3; }
+  body.is-landscape .cr-footer { position: sticky; bottom: 0; z-index: 4; padding: 4px 10px calc(4px + var(--safe-b)); }
+  body.is-landscape .cr-sec { padding: 0 0 8px; }
+  body.is-landscape .cr-sec-title { margin: 6px 0 4px; }
+}

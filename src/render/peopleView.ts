@@ -372,6 +372,29 @@ export class PeopleView {
     return best;
   }
 
+  /**
+   * People whose body (the segment from feet to head, in screen space) passes within `radius` CSS px of a screen point,
+   * nearest first; a person the ray hits exactly counts as distance 0. `depth` is the distance along the ray.
+   */
+  pickNear(ray: THREE.Ray, camera: CameraRig, sx: number, sy: number, radius: number): Array<{ id: Id; px: number; depth: number; exact: boolean }> {
+    const out: Array<{ id: Id; px: number; depth: number; exact: boolean }> = [];
+    const a = { x: 0, y: 0, visible: false }, b = { x: 0, y: 0, visible: false };
+    for (const e of this.entries.values()) {
+      if (!e.visible) continue;
+      const cx = (e.box.min.x + e.box.max.x) / 2, cz = (e.box.min.z + e.box.max.z) / 2;
+      camera.project(cx, e.box.min.y + 0.1, cz, a);
+      camera.project(cx, e.box.max.y - 0.1, cz, b);
+      const vx = b.x - a.x, vy = b.y - a.y, len2 = vx * vx + vy * vy;
+      const t = len2 > 0 ? Math.max(0, Math.min(1, ((sx - a.x) * vx + (sy - a.y) * vy) / len2)) : 0;
+      const exact = ray.intersectsBox(e.box);
+      const px = exact ? 0 : Math.hypot(sx - (a.x + vx * t), sy - (a.y + vy * t));
+      if (px > radius) continue;
+      const depth = (cx - ray.origin.x) * ray.direction.x + ((e.box.min.y + e.box.max.y) / 2 - ray.origin.y) * ray.direction.y + (cz - ray.origin.z) * ray.direction.z;
+      out.push({ id: e.id, px, depth, exact });
+    }
+    return out.sort((p, q) => p.px - q.px || p.depth - q.depth);
+  }
+
   /** World point above a person's head. */
   headOf(id: Id, out: THREE.Vector3): THREE.Vector3 | null {
     const e = this.entries.get(id);
