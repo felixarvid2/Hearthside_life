@@ -53,3 +53,4 @@ Cached results in dev/hair-ai/raw/ are reused, so rebuilding costs nothing.
 | 2026-11-01 08:47 | fal-ai/trellis | 3D model quiff | 0.020 |
 | 2026-11-01 08:48 | fal-ai/trellis | 3D model slick-back | 0.020 |
 | 2026-11-01 08:49 | fal-ai/trellis | 3D model curly-crop | 0.020 |
+| 2026-11-01 08:50 | fal-ai/trellis | 3D model locs-medium | 0.020 |
