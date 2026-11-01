@@ -871,7 +871,7 @@ async function stepLive(T) {
   T.check(S, 'simulation reached 09:05 (shift window open)', r2.done, JSON.stringify(await simNow(T)));
   const miraBefore = await needsOf(T, mira);
   T.check(S, 'first person is on the lot before work', !miraBefore.loc.startsWith('off:'), miraBefore.loc);
-  const wageBefore = await page.evaluate(([m]) => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; return { funds: hh.funds, wages: hh.ledger.filter((e) => e.kind === 'wage').length }; }, [mira]);
+  const wageBefore = await page.evaluate(([m]) => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; return { funds: hh.funds, wages: hh.ledger.filter((e) => e.kind === 'wage').length, ids: hh.ledger.map((e) => e.id) }; }, [mira]);
   const m2 = await tapAndOpenMenu(T, 'person', mira, S, 'self menu (work)');
   if (m2) {
     const hasWork = m2.items.find((i) => /Go to Work/.test(i.label ?? ''));
@@ -900,12 +900,19 @@ async function stepLive(T) {
   const wages = await page.evaluate(([m, s, d]) => {
     const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
     const count = (id) => hh.ledger.filter((e) => e.kind === 'wage' && e.occurrence === `pay:${id}:${d}`).length;
-    return { mira: count(m), sage: count(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds };
-  }, [mira, sage, day0]);
+    return { mira: count(m), sage: count(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
+  }, [mira, sage, day0, wageBefore.ids]);
   log('wages', JSON.stringify(wages));
   T.check(S, 'exactly one wage ledger entry for the first person\'s shift', wages.mira === 1, JSON.stringify(wages.all));
   T.check(S, 'the roommate (own shift) was paid exactly once as well', wages.sage === 1 || startInfo.sageCareer === null, `sage entries ${wages.sage}; career ${startInfo.sageCareer}`);
-  T.check(S, 'household funds rose by the wage(s)', wages.funds > wageBefore.funds, `${fmtMoney(wageBefore.funds)} -> ${fmtMoney(wages.funds)}`);
+  // Milestone 4 adds expenses during a shift (groceries, repairperson), so funds need not rise overall: check instead that the
+  // wage was credited and that the funds change equals exactly the new ledger entries (no money appears or vanishes).
+  const seen = new Set(wageBefore.ids);
+  const fresh = wages.entries.filter((e) => !seen.has(e.id));
+  const freshSum = fresh.reduce((a, e) => a + e.amount, 0);
+  const freshWage = fresh.filter((e) => e.kind === 'wage').reduce((a, e) => a + e.amount, 0);
+  T.check(S, 'household funds changed by exactly the new ledger entries, including the wage(s)', freshWage > 0 && wages.funds - wageBefore.funds === freshSum,
+    `${fmtMoney(wageBefore.funds)} -> ${fmtMoney(wages.funds)}; new entries ${fresh.map((e) => `${e.kind} ${e.amount}`).join(', ')}`);
   // let a day boundary-free amount of time pass: the wage must not repeat
   await page.evaluate(() => window.__t.run(4 * 30, 'false'));
   const wages2 = await page.evaluate(([m, d]) => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; return hh.ledger.filter((e) => e.kind === 'wage' && e.occurrence === `pay:${m}:${d}`).length; }, [mira, day0]);
