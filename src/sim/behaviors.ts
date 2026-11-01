@@ -2,6 +2,8 @@
 // computer, reading, outfits) and the behavior registry. Cooking, travel and social behaviors live in
 // cooking.ts, travel.ts and social.ts.
 
+import { offeredInteractionIds } from '../content/capabilities';
+import { BOOK_MAX_LEVEL } from '../content/skillEffects';
 import type { InteractionDef } from '../content/types';
 import { facingDir } from '../core/geometry';
 import { transact } from '../core/state';
@@ -12,6 +14,8 @@ import {
   behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef,
 } from './context';
 import { cookBehavior, eatMealBehavior } from './cooking';
+import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
+import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
 import { socialBehavior } from './social';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
@@ -53,7 +57,8 @@ export function interactionCheck(ctx: SimCtx, p: Person, a: ActionInstance, igno
     if (a.target.kind !== 'object') return 'Pick an object.';
     const ref = targetObject(ctx, p, a);
     if (!ref) return 'It is gone.';
-    if (!ref.def.interactions.includes(def.id)) return `Can't do that with the ${objectName(ctx, ref.def.id)}.`;
+    if (!offeredInteractionIds(ref.def).includes(def.id)) return `Can't do that with the ${objectName(ctx, ref.def.id)}.`;
+    if (isBroken(ref.obj) && !BROKEN_OK_BEHAVIORS.has(def.behavior ?? 'generic')) return 'Broken';
   }
   if (!ignoreCost && def.cost && a.data.charged !== true) {
     const hh = ctx.state.households[p.householdId];
@@ -315,9 +320,29 @@ const computerBehavior: Behavior = {
   interruptible: true,
 };
 
+/** Skills a skill book (readSkillBook, data.skillId) can teach, and the title of each book. */
+export const SKILL_BOOKS: Readonly<Record<string, string>> = {
+  cooking: 'Cookbook', handiness: 'Home Repair Manual', gardening: 'Gardening Almanac', charisma: 'Public Speaking Guide',
+  programming: 'Programming Primer',
+};
+
+/** The skill a read action trains: the book's skill for readSkillBook, else the interaction's own skill. */
+function bookSkill(def: InteractionDef, a: ActionInstance, shelf: ObjRef | null): Step['skill'] {
+  if (def.id !== 'readSkillBook') return skillRate(def, shelf);
+  const id = a.data.skillId;
+  if (typeof id !== 'string' || !(id in SKILL_BOOKS)) return undefined;
+  return { id, xpPerHour: def.skill ? def.skill.xpPerHour * (shelf?.def.stats.skill ?? 1) : 0 };
+}
+
 /** Read: take a book from the bookcase, then read at a nearby free seat (or standing). */
 const readBehavior: Behavior = {
-  check: interactionCheck,
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    if (r || a.interactionId !== 'readSkillBook') return r;
+    const id = a.data.skillId;
+    if (typeof id !== 'string' || !(id in SKILL_BOOKS) || !ctx.content.skills[id]) return 'Choose a book to study.';
+    return (p.skills[id]?.level ?? 1) >= BOOK_MAX_LEVEL ? `Nothing new in these books (${ctx.content.skills[id]!.name} ${BOOK_MAX_LEVEL}+).` : null;
+  },
   reserve: (ctx, p, a) => reservePrimary(ctx, p, a),
   step(ctx, p, a) {
     const def = defOf(ctx, a);
@@ -328,10 +353,13 @@ const readBehavior: Behavior = {
       return { goal, posture: 'standing', performAnim: 'pickUp', duration: { kind: 'fixed', minutes: 1 }, rates: {} };
     }
     const shelf = objectRef(ctx, lotLoc(p)?.lotId ?? '', typeof a.data.bookFrom === 'string' ? a.data.bookFrom : '');
-    if (hasUsePoint(a, 'seat')) return seatStep(ctx, p, a, def, shelf);
+    if (hasUsePoint(a, 'seat')) {
+      const s = seatStep(ctx, p, a, def, shelf);
+      return typeof s === 'string' ? s : { ...s, skill: bookSkill(def, a, shelf) };
+    }
     return {
       goal: { kind: 'here' }, posture: 'standing', performAnim: def.anims.perform, duration: defDuration(def),
-      rates: performRates(ctx, p, def, shelf, null, 'standing'), skill: skillRate(def, shelf),
+      rates: performRates(ctx, p, def, shelf, null, 'standing'), skill: bookSkill(def, a, shelf),
     };
   },
   next(ctx, p, a) {
@@ -415,6 +443,13 @@ function buildRegistry(): Record<string, Behavior> {
     editOutfits: editOutfitsBehavior,
     cook: cookBehavior,
     eatMeal: eatMealBehavior,
+    clean: cleanBehavior,
+    washDishes: washDishesBehavior,
+    mop: mopBehavior,
+    tidy: tidyBehavior,
+    repair: repairBehavior,
+    service: serviceBehavior,
+    callRepair: callRepairBehavior,
     goToWork: goToWorkBehavior,
     goHere: goHereBehavior,
     leaveLot: leaveLotBehavior,

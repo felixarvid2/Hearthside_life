@@ -12,9 +12,9 @@ export const RESERVING_PHASES: ReadonlySet<ActionPhase> = new Set<ActionPhase>([
 /**
  * Use points stored in ActionInstance.data under these prefixes: `<p>Obj` (object id), and either
  * `<p>Slot` (slot id) or `<p>X`/`<p>Z` (stand tile). 'use' = the primary object, 'stove' = cooking
- * station, 'seat' = a chair/sofa used for the activity, 'surf' = serving surface.
+ * station, 'seat' = a chair/sofa used for the activity, 'surf' = serving surface, 'wash' = sink or dishwasher.
  */
-export const USE_POINT_PREFIXES = ['use', 'stove', 'seat', 'surf'] as const;
+export const USE_POINT_PREFIXES = ['use', 'stove', 'seat', 'surf', 'wash'] as const;
 export type UsePointPrefix = (typeof USE_POINT_PREFIXES)[number];
 
 /** Reservation keys an action holds, derived only from its serializable fields. */

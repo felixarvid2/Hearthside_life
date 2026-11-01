@@ -21,6 +21,11 @@
 //   the swatch colour and the others keep their original shade relative to it (e.g. wood + woodDark).
 //   Swatch colours are sRGB hex; Kenney baseColorFactor values are authored as sRGB (that is how the catalog
 //   thumbnails look), so swatches[0] of every region reproduces the original model colour.
+//
+// Tags drive the daily-life capabilities (content/capabilities.ts): 'cleanable' objects get dirty with use and offer
+// Clean; 'plumbing', 'appliance' and 'electronics' objects wear out, break (quality 1..5 sets how fast) and offer
+// Repair, Service and Call a Repairperson; 'sink' / 'dishes' objects are dish-washing stations. New furniture only needs the
+// right tags (no interaction list changes) to take part in cleaning and repairs.
 
 import type { FinishRegion, ObjectDef, ObjectSlot, ObjectStats, Swatch } from './types';
 import { dollars } from '../core/money';
@@ -244,7 +249,7 @@ const BEDS: ObjectDef[] = [
   obj(bedDouble, {
     id: 'bed-double-oak', name: 'Hearthwood Double Bed', category: 'beds', subcategory: 'double', rooms: ['bedroom'], style: 'classic',
     description: 'A sturdy oak double bed with a low headboard and a quilted coverlet. Sleeps two, one on each side.',
-    tags: ['bed', 'double', 'sleep'], tier: 'standard', price: dollars(950), quality: 3, functional: true,
+    tags: ['bed', 'double', 'sleep', 'cleanable'], tier: 'standard', price: dollars(950), quality: 3, functional: true,
     footprint: FP22, layer: 'floor', blocksMovement: true,
     slots: [
       sleep('left', bedDouble.at(0.27, 0.56), 0.25 * 1.75, [-1, 1]),
@@ -256,7 +261,7 @@ const BEDS: ObjectDef[] = [
   obj(bedSingle, {
     id: 'bed-single-pine', name: 'Pinecrest Single Bed', category: 'beds', subcategory: 'single', rooms: ['bedroom', 'kids'], style: 'cottage',
     description: 'A simple pine single bed. Cheap and cheerful, but its thin mattress restores energy a little more slowly.',
-    tags: ['bed', 'single', 'sleep'], packs: ['everyday-essentials', 'cozy-cottage'], tier: 'budget', price: dollars(320), quality: 2,
+    tags: ['bed', 'single', 'sleep', 'cleanable'], packs: ['everyday-essentials', 'cozy-cottage'], tier: 'budget', price: dollars(320), quality: 2,
     functional: true, footprint: FP12, layer: 'floor', blocksMovement: true,
     slots: [sleep('sleep', bedSingle.at(0.5, 0.56), 0.25 * 1.75, [1, 1])],
     interactions: ['sleep', 'nap'], stats: { energy: 0.85, comfort: 4, environment: 1 },
@@ -265,7 +270,7 @@ const BEDS: ObjectDef[] = [
   obj(bedBunk, {
     id: 'bed-bunk-pine', name: 'Two-Story Bunk Bed', category: 'beds', subcategory: 'bunk', rooms: ['bedroom', 'kids'], style: 'cottage',
     description: 'Two pine single beds stacked on one footprint - a space saver for shared rooms. Both bunks are entered from the right.',
-    tags: ['bed', 'bunk', 'sleep'], packs: ['everyday-essentials', 'kids-storybook'], tier: 'budget', price: dollars(540), quality: 2,
+    tags: ['bed', 'bunk', 'sleep', 'cleanable'], packs: ['everyday-essentials', 'kids-storybook'], tier: 'budget', price: dollars(540), quality: 2,
     functional: true, footprint: FP12, layer: 'floor', blocksMovement: true,
     slots: [
       sleep('lower', bedBunk.at(0.5, 0.55), 0.23 * 1.75, [1, 1]),
@@ -309,42 +314,42 @@ const KITCHEN: ObjectDef[] = [
   obj(fridge, {
     id: 'fridge-standard', name: 'Everyday Fridge', category: 'kitchen', subcategory: 'fridge', rooms: ['kitchen'], style: 'modern',
     description: 'A reliable fridge-freezer. Grab a quick snack or gather ingredients to cook a meal.',
-    tags: ['fridge', 'appliance', 'food'], tier: 'standard', price: dollars(780), quality: 3, functional: true,
+    tags: ['fridge', 'appliance', 'food', 'cleanable'], tier: 'standard', price: dollars(780), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, fridge, 1)],
     interactions: ['grabSnack', 'cookMeal'], stats: { cooking: 0 }, finishes: [applianceR()],
   }),
   obj(fridgeLarge, {
     id: 'fridge-side-by-side', name: 'Side-by-Side Fridge', category: 'kitchen', subcategory: 'fridge', rooms: ['kitchen'], style: 'modern',
     description: 'A roomy two-door fridge that keeps produce crisp. Meals cooked from it turn out a little better.',
-    tags: ['fridge', 'appliance', 'food'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'premium', price: dollars(1850), quality: 4,
+    tags: ['fridge', 'appliance', 'food', 'cleanable'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'premium', price: dollars(1850), quality: 4,
     functional: true, footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, fridgeLarge, 1)],
     interactions: ['grabSnack', 'cookMeal'], stats: { cooking: 1, environment: 1 }, finishes: [applianceR()],
   }),
   obj(stove, {
     id: 'stove-basic', name: 'Basic Gas Range', category: 'kitchen', subcategory: 'stove', rooms: ['kitchen'], style: 'classic',
     description: 'Four burners and an oven. Cooks use it when they make a meal from the fridge.',
-    tags: ['stove', 'appliance', 'cooking'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
+    tags: ['stove', 'appliance', 'cooking', 'cleanable'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, stove, 1)],
     interactions: [], stats: { cooking: 0 }, finishes: [woodR(['wood'])],
   }),
   obj(counter, {
     id: 'counter-basic', name: 'Base Cabinet Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen'], style: 'classic',
     description: 'A base cabinet with a worktop. Cooked meals are served on free counters.',
-    tags: ['counter', 'surface', 'storage'], tier: 'budget', price: dollars(260), quality: 2, functional: true,
+    tags: ['counter', 'surface', 'storage', 'cleanable'], tier: 'budget', price: dollars(260), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(WORKTOP),
     finishes: [woodR(['wood', 'woodDark']), counterR()],
   }),
   obj(counterDrawers, {
     id: 'counter-drawers', name: 'Drawer Unit Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen'], style: 'classic',
     description: 'A counter module with three deep drawers for pans and cutlery. Same worktop height as the other modules.',
-    tags: ['counter', 'surface', 'storage'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
+    tags: ['counter', 'surface', 'storage', 'cleanable'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(WORKTOP),
     finishes: [woodR(['wood', 'woodDark']), counterR()],
   }),
   obj(sink, {
     id: 'counter-sink', name: 'Kitchen Sink Counter', category: 'kitchen', subcategory: 'sink', rooms: ['kitchen'], style: 'classic',
     description: 'A counter module with a steel basin and a swan-neck tap. Wash your hands before cooking.',
-    tags: ['sink', 'counter', 'surface'], tier: 'standard', price: dollars(480), quality: 3, functional: true,
+    tags: ['sink', 'counter', 'surface', 'plumbing', 'cleanable'], tier: 'standard', price: dollars(480), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(WORKTOP), slots: [useFront('use', 0.5, sink, 1)],
     interactions: ['washHands'], stats: { hygiene: 1 }, finishes: [woodR(['wood', 'woodDark'])],
   }),
@@ -367,13 +372,13 @@ const SEATING_AND_TABLES: ObjectDef[] = [
   obj(diningTable, {
     id: 'table-dining-oak', name: 'Oak Dining Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'classic',
     description: 'A four-seat oak table. Meals can be served here, and diners sit at chairs pushed up to it.',
-    tags: ['table', 'dining', 'surface'], tier: 'standard', price: dollars(420), quality: 3, functional: true,
+    tags: ['table', 'dining', 'surface', 'cleanable'], tier: 'standard', price: dollars(420), quality: 3, functional: true,
     footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.66, stats: { environment: 1 }, finishes: [woodR()],
   }),
   obj(roundTable, {
     id: 'table-dining-round', name: 'Hexagon Pedestal Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'mid-century',
     description: 'A six-sided pedestal table with room for chairs on every side. Meals can be served here.',
-    tags: ['table', 'dining', 'surface'], packs: ['everyday-essentials', 'mid-century'], tier: 'premium', price: dollars(780), quality: 4,
+    tags: ['table', 'dining', 'surface', 'cleanable'], packs: ['everyday-essentials', 'mid-century'], tier: 'premium', price: dollars(780), quality: 4,
     functional: true, footprint: FP22, layer: 'floor', blocksMovement: true, surfaceHeight: r3(roundTable.box.y1),
     stats: { environment: 2 }, finishes: [woodR()],
   }),
@@ -509,14 +514,14 @@ const BATHROOM: ObjectDef[] = [
   obj(toilet, {
     id: 'toilet-basic', name: 'Basic Toilet', category: 'bathroom', subcategory: 'toilet', rooms: ['bathroom'], style: 'classic',
     description: 'A standard close-coupled toilet.',
-    tags: ['toilet', 'fixture'], tier: 'budget', price: dollars(260), quality: 2, functional: true,
+    tags: ['toilet', 'fixture', 'plumbing', 'cleanable'], tier: 'budget', price: dollars(260), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', toilet.at(0.5, 0.62), 0.248 * 2, [0, 1])],
     interactions: ['useToilet'], stats: { comfort: 2 }, finishes: [],
   }),
   obj(shower, {
     id: 'shower-stall', name: 'Glass Shower Stall', category: 'bathroom', subcategory: 'shower', rooms: ['bathroom'], style: 'modern',
     description: 'A compact corner shower with a glass door. Showers until fully clean (at most 30 minutes).',
-    tags: ['shower', 'fixture'], tier: 'standard', price: dollars(750), quality: 3, functional: true,
+    tags: ['shower', 'fixture', 'plumbing', 'cleanable'], tier: 'standard', price: dollars(750), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true,
     slots: [{ id: 'inside', kind: 'use', pos: shower.at(0.5, 0.5), height: r3(0.079 * 1.7), facing: Math.PI, approach: [0, 1], posture: 'standing' }],
     interactions: ['takeShower'], stats: { hygiene: 1 }, finishes: [],
@@ -524,7 +529,7 @@ const BATHROOM: ObjectDef[] = [
   obj(bathtub, {
     id: 'bathtub', name: 'Deep Soaking Tub', category: 'bathroom', subcategory: 'bath', rooms: ['bathroom'], style: 'classic',
     description: 'A long enamel bathtub. A relaxing soak cleans more slowly than a shower but lifts the mood.',
-    tags: ['bath', 'fixture'], tier: 'premium', price: dollars(1400), quality: 4, functional: true,
+    tags: ['bath', 'fixture', 'plumbing', 'cleanable'], tier: 'premium', price: dollars(1400), quality: 4, functional: true,
     footprint: FP21, layer: 'floor', blocksMovement: true,
     slots: [{ id: 'soak', kind: 'use', pos: bathtub.at(0.5, 0.5), height: r3(0.09 * 1.65), facing: Math.PI / 2, approach: [0, 1], posture: 'seated' }],
     interactions: ['takeBath'], stats: { hygiene: 1.1, comfort: 6, environment: 2 }, finishes: [],
@@ -532,7 +537,7 @@ const BATHROOM: ObjectDef[] = [
   obj(bathSink, {
     id: 'bathroom-sink', name: 'Pedestal Basin', category: 'bathroom', subcategory: 'sink', rooms: ['bathroom'], style: 'classic',
     description: 'A white pedestal washbasin. Pairs with a mirror above it.',
-    tags: ['sink', 'fixture'], tier: 'budget', price: dollars(180), quality: 2, functional: true,
+    tags: ['sink', 'fixture', 'plumbing', 'cleanable'], tier: 'budget', price: dollars(180), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, bathSink, 1)],
     interactions: ['washHands'], stats: { hygiene: 1 }, finishes: [],
   }),
@@ -554,7 +559,7 @@ const STUDY: ObjectDef[] = [
     description: 'A tall open-backed bookcase. Take a book and read it in a nearby seat to train logic.',
     tags: ['bookcase', 'books', 'storage'], tier: 'budget', price: dollars(230), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, bookcase, 1)],
-    interactions: ['readBook'], stats: { skill: 1, fun: 1 }, finishes: [woodR()],
+    interactions: ['readBook', 'readSkillBook'], stats: { skill: 1, fun: 1 }, finishes: [woodR()],
   }),
   obj(bookcaseWide, {
     id: 'bookcase-wide', name: 'Wide Library Bookcase', category: 'storage', subcategory: 'bookcase', rooms: ['study', 'living'], style: 'classic',
@@ -562,7 +567,7 @@ const STUDY: ObjectDef[] = [
     tags: ['bookcase', 'books', 'storage'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'premium', price: dollars(640), quality: 4,
     functional: true, footprint: FP21, layer: 'floor', blocksMovement: true,
     slots: [useFront('left', 0.5, bookcaseWide, 1), useFront('right', 1.5, bookcaseWide, 1)],
-    interactions: ['readBook'], stats: { skill: 1.2, fun: 1.15, environment: 1 }, finishes: [woodR()],
+    interactions: ['readBook', 'readSkillBook'], stats: { skill: 1.2, fun: 1.15, environment: 1 }, finishes: [woodR()],
   }),
 ];
 
@@ -726,13 +731,13 @@ const TABLES_STORAGE_2: ObjectDef[] = [
   obj(glassDining, {
     id: 'table-dining-glass', name: 'Glass-Top Dining Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'modern',
     description: 'A four-seat table with a clear glass top on a slim steel frame. Meals can be served here.',
-    tags: ['table', 'dining', 'surface'], packs: ['modern-minimal'], tier: 'premium', price: dollars(760), quality: 4, functional: true,
+    tags: ['table', 'dining', 'surface', 'cleanable'], packs: ['modern-minimal'], tier: 'premium', price: dollars(760), quality: 4, functional: true,
     footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.66, stats: { environment: 2 }, finishes: [metalR()],
   }),
   obj(trestle, {
     id: 'table-trestle', name: 'Trestle Farm Table', category: 'tables', subcategory: 'dining', rooms: ['dining', 'kitchen'], style: 'cottage',
     description: 'A sturdy scrubbed-wood table on crossed trestle legs. Seats four and has seen a lot of dinners.',
-    tags: ['table', 'dining', 'surface'], packs: ['cozy-cottage'], tier: 'standard', price: dollars(540), quality: 3, functional: true,
+    tags: ['table', 'dining', 'surface', 'cleanable'], packs: ['cozy-cottage'], tier: 'standard', price: dollars(540), quality: 3, functional: true,
     footprint: FP21, layer: 'floor', blocksMovement: true, surfaceHeight: 0.7, stats: { environment: 1 }, finishes: [woodR()],
   }),
   obj(cornerDesk, {
@@ -752,14 +757,14 @@ const TABLES_STORAGE_2: ObjectDef[] = [
     description: 'A waist-high open shelf for paperbacks and plants. Its top is a surface for lamps and small things.',
     tags: ['bookcase', 'books', 'storage', 'surface'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'budget', price: dollars(150), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(lowBookcase.box.y1), slots: [useFront('use', 0.5, lowBookcase, 1)],
-    interactions: ['readBook'], stats: { skill: 0.9, fun: 0.9 }, finishes: [woodR()],
+    interactions: ['readBook', 'readSkillBook'], stats: { skill: 0.9, fun: 0.9 }, finishes: [woodR()],
   }),
   obj(tallBookcase, {
     id: 'bookcase-tall', name: 'Tall Shelving Unit', category: 'storage', subcategory: 'bookcase', rooms: ['study', 'living', 'bedroom'], style: 'classic',
     description: 'A floor-to-top shelving unit with five levels. Holds a small library and rewards long reading sessions.',
     tags: ['bookcase', 'books', 'storage'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, tallBookcase, 1)],
-    interactions: ['readBook'], stats: { skill: 1.1, fun: 1.05, environment: 1 }, finishes: [woodR()],
+    interactions: ['readBook', 'readSkillBook'], stats: { skill: 1.1, fun: 1.05, environment: 1 }, finishes: [woodR()],
   }),
   obj(mediaDoors, {
     id: 'media-cabinet-doors', name: 'Media Cabinet with Doors', category: 'storage', subcategory: 'media', rooms: ['living', 'bedroom'], style: 'classic',
@@ -786,20 +791,20 @@ const KITCHEN_2: ObjectDef[] = [
   obj(barCounter, {
     id: 'counter-bar', name: 'Breakfast Bar Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen', 'dining'], style: 'classic',
     description: 'A shallow counter module for a breakfast bar: a worktop at the same height as the other modules, with room for stools on the open side.',
-    tags: ['counter', 'surface', 'bar'], packs: ['everyday-essentials', 'mid-century'], tier: 'budget', price: dollars(190), quality: 2, functional: true,
+    tags: ['counter', 'surface', 'bar', 'cleanable'], packs: ['everyday-essentials', 'mid-century'], tier: 'budget', price: dollars(190), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: r3(WORKTOP), finishes: [woodR(['wood', 'woodDark']), counterR()],
   }),
   obj(stoveElectric, {
     id: 'stove-electric', name: 'Electric Hob Range', category: 'kitchen', subcategory: 'stove', rooms: ['kitchen'], style: 'modern',
     description: 'Four ceramic hotplates over a fan oven. Cooks use it when they make a meal from the fridge, and a good range lifts the result a little.',
-    tags: ['stove', 'appliance', 'cooking'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(780), quality: 4, functional: true,
+    tags: ['stove', 'appliance', 'cooking', 'cleanable'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(780), quality: 4, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, stoveElectric, 1)],
     interactions: [], stats: { cooking: 1 }, finishes: [woodR(['wood'])],
   }),
   obj(fridgeCompact, {
     id: 'fridge-compact', name: 'Compact Fridge', category: 'kitchen', subcategory: 'fridge', rooms: ['kitchen', 'bedroom', 'study'], style: 'modern',
     description: 'A counter-height fridge for small kitchens and studies. Grab a snack or gather ingredients to cook a meal.',
-    tags: ['fridge', 'appliance', 'food'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
+    tags: ['fridge', 'appliance', 'food', 'cleanable'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, fridgeCompact, 1)],
     interactions: ['grabSnack', 'cookMeal'], stats: { cooking: 0 }, finishes: [applianceR()],
   }),
@@ -831,21 +836,21 @@ const BATHROOM_2: ObjectDef[] = [
   obj(toiletSquare, {
     id: 'toilet-square', name: 'Square-Line Toilet', category: 'bathroom', subcategory: 'toilet', rooms: ['bathroom'], style: 'modern',
     description: 'A squared-off close-coupled toilet with a slim cistern. A little more comfortable than the basic one.',
-    tags: ['toilet', 'fixture'], packs: ['modern-minimal'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
+    tags: ['toilet', 'fixture', 'plumbing', 'cleanable'], packs: ['modern-minimal'], tier: 'standard', price: dollars(340), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', toiletSquare.at(0.5, 0.45), 0.248 * 2, [0, 1])],
     interactions: ['useToilet'], stats: { comfort: 3 }, finishes: [],
   }),
   obj(vanity, {
     id: 'vanity-basin', name: 'Vanity Unit with Basin', category: 'bathroom', subcategory: 'sink', rooms: ['bathroom'], style: 'modern',
     description: 'A washbasin set into a vanity cabinet with two drawers for towels and toiletries. Pairs with a mirror above it.',
-    tags: ['sink', 'fixture', 'storage'], packs: ['modern-minimal', 'everyday-essentials'], tier: 'standard', price: dollars(420), quality: 3, functional: true,
+    tags: ['sink', 'fixture', 'storage', 'plumbing', 'cleanable'], packs: ['modern-minimal', 'everyday-essentials'], tier: 'standard', price: dollars(420), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, vanity, 1)],
     interactions: ['washHands'], stats: { hygiene: 1, environment: 1 }, finishes: [woodR()],
   }),
   obj(showerRound, {
     id: 'shower-round', name: 'Quadrant Shower', category: 'bathroom', subcategory: 'shower', rooms: ['bathroom'], style: 'modern',
     description: 'A curved corner shower enclosure with a glass screen and a deep tray. Showers until fully clean (at most 30 minutes).',
-    tags: ['shower', 'fixture'], packs: ['modern-minimal'], tier: 'premium', price: dollars(980), quality: 4, functional: true,
+    tags: ['shower', 'fixture', 'plumbing', 'cleanable'], packs: ['modern-minimal'], tier: 'premium', price: dollars(980), quality: 4, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true,
     slots: [{ id: 'inside', kind: 'use', pos: showerRound.at(0.45, 0.55), height: r3(0.079 * 1.7), facing: Math.PI, approach: [0, 1], posture: 'standing' }],
     interactions: ['takeShower'], stats: { hygiene: 1.1, environment: 1 }, finishes: [],

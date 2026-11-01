@@ -25,6 +25,25 @@ const ACTIVITY: MoodletDef[] = [
   m('confidentSpeaker', 'Confident Speaker', 6, 180, 'face', 'Practised a speech until it flowed.'),
   m('freshOutfit', 'Fresh Outfit', 3, 120, 'shirt', 'Feeling good in the right clothes.'),
   m('caughtUp', 'Caught Up', 6, 180, 'phone', 'A good phone call with someone who matters.'),
+  m('sparkling', 'Sparkling Clean', 5, 180, 'sparkle', 'Scrubbed something until it shone.'),
+  m('fixedIt', 'Fixed It!', 8, 240, 'build', 'Got a broken thing working again.'),
+];
+
+/** Moodlets from the state of the home, refreshed by the simulation while the condition holds and dropped once it does not. */
+const HOME: MoodletDef[] = [
+  m('freshHome', 'Fresh and Clean Home', 8, 45, 'home', 'Everything is spotless: no grime, dishes, messes or broken things.'),
+  m('dirtyKitchen', 'Dirty Kitchen', -8, 45, 'warning', 'Dirty dishes or a grimy stove, counter or sink.'),
+  m('dirtyBathroom', 'Dirty Bathroom', -8, 45, 'warning', 'The toilet, shower or basin is filthy.'),
+  m('messyFloors', 'Messy Floors', -5, 45, 'warning', 'Puddles and spills on the floor.'),
+  m('brokenThings', 'Things Need Fixing', -5, 45, 'warning', 'Something in the home is broken.'),
+];
+
+/** Moodlets from mishaps. */
+const MISHAP: MoodletDef[] = [
+  m('accident', 'Accident', -12, 240, 'warning', 'Did not make it to the toilet in time.'),
+  m('shocked', 'Shocked', -8, 120, 'warning', 'Got a nasty jolt while repairing something.'),
+  m('soaked', 'Soaked', -4, 90, 'warning', 'A leaking pipe sprayed everything.'),
+  m('singed', 'Singed', -8, 180, 'warning', 'A grease flare-up on the stove.'),
 ];
 
 /** Moodlets granted by social interactions. */
@@ -73,4 +92,4 @@ const NEEDS: MoodletDef[] = [
 ];
 
 /** Every moodlet definition. */
-export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...SOCIAL, ...PROGRESS, ...NEEDS];
+export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS];

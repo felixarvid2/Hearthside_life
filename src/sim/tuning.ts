@@ -104,3 +104,101 @@ export const DROP_IN_LATEST = 18 * 60;
 export const TV_SEAT_RADIUS = 5;
 export const READ_SEAT_RADIUS = 8;
 export const MEAL_SEAT_RADIUS = 12;
+
+// ---------------------------------------------------------------------------------------------
+// Housekeeping: dirt, wear and breakage, dishes, messes, repairs (sim/housekeeping.ts, sim/housework.ts)
+// ---------------------------------------------------------------------------------------------
+
+/** Dirt (0..1) an object gains each time it is used, by the first matching tag. */
+export const DIRT_PER_USE: ReadonlyArray<readonly [tag: string, dirt: number]> = [
+  ['toilet', 0.04], ['shower', 0.05], ['bath', 0.05], ['stove', 0.07], ['sink', 0.02], ['bed', 0.02], ['fridge', 0.015],
+  ['counter', 0.03], ['table', 0.04],
+];
+/** Dirt above which an object looks dirty (render, menu hint) and counts as dirty for moods. */
+export const DIRT_VISIBLE = 0.35;
+export const DIRT_FILTHY = 0.6;
+/** A person in a state of low hygiene leaves this much extra dirt behind (x(1 + (1 - hygiene / 100) * this)). */
+export const DIRT_UNWASHED_EXTRA = 0.5;
+/** Hygiene lost on top of the interaction's own effect when finishing on a dirty toilet (x dirt). */
+export const DIRTY_TOILET_HYGIENE = 6;
+/** Hygiene gain of showers, baths and sinks is cut by this fraction at full dirt. */
+export const DIRTY_WASH_PENALTY = 0.35;
+/** Meal quality lost at full stove dirt. */
+export const DIRTY_STOVE_QUALITY = 0.25;
+/** Extra mishap chance at full stove dirt. */
+export const DIRTY_STOVE_MISHAP = 0.2;
+
+/** Break chance per use of a breakable object (before quality, wear and age), and the wear gained per use. */
+export const BREAK_CHANCE = 0.006;
+export const WEAR_PER_USE = 0.01;
+/** Quality 1..5 multiplier on break chance and wear (cheap objects break more). */
+export const QUALITY_BREAK_MULT: Readonly<Record<number, number>> = { 1: 2, 2: 1.5, 3: 1, 4: 0.6, 5: 0.35 };
+/** Break chance is x(1 + wear x this) and x(1 + age fraction x this) with age saturating at AGE_FULL_DAYS. */
+export const WEAR_BREAK_FACTOR = 2.5;
+export const AGE_BREAK_FACTOR = 0.5;
+export const AGE_FULL_DAYS = 30;
+/** Servicing removes this much wear; objects with wear above SERVICE_WEAR are worth servicing. */
+export const SERVICE_WEAR_REMOVED = 0.5;
+export const SERVICE_MIN_WEAR = 0.12;
+export const SERVICE_AUTONOMY_WEAR = 0.35;
+/** Each earlier failed repair adds this to the success chance, so repairs always succeed within a few attempts. */
+export const REPAIR_PITY = 0.12;
+export const REPAIR_MIN_CHANCE = 0.15;
+export const REPAIR_MAX_CHANCE = 0.98;
+/** Electrical shock: energy lost and hygiene lost by a splash from a failed plumbing repair. */
+export const SHOCK_ENERGY = 12;
+export const SPLASH_HYGIENE = 8;
+
+/** The repairperson's fee ($85) and the minutes (min, max) until they have fixed the object. */
+export const REPAIRPERSON_FEE = 8500;
+export const REPAIRPERSON_DELAY_MIN = 90;
+export const REPAIRPERSON_DELAY_MAX = 150;
+/** Autonomy only phones a repairperson when the household has at least this much money left afterwards. */
+export const REPAIRPERSON_BUFFER = 15000;
+
+/** Cleaning minutes: base + per unit of dirt (30 at full dirt) before the Handiness multiplier. */
+export const CLEAN_BASE_MINUTES = 6;
+export const CLEAN_DIRT_MINUTES = 24;
+/** Minutes to wash one plate by hand (a dishwasher halves it) and to mop a mess. */
+export const WASH_MINUTES_PER_PLATE = 2;
+export const WASH_BASE_MINUTES = 2;
+export const DISHWASHER_MULT = 0.5;
+export const MOP_MINUTES = 6;
+/** Tidy-up: radius (tiles), dirt removed, minutes. */
+export const TIDY_RADIUS = 5;
+export const TIDY_DIRT_REMOVED = 0.2;
+
+/** Cleaning chores in autonomy: dirt level where each starts to matter, and the drive at that level. */
+export const CHORE_DIRT_START = 0.3;
+export const CHORE_DRIVE = 1.1;
+/** Dirty dishes: autonomy pressure per plate and per game hour they have waited. */
+export const DISH_PRESSURE_PER_PLATE = 0.12;
+export const DISH_PRESSURE_PER_HOUR = 0.08;
+/** Chores wait when any of hunger, energy, bladder or hygiene is below this. */
+export const CHORE_NEEDS_FLOOR = 35;
+/** ... and when fun is below this (people with nothing left to enjoy do not scrub the oven). */
+export const CHORE_FUN_FLOOR = 28;
+/** Hours (hour of day) when chores are unattractive (everyone is winding down or asleep). */
+export const CHORE_QUIET_FROM = 21;
+export const CHORE_QUIET_TO = 7;
+
+/** Plates one dishes item holds, mess items per lot. */
+export const DISH_STACK_MAX = 8;
+export const MESS_LIMIT_PER_LOT = 10;
+/** Chance (per shower) of leaving a puddle: normal and for messy people. */
+export const SHOWER_PUDDLE_CHANCE = 0.06;
+export const SHOWER_PUDDLE_MESSY = 0.3;
+
+/** Bladder at or below this is an accident (not for people lying down); afterwards bladder is set to ACCIDENT_BLADDER. */
+export const ACCIDENT_BELOW = 1;
+export const ACCIDENT_BLADDER = 45;
+export const ACCIDENT_HYGIENE = 15;
+
+/** Home moods are refreshed this often (game minutes) and last HOME_MOODLET_MINUTES unless refreshed. */
+export const HOME_MOOD_INTERVAL = 20;
+export const HOME_MOODLET_MINUTES = 45;
+/** Home moods need this many dirty cleanable things / dirty plates. */
+export const DIRTY_KITCHEN_SCORE = 2;
+/** Minimum cleanable objects before a home can be called "fresh and clean". */
+export const FRESH_HOME_MIN_OBJECTS = 3;
+export const FRESH_HOME_MAX_DIRT = 0.25;

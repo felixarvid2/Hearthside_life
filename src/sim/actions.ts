@@ -15,13 +15,14 @@ import type { SimCtx } from './context';
 import { interactionDef, lotLoc, objectName, objectRef, setAnim, socialDef } from './context';
 import { recordInteraction } from './aspirations';
 import { behaviorFor } from './behaviors';
+import { CHORE_BEHAVIORS, dirtOf, useObject } from './housekeeping';
 import { addMoodlet } from './mood';
 import { routeTick, unstick } from './movement';
 import { changeNeed } from './needs';
 import { addSkillXp } from './skills';
 import type { Behavior, EndResult, Step } from './steps';
 import { enjoyMult, syncReservations } from './steps';
-import { AUTONOMY_REPEAT_COOLDOWN, POSTURE_CHANGE_MINUTES } from './tuning';
+import { AUTONOMY_REPEAT_COOLDOWN, DIRTY_TOILET_HYGIENE, DIRTY_WASH_PENALTY, POSTURE_CHANGE_MINUTES } from './tuning';
 
 const EPS = 1e-9;
 
@@ -221,15 +222,23 @@ function grantXp(ctx: SimCtx, p: Person, a: ActionInstance): void {
 function applyEffects(ctx: SimCtx, p: Person, a: ActionInstance, beh: Behavior): void {
   if (a.data.role === 'listen') { beh.apply?.(ctx, p, a); return; }
   const def = interactionDef(ctx, a.interactionId);
+  const loc = lotLoc(p);
+  const target = loc && a.target.kind === 'object' ? objectRef(ctx, loc.lotId, a.target.objectId) : null;
   if (def) {
     const enjoy = enjoyMult(ctx, p, def);
     for (const [need, v] of Object.entries(def.needsOnComplete) as Array<[keyof Person['needs'], number]>) {
-      if (v) changeNeed(ctx, p, need, v > 0 ? v * enjoy : v);
+      if (!v) continue;
+      let gain = v > 0 ? v * enjoy : v;
+      // A dirty basin washes less well; finishing on a dirty toilet leaves you grubbier.
+      if (need === 'hygiene' && target) gain = v > 0 ? gain * (1 - DIRTY_WASH_PENALTY * dirtOf(target.obj)) : gain - (target.def.tags.includes('toilet') ? DIRTY_TOILET_HYGIENE * dirtOf(target.obj) : 0);
+      changeNeed(ctx, p, need, gain);
     }
     if (def.moodletOnComplete) addMoodlet(ctx.content, p, def.moodletOnComplete, ctx.now, def.id);
   }
   grantXp(ctx, p, a);
   beh.apply?.(ctx, p, a);
+  // Using an object dirties and wears it (chores handle their own targets).
+  if (target && loc && def && !CHORE_BEHAVIORS.has(def.behavior ?? 'generic')) useObject(ctx, p, loc.lotId, target);
   const social = def ? undefined : socialDef(ctx, a.interactionId);
   // Socials count toward aspirations only when accepted (resolveSocial stores the outcome).
   if (social && a.data.accepted !== true) return;

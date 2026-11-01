@@ -3,28 +3,37 @@
 // (occurrence `cook:<actionId>`); cancelling before that charges nothing. Leftover portions are eaten by
 // other household members through autonomy; meals spoil after a game day.
 
+import { cookingMishap, cookingQuality, cookingSpill, cookingTime, gardeningGroceries } from '../content/skillEffects';
 import type { RecipeDef } from '../content/types';
 import { footprintTiles, facingDir } from '../core/geometry';
 import { newId } from '../core/ids';
-import { transact } from '../core/state';
+import { addFeed, transact } from '../core/state';
 import type { ActionInstance, Id, Person, WorldItem } from '../core/types';
 import type { ObjRef, SimCtx } from './context';
 import {
   clamp, insideFootprint, isStove, isTable, lotLoc, lotObjects, objectCenter, objectRef, tileOfLoc, dist,
 } from './context';
 import { defOf, interactionCheckNoCost, reservePrimary, seatCandidates, targetObject } from './behaviors';
+import { addDirtyDishes, breakObject, dirtOf, housekeepingOn, isBroken, spawnMess, useObject } from './housekeeping';
+import { addMoodlet } from './mood';
+import { changeNeed } from './needs';
 import { insertAction, makeAction } from './queue';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
   clearUsePoint, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate,
   standCandidates, syncReservations, usePointGoal, usePointObject,
 } from './steps';
-import { MEAL_SEAT_RADIUS, MEAL_SPOIL_MINUTES } from './tuning';
+import { DIRTY_STOVE_MISHAP, DIRTY_STOVE_QUALITY, DIRT_FILTHY, MEAL_SEAT_RADIUS, MEAL_SPOIL_MINUTES } from './tuning';
 
 const stageOf = (a: ActionInstance) => (typeof a.data.stage === 'number' ? a.data.stage : 0);
 
 /** Cooking skill id used for recipes and meal quality. */
 export const COOKING_SKILL = 'cooking';
+
+/** Grocery cost of a recipe for this person (gardeners save on groceries). */
+export function recipeCost(p: Person, recipe: RecipeDef): number {
+  return Math.round(recipe.cost * (1 - gardeningGroceries(p.skills.gardening?.level ?? 1)));
+}
 
 /** Recipes the person can cook, best first (higher level requirement, then cheaper). */
 function cookableRecipes(ctx: SimCtx, p: Person): RecipeDef[] {
@@ -43,12 +52,13 @@ export function chooseRecipe(ctx: SimCtx, p: Person, a: ActionInstance): RecipeD
   if (list.length === 0) return 'No recipes known.';
   const funds = ctx.state.households[p.householdId]?.funds ?? 0;
   // Nothing affordable: report the cheapest recipe so the reason names the smallest amount needed.
-  return list.find((r) => r.cost <= funds) ?? [...list].sort((x, y) => x.cost - y.cost || (x.id < y.id ? -1 : 1))[0]!;
+  return list.find((r) => recipeCost(p, r) <= funds) ?? [...list].sort((x, y) => recipeCost(p, x) - recipeCost(p, y) || (x.id < y.id ? -1 : 1))[0]!;
 }
 
-function stovesOn(ctx: SimCtx, p: Person): ObjRef[] {
+/** Stoves on the person's level; broken ones only when `broken` is set. */
+export function stovesOn(ctx: SimCtx, p: Person, broken = false): ObjRef[] {
   const loc = lotLoc(p);
-  return loc ? lotObjects(ctx, loc.lotId, loc.level).filter((r) => isStove(r.def)) : [];
+  return loc ? lotObjects(ctx, loc.lotId, loc.level).filter((r) => isStove(r.def) && (broken || !isBroken(r.obj))) : [];
 }
 
 /** Footprint tiles of a surface object not covered by surface objects or items. */
@@ -70,8 +80,39 @@ export function freeSurfaceTiles(ctx: SimCtx, lotId: Id, ref: ObjRef): Array<{ x
 
 function mealQuality(p: Person, stove: ObjRef | null): number {
   const level = p.skills[COOKING_SKILL]?.level ?? 1;
-  const q = 0.35 + level * 0.06 + (stove?.def.stats.cooking ?? 0) * 0.05;
+  const q = (cookingQuality(level) + (stove?.def.stats.cooking ?? 0) * 0.05) * (1 - DIRTY_STOVE_QUALITY * (stove ? dirtOf(stove.obj) : 0));
   return Math.round(clamp(q, 0.1, 1) * 100) / 100;
+}
+
+/**
+ * What happened at the stove once the dish is done: the stove gets dirty and worn, a beginner (or a dirty stove)
+ * may burn the food, low levels spill on the floor, and a burn on a filthy stove can scorch it. Returns the
+ * quality of the dish. Only with housekeeping content.
+ */
+function stoveOutcome(ctx: SimCtx, p: Person, a: ActionInstance, stove: ObjRef | null, quality: number): number {
+  const loc = lotLoc(p);
+  if (!loc || !housekeepingOn(ctx)) return quality;
+  const level = p.skills[COOKING_SKILL]?.level ?? 1;
+  const dirt = stove ? dirtOf(stove.obj) : 0;
+  const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
+  const playable = ctx.state.households[p.householdId]?.isPlayable === true;
+  let q = quality;
+  const burnt = ctx.rng.chance(cookingMishap(level) + DIRTY_STOVE_MISHAP * dirt);
+  if (burnt) {
+    q = Math.round(q * 0.6 * 100) / 100;
+    if (playable) addFeed(ctx.state, ctx.events, 'info', `${p.firstName} burnt the ${(recipe?.name ?? 'meal').toLowerCase()} a little.`, p.id);
+  }
+  if (ctx.rng.chance(cookingSpill(level))) spawnMess(ctx, loc.lotId, loc.level, loc.x, loc.z, 'spill', 0.4);
+  if (stove) {
+    const broke = useObject(ctx, p, loc.lotId, stove);
+    if (burnt && !broke && !isBroken(stove.obj) && dirt >= DIRT_FILTHY && level <= 4 && ctx.rng.chance(0.3)) {
+      breakObject(ctx, loc.lotId, stove, p);
+      changeNeed(ctx, p, 'hygiene', -8);
+      addMoodlet(ctx.content, p, 'singed', ctx.now, 'cook');
+      if (playable) addFeed(ctx.state, ctx.events, 'warning', `A grease flare-up scorched the stove while ${p.firstName} cooked.`, p.id);
+    }
+  }
+  return q;
 }
 
 /** Creates the meal item on a surface (first free tile) or on the floor at the cook's tile. */
@@ -104,6 +145,7 @@ function serveMeal(ctx: SimCtx, p: Person, a: ActionInstance, surface: ObjRef | 
   ctx.state.items[item.id] = item;
   a.data.itemId = item.id;
   ctx.events.emit({ type: 'item.changed', itemId: item.id, lotId: item.lotId });
+  if (surface) useObject(ctx, p, loc.lotId, surface);
   return item;
 }
 
@@ -116,9 +158,9 @@ export const cookBehavior: Behavior = {
       const recipe = chooseRecipe(ctx, p, a);
       if (typeof recipe === 'string') return recipe;
       const funds = ctx.state.households[p.householdId]?.funds ?? 0;
-      if (funds < recipe.cost) return `Not enough money for groceries ($${(recipe.cost / 100).toFixed(2)}).`;
+      if (funds < recipeCost(p, recipe)) return `Not enough money for groceries ($${(recipeCost(p, recipe) / 100).toFixed(2)}).`;
     }
-    if (stageOf(a) <= 1 && stovesOn(ctx, p).length === 0) return 'Needs a stove.';
+    if (stageOf(a) <= 1 && stovesOn(ctx, p).length === 0) return stovesOn(ctx, p, true).length > 0 ? 'The stove is broken.' : 'Needs a stove.';
     return null;
   },
   reserve(ctx, p, a) {
@@ -147,10 +189,10 @@ export const cookBehavior: Behavior = {
       if (typeof goal === 'string') return goal;
       const stove = usePointObject(ctx, p, a, 'stove');
       const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
-      const minutes = recipe?.minutes ?? (def.duration.kind === 'fixed' ? def.duration.minutes : 30);
+      const minutes = (recipe?.minutes ?? (def.duration.kind === 'fixed' ? def.duration.minutes : 30)) * cookingTime(p.skills[COOKING_SKILL]?.level ?? 1);
       return {
         goal, posture: 'standing', performAnim: def.anims.perform === 'idle' ? 'cook' : def.anims.perform,
-        duration: { kind: 'fixed', minutes: Math.max(1, minutes) }, rates: performRates(ctx, p, def, stove, null, 'standing'),
+        duration: { kind: 'fixed', minutes: Math.max(1, Math.round(minutes)) }, rates: performRates(ctx, p, def, stove, null, 'standing'),
         skill: skillRate(def, stove) ?? { id: COOKING_SKILL, xpPerHour: 20 },
       };
     }
@@ -162,8 +204,9 @@ export const cookBehavior: Behavior = {
     if (stageOf(a) !== 1 || a.data.charged === true) return null;
     const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
     if (!recipe) return 'Unknown recipe.';
-    const r = transact(ctx.state, ctx.events, p.householdId, -recipe.cost, 'groceries', `Groceries: ${recipe.name}`, { occurrence: `cook:${a.id}` });
-    if (!r.ok) return `Not enough money for groceries ($${(recipe.cost / 100).toFixed(2)}).`;
+    const cost = recipeCost(p, recipe);
+    const r = transact(ctx.state, ctx.events, p.householdId, -cost, 'groceries', `Groceries: ${recipe.name}`, { occurrence: `cook:${a.id}` });
+    if (!r.ok) return `Not enough money for groceries ($${(cost / 100).toFixed(2)}).`;
     a.data.charged = true;
     return null;
   },
@@ -179,7 +222,7 @@ export const cookBehavior: Behavior = {
     }
     if (stage === 1) {
       const stove = usePointObject(ctx, p, a, 'stove');
-      a.data.quality = mealQuality(p, stove);
+      a.data.quality = stoveOutcome(ctx, p, a, stove, mealQuality(p, stove));
       const from = stove ? objectCenter(stove) : { x: loc.x, z: loc.z };
       clearUsePoint(a, 'stove');
       const cands: UseCandidate[] = [];
@@ -218,11 +261,16 @@ function itemOf(ctx: SimCtx, a: ActionInstance): WorldItem | undefined {
   return a.target.kind === 'item' ? ctx.state.items[a.target.itemId] : undefined;
 }
 
-/** True when the seat's front point lies on a table. */
-function seatAtTable(ctx: SimCtx, lotId: Id, level: number, slot: { x: number; z: number; facing: number }): boolean {
+/** The table the seat's front point lies on, if any. */
+function tableAtSeat(ctx: SimCtx, lotId: Id, level: number, slot: { x: number; z: number; facing: number }): ObjRef | null {
   const f = facingDir(slot.facing);
   const fx = slot.x + f.x * 0.75, fz = slot.z + f.z * 0.75;
-  return lotObjects(ctx, lotId, level).some((r) => isTable(r.def) && insideFootprint(r, fx, fz));
+  return lotObjects(ctx, lotId, level).find((r) => isTable(r.def) && insideFootprint(r, fx, fz)) ?? null;
+}
+
+/** True when the seat's front point lies on a table. */
+function seatAtTable(ctx: SimCtx, lotId: Id, level: number, slot: { x: number; z: number; facing: number }): boolean {
+  return tableAtSeat(ctx, lotId, level, slot) !== null;
 }
 
 /** Eat a meal portion: pick it up, then sit at a free chair at a table (or stand) and eat. */
@@ -298,6 +346,7 @@ export const eatMealBehavior: Behavior = {
     if (!item || item.portions <= 0) return 'The food is gone.';
     item.portions -= 1;
     a.data.itemTaken = true;
+    if (item.position.onObjectId) a.data.mealSurface = item.position.onObjectId;
     a.data.recipeId = item.recipeId;
     a.data.quality = item.quality;
     if (item.portions <= 0) delete ctx.state.items[item.id];
@@ -315,6 +364,19 @@ export const eatMealBehavior: Behavior = {
     const seats = seatCandidates(ctx, p, (s) => dist(s.x, s.z, loc.x, loc.z) <= MEAL_SEAT_RADIUS && seatAtTable(ctx, loc.lotId, loc.level, s));
     if (seats.length > 0) pickUsePoint(ctx, p, a, 'seat', seats, { plan: true, what: 'chair' });
     return true;
+  },
+  /** Eating leaves a dirty plate on the table (or where the meal stood) and crumbs on the table. */
+  apply(ctx, p, a) {
+    const loc = lotLoc(p);
+    if (!loc) return;
+    let table: ObjRef | null = null;
+    if (hasUsePoint(a, 'seat')) {
+      const g = usePointGoal(ctx, p, a, 'seat');
+      if (typeof g !== 'string' && g.kind === 'slot') table = tableAtSeat(ctx, loc.lotId, loc.level, g.slot);
+    }
+    if (!table && typeof a.data.mealSurface === 'string') table = objectRef(ctx, loc.lotId, a.data.mealSurface);
+    addDirtyDishes(ctx, loc.lotId, loc.level, table, loc.x, loc.z, 1, typeof a.data.recipeId === 'string' ? a.data.recipeId : 'meal', p.householdId);
+    if (table) useObject(ctx, p, loc.lotId, table);
   },
 };
 

@@ -8,6 +8,7 @@ import { facingTo } from '../core/geometry';
 import { addFeed, isProcessed, markProcessed } from '../core/state';
 import type { GameMinutes, Id, Person, ScheduledEvent, WorldState } from '../core/types';
 import { requestCancel } from './actions';
+import { runScheduledTask } from './housework';
 import type { SimCtx } from './context';
 import { lotLoc, setAnim } from './context';
 import { insertAction, makeAction } from './queue';
@@ -75,7 +76,8 @@ export function processSchedule(ctx: SimCtx): void {
     const p = e.personId ? ctx.state.people[e.personId] : undefined;
     if (e.kind === 'visitArrive' && p) arrive(ctx, p, e);
     else if (e.kind === 'visitLeave' && p) depart(ctx, p);
-    // Other kinds (bills, custom) are handled by later milestones; returns from work use career state.
+    else if (e.kind === 'custom') runScheduledTask(ctx, e);
+    // Other kinds (bills) are handled by later milestones; returns from work use career state.
   }
 }
 

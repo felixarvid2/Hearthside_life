@@ -8,10 +8,13 @@ import type { InteractionDef, SocialDef } from '../content/types';
 import { hourOfDay } from '../core/clock';
 import type { ActionInstance, NeedId, Person } from '../core/types';
 import { NEED_IDS } from '../core/types';
-import { behaviorFor, freeUsePointExists } from './behaviors';
-import { availableMeals } from './cooking';
+import { BOOK_MAX_LEVEL } from '../content/skillEffects';
+import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
+import { choreCandidates } from './chores';
+import { availableMeals, stovesOn } from './cooking';
+import { isBroken } from './housekeeping';
 import type { SimCtx } from './context';
-import { dist, hashString, isStove, isVisitor, lotLoc, lotObjects, objectCenter } from './context';
+import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter } from './context';
 import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
 import { familyTie, peekRel } from './relationships';
@@ -66,7 +69,7 @@ function needScore(ctx: SimCtx, p: Person, ads: Partial<Record<NeedId, number>>,
   return s;
 }
 
-function cooldownMult(ctx: SimCtx, p: Person, id: string, targetKey: string): number {
+export function cooldownMult(ctx: SimCtx, p: Person, id: string, targetKey: string): number {
   if ((p.cooldowns[`${id}@${targetKey}`] ?? -Infinity) > ctx.now) return 0;
   return (p.cooldowns[id] ?? -Infinity) > ctx.now ? 0.25 : 1;
 }
@@ -113,8 +116,9 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   const out: Candidate[] = [];
   const funds = ctx.state.households[p.householdId]?.funds ?? 0;
   const meals = visitor ? [] : availableMeals(ctx, loc.lotId, p.householdId);
-  const hasStove = lotObjects(ctx, loc.lotId, loc.level).some((r) => isStove(r.def));
+  const hasStove = stovesOn(ctx, p).length > 0;
   for (const ref of lotObjects(ctx, loc.lotId, loc.level)) {
+    if (isBroken(ref.obj)) continue;
     for (const iid of ref.def.interactions) {
       const def = ctx.content.interactions[iid];
       if (!def || !def.autonomy.enabled || def.status !== 'ready' || def.kind !== 'object') continue;
@@ -127,11 +131,18 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
         const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready').reduce((m, r) => Math.min(m, r.cost), Infinity);
         if (!(cheapest <= funds)) continue;
       }
+      // Skill books: study the skill the person knows least (up to the level books can teach).
+      let data: ActionRequest['data'] | undefined;
+      if (iid === 'readSkillBook') {
+        const skillId = bookToStudy(ctx, p);
+        if (!skillId) continue;
+        data = { skillId };
+      }
       if (!freeUsePointExists(ctx, p, def, ref.obj.id)) continue;
       const c = objectCenter(ref);
       const addresses: NeedId[] = [];
       const score = interactionScore(ctx, p, def, dist(loc.x, loc.z, c.x, c.z), ref.obj.id, addresses);
-      if (score > 0) out.push({ req: { interactionId: iid, target: { kind: 'object', objectId: ref.obj.id, slotId: null } }, score, key: `${iid}@${ref.obj.id}`, addresses });
+      if (score > 0) out.push({ req: { interactionId: iid, target: { kind: 'object', objectId: ref.obj.id, slotId: null }, ...(data ? { data } : {}) }, score, key: `${iid}@${ref.obj.id}`, addresses });
     }
   }
   const eat = ctx.content.interactions.eatMeal;
@@ -166,7 +177,19 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   const social = socialCandidate(ctx, p);
   if (social) out.push(social);
   if (!visitor) { const inv = inviteCandidate(ctx, p); if (inv) out.push(inv); }
+  if (!visitor) out.push(...choreCandidates(ctx, p, { biasFor, cooldownMult }));
   return out;
+}
+
+/** The skill a person studies from a skill book: the lowest of the book skills below the book cap (ties by id). */
+function bookToStudy(ctx: SimCtx, p: Person): string | null {
+  let best: string | null = null, bestLevel = BOOK_MAX_LEVEL;
+  for (const id of Object.keys(SKILL_BOOKS).sort((x, y) => hashString(p.id + x) - hashString(p.id + y))) {
+    if (!ctx.content.skills[id]) continue;
+    const lv = p.skills[id]?.level ?? 1;
+    if (lv < bestLevel) { best = id; bestLevel = lv; }
+  }
+  return best;
 }
 
 /**

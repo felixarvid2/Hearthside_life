@@ -17,6 +17,7 @@ import { runAutonomy } from './autonomy';
 import { behaviorFor } from './behaviors';
 import { updateCareers } from './careers';
 import { spoilMeals } from './cooking';
+import { runHousekeeping } from './housekeeping';
 import type { SimCtx } from './context';
 import { behaviorOf, dist, lotLoc } from './context';
 import { computeMood, expireMoodlets } from './mood';
@@ -100,6 +101,8 @@ export class Simulation {
     for (const p of people) if (state.people[p.id] && lotLoc(p)) runPerson(ctx, p);
     // 6. Autonomy
     runAutonomy(ctx);
+    // 6b. Accidents and the moods of a clean or messy home
+    runHousekeeping(ctx);
     // 7. Moodlets, thoughts, aspirations, meals
     for (const p of people) {
       expireMoodlets(p, ctx.now);

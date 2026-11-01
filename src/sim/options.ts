@@ -1,14 +1,17 @@
 // Context-menu options for a person and a picked target, with readable reasons for disabled entries.
 // Pure: building options never changes the world.
 
+import { isRepairable, offeredInteractionIds } from '../content/capabilities';
 import { OUTFIT_CATEGORIES } from '../core/types';
 import type { ActionInstance, OutfitCategory, Person } from '../core/types';
-import { behaviorFor, freeUsePointExists } from './behaviors';
+import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
+import { dirtOf, isBroken, wearOf } from './housekeeping';
+import { repairFee } from './housework';
 import type { SimCtx } from './context';
-import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, objectRef } from './context';
+import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef } from './context';
 import { NEED_LABELS } from './needs';
 import { knownPeople } from './relationships';
-import { QUEUE_MAX } from './tuning';
+import { QUEUE_MAX, SERVICE_MIN_WEAR } from './tuning';
 import type { ActionData, ActionRequest, InteractionOption } from './types';
 
 const OUTFIT_LABELS: Record<OutfitCategory, string> = {
@@ -42,7 +45,7 @@ export function requestReason(ctx: SimCtx, p: Person, req: ActionRequest, transi
   const def = interactionDef(ctx, req.interactionId);
   if (!def) return null;
   if (def.duration.kind === 'untilFull' && p.needs[def.duration.need] >= 95) return `${NEED_LABELS[def.duration.need]} is already full.`;
-  if (def.kind === 'object' && req.target.kind === 'object' && !freeUsePointExists(ctx, p, def, req.target.objectId)) return 'Someone is using it.';
+  if (def.kind === 'object' && def.behavior !== 'callRepair' && req.target.kind === 'object' && !freeUsePointExists(ctx, p, def, req.target.objectId)) return 'Someone is using it.';
   return null;
 }
 
@@ -65,9 +68,23 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
       if (!ref) return [];
       const out: InteractionOption[] = [];
       const t: ActionInstance['target'] = { kind: 'object', objectId: target.objectId, slotId: target.slotId ?? null };
-      for (const iid of ref.def.interactions) {
+      for (const iid of offeredInteractionIds(ref.def)) {
         const def = interactionDef(ctx, iid);
         if (!def || def.status !== 'ready') continue;
+        // Chores only show when there is something to do: dirt to clean, a break to fix, wear to service.
+        if (def.behavior === 'clean' && dirtOf(ref.obj) < 0.05) continue;
+        if ((def.behavior === 'repair' || def.behavior === 'callRepair') && !isBroken(ref.obj)) continue;
+        if (def.behavior === 'service' && (isBroken(ref.obj) || wearOf(ref.obj) < SERVICE_MIN_WEAR)) continue;
+        if (def.id === 'readSkillBook') {
+          for (const skillId of Object.keys(SKILL_BOOKS)) {
+            if (ctx.content.skills[skillId]) out.push(option(ctx, p, iid, `Study: ${SKILL_BOOKS[skillId]}`, def.icon, 'object', t, { skillId }));
+          }
+          continue;
+        }
+        if (def.behavior === 'callRepair') {
+          out.push(option(ctx, p, iid, `Call a Repairperson ($${(repairFee(p) / 100).toFixed(0)})`, def.icon, 'object', t));
+          continue;
+        }
         if (def.behavior === 'changeOutfit') {
           for (const cat of OUTFIT_CATEGORIES) {
             if ((p.outfits.outfits[cat]?.length ?? 0) === 0) continue;
@@ -83,8 +100,9 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
     }
     case 'item': {
       const out: InteractionOption[] = [];
+      const kind = ctx.state.items[target.itemId]?.kind ?? 'meal';
       for (const def of Object.values(ctx.content.interactions)) {
-        if (def.kind !== 'item' || def.status !== 'ready') continue;
+        if (def.kind !== 'item' || def.status !== 'ready' || !(def.itemKinds ?? ['meal']).includes(kind)) continue;
         out.push(option(ctx, p, def.id, def.name, def.icon, 'object', target));
       }
       return out;
@@ -142,6 +160,15 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
       continue;
     }
     out.push(option(ctx, p, def.id, def.name, def.icon, 'self', self));
+  }
+  // Broken things can be reported to a repairperson by phone from the person's own menu too.
+  const call = interactionDef(ctx, 'callRepairperson');
+  const loc = lotLoc(p);
+  if (call && call.status === 'ready' && loc) {
+    for (const ref of lotObjects(ctx, loc.lotId, loc.level)) {
+      if (!isRepairable(ref.def) || !isBroken(ref.obj)) continue;
+      out.push(option(ctx, p, call.id, `Call a Repairperson: ${ref.def.name} ($${(repairFee(p) / 100).toFixed(0)})`, call.icon, 'self', { kind: 'object', objectId: ref.obj.id, slotId: null }));
+    }
   }
   return out;
 }

@@ -116,7 +116,8 @@ export function collectHouseholdRefs(c: MissingCollector, content: ContentDB, hh
 }
 
 export function collectItemRefs(c: MissingCollector, content: ContentDB, item: WorldItem, where: string): void {
-  c.check('recipe', content.recipes, item.recipeId, where);
+  // Floor messes name their variant ('puddle', 'crumbs', 'spill') in recipeId, not a recipe.
+  if (item.kind !== 'mess') c.check('recipe', content.recipes, item.recipeId, where);
 }
 
 const KIND_LABEL: Record<MissingKind, string> = {

@@ -101,6 +101,7 @@ export class Game implements GameAPI {
           break;
         case 'lot.changed': if (live) { v.lotChanged(e.what); if (this.roomHighlight) this.drawRoomHighlight(); } break;
         case 'item.changed': if (live) v.itemsChanged(); break;
+        case 'object.changed': if (live) v.objectConditionChanged(); break;
         case 'person.changed':
           if (live && (e.what === 'appearance' || e.what === 'outfit' || e.what === 'all')) v.personChanged(e.personId);
           if (e.what === 'appearance' || e.what === 'all') this.emit('portraits');

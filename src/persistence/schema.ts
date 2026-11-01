@@ -24,6 +24,38 @@ export const MIGRATIONS: MigrationRegistry = {
   1: (raw) => raw,
 };
 
+/**
+ * Defaults for fields added to schema 1 after release (Milestone 4 daily-life systems): an object's `condition`
+ * gained optional `wear`, `brokenAt` and `fails`, and world items gained the kinds 'dishes' and 'mess'. Old saves
+ * lack them and the game reads absent as 0, so nothing has to change in the data; this only repairs values that
+ * would confuse the simulation (a missing or out-of-range `condition`, an unknown item kind). It touches the data
+ * only when something needs fixing, and is applied to every loaded world, whatever its version.
+ */
+export function fillDailyLifeDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  if (isRecord(raw.lots)) {
+    for (const lot of Object.values(raw.lots)) {
+      if (!isRecord(lot) || !isRecord(lot.objects)) continue;
+      for (const o of Object.values(lot.objects)) {
+        if (!isRecord(o)) continue;
+        if (!isRecord(o.condition)) { o.condition = { dirt: 0, broken: false }; continue; }
+        const c = o.condition;
+        if (!num(c.dirt) || c.dirt < 0 || c.dirt > 1) c.dirt = num(c.dirt) ? Math.min(1, Math.max(0, c.dirt)) : 0;
+        if (typeof c.broken !== 'boolean') c.broken = false;
+        if (c.wear !== undefined && !(num(c.wear) && c.wear >= 0 && c.wear <= 1)) c.wear = num(c.wear) ? Math.min(1, Math.max(0, c.wear)) : undefined;
+        if (c.wear === undefined) delete c.wear;
+        if (c.brokenAt !== undefined && !num(c.brokenAt)) delete c.brokenAt;
+        if (c.fails !== undefined && !(num(c.fails) && c.fails >= 0)) delete c.fails;
+      }
+    }
+  }
+  if (isRecord(raw.items)) {
+    for (const item of Object.values(raw.items)) {
+      if (isRecord(item) && item.kind !== 'meal' && item.kind !== 'dishes' && item.kind !== 'mess') item.kind = 'meal';
+    }
+  }
+}
+
 /** Oldest schema version this build can still upgrade. */
 export const OLDEST_SUPPORTED_VERSION = 1;
 
@@ -93,6 +125,7 @@ export function migrate(raw: unknown, opts: MigrateOptions = {}): MigrateResult 
     opts.currentVersion ?? SCHEMA_VERSION, opts.oldestVersion ?? OLDEST_SUPPORTED_VERSION,
   );
   if (!r.ok) return r;
+  fillDailyLifeDefaults(r.data);
   return { ok: true, state: r.data as unknown as WorldState, fromVersion: r.fromVersion, toVersion: r.toVersion, migrated: r.migrated };
 }
 

@@ -47,12 +47,18 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
       case 'object': {
         for (const lot of Object.values(st.lots)) {
           const o = lot.objects[pick.objectId];
-          if (o) return api.content.objects[o.defId]?.name ?? humanize(o.defId);
+          if (o) {
+            const name = api.content.objects[o.defId]?.name ?? humanize(o.defId);
+            // Condition shows in the title so a disabled "Broken" entry is easy to understand.
+            return o.condition?.broken ? `${name} (broken)` : (o.condition?.dirt ?? 0) >= 0.6 ? `${name} (filthy)` : (o.condition?.dirt ?? 0) >= 0.35 ? `${name} (dirty)` : name;
+          }
         }
         return 'Object';
       }
       case 'item': {
         const it = st.items[pick.itemId];
+        if (it?.kind === 'dishes') return `Dirty dishes${it.portions > 1 ? ` (${it.portions} plates)` : ''}`;
+        if (it?.kind === 'mess') return it.recipeId === 'crumbs' ? 'Crumbs' : it.recipeId === 'spill' ? 'Spill' : 'Puddle';
         return it ? `${api.content.recipes[it.recipeId]?.name ?? 'Meal'}${it.portions > 1 ? ` (${it.portions} servings)` : ''}` : 'Meal';
       }
       case 'floor': return 'This spot';

@@ -1,6 +1,7 @@
 // Building blocks for interaction behaviors: the Behavior contract, Step descriptions, use-point
 // selection (specific slots or stand tiles, reserved and reachable) and need-rate computation.
 
+import { fitnessEnergyCost, fitnessSweat, musicFun } from '../content/skillEffects';
 import type { InteractionDef } from '../content/types';
 import type { AnimId } from '../core/anim';
 import type { Tile, WorldSlot } from '../core/nav';
@@ -10,6 +11,7 @@ import { dist, findSlot, isSeat, lotLoc, lotObjects, objectCenter, objectName, o
 import { planRoute, routeFromPath } from './movement';
 import type { UsePointPrefix } from './reservations';
 import { reservationKeys, slotKey, surfaceKey, tileResKey } from './reservations';
+import { DIRTY_WASH_PENALTY } from './tuning';
 
 /** Where the current stage of an action takes place. */
 export type Goal =
@@ -99,9 +101,9 @@ function setUsePoint(a: ActionInstance, prefix: UsePointPrefix, c: UseCandidate)
   else if (c.tile) { a.data[`${prefix}X`] = c.tile.x; a.data[`${prefix}Z`] = c.tile.z; }
 }
 
-/** Item capacity for reservations: the meal's remaining portions. */
+/** Item capacity for reservations: a meal's remaining portions; dishes and messes are cleaned by one person at a time. */
 export function itemCapacity(ctx: SimCtx): (itemId: Id) => number {
-  return (id) => ctx.state.items[id]?.portions ?? 0;
+  return (id) => { const it = ctx.state.items[id]; return !it ? 0 : it.kind === 'meal' ? it.portions : 1; };
 }
 
 /** Re-syncs an action's reservations with its data. Returns false when something is held by another action. */
@@ -193,7 +195,7 @@ export function standCandidates(ctx: SimCtx, lotId: Id, objectId: Id): UseCandid
 }
 
 const GONE: Record<UsePointPrefix, string> = {
-  use: 'It is gone.', seat: 'The seat is gone.', stove: 'The stove is gone.', surf: 'The counter is gone.',
+  use: 'It is gone.', seat: 'The seat is gone.', stove: 'The stove is gone.', surf: 'The counter is gone.', wash: 'The sink is gone.',
 };
 
 /** Goal for a stored use point, or a failure reason when its object or slot vanished. */
@@ -249,7 +251,8 @@ function statMult(need: NeedId, ref: ObjRef | null): number {
   if (!s) return 1;
   if (need === 'energy') return s.energy ?? 1;
   if (need === 'fun') return s.fun ?? 1;
-  if (need === 'hygiene') return s.hygiene ?? 1;
+  // Dirty showers, baths and basins wash less well.
+  if (need === 'hygiene') return (s.hygiene ?? 1) * (1 - DIRTY_WASH_PENALTY * (ref?.obj.condition?.dirt ?? 0));
   return 1;
 }
 
@@ -270,6 +273,12 @@ export function performRates(
       v *= statMult(need, primary);
       if (posture === 'seated' || posture === 'lying') v *= comfortMult(seat ?? primary);
       v *= enjoy;
+      if (need === 'fun' && def.autonomy.tags.includes('music')) v *= musicFun(p.skills.music?.level ?? 1);
+    } else if (v < 0 && def.autonomy.tags.includes('active')) {
+      // Fit people tire less and sweat less from workouts.
+      const fit = p.skills.fitness?.level ?? 1;
+      if (need === 'energy') v *= fitnessEnergyCost(fit);
+      else if (need === 'hygiene') v *= fitnessSweat(fit);
     }
     out[need] = v;
   }

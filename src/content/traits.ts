@@ -28,7 +28,7 @@ const CATEGORY_LABELS: Record<SocialCategory, string> = {
 /** Readable labels for autonomy tags used as trait keys. */
 export const TAG_LABELS: Record<string, string> = {
   social: 'social', reading: 'reading', active: 'active', creative: 'creative', computer: 'computer', food: 'food',
-  music: 'music', skill: 'skill-building', rest: 'resting', tv: 'TV', hygiene: 'washing', gaming: 'gaming', sleep: 'sleep',
+  music: 'music', skill: 'skill-building', rest: 'resting', tv: 'TV', hygiene: 'washing', gaming: 'gaming', sleep: 'sleep', cleaning: 'cleaning', repair: 'repair',
 };
 
 const pct = (m: number) => `${Math.round(Math.abs(m - 1) * 100)}%`;
@@ -89,10 +89,10 @@ export const TRAITS: TraitDef[] = [
   }),
   // --- Organisation and cleanliness
   trait('neat', 'Neat', 'tidiness', 'sparkle', ['messy'], 'Notices grime early and keeps everything spotless.', {
-    needDecay: { hygiene: 1.15 }, autonomyBias: { washHands: 1.6, takeShower: 1.2 }, enjoys: { hygiene: 1.2 },
+    needDecay: { hygiene: 1.15 }, autonomyBias: { washHands: 1.6, takeShower: 1.2, cleaning: 2 }, enjoys: { hygiene: 1.2 },
   }),
   trait('messy', 'Messy', 'tidiness', 'box', ['neat'], 'A little chaos never hurt anyone. Washing can wait.', {
-    needDecay: { hygiene: 0.85 }, autonomyBias: { washHands: 0.5 },
+    needDecay: { hygiene: 0.85 }, autonomyBias: { washHands: 0.5, cleaning: 0.3 },
   }),
   // --- Activity and energy
   trait('athletic', 'Athletic', 'energy', 'energy', [], 'Happiest when moving and full of stamina.', {
@@ -109,7 +109,7 @@ export const TRAITS: TraitDef[] = [
     autonomyBias: { creative: 1.4 }, skillRate: { creativity: 1.25, painting: 1.25, music: 1.25, writing: 1.25 }, enjoys: { creative: 1.25, music: 1.1 },
   }),
   trait('practical', 'Practical', 'creativity', 'check', [], 'Prefers useful skills and gets the job done.', {
-    autonomyBias: { skill: 1.2 }, skillRate: { handiness: 1.25, cooking: 1.15 }, workPerformance: 1,
+    autonomyBias: { skill: 1.2, repair: 1.5 }, skillRate: { handiness: 1.25, cooking: 1.15 }, workPerformance: 1,
   }),
   trait('bookish', 'Bookish', 'creativity', 'book', [], 'Never without a book and always learning something.', {
     autonomyBias: { reading: 1.6 }, skillRate: { logic: 1.25, writing: 1.2, research: 1.25 }, enjoys: { reading: 1.3 },

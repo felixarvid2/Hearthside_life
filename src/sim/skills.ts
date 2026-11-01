@@ -1,6 +1,7 @@
 // Skill experience and levels. Skills are recorded on a person the first time they are practiced.
 
 import type { ContentDB, SkillDef } from '../content/types';
+import { logicStudy } from '../content/skillEffects';
 import { addFeed } from '../core/state';
 import type { Person, SkillState } from '../core/types';
 import type { SimCtx } from './context';
@@ -42,7 +43,9 @@ export function addSkillXp(ctx: SimCtx, p: Person, skillId: string, baseXp: numb
   const def = ctx.content.skills[skillId];
   if (!def || baseXp <= 0) return;
   const s = (p.skills[skillId] ??= { level: 1, xp: 0 });
-  s.xp = Math.round((s.xp + baseXp * traitSkillMult(ctx.content, p, skillId)) * 100) / 100;
+  // Logical people are quick studies: every other skill gains a little extra.
+  const study = skillId === 'logic' ? 1 : 1 + logicStudy(p.skills.logic?.level ?? 1);
+  s.xp = Math.round((s.xp + baseXp * traitSkillMult(ctx.content, p, skillId) * study) * 100) / 100;
   const level = skillLevelFor(def, s.xp);
   if (level > s.level) {
     s.level = level;

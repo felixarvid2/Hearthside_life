@@ -18,7 +18,7 @@ const FEED_LABELS: Record<FeedEntry['kind'], string> = {
   info: 'News', social: 'Social', money: 'Money', career: 'Career', need: 'Needs', warning: 'Warning', aspiration: 'Aspiration', build: 'Home',
 };
 const LEDGER_LABELS: Record<LedgerKind, string> = {
-  wage: 'Wage', purchase: 'Purchase', refund: 'Refund', sale: 'Sale', groceries: 'Groceries', bill: 'Bill', reward: 'Reward', build: 'Building', gift: 'Gift', start: 'Start',
+  wage: 'Wage', purchase: 'Purchase', refund: 'Refund', sale: 'Sale', groceries: 'Groceries', bill: 'Bill', reward: 'Reward', build: 'Building', gift: 'Gift', start: 'Start', repair: 'Repair',
 };
 
 export interface ListPanel { panel: Panel; open(): void; close(): void; refresh(): void }

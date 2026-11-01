@@ -93,7 +93,7 @@ export interface Household {
 }
 
 export type LedgerKind =
-  | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start';
+  | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start' | 'repair';
 
 export interface LedgerEntry {
   id: Id;
@@ -199,16 +199,28 @@ export interface PlacedObject {
   purchasePrice: Cents;
   boughtAt: GameMinutes;
   ownerHouseholdId: Id | null;
-  /** Wear and state flags for later milestones (dirty, broken). */
-  condition: { dirt: number; broken: boolean };
+  /**
+   * Cleanliness and repair state. `dirt` 0 (spotless) .. 1 (filthy); `broken` objects cannot be used until repaired.
+   * The other fields are optional so older saves load unchanged (absent = 0): `wear` 0..1 builds with use and raises
+   * the break chance, `brokenAt` is the game minute it broke, `fails` counts failed repair attempts since.
+   */
+  condition: { dirt: number; broken: boolean; wear?: number; brokenAt?: GameMinutes; fails?: number };
   /** For surface items: id of the object they rest on. */
   supportId?: Id;
 }
 
-/** Transient items created by actions (e.g. a served meal). Saved, but never sold. */
+/** What a WorldItem is: a served meal, dirty dishes left after eating, or a floor mess (puddle, crumbs, spill). */
+export type WorldItemKind = 'meal' | 'dishes' | 'mess';
+
+/**
+ * Transient items created by actions (e.g. a served meal). Saved, but never sold.
+ * `dishes`: `portions` = number of dirty plates, `recipeId` = the dish they held, `quality` unused (1).
+ * `mess`: `recipeId` = the variant ('puddle' | 'crumbs' | 'spill'), `quality` = severity 0..1, `portions` = 1.
+ * Only meals spoil; dishes and messes stay until somebody cleans them.
+ */
 export interface WorldItem {
   id: Id;
-  kind: 'meal';
+  kind: WorldItemKind;
   lotId: Id;
   /** Where it rests: on an object surface or the floor. */
   position: { x: number; z: number; level: number; onObjectId?: Id };

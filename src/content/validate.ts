@@ -13,6 +13,7 @@ import type {
   CatalogCategory, ContentDB, InteractionDef, ObjectDef, PlacementLayer, PriceTier, SlotKind, SocialCategory, TraitCategory,
 } from './types';
 import { fittedBounds } from './objects';
+import { capabilityInteractions } from './capabilities';
 
 /** Furniture entry of public/assets/manifest.json (only the fields validation needs). */
 export interface ManifestModel { min: number[]; max: number[]; materials: Array<{ name: string }> }
@@ -237,6 +238,12 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
       if (i.kind !== 'object') err(`${w}: interaction '${id}' is not an object interaction`);
       if (ready && i.status !== 'ready') err(`${w}: ready object promises unfinished interaction '${id}'`);
       if (i.slotKinds.length && !o.slots.some((s) => i.slotKinds.includes(s.kind))) err(`${w}: '${id}' needs a ${i.slotKinds.join('/')} slot`);
+      if (ready) offeredBy.set(id, (offeredBy.get(id) ?? 0) + 1);
+    }
+    // Tag capabilities (cleaning, repairs) are offered without being listed; they need their interactions to exist.
+    for (const id of capabilityInteractions(o)) {
+      const i = db.interactions[id];
+      if (!i) { err(`${w}: tag capability needs interaction '${id}'`); continue; }
       if (ready) offeredBy.set(id, (offeredBy.get(id) ?? 0) + 1);
     }
     if (!o.functional && o.interactions.length) err(`${w}: decorative objects (functional false) must not offer interactions`);

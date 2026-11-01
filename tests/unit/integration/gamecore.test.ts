@@ -178,8 +178,10 @@ describe('live mode', () => {
     const [theo, sasha] = members(s);
     const fridge = objectsByDef(s, 'fridge-standard')[0]!;
     expect(core.queue(theo!.id, core.options(theo!.id, { kind: 'object', objectId: fridge }).find((o) => o.interactionId === 'cookMeal')!).ok).toBe(true);
-    for (let i = 0; i < 4 * 90 && Object.keys(s.items).length === 0; i++) core.advanceTicks(1);
-    const meal = Object.values(s.items)[0]!;
+    // (a beginner may leave a spill on the floor while cooking: pick out the served meal)
+    const served = () => Object.values(s.items).find((it) => it.kind === 'meal');
+    for (let i = 0; i < 4 * 90 && !served(); i++) core.advanceTicks(1);
+    const meal = served()!;
     expect(meal.kind).toBe('meal');
     const menu = core.options(sasha!.id, { kind: 'item', itemId: meal.id });
     expect(menu.map((o) => o.interactionId)).toContain('eatMeal');

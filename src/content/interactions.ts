@@ -14,6 +14,7 @@
 // - The toilet refills bladder at +600/h (empty -> full in 10 min); a shower refills hygiene in ~25 min.
 // - Fun activities give +16..+28 fun/h before object `fun` multipliers; practice activities give 40-60 skill xp/h
 //   (see SKILLS thresholds: level 2 at 100 xp, level 10 at 3,200 xp).
+// Housework: chores cost a little energy per hour; Handiness shortens them.
 // Object stats scale the matching effect: energy (sleep/rest), comfort (sit), fun (fun gains), hygiene, skill.
 // Autonomy `ads` advertise the need gains used by utility scoring; `tags` feed trait/preference biasing
 // (preference ids 'activity:<tag>' match these tags).
@@ -81,7 +82,7 @@ const FOOD: InteractionDef[] = [
     icon: 'hunger', kind: 'item', behavior: 'eatMeal', posture: 'seated',
     anims: { prepare: 'pickUp', perform: 'eat' },
     // Hunger comes from the portion (RecipeDef.hunger scaled by meal quality), applied by the eatMeal behaviour.
-    duration: { kind: 'fixed', minutes: 25 }, moodletOnComplete: 'goodMeal',
+    duration: { kind: 'fixed', minutes: 25 }, moodletOnComplete: 'goodMeal', itemKinds: ['meal'],
     autonomy: { enabled: true, ads: { hunger: 50 }, tags: ['food', 'meal'] }, allowVisitors: true,
   }),
 ];
@@ -143,6 +144,14 @@ const LEISURE: InteractionDef[] = [
     autonomy: { enabled: true, ads: { fun: 5 }, tags: ['computer', 'skill', 'programming'] },
   }),
   def({
+    id: 'readSkillBook', name: 'Study a Skill Book',
+    description: 'Study a how-to book (action data.skillId: cooking, handiness, gardening, charisma or programming). Teaches the skill up to level 5.',
+    icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'read', posture: 'seated',
+    anims: { prepare: 'pickUp', perform: 'read' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 6 }, skill: { id: 'logic', xpPerHour: 45 },
+    autonomy: { enabled: true, ads: { fun: 6 }, tags: ['reading', 'skill', 'book'] },
+  }),
+  def({
     id: 'readBook', name: 'Read a Book', description: 'Take a book and read it in a nearby free seat (or standing). Fun, and trains Logic.',
     icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'read', posture: 'seated',
     anims: { prepare: 'pickUp', perform: 'read' },
@@ -173,6 +182,64 @@ const LEISURE: InteractionDef[] = [
     duration: { kind: 'fixed', minutes: 5 }, needsOnComplete: { fun: 3 }, skill: { id: 'gardening', xpPerHour: 120 },
     moodletOnComplete: 'greenThumb',
     autonomy: { enabled: true, ads: { fun: 3 }, tags: ['gardening', 'skill'] },
+  }),
+];
+
+/**
+ * Housework (cleaning and repairs). The object interactions are offered by tag (content/capabilities.ts), not listed
+ * on objects: 'cleanable' objects offer cleanObject; 'plumbing', 'appliance' and 'electronics' objects offer
+ * repairObject, serviceObject and callRepairperson. Durations, success chances and costs depend on skills and the
+ * object and are computed by the simulation (sim/housework.ts); the minutes below are only defaults. Item
+ * interactions apply to dirty dishes and floor messes (`itemKinds`).
+ */
+const HOUSEWORK: InteractionDef[] = [
+  def({
+    id: 'cleanObject', name: 'Clean', description: 'Scrub away the grime. Dirty things make meals worse, wash less well and drag the mood down. Faster with Handiness.',
+    icon: 'sparkle', kind: 'object', behavior: 'clean', posture: 'standing',
+    anims: { perform: 'clean' }, duration: { kind: 'fixed', minutes: 15 }, needsPerHour: { energy: -2 },
+    skill: { id: 'handiness', xpPerHour: 20 }, moodletOnComplete: 'sparkling',
+    autonomy: { enabled: true, ads: {}, tags: ['cleaning', 'chore'] },
+  }),
+  def({
+    id: 'washDishes', name: 'Wash Dishes', description: 'Carry the dirty plates to a sink (or dishwasher) and wash them.',
+    icon: 'sparkle', kind: 'item', itemKinds: ['dishes'], behavior: 'washDishes', posture: 'standing',
+    anims: { prepare: 'pickUp', perform: 'clean' }, duration: { kind: 'fixed', minutes: 6 }, needsPerHour: { energy: -1 },
+    skill: { id: 'handiness', xpPerHour: 10 },
+    autonomy: { enabled: true, ads: {}, tags: ['cleaning', 'chore', 'dishes'] },
+  }),
+  def({
+    id: 'mopFloor', name: 'Mop Up', description: 'Wipe up a puddle, spill or crumbs from the floor.',
+    icon: 'sparkle', kind: 'item', itemKinds: ['mess'], behavior: 'mop', posture: 'standing',
+    anims: { perform: 'clean' }, duration: { kind: 'fixed', minutes: 6 }, needsPerHour: { energy: -1 },
+    skill: { id: 'handiness', xpPerHour: 15 },
+    autonomy: { enabled: true, ads: {}, tags: ['cleaning', 'chore', 'mop'] },
+  }),
+  def({
+    id: 'tidyUp', name: 'Tidy Up', description: 'A quick tidy of the area around you: wipes the worst grime off nearby things and sweeps up crumbs.',
+    icon: 'sparkle', kind: 'self', behavior: 'tidy', posture: 'standing',
+    anims: { perform: 'clean' }, duration: { kind: 'fixed', minutes: 12 }, needsPerHour: { energy: -2 },
+    skill: { id: 'handiness', xpPerHour: 10 },
+    autonomy: { enabled: true, ads: {}, tags: ['cleaning', 'chore', 'tidy'] },
+  }),
+  def({
+    id: 'repairObject', name: 'Repair', description: 'Fix a broken object. Handiness makes it quicker and more likely to work; a failed attempt wastes time and can give a shock.',
+    icon: 'settings', kind: 'object', behavior: 'repair', posture: 'standing',
+    anims: { perform: 'kneelFix' }, duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { energy: -3 },
+    skill: { id: 'handiness', xpPerHour: 60 },
+    autonomy: { enabled: true, ads: {}, tags: ['repair', 'chore', 'skill'] },
+  }),
+  def({
+    id: 'serviceObject', name: 'Service', description: 'Maintain a worn object so it breaks down less often. Practises Handiness.',
+    icon: 'settings', kind: 'object', behavior: 'service', posture: 'standing',
+    anims: { perform: 'kneelFix' }, duration: { kind: 'fixed', minutes: 20 }, needsPerHour: { energy: -3 },
+    skill: { id: 'handiness', xpPerHour: 50 },
+    autonomy: { enabled: true, ads: {}, tags: ['repair', 'chore', 'skill'] },
+  }),
+  def({
+    id: 'callRepairperson', name: 'Call a Repairperson', description: 'Phone a repairperson for a fixed fee. They fix the broken object within a few hours.',
+    icon: 'phone', kind: 'object', behavior: 'callRepair', posture: 'standing',
+    anims: { perform: 'phone' }, duration: { kind: 'fixed', minutes: 4 },
+    autonomy: { enabled: true, ads: {}, tags: ['repair', 'phone'] },
   }),
 ];
 
@@ -248,4 +315,4 @@ const SELF: InteractionDef[] = [
 ];
 
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...WARDROBE, ...SELF];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOUSEWORK, ...WARDROBE, ...SELF];

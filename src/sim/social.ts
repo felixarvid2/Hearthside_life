@@ -3,6 +3,7 @@
 // head of their queue. They face each other for the social's duration. The outcome is resolved ONCE at
 // apply with the world rng: acceptance = base + relationship + mood + traits - spam dampening.
 
+import { charismaAcceptance } from '../content/skillEffects';
 import type { SocialDef } from '../content/types';
 import { facingTo } from '../core/geometry';
 import { addFeed } from '../core/state';
@@ -98,6 +99,7 @@ export function socialAcceptance(ctx: SimCtx, actor: Person, target: Person, def
     p += ctx.content.traits[t]?.effects.socialReceive?.[def.category] ?? 0;
   }
   p -= recentUses(toTarget, def.id, ctx.now) * SOCIAL_SPAM_PENALTY;
+  p += charismaAcceptance(actor.skills.charisma?.level ?? 1);
   return clamp(p, SOCIAL_ACCEPT_MIN, SOCIAL_ACCEPT_MAX);
 }
 

@@ -277,6 +277,14 @@ These ids are used across modules and must exist with these meanings.
 | `jogInPlace` | `generic` | self; fitness xp, energy cost |
 | `phoneInvite` | `invite` | self; data.personId = neighbour; schedules a visit in 60 min |
 | `phoneChat` | `phoneChat` | self; data.personId; social +, small friendship gain |
+| `readSkillBook` | `read` | bookcase; data.skillId (cooking, handiness, gardening, charisma, programming); trains that skill up to level 5 |
+| `cleanObject` | `clean` | tag `cleanable`; scrubs dirt to 0; minutes = 6 + 24 x dirt, faster with Handiness |
+| `washDishes` | `washDishes` | item (dishes); pick up, carry to a working `sink`/`dishes` object, wash; item removed on completion |
+| `mopFloor` | `mop` | item (mess); wipes a puddle, spill or crumbs |
+| `tidyUp` | `tidy` | self; takes 0.2 dirt off cleanable things within 5 tiles and sweeps crumbs |
+| `repairObject` | `repair` | tags `plumbing`/`appliance`/`electronics`, only when broken; success by Handiness/Logic/Programming, failures can shock or splash |
+| `serviceObject` | `service` | same tags; removes wear so the object breaks less often |
+| `callRepairperson` | `callRepair` | same tags, only when broken; $85 (less with Charisma) charged once with the visit, fixed 90-150 min later |
 
 **Surfaces** (surfaces agent): wall designs `plain-paint`, `subway-tile`, `stripes-regency`, `brick-classic`
 and floor designs `oak-planks`, `checker-tile`, `carpet-plush`, `hex-mosaic`, `stone-pavers` must exist
@@ -297,6 +305,7 @@ cooking, logic, programming, charisma, fitness, gardening, music.
    validate -> reserve -> route -> prepare -> perform -> apply -> cleanup.
    Cancellation or failure in any phase runs that phase's cleanup and always releases reservations.
 6. Autonomy for idle people (staggered, cooldowns, hysteresis), visitors' simple autonomy.
+6b. Housekeeping: accidents (empty bladder away from a toilet) and, every 20 minutes, the home moodlets.
 7. Moodlets expire; aspiration objectives update on events.
 
 ## Rendering and UI (summary; detailed when written)
@@ -305,3 +314,26 @@ cooking, logic, programming, charisma, fitness, gardening, music.
   cutaway. Character creator reuses the renderer with a preview scene.
 - HTML/CSS panels over the canvas; portrait uses a top bar, household strip and bottom sheets; landscape uses
   a bottom HUD and side panels. Touch targets >= 44 px.
+
+## Daily life: dirt, breakage, chores (Milestone 4)
+
+Implemented generically by object **tags** (`src/content/capabilities.ts`): `cleanable` (gets dirty, offers Clean),
+`plumbing` / `appliance` / `electronics` (wears, breaks, offers Repair, Service, Call a Repairperson), `sink` / `dishes`
+(dish-washing station; `dishes` washes in half the time). A new dishwasher or washing machine only needs the tags.
+
+- State (all optional in saves; absent = 0, repaired by `fillDailyLifeDefaults` in `persistence/schema.ts`, schema stays 1):
+  `PlacedObject.condition` = `{ dirt 0..1, broken, wear?, brokenAt?, fails? }`; `WorldItem.kind` = `meal | dishes | mess`
+  (dishes: `portions` = plates, one stack per surface; mess: `recipeId` = puddle | spill | crumbs, `quality` = severity).
+- `sim/housekeeping.ts`: dirt per use (`tuning.ts DIRT_PER_USE`), wear and a seeded break chance (`state.rng`,
+  quality 1..5 x wear x age), dishes and messes, accidents, home moodlets (Dirty Kitchen, Dirty Bathroom, Messy Floors,
+  Things Need Fixing, Fresh and Clean Home). Everything is switched on by the content having the `cleanObject` interaction.
+- `sim/housework.ts`: the chore behaviors and the repairperson (a scheduled `custom` event, fee charged once through
+  `transact` with an occurrence id). Broken objects refuse every interaction with the reason `Broken` except Clean,
+  Repair and Call a Repairperson. A failed repair adds `REPAIR_PITY` to the next attempt, so repairs never soft-lock.
+- `sim/chores.ts`: autonomy for chores (neat people clean at low dirt, messy ones only when filthy; dishes and messes build
+  pressure with time; essential fixtures - last toilet, shower, stove or fridge - are repaired first; a repairperson is called
+  after failures when the household can afford it). Chores wait for urgent needs.
+- Skill effects: `content/skillEffects.ts` (shared by the sim and the level texts in `content/skills.ts`).
+- Rendering: `render/objectsView.ts` draws a grime decal (dirt >= 0.35), stink lines (>= 0.6), a warning marker with
+  spark flicker (electronics/appliances) or a puddle (plumbing) on broken objects, plus dirty plates and floor messes.
+  `object.changed` events refresh the overlays.

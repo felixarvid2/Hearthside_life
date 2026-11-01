@@ -194,6 +194,9 @@ export class GameView {
 
   itemsChanged(): void { if (this.world && this.lot) this.objects.syncItems(this.world, this.lot.id); }
 
+  /** An object got dirtier or cleaner, broke or was repaired: refresh its overlays. */
+  objectConditionChanged(): void { if (this.lot) this.objects.syncCondition(this.lot); }
+
   personChanged(id: Id): void { if (this.world) this.people?.personChanged(this.world, id); }
 
   onTicks(): void { if (this.world) this.people?.onTicks(this.world); }
@@ -373,6 +376,7 @@ export class GameView {
     this.fog.color.copy(this.lighting.background);
     r.toneMappingExposure = this.lighting.exposure;
     this.objects.setNight(this.lighting.night, this.rig.target);
+    this.objects.animate(dt, this.opts.reducedMotion);
     // people
     const people = this.people;
     if (people) {

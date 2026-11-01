@@ -3,7 +3,7 @@
 // Entries with status 'dev' are never shown as selectable finished content and never counted.
 
 import type {
-  BodyFrame, BondStatus, Cents, GarmentLayer, Hex, MemoryKind, NeedId, OutfitCategory, Posture,
+  BodyFrame, BondStatus, Cents, GarmentLayer, Hex, MemoryKind, NeedId, OutfitCategory, Posture, WorldItemKind,
 } from '../core/types';
 import type { AnimId } from '../core/anim';
 
@@ -168,6 +168,8 @@ export interface InteractionDef {
   moodletOnComplete?: string;
   /** Special behaviour implemented by the simulation ('cook', 'eatMeal', 'goToWork', 'changeOutfit', ...). */
   behavior?: string;
+  /** Item interactions only: the kinds of world item this applies to (default: served meals). */
+  itemKinds?: WorldItemKind[];
   autonomy: {
     enabled: boolean;
     /** Advertised need gains used by utility scoring. */
@@ -371,6 +373,8 @@ export interface GarmentDef {
   affinity?: GarmentAffinity;
   /** Allowed pattern ids ('solid' always allowed). */
   patterns: string[];
+  /** Pattern a freshly chosen garment starts with (absent = 'solid'); must be one of `patterns`. */
+  defaultPattern?: string;
   defaultColor: Hex;
   /** Procedural garment parameters (src/characters/clothing.ts). */
   build: Record<string, number | string | boolean>;
@@ -381,9 +385,11 @@ export interface AccessoryDef {
   id: string;
   name: string;
   description: string;
-  kind: 'glasses' | 'hat' | 'earrings' | 'necklace' | 'bag' | 'watch' | 'scarf' | 'other';
+  kind: 'glasses' | 'hat' | 'earrings' | 'necklace' | 'bag' | 'watch' | 'bracelet' | 'scarf' | 'other';
   /** Default presentation affinity for random and premade people (absent = 'neutral'). */
   affinity?: GarmentAffinity;
+  /** Outfit categories random and premade outfits may use this in (absent = all); the creator offers it everywhere. */
+  categories?: OutfitCategory[];
   defaultColor: Hex;
   build: Record<string, number | string | boolean>;
   status: ContentStatus;
