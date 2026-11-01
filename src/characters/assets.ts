@@ -136,8 +136,9 @@ function meshyFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAsset
   const template = buildBodyTemplate(raw, { stylise: false, skinParts: false });
   const headMap = new HeadMap(extras.head, template.headOrigin);
   template.headMap = headMap;
-  const normals = new Float32Array((sm.geometry.getAttribute('normal') as THREE.BufferAttribute).array);
-  const uv = new Float32Array((sm.geometry.getAttribute('uv') as THREE.BufferAttribute).array);
+  // the GLB stores its attributes interleaved: read them through the accessors, not the shared array
+  const normals = attributeArray(sm.geometry.getAttribute('normal'), 3);
+  const uv = attributeArray(sm.geometry.getAttribute('uv'), 2);
   const skinMesh = buildMeshyMesh({ raw, normals, uv, template, headMap });
   template.skinMesh = skinMesh;
   const rootBone = skeleton.bones.find((bn) => !(bn.parent && (bn.parent as THREE.Bone).isBone)) ?? skeleton.bones[0]!;
@@ -151,6 +152,15 @@ function meshyFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAsset
     boneInverses: skeleton.boneInverses.map((m) => m.clone()),
     skinGeometry: toGeometry(skinMesh, `skin-${frame}m`),
   };
+}
+
+export function attributeArray(a: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, size: 2 | 3): Float32Array {
+  const out = new Float32Array(a.count * size);
+  for (let i = 0; i < a.count; i++) {
+    out[i * size] = a.getX(i); out[i * size + 1] = a.getY(i);
+    if (size === 3) out[i * 3 + 2] = a.getZ(i);
+  }
+  return out;
 }
 
 /** Extracts positions, skin and bind skeleton facts from a loaded body mesh. */

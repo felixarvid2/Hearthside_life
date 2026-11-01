@@ -69,7 +69,17 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
 - **Coverage**: the skin shader pushes body regions under worn garments inward (same `Coverage` data as the classic skin);
   where nothing covers it, the baked base layer reads as plain underwear.
 - **Hair, facial hair, glasses and earrings** are built on the parametric head and carried onto the scanned head by
-  `HeadMap` (eye line, brow line and crown mapped, horizontal offset scaled by the ratio of the heads' radii).
+  `HeadMap` (eye line, brow line and crown mapped; inside the head the offset scales with the ratio of the heads' radii,
+  outside it keeps its length and follows the surface).
+- **Numbers** (per body): about 10,000 triangles (source 20,700), 6.7-6.9k vertices, one draw call, GLB 0.55 MB (1024 px
+  WebP albedo 71-74 kB, 512 px mask 8 kB), about 7 MB of GPU texture memory per frame. A person (body, outfit, hair) costs
+  about as much as a classic one (same draw calls, 5 % fewer triangles; a software-rendered frame with 8 people measured
+  337-347 ms classic vs 362-374 ms detailed, 2 people 78-92 vs 90-91 ms), so the low graphics preset keeps the detailed style.
+- **Face controls that cannot apply to a baked face**: brow style (the baked brows only take the brow colour), lip colour and
+  lip tint (the baked mouth is a thin line). Eye colour, brow colour, freckles, blush, stubble, eye size / spacing / tilt /
+  height, brow height / tilt and every face sculpt slider work (the eye and brow ones move the surface under the baked
+  features instead of repainting them). The baked tank top and shorts are the base layer: hidden under garments, read as
+  plain underwear where nothing covers them and as bare skin where a garment of that half is worn but leaves them visible.
 
 ## Furniture
 

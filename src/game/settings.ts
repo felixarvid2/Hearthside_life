@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   reducedMotion: false,
   textScale: 1,
   quality: 'high',
-  characterStyle: 'classic', // TEMP until the detailed bodies are verified in the browser
+  characterStyle: 'detailed', // 'classic' = the procedural bodies (also the fallback when the scanned ones fail to load)
   shadows: true,
   showStats: false,
   tutorial: true,

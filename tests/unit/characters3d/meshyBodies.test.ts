@@ -1,7 +1,12 @@
 // The shipped Meshy bodies (public/assets/characters/meshy_a.glb, meshy_b.glb; built by tools/build-meshy-bodies.mts):
 // the files load and skin on the shared skeleton, the runtime data derived from them is sound, body sliders move the
 // same field the garments use, garments and hair build on them, and the head map puts hair on the real head.
+import { NodeIO } from '@gltf-transform/core';
+import { EXTTextureWebP } from '@gltf-transform/extensions';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { attributeArray, rawFromMesh } from '../../../src/characters/assets';
 import { GARMENTS, HAIR } from '../../../src/content/character';
 import { BODY_PARAM_IDS, bodyDeltas } from '../../../src/characters/bodyShape';
 import { buildGarment } from '../../../src/characters/clothing';
@@ -147,6 +152,9 @@ describe.each(['a', 'b'] as const)('meshy body %s', (f) => {
     const eyeC = o[1] - 0.02 + 0.098 * 1.1;
     expect(map.mapY(eyeC)).toBeCloseTo(extras.head.eyeY, 5);
     for (const y of [1.5, 1.6, 1.68, 1.75]) expect(map.unmapY(map.mapY(y))).toBeCloseTo(y, 5);
+    // a point far behind the head (a ponytail) moves with the surface, it is not scaled with it
+    const far = map.toMeshy([0, eyeC, -0.35]);
+    expect(Math.abs(far[2] - -0.35)).toBeLessThan(0.05);
     const p = map.toMeshy([0.03, eyeC + 0.02, o[2] + 0.1]);
     const q = map.toClassic(p);
     expect(q[0]).toBeCloseTo(0.03, 3);
@@ -159,6 +167,36 @@ describe.each(['a', 'b'] as const)('meshy body %s', (f) => {
     expect(partOf('thigh_l', 0.9, 0.1, 0.8).part).toBe(PART.torso);
     expect(partOf('lowerarm_r', 1.4, -0.4, 0.8)).toEqual({ part: PART.arm, s: 0.4 });
     expect(partOf('foot_l', 0.05, 0.1, 0.8).part).toBe(PART.foot);
+  });
+});
+
+describe('three.js loader', () => {
+  it('reads the interleaved attributes of the GLB through accessors (uv, normals) and the skin through rawFromMesh', async () => {
+    for (const f of ['a', 'b'] as const) {
+      const m = await loadMeshyBody(f);
+      // the loader cannot decode WebP in Node: parse a copy without textures
+      const io = new NodeIO().registerExtensions([EXTTextureWebP]);
+      const mat = m.doc.getRoot().listMaterials()[0]!;
+      mat.setBaseColorTexture(null); mat.setOcclusionTexture(null);
+      for (const t of m.doc.getRoot().listTextures()) t.dispose();
+      const glb = await io.writeBinary(m.doc);
+      const gltf = await new Promise<{ scene: THREE.Object3D }>((res, rej) => new GLTFLoader().parse(glb.buffer.slice(glb.byteOffset, glb.byteOffset + glb.byteLength) as ArrayBuffer, '', res as never, rej));
+      let sm: THREE.SkinnedMesh | null = null;
+      gltf.scene.traverse((o) => { if (!sm && (o as THREE.SkinnedMesh).isSkinnedMesh) sm = o as THREE.SkinnedMesh; });
+      expect(sm).not.toBeNull();
+      const mesh = sm as unknown as THREE.SkinnedMesh;
+      const uv = attributeArray(mesh.geometry.getAttribute('uv'), 2);
+      const nrm = attributeArray(mesh.geometry.getAttribute('normal'), 3);
+      expect(uv.length).toBe(m.uv.length);
+      expect(nrm.length).toBe(m.normals.length);
+      expect(uv.every((v, i) => v === m.uv[i])).toBe(true);
+      expect(nrm.every((v, i) => v === m.normals[i])).toBe(true);
+      expect(mesh.userData.meshyBody?.frame).toBe(f);
+      const raw = rawFromMesh(f, mesh);
+      expect(raw.boneNames.length).toBe(65);
+      expect(raw.positions.every((v, i) => v === m.raw.positions[i])).toBe(true);
+      expect(raw.joints.every((v, i) => v === m.raw.joints[i])).toBe(true);
+    }
   });
 });
 

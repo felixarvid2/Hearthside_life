@@ -106,6 +106,9 @@ async function buildOne(b: (typeof BODIES)[number], mods: { fit: Record<string, 
   const mean = (a: Array<{ y: number }>) => a.reduce((s, e) => s + e.y, 0) / a.length;
   const eyeY = mean(cls.eyes), browY = cls.brows.length ? mean(cls.brows) : eyeY + 0.024;
   console.log(`[${b.id}] eyes ${cls.eyes.length} at y ${eyeY.toFixed(3)}, brows ${cls.brows.length} at y ${browY.toFixed(3)}, texels ${JSON.stringify(cls.counts)}`);
+  const srcCovered = new Uint8Array(S * S);
+  for (let k = 0; k < S * S; k++) srcCovered[k] = (map.tri[k] as number) >= 0 ? 1 : 0;
+  mods.bake.bleedClasses(cls.classes, srcCovered, S, 6);
   // ---- weld (the source atlas duplicates vertices along its chart borders), simplify with the head locked ----
   await MeshoptSimplifier.ready;
   const weldKey = new Map<string, number>();
@@ -148,7 +151,7 @@ async function buildOne(b: (typeof BODIES)[number], mods: { fit: Record<string, 
   const atlas = mods.atlas.buildAtlas({ positions: sPos, normals: sNrm, index: sIdx, region }, { size: ALBEDO, pad: 3, density: { 1: 1.7, 4: 1.3, 5: 1.3 }, minChartTris: 14 });
   console.log(`[${b.id}] atlas: ${atlas.charts} charts, ${atlas.index.length / 3} tris, ${atlas.source.length} vertices, ${atlas.texelsPerMetre.toFixed(0)} texels/m`);
   const baked = mods.atlas.bakeAtlas(atlas, { positions: fit.positions, index: fit.index, uv: uvAll, rgb: new Uint8Array(img.data), classes: cls.classes, size: S }, ALBEDO, 4);
-  const mask = mods.bake.packMask(baked.classes, baked.covered, ALBEDO, MASK) as Uint8Array;
+  const mask = mods.bake.packMask(baked.classes, baked.padded, ALBEDO, MASK) as Uint8Array;
   const maskRgb = Buffer.alloc(MASK * MASK * 3);
   // channel B carries the iris (below the split height) and the brow (above); the packer keeps them apart as two channels
   for (let k = 0; k < MASK * MASK; k++) { maskRgb[k * 3] = mask[k * 4]!; maskRgb[k * 3 + 1] = mask[k * 4 + 1]!; maskRgb[k * 3 + 2] = Math.min(255, mask[k * 4 + 2]! + mask[k * 4 + 3]!); }

@@ -12,7 +12,7 @@ export const POSTURE_ANCHORS = {
     /** Per frame measurements (a: broader frame, b: curvier frame). */
     frames: { a: { seatHeight: 0.462, seatZ: -0.2 }, b: { seatHeight: 0.468, seatZ: -0.153 } },
     /** The same for the scanned (Meshy) bodies (`dev/meshy/shootLab.mjs --plan=measure`). */
-    detailed: { a: { seatHeight: 0.462, seatZ: -0.2 }, b: { seatHeight: 0.468, seatZ: -0.153 } },
+    detailed: { a: { seatHeight: 0.442, seatZ: -0.156 }, b: { seatHeight: 0.477, seatZ: -0.197 } },
     /** Feet rest on the floor at about this root-space z. */
     feetZ: 0.19,
   },

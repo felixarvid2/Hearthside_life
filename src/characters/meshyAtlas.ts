@@ -204,7 +204,8 @@ export interface SourceSurface {
   size: number;
 }
 
-export interface BakeResult { rgb: Uint8Array; classes: Uint8Array; covered: Uint8Array }
+/** `covered`: texels inside a triangle; `padded`: covered plus the bleed ring around every chart (classes and colours are valid there too). */
+export interface BakeResult { rgb: Uint8Array; classes: Uint8Array; covered: Uint8Array; padded: Uint8Array }
 
 /** Closest point of triangle (a, b, c) to p: barycentric weights and squared distance. */
 function closestOnTriangle(p: number[], a: number[], b: number[], c: number[]): { w: [number, number, number]; d2: number } {
@@ -312,13 +313,12 @@ export function bakeAtlas(mesh: Pick<AtlasMesh, 'positions' | 'normals' | 'uv' |
     }
   }
   // bleed into the padding
-  const cov = covered.slice();
-  bleed(rgb, classes, cov, size, padding);
-  return { rgb, classes, covered };
+  const padded = bleed(rgb, classes, covered, size, padding);
+  return { rgb, classes, covered, padded };
 }
 
-function bleed(rgb: Uint8Array, classes: Uint8Array, covered: Uint8Array, size: number, rings: number): void {
-  let cur = covered;
+function bleed(rgb: Uint8Array, classes: Uint8Array, covered: Uint8Array, size: number, rings: number): Uint8Array {
+  let cur = covered.slice();
   for (let r = 0; r < rings; r++) {
     const next = cur.slice();
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
@@ -336,4 +336,5 @@ function bleed(rgb: Uint8Array, classes: Uint8Array, covered: Uint8Array, size: 
     }
     cur = next;
   }
+  return cur;
 }

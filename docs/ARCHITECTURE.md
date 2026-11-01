@@ -135,7 +135,10 @@ Tests live in `tests/unit/<module>/*.test.ts`.
 - Visitors: neighbours visit through `state.schedule` (`visitArrive`/`visitLeave`), arriving at `lot.entry`.
 
 ### characters (`src/characters`)
-- `assets.ts`: `loadCharacterAssets(baseUrl = './assets/'): Promise<CharacterAssets>` (bodies + clips).
+- `assets.ts`: `loadCharacterAssets(baseUrl = './assets/', style = 'detailed'): Promise<CharacterAssets>` (bodies + clips) and
+  `setCharacterStyle(assets, style)`. Styles: `detailed` (scanned Meshy bodies `meshy_a/b.glb`, skin recoloured through a
+  mask: `meshyBody.ts`, `meshyAtlas.ts`, `meshyBake.ts`, `meshyFit.ts`, `headMap.ts`, `createMeshySkinMaterial`) and `classic`
+  (procedural skin). `assets.frames` is the active set; `CharacterView.refreshStyle()` rebuilds a person after a switch.
 - `CharacterView.ts`: `new CharacterView(assets, content, appearance, outfit)` with `root: THREE.Group`,
   `setAppearance(a)`, `setOutfit(o)`, `play(anim: AnimId, opts?: { fade?: number })`, `update(dtSeconds)`,
   `headTop(target: THREE.Vector3): THREE.Vector3`, `setSelected(on)`, `dispose()`. Feet at origin, faces +z.

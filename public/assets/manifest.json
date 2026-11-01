@@ -2,7 +2,8 @@
  "generatedBy": "tools/build-assets.mjs",
  "sources": {
   "characters": "Quaternius Universal Animation Library 1 and 2 (Standard), CC0 1.0, https://quaternius.com",
-  "furniture": "Kenney Furniture Kit 2.0, CC0 1.0, https://kenney.nl"
+  "furniture": "Kenney Furniture Kit 2.0, CC0 1.0, https://kenney.nl",
+  "detailedCharacters": "meshy_a / meshy_b: AI-generated with Meshy (https://www.meshy.ai), 2026-11-01; see dev/meshy/README.md"
  },
  "characters": {
   "body_a": {
@@ -40,6 +41,58 @@
     ]
    },
    "source": "Mannequin_F.glb"
+  },
+  "meshy_a": {
+   "file": "characters/meshy_a.glb",
+   "vertices": 6856,
+   "triangles": 9998,
+   "joints": 65,
+   "textures": [
+    {
+     "name": "albedo",
+     "size": [
+      1024,
+      1024
+     ],
+     "mime": "image/webp"
+    },
+    {
+     "name": "mask",
+     "size": [
+      512,
+      512
+     ],
+     "mime": "image/png"
+    }
+   ],
+   "bytes": 562792,
+   "source": "dev/meshy/base_male_v2.glb (Meshy)"
+  },
+  "meshy_b": {
+   "file": "characters/meshy_b.glb",
+   "vertices": 6681,
+   "triangles": 9998,
+   "joints": 65,
+   "textures": [
+    {
+     "name": "albedo",
+     "size": [
+      1024,
+      1024
+     ],
+     "mime": "image/webp"
+    },
+    {
+     "name": "mask",
+     "size": [
+      512,
+      512
+     ],
+     "mime": "image/png"
+    }
+   ],
+   "bytes": 555712,
+   "source": "dev/meshy/base_female_underwear.glb (Meshy)"
   }
  },
  "animations": {

@@ -265,6 +265,8 @@ export interface MeshySkinUniforms extends SkinUniforms {
   uUnder: THREE.IUniform<THREE.Color>;
   /** Strength of the baked shading kept on recoloured skin (1 = as baked, 0 = flat tone). */
   uDetail: THREE.IUniform<number>;
+  /** Worn garments over the baked base layer: top covered (0/1), bottom covered (0/1), height that separates the tank top from the shorts. */
+  uBase: THREE.IUniform<THREE.Vector3>;
 }
 
 const MSKIN_VERT_HEAD = /* glsl */ `
@@ -320,6 +322,7 @@ uniform vec3 uClothLum;
 uniform float uSplitY;
 uniform vec3 uUnder;
 uniform float uDetail;
+uniform vec3 uBase;
 uniform vec3 uEyeColor;
 uniform vec3 uBrowColor;
 uniform vec3 uHairColor;
@@ -338,12 +341,15 @@ if (vCover > 0.5) discard;                            // under an opaque garment
   vec3 m = texture2D(uMask, vMsUv).rgb;               // skin, baked clothing, iris / brow
   float lt = max(hsLuma(tex), 1e-4);
   // skin: the chosen tone times the baked shading (luminance ratio to the mean baked skin), a little of the baked hue kept
-  float rs = pow(clamp(lt / max(hsLuma(uSkinMean), 1e-3), 0.25, 2.2), uDetail);
+  float rs = pow(clamp(lt / max(hsLuma(uSkinMean), 1e-3), 0.6, 1.8), uDetail); // anti-aliased clothing edges are skin-warm but dark: keep them from drawing lines
   vec3 hue = clamp(tex / max(uSkinMean, vec3(1e-3)) / max(lt / max(hsLuma(uSkinMean), 1e-3), 1e-3), vec3(0.8), vec3(1.25));
   vec3 skinCol = tone * rs * mix(vec3(1.0), hue, 0.35);
   // baked base layer: plain underwear with its own shading (dark and light parts are normalised separately)
   float refL = lt < uClothLum.z ? uClothLum.x : uClothLum.y;
   vec3 underCol = uUnder * pow(clamp(lt / max(refL, 1e-4), 0.3, 2.5), uDetail * 0.8);
+  // a garment over the tank top (or the shorts) that does not hide all of it: what peeks out reads as bare skin, not as a second layer
+  vec3 bareCol = tone * pow(clamp(lt / max(refL, 1e-4), 0.6, 1.5), uDetail * 0.4);
+  underCol = mix(underCol, bareCol, mix(uBase.x, uBase.y, step(vBindY, uBase.z)));
   // iris and brow take the creator colours, keeping the baked dark/bright structure
   float isBrow = step(uSplitY, vBindY);
   vec3 irisCol = uEyeColor * mix(0.38, 1.25, smoothstep(0.004, 0.06, lt));
@@ -407,6 +413,7 @@ export function createMeshySkinMaterial(): { material: THREE.MeshStandardMateria
     uSplitY: { value: 1.685 },
     uUnder: { value: new THREE.Color('#d9d3c9') },
     uDetail: { value: 0.75 },
+    uBase: { value: new THREE.Vector3(0, 0, 0.9) },
   };
   patch(material, 'hs-meshy-skin-v1', uniforms as unknown as Uniforms,
     [['#include <common>', `#include <common>\n${MSKIN_VERT_HEAD}`], ['#include <morphtarget_vertex>', MSKIN_VERT_COVER]],

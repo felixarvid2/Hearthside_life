@@ -370,5 +370,11 @@ export class CharacterView {
     const t = cov.torso;
     this.skinU.uCoverTorso.value.set(t?.yMin ?? 0, t?.yMaxBack ?? 0, t?.yMaxFront ?? 0, t ? 1 : 0);
     this.skinU.uCoverLimbs.value.set(cov.armMaxX, cov.legMinY, cov.footMaxY, 0.03);
+    // Meshy bodies: the baked tank top / shorts read as underwear unless a garment of that half is worn
+    const base = (this.skinU as Partial<MeshySkinUniforms>).uBase;
+    if (base) {
+      const worn = (layers: GarmentLayer[]) => (resolved.layers.some((l) => layers.includes(l.layer)) ? 1 : 0);
+      base.value.set(worn(['top', 'outer', 'full']), worn(['bottom', 'full']), lm.crotchY + 0.12);
+    }
   }
 }

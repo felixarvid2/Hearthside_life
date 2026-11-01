@@ -172,6 +172,7 @@ export class HeadMap {
   private readonly keysM: number[];
   private readonly chinC: number;
   private readonly slopeBelow: number;
+  private readonly slopeTop: number;
   /** Height of the chin on the Meshy head (from the parametric proportions below the eyes). */
   readonly chinM: number;
 
@@ -181,6 +182,7 @@ export class HeadMap {
     const eyeC = base + FL.eyeY * HEAD_SCALE, browC = base + FL.browY * HEAD_SCALE, crownC = base + CROWN_Y * HEAD_SCALE;
     this.chinC = base + (H_MIN - 0.004) * HEAD_SCALE;
     this.slopeBelow = (info.crownY - info.eyeY) / (crownC - eyeC);
+    this.slopeTop = (info.crownY - info.browY) / (crownC - browC);
     this.chinM = info.eyeY - (eyeC - this.chinC) * this.slopeBelow;
     this.keysC = [eyeC, browC, crownC];
     this.keysM = [info.eyeY, info.browY, info.crownY];
@@ -202,9 +204,12 @@ export class HeadMap {
     return c[2]! + (y - m[2]!) * ((c[2]! - c[1]!) / (m[2]! - m[1]!));
   }
 
-  private scale(theta: number, yC: number, yM: number): number {
-    const rc = sampleRadius(this.classic, theta, yC), rm = sampleRadius(this.info.table, theta, yM);
-    return clamp(rm / Math.max(rc, 1e-3), 0.5, 1.8);
+  /** Surface radii of both heads at an angle and height (classic height yC, Meshy height yM). */
+  private radii(theta: number, yC: number, yM: number): { rc: number; rm: number } {
+    // the radii vanish at the crown, so they are read from a little below it (a rim around a dip would show otherwise)
+    const hold = this.keysC[2]! - 0.02;
+    const k = yC > hold ? hold - yC : 0;
+    return { rc: Math.max(sampleRadius(this.classic, theta, yC + k), 1e-3), rm: sampleRadius(this.info.table, theta, yM + k * this.slopeTop) };
   }
 
   /** Classic-head bind point -> Meshy head. Fades to the identity below the chin (hair that hangs to the shoulders). */
@@ -215,11 +220,16 @@ export class HeadMap {
     const dx = p[0] - t.axisX, dz = p[2] - t.axisZ;
     const theta = Math.atan2(dx, dz);
     const yM = this.mapY(p[1]);
-    const s = this.scale(theta, p[1], yM);
+    const { rc, rm } = this.radii(theta, p[1], yM);
+    // inside the parametric surface the offset scales with the ratio of the radii; outside it (hair above the scalp, tails
+    // that hang away from the head) it keeps its length and only moves with the surface
+    const r = Math.hypot(dx, dz);
+    const r2 = r <= rc ? r * clamp(rm / rc, 0.5, 1.8) : rm + (r - rc);
+    const k = r > 1e-9 ? r2 / r : 1;
     const mt = this.info.table;
-    out[0] = p[0] + w * (mt.axisX + dx * s - p[0]);
+    out[0] = p[0] + w * (mt.axisX + dx * k - p[0]);
     out[1] = p[1] + w * (yM - p[1]);
-    out[2] = p[2] + w * (mt.axisZ + dz * s - p[2]);
+    out[2] = p[2] + w * (mt.axisZ + dz * k - p[2]);
     return out;
   }
 
@@ -229,8 +239,11 @@ export class HeadMap {
     const dx = p[0] - mt.axisX, dz = p[2] - mt.axisZ;
     const theta = Math.atan2(dx, dz);
     const yC = this.unmapY(p[1]);
-    const s = this.scale(theta, yC, p[1]);
-    return [this.classic.axisX + dx / s, yC, this.classic.axisZ + dz / s];
+    const { rc, rm } = this.radii(theta, yC, p[1]);
+    const r = Math.hypot(dx, dz);
+    const r2 = r <= rm ? r / clamp(rm / rc, 0.5, 1.8) : rc + (r - rm);
+    const k = r > 1e-9 ? r2 / r : 1;
+    return [this.classic.axisX + dx * k, yC, this.classic.axisZ + dz * k];
   }
 
   /** Moves every vertex of a hair/facial hair/accessory mesh onto the Meshy head (normals are rebuilt by the caller). */

@@ -217,6 +217,26 @@ function morph(src: Uint8Array, size: number, r: number, mode: 'erode' | 'dilate
   return out;
 }
 
+/** Spreads the classes of covered texels into the uncovered ones around them (so a lookup that lands just outside a chart still finds its class). */
+export function bleedClasses(classes: Uint8Array, covered: Uint8Array, size: number, rings: number): void {
+  let cur = covered.slice();
+  for (let r = 0; r < rings; r++) {
+    const next = cur.slice();
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const k = y * size + x;
+      if (cur[k]) continue;
+      for (let dy = -1; dy <= 1 && !next[k]; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= size || yy >= size || !cur[yy * size + xx]) continue;
+        classes[k] = classes[yy * size + xx] as number;
+        next[k] = 1;
+        break;
+      }
+    }
+    cur = next;
+  }
+}
+
 /** Bleeds the colours of covered texels into the empty ones (a few rings), so mip levels and filtering do not pull in black. */
 export function dilateTexels(rgb: Uint8Array, covered: Uint8Array, size: number, rings: number): void {
   let cur = covered.slice();

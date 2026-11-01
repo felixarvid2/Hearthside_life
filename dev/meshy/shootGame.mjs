@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Screenshots of the real game (production build) with one character style -> dev/meshy/shots/game/<style>-<name>.png:
 // live overview with the household portraits in the HUD, a close-up, a seated and a sleeping person, the creator preview.
-//   node dev/meshy/shootGame.mjs [--style=detailed|classic] [--out=DIR] [--no-build]
+//   node dev/meshy/shootGame.mjs [--style=detailed|classic] [--out=DIR] [--no-build] [--creator | --creator-only] [--switch]
 // Builds into a scratch folder, serves it with vite preview on port 5393 and runs Chromium (SwiftShader) under
 // `flock /tmp/hearthside-browser.lock`. Do not wrap this script in another flock.
 
@@ -104,13 +104,14 @@ try {
   const frames = (n, dt = 1 / 30) => page.evaluate(([n2, dt2]) => { for (let i = 0; i < n2; i++) window.hearthside.debug.frame(dt2); }, [n, dt]);
   const shot = async (name, opts = {}) => {
     await frames(1);
-    await page.screenshot({ path: join(OUT, `${STYLE}-${name}.png`), ...opts });
+    await page.screenshot({ path: join(OUT, `${STYLE}-${name}.png`), timeout: 180000, ...opts });
     console.log(`[game] ${STYLE}-${name}`);
   };
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 240000 });
   await page.waitForTimeout(1200);
   console.log('[game] character style in effect:', await page.evaluate(() => window.hearthside.view.characterAssets?.style));
+  if (!args.includes('--creator-only')) {
   const started = await page.evaluate(async () => {
     const g = window.hearthside.game;
     const hhs = g.premadeHouseholds();
@@ -152,6 +153,53 @@ try {
   await page.evaluate((id) => faceAndZoom(id, 100), slept.personId ?? null);
   await frames(3);
   await shot('sleeping');
+  if (args.includes('--switch')) {
+    // Settings > Character style at run time: the other bodies load on demand and everyone is rebuilt
+    const other = STYLE === 'detailed' ? 'classic' : 'detailed';
+    await page.evaluate((st) => window.hearthside.game.setSettings({ characterStyle: st }), other);
+    await page.waitForFunction((st) => window.hearthside.view.characterAssets?.style === st, other, { timeout: 60000 });
+    await frames(10);
+    await page.evaluate(() => window.hearthside.view.frameLot(true));
+    await frames(4);
+    await page.waitForTimeout(1500);
+    await frames(10);
+    await shot(`switched-to-${other}`);
+    await page.evaluate((st) => window.hearthside.game.setSettings({ characterStyle: st }), STYLE);
+    await page.waitForFunction((st) => window.hearthside.view.characterAssets?.style === st, STYLE, { timeout: 60000 });
+    await frames(10);
+    await shot(`switched-back-to-${STYLE}`);
+  }
+  }
+  if (args.includes('--creator') || args.includes('--creator-only')) {
+    // the character creator: identity, face and body, hair, clothing (same taps as tests/e2e/acceptance.mjs)
+    if (!args.includes('--creator-only')) {
+      await page.reload({ waitUntil: 'load' });
+      await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 240000 });
+      await page.waitForTimeout(800);
+    }
+    await page.getByRole('button', { name: /New Game/ }).first().click();
+    await page.getByText('Create a Household').first().click();
+    await page.waitForFunction(() => window.hearthside.game.mode() === 'creator', null, { timeout: 60000 });
+    await page.waitForSelector('.cr-panel', { timeout: 30000 });
+    await page.waitForTimeout(2500);
+    await frames(10);
+    await shot('creator-identity');
+    const next = async () => { await page.locator('.cr-next').click(); await page.waitForTimeout(500); await frames(4); };
+    await next();
+    const chips = page.locator('[aria-label="Body presets"] .chip');
+    const n = await chips.count();
+    if (n > 2) { await chips.nth(n - 1).click(); await frames(6); }
+    await shot('creator-body');
+    await next();
+    const cards = page.locator('.cr-hair-grid .cr-card');
+    const nh = await cards.count();
+    if (nh > 3) { await cards.nth(nh - 3).click(); await frames(6); }
+    await shot('creator-hair');
+    await next();
+    await page.waitForTimeout(300);
+    await frames(6);
+    await shot('creator-clothing');
+  }
   if (errors.length) console.log(`[game] console problems (${errors.length}):\n  ${[...new Set(errors)].slice(0, 8).join('\n  ')}`);
   await ctx.close();
 } finally {

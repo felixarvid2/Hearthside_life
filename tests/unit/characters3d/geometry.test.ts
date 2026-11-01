@@ -86,6 +86,14 @@ describe('pure helpers', () => {
     const l = lyingPlacement({ x: 0, y: 0.5, z: 0 }, 0);
     expect(l.z + POSTURE_ANCHORS.lying.centerZ).toBeCloseTo(0, 6);
     expect(l.y).toBeCloseTo(0.54, 6);
+    // each frame and style has its own measurement (the scanned bodies sit a little differently)
+    for (const frame of ['a', 'b'] as const) {
+      const c = seatedPlacement({ x: 0, y: 1, z: 0 }, 0, frame, 'classic');
+      const d = seatedPlacement({ x: 0, y: 1, z: 0 }, 0, frame, 'detailed');
+      expect(c.y).toBeCloseTo(1 - POSTURE_ANCHORS.seated.frames[frame].seatHeight, 6);
+      expect(d.y).toBeCloseTo(1 - POSTURE_ANCHORS.seated.detailed[frame].seatHeight, 6);
+      expect(d.z).toBeCloseTo(-POSTURE_ANCHORS.seated.detailed[frame].seatZ, 6);
+    }
   });
 });
 

@@ -83,6 +83,9 @@ if (['creator', 'all'].includes(PLAN)) {
   }
   for (const f of ['a', 'b']) shot(`${f}_face_sliders`, CLOSE, { person: solo(f), set: { body: {}, face: { faceLength: 1, faceWidth: 1, jawWidth: 1, chin: 1, cheeks: 1, noseWidth: 1, noseLength: 1, lipFullness: 1 }, freckles: 0.9, blush: 0.9, outfit: TEE, hair: 'none', facial: null }, cam: front(1.1, 1.62, 28) });
 }
+if (['hairside', 'all'].includes(PLAN)) {
+  for (const h of ['ponytail-high', 'long-straight', 'braids-twin', 'bob-chin']) for (const f of ['a', 'b']) shot(`${f}_side_${h}`, { vp: [600, 700], dpr: 1 }, { person: solo(f), set: { hair: h, outfit: TEE, hairColor: '#7a4a2a' }, cam: [1.57, 0.08, 3.2, 1.25, 28] });
+}
 const BENCH = PLAN === 'bench';
 const MEASURE = PLAN === 'measure';
 if (['live', 'all'].includes(PLAN)) {
@@ -104,7 +107,7 @@ function waitForServer(url, ms) {
   })();
 }
 
-const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), '--config', join(here, 'vite.lab.config.mjs'), '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
 let browser = null;
 try {
   await waitForServer(`http://127.0.0.1:${PORT}/dev/characters.html`, 30000);
