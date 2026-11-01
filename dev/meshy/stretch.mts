@@ -50,29 +50,35 @@ const poses: Array<[string, 'standing' | 'seated' | 'lying' | undefined, number]
   ['eat', undefined, 0.5], ['wave', undefined, 0.4], ['dance', undefined, 0.8], ['talk', undefined, 0.6], ['cook', undefined, 0.4], ['pickUp', undefined, 0.6], ['foldArms', undefined, 0.5],
 ];
 
-function stretch(mesh: THREE.SkinnedMesh, idx: ArrayLike<number>): { max: number; over2: number; over3: number; p99: number; worst: Array<{ r: number; a: number }> } {
+function stretch(mesh: THREE.SkinnedMesh, idx: ArrayLike<number>): { max: number; over2: number; over3: number; p99: number; worst: Array<{ r: number; a: number; b?: number }> } {
   const g = mesh.geometry, bp = g.getAttribute('position'), n = bp.count;
   const v = new THREE.Vector3();
   const posed = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) { mesh.getVertexPosition(i, v); posed.set([v.x, v.y, v.z], i * 3); }
-  const seen = new Set<number>(), rs: Array<{ r: number; a: number }> = [];
+  const seen = new Set<number>(), rs: Array<{ r: number; a: number; b?: number }> = [];
   const edge = (a: number, b: number) => {
     const k = a < b ? a * n + b : b * n + a;
     if (seen.has(k)) return; seen.add(k);
     const d0 = Math.hypot(bp.getX(a) - bp.getX(b), bp.getY(a) - bp.getY(b), bp.getZ(a) - bp.getZ(b));
     if (d0 < 0.003) return;
     const d1 = Math.hypot(posed[a * 3]! - posed[b * 3]!, posed[a * 3 + 1]! - posed[b * 3 + 1]!, posed[a * 3 + 2]! - posed[b * 3 + 2]!);
-    rs.push({ r: d1 / d0, a });
+    rs.push({ r: d1 / d0, a, b });
   };
   for (let t = 0; t < idx.length; t += 3) { edge(idx[t]!, idx[t + 1]!); edge(idx[t + 1]!, idx[t + 2]!); edge(idx[t + 2]!, idx[t]!); }
   rs.sort((x, y) => y.r - x.r);
   return { max: rs[0]!.r, p99: rs[Math.floor(rs.length * 0.01)]!.r, over2: rs.filter((x) => x.r > 2).length, over3: rs.filter((x) => x.r > 3).length, worst: rs.slice(0, 6) };
 }
 
+const bonesOf = (a: number) => raw.boneNames[fit.joints[a * 4]!];
 const refIdx = ref.geometry.getIndex()!.array;
 const dump = arg('dump');
+if (arg('edges')) {
+  animator.play('idle' as never, { fade: 0 }); animator.update(0); animator.update(0.4); body.scene.updateMatrixWorld(true); skel.update();
+  const bp = geo.getAttribute('position');
+  for (const w of stretch(mm, index).worst) console.log('edge', w.r.toFixed(1), [w.a, w.b!].map((i) => `(${[0, 1, 2].map((k) => bp.array[i * 3 + k]!.toFixed(3)).join(',')} ${bonesOf(i)})`).join(' - '));
+}
 if (dump) mkdirSync(dump, { recursive: true });
-const bonesOf = (a: number) => raw.boneNames[fit.joints[a * 4]!];
+
 console.log('report', JSON.stringify({ ...fit.report, head: undefined, skull: undefined }));
 for (const [id, posture, t] of poses) {
   animator.play(id as never, { fade: 0, posture });

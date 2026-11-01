@@ -1120,9 +1120,8 @@ async function stepBuy(T) {
     await T.shot('buy-ghost-rotated-invalid');
   }
   await T.shot('buy-ghost-rotated');
-  const bedS = await page.locator('.bb-confirm').isEnabled();
-  if (!bedS) {
-    await T.tap(page.locator('.bb-place-footer button[aria-label="Rotate right"]'));
+  if (!(await page.evaluate(() => window.hearthside.game.placement().ok))) {
+    await T.tap(page.locator('.bb-place-footer button[aria-label="Rotate right"]')); // back to the turn that fitted
     await T.frames(2);
   }
   const plFinal = await page.evaluate(() => window.hearthside.game.placement());
@@ -1140,10 +1139,19 @@ async function stepBuy(T) {
   T.check(S, 'the bed can be selected again after moving it', sel2, '');
   await T.tap(page.locator('.bb-buy-panel button:visible', { hasText: /^Move\b(?! here)/ }).first());
   await page.waitForTimeout(300);
-  await T.tap(page.locator('.bb-place-footer button[aria-label="Rotate right"]'));
-  await T.frames(2);
-  let okNow = await page.locator('.bb-confirm').isEnabled();
-  if (!okNow) { await T.tap(page.locator('.bb-place-footer button[aria-label="Rotate right"]')); await T.frames(2); okNow = await page.locator('.bb-confirm').isEnabled(); }
+  // turn it until the ghost fits (a person may be standing in a turned footprint); another tile when no turn fits here
+  let okNow = false;
+  for (let attempt = 0; attempt < 3 && !okNow; attempt++) {
+    for (let k = 0; k < 3 && !okNow; k++) {
+      await T.tap(page.locator('.bb-place-footer button[aria-label="Rotate right"]'));
+      await T.frames(2);
+      okNow = await page.evaluate(() => window.hearthside.game.placement().ok);
+    }
+    if (!okNow) {
+      const more = (await validTiles(T, 4)).filter((t) => t.px !== bed2.x || t.pz !== bed2.z);
+      if (more[attempt]) await placeAt(T, S, 'bed rotate elsewhere', more[attempt], false);
+    }
+  }
   if (okNow) await T.tap(page.locator('.bb-confirm')); else await T.tap(page.locator('.bb-place-footer button:has-text("Cancel")'));
   await page.waitForTimeout(400);
   const s3 = await state3(T);

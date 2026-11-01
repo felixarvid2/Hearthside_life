@@ -108,6 +108,7 @@ npm run e2e            # end-to-end tests
   - `ui.html`
   - `creator.html`
   - `buildbuy.html`
+  - `meshy.html`: feasibility test of an AI-generated (Meshy) body on the mannequin skeleton (`dev/meshy/`)
 
 ## Documentation
 
