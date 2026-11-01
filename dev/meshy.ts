@@ -482,8 +482,8 @@ function step(dt: number, n = 1): void {
 /** A CharacterView whose body template (and therefore garments, hair and morph targets) was built from the Meshy mesh. */
 function meshyGarmentView(base: CharacterAssets, fa: FrameAssets): CharacterView {
   const template = buildBodyTemplate(asset.meshyRaw);
-  const derived: FrameAssets = { ...fa, raw: asset.meshyRaw, template, skinGeometry: toGeometry(template.skinMesh, 'skin-meshy') };
-  const assetsM: CharacterAssets = { frames: { a: derived, b: derived }, clips: base.clips, cache: new Map() };
+  const derived: FrameAssets = { ...fa, key: 'meshy-lab', raw: asset.meshyRaw, template, skinGeometry: toGeometry(template.skinMesh, 'skin-meshy') };
+  const assetsM: CharacterAssets = { frames: { a: derived, b: derived }, style: 'classic', sets: {}, baseUrl: base.baseUrl, clips: base.clips, cache: new Map() };
   const a = proceduralAppearance();
   a.hair = { ...a.hair, styleId: '' }; // bald: hair comes from addHair (fitted)
   const cv = new CharacterView(assetsM, content, a, proceduralOutfit());
@@ -496,7 +496,7 @@ const trace = (m: string) => { if (params.get('trace') === '1') console.log(`[me
 async function main(): Promise<void> {
   const t0 = performance.now();
   trace('assets');
-  assets = await loadCharacterAssets('/assets/');
+  assets = await loadCharacterAssets('/assets/', 'classic'); // the lab compares against the procedural body
   const fa = assets.frames[FRAME];
   trace('meshy glb');
   asset = await loadMeshy(fa);

@@ -1,6 +1,6 @@
 # Meshy character test models
 
-Generated with Meshy (https://www.meshy.ai) on 2026-11-01 for the character feasibility test. Not shipped in the game yet.
+Generated with Meshy (https://www.meshy.ai) on 2026-11-01. `base_male_v2.glb` and `base_female_underwear.glb` are the inputs of `npm run assets:meshy`, which builds the in-game bodies `public/assets/characters/meshy_a.glb` and `meshy_b.glb` (see "In the game" below); the other files are from the feasibility test.
 
 | File | How it was made | Credits |
 |---|---|---|
@@ -13,6 +13,14 @@ All are single textured meshes (~20k triangles, about 3 MB), unrigged, in T-pose
 prompt for the female body twice (long hair, fantasy clothing; 40 credits lost); generating a reference image first
 and then using image-to-3D gives much better control and is the recommended route.
 
+## In the game
+
+`npm run assets:meshy` (`tools/build-meshy-bodies.mts`) turns `base_male_v2.glb` (frame a) and `base_female_underwear.glb`
+(frame b) into `public/assets/characters/meshy_a.glb` and `meshy_b.glb`; `GameSettings.characterStyle` (`detailed` by
+default, `classic` = the procedural bodies) chooses which one the game draws. See `docs/ASSET_GUIDE.md` (Characters) for the
+pipeline and the runtime. `dev/meshy/shootLab.mjs` takes screenshots, `--plan=bench` frame-cost numbers and
+`--plan=measure` posture anchors of `dev/characters.html` in either style.
+
 ## Feasibility test: Meshy body on the mannequin skeleton (dev/meshy.html)
 
 Question: can an unrigged Meshy mesh be driven by our 65-joint skeleton and the existing clips, and how does it
@@ -22,8 +30,8 @@ What was built (nothing in `src/` changed):
 
 | File | Purpose |
 |---|---|
-| `dev/meshyFit.ts` | Pure fit: orientation, landmarks, vertical warp onto the mannequin joints, arm and leg straightening, skin-weight transfer (`SkinTransfer`), seam welding, smoothing |
-| `dev/meshyRaw.ts` | Fitted mesh as a `RawBody`, so `buildBodyTemplate`/`buildGarment`/`buildHair` can be pointed at it |
+| `src/characters/meshyFit.ts` | Pure fit: orientation, landmarks, vertical warp onto the mannequin joints, arm and leg straightening, skin-weight transfer (`SkinTransfer`), seam welding, smoothing |
+| `src/characters/meshyRaw.ts` | Fitted mesh as a `RawBody`, so `buildBodyTemplate`/`buildGarment`/`buildHair` can be pointed at it |
 | `dev/meshy.html`, `dev/meshy.ts` | Viewer: procedural character (left) next to the Meshy one (right), same clips, live camera (`CameraRig` defaults: ortho, pitch 37 deg, 66 px/m, the game's `Lighting` at noon) and close-up cameras |
 | `dev/meshy/shoot.mjs` | Playwright screenshots into `dev/meshy/shots/` (`--bench` also times frames) |
 | `dev/meshy/stretch.mts` | Node-only pose check: edge stretch per clip, with the mannequin's own skin as reference; `softrender.py` draws the dumps without a browser |

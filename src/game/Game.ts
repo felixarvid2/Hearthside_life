@@ -132,7 +132,7 @@ export class Game implements GameAPI {
     let furn = 0, chars = 0;
     const report = () => onProgress?.(0.05 + 0.9 * (furn * 0.5 + chars * 0.5), 'Furnishing the house');
     const [characterAssets] = await Promise.all([
-      loadCharacterAssets(this.assetBase).then((a) => { chars = 1; report(); return a; }),
+      loadCharacterAssets(this.assetBase, this.settingsValue.characterStyle).then((a) => { chars = 1; report(); return a; }),
       v.objectAssets.preload(assets, (d, t) => { furn = d / t; report(); }),
     ]);
     v.setCharacterAssets(characterAssets);
@@ -500,11 +500,13 @@ export class Game implements GameAPI {
   setSettings(patch: Partial<GameSettings>): void {
     const next = mergeSettings(this.settingsValue, patch);
     if (JSON.stringify(next) === JSON.stringify(this.settingsValue)) return;
+    const prev = this.settingsValue;
     this.settingsValue = next;
     saveSettings(next);
     applyDocumentSettings(next);
     this.audio.setSettings(next);
     this.gameView.applyOptions({ quality: next.quality, shadows: next.shadows, reducedMotion: next.reducedMotion });
+    if (next.characterStyle !== prev.characterStyle) void this.gameView.setCharacterStyle(next.characterStyle).then(() => this.emit('portraits'), (e) => console.error('[game] character style', e));
     this.emit('settings');
   }
 

@@ -5,13 +5,30 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { BodyFrame } from '../core/types';
+import { HeadMap } from './headMap';
+import { buildMeshyMesh } from './meshyBody';
+import type { MeshyExtras } from './meshyBody';
 import type { RawBody, Vec3 } from './rig';
 import type { BodyTemplate } from './template';
 import { buildBodyTemplate } from './template';
 import { toGeometry } from './geometry';
 
+/** 'detailed': the scanned Meshy bodies (public/assets/characters/meshy_*.glb); 'classic': the procedural bodies. */
+export type CharacterStyle = 'detailed' | 'classic';
+
+/** Textures and build data of a Meshy body frame. */
+export interface MeshyFrame {
+  albedo: THREE.Texture;
+  mask: THREE.Texture;
+  extras: MeshyExtras;
+}
+
 export interface FrameAssets {
   frame: BodyFrame;
+  /** Cache key of everything generated for this frame ('a', 'b' for classic bodies; 'am', 'bm' for Meshy bodies). */
+  key: string;
+  /** Present for Meshy bodies: the skin shader recolours its albedo through the mask. */
+  meshy: MeshyFrame | null;
   raw: RawBody;
   template: BodyTemplate;
   /** Bind-pose bone hierarchy; cloned per character. */
@@ -24,27 +41,60 @@ export interface FrameAssets {
 }
 
 export interface CharacterAssets {
+  /** The frames of the active style. */
   frames: Record<BodyFrame, FrameAssets>;
+  style: CharacterStyle;
+  /** Frame sets loaded so far (a style is loaded on first use). */
+  sets: Partial<Record<CharacterStyle, Record<BodyFrame, FrameAssets>>>;
+  baseUrl: string;
   /** Animation clips by source name (e.g. 'Idle_Loop'). */
   clips: Map<string, THREE.AnimationClip>;
   /** Generated geometry shared across characters, keyed by frame/style id. */
   cache: Map<string, THREE.BufferGeometry>;
 }
 
-/** Loads bodies and clips from `${baseUrl}characters/...` and fits both body templates. */
-export async function loadCharacterAssets(baseUrl = './assets/'): Promise<CharacterAssets> {
-  const loader = new GLTFLoader();
+/**
+ * Loads the animation clips and the bodies of `style` from `${baseUrl}characters/...` and fits their templates. When the
+ * detailed bodies cannot be loaded the classic ones are used (`assets.style` says which).
+ */
+export async function loadCharacterAssets(baseUrl = './assets/', style: CharacterStyle = 'detailed'): Promise<CharacterAssets> {
   const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-  const [a, b, an1, an2] = await Promise.all(
-    ['body_a', 'body_b', 'anims_1', 'anims_2'].map((n) => loader.loadAsync(`${base}characters/${n}.glb`)),
-  );
+  const loader = new GLTFLoader();
+  const [an1, an2] = await Promise.all(['anims_1', 'anims_2'].map((n) => loader.loadAsync(`${base}characters/${n}.glb`)));
   const clips = new Map<string, THREE.AnimationClip>();
   for (const g of [an1!, an2!]) for (const clip of g.animations) clips.set(clip.name, clip);
-  const frames = {
-    a: frameFromGltf('a', a!.scene),
-    b: frameFromGltf('b', b!.scene),
-  } as Record<BodyFrame, FrameAssets>;
-  return { frames, clips, cache: new Map() };
+  const assets: CharacterAssets = { frames: null as unknown as Record<BodyFrame, FrameAssets>, style, sets: {}, baseUrl: base, clips, cache: new Map() };
+  await setCharacterStyle(assets, style);
+  return assets;
+}
+
+/**
+ * Switches the active frame set, loading it first when needed. Returns the style in effect: a failed load of the
+ * detailed bodies keeps (or loads) the classic ones. Views must be rebuilt after a change (CharacterView.refreshStyle).
+ */
+export async function setCharacterStyle(assets: CharacterAssets, style: CharacterStyle): Promise<CharacterStyle> {
+  let want = style;
+  if (!assets.sets[want]) {
+    try {
+      assets.sets[want] = await loadFrameSet(assets.baseUrl, want);
+    } catch (e) {
+      if (want === 'classic') throw e;
+      console.warn('[characters] detailed bodies unavailable, using the classic bodies', e);
+      want = 'classic';
+      assets.sets.classic ??= await loadFrameSet(assets.baseUrl, 'classic');
+    }
+  }
+  assets.style = want;
+  assets.frames = assets.sets[want]!;
+  return want;
+}
+
+async function loadFrameSet(base: string, style: CharacterStyle): Promise<Record<BodyFrame, FrameAssets>> {
+  const loader = new GLTFLoader();
+  const names = style === 'detailed' ? ['meshy_a', 'meshy_b'] : ['body_a', 'body_b'];
+  const [a, b] = await Promise.all(names.map((n) => loader.loadAsync(`${base}characters/${n}.glb`)));
+  const make = style === 'detailed' ? meshyFrameFromGltf : frameFromGltf;
+  return { a: make('a', a!.scene), b: make('b', b!.scene) };
 }
 
 function frameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets {
@@ -60,10 +110,46 @@ function frameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets {
   rootBone.updateMatrixWorld(true);
   sm.geometry.dispose();
   return {
-    frame, raw, template, rootBone,
+    frame, key: frame, meshy: null, raw, template, rootBone,
     boneNames: skeleton.bones.map((bn) => bn.name),
     boneInverses: skeleton.boneInverses.map((m) => m.clone()),
     skinGeometry: toGeometry(template.skinMesh, `skin-${frame}`),
+  };
+}
+
+/** A Meshy body GLB: skinned mesh bound to the shared skeleton, albedo in the base colour slot, mask in the occlusion slot. */
+function meshyFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets {
+  let mesh: THREE.SkinnedMesh | null = null;
+  scene.traverse((o) => { if (!mesh && (o as THREE.SkinnedMesh).isSkinnedMesh) mesh = o as THREE.SkinnedMesh; });
+  if (!mesh) throw new Error(`meshy body ${frame}: no skinned mesh`);
+  const sm = mesh as THREE.SkinnedMesh;
+  const extras = (sm.userData.meshyBody ?? sm.parent?.userData.meshyBody) as MeshyExtras | undefined;
+  const mat = sm.material as THREE.MeshStandardMaterial;
+  if (!extras || !mat.map || !mat.aoMap) throw new Error(`meshy body ${frame}: missing extras or textures`);
+  const albedo = mat.map, mask = mat.aoMap;
+  albedo.colorSpace = THREE.SRGBColorSpace;
+  mask.colorSpace = THREE.NoColorSpace;
+  for (const t of [albedo, mask]) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 4; }
+  const skeleton = sm.skeleton;
+  const raw = rawFromMesh(frame, sm);
+  // the scanned surface is the body: no stylisation, no procedural hands, feet or head
+  const template = buildBodyTemplate(raw, { stylise: false, skinParts: false });
+  const headMap = new HeadMap(extras.head, template.headOrigin);
+  template.headMap = headMap;
+  const normals = new Float32Array((sm.geometry.getAttribute('normal') as THREE.BufferAttribute).array);
+  const uv = new Float32Array((sm.geometry.getAttribute('uv') as THREE.BufferAttribute).array);
+  const skinMesh = buildMeshyMesh({ raw, normals, uv, template, headMap });
+  template.skinMesh = skinMesh;
+  const rootBone = skeleton.bones.find((bn) => !(bn.parent && (bn.parent as THREE.Bone).isBone)) ?? skeleton.bones[0]!;
+  rootBone.removeFromParent();
+  rootBone.updateMatrixWorld(true);
+  sm.geometry.dispose();
+  mat.dispose();
+  return {
+    frame, key: `${frame}m`, meshy: { albedo, mask, extras }, raw, template, rootBone,
+    boneNames: skeleton.bones.map((bn) => bn.name),
+    boneInverses: skeleton.boneInverses.map((m) => m.clone()),
+    skinGeometry: toGeometry(skinMesh, `skin-${frame}m`),
   };
 }
 
@@ -120,5 +206,11 @@ export function cachedGeometry(assets: CharacterAssets, key: string, build: () =
 export function disposeCharacterAssets(assets: CharacterAssets): void {
   for (const g of assets.cache.values()) g.dispose();
   assets.cache.clear();
-  for (const f of Object.values(assets.frames)) f.skinGeometry.dispose();
+  for (const set of Object.values(assets.sets)) {
+    for (const f of Object.values(set)) {
+      f.skinGeometry.dispose();
+      f.meshy?.albedo.dispose();
+      f.meshy?.mask.dispose();
+    }
+  }
 }

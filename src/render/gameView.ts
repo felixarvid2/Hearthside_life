@@ -3,7 +3,8 @@
 // screen-space questions (picking, projection, anchors). It never changes the world state.
 
 import * as THREE from 'three';
-import type { CharacterAssets } from '../characters/assets';
+import type { CharacterAssets, CharacterStyle } from '../characters/assets';
+import { setCharacterStyle } from '../characters/assets';
 import type { ContentDB } from '../content/types';
 import { hourOfDay } from '../core/clock';
 import { tileKey } from '../core/ids';
@@ -63,6 +64,7 @@ export class GameView {
   private cycleState: { key: string; index: number; x: number; y: number; at: number; version: number } | null = null;
   private pendingReveal: { box: THREE.Box3; wait: number; zoomIn: boolean } | null = null;
   private ghost: PlacementState | null = null;
+  private highlighted: Id | null = null;
   private lastCutawayKey = '';
   /** Called when the camera moved (UI anchors). */
   onCamera: (() => void) | null = null;
@@ -74,7 +76,7 @@ export class GameView {
       this.rig.setSize(w, h);
       this.creator?.setSize(w, h);
       if (this.orbiting) this.frameLot(true);
-      else if (this.ghost) this.reveal(this.ghost, false);
+      else this.keepInView();
     };
     this.objectAssets = new ObjectAssets(assetBase);
     this.lighting = new Lighting(this.scene);
@@ -107,6 +109,17 @@ export class GameView {
   }
 
   get characterAssets(): CharacterAssets | null { return this.charAssets; }
+
+  /** Switches the character style (loading the other bodies on first use) and rebuilds everyone. Resolves to the style in effect. */
+  async setCharacterStyle(style: CharacterStyle): Promise<CharacterStyle> {
+    const assets = this.charAssets;
+    if (!assets || assets.style === style) return assets?.style ?? style;
+    const now = await setCharacterStyle(assets, style);
+    this.people?.refreshStyle();
+    this.creator?.refreshStyle();
+    this.portraits?.refreshStyle();
+    return now;
+  }
   get portraitRenderer(): PortraitRenderer | null { return this.portraits; }
   get creatorScene(): CreatorScene | null { return this.creator; }
 
@@ -173,7 +186,7 @@ export class GameView {
 
   setSelected(id: Id | null): void { this.people?.setSelected(id); }
 
-  setObjectHighlight(id: Id | null): void { this.objects.setHighlight(id); }
+  setObjectHighlight(id: Id | null): void { this.highlighted = id; this.objects.setHighlight(id); }
 
   setPlacement(p: PlacementState | null): void {
     this.ghost = p;
@@ -249,6 +262,12 @@ export class GameView {
       case 'item': return this.objects.boxOf(t.kind === 'object' ? t.objectId : t.itemId)?.clone() ?? null;
       default: return null;
     }
+  }
+
+  /** After a layout change: pans (never zooms) so the placement ghost, or else the selected Buy object, stays visible. */
+  private keepInView(): void {
+    if (this.ghost) this.reveal(this.ghost, false);
+    else if (this.highlighted) this.reveal({ kind: 'object', objectId: this.highlighted }, false);
   }
 
   private runPendingReveal(dt: number): void {
@@ -452,7 +471,7 @@ export class GameView {
 
   setInsets(i: Insets): void {
     const changed = this.rig.setInsets(i);
-    if (changed && this.ghost && !this.pendingReveal) this.reveal(this.ghost, false); // panels or the device turned: keep the ghost on screen
+    if (changed && !this.pendingReveal) this.keepInView(); // panels or the device turned: keep the ghost / selected object on screen
     if (this.orbiting) { this.rig.update(0); this.frameLot(true); }
     this.creator?.setInsets(i);
   }

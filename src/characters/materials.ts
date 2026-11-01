@@ -248,6 +248,173 @@ export function createSkinMaterial(): { material: THREE.MeshStandardMaterial; un
 }
 
 // ---------------------------------------------------------------------------------------------
+// Skin of a Meshy body
+// ---------------------------------------------------------------------------------------------
+
+/** Uniforms of the Meshy skin: the shared SkinUniforms plus the texture inputs and the recolour parameters. */
+export interface MeshySkinUniforms extends SkinUniforms {
+  uAlbedo: THREE.IUniform<THREE.Texture | null>;
+  uMask: THREE.IUniform<THREE.Texture | null>;
+  /** Mean linear colour of the baked skin. */
+  uSkinMean: THREE.IUniform<THREE.Vector3>;
+  /** Luminance of the dark and light baked clothing and the luminance that separates them. */
+  uClothLum: THREE.IUniform<THREE.Vector3>;
+  /** Height (bind space) above which mask channel B is a brow, below it an iris. */
+  uSplitY: THREE.IUniform<number>;
+  /** Colour of the baked base layer (tank top, shorts) where it shows as plain underwear. */
+  uUnder: THREE.IUniform<THREE.Color>;
+  /** Strength of the baked shading kept on recoloured skin (1 = as baked, 0 = flat tone). */
+  uDetail: THREE.IUniform<number>;
+}
+
+const MSKIN_VERT_HEAD = /* glsl */ `
+attribute vec4 aInfo;
+attribute vec3 aFace;
+varying vec4 vInfo;
+varying vec3 vFace;
+varying vec2 vMsUv;
+varying float vBindY;
+varying float vCover;
+uniform vec4 uCoverTorso; // yMin, yMaxBack, yMaxFront, enabled
+uniform vec4 uCoverLimbs; // armMaxX, legMinY, footMaxY, margin
+`;
+
+// Same push-in of covered regions as the procedural skin; the front/back neckline height is blended by the normal so the
+// edge of a (much coarser) scanned mesh does not step where the surface turns sideways.
+const MSKIN_VERT_COVER = /* glsl */ `
+#include <morphtarget_vertex>
+vInfo = aInfo;
+vFace = aFace;
+vMsUv = uv;
+vBindY = transformed.y;
+{
+  float part = aInfo.x;
+  float sAx = aInfo.y;
+  float mg = uCoverLimbs.w;
+  float cover = 0.0;
+  if (part < 0.5) {
+    float yMax = mix(uCoverTorso.y, uCoverTorso.z, smoothstep(-0.3, 0.3, aInfo.z));
+    cover = uCoverTorso.w * smoothstep(uCoverTorso.x + mg - 0.012, uCoverTorso.x + mg + 0.012, sAx) * (1.0 - smoothstep(yMax - mg - 0.012, yMax - mg + 0.012, sAx));
+  } else if (part < 1.5) {
+    cover = smoothstep(uCoverLimbs.y + mg - 0.012, uCoverLimbs.y + mg + 0.012, sAx);
+  } else if (part < 2.5) {
+    cover = 1.0 - smoothstep(uCoverLimbs.x - mg - 0.012, uCoverLimbs.x - mg + 0.012, sAx);
+  } else if (part > 3.5 && part < 4.5) {
+    cover = 1.0 - smoothstep(uCoverLimbs.z - mg - 0.012, uCoverLimbs.z - mg + 0.012, sAx);
+  }
+  transformed -= normal * (0.022 * cover);
+  vCover = cover;
+}
+`;
+
+const MSKIN_FRAG_HEAD = /* glsl */ `
+varying vec4 vInfo;
+varying vec3 vFace;
+varying vec2 vMsUv;
+varying float vBindY;
+varying float vCover;
+uniform sampler2D uAlbedo;
+uniform sampler2D uMask;
+uniform vec3 uSkinMean;
+uniform vec3 uClothLum;
+uniform float uSplitY;
+uniform vec3 uUnder;
+uniform float uDetail;
+uniform vec3 uEyeColor;
+uniform vec3 uBrowColor;
+uniform vec3 uHairColor;
+uniform vec4 uSkinFx; // freckles, blush, stubble, -
+uniform float uSelect;
+float hsHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float hsLuma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+`;
+
+const MSKIN_FRAG_PAINT = /* glsl */ `
+#include <color_fragment>
+if (vCover > 0.5) discard;                            // under an opaque garment: nothing of the body can poke through
+{
+  vec3 tone = diffuseColor.rgb;                       // material.color: the chosen skin tone (linear)
+  vec3 tex = texture2D(uAlbedo, vMsUv).rgb;           // baked albedo (linear)
+  vec3 m = texture2D(uMask, vMsUv).rgb;               // skin, baked clothing, iris / brow
+  float lt = max(hsLuma(tex), 1e-4);
+  // skin: the chosen tone times the baked shading (luminance ratio to the mean baked skin), a little of the baked hue kept
+  float rs = pow(clamp(lt / max(hsLuma(uSkinMean), 1e-3), 0.25, 2.2), uDetail);
+  vec3 hue = clamp(tex / max(uSkinMean, vec3(1e-3)) / max(lt / max(hsLuma(uSkinMean), 1e-3), 1e-3), vec3(0.8), vec3(1.25));
+  vec3 skinCol = tone * rs * mix(vec3(1.0), hue, 0.35);
+  // baked base layer: plain underwear with its own shading (dark and light parts are normalised separately)
+  float refL = lt < uClothLum.z ? uClothLum.x : uClothLum.y;
+  vec3 underCol = uUnder * pow(clamp(lt / max(refL, 1e-4), 0.3, 2.5), uDetail * 0.8);
+  // iris and brow take the creator colours, keeping the baked dark/bright structure
+  float isBrow = step(uSplitY, vBindY);
+  vec3 irisCol = uEyeColor * mix(0.38, 1.25, smoothstep(0.004, 0.06, lt));
+  vec3 browCol = uBrowColor * mix(0.55, 1.2, smoothstep(0.01, 0.12, lt));
+  vec3 featCol = mix(irisCol, browCol, isBrow);
+  float rest = clamp(1.0 - m.r - m.g - m.b, 0.0, 1.0);
+  vec3 col = tex * rest + skinCol * m.r + underCol * m.g + featCol * m.b;
+  // face paint on the head: blush, freckles and stubble use the parametric face layout (aFace = head-local coordinates)
+  if (vInfo.x > 4.5 && vInfo.x < 5.5) {
+    vec3 fp = vFace;
+    if (fp.z > 0.02) {
+      float ax = abs(fp.x);
+      float skinM = clamp(m.r, 0.0, 1.0);
+      float cheek = exp(-(pow(ax - 0.045, 2.0) + pow(fp.y - 0.062, 2.0)) / (2.0 * 0.015 * 0.015));
+      col = mix(col, col * vec3(1.12, 0.74, 0.76), uSkinFx.y * cheek * 0.55 * skinM);
+      if (uSkinFx.x > 0.01) {
+        float region = exp(-pow(ax - 0.026, 2.0) / (2.0 * 0.021 * 0.021) - pow(fp.y - 0.073, 2.0) / (2.0 * 0.012 * 0.012));
+        vec2 cell = fp.xy / 0.0034;
+        vec2 ci = floor(cell);
+        vec2 cf = fract(cell);
+        float h = hsHash(ci);
+        vec2 c = vec2(hsHash(ci + 7.1), hsHash(ci + 3.3)) * 0.6 + 0.2;
+        float r = (0.16 + 0.14 * hsHash(ci + 1.7));
+        float dotM = step(0.45, h) * (1.0 - smoothstep(r - 0.1, r + 0.1, length(cf - c)));
+        col = mix(col, col * vec3(0.68, 0.55, 0.47), dotM * region * uSkinFx.x * 0.85 * skinM);
+      }
+      if (uSkinFx.z > 0.01) {
+        float lowerFace = smoothstep(0.052, 0.036, fp.y) * smoothstep(-0.03, -0.004, fp.y);
+        float lipGap = 1.0 - exp(-(fp.x * fp.x) / (2.0 * 0.019 * 0.019) - pow(fp.y - 0.029, 2.0) / (2.0 * 0.0075 * 0.0075));
+        float upper = smoothstep(0.05, 0.044, fp.y) * smoothstep(0.034, 0.038, fp.y) * smoothstep(0.03, 0.02, ax);
+        float sm = clamp(lowerFace * lipGap + upper, 0.0, 1.0) * smoothstep(0.06, 0.07, length(vec2(ax, fp.z)));
+        float grain = 0.7 + 0.3 * hsHash(floor(fp.xy / 0.0007));
+        col = mix(col, mix(col * 0.55, uHairColor * 0.8, 0.5), sm * uSkinFx.z * 0.55 * grain * skinM);
+      }
+    }
+  }
+  diffuseColor.rgb = col;
+}
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.08 + vec3(0.04, 0.03, 0.0), uSelect);
+`;
+
+/** Per-character skin material of a Meshy body: baked albedo recoloured to the chosen skin tone through the mask. */
+export function createMeshySkinMaterial(): { material: THREE.MeshStandardMaterial; uniforms: MeshySkinUniforms } {
+  const material = new THREE.MeshStandardMaterial({ color: '#c99a78', roughness: 0.7, metalness: 0 });
+  const uniforms: MeshySkinUniforms = {
+    uCoverTorso: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uCoverLimbs: { value: new THREE.Vector4(0, 10, 0, 0.03) },
+    uEyeColor: { value: new THREE.Color('#5e3b1f') },
+    uBrowColor: { value: new THREE.Color('#3d2a1f') },
+    uLipColor: { value: new THREE.Color('#b5525a') },
+    uHairColor: { value: new THREE.Color('#3d2a1f') },
+    uEye: { value: new THREE.Vector4() },
+    uBrow: { value: new THREE.Vector4() },
+    uMouth: { value: new THREE.Vector4() },
+    uSkinFx: { value: new THREE.Vector4() },
+    uSelect: { value: 0 },
+    uAlbedo: { value: null },
+    uMask: { value: null },
+    uSkinMean: { value: new THREE.Vector3(0.79, 0.49, 0.38) },
+    uClothLum: { value: new THREE.Vector3(0.1, 0.1, 0.1) },
+    uSplitY: { value: 1.685 },
+    uUnder: { value: new THREE.Color('#d9d3c9') },
+    uDetail: { value: 0.75 },
+  };
+  patch(material, 'hs-meshy-skin-v1', uniforms as unknown as Uniforms,
+    [['#include <common>', `#include <common>\n${MSKIN_VERT_HEAD}`], ['#include <morphtarget_vertex>', MSKIN_VERT_COVER]],
+    [['#include <common>', `#include <common>\n${MSKIN_FRAG_HEAD}`], ['#include <color_fragment>', MSKIN_FRAG_PAINT]]);
+  return { material, uniforms };
+}
+
+// ---------------------------------------------------------------------------------------------
 // Cloth
 // ---------------------------------------------------------------------------------------------
 

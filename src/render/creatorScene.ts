@@ -121,6 +121,12 @@ export class CreatorScene {
 
   get active(): boolean { return this.view !== null; }
 
+  /** Rebuilds the shown person on the assets' current character style. */
+  refreshStyle(): void {
+    this.view?.refreshStyle();
+    this.view?.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
+  }
+
   setView(v: View): void {
     this.viewName = v;
     const yaw = v === 'side' ? Math.PI / 2 : v === 'back' ? Math.PI : 0;

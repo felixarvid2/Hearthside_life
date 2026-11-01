@@ -3,6 +3,7 @@
 | Folder | Source | License |
 |---|---|---|
 | characters/ | Quaternius - Universal Animation Library 1 & 2 (Standard), mannequins and animations | CC0 1.0 |
+| characters/meshy_a.glb, meshy_b.glb | Base bodies generated with Meshy (meshy.ai) on 2026-11-01, fitted and re-textured by tools/build-meshy-bodies.mts | Meshy terms of the generating account (see dev/meshy/README.md) |
 | furniture/ | Kenney - Furniture Kit 2.0 (models and isometric thumbnails) | CC0 1.0 |
 | audio/ | Kenney - Interface Sounds 1.0 and Music Jingles | CC0 1.0 |
 

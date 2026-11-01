@@ -53,9 +53,10 @@ export interface ClassifyOptions {
 
 export interface ClassifyResult {
   classes: Uint8Array;
-  /** Mean linear-sRGB colour of the body skin and of the baked clothing. */
+  /** Mean linear-sRGB colour of the body skin and the luminance clusters of the baked clothing. */
   skinMean: [number, number, number];
-  clothMean: [number, number, number];
+  /** Linear luminance of the baked clothing: [dark cluster, light cluster, split] (one cluster: both equal, split 0). */
+  clothLum: [number, number, number];
   /** Face landmark estimates (bind space) from the classified features, null when not found. */
   eyes: Array<{ x: number; y: number; z: number; r: number }>;
   brows: Array<{ x: number; y: number; z: number }>;
@@ -173,19 +174,30 @@ export function classifyTexels(rgb: Uint8Array, map: TexelMap, o: ClassifyOption
     brows.push(centroid(members));
   });
   // statistics
-  const sm = [0, 0, 0], cm = [0, 0, 0];
-  let sn = 0, cn = 0;
+  const sm = [0, 0, 0];
+  let sn = 0;
   const counts: Record<string, number> = {};
+  const clothY: number[] = [];
   for (let k = 0; k < n; k++) {
     if (tri[k]! < 0) continue;
     const c = classes[k] as number;
     counts[c] = (counts[c] ?? 0) + 1;
     if (c === CLASS.skin && !head(k)) { sn++; for (let d = 0; d < 3; d++) sm[d] = (sm[d] as number) + srgbToLinear(rgb[k * 3 + d] as number); }
-    else if (c === CLASS.cloth) { cn++; for (let d = 0; d < 3; d++) cm[d] = (cm[d] as number) + srgbToLinear(rgb[k * 3 + d] as number); }
+    else if (c === CLASS.cloth && k % 5 === 0) clothY.push(0.2126 * srgbToLinear(rgb[k * 3] as number) + 0.7152 * srgbToLinear(rgb[k * 3 + 1] as number) + 0.0722 * srgbToLinear(rgb[k * 3 + 2] as number));
   }
   const skinMean = sm.map((v) => v / Math.max(1, sn)) as [number, number, number];
-  const clothMean = cm.map((v) => v / Math.max(1, cn)) as [number, number, number];
-  return { classes, skinMean, clothMean, eyes, brows, counts };
+  // one-dimensional two-means over the clothing luminance (black shorts and a grey tank top are two clusters)
+  let lo = Infinity, hi = -Infinity;
+  for (const v of clothY) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  for (let it = 0; it < 12 && clothY.length; it++) {
+    const mid = (lo + hi) / 2;
+    let a = 0, an = 0, b = 0, bn = 0;
+    for (const v of clothY) if (v < mid) { a += v; an++; } else { b += v; bn++; }
+    if (an) lo = a / an;
+    if (bn) hi = b / bn;
+  }
+  const clothLum: [number, number, number] = hi / Math.max(lo, 1e-4) > 1.8 ? [lo, hi, (lo + hi) / 2] : [(lo + hi) / 2, (lo + hi) / 2, 0];
+  return { classes, skinMean, clothLum, eyes, brows, counts };
 }
 
 /** Square erosion or dilation of a binary mask by `r` texels (separable). */

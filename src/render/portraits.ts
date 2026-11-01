@@ -128,6 +128,13 @@ export class PortraitRenderer {
     return this.canvas.toDataURL('image/png');
   }
 
+  /** Drops the cached portraits and the reusable views (after the character style changed). */
+  refreshStyle(): void {
+    for (const v of this.views.values()) v.dispose();
+    this.views.clear();
+    this.cache.clear();
+  }
+
   dispose(): void {
     for (const v of this.views.values()) v.dispose();
     this.views.clear();

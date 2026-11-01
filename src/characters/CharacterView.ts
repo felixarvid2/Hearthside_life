@@ -15,10 +15,11 @@ import type { Coverage, CutParams } from './clothing';
 import { buildGarment, mergeCoverage } from './clothing';
 import { toGeometry, triangleCount } from './geometry';
 import { CROWN_Y, HEAD_OFFSET, HEAD_SCALE, HEAD_SCULPT_IDS } from './headShape';
+import { PAINT_MORPH_IDS } from './meshyBody';
 import { STRAND_IDS, buildHair } from './hair';
 import { buildAccessory } from './accessories';
-import type { ClothUniforms, HairUniforms, SkinUniforms } from './materials';
-import { FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createClothMaterial, createHairMaterial, createSkinMaterial } from './materials';
+import type { ClothUniforms, HairUniforms, MeshySkinUniforms, SkinUniforms } from './materials';
+import { FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
 import { resolveOutfit } from './outfits';
 import { clamp } from './rig';
 
@@ -28,7 +29,7 @@ interface GarmentSlot { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMat
 
 /** Shared garment geometry for a frame (built on first use). */
 export function garmentGeometry(assets: CharacterAssets, frame: FrameAssets, def: GarmentDef): THREE.BufferGeometry {
-  return cachedGeometry(assets, `garment:${frame.frame}:${def.id}`, () => {
+  return cachedGeometry(assets, `garment:${frame.key}:${def.id}`, () => {
     const built = buildGarment(frame.template, def);
     const g = toGeometry(built.mesh, `garment-${frame.frame}-${def.id}`);
     g.userData.cuts = built.cuts;
@@ -43,7 +44,7 @@ export function hairGeometry(assets: CharacterAssets, frame: FrameAssets, conten
   const facialDef = facialId ? content.facialHair[facialId] ?? null : null;
   const facial = facialDef && facialDef.build.kind === 'shell' ? facialDef : null;
   if (!hair && !facial) return null;
-  return cachedGeometry(assets, `hair:${frame.frame}:${hair?.id ?? '-'}:${facial?.id ?? '-'}`, () => {
+  return cachedGeometry(assets, `hair:${frame.key}:${hair?.id ?? '-'}:${facial?.id ?? '-'}`, () => {
     const mesh = buildHair(frame.template, hair, facial);
     const g = toGeometry(mesh, `hair-${hair?.id}-${facial?.id}`);
     let top = 0;
@@ -64,7 +65,7 @@ function selectionRing(): { geometry: THREE.BufferGeometry; material: THREE.Mesh
 
 /** Shared accessory geometry for a frame. */
 export function accessoryGeometry(assets: CharacterAssets, frame: FrameAssets, def: AccessoryDef): THREE.BufferGeometry {
-  return cachedGeometry(assets, `acc:${frame.frame}:${def.id}`, () => toGeometry(buildAccessory(frame.template, def), `acc-${def.id}`));
+  return cachedGeometry(assets, `acc:${frame.key}:${def.id}`, () => toGeometry(buildAccessory(frame.template, def), `acc-${def.id}`));
 }
 
 export class CharacterView {
@@ -103,7 +104,7 @@ export class CharacterView {
   // ---- public API ----
 
   setAppearance(a: Appearance): void {
-    const frameChanged = a.frame !== this.appearance.frame;
+    const frameChanged = a.frame !== this.appearance.frame || this.assets.frames[a.frame] !== this.frame;
     this.appearance = structuredClone(a);
     if (frameChanged) {
       this.teardownRig();
@@ -112,6 +113,12 @@ export class CharacterView {
       this.play(this.lastAnim.id, { fade: 0, posture: this.lastAnim.posture });
     }
     this.applyAppearance();
+  }
+
+  /** Rebuilds the person on the assets' current character style (after setCharacterStyle). */
+  refreshStyle(): void {
+    if (this.disposed || this.assets.frames[this.appearance.frame] === this.frame) return;
+    this.setAppearance(this.appearance);
   }
 
   setOutfit(o: Outfit): void {
@@ -139,7 +146,7 @@ export class CharacterView {
     head.updateWorldMatrix(true, false);
     const O = this.frame.template.headOrigin;
     const hairTop = (this.hair?.mesh.geometry.userData.topY as number | undefined) ?? 0;
-    const crownY = Math.max(O[1] + HEAD_OFFSET[1] + CROWN_Y * HEAD_SCALE, hairTop);
+    const crownY = Math.max(this.frame.meshy?.extras.head.crownY ?? O[1] + HEAD_OFFSET[1] + CROWN_Y * HEAD_SCALE, hairTop);
     return target.set(O[0], crownY, O[2]).applyMatrix4(this.frame.boneInverses[hi]!).applyMatrix4(head.matrixWorld);
   }
 
@@ -187,7 +194,16 @@ export class CharacterView {
     this.skeleton = skeleton;
     this.bones = byName;
     this.root.add(root);
-    const { material, uniforms } = createSkinMaterial();
+    const meshy = this.frame.meshy;
+    const { material, uniforms } = meshy ? createMeshySkinMaterial() : createSkinMaterial();
+    if (meshy) {
+      const mu = uniforms as MeshySkinUniforms;
+      mu.uAlbedo.value = meshy.albedo;
+      mu.uMask.value = meshy.mask;
+      mu.uSkinMean.value.fromArray(meshy.extras.skinMean);
+      mu.uClothLum.value.fromArray(meshy.extras.clothLum);
+      mu.uSplitY.value = meshy.extras.splitY;
+    }
     this.skinMat = material;
     this.skinU = uniforms;
     this.skinMesh = this.skinned(this.frame.skinGeometry, material, 'skin');
@@ -226,6 +242,7 @@ export class CharacterView {
     const face = this.appearance.face.params;
     for (const id of BODY_PARAM_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(body[id] ?? 0, -1, 1); }
     for (const id of HEAD_SCULPT_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(face[id] ?? 0, -1, 1); }
+    for (const id of PAINT_MORPH_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(face[id] ?? 0, -1, 1); }
     const hc = dict.hairClear;
     if (hc !== undefined) infl[hc] = this.hairClear;
   }

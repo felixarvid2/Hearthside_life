@@ -1,5 +1,5 @@
-// Feasibility experiment (dev/meshy*): the Meshy base bodies fitted onto the mannequin skeleton, and the body
-// template / garment / hair generators pointed at the fitted Meshy mesh.
+// The Meshy base bodies (dev/meshy/, the inputs of tools/build-meshy-bodies.mts) fitted onto the mannequin skeleton, and
+// the body template / garment / hair generators pointed at the fitted Meshy mesh.
 import { NodeIO } from '@gltf-transform/core';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -14,8 +14,7 @@ import { loadRawBody } from './loadRaw';
 
 const dir = fileURLToPath(new URL('../../../dev/meshy/', import.meta.url));
 const MODELS: Array<{ file: string; frame: 'a' | 'b' }> = [
-  { file: 'base_male_test.glb', frame: 'a' },
-  { file: 'base_male_underwear.glb', frame: 'a' },
+  { file: 'base_male_v2.glb', frame: 'a' },
   { file: 'base_female_underwear.glb', frame: 'b' },
 ];
 

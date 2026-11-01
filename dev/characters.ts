@@ -7,7 +7,8 @@ import type { AnimId } from '../src/core/anim';
 import type { Appearance, BodyFrame, GarmentChoice, GarmentLayer, Outfit } from '../src/core/types';
 import type { ContentDB } from '../src/content/types';
 import * as CH from '../src/content/character';
-import { loadCharacterAssets } from '../src/characters/assets';
+import { loadCharacterAssets, setCharacterStyle } from '../src/characters/assets';
+import type { CharacterAssets } from '../src/characters/assets';
 import { CharacterView } from '../src/characters/CharacterView';
 
 function byId<T extends { id: string }>(list: readonly T[]): Record<string, T> {
@@ -30,6 +31,7 @@ const content = characterContent();
 const params = new URLSearchParams(location.search);
 const MAX_PEOPLE = Number(params.get('n') ?? 99);
 const SHADOWS = params.get('shadows') !== '0';
+const STYLE = params.get('style') === 'classic' ? 'classic' : 'detailed';
 const swatch = (list: Array<{ color: string }>, i: number) => (list[i % list.length] as { color: string }).color;
 
 function appearance(i: number, frame: BodyFrame, hairId: string): Appearance {
@@ -134,11 +136,14 @@ function updateCamera(): void {
 }
 
 const people: CharacterView[] = [];
+let labAssets: CharacterAssets;
+let labOutfits: Outfit[] = [];
 let currentAnim: AnimId = 'idle';
 
 async function main(): Promise<void> {
   const t0 = performance.now();
-  const assets = await loadCharacterAssets('/assets/');
+  const assets = await loadCharacterAssets('/assets/', STYLE);
+  labAssets = assets;
   const loadMs = performance.now() - t0;
   const hairs = CH.HAIR.map((h) => h.id);
   const count = Math.min(MAX_PEOPLE, Math.max(hairs.length, OUTFITS.length) + 3);
@@ -191,6 +196,52 @@ function buildBar(): void {
 
 /** Hooks for automated screenshots. */
 const lab = {
+  /** Replaces person i: appearance fields (skin, body, face, hair) and an outfit given as garment ids. */
+  set(i: number, o: { frame?: BodyFrame; skin?: string; hair?: string; hairColor?: string; facial?: string | null; body?: Record<string, number>; face?: Record<string, number>; eyeColor?: string; browColor?: string; freckles?: number; blush?: number; outfit?: string[] }): void {
+    const p = people[i]!;
+    const a = appearance(i, o.frame ?? (i % 2 === 0 ? 'a' : 'b'), o.hair ?? CH.HAIR[0]!.id);
+    if (o.skin) a.skin = o.skin;
+    if (o.hairColor) { a.hair.color = o.hairColor; a.face.browColor = o.hairColor; }
+    if (o.facial !== undefined) a.hair.facialHairId = o.facial;
+    if (o.body) a.body = { ...a.body, ...o.body };
+    if (o.face) a.face.params = { ...a.face.params, ...o.face };
+    if (o.eyeColor) a.face.eyeColor = o.eyeColor;
+    if (o.browColor) a.face.browColor = o.browColor;
+    if (o.freckles !== undefined) a.face.freckles = o.freckles;
+    if (o.blush !== undefined) a.face.blush = o.blush;
+    p.setAppearance(a);
+    if (o.outfit) { labOutfits[i] = outfitFor(o.outfit, i); p.setOutfit(labOutfits[i]!); }
+  },
+  async style(s: 'classic' | 'detailed'): Promise<string> {
+    const now = await setCharacterStyle(labAssets, s);
+    for (const p of people) p.refreshStyle();
+    return now;
+  },
+  /**
+   * Frame cost with `n` people walking in the live camera framing (SwiftShader, so only relative numbers mean anything):
+   * animation update + render + a pixel readback per frame, averaged over `frames`.
+   */
+  bench(n: number, frames = 12): { msPerFrame: number; updateMs: number; triangles: number; calls: number } {
+    const gl = renderer.getContext();
+    const px = new Uint8Array(4);
+    people.forEach((p, k) => { p.root.visible = k < n; if (k < n) { p.play('walk'); p.root.position.set(((k % 4) - 1.5) * 0.9, 0, Math.floor(k / 4) * 1.1 - 0.5); p.root.rotation.y = 0.5; } });
+    lab.orthoCam(true, 6);
+    lab.cam(0.8, 0.65, 12, 0, 0.9, 0);
+    for (let k = 0; k < 3; k++) { for (const p of people) p.update(0.05); renderer.render(scene, camera); }
+    let upd = 0;
+    const t0 = performance.now();
+    for (let k = 0; k < frames; k++) {
+      const u0 = performance.now();
+      for (const p of people) if (p.root.visible) p.update(0.05);
+      upd += performance.now() - u0;
+      renderer.render(scene, camera);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    }
+    const ms = (performance.now() - t0) / frames;
+    return { msPerFrame: ms, updateMs: upd / frames, triangles: renderer.info.render.triangles, calls: renderer.info.render.calls };
+  },
+  /** Clears the lab's grid and shows one person in the middle (for screenshots). */
+  solo(i: number): void { people.forEach((p, k) => { p.root.visible = k === i; }); },
   anim(a: AnimId, posture?: 'standing' | 'seated' | 'lying'): void {
     currentAnim = a;
     for (const p of people) p.play(a, posture ? { posture } : {});

@@ -11,6 +11,8 @@ export const POSTURE_ANCHORS = {
     seatZ: -0.18,
     /** Per frame measurements (a: broader frame, b: curvier frame). */
     frames: { a: { seatHeight: 0.462, seatZ: -0.2 }, b: { seatHeight: 0.468, seatZ: -0.153 } },
+    /** The same for the scanned (Meshy) bodies (`dev/meshy/shootLab.mjs --plan=measure`). */
+    detailed: { a: { seatHeight: 0.462, seatZ: -0.2 }, b: { seatHeight: 0.468, seatZ: -0.153 } },
     /** Feet rest on the floor at about this root-space z. */
     feetZ: 0.19,
   },
@@ -37,10 +39,10 @@ export interface RootPlacement { x: number; y: number; z: number; yaw: number }
 
 /**
  * Root transform that seats a person on a seat anchor (seat surface centre at height y) facing `facing`
- * (radians, 0 = +z). Pass the frame for its exact measurement.
+ * (radians, 0 = +z). Pass the frame for its exact measurement (and the style: the scanned bodies sit a little differently).
  */
-export function seatedPlacement(anchor: { x: number; y: number; z: number }, facing: number, frame?: 'a' | 'b'): RootPlacement {
-  const m = frame ? POSTURE_ANCHORS.seated.frames[frame] : POSTURE_ANCHORS.seated;
+export function seatedPlacement(anchor: { x: number; y: number; z: number }, facing: number, frame?: 'a' | 'b', style: 'classic' | 'detailed' = 'classic'): RootPlacement {
+  const m = frame ? (style === 'detailed' ? POSTURE_ANCHORS.seated.detailed : POSTURE_ANCHORS.seated.frames)[frame] : POSTURE_ANCHORS.seated;
   const dx = Math.sin(facing), dz = Math.cos(facing);
   return { x: anchor.x - dx * m.seatZ, y: anchor.y - m.seatHeight, z: anchor.z - dz * m.seatZ, yaw: facing };
 }

@@ -142,6 +142,11 @@ export class PeopleView {
     return best;
   }
 
+  /** Rebuilds every person on the assets' current character style. */
+  refreshStyle(): void {
+    for (const e of this.entries.values()) e.view.refreshStyle();
+  }
+
   clear(): void {
     for (const e of [...this.entries.values()]) this.remove(e);
     this.slotsLot = null;
@@ -292,7 +297,7 @@ export class PeopleView {
           const pl = lyingPlacement(anchor, s.facing);
           ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
         } else if (s.kind === 'sit' || posture === 'seated') {
-          const pl = seatedPlacement(anchor, s.facing, p.appearance.frame);
+          const pl = seatedPlacement(anchor, s.facing, p.appearance.frame, this.assets.style);
           ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
         }
         rx = x + (ax - x) * k;
