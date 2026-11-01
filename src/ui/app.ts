@@ -9,7 +9,7 @@ import type { GameAPI, GameMode, SoundId } from '../game/api';
 import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
 import type { Id, StartMode } from '../core/types';
-import { mountBuildMode, type BuildModeUI } from './build/buildMode';
+import type { BuildModeUI } from './build/buildMode';
 import { mountBuildOverlay } from './build/buildOverlay';
 import { BuildSession } from './build/buildSession';
 import { mountBuyMode } from './buy/buyMode';
@@ -242,6 +242,25 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   let lastMode: GameMode | null = null;
   let destroyed = false;
 
+  // The Build panel (finish catalogs, structure tools) is only needed in Build mode: a separate chunk loaded on first use.
+  let buildLoading = false;
+  const showBuildPanel = () => {
+    if (buildUI) { buildUI.show(); return; }
+    if (buildLoading) return;
+    buildLoading = true;
+    void import('./build/buildMode').then((mod) => {
+      buildLoading = false;
+      if (destroyed) return;
+      buildUI ??= mod.mountBuildMode(root, api, buildSession);
+      if (api.mode() === 'build') buildUI.show();
+    }).catch((err: unknown) => {
+      buildLoading = false;
+      console.error('[ui] the Build panel could not load', err);
+      toast('The Build panel could not load. Check your connection and try again.', 'error', 5000);
+      if (api.mode() === 'build') api.setMode('live');
+    });
+  };
+
   const destroyCreator = () => { if (creator) { try { creator.ui.destroy(); } catch { /* ignore */ } creator = null; } };
 
   // The creator (and the wardrobe, which reuses its clothing step) is loaded on demand: a separate chunk that
@@ -368,7 +387,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     if (inGame) {
       hud.setMode(m);
       if (m === 'buy') { buyUI ??= mountBuyMode(root, api); buyUI.show(); } else buyUI?.hide();
-      if (m === 'build') { buildUI ??= mountBuildMode(root, api, buildSession); buildUI.show(); } else buildUI?.hide();
+      if (m === 'build') showBuildPanel(); else buildUI?.hide();
       if (m !== 'live') closePanels();
       if (lastMode !== m) { ctx.close(); lastMode = m; }
       hud.onSpeed(); hud.onCamera(); hud.refresh();
