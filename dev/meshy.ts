@@ -241,11 +241,19 @@ async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
     splitLegs: params.get('split') !== '0', straightenLegs: params.get('legs') !== '0', sigma: num('sigma', DEFAULT_FIT.sigma), smooth: num('smooth', DEFAULT_FIT.smooth), smoothAmount: num('smoothAmount', DEFAULT_FIT.smoothAmount),
   };
   trace('fitting');
-  const res = fitMeshy({ positions: new Float32Array(pos.array), normals: new Float32Array(nor.array), index }, fa.raw, fit);
+  // attributes can be interleaved (files rewritten by gltf-transform): copy through the accessors, not `.array`
+  const positions = new Float32Array(n * 3), normals = new Float32Array(n * 3), uvs = new Float32Array(n * 2);
+  const uvA = g.getAttribute('uv');
+  for (let i = 0; i < n; i++) {
+    positions.set([pos.getX(i), pos.getY(i), pos.getZ(i)], i * 3);
+    normals.set([nor.getX(i), nor.getY(i), nor.getZ(i)], i * 3);
+    uvs.set([uvA.getX(i), uvA.getY(i)], i * 2);
+  }
+  const res = fitMeshy({ positions, normals, index }, fa.raw, fit);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(res.positions, 3));
   geo.setAttribute('normal', new THREE.BufferAttribute(res.normals, 3));
-  geo.setAttribute('uv', g.getAttribute('uv').clone());
+  geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(res.joints, 4));
   geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(res.weights, 4));
   geo.setIndex(new THREE.BufferAttribute(res.index, 1));
