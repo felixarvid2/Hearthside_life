@@ -1,6 +1,9 @@
 # Continuation note
 
-State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite build).
+State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite build). Milestone 3 (developed character creator) content and
+checks are in: 54 garments, 15 accessories, 28 hairstyles, 20 traits, 24 face presets (docs/CONTENT_STATUS.md), hats that squeeze hair
+(`src/characters/hatFit.ts`), creator thumbnails (`src/ui/creator/garmentIcon.ts`) and the creator acceptance run
+`npm run e2e:creator` (`tests/e2e/creator-m3.mjs`; see TEST_CHECKLIST). Wardrobe build keys are documented in ASSET_GUIDE "Wardrobe".
 
 ## Checks
 

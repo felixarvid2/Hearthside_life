@@ -197,3 +197,17 @@ describe('bond upkeep', () => {
     expect(w.state.bonds[[w.mira, ada].sort().join('|')]!.status).toBe('partner');
   });
 });
+
+describe('decay never makes resentment worse', () => {
+  it('rivals soften toward zero instead of sinking further', () => {
+    const { w } = socialWorld();
+    const ada = w.neighbour!;
+    setBoth(w.state, w.mira, ada, { familiarity: 60, friendship: -45, trust: -20 });
+    bond(w.state, w.mira, ada, 'rival');
+    for (const r of Object.values(w.state.relationships)) r.lastInteractionAt = 0;
+    decayRelationships(w.state, 4 * 1440);
+    const rel = w.state.relationships[relKey(w.mira, ada)]!;
+    expect(rel.friendship).toBe(-44.25);
+    expect(rel.trust).toBe(-19.25);
+  });
+});

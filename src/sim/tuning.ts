@@ -225,7 +225,7 @@ export const DECAY_FLOOR: Readonly<Record<string, { friendship: number; trust: n
   engaged: { friendship: 45, trust: 30, romance: 40 },
   spouse: { friendship: 45, trust: 30, romance: 35 },
   exPartner: { friendship: 0, trust: 0, romance: 0 },
-  rival: { friendship: -100, trust: -100, romance: 0 },
+  rival: { friendship: 0, trust: 0, romance: 0 },
 };
 
 /** Memories: at most this many per other person below importance 3, and the hard cap on everything. */

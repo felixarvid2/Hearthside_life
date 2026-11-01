@@ -27,6 +27,8 @@ export function createEventTracker(sh: Shell): EventTracker {
   el.addEventListener('pointerdown', (e) => e.stopPropagation());
   const dismissed = new Set<string>();
   let collapsed = false;
+  /** Set once the player folds or unfolds the card; until then it folds itself when space is short. */
+  let userChose = false;
   let sig = '';
   let shownId = '';
 
@@ -42,7 +44,7 @@ export function createEventTracker(sh: Shell): EventTracker {
     else sub = ev.rating ? RATING_TEXT[ev.rating] : 'Finished';
     const guests = names(st, ev.guestIds);
     const title = ev.type === 'date' ? `Date with ${guests}` : ev.guestIds.length === 1 && (ev.type === 'visit' || ev.type === 'dropIn' || ev.type === 'reconciliation' || ev.type === 'welcomeWagon') ? `${ev.title}: ${guests}` : ev.title;
-    const collapseBtn = button({ icon: collapsed ? 'down' : 'up', iconOnly: true, label: collapsed ? 'Show goals' : 'Hide goals', small: true, variant: 'ghost', onClick: () => { collapsed = !collapsed; sig = ''; sh.sound('click'); refresh(); } });
+    const collapseBtn = button({ icon: collapsed ? 'down' : 'up', iconOnly: true, label: collapsed ? 'Show goals' : 'Hide goals', small: true, variant: 'ghost', onClick: () => { collapsed = !collapsed; userChose = true; sig = ''; sh.sound('click'); refresh(); } });
     const head = h('div', { class: 'ev-head' }, icon(def?.icon ?? 'star', 22),
       h('div', { class: 'ev-titles' }, h('span', { class: 'ev-title', text: title }), h('span', { class: 'ev-sub', text: sub })), collapseBtn);
     const parts: Array<HTMLElement> = [head];
@@ -75,12 +77,33 @@ export function createEventTracker(sh: Shell): EventTracker {
     refresh();
   };
 
+  /**
+   * The tutorial card sits in the same corner: the goal card goes just below it while it is open, never taller than the
+   * space left above the bottom bar, and (unless the player chose) folds to its title line when there is little room.
+   * Returns the room left in pixels.
+   */
+  const fitCorner = (): number => {
+    const card = document.querySelector<HTMLElement>('.tutorial-card');
+    const root = el.parentElement?.getBoundingClientRect();
+    if (!root) return 999;
+    const r = card && !card.hidden && card.offsetParent !== null ? card.getBoundingClientRect() : null;
+    const shellTop = Number.parseFloat(document.documentElement.style.getPropertyValue('--shell-top')) || 0;
+    const top = r ? Math.round(r.bottom - root.top + 6) : Math.round(shellTop + 8);
+    const bottom = Number.parseFloat(document.documentElement.style.getPropertyValue('--shell-bottom')) || 0;
+    const room = Math.max(48, Math.round(root.height - top - bottom - 8));
+    if (el.style.top !== `${top}px`) el.style.top = `${top}px`;
+    if (el.style.maxHeight !== `${room}px`) el.style.maxHeight = `${room}px`;
+    return room;
+  };
+
   const refresh = () => {
+    const room = fitCorner();
+    if (!userChose && (room < 150) !== collapsed) { collapsed = room < 150; sig = ''; }
     const st = api.state();
     const live = api.mode() === 'live';
     const ev = st && live ? trackedEvent(st, dismissed) : undefined;
     if (!st || !ev) { if (!el.hidden) { el.hidden = true; el.replaceChildren(); sig = ''; sh.requestLayout(); } return; }
-    if (ev.id !== shownId) { shownId = ev.id; collapsed = false; sig = ''; }
+    if (ev.id !== shownId) { shownId = ev.id; userChose = false; collapsed = room < 150; sig = ''; }
     const now = st.clock.minutes;
     const s = `${ev.id}|${ev.status}|${collapsed}|${ev.status === 'invited' ? Math.floor((ev.startAt - now) / 5) : ev.status === 'running' ? Math.floor((ev.endAt - now) / 5) : 0}|${ev.arrivedIds.length}|${ev.goals.map((g) => `${g.progress}${g.done ? 'd' : ''}`).join(',')}|${ev.rating ?? ''}`;
     if (s === sig) return;

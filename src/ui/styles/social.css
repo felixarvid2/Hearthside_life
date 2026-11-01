@@ -50,7 +50,7 @@
 /* ---------- Event tracker on the HUD ---------- */
 .ev-tracker {
   position: absolute; z-index: 9; left: calc(8px + var(--safe-l)); top: calc(var(--shell-top) + 8px); width: min(280px, calc(100% - 16px));
-  padding: 8px 10px; pointer-events: auto;
+  padding: 8px 10px; pointer-events: auto; overflow-y: auto; touch-action: pan-y;
 }
 body.is-portrait .ev-tracker { width: min(300px, calc(100% - 78px - var(--safe-r))); }
 body.shell-sheet-open.is-compact .ev-tracker { display: none; }

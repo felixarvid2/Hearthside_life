@@ -11,7 +11,7 @@ import { h } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { formatMoney, initials } from './format';
 import type { Shell } from './shell';
-import { guestAvailability, guestCandidates, startOptions } from './socialModel';
+import { guestAvailability, guestCandidates, shownLabel, startOptions } from './socialModel';
 
 export function openEventPlanner(sh: Shell, hostId: Id): void {
   const { api } = sh;
@@ -88,8 +88,7 @@ export function openEventPlanner(sh: Shell, hostId: Id): void {
     guestBox.replaceChildren(...people.map((g) => {
       const a = guestAvailability(g);
       const on = chosen.has(g.id);
-      const rel = st.relationships[`${host.id}>${g.id}`];
-      const label: RelLabel = rel?.label ?? 'acquaintance';
+      const label: RelLabel = shownLabel(st, host.id, g.id);
       const url = api.portrait(g.id);
       const av = url ? h('img', { class: 'rel-avatar', attrs: { src: url, alt: '' } }) : h('span', { class: 'rel-avatar rel-initials', text: initials(g), attrs: { 'aria-hidden': 'true' } });
       const b = h('button', { type: 'button', class: ['evp-guest', on && 'is-selected'], disabled: !a.ok, attrs: { 'aria-pressed': on } },

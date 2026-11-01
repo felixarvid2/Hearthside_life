@@ -3,8 +3,9 @@
 
 import type { EventDef } from '../../content/types';
 import { DAY_NAMES, atDayMinute, dayIndex, formatClock, weekday } from '../../core/clock';
-import { romanceInterest } from '../../core/relations';
-import type { HomeEvent, Person, WorldState } from '../../core/types';
+import { pairKey } from '../../core/ids';
+import { relationshipLabel, romanceInterest } from '../../core/relations';
+import type { HomeEvent, Person, RelLabel, WorldState } from '../../core/types';
 import type { MenuOption } from '../../game/api';
 
 // ---- social menu ----
@@ -84,4 +85,13 @@ export function guestAvailability(g: Person): { ok: boolean; text: string } {
   if (g.location.place === 'home') return { ok: true, text: 'At home' };
   if (g.location.place === 'work') return { ok: false, text: 'At work' };
   return { ok: false, text: 'Away' };
+}
+
+/** The label to show for `from`'s view of `to`: the stored one, else derived from the values and the bond (older saves). */
+export function shownLabel(st: WorldState, from: string, to: string): RelLabel {
+  const r = st.relationships[`${from}>${to}`];
+  if (!r) return 'stranger';
+  if (r.label) return r.label;
+  const a = st.people[from], b = st.people[to];
+  return relationshipLabel(r, st.bonds[pairKey(from, to)]?.status, undefined, !!a && !!b && romanceInterest(a, b));
 }

@@ -26,6 +26,11 @@ Key automated areas (brief section 25):
   conflicts, template import/export with missing-asset substitution.
 - **Persistence**: five slots, autosave plus backup rotation, corrupted save recovery, invalid/newer imports
   rejected, missing content references reported (never deleted).
+- **Relationships and events (M5)**: label thresholds and hysteresis, trust gates, bounded decay, romance gating (never with
+  non-interested, non-open, under-age or related people; exclusivity; mood; privacy; upset partner), gentle rejections, jealousy
+  after witnessed flirting, memory bounds and timed effects, event lifecycle (plan, invite, start, goals, end) with the reward applied once
+  across save/load, save defaults for the new optional fields, and a headless playtest (befriend the neighbour, a date at home, a
+  dinner party for three) that must end identically with and without a reload in the middle.
 - **Headless playtests**: several game days with autonomy (nobody stuck, needs maintained, meals cooked, work
   paid once, the neighbour visits), and the Milestone 1 acceptance scenario without rendering.
 
@@ -56,3 +61,11 @@ Record real devices separately from emulation:
 | Date | Device / browser | Orientation(s) | Result |
 |---|---|---|---|
 | - | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | acceptance 122-124 passed per viewport, see CONTINUATION.md |
+
+## Manual browser checks, Milestone 5 (emulation only; no named device)
+
+Portrait 390x844, landscape 844x390 and desktop 1280x720: tap another person to open the social menu (sections Friendly / Romantic /
+Mean / Special; unavailable entries fold under "Unavailable (n)" on small screens and still show their reasons); People tab shows the
+label, friendship, trust and romance bars, running memory effects and an expandable memory list with dates; phone -> Plan an Event
+(type, guests, time, live reason when it cannot be done, Send invitations); the event card on the HUD shows the countdown, goals and
+the result, and cancels a planned event.

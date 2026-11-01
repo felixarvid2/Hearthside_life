@@ -232,7 +232,7 @@ export function decayRelationships(state: WorldState, now: GameMinutes): void {
     if ((now - rel.lastInteractionAt) / 1440 < DECAY_GRACE_DAYS) continue;
     const floor = DECAY_FLOOR[state.bonds[pairKey(rel.from, rel.to)]?.status ?? 'none'] ?? DECAY_FLOOR.none!;
     const fade = (v: number, perDay: number, min: number): number =>
-      v > min ? Math.max(min, v - perDay) : v < 0 ? Math.min(0, v + FORGIVE_PER_DAY) : v;
+      v < 0 ? Math.min(0, v + FORGIVE_PER_DAY) : v > min ? Math.max(min, v - perDay) : v;
     rel.friendship = fade(rel.friendship, DECAY_FRIENDSHIP_PER_DAY, floor.friendship);
     rel.trust = fade(rel.trust, DECAY_TRUST_PER_DAY, floor.trust);
     rel.romance = fade(rel.romance, DECAY_ROMANCE_PER_DAY, floor.romance);

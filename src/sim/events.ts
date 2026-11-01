@@ -13,7 +13,7 @@
 //   reconciliation visit is rolled) and from stable hashes of ids, so the same state gives the same result.
 // - Dates happen at home (there is no lot travel yet); the caterer's food is put on a table when the event starts.
 
-import { atDayMinute, dayIndex, formatClock, formatDay, hourOfDay } from '../core/clock';
+import { DAY_NAMES, atDayMinute, dayIndex, formatClock, hourOfDay, weekday } from '../core/clock';
 import { newId, pairKey } from '../core/ids';
 import { romanceInterest } from '../core/relations';
 import { addFeed, isProcessed, markProcessed, transact } from '../core/state';
@@ -217,7 +217,7 @@ export function planEvent(ctx: SimCtx, req: PlanRequest, opts: { skipConsent?: b
   ctx.state.schedule.push({ occurrence: `eventstart:${ev.id}`, at: startAt, kind: 'eventStart', data: { eventId: ev.id } });
   ctx.state.schedule.push({ occurrence: `eventend:${ev.id}`, at: ev.endAt, kind: 'eventEnd', data: { eventId: ev.id } });
   if (playableHost(ctx, ev)) {
-    addFeed(ctx.state, ctx.events, 'social', `${host.firstName} planned a ${def.name.toLowerCase()} for ${formatDay(startAt)} at ${formatClock(startAt)} with ${names(ctx.state, ev.guestIds)}.`, host.id);
+    addFeed(ctx.state, ctx.events, 'social', `${host.firstName} planned a ${def.name.toLowerCase()} for ${DAY_NAMES[weekday(startAt)]} at ${formatClock(startAt)} with ${names(ctx.state, ev.guestIds)}.`, host.id);
   }
   emit(ctx, ev, 'planned');
   return { ok: true, eventId: ev.id };
