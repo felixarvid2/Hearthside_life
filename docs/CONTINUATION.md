@@ -1,76 +1,105 @@
 # Continuation note
 
-State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite build). Milestone 3 (developed character creator) content and
-checks are in: 54 garments, 15 accessories, 28 hairstyles, 20 traits, 24 face presets (docs/CONTENT_STATUS.md), hats that squeeze hair
-(`src/characters/hatFit.ts`), creator thumbnails (`src/ui/creator/garmentIcon.ts`) and the creator acceptance run
-`npm run e2e:creator` (`tests/e2e/creator-m3.mjs`; see TEST_CHECKLIST). Wardrobe build keys are documented in ASSET_GUIDE "Wardrobe".
+State on 2026-11-01 (handover). Work happens on branch `ccr-333d8ff5-slv7qa`, draft PR #1 (not merged). The active goal is
+**finish Milestones 2-5** (brief section 26, docs/ROADMAP.md). Milestone 1 is complete and passed the browser acceptance run in all
+three viewports.
 
-## Checks
+## Milestone status
 
-- `npm run typecheck`: clean.
-- `npm test`: 52 files, 543 tests pass.
-- `npm run build`: passes. Warning: main chunk is about 1.4 MB.
-- `npm run e2e`: smoke passes.
-- `npm run e2e:acceptance` (brief section 26 scenario through the real UI):
-  - landscape 844x390: 122/122 passed.
-  - desktop 1280x720: 122/122 passed.
-  - portrait 390x844: 124/124 passed (also after the character change and the neighbour-menu test fix).
+| Milestone | Systems | Content (target) | Browser-verified |
+|---|---|---|---|
+| 1 Creator and foundation | done | done | yes: acceptance 122-124/124 per viewport |
+| 2 Home editor | core done (`src/building/buildPlans.ts`, `buildCommands.ts`, `src/world/structure.ts`, `roomTracker.ts`, `src/game/core/build.ts`); **Build-mode UI in progress** | done: 50 walls (48), 32 floors (32), 111 furniture (60), 9 doors, 11 windows | **no** |
+| 3 Character creator | done (hats squeeze hair `src/characters/hatFit.ts`, creator icons `src/ui/creator/garmentIcon.ts`); **final checks in progress** | 28 hairstyles (24), 54 garments (48), 15 accessories (12), 20 traits (20), 24 face presets | partly (`npm run e2e:creator`, `tests/e2e/creator-m3.mjs`) |
+| 4 Daily life | done: cleaning, dishes, messes, repairs, repairperson, skill effects, chore autonomy, 7-day playtests | 111 furniture (100) incl. hobby, kids, outdoor, dishwasher | **no** (dirt/broken overlays never seen in a browser) |
+| 5 Relationships and events | done: trust/friendship/romance axes, labels, adult romance gating, memories, 8 event types, planner, goal card | 35 socials (24), 8 event types | partly (mock UI page, portrait/landscape) |
 
-## Acceptance fixes (11 issues, all fixed)
+What was in progress when this note was written (WIP commits on the branch; check `git log` and `git status`):
 
-- Creator mounted twice.
-- Person panel unusable on short landscape.
-- Buttons under 44 px.
-- Creator step tab out of view.
-- Buy, Build and creator panels on short landscape.
-- Tiny people and fiddly person picking: screen-space forgiving pick, repeat taps cycle, camera reveals the
-  ghost or selected object, panels keep in view on change.
-- Toasts drawn over context menus.
-- Dream Home aspiration counted starter furniture; it now counts only bought items.
-- "Already has this finish" shown as a neutral tip.
-- Loads restore the saved speed (older saves load paused).
-- Creator hint when a garment has no patterns.
+- **Build-mode UI** (`src/ui/build/*`, `src/render/lotView.ts`, Game build preview, wide openings in lotView, catalog paging,
+  surface thumbnails re-requested after AI maps load, an M2 scenario added to `tests/e2e/acceptance.mjs`).
+- **Creator M3 final checks** (`src/characters/*`, `src/ui/creator/*`, `tests/e2e/creator-m3.mjs`). Wardrobe build keys are
+  documented in ASSET_GUIDE "Wardrobe".
 
-## Characters
+## Next steps, in order
 
-- People use AI-generated Meshy base bodies by default (`characterStyle: 'detailed'`, Settings > Display).
-  The procedural `'classic'` bodies remain as a fallback.
-- Sources and generation notes: `dev/meshy/` (its README covers generation, credits and the feasibility test).
-- Build step `npm run assets:meshy` (`tools/build-meshy-bodies.mts`):
-  - fits the bodies to the UAL skeleton;
-  - simplifies to about 10k triangles;
-  - repacks a 1024 px atlas;
-  - bakes a skin, base-layer and eye mask.
-  - Output: `public/assets/characters/meshy_a.glb` and `meshy_b.glb`.
-- Works: skin tone, eye and brow colour, body and face sliders, hair, accessories.
-- Does not apply to the baked faces: brow style and lip colour.
-- Meshy licence depends on the plan of the account that generated the bodies. Check before distribution.
-- Meshy credits left: 42.
+1. Finish the Build-mode UI if it is incomplete. With a build tool active, a one-finger drag draws walls, rooms, floors and
+   erase rectangles. Two fingers pan. Confirm and Cancel buttons show on touch, and corner handles resize a room. Cost,
+   measure and reason update live. Use `GameAPI` `setBuildTool` / `buildPreview` / `buildApply` / `buildHighlight` /
+   `rooms` / `openingAt` / `view.groundPoint` (documented at the top of `src/game/api.ts`).
+2. Run every check and fix failures:
+   - `npm run typecheck`
+   - `npm test`
+   - `npm run content:check`
+   - `npm run build`
+   - `npm run e2e`
+   - `npm run e2e:creator`
+   - `npm run e2e:acceptance -- --only=portrait`, then the same for `landscape` and `desktop`. A run takes 10-30 min under
+     SwiftShader.
+3. Browser-check the parts never seen in a real page:
+   - Build mode in all three viewports: build a room, add a door and a window, paint each wall side, undo and redo, and
+     have a person walk in.
+   - Dirt, broken, puddle and dirty-plate overlays: seed them by setting `obj.condition` and spawning messes through
+     `window.hearthside.debug`.
+   - The event goal card in landscape 844x390 with the tutorial open.
+   - The social menu `<details>` fold on small screens. The acceptance neighbour step uses `.ctx-item` selectors, so check it
+     still taps.
+   - AI hairstyles on the classic style (shots in `dev/hair-ai/shots/classic/` if that run finished).
+4. Update the docs to the verified state:
+   - `docs/CONTENT_STATUS.md` (`npm run content:check -- --markdown`)
+   - `docs/ROADMAP.md` current milestone
+   - this file
+   - the PR #1 description
+5. The PR merges only after the user approves. This repository is not covered by the standing merge approval in
+   felixarvid2/test.
 
-## Known issues and next steps, in order
+## Known issues
 
-1. Garments were refitted to the scanned bodies (necklines on the shoulder slope, rolled rims, bell skirts with folds, fabric
-   relief and sheen, bare male torso; see ASSET_GUIDE "Garment fit"). Still weak:
-   - some premade men default to skirts or nightgowns;
-   - where a garment leaves the baked shorts visible (swimsuit, trunks) their hem shows as a faint seam on the thigh (the base
-     layer is flatter than the baked skin around it); the swimsuit leg opening is a fragment cut on a coarse shell;
-   - cloth folds are static (geometry on skirts and loose tops, normal detail elsewhere), not simulated.
-2. Main chunk is over 1.2 MB; `content/index.ts` is imported both statically and dynamically.
-3. Boot progress bar is not driven.
-4. (Fixed in M5) The social menu is grouped Friendly / Romantic / Mean / Special and ordered by relevance; unavailable entries fold away on small screens.
-5. Bookworm "own 2 bookcases" may count the starter bookcases.
-6. Tests so far are on SwiftShader only. Record real-device runs in the device log in
-   `docs/TEST_CHECKLIST.md`.
+- Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
+  build/creator-only modules.
+- Boot progress bar is not driven.
+- Garments: a faint seam on the thigh where swimwear leaves the baked shorts visible; folds are static; seated skirts open
+  like a lampshade.
+- AI hair: box-braids and twin-tails have flat parts; some bangs stop at eye level; the backs are invented by TRELLIS.
+- Bookworm "own 2 bookcases" may count starter bookcases.
+- Weddings are not events, gifts are a $20 social, and dates happen at home until lot travel (Milestone 7).
+- Room move, resize and duplicate are not implemented. Delete room is.
+- Only SwiftShader emulation so far; record real devices in the TEST_CHECKLIST device log.
 
-## Commands that work
+## Assets and AI generation
 
-- `npm install`
-- `npm run typecheck`
-- `npm test`
-- `npm run build`
-- `npm run content:check`
-- `npm run e2e`
-- `npm run e2e:acceptance` (`-- --only=portrait|landscape|desktop`). It takes the browser lock
-  `/tmp/hearthside-browser.lock` itself; do not wrap it in another `flock`.
-- `npm run assets` (needs the asset library at `../test/assets`)
-- `npm run assets:meshy`
+- **People.** People use Meshy-generated base bodies (`dev/meshy/`, `npm run assets:meshy` builds
+  `public/assets/characters/meshy_{a,b}.glb`). Settings > Display offers characterStyle detailed or classic. Meshy
+  credits left: 42.
+- **fal.ai.** The key is in the user's repo `felixarvid2/apis`, file `Fal.ai`, cloned to `/home/user/apis`. Read it at run
+  time; never print or commit it. Use `queue.fal.run` or `fal.run`, never `api.fal.ai`, where a proxy overrides auth.
+  - Budget: $10 total, about $1.25 spent. Ledgers: `dev/hair-ai/LEDGER.md` and `dev/surfaces-ai/LEDGER.md`.
+  - Allowed models: FLUX schnell/dev and TRELLIS. Do not use Hunyuan3D: its licence excludes the EU.
+- **AI hair.** `npm run hair:ai` (`tools/build-ai-hair.mts`, `tools/hair-ai/`). Raw generations are cached in
+  `dev/hair-ai/raw/` (gitignored, so a fresh clone has to regenerate them, which costs money).
+- **AI surface maps.** `npm run assets:surfaces` builds them from `dev/surfaces-ai/raw/` (gitignored).
+- **Licences.** Check the Meshy, FLUX and TRELLIS output terms before distribution (see `public/assets/LICENSES.md`).
+
+## Working conventions
+
+- Browser runs share `/tmp/hearthside-browser.lock`. Wrap custom Playwright scripts in `flock /tmp/hearthside-browser.lock ...`,
+  but never wrap `tests/e2e/acceptance.mjs` or `run-e2e.mjs`, which take the lock themselves (a nested lock deadlocks).
+- Before every commit, scan for the fal key:
+  `grep -rlF --exclude-dir=node_modules --exclude-dir=.git "<secret part>" .` must print nothing.
+
+## Commands
+
+| Command | Notes |
+|---|---|
+| `npm install` | |
+| `npm run typecheck` | |
+| `npm test` | |
+| `npm run build` | |
+| `npm run content:check` | |
+| `npm run e2e` | |
+| `npm run e2e:acceptance -- --only=portrait\|landscape\|desktop` | |
+| `npm run e2e:creator` | |
+| `npm run assets` | needs `../test/assets` |
+| `npm run assets:meshy` | |
+| `npm run assets:surfaces` | |
+| `npm run hair:ai -- images\|models\|build\|sheet\|content` | |
