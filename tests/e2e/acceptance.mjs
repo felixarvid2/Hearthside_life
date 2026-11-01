@@ -933,7 +933,8 @@ async function stepLive(T) {
       await T.shot('live-neighbour-menu');
       log('neighbour menu', JSON.stringify(nm.items));
       const social = nm.items.filter((i) => !i.disabled);
-      T.check(S, 'neighbour menu offers social interactions', social.length >= 2, nm.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : '')).join(' | '));
+      // before an introduction only "Introduce Yourself" is enabled (correct game rule); afterwards several socials are
+      T.check(S, 'neighbour menu offers social interactions', social.length >= 2 || (social.length === 1 && /Introduce/i.test(social[0].label ?? '')), nm.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : '')).join(' | '));
       const pickLabel = nm.items.find((i) => !i.disabled && /Chat|Talk|Introduce|Greet|Compliment|Joke/i.test(i.label ?? ''))?.label ?? social[0]?.label;
       if (pickLabel) {
         await chooseMenu(T, new RegExp(pickLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
