@@ -86,6 +86,23 @@ if (['creator', 'all'].includes(PLAN)) {
 if (['hairside', 'all'].includes(PLAN)) {
   for (const h of ['ponytail-high', 'long-straight', 'braids-twin', 'bob-chin']) for (const f of ['a', 'b']) shot(`${f}_side_${h}`, { vp: [600, 700], dpr: 1 }, { person: solo(f), set: { hair: h, outfit: TEE, hairColor: '#7a4a2a' }, cam: [1.57, 0.08, 3.2, 1.25, 28] });
 }
+if (['hair', 'hairlive'].includes(PLAN)) {
+  // every hairstyle on both frames: close views (front / three-quarter / side / back) or game distance (walk, sit)
+  const ids = (opt('hairs', '') || 'buzz,crop-side-part,curly-top,bob-chin,waves-shoulder,long-straight,ponytail-high,bun-top,afro-coily,braids-twin').split(',');
+  const COLORS = ['#6b4528', '#2b221e', '#c8a064', '#7c3a22', '#3d2a1f'];
+  const closeVp = { vp: [420, 520], dpr: 1 };
+  ids.forEach((h, k) => {
+    for (const f of ['a', 'b']) {
+      const set = { hair: h, outfit: TEE, hairColor: COLORS[k % COLORS.length], facial: null };
+      if (PLAN === 'hair') {
+        for (const [v, yaw] of [['front', 0], ['three', 0.7], ['side', 1.57], ['back', Math.PI]]) shot(`${f}_h_${h}_${v}`, closeVp, { person: solo(f), set, cam: [yaw, 0.08, 2.3, 1.38, 28] });
+      } else {
+        shot(`${f}_hl_${h}_walk`, LIVE, { person: solo(f), set, anim: 'walk', steps: [0.05, 8], ortho: 2.6 });
+        shot(`${f}_hl_${h}_sit`, LIVE, { person: solo(f), set, anim: 'sitIdle', posture: 'seated', steps: [0.05, 6], ortho: 2.6 });
+      }
+    }
+  });
+}
 const BENCH = PLAN === 'bench';
 const MEASURE = PLAN === 'measure';
 if (['live', 'all'].includes(PLAN)) {
