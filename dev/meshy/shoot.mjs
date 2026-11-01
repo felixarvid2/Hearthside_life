@@ -129,7 +129,7 @@ try {
         for (const [m, ...a] of sc.ops) await page.evaluate(([mm, aa]) => window.lab[mm](...aa), [m, a]);
         await page.waitForTimeout(500);
         const file = join(OUT, `${mp.prefix}_${sc.name}.png`);
-        await page.screenshot({ path: file });
+        try { await page.screenshot({ path: file, timeout: 120000 }); } catch { await page.waitForTimeout(2000); await page.screenshot({ path: file, timeout: 120000 }); }
         let line = `[shoot] ${mp.prefix}_${sc.name}`;
         if (sc.stretch) {
           const st = await page.evaluate(() => window.lab.stretch());

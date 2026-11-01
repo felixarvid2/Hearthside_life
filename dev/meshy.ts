@@ -219,7 +219,9 @@ async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
   const url = params.get('glb') ?? MODEL_DEF.glb;
   const resp = await fetch(url);
   const buf = await resp.arrayBuffer();
+  trace(`fetched ${buf.byteLength} bytes`);
   const gltf = await new GLTFLoader().parseAsync(buf, url.slice(0, url.lastIndexOf('/') + 1));
+  trace('parsed');
   let mesh: THREE.Mesh | null = null;
   gltf.scene.updateMatrixWorld(true);
   gltf.scene.traverse((o) => { if (!mesh && (o as THREE.Mesh).isMesh) mesh = o as THREE.Mesh; });
@@ -238,6 +240,7 @@ async function loadMeshy(fa: FrameAssets): Promise<MeshyAsset> {
     height: num('height', DEFAULT_FIT.height), girth: num('girth', DEFAULT_FIT.girth), armScale: num('armScale', DEFAULT_FIT.armScale),
     splitLegs: params.get('split') !== '0', straightenLegs: params.get('legs') !== '0', sigma: num('sigma', DEFAULT_FIT.sigma), smooth: num('smooth', DEFAULT_FIT.smooth), smoothAmount: num('smoothAmount', DEFAULT_FIT.smoothAmount),
   };
+  trace('fitting');
   const res = fitMeshy({ positions: new Float32Array(pos.array), normals: new Float32Array(nor.array), index }, fa.raw, fit);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(res.positions, 3));
@@ -480,16 +483,23 @@ function meshyGarmentView(base: CharacterAssets, fa: FrameAssets): CharacterView
   return cv;
 }
 
+const trace = (m: string) => { if (params.get('trace') === '1') console.log(`[meshy] ${m}`); };
+
 async function main(): Promise<void> {
   const t0 = performance.now();
+  trace('assets');
   assets = await loadCharacterAssets('/assets/');
   const fa = assets.frames[FRAME];
+  trace('meshy glb');
   asset = await loadMeshy(fa);
+  trace('fitted');
   loadMs = performance.now() - t0;
   proc = new CharacterView(assets, content, proceduralAppearance(), proceduralOutfit(GARMENTS ? OUTFIT_IDS : PROC_BASE_IDS));
+  trace('procedural person');
   proc.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
   meshy = new MeshyCharacter(fa, assets, asset, params.get('wire') === '1', GARMENTS ? meshyGarmentView(assets, fa) : null);
   if (params.has('hair')) hairInfo = meshy.addHair(assets, params.get('hair')!, params.get('hairColor') ?? '#5b3824');
+  trace('meshy person');
   slotP = makeSlot(proc.root);
   slotM = makeSlot(meshy.root);
   scene.add(slotP.group, slotM.group);
@@ -499,6 +509,7 @@ async function main(): Promise<void> {
   if (sc) setScene(sc);
   play((params.get('clip') as AnimId | null) ?? 'idle');
   if (params.has('t')) step(num('t', 0), 1);
+  trace('scene set');
   buildBar();
   resize();
   addEventListener('resize', () => { resize(); });
