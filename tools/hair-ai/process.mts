@@ -167,13 +167,13 @@ export function freeUvBlock(h: HairMesh, size: number, block: number): { u: numb
  * A thin scalp cap on the head surface from a hairline up over the crown, UV-mapped into a free block of the tint map: it
  * keeps the skull covered under generated hair that leaves bare patches (puffs, ponytails, short crops).
  */
-export function scalpCap(hs: Record<string, any>, hair: Record<string, any>, opts: { hairline: string; fringe: number; offset: number; block: { u: number; v: number }; blockSize: number; size: number; cols?: number; rows?: number }): HairMesh {
+export function scalpCap(hs: Record<string, any>, hair: Record<string, any>, opts: { hairline: string; fringe: number; minY?: number; offset: number; block: { u: number; v: number }; blockSize: number; size: number; cols?: number; rows?: number }): HairMesh {
   const cols = opts.cols ?? 30, rows = opts.rows ?? 9;
   const pos: number[] = [], uv: number[] = [], index: number[] = [];
   const hx = hs.H_MAX as number, dome = hs.DOME_START as number;
   for (let i = 0; i < cols; i++) {
     const th = -Math.PI + ((i + 0.5) / cols) * Math.PI * 2;
-    const y0 = hair.hairlineY(th, opts.hairline, opts.fringe) as number;
+    const y0 = Math.max(hair.hairlineY(th, opts.hairline, opts.fringe) as number, opts.minY ?? -1);
     for (let j = 0; j <= rows; j++) {
       const h = Math.min(y0, dome) + ((hx - Math.min(y0, dome)) * j) / rows;
       const p = hs.headPoint(th, h) as number[], n = hs.headNormal(th, h) as number[];

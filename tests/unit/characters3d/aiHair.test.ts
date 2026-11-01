@@ -66,6 +66,16 @@ describe.each(defs.map((d) => d.id))('shipped hair GLB %s', (id) => {
     for (let i = 0; i < data.index.length; i++) expect(data.index[i]!).toBeLessThan(data.positions.length / 3);
   });
 
+  it('keeps the face free: no hair in front of the face between the chin and the eye line', () => {
+    const { data } = files[id]!;
+    let inFace = 0;
+    for (let i = 0; i < data.positions.length; i += 3) {
+      const x = data.positions[i]!, y = data.positions[i + 1]!, z = data.positions[i + 2]!;
+      if (z > 0.035 && Math.abs(x) < 0.07 && y < 0.098 && y > -0.05) inFace++;
+    }
+    expect(inFace).toBeLessThan(12); // the simplifier may move a border vertex a little
+  });
+
   it('has unit normals, uv inside the map and a root shade in 0..1', () => {
     const { data } = files[id]!;
     let badN = 0, badUv = 0, badS = 0;

@@ -34,25 +34,32 @@ const PLAN = opt('plan', 'gallery');
 const OUT = resolve(here, 'shots', 'garments', TAG);
 mkdirSync(OUT, { recursive: true });
 
-const TOPS = ['tee-crew', 'tee-long', 'tank-top', 'shirt-button', 'polo-shirt', 'sweater-knit', 'pajama-top', 'jacket-zip'];
-const BOTTOMS = ['jeans-straight', 'trousers-tailored', 'shorts-casual', 'joggers', 'skirt-aline', 'pajama-pants', 'swim-trunks'];
-const FULLS = ['sundress', 'dress-shirt', 'overalls', 'swimsuit', 'nightgown'];
-const SHOES = ['sneakers', 'boots-ankle', 'loafers', 'slippers', 'sandals-slide'];
-const ALL = [...TOPS, ...BOTTOMS, ...FULLS, ...SHOES];
+const TOPS = ['tee-crew', 'tee-long', 'tank-top', 'shirt-button', 'polo-shirt', 'sweater-knit', 'pajama-top', 'jacket-zip',
+  'hoodie', 'blouse', 'henley', 'turtleneck', 'crop-top', 'flannel-shirt', 'waistcoat',
+  'cardigan', 'denim-jacket', 'puffer-jacket', 'blazer']; // outerwear is shot over a plain tee, see outfitOf
+const OUTER = ['jacket-zip', 'cardigan', 'denim-jacket', 'puffer-jacket', 'blazer', 'trench-coat'];
+const BOTTOMS = ['jeans-straight', 'trousers-tailored', 'shorts-casual', 'joggers', 'skirt-aline', 'pajama-pants', 'swim-trunks',
+  'chinos', 'cargo-shorts', 'pleated-skirt', 'pencil-skirt', 'leggings', 'wide-leg-trousers', 'bike-shorts'];
+const FULLS = ['sundress', 'dress-shirt', 'overalls', 'swimsuit', 'nightgown', 'jumpsuit', 'wrap-dress', 'maxi-dress', 'suit', 'bathrobe', 'unitard'];
+const SHOES = ['sneakers', 'boots-ankle', 'loafers', 'slippers', 'sandals-slide', 'pumps', 'running-shoes', 'rain-boots', 'ballet-flats'];
+const ALL = [...TOPS.filter((x) => !OUTER.includes(x)), ...OUTER, ...BOTTOMS, ...FULLS, ...SHOES];
 const ids = opt('ids', '') ? opt('ids', '').split(',') : ALL;
-const layerOf = (id) => (TOPS.includes(id) ? 'top' : BOTTOMS.includes(id) ? 'bottom' : FULLS.includes(id) ? 'full' : 'shoe');
+const layerOf = (id) => (OUTER.includes(id) ? 'outer' : TOPS.includes(id) ? 'top' : BOTTOMS.includes(id) ? 'bottom' : FULLS.includes(id) ? 'full' : 'shoe');
 const OUTFIT = opt('outfit', '');
+const ACC = opt('acc', ''); // accessory ids joined with +, e.g. --acc=beanie+scarf
+const HAIR = opt('hair', 'none');
 const outfitOf = (id) => {
   if (OUTFIT) return OUTFIT.split(',');
   switch (layerOf(id)) {
-    case 'top': return id === 'jacket-zip' ? ['tee-crew', id, 'jeans-straight', 'sneakers'] : [id, 'jeans-straight', 'sneakers'];
+    case 'outer': return ['tee-crew', id, 'jeans-straight', 'sneakers'];
+    case 'top': return [id, 'jeans-straight', 'sneakers'];
     case 'bottom': return ['tee-crew', id, 'sneakers'];
     case 'full': return id === 'overalls' ? [id, 'boots-ankle'] : [id, 'sandals-slide'];
     default: return ['tee-crew', 'jeans-straight', id];
   }
 };
 // [yaw, pitch, dist, ty] per layer: tops close on the torso, bottoms on the hips and legs, full outfits head to toe, shoes on the feet
-const FRAMING = { top: [2.3, 1.28], bottom: [3.0, 0.7], full: [4.3, 0.92], shoe: [1.7, 0.14] };
+const FRAMING = { top: [2.3, 1.28], outer: [3.2, 1.1], bottom: [3.0, 0.7], full: [4.3, 0.92], shoe: [1.7, 0.14] };
 const VIEWS = opt('yaws', '') ? opt('yaws', '').split(',').map((y) => [`y${y}`, Number(y)]) : [['front', 0.0], ['three', 0.7]];
 const DIST = opt('dist', ''), TY = opt('ty', ''), PITCH = Number(opt('pitch', '0.08'));
 
@@ -87,15 +94,15 @@ try {
         const person = f === 'a' ? 0 : 1;
         const [dist, ty] = [DIST ? Number(DIST) : FRAMING[layerOf(id)][0], TY ? Number(TY) : FRAMING[layerOf(id)][1]];
         for (const [vn, yaw] of VIEWS) {
-          await page.evaluate(([p, o, y, d, t, pt, NS]) => {
+          await page.evaluate(([p, o, y, d, t, pt, NS, HAIR, ACC]) => {
             const lab = window.lab;
             lab.only([p]); lab.place(p, 0, 0, 0);
-            lab.set(p, { outfit: o, hair: 'none', skin: '#e8c39d' });
+            lab.set(p, { outfit: o, hair: HAIR, skin: '#e8c39d', accessories: ACC ? ACC.split('+') : [] });
             lab.playOne(p, 'idle'); lab.step(0.05, 4);
             lab.hideSkin(p, NS);
             lab.orthoCam(false);
             lab.cam(y, pt, d, 0, t, 0, 30);
-          }, [person, outfitOf(id), yaw, dist, ty, PITCH, opt('noskin', '') === '1']);
+          }, [person, outfitOf(id), yaw, dist, ty, PITCH, opt('noskin', '') === '1', HAIR, ACC]);
           await page.waitForTimeout(120);
           const name = `${id}_${f}_${vn}.png`;
           await shoot(join(OUT, name));
@@ -117,6 +124,45 @@ try {
         for (let c = 0; c < 4; c++) comps.push({ input: order[c], left: c * W, top: r * H });
       }
       await sharp({ create: { width: W * 4, height: H * chunk.length, channels: 3, background: '#fff' } }).composite(comps).png().toFile(join(OUT, `sheet_${String(s).padStart(2, '0')}_${chunk[0]}.png`));
+    }
+  } else if (PLAN === 'acc') {
+    // accessories on both frames: head items close, neck items at the chest, wrist items at the hands, over a few hairstyles
+    //   node dev/meshy/shootGarments.mjs --plan=acc --tag=acc [--ids=beanie,cap,...] [--hairs=crop-side-part,bun-top,afro-coily]
+    const ACC_IDS = ['sunglasses', 'sunglasses-round', 'beanie', 'cap', 'sunhat', 'headband', 'scarf', 'necklace-pendant', 'necklace-pearls', 'watch', 'bracelet'];
+    const accIds = opt('ids', '') ? opt('ids', '').split(',') : ACC_IDS;
+    const hairs = opt('hairs', 'crop-side-part').split(',');
+    const where = (id) => (['scarf', 'necklace-pendant', 'necklace-pearls'].includes(id) ? { dist: 2.4, ty: 1.38, yaws: [0.0, 0.7] }
+      : ['watch', 'bracelet'].includes(id) ? { dist: 1.9, ty: 0.9, yaws: [0.9, 1.7] } : { dist: 1.15, ty: 1.58, yaws: [0.0, 0.8] });
+    const rows = [];
+    for (const id of accIds) for (const hair of hairs) {
+      const w = where(id);
+      const row = [];
+      for (const f of ['a', 'b']) {
+        const person = f === 'a' ? 0 : 1;
+        for (const yaw of w.yaws) {
+          await page.evaluate(([p, o, y, d, t, pt, hr, ac]) => {
+            const lab = window.lab;
+            lab.only([p]); lab.place(p, 0, 0, 0);
+            lab.set(p, { outfit: o, hair: hr, skin: '#e8c39d', accessories: ac });
+            lab.playOne(p, 'idle'); lab.step(0.05, 4);
+            lab.orthoCam(false);
+            lab.cam(y, pt, d, 0, t, 0, 30);
+          }, [person, (OUTFIT ? OUTFIT.split(',') : ['tee-crew', 'jeans-straight', 'sneakers']), yaw, w.dist, w.ty, PITCH, hair, id.split('+')]);
+          await page.waitForTimeout(120);
+          const file = join(OUT, `${id}_${hair}_${f}_${yaw}.png`);
+          await shoot(file);
+          row.push(file);
+        }
+      }
+      rows.push(row);
+      console.log(`[acc] ${id} ${hair}${errors.length ? `  ERRORS: ${errors.slice(0, 2).join(' | ')}` : ''}`);
+    }
+    const perSheet = 4;
+    for (let s0 = 0; s0 * perSheet < rows.length; s0++) {
+      const chunk = rows.slice(s0 * perSheet, s0 * perSheet + perSheet);
+      const comps = [];
+      chunk.forEach((row, r) => row.forEach((file, c) => comps.push({ input: file, left: c * W, top: r * H })));
+      await sharp({ create: { width: W * 4, height: H * chunk.length, channels: 3, background: '#fff' } }).composite(comps).png().toFile(join(OUT, `sheet_acc_${String(s0).padStart(2, '0')}.png`));
     }
   } else if (PLAN === 'live') {
     // game distance: ortho 2.6 m tall at DPR 2, walk / sit / sleep / eat for both frames

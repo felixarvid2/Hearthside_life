@@ -676,7 +676,7 @@ export class CreatorSession {
     return this.editOutfit(LAYER_NAMES[layer], category, index, (o, ctx) => {
       const prev = o.layers[layer];
       const choice = def ? garmentChoice(def, prev?.color ?? def.defaultColor,
-        prev && (prev.pattern === 'solid' || def.patterns.includes(prev.pattern)) ? prev.pattern : 'solid', prev?.patternColor) : null;
+        prev ? (prev.pattern === 'solid' || def.patterns.includes(prev.pattern) ? prev.pattern : 'solid') : (def.defaultPattern ?? 'solid'), prev?.patternColor) : null;
       const r = setLayer(o, layer, choice);
       o.layers = r.outfit.layers;
       ctx.note = r.note;

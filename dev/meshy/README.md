@@ -24,7 +24,8 @@ pipeline and the runtime. `dev/meshy/shootLab.mjs` takes screenshots, `--plan=be
 (`--dist --ty --pitch --yaws`), `--plan=live` (walk, sit, sleep, eat at game distance), `--noskin=1` and `--outfit=` for debugging; output in
 `dev/meshy/shots/garments/<tag>/`.
 `--plan=hair` shoots every hairstyle (`--hairs=a,b --frames=a,b --views=front,three,side,back,drape --people=2`) close up and
-`--plan=hairlive` at game distance (walk and sit); `shots/hair/before|after|live` hold the hair rework screenshots.
+`--plan=hairlive` at game distance (walk and sit); `shots/hair/before|after|live` hold the hair rework screenshots. `--hairs=ai` (the generated hairstyles of
+`public/assets/characters/hair/`, see `dev/hair-ai/`) or `--hairs=all` select the styles; `--style=classic` shoots them on the procedural bodies.
 
 ## Feasibility test: Meshy body on the mannequin skeleton (dev/meshy.html)
 

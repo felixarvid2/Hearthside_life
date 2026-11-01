@@ -9,6 +9,7 @@ import { promptDialog, tabs } from '../../kit/components';
 import { h, setText, toggleClass } from '../../kit/dom';
 import { icon } from '../../kit/icons';
 import type { CreatorContext, StepDef } from '../context';
+import { accessoryIconSvg, garmentIconSvg } from '../garmentIcon';
 import { Binder, choiceChips, colorField, hint, issueList, noteBox, section, smallButton } from '../widgets';
 
 const LAYERS: readonly GarmentLayer[] = ['top', 'bottom', 'full', 'outer', 'shoes'];
@@ -185,7 +186,8 @@ export const clothingStep: StepDef = {
     if (accDefs.length > 0) {
       const row = h('div', { class: 'chips cr-chips', role: 'group', ariaLabel: 'Accessories' });
       const accBtns = accDefs.map((def) => {
-        const btn = h('button', { type: 'button', class: 'chip cr-chip', title: def.description }, h('span', { class: 'cr-check' }, icon('check', 16)), h('span', { text: def.name }));
+        const btn = h('button', { type: 'button', class: 'chip cr-chip', title: def.description }, h('span', { class: 'cr-check' }, icon('check', 16)),
+          h('span', { class: 'cr-glyph', html: accessoryIconSvg(def) }), h('span', { text: def.name }));
         btn.addEventListener('click', () => {
           const has = outfit()?.accessories.some((x) => x.accessoryId === def.id);
           ctx.report(has ? s().removeAccessory(cat, idx, def.id) : s().addAccessory(cat, idx, def.id));
@@ -206,7 +208,7 @@ export const clothingStep: StepDef = {
           onPick: (c) => ctx.report(s().setAccessoryColor(cat, idx, acc.accessoryId, c)), onCommit: commit,
         }));
       });
-      accSection = section('Accessories', row, ...colors, hint('One item of each kind (glasses, earrings...) at a time.'));
+      accSection = section('Accessories', row, ...colors, hint('One item of each kind (glasses, hat, necklace, watch...) at a time.'));
     }
 
     const el = h('div', { class: 'cr-step cr-step-clothing' },
@@ -248,7 +250,7 @@ function layerSection(ctx: CreatorContext, b: Binder, cat: OutfitCategory, idx: 
   const fullDef = (layer === 'top' || layer === 'bottom') && outfit()?.layers.full ? content.garments[outfit()!.layers.full!.garmentId] : undefined;
   if (fullDef) notes.push(noteBox(`Covered by the full outfit (${fullDef.name}). Choosing a ${LAYER_NAMES[layer].toLowerCase()} replaces it.`));
 
-  const opts: Array<{ id: string; label: string; title?: string }> = [{ id: '__none', label: 'None' }, ...options.map((g) => ({ id: g.id, label: g.name, title: g.description }))];
+  const opts: Array<{ id: string; label: string; title?: string }> = [{ id: '__none', label: 'None' }, ...options.map((g) => ({ id: g.id, label: g.name, title: g.description, glyph: garmentIconSvg(g) }))];
   if (cur && !options.some((g) => g.id === cur.garmentId)) opts.push({ id: cur.garmentId, label: `${curDef?.name ?? cur.garmentId} (not for ${catName(cat)})` });
   const picker = options.length > 0 || cur ? b.add(choiceChips<string>({
     label: `${LAYER_NAMES[layer]} garments`, hideLabel: true, options: opts,

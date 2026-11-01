@@ -43,6 +43,17 @@ export async function buildAll(styles: AiStyle[], root: string, opts: { debug?: 
     for (let i = 0; i < n; i++) if (!seg.hair[i] && (m.pos[i * 3 + 1] as number) > yE - 1.25 * ew) head.push(m.pos[i * 3] as number, m.pos[i * 3 + 1] as number, m.pos[i * 3 + 2] as number);
     const fit = fitHead({ head: new Float32Array(head), all: m.pos, surface: new Float32Array(surf), face: new Float32Array(face) }, { yE });
     const T: Transform = fit.T;
+    // no hair in front of the face below the brows (generated fringes and the mannequin's dark cheeks), in head-local space
+    {
+      const q: [number, number, number] = [0, 0, 0];
+      for (let t = 0; t < seg.keepTri.length; t++) {
+        if (!seg.keepTri[t]) continue;
+        for (let k = 0; k < 3; k++) {
+          applyTransform(T, m.pos, (m.index[t * 3 + k] as number) * 3, q);
+          if (q[2] > 0.035 && Math.abs(q[0]) < 0.07 && q[1] < 0.098 && q[1] > -0.05) { seg.keepTri[t] = 0; break; }
+        }
+      }
+    }
     const raw = extractHair(m, seg.keepTri, T);
     const capTris = s.scalp ? 30 * 9 * 2 : 0;
     let simp = await simplifyHair(raw, TARGET_TRIS - capTris);
@@ -51,7 +62,7 @@ export async function buildAll(styles: AiStyle[], root: string, opts: { debug?: 
       const block = freeUvBlock(simp, TINT_SIZE, 20);
       if (!block) throw new Error(`${s.id}: no free texel block for the scalp cap`);
       paint = { ...block, size: 20 };
-      simp = mergeMeshes(simp, scalpCap(hs, hairMod, { hairline: s.scalp.hairline, fringe: s.scalp.fringe ?? 0, offset: 0.007, block, blockSize: 20, size: TINT_SIZE }));
+      simp = mergeMeshes(simp, scalpCap(hs, hairMod, { hairline: s.scalp.hairline, fringe: s.scalp.fringe ?? 0, minY: s.scalp.minY, offset: 0.007, block, blockSize: 20, size: TINT_SIZE }));
     }
     const normals = smoothNormals(simp);
     orientNormals(simp, normals);

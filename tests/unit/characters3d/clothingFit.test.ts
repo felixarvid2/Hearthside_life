@@ -66,11 +66,11 @@ describe.each(['a', 'b', 'classic', 'classic-b'] as const)('garment fit on body 
       const b = buildGarment(t, g);
       const tris = b.mesh.indices.length / 3;
       total += tris;
-      expect(tris, g.id).toBeLessThan(7500);
+      expect(tris, g.id).toBeLessThan(9500); // the three-piece suit is the largest garment: jacket, shirt and trousers
       // the rim rings are extra geometry: a tee has more triangles than the same shell would without them
       for (let i = 0; i < b.mesh.positions.length; i++) expect(Number.isFinite(b.mesh.positions[i]!), g.id).toBe(true);
     }
-    expect(total).toBeLessThan(80000);
+    expect(total).toBeLessThan(200000); // 54 garments; one worn outfit is a handful of them
     const tee = buildGarment(t, GARMENTS.find((x) => x.id === 'tee-crew')!);
     const shorts = buildGarment(t, GARMENTS.find((x) => x.id === 'shorts-casual')!);
     // lowest tee vertex is below the hem line used by the cut parameters (the rim hangs 2 x rho below it)

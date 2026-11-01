@@ -85,7 +85,7 @@ describe('character content registry', () => {
       for (const p of g.patterns) { expect(patterns.has(p)).toBe(true); expect(PATTERN_IDS[p]).toBeDefined(); }
       expect(g.patterns).toContain('solid');
       expect(g.defaultColor).toMatch(HEX);
-      expect(['shirt', 'pants', 'skirt', 'dress', 'overalls', 'swimsuit', 'shoe']).toContain(g.build.shape);
+      expect(['shirt', 'pants', 'skirt', 'dress', 'overalls', 'swimsuit', 'jumpsuit', 'suit', 'shoe']).toContain(g.build.shape);
       if (g.layer !== 'shoes') expect(FABRIC_IDS[String(g.build.fabric)]).toBeDefined();
       expect(g.layer === 'shoes').toBe(g.build.shape === 'shoe');
     }
@@ -106,7 +106,7 @@ describe('character content registry', () => {
     for (const h of CH.HAIR) expect(pieces).toContain(h.build.piece);
     expect(new Set(CH.HAIR.map((h) => h.build.piece)).size).toBeGreaterThanOrEqual(7);
     for (const f of CH.FACIAL_HAIR) expect(['paint', 'shell']).toContain(f.build.kind);
-    for (const a of CH.ACCESSORIES) expect(['glasses', 'earrings']).toContain(a.kind);
+    for (const a of CH.ACCESSORIES) expect(['glasses', 'earrings', 'hat', 'scarf', 'necklace', 'watch', 'bracelet']).toContain(a.kind);
   });
 });
 

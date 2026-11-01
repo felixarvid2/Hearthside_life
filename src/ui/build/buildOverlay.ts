@@ -79,12 +79,19 @@ export function mountBuildOverlay(opts: {
     return e;
   };
 
-  const place = (el: HTMLElement, x: number, y: number, z: number): boolean => {
+  const place = (el: HTMLElement, x: number, y: number, z: number, keepOnScreen = false): boolean => {
     const s = api.view.worldToScreen(x, y, z);
     if (!s.visible) return false;
     const p = opts.canvasToRoot(s);
-    el.style.left = `${Math.round(p.x)}px`;
-    el.style.top = `${Math.round(p.y)}px`;
+    let px = p.x, py = p.y;
+    if (keepOnScreen) {
+      // the tip hangs above its point: keep it clear of the top bar and the screen edges
+      const area = layer.getBoundingClientRect();
+      px = Math.max(90, Math.min(area.width - 90, px));
+      py = Math.max(122, Math.min(area.height - 20, py));
+    }
+    el.style.left = `${Math.round(px)}px`;
+    el.style.top = `${Math.round(py)}px`;
     return true;
   };
 
@@ -108,7 +115,7 @@ export function mountBuildOverlay(opts: {
       const end = st.mode === 'drag' ? (t.to ?? t.from) : t.from;
       const mid = st.mode === 'drag' && handles.length ? handles[handles.length > 2 ? 2 : 1]! : null;
       const x = mid ? mid.x : end.x, z = mid ? mid.z : end.z;
-      const shown = place(tip, x, st.mode === 'click' && t.wallId ? 1.4 : 0, z);
+      const shown = place(tip, x, st.mode === 'click' && t.wallId ? 1.4 : 0, z, true);
       tip.hidden = !shown;
       setText(tip, tipText(pv));
       tip.dataset.ok = pv.unchanged ? 'neutral' : String(pv.ok);

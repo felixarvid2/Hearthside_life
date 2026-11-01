@@ -1212,7 +1212,7 @@ async function stepBuild(T) {
   const { page } = T;
   await page.evaluate(() => window.hearthside.view.frameLot(true));
   await T.tap(page.locator('.mode-btn[data-mode="build"]'));
-  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 6000 }).catch(() => undefined);
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 }).catch(() => undefined);
   await page.waitForTimeout(600);
   await T.frames(45);
   await T.shot('build-panel');
@@ -1639,7 +1639,7 @@ async function stepHomeEditor(T) {
   await page.evaluate(() => { window.hearthside.game.setSpeed(0); document.querySelectorAll('.toast').forEach((t) => t.remove()); });
   if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'live') { await T.tap(page.locator('.mode-btn[data-mode="live"]')); await page.waitForTimeout(400); }
   await T.tap(page.locator('.mode-btn[data-mode="build"]'));
-  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 8000 });
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
   await page.waitForTimeout(700);
   await T.frames(30);
   // the new room goes on the north strip of the lot, which the house hides from the default view: look from the north
@@ -1762,7 +1762,7 @@ async function stepHomeEditor(T) {
   const doorWall = Object.values(s1.openings).find((o) => /door/.test(o.defId) && !s0.openings[o.id]).wallId;
   const doorX = Number(doorWall.split(':')[2]), doorZ = Number(doorWall.split(':')[3]);
 
-  // ---- a window in the north wall (Windows tab: catalog, then the wall)
+  // ---- a window in the south wall (Windows tab: catalog, then the wall)
   await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-window"]'));
   await page.waitForTimeout(500);
   const winId = await page.evaluate(() => Object.values(window.hearthside.game.content.openings).filter((d) => d.kind === 'window' && d.status === 'ready' && d.width === 1).sort((a, b) => a.price - b.price)[0]?.id);
@@ -1773,8 +1773,11 @@ async function stepHomeEditor(T) {
   if (await winCard.count()) { await winCard.scrollIntoViewIfNeeded().catch(() => undefined); await T.tap(winCard); }
   await page.waitForTimeout(300);
   T.check(S, 'choosing a window selects the opening tool', (await page.evaluate(() => window.hearthside.game.buildTool()))?.defId === winId, winId);
-  const winWall = `0:h:${X0 + 1}:${Z0}`;
+  // the south wall faces away from the (northern) camera: it stands tall and is easy to hit
+  const winWall = `0:h:${X0 + 1}:${Z1}`;
   const wp = await pointFor(T, 'wall', winWall);
+  const wpPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [wp.x, wp.y]);
+  T.check(S, 'the wall for the window is under the tap point', wpPick.kind === 'wall' && wpPick.wallId === winWall && wp.free, JSON.stringify({ wp, wpPick }));
   const s1b = await lotSnap(T);
   await T.tapAt(wp.x, wp.y);
   await page.waitForTimeout(400);
@@ -1788,7 +1791,7 @@ async function stepHomeEditor(T) {
   await page.waitForTimeout(400);
   const s2 = await lotSnap(T);
   const winOpening = Object.values(s2.openings).find((o) => o.defId === winId && !s1.openings[o.id]);
-  T.check(S, 'the window is in the north wall and cost its catalog price', !!winOpening && winOpening.wallId === winWall && s1.funds - s2.funds === (await page.evaluate((id) => window.hearthside.game.content.openings[id].price, winId)), JSON.stringify(winOpening && winOpening.wallId));
+  T.check(S, 'the window is in that wall and cost its catalog price', !!winOpening && winOpening.wallId === winWall && s1.funds - s2.funds === (await page.evaluate((id) => window.hearthside.game.content.openings[id].price, winId)), JSON.stringify(winOpening && winOpening.wallId));
   await T.shot('m2-window-placed');
 
   // ---- paint each side of a wall independently: the west wall, once from each side

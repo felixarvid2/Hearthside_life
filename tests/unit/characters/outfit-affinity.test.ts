@@ -14,7 +14,7 @@ import type { Outfit, Wardrobe } from '../../../src/core/types';
 import type { PersonDraft } from '../../../src/core/drafts';
 
 const content = realContent();
-const FEM_ONLY = ['skirt-aline', 'sundress', 'dress-shirt', 'swimsuit', 'nightgown'];
+const FEM_ONLY = ['skirt-aline', 'sundress', 'dress-shirt', 'swimsuit', 'nightgown', 'blouse', 'crop-top', 'pleated-skirt', 'pencil-skirt', 'wrap-dress', 'maxi-dress', 'pumps', 'ballet-flats'];
 
 /** Affinities of every garment worn anywhere in a wardrobe. */
 function worn(w: Wardrobe, db: ContentDB = content): Array<{ id: string; affinity: GarmentAffinity }> {
@@ -24,7 +24,7 @@ function worn(w: Wardrobe, db: ContentDB = content): Array<{ id: string; affinit
 const wardrobeOf = (p: PersonDraft) => p.outfits;
 
 describe('garment affinity data', () => {
-  it('tags dresses, skirts, nightgowns and swimsuits as fem and everything else is not', () => {
+  it('tags dresses, skirts, nightgowns, swimsuits and the dressier pieces (blouse, pumps, flats, crop top) as fem and everything else is not', () => {
     for (const g of Object.values(content.garments)) {
       expect(garmentAffinity(g) === 'fem', g.id).toBe(FEM_ONLY.includes(g.id));
     }

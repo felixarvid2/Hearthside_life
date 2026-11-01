@@ -470,7 +470,10 @@ export interface ClothUniforms {
   uAltColor: THREE.IUniform<THREE.Color>;
   uPattern: THREE.IUniform<number>;
   uFabric: THREE.IUniform<number>;
-  /** details (1 jeans, 2 crease, 3 side stripe, 4 sneaker laces/toe cap, 5 loafer strap), placket (1 buttons, 2 zip, 3 short), rib, piping */
+  /**
+   * details (1 jeans, 2 crease, 3 side stripe, 4 sneaker laces/toe cap, 5 loafer strap, 6 running shoe, 7 pump, 8 flat bow, 9 jacket seams),
+   * placket (1 buttons, 2 zip, 3 short, 4 two buttons, 5 double-breasted), rib, piping
+   */
   uFlags: THREE.IUniform<THREE.Vector4>;
   /** hem band, belt, ankle cuff, waistband */
   uFlags2: THREE.IUniform<THREE.Vector4>;
@@ -478,6 +481,10 @@ export interface ClothUniforms {
   uCutArm: THREE.IUniform<THREE.Vector4>;
   uCutMisc: THREE.IUniform<THREE.Vector4>;
   uHem: THREE.IUniform<THREE.Vector4>;
+  /** pocket style (1 kangaroo, 2 chest flaps, 3 denim jacket, 4 cargo thigh, 5 chino slant, 6 welt), decor (1 hood cords, 2 quilt, 3 lapel, 4 wrap, 8 sash without buckle), neck band width (m), necktie flag */
+  uFlags3: THREE.IUniform<THREE.Vector4>;
+  /** neck cut of the inner shirt under a jacket (same layout as uCutNeck; inactive when z = 0) */
+  uInner: THREE.IUniform<THREE.Vector4>;
   /** crotchY, chestY, neckBaseY, foot centre |x| */
   uBody: THREE.IUniform<THREE.Vector4>;
   /** fabric relief, drape wrinkles, sheen, fuzz (see FABRIC_FX) */
@@ -504,6 +511,8 @@ uniform vec4 uCutNeck;
 uniform vec4 uCutArm;
 uniform vec4 uCutMisc;
 uniform vec4 uHem;
+uniform vec4 uFlags3;
+uniform vec4 uInner;
 uniform vec4 uBody;
 uniform vec4 uFx;
 uniform float uSelect;
@@ -528,15 +537,31 @@ float hcLine(float d, float halfW) {
   return 1.0 - smoothstep(halfW - w, halfW + w, abs(d));
 }
 float hcFade(float period, float x) { return 1.0 - smoothstep(0.25, 0.6, fwidth(x / period)); }
-float hcNeckY(float ax, float front) {
-  float shape = uCutNeck.w;
-  float r = ax / max(uCutNeck.z, 1e-4);
+// distance-based line along the segment a-b (half width hw)
+float hcSeg(vec2 p, vec2 a, vec2 b, float hw) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-8), 0.0, 1.0);
+  return hcLine(length(pa - ba * h), hw);
+}
+// rounded rectangle outline (centre c, half size hs): 1 on the outline
+float hcRectLine(vec2 p, vec2 c, vec2 hs, float hw) {
+  vec2 d = abs(p - c) - hs;
+  float o = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+  return hcLine(o, hw);
+}
+float hcRectIn(vec2 p, vec2 c, vec2 hs) {
+  vec2 d = abs(p - c) - hs;
+  return step(max(d.x, d.y), 0.0);
+}
+float hcNeckY(float ax, float front, vec4 nk) {
+  float shape = nk.w;
+  float r = ax / max(nk.z, 1e-4);
   float dip = 0.0;
   if (shape < 0.5) dip = max(1.0 - r * r, 0.0);
   else if (shape < 1.5) dip = pow(max(1.0 - r * r, 0.0), 0.5);
   else if (shape < 2.5) dip = max(1.0 - r, 0.0);
   else if (shape < 3.5) dip = 1.0 - smoothstep(0.85, 1.0, r);
-  return uCutNeck.x - uCutNeck.y * front * dip;
+  return nk.x - nk.y * front * dip;
 }
 // lower edge of the armhole of a strapped top: vertical beside the strap, rounding out to the armpit
 float hcArmholeY(float ax) {
@@ -557,7 +582,9 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
   bool isShoe = panel > 4.5 && panel < 6.5;
   // ---- cuts (bind space) ----
   float neckY = 10.0;
-  if (torsoLike && uCutNeck.w < 3.5) neckY = hcNeckY(ax, front);
+  bool innerShirt = panel > 6.5 && panel < 7.5;
+  vec4 nk = (innerShirt && uInner.z > 0.0) ? uInner : uCutNeck;
+  if (torsoLike && nk.w < 3.5) neckY = hcNeckY(ax, front, nk);
   if (torsoLike) {
     bool strapZone = uCutArm.w > 0.5 && ax >= uCutArm.y && ax <= uCutArm.z;
     if (uCutArm.w > 0.5 && ax > uCutArm.z && b.y > hcArmholeY(ax)) discard;
@@ -640,16 +667,16 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
     col = mix(col, uPatColor, pip);
   }
   // placket: buttons / zip down the centre front
-  if (torsoLike && uFlags.y > 0.5 && b.z > 0.0 && !(panel > 6.5 && panel < 7.5)) {
+  if (torsoLike && uFlags.y > 0.5 && uFlags.y < 4.5 && b.z > 0.0 && !(panel > 6.5 && panel < 7.5)) {
     float top = neckY;
-    float len = uFlags.y > 2.5 ? 0.12 : 2.0;
+    float len = uFlags.y > 3.5 ? 0.17 : uFlags.y > 2.5 ? 0.12 : 2.0;
     if (b.y < top && b.y > top - len) {
       if (uFlags.y < 1.5 || uFlags.y > 2.5) {
         col *= 1.0 - 0.18 * hcLine(ax - 0.012, 0.0008);
         float k = (top - 0.025 - b.y) / 0.075;
         float by = top - 0.025 - floor(k + 0.5) * 0.075;
         float bd = length(vec2(b.x, b.y - by));
-        float bm = (1.0 - smoothstep(0.0034, 0.0042, bd)) * step(-0.5, k);
+        float bm = (1.0 - smoothstep(0.0034, 0.0042, bd)) * step(-0.5, k) * step(top - len, by - 0.004);
         col = mix(col, mix(col, vec3(0.96, 0.94, 0.9), 0.55), bm);
       } else {
         col = mix(col, vec3(0.55, 0.56, 0.58), hcLine(b.x, 0.0012));
@@ -657,6 +684,19 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
         col = mix(col, vec3(0.7, 0.71, 0.73), tab);
       }
     }
+  }
+  // double-breasted front: two columns of buttons, the overlap edge and a stitched flap line
+  if (torsoLike && uFlags.y > 4.5 && b.z > 0.0 && !(panel > 6.5 && panel < 7.5)) {
+    float topC = uCutNeck.x - uCutNeck.y;
+    float lowC = min(topC, uHem.x + 0.55);
+    float kk = (lowC - 0.03 - b.y) / 0.085;
+    float byy = lowC - 0.03 - floor(kk + 0.5) * 0.085;
+    float inRows = step(-0.5, kk) * step(kk, 3.5);
+    float bd2 = length(vec2(ax - 0.052, b.y - byy));
+    float bm2 = (1.0 - smoothstep(0.0048, 0.0058, bd2)) * inRows;
+    float flapEdge = hcLine(b.x + 0.085, 0.0008) * step(uHem.x, b.y) * step(b.y, lowC) * step(0.0, b.z);
+    col *= 1.0 - 0.2 * flapEdge;
+    col = mix(col, vec3(0.2, 0.15, 0.1), bm2 * 0.9);
   }
   // jeans stitching, trouser crease, side stripe
   if (uFlags.x > 0.5 && uFlags.x < 1.5 && (panel > 1.5 && panel < 2.5 || panel < 0.5 || panel > 7.5)) {
@@ -685,11 +725,132 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
   }
   if (uFlags.x > 1.5 && uFlags.x < 2.5 && panel > 1.5 && panel < 2.5 && b.z > 0.0) col *= 1.0 + 0.16 * hcLine(ax - 0.09, 0.0016);
   if (uFlags.x > 2.5 && uFlags.x < 3.5 && (panel > 1.5 && panel < 2.5 || panel < 0.5)) col = mix(col, uPatColor, hcLine(b.z + 0.004, 0.006) * step(0.11, ax));
+  // jacket seams (denim jacket): front princess seams, back yoke, sleeve seam
+  if (uFlags.x > 8.5 && uFlags.x < 9.5) {
+    vec3 thread = vec3(0.8, 0.58, 0.28);
+    float dash = step(0.45, fract((b.y + b.x * 0.7) / 0.006));
+    float st = 0.0;
+    if (panel < 0.5) {
+      float topS = uBody.y + 0.02;
+      if (front > 0.5) st = max(st, hcLine(ax - 0.105, 0.0009) * step(uHem.x + 0.02, b.y) * step(b.y, topS));
+      else {
+        st = max(st, hcLine(b.y - (uBody.y + 0.075), 0.0009));
+        st = max(st, hcLine(ax - 0.07, 0.0009) * step(uHem.x + 0.02, b.y) * step(b.y, uBody.y + 0.075));
+      }
+    }
+    if (panel > 0.5 && panel < 1.5) st = max(st, hcLine(abs(b.z) - 0.0, 0.0012) * step(0.2, ax));
+    col = mix(col, thread, clamp(st, 0.0, 1.0) * dash);
+  }
+  // pockets (stitched outlines and flaps; the drawing sits on the cloth, no extra geometry)
+  if (uFlags3.x > 0.5) {
+    float pk = 0.0;
+    float fill = 0.0;
+    float pStyle = uFlags3.x;
+    if (pStyle < 1.5 && panel < 0.5 && front > 0.5) {
+      // kangaroo pocket on the belly
+      float py0 = uHem.x + 0.05, py1 = uHem.x + 0.2;
+      float tt = clamp((b.y - py0) / (py1 - py0), 0.0, 1.0);
+      float hw = mix(0.13, 0.09, tt);
+      float inBand = step(py0, b.y) * step(b.y, py1);
+      pk = max(hcLine(ax - hw, 0.0012) * inBand, hcLine(b.y - py1, 0.0012) * step(ax, hw) * 0.9);
+      fill = inBand * step(ax, hw);
+      pk = max(pk, hcLine(b.y - py0, 0.0012) * step(ax, hw) * 0.8);
+    } else if ((pStyle > 1.5 && pStyle < 3.5) && panel < 0.5 && front > 0.5) {
+      // chest pockets with a button flap
+      float cy = uBody.y - 0.025;
+      vec2 c = vec2(ax, b.y);
+      vec2 pc = vec2(0.075, cy - 0.025), ph = vec2(0.032, 0.036);
+      pk = hcRectLine(c, pc, ph, 0.0011);
+      fill = hcRectIn(c, pc, ph) * 0.5;
+      float flapY = cy + 0.011 - 0.012;
+      pk = max(pk, hcLine(b.y - (cy + 0.0) + 0.0, 0.0011) * hcRectIn(c, pc, ph + vec2(0.001)));
+      float but = 1.0 - smoothstep(0.0028, 0.0036, length(c - vec2(0.075, cy - 0.011)));
+      col = mix(col, vec3(0.78, 0.66, 0.36), but * hcRectIn(c, pc, ph));
+    } else if (pStyle > 3.5 && pStyle < 4.5 && panel > 1.5 && panel < 2.5) {
+      // cargo pocket on the outer thigh with a flap
+      float wt = uHem.w;
+      vec2 c = vec2(b.z, b.y);
+      vec2 pc = vec2(0.0, wt - 0.235), ph = vec2(0.052, 0.07);
+      float side = step(0.115, ax);
+      pk = hcRectLine(c, pc, ph, 0.0012) * side;
+      fill = hcRectIn(c, pc, ph) * side * 0.5;
+      pk = max(pk, hcLine(b.y - (wt - 0.19), 0.0012) * hcRectIn(c, pc, ph) * side);
+      float but = (1.0 - smoothstep(0.0032, 0.004, length(vec2(b.z, b.y - (wt - 0.215))))) * side;
+      col = mix(col, vec3(0.78, 0.66, 0.36), but);
+    } else if (pStyle > 4.5 && pStyle < 5.5 && (panel < 0.5 || panel > 1.5 && panel < 2.5)) {
+      // chino slant pockets in front, welt pockets behind
+      float wt = uHem.w;
+      if (front > 0.5) pk = hcSeg(vec2(ax, b.y), vec2(0.15, wt - 0.008), vec2(0.105, wt - 0.115), 0.0012) * step(0.0, b.z);
+      else {
+        pk = hcSeg(vec2(ax, b.y), vec2(0.06, wt - 0.06), vec2(0.115, wt - 0.06), 0.0012);
+        pk = max(pk, hcLine(b.y - (wt - 0.052), 0.0008) * step(0.06, ax) * step(ax, 0.115));
+      }
+      pk *= step(b.y, wt) * step(wt - 0.2, b.y);
+    } else if (pStyle > 5.5 && panel < 0.5 && front > 0.5) {
+      // jacket welt pockets and a breast pocket
+      float hy = uHem.x + 0.12;
+      pk = hcSeg(vec2(ax, b.y), vec2(0.08, hy), vec2(0.15, hy), 0.0012);
+      pk = max(pk, hcSeg(vec2(ax, b.y), vec2(0.08, hy + 0.012), vec2(0.15, hy + 0.012), 0.0008));
+      pk = max(pk, hcSeg(vec2(b.x, b.y), vec2(0.075, uBody.y - 0.025), vec2(0.125, uBody.y - 0.02), 0.0012) * step(0.0, b.x));
+    }
+    col = mix(col, col * 0.62, clamp(pk, 0.0, 1.0));
+    col = mix(col, col * 0.96, fill);
+  }
+  // decorations
+  if (uFlags3.y > 0.5) {
+    float dec = uFlags3.y;
+    if (dec < 1.5) {
+      // hood drawstrings hanging from the neckline
+      float cord = hcLine(ax - 0.032, 0.0022) * front * step(neckY - 0.15, b.y) * step(b.y, neckY - 0.012);
+      float tip = (1.0 - smoothstep(0.0048, 0.006, length(vec2(ax - 0.032, b.y - (neckY - 0.152))))) * front;
+      col = mix(col, mix(col, vec3(0.93, 0.92, 0.88), 0.85), max(cord * step(0.0, b.z), tip));
+    } else if (dec < 2.5) {
+      // quilted channels (puffer): horizontal on the body, across the sleeve
+      float axisC = (panel > 0.5 && panel < 1.5) ? ax : b.y;
+      float f01 = fract(axisC / 0.078);
+      float seam = smoothstep(0.38, 0.5, abs(f01 - 0.5));
+      col *= 1.0 - 0.2 * seam;
+      hcH = hcH * 0.4 - seam * 1.6 + 0.4;
+    } else if (dec < 3.5) {
+      // lapel facing along the V opening, stitched edge
+      float dN = neckY - b.y;
+      float lap = front * step(0.0, dN) * step(dN, 0.052) * (panel < 0.5 ? 1.0 : 0.0);
+      col = mix(col, col * 1.1 + vec3(0.025), lap * 0.6);
+      col *= 1.0 - 0.24 * hcLine(dN - 0.052, 0.0007) * front * step(0.0, dN) * (panel < 0.5 ? 1.0 : 0.0);
+    } else if (dec < 4.5) {
+      // wrap front: the overlapping panel's edge crosses from the shoulder to the tie at the left hip
+      float yTop = uCutNeck.x - uCutNeck.y;
+      vec2 pp = vec2(b.x, b.y);
+      float edge = hcSeg(pp, vec2(-0.05, uCutNeck.x - 0.02), vec2(0.105, uHem.w), 0.0014) * front * step(b.z, 0.5);
+      col *= 1.0 - 0.3 * edge * (panel < 0.5 ? 1.0 : 0.0);
+      // tie knot and ribbons at the left hip
+      float knot = (1.0 - smoothstep(0.012, 0.016, length(vec2((b.x - 0.105) * 1.2, b.y - uHem.w)))) * front;
+      float rib1 = hcSeg(pp, vec2(0.105, uHem.w), vec2(0.125, uHem.w - 0.12), 0.0045) * front;
+      float rib2 = hcSeg(pp, vec2(0.105, uHem.w), vec2(0.085, uHem.w - 0.1), 0.0045) * front;
+      col = mix(col, col * 0.72, max(knot, max(rib1, rib2)) * (panel < 0.5 || panel > 2.5 && panel < 3.5 ? 1.0 : 0.0));
+    }
+  }
+  // necktie on the shirt under a suit jacket
+  if (uFlags3.w > 0.5 && innerShirt && front > 0.5) {
+    float topT = uInner.x - uInner.y;
+    float t01 = clamp((topT - b.y) / 0.3, 0.0, 1.0);
+    float w = mix(0.0085, 0.017, smoothstep(0.0, 0.18, t01)) * (1.0 - 0.45 * smoothstep(0.7, 1.0, t01));
+    float tie = (1.0 - smoothstep(w - 0.0008, w + 0.0008, ax)) * step(b.y, topT + 0.005) * step(topT - 0.3, b.y);
+    col = mix(col, vec3(0.5, 0.13, 0.17) * (0.85 + 0.2 * hcBand(uv.y + b.x * 3.0, 0.01, 0.5)), tie);
+  }
+  // neck band: a ribbed or contrasting trim along the neckline (cardigan, robe)
+  if (torsoLike && uFlags3.z > 0.0 && !innerShirt) {
+    float dNb = neckY - b.y;
+    if (dNb < uFlags3.z && dNb > -0.001) {
+      col *= 0.86 + 0.14 * mix(0.5, hcBand(uv.x + uv.y, 0.006, 0.5), hcFade(0.006, uv.x + uv.y));
+      col = mix(col, col * 0.72, hcLine(dNb - uFlags3.z, 0.0007));
+    }
+  }
   // belt at the dress waist
   if (uFlags2.y > 0.5 && torsoLike || uFlags2.y > 0.5 && panel > 2.5 && panel < 3.5) {
     float belt = hcLine(b.y - uHem.w, 0.011);
     col = mix(col, col * 0.45, belt);
-    float buckle = belt * (1.0 - step(0.014, ax)) * front;
+    float buckle = belt * (1.0 - step(0.014, ax)) * front * (uFlags3.y > 3.5 && uFlags3.y < 4.5 || uFlags3.y > 7.5 ? 0.0 : 1.0);
     col = mix(col, vec3(0.78, 0.66, 0.36), buckle);
   }
   // shoes: sneaker laces and toe cap, loafer strap
@@ -701,7 +862,28 @@ const CLOTH_FRAG_PAINT = /* glsl */ `
       col = mix(col, uAltColor, lace);
       col = mix(col, uAltColor * 0.95, step(0.14, b.z) * step(b.y, 0.045));
     }
-    if (uFlags.x > 4.5) col = mix(col, col * 0.6, hcLine(b.z - 0.075, 0.006) * step(0.045, b.y));
+    if (uFlags.x > 4.5 && uFlags.x < 5.5) col = mix(col, col * 0.6, hcLine(b.z - 0.075, 0.006) * step(0.045, b.y));
+    if (uFlags.x > 5.5 && uFlags.x < 6.5) {
+      // running shoe: laced throat, side flash, perforated toe box, heel tab
+      float instep = step(0.0, b.z) * step(b.z, 0.12) * step(0.05, b.y);
+      float lace = instep * step(abs(fx), 0.012) * hcBand(b.z, 0.014, 0.4);
+      col = mix(col, uAltColor, lace);
+      float flash = hcSeg(vec2(b.z, b.y), vec2(-0.045, 0.028), vec2(0.1, 0.07), 0.0065) * step(0.02, abs(fx));
+      col = mix(col, uAltColor, flash);
+      float perf = hcBand(b.z, 0.011, 0.42) * hcBand(b.y, 0.011, 0.42) * step(0.1, b.z) * step(0.03, b.y);
+      col *= 1.0 - 0.28 * perf;
+      col = mix(col, col * 0.55, hcLine(b.z + 0.075, 0.004) * step(0.04, b.y));
+    }
+    if (uFlags.x > 6.5 && uFlags.x < 7.5) {
+      // pump: thin ankle strap and a lighter sole edge
+      col = mix(col, col * 0.7, hcLine(b.z + 0.035, 0.0035) * step(0.02, b.y));
+    }
+    if (uFlags.x > 7.5 && uFlags.x < 8.5) {
+      // ballet flat: bow at the vamp and a gathered topline
+      float bow = 1.0 - smoothstep(0.006, 0.0085, length(vec2(fx * 1.6, b.z - 0.115)));
+      col = mix(col, col * 0.7 + 0.1, bow * step(0.02, b.y));
+      col *= 1.0 - 0.14 * hcBand(b.z * 1.0 + fx * 0.0, 0.006, 0.5) * step(0.12, b.z);
+    }
   }
   if (!gl_FrontFacing) col *= 0.7;
   col = mix(col, col * 1.08 + vec3(0.03, 0.025, 0.0), uSelect);
@@ -743,11 +925,13 @@ export function createClothMaterial(): { material: THREE.MeshStandardMaterial; u
     uCutArm: { value: new THREE.Vector4() },
     uCutMisc: { value: new THREE.Vector4() },
     uHem: { value: new THREE.Vector4() },
+    uFlags3: { value: new THREE.Vector4() },
+    uInner: { value: new THREE.Vector4() },
     uBody: { value: new THREE.Vector4() },
     uFx: { value: new THREE.Vector4(0.5, 0.5, 0, 0) },
     uSelect: { value: 0 },
   };
-  patch(material, 'hs-cloth-v2', uniforms as unknown as Uniforms,
+  patch(material, 'hs-cloth-v3', uniforms as unknown as Uniforms,
     [['#include <common>', `#include <common>\n${CLOTH_VERT_HEAD}`], ['#include <begin_vertex>', '#include <begin_vertex>\nvCloth = aCloth;\nvBind = position;']],
     [
       ['#include <common>', `#include <common>\n${CLOTH_FRAG_HEAD}`],

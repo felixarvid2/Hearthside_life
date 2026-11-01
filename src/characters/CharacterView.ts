@@ -20,12 +20,29 @@ import { CROWN_Y, HEAD_OFFSET, HEAD_SCALE, HEAD_SCULPT_IDS } from './headShape';
 import { PAINT_MORPH_IDS } from './meshyBody';
 import { STRAND_IDS, buildHair } from './hair';
 import { buildAccessory } from './accessories';
+import { HAT_FIT, addHatFit } from './hatFit';
 import type { ClothUniforms, HairUniforms, MeshySkinUniforms, SkinUniforms } from './materials';
 import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
 import { resolveOutfit } from './outfits';
 import { clamp } from './rig';
 
 const BROW_INDEX: Record<string, number> = { natural: 0, straight: 1, 'soft-arch': 2, 'high-arch': 3, thick: 4, thin: 5, bushy: 6, angled: 7 };
+
+/** Surface of each accessory kind (rigid items; `double` for thin sheets such as brims and scarves). */
+const ACCESSORY_LOOK: Partial<Record<AccessoryDef['kind'], { roughness: number; metalness: number; double: boolean }>> = {
+  glasses: { roughness: 0.45, metalness: 0.1, double: false },
+  earrings: { roughness: 0.3, metalness: 0.85, double: false },
+  hat: { roughness: 0.92, metalness: 0, double: true },
+  scarf: { roughness: 0.96, metalness: 0, double: true },
+  necklace: { roughness: 0.3, metalness: 0.85, double: false },
+  watch: { roughness: 0.4, metalness: 0.55, double: false },
+  bracelet: { roughness: 0.35, metalness: 0.8, double: false },
+};
+
+/** Garment `build` keywords -> cloth shader codes (see ClothUniforms in materials.ts). */
+const PLACKETS: Record<string, number> = { buttons: 1, zip: 2, short: 3, two: 4, double: 5 };
+const POCKETS: Record<string, number> = { kangaroo: 1, chest: 2, denim: 3, cargo: 4, chino: 5, welt: 6 };
+const DECORS: Record<string, number> = { cords: 1, quilt: 2, lapel: 3, wrap: 4, sash: 8 };
 
 interface GarmentSlot { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: ClothUniforms; garmentId: string }
 
@@ -48,6 +65,7 @@ export function hairGeometry(assets: CharacterAssets, frame: FrameAssets, conten
   if (!hair && !facial) return null;
   return cachedGeometry(assets, `hair:${frame.key}:${hair?.id ?? '-'}:${facial?.id ?? '-'}`, () => {
     const mesh = buildHair(frame.template, hair, facial);
+    addHatFit(frame.template, mesh);
     const g = toGeometry(mesh, `hair-${hair?.id}-${facial?.id}`);
     let top = 0;
     for (let i = 1; i < mesh.positions.length; i += 3) top = Math.max(top, mesh.positions[i] as number);
@@ -60,6 +78,7 @@ export function hairGeometry(assets: CharacterAssets, frame: FrameAssets, conten
 export function aiHairGeometry(assets: CharacterAssets, frame: FrameAssets, data: AiHairData): THREE.BufferGeometry {
   return cachedGeometry(assets, `aihair:${frame.key}:${data.id}`, () => {
     const mesh = buildAiHair(frame.template, data);
+    addHatFit(frame.template, mesh);
     const g = toGeometry(mesh, `aihair-${frame.frame}-${data.id}`);
     g.userData.topY = topOf(mesh);
     return g;
@@ -99,6 +118,8 @@ export class CharacterView {
   private outfit: Outfit;
   private selected = false;
   private hairClear = 0;
+  /** 0..1: how far the hair is squeezed down onto the skull under a hat (the 'hatFit' morph). */
+  private hatFit = 0;
   private disposed = false;
   private ring: THREE.Mesh | null = null;
   private lastAnim: { id: AnimId; posture?: Posture } = { id: 'idle' };
@@ -262,6 +283,8 @@ export class CharacterView {
     for (const id of PAINT_MORPH_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(face[id] ?? 0, -1, 1); }
     const hc = dict.hairClear;
     if (hc !== undefined) infl[hc] = this.hairClear;
+    const hf = dict[HAT_FIT];
+    if (hf !== undefined) infl[hf] = this.hatFit;
   }
 
   private applyAppearance(): void {
@@ -386,15 +409,19 @@ export class CharacterView {
       u.uFabric.value = FABRIC_IDS[fabric] ?? 0;
       const fx = FABRIC_FX[fabric] ?? FABRIC_FX.cotton!;
       u.uFx.value.set(fx.bump, fx.fold, fx.sheen, fx.fuzz);
-      const details = b.details === 'jeans' ? 1 : b.details === 'crease' ? 2 : b.sideStripe ? 3 : b.laces || b.toeCap ? 4 : b.strap === true ? 5 : 0;
-      const placket = b.placket === 'buttons' ? 1 : b.placket === 'zip' ? 2 : b.placket === 'short' ? 3 : 0;
+      const style = typeof b.style === 'string' ? b.style : '';
+      const details = def.layer === 'shoes' && style === 'runner' ? 6 : def.layer === 'shoes' && style === 'pump' ? 7 : def.layer === 'shoes' && style === 'flat' ? 8
+        : b.details === 'jeans' ? 1 : b.details === 'crease' ? 2 : b.details === 'jacket' ? 9 : b.sideStripe ? 3 : b.laces || b.toeCap ? 4 : b.strap === true ? 5 : 0;
+      const placket = PLACKETS[b.placket as string] ?? 0;
       u.uFlags.value.set(details, placket, b.rib ? 1 : 0, b.piping ? 1 : 0);
       u.uFlags2.value.set(b.hemBand ? 1 : 0, b.belt ? 1 : 0, b.cuff ? 1 : 0, b.waistBand ? 1 : 0);
+      u.uFlags3.value.set(POCKETS[b.pocket as string] ?? 0, DECORS[b.decor as string] ?? 0, typeof b.neckBand === 'number' ? b.neckBand : 0, b.tie ? 1 : 0);
       const cuts = geometry.userData.cuts as CutParams;
       u.uCutNeck.value.fromArray(cuts.neck);
       u.uCutArm.value.fromArray(cuts.arm);
       u.uCutMisc.value.fromArray(cuts.misc);
       u.uHem.value.fromArray(cuts.hem);
+      u.uInner.value.fromArray(cuts.inner);
       u.uBody.value.set(lm.crotchY, lm.chestY, lm.neckBaseY, lm.footX);
       u.uSelect.value = this.selected ? 1 : 0;
       this.applyMorphs(slot.mesh);
@@ -408,15 +435,21 @@ export class CharacterView {
     // accessories (head-attached)
     for (const a of this.accessories) { a.mesh.removeFromParent(); a.material.dispose(); }
     this.accessories = [];
+    let fit = 0;
     for (const { def, color } of resolved.accessories) {
-      if (def.kind !== 'glasses' && def.kind !== 'earrings') { this.issues.push(`${def.name} is not drawn yet.`); continue; }
-      const metal = def.kind === 'earrings';
-      const material = new THREE.MeshStandardMaterial({ color, roughness: metal ? 0.3 : 0.45, metalness: metal ? 0.85 : 0.1 });
+      const look = ACCESSORY_LOOK[def.kind];
+      if (!look) { this.issues.push(`${def.name} is not drawn yet.`); continue; }
+      const pearls = def.build.style === 'pearls';
+      const material = new THREE.MeshStandardMaterial({
+        color, roughness: pearls ? 0.25 : look.roughness, metalness: pearls ? 0.1 : look.metalness, vertexColors: true, side: look.double ? THREE.DoubleSide : THREE.FrontSide,
+      });
       const mesh = this.skinned(accessoryGeometry(this.assets, this.frame, def), material, `acc-${def.id}`);
       mesh.castShadow = false;
       this.accessories.push({ mesh, material });
-      this.applyMorphs(mesh);
+      if (def.kind === 'hat') fit = Math.max(fit, typeof def.build.fit === 'number' ? def.build.fit : 1);
     }
+    this.hatFit = fit;
+    for (const a of this.accessories) this.applyMorphs(a.mesh);
     // bulky upper layers push long hair away from the back (hair 'hairClear' morph)
     let clear = 0;
     for (const { layer, def } of resolved.layers) {

@@ -261,6 +261,14 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     });
   };
 
+  let buildPrefetched = false;
+  /** Fetches the Build panel chunk while the player is busy in Live mode, so Build opens at once. */
+  const prefetchBuildPanel = () => {
+    if (buildPrefetched) return;
+    buildPrefetched = true;
+    setTimeout(() => { void import('./build/buildMode').catch(() => { buildPrefetched = false; }); }, 2500);
+  };
+
   const destroyCreator = () => { if (creator) { try { creator.ui.destroy(); } catch { /* ignore */ } creator = null; } };
 
   // The creator (and the wardrobe, which reuses its clothing step) is loaded on demand: a separate chunk that
@@ -385,6 +393,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     toggleClass(document.body, 'shell-in-game', inGame || next === 'wardrobe');
     document.body.dataset.shellRoute = next;
     if (inGame) {
+      prefetchBuildPanel();
       hud.setMode(m);
       if (m === 'buy') { buyUI ??= mountBuyMode(root, api); buyUI.show(); } else buyUI?.hide();
       if (m === 'build') showBuildPanel(); else buildUI?.hide();

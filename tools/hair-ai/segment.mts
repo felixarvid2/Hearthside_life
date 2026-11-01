@@ -4,6 +4,7 @@
 
 import type { RawModel, Vec3 } from './mesh.mts';
 import { adjacency, sampleTex, weldMap } from './mesh.mts';
+import { DistanceField } from './register.mts';
 
 export interface Segmentation {
   /** Per vertex: 1 hair, 0 mannequin (after propagation). */
@@ -51,6 +52,17 @@ export function segment(m: RawModel, opts: { hairAbove?: number } = {}): Segment
   }
   const hair = new Uint8Array(n);
   for (let i = 0; i < n; i++) hair[i] = (p[rep[i] as number] as number) > 0.5 ? 1 : 0;
+  // dark neutral vertices touching the mannequin (its shaded bust, chin and cheeks) are mannequin, not hair
+  const sure: number[] = [];
+  for (let i = 0; i < n; i++) if (rep[i] === i && p[i] === 0 && chroma[i]! < 0.07 && lum[i]! > 0.3) sure.push(m.pos[i * 3] as number, m.pos[i * 3 + 1] as number, m.pos[i * 3 + 2] as number);
+  const near = new DistanceField(sure, [-0.7, -0.7, -0.7], [0.7, 0.7, 0.7], 0.01);
+  for (let i = 0; i < n; i++) {
+    const r = rep[i] as number;
+    if ((p[r] as number) > 0.5 && chroma[i]! <= 0.1 && lum[i]! < 0.24 && near.at(m.pos[i * 3] as number, m.pos[i * 3 + 1] as number, m.pos[i * 3 + 2] as number) < 0.025) p[r] = 0;
+  }
+  const hair2 = new Uint8Array(n);
+  for (let i = 0; i < n; i++) hair2[i] = (p[rep[i] as number] as number) > 0.5 ? 1 : 0;
+  hair.set(hair2);
   // triangles: all three vertices hair (the border ring of mixed grey/brown texels is dropped)
   const nt = m.index.length / 3;
   const keep = new Uint8Array(nt);

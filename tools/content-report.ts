@@ -21,7 +21,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const markdown = process.argv.includes('--markdown');
 const strict = process.argv.includes('--strict');
 
-interface Row { label: string; ready: number; dev: number; variants?: number | string; m1?: number; m2?: number; target?: number }
+interface Row { label: string; ready: number; dev: number; variants?: number | string; m1?: number; m2?: number; m3?: number; target?: number }
 
 /** Full-project catalog targets per buy category (brief section 16). */
 const CATEGORY_TARGETS: Record<CatalogCategory, number> = {
@@ -80,10 +80,10 @@ async function main(): Promise<void> {
   sections.push({
     title: 'Character content',
     rows: [
-      { label: 'hairstyles', ...count(Object.values(db.hair)), variants: db.hairColors.length ? `${db.hairColors.length} colours` : '-', m1: 8, target: 60 },
+      { label: 'hairstyles', ...count(Object.values(db.hair)), variants: db.hairColors.length ? `${db.hairColors.length} colours` : '-', m1: 8, m3: 24, target: 60 },
       { label: 'facial hair', ...count(Object.values(db.facialHair)), variants: '-', target: 16 },
-      { label: 'garments', ...count(garments), variants: garments.filter((g) => g.status === 'ready').reduce((n, g) => n + 1 + g.patterns.filter((p) => p !== 'solid').length, 0), m1: 12, target: 132 },
-      { label: 'accessories', ...count(Object.values(db.accessories)), variants: '-', target: 32 },
+      { label: 'garments', ...count(garments), variants: garments.filter((g) => g.status === 'ready').reduce((n, g) => n + 1 + g.patterns.filter((p) => p !== 'solid').length, 0), m1: 12, m3: 48, target: 132 },
+      { label: 'accessories', ...count(Object.values(db.accessories)), variants: `${new Set(Object.values(db.accessories).map((a) => a.kind)).size} kinds`, m3: 12, target: 32 },
       { label: 'patterns', ready: Object.keys(db.patterns).length, dev: 0, variants: '-' },
       { label: 'face presets', ready: Object.keys(db.facePresets).length, dev: 0, variants: `${db.faceParams.length} sliders` },
       { label: 'body presets', ready: Object.keys(db.bodyPresets).length, dev: 0, variants: `${db.bodyParams.length} sliders` },
@@ -103,7 +103,7 @@ async function main(): Promise<void> {
     rows: [
       { label: 'activities', ...count(Object.values(db.interactions).filter((i) => !NOT_ACTIVITIES.includes(i.behavior ?? ''))), variants: '-', target: 40 },
       { label: 'social interactions', ...count(socials), variants: `${socials.filter((s) => s.alsoActivity).length} also activities`, target: 40 },
-      { label: 'traits', ...count(Object.values(db.traits)), variants: '-', target: 40 },
+      { label: 'traits', ...count(Object.values(db.traits)), variants: '-', m3: 20, target: 40 },
       { label: 'aspirations', ...count(Object.values(db.aspirations)), variants: `${Object.values(db.aspirations).reduce((n, a) => n + a.stages.length, 0)} stages`, target: 12 },
       { label: 'skills', ...count(Object.values(db.skills)), variants: '-', target: 16 },
       { label: 'careers (10 levels)', ...count(careers), variants: `${careers.reduce((n, c) => n + c.levels.length, 0)} levels`, m1: 1, target: 12 },
@@ -119,15 +119,15 @@ async function main(): Promise<void> {
 
   for (const s of sections) {
     if (markdown) {
-      console.log(`\n### ${s.title}\n\n| | ready | dev | variants | M1 min | M2 min | full target |\n|---|---:|---:|---:|---:|---:|---:|`);
-      for (const r of s.rows) console.log(`| ${r.label} | ${r.ready} | ${r.dev} | ${r.variants ?? '-'} | ${r.m1 ?? '-'} | ${r.m2 ?? '-'} | ${r.target ?? '-'} |`);
+      console.log(`\n### ${s.title}\n\n| | ready | dev | variants | M1 min | M2 min | M3 min | full target |\n|---|---:|---:|---:|---:|---:|---:|---:|`);
+      for (const r of s.rows) console.log(`| ${r.label} | ${r.ready} | ${r.dev} | ${r.variants ?? '-'} | ${r.m1 ?? '-'} | ${r.m2 ?? '-'} | ${r.m3 ?? '-'} | ${r.target ?? '-'} |`);
       if (s.note) console.log(`\n${s.note}`);
     } else {
       console.log(`\n${s.title}`);
-      console.log(`  ${'category'.padEnd(40)}${'ready'.padStart(7)}${'dev'.padStart(6)}${'variants'.padStart(18)}${'M1'.padStart(6)}${'M2'.padStart(6)}${'target'.padStart(8)}`);
+      console.log(`  ${'category'.padEnd(40)}${'ready'.padStart(7)}${'dev'.padStart(6)}${'variants'.padStart(18)}${'M1'.padStart(6)}${'M2'.padStart(6)}${'M3'.padStart(6)}${'target'.padStart(8)}`);
       for (const r of s.rows) {
         console.log(`  ${r.label.padEnd(40)}${String(r.ready).padStart(7)}${String(r.dev).padStart(6)}${String(r.variants ?? '-').padStart(18)}` +
-          `${String(r.m1 ?? '-').padStart(6)}${String(r.m2 ?? '-').padStart(6)}${String(r.target ?? '-').padStart(8)}`);
+          `${String(r.m1 ?? '-').padStart(6)}${String(r.m2 ?? '-').padStart(6)}${String(r.m3 ?? '-').padStart(6)}${String(r.target ?? '-').padStart(8)}`);
       }
       if (s.note) console.log(`  (${s.note})`);
     }

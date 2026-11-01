@@ -172,7 +172,7 @@ export function colorField(o: ColorFieldOpts): Bound {
 // Chips and cards
 // ---------------------------------------------------------------------------------------------
 
-export interface ChoiceOption<T extends string> { id: T; label: string; title?: string; icon?: string }
+export interface ChoiceOption<T extends string> { id: T; label: string; title?: string; icon?: string; /** SVG markup of a thumbnail drawn before the label (own markup, never user text). */ glyph?: string }
 
 /** Single-choice chips (radio group) with a check mark on the chosen one. */
 export function choiceChips<T extends string>(o: {
@@ -187,6 +187,7 @@ export function choiceChips<T extends string>(o: {
     const b = h('button', { type: 'button', class: 'chip cr-chip', role: 'radio', dataset: { id: opt.id }, ...(opt.title ? { title: opt.title } : {}) },
       h('span', { class: 'cr-check' }, icon('check', 16)),
       opt.icon ? icon(opt.icon, 16) : null,
+      opt.glyph ? h('span', { class: 'cr-glyph', html: opt.glyph }) : null,
       h('span', { text: opt.label }));
     b.addEventListener('click', () => o.onPick(opt.id));
     row.appendChild(b);

@@ -54,19 +54,33 @@ function appearance(i: number, frame: BodyFrame, hairId: string): Appearance {
   };
 }
 
-function outfitFor(ids: string[], i: number): Outfit {
+/**
+ * An outfit from garment specs `id[:pattern][@#colour]` (pattern defaults to the garment's own default, then to a lab rotation by person)
+ * and optional accessory specs `id[@#colour]` (default: a few by person index so the grid shows glasses and earrings).
+ */
+function outfitFor(ids: string[], i: number, acc?: string[]): Outfit {
   const layers: Partial<Record<GarmentLayer, GarmentChoice>> = {};
-  for (const id of ids) {
-    const g = content.garments[id];
+  for (const spec of ids) {
+    const [head, color] = spec.split('@');
+    const [id, pat] = (head as string).split(':');
+    const g = content.garments[id as string];
     if (!g) continue;
-    const pattern = g.patterns[(i % g.patterns.length)] ?? 'solid';
-    layers[g.layer] = { garmentId: id, color: g.defaultColor, pattern, patternColor: '#f6f1e6' };
+    const pattern = pat ?? g.defaultPattern ?? g.patterns[(i % g.patterns.length)] ?? 'solid';
+    layers[g.layer] = { garmentId: id as string, color: color ?? g.defaultColor, pattern, patternColor: '#f6f1e6' };
   }
   const accessories: Outfit['accessories'] = [];
-  if (i % 4 === 0) accessories.push({ accessoryId: 'glasses-round', color: '#3a3632' });
-  if (i % 5 === 1) accessories.push({ accessoryId: 'glasses-square', color: '#1f1b19' });
-  if (i % 4 === 2) accessories.push({ accessoryId: 'earrings-hoop', color: '#d9b65a' });
-  if (i % 5 === 3) accessories.push({ accessoryId: 'earrings-stud', color: '#e2c46b' });
+  if (acc) {
+    for (const spec of acc) {
+      const [id, color] = spec.split('@');
+      const a = content.accessories[id as string];
+      if (a) accessories.push({ accessoryId: a.id, color: color ?? a.defaultColor });
+    }
+  } else {
+    if (i % 4 === 0) accessories.push({ accessoryId: 'glasses-round', color: '#3a3632' });
+    if (i % 5 === 1) accessories.push({ accessoryId: 'glasses-square', color: '#1f1b19' });
+    if (i % 4 === 2) accessories.push({ accessoryId: 'earrings-hoop', color: '#d9b65a' });
+    if (i % 5 === 3) accessories.push({ accessoryId: 'earrings-stud', color: '#e2c46b' });
+  }
   return { id: `out_${i}`, name: 'Lab', layers, accessories };
 }
 
@@ -84,6 +98,20 @@ const OUTFITS: string[][] = [
   ['swimsuit'],
   ['swim-trunks', 'sandals-slide'],
   ['nightgown', 'slippers'],
+  ['hoodie', 'chinos', 'running-shoes'],
+  ['blouse', 'pencil-skirt', 'pumps', 'blazer'],
+  ['maxi-dress', 'ballet-flats', 'cardigan'],
+  ['turtleneck', 'wide-leg-trousers', 'ballet-flats', 'trench-coat'],
+  ['flannel-shirt', 'cargo-shorts', 'rain-boots', 'puffer-jacket'],
+  ['henley', 'leggings', 'running-shoes', 'denim-jacket'],
+  ['suit', 'loafers'],
+  ['jumpsuit', 'pumps'],
+  ['wrap-dress', 'ballet-flats'],
+  ['bathrobe', 'slippers'],
+  ['unitard', 'running-shoes'],
+  ['crop-top', 'bike-shorts', 'running-shoes'],
+  ['waistcoat', 'trousers-tailored', 'loafers'],
+  ['tee-crew', 'pleated-skirt', 'sneakers'],
 ];
 
 // ---- scene ----
@@ -200,7 +228,7 @@ function buildBar(): void {
 /** Hooks for automated screenshots. */
 const lab = {
   /** Replaces person i: appearance fields (skin, body, face, hair) and an outfit given as garment ids. */
-  set(i: number, o: { frame?: BodyFrame; skin?: string; hair?: string; hairColor?: string; facial?: string | null; body?: Record<string, number>; face?: Record<string, number>; eyeColor?: string; browColor?: string; freckles?: number; blush?: number; outfit?: string[] }): void {
+  set(i: number, o: { frame?: BodyFrame; skin?: string; hair?: string; hairColor?: string; facial?: string | null; body?: Record<string, number>; face?: Record<string, number>; eyeColor?: string; browColor?: string; freckles?: number; blush?: number; outfit?: string[]; accessories?: string[] }): void {
     const p = people[i]!;
     const a = appearance(i, o.frame ?? (i % 2 === 0 ? 'a' : 'b'), o.hair ?? CH.HAIR[0]!.id);
     if (o.skin) a.skin = o.skin;
@@ -213,7 +241,7 @@ const lab = {
     if (o.freckles !== undefined) a.face.freckles = o.freckles;
     if (o.blush !== undefined) a.face.blush = o.blush;
     p.setAppearance(a);
-    if (o.outfit) { labOutfits[i] = outfitFor(o.outfit, i); p.setOutfit(labOutfits[i]!); }
+    if (o.outfit) { labOutfits[i] = outfitFor(o.outfit, i, o.accessories); p.setOutfit(labOutfits[i]!); }
   },
   async style(s: 'classic' | 'detailed'): Promise<string> {
     const now = await setCharacterStyle(labAssets, s);

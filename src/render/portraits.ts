@@ -3,7 +3,9 @@
 // is rendered per frame (requests queue) so a household strip never stalls the game.
 
 import * as THREE from 'three';
+import { isMeshHair } from '../characters/aiHair';
 import type { CharacterAssets } from '../characters/assets';
+import { loadAiHair } from '../characters/assets';
 import { CharacterView } from '../characters/CharacterView';
 import type { ContentDB } from '../content/types';
 import type { Appearance, BodyFrame, Outfit } from '../core/types';
@@ -58,7 +60,11 @@ export class PortraitRenderer {
     if (existing) {
       return new Promise((res) => { const prev = existing.resolve; existing.resolve = (u) => { prev(u); res(u); }; });
     }
-    return new Promise((resolve) => { this.queue.push({ key, appearance: structuredClone(appearance), outfit: structuredClone(outfit), resolve }); });
+    const queued = () => new Promise<string>((resolve) => { this.queue.push({ key, appearance: structuredClone(appearance), outfit: structuredClone(outfit), resolve }); });
+    // a generated hairstyle is drawn as soon as its GLB is loaded: wait for it so the cached portrait never shows the stand-in
+    const def = this.content.hair[appearance.hair.styleId];
+    if (isMeshHair(def) && !this.assets.aiHair?.has(def.id)) return loadAiHair(this.assets, def.id, def.build.asset as string).then(queued);
+    return queued();
   }
 
   get pending(): number { return this.queue.length; }

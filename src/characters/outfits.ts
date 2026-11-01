@@ -24,7 +24,7 @@ export const MAX_OUTFITS_PER_CATEGORY = 5;
 export const MAX_ACCESSORIES = 4;
 /** Accessory kinds of which only one can be worn at a time ('other' is unlimited). */
 export const SINGLE_ACCESSORY_KINDS: readonly AccessoryDef['kind'][] =
-  ['glasses', 'hat', 'earrings', 'necklace', 'bag', 'watch', 'scarf'];
+  ['glasses', 'hat', 'earrings', 'necklace', 'bag', 'watch', 'bracelet', 'scarf'];
 
 export const OUTFIT_CATEGORY_NAMES: Record<OutfitCategory, string> = {
   everyday: 'Everyday', formal: 'Formal', work: 'Work', athletic: 'Athletic', sleep: 'Sleepwear', swim: 'Swimwear',
@@ -502,6 +502,7 @@ export function randomOutfit(rng: Rng, content: ContentDB, category: OutfitCateg
     const kinds = new Set(accessories.map((a) => content.accessories[a.accessoryId]?.kind));
     const pool = Object.values(content.accessories ?? {})
       .filter((a) => a.status === 'ready' && a.kind !== 'glasses' && !kinds.has(a.kind)
+        && (!a.categories || a.categories.includes(category))
         && (!opts.affinities || opts.affinities.includes(garmentAffinity(a))));
     if (pool.length > 0) {
       const acc = rng.pick(pool);
@@ -532,7 +533,7 @@ export interface WardrobeOptions {
 /** One outfit per category (valid whenever the content can dress that category), worn: everyday. */
 export function defaultWardrobe(content: ContentDB, rng: Rng, opts: WardrobeOptions = {}): Wardrobe {
   const hue = opts.hue ?? rng.range(0, 360);
-  const glassesPool = Object.values(content.accessories ?? {}).filter((a) => a.status === 'ready' && a.kind === 'glasses');
+  const glassesPool = Object.values(content.accessories ?? {}).filter((a) => a.status === 'ready' && a.kind === 'glasses' && a.build.tint !== true);
   let glassesId: string | null = null;
   if (typeof opts.glasses === 'string') glassesId = content.accessories[opts.glasses] ? opts.glasses : null;
   else if (!opts.plain && glassesPool.length > 0 && (opts.glasses === true || (opts.glasses === undefined && rng.chance(0.2)))) {
