@@ -181,6 +181,31 @@ async function main() {
     check('objects carry dirt/broken condition for the overlays', !!(seeded.a || seeded.b || seeded.c), JSON.stringify(seeded));
     await shot('condition-overlays');
 
+    // ---- Milestone 4: dirty dishes on a counter and floor messes (puddle, crumbs) ----
+    const housekeeping = await page.evaluate(() => {
+      const h = window.hearthside, g = h.game, st = g.state(), lot = st.lots[st.activeLotId], now = st.clock.minutes;
+      const objs = Object.values(lot.objects);
+      const counter = objs.find((o) => {
+        const d = g.content.objects[o.defId];
+        return (d?.surfaceHeight ?? 0) >= 0.85 && (d?.tags ?? []).some((t) => ['counter', 'surface', 'table', 'dining'].includes(t));
+      }) ?? objs.find((o) => (g.content.objects[o.defId]?.surfaceHeight ?? 0) >= 0.85);
+      const base = counter ?? objs[0];
+      const mk = (id, kind, position, recipeId, portions, quality) => ({
+        id, kind, lotId: lot.id, position, recipeId, portions, quality,
+        createdAt: now, spoilsAt: now + 365 * 1440, ownerHouseholdId: st.activeHouseholdId,
+      });
+      const dishPos = counter ? { x: counter.x + 0.5, z: counter.z + 0.5, level: 0, onObjectId: counter.id } : { x: base.x + 0.5, z: base.z + 0.5, level: 0 };
+      st.items.itm_vis_dishes = mk('itm_vis_dishes', 'dishes', dishPos, 'pasta-tomato', 4, 1);
+      st.items.itm_vis_mess = mk('itm_vis_mess', 'mess', { x: base.x + 1.5, z: base.z + 1.5, level: 0 }, 'puddle', 1, 0.8);
+      st.items.itm_vis_crumbs = mk('itm_vis_crumbs', 'mess', { x: base.x + 2.5, z: base.z + 0.5, level: 0 }, 'crumbs', 1, 0.5);
+      h.view.itemsChanged();
+      h.view.rig.glideTo(base.x + 1.2, base.z + 1.2, 46, 0);
+      return { counter: base.id, dishes: dishPos, items: Object.keys(st.items).length };
+    });
+    await frames(14);
+    check('dirty dishes and floor messes were added to the lot', housekeeping.items >= 3, JSON.stringify(housekeeping));
+    await shot('dirty-dishes-and-messes');
+
     // ---- Milestone 5: plan a visit and show the goal card on the HUD with the tutorial open ----
     const planned = await page.evaluate(() => {
       const h = window.hearthside, g = h.game, st = g.state();

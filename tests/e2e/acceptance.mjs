@@ -631,6 +631,25 @@ async function drag(T, from, to) {
   await page.waitForTimeout(150);
 }
 
+/** Waits until the camera insets (the screen area the UI panels cover) stopped changing: a panel grows a moment after a
+ * tool is chosen, which re-centres the camera on the free area without moving its target (and so moves the ground under
+ * a screen point that was measured earlier). */
+async function settleInsets(T, maxMs = 4000) {
+  const read = () => T.page.evaluate(() => JSON.stringify(window.hearthside.view.rig.insets));
+  // let the panel's queued animation-frame work run (footer render, layout measure), which can predate our reads
+  const raf = () => T.page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const end = Date.now() + maxMs;
+  await raf();
+  let prev = await read(), stable = 0;
+  while (Date.now() < end) {
+    await T.page.waitForTimeout(250);
+    await T.frames(2);
+    const cur = await read();
+    if (cur === prev) { if (++stable >= 2) return true; } else { stable = 0; prev = cur; }
+  }
+  return false;
+}
+
 /** Waits (in real time) until the camera stopped moving: panel transitions change the camera insets after our synchronous frames. */
 async function settle(T, maxMs = 6000) {
   const read = () => T.page.evaluate(() => { const v = window.hearthside.game.view; const a = v.worldToScreen(12, 0, 12), b = v.worldToScreen(5, 0, 18); return [a.x, a.y, b.x, b.y].map((n) => Math.round(n * 10) / 10).join(','); });
@@ -1031,9 +1050,28 @@ async function validTiles(T, max = 6, prefer) {
 async function placeAt(T, S, label, tile, confirm = true) {
   const { page } = T;
   if (T.vpInfo.touch) {
-    await T.tapAt(tile.x, tile.y);
-    await T.frames(3);
-    const pl = await page.evaluate(() => window.hearthside.game.placement());
+    // The screen point for a tile was measured a moment before the tap. A panel transition or a camera glide can move
+    // the ground under it in the meantime, which turns the tap into a tap on another tile (the ghost keeps the place it
+    // had). Measure the point again right before tapping, and if the ghost still did not land where wanted, let the
+    // layout settle and tap once more.
+    const freshPoint = () => page.evaluate(([px, pz]) => {
+      const p = window.__t.tile(px, pz);
+      return p && { ...p, pick: window.__t.pick(p.x, p.y), insets: { ...window.hearthside.view.rig.insets }, ppm: window.hearthside.view.rig.ppm };
+    }, [tile.px, tile.pz]);
+    const tapTile = async (pt) => {
+      await T.tapAt(pt?.free ? pt.x : tile.x, pt?.free ? pt.y : tile.y);
+      await T.frames(3);
+      return page.evaluate(() => window.hearthside.game.placement());
+    };
+    let fresh = await freshPoint();
+    let pl = await tapTile(fresh);
+    if (!(pl && pl.x === tile.px && pl.z === tile.pz && pl.ok)) {
+      log(`${label}: ghost stayed at ${JSON.stringify(pl && { x: pl.x, z: pl.z, ok: pl.ok, reasons: pl.reasons })}; settling and tapping again`);
+      await settleInsets(T);
+      fresh = await freshPoint();
+      pl = await tapTile(fresh);
+      log(`${label}: retry ${JSON.stringify({ point: fresh && { x: fresh.x, y: fresh.y, free: fresh.free, pick: fresh.pick, insets: fresh.insets }, pl: pl && { x: pl.x, z: pl.z, ok: pl.ok, reasons: pl.reasons } })}`);
+    }
     T.check(S, `${label}: tapping a tile moves the ghost there`, pl && pl.x === tile.px && pl.z === tile.pz && pl.ok, JSON.stringify(pl && { x: pl.x, z: pl.z, ok: pl.ok, reasons: pl.reasons }) + ` wanted ${tile.px},${tile.pz}`);
     if (confirm) { await T.shot(`buy-ghost-${label.replace(/\W+/g, '-')}`); await T.tap(page.locator('.bb-confirm')); }
   } else {
@@ -1909,11 +1947,36 @@ async function stepHomeEditor(T) {
   await page.waitForTimeout(300);
   const areaTool = await page.evaluate(() => ({ b: window.hearthside.game.buildTool(), p: window.hearthside.game.paintTool() }));
   T.check(S, 'the Area scope uses the floor build tool (rectangle) and ends the paint tool', areaTool.b?.kind === 'floor' && areaTool.b.shape === 'rect' && areaTool.p === null, JSON.stringify(areaTool));
-  const floorPair = await framePair(T, 'tile', [X0, Z0], [X0 + 1, Z0 + 1], 20);
-  const fa = floorPair.a, fb = floorPair.b;
+  // the camera may have zoomed out during the wall painting (MIN_PPM): frame the 2 x 2 block itself, not the whole lot
+  await frameNorth(T, X0 + 1, Z0 + 1, 4);
   const s3 = await lotSnap(T);
+  // measured under a camera and UI layout that stopped moving: a panel height transition re-centres the camera
+  // (insets) without moving its target, which moves the ground under a screen point measured a moment earlier
+  let floorPair = null, fa = null, fb = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await settleInsets(T);
+    floorPair = await framePair(T, 'tile', [X0, Z0], [X0 + 1, Z0 + 1], 20);
+    fa = floorPair.a; fb = floorPair.b;
+    const view = () => page.evaluate(() => JSON.stringify({ i: window.hearthside.view.rig.insets, t: [window.hearthside.view.rig.target.x, window.hearthside.view.rig.target.z], p: window.hearthside.view.rig.ppm }));
+    const before = await view();
+    await page.waitForTimeout(400);
+    if (await view() === before) break;
+    log('floor area reframe', `attempt ${attempt + 1}: the layout moved, framing again`);
+  }
+  log('floor area points', JSON.stringify({ fa, fb, ppm: floorPair.ppm, tried: floorPair.tried.slice(-3) }));
+  const floorGuide = await page.evaluate(([ax, ay, bx, by]) => {
+    const c = document.getElementById('game-canvas').getBoundingClientRect();
+    const v = window.hearthside.game.view;
+    return { rect: [c.left, c.top, c.width, c.height], a: v.groundPoint(ax - c.left, ay - c.top), b: v.groundPoint(bx - c.left, by - c.top), pickA: window.__t.pick(ax, ay), pickB: window.__t.pick(bx, by), insets: { ...window.hearthside.view.rig.insets } };
+  }, [fa.x, fa.y, fb.x, fb.y]);
+  log('floor area ground', JSON.stringify(floorGuide));
+  T.check(S, 'the two drag points are over the tiles to paint', floorGuide.pickA?.tile?.x === X0 && floorGuide.pickA?.tile?.z === Z0 && floorGuide.pickB?.tile?.x === X0 + 1 && floorGuide.pickB?.tile?.z === Z0 + 1, JSON.stringify({ a: floorGuide.pickA, b: floorGuide.pickB, insets: floorGuide.insets }));
   await drag(T, fa, fb);
   await T.frames(4);
+  log('floor area highlight', JSON.stringify(await page.evaluate(() => {
+    const h = window.hearthside, r = h.view.rig;
+    return { highlight: h.game.buildHighlight()?.highlight?.tiles, ppm: r.ppm, tx: r.target?.x, tz: r.target?.z, insets: r.insets };
+  })));
   if (touch) {
     const txt = await footerText(T);
     T.check(S, 'dragging over tiles previews the floor (4 tiles) with two handles', /4 floor tiles|4 m2|4 m/.test(txt) && (await page.locator('.bb-handle:not([hidden])').count()) === 2 && JSON.stringify(await lotSnap(T)) === JSON.stringify(s3), txt.replace(/\s+/g, ' '));
