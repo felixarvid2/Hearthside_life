@@ -54,4 +54,4 @@ Record real devices separately from emulation:
 
 | Date | Device / browser | Orientation(s) | Result |
 |---|---|---|---|
-| - | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | see CONTINUATION.md |
+| - | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | acceptance 122-124 passed per viewport, see CONTINUATION.md |

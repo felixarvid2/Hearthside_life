@@ -1,56 +1,72 @@
 # Continuation note
 
-State on 2026-10-31: Milestone 1 is about half done. Work paused because the usage limit was reached
-(resets 20:30 UTC). Nothing renders in the browser yet: `src/main.ts` is still empty.
+State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite build).
 
-## Done and verified (typecheck clean, 465/467 tests pass)
+## Checks
 
-- Core contracts (`src/core`), asset pipeline (`tools/build-assets.mjs`), UI kit (`src/ui/kit`).
-- Content: 44 furniture designs, 25 interactions, 20 socials, 20 traits, 6 aspirations, 16 skills
-  (7 trainable), culinary career (10 levels). `npm run content:check`: 0 errors.
-- World and building: rooms, A* navigation, placement, starter and neighbour houses, undoable build/buy
-  (reviewed; all 7 review findings fixed).
-- Simulation: needs, actions with reservations, autonomy, socials, careers, visitors (reviewed; findings
-  below are NOT fixed yet).
-- Creator model (`src/characters/creator.ts`, `names.ts`, `outfits.ts`), persistence (`src/persistence`).
-- GameCore + `createNewWorld` + headless playtests (`tests/unit/integration`): 3 game days run without
-  failures, wages paid once, Milestone 1 acceptance scenario passes headless.
+- `npm run typecheck`: clean.
+- `npm test`: 52 files, 543 tests pass.
+- `npm run build`: passes. Warning: main chunk is about 1.4 MB.
+- `npm run e2e`: smoke passes.
+- `npm run e2e:acceptance` (brief section 26 scenario through the real UI):
+  - landscape 844x390: 122/122 passed.
+  - desktop 1280x720: 122/122 passed.
+  - portrait 390x844: 124/124 passed before the character change. Being re-run after a test fix; result TODO.
 
-## Interrupted (work in progress, committed as-is)
+## Acceptance fixes (11 issues, all fixed)
 
-Resume these agents' work; they stopped mid-task:
+- Creator mounted twice.
+- Person panel unusable on short landscape.
+- Buttons under 44 px.
+- Creator step tab out of view.
+- Buy, Build and creator panels on short landscape.
+- Tiny people and fiddly person picking: screen-space forgiving pick, repeat taps cycle, camera reveals the
+  ghost or selected object, panels keep in view on change.
+- Toasts drawn over context menus.
+- Dream Home aspiration counted starter furniture; it now counts only bought items.
+- "Already has this finish" shown as a neutral tip.
+- Loads restore the saved speed (older saves load paused).
+- Creator hint when a garment has no patterns.
 
-- **3D characters** (`src/characters/*` except creator/names/outfits, `src/content/character.ts`,
-  `dev/characters.*`): was starting the hair generator.
-- **Surfaces** (`src/content/surfaces.ts`, `src/render/textures`, `src/render/openingMeshes.ts`,
-  `dev/surfaces.*`): almost done, final browser check left.
-- **UI shell** (`src/ui/app.ts`, `screens`, `hud`, `input*`, `dev/ui.*`): writing test scripts.
-- **Buy/Build panels** (`src/ui/buy`, `src/ui/build`, `dev/buildbuy.*`): final screenshot review.
-- **Creator UI** (`src/ui/creator`, `dev/creator.*`): writing its functional test script.
+## Characters
 
-Agent briefs are in the session scratchpad (`prompts/`); the same content is reflected in
-`docs/ARCHITECTURE.md` and `docs/UI_SPEC.md`.
+- People use AI-generated Meshy base bodies by default (`characterStyle: 'detailed'`, Settings > Display).
+  The procedural `'classic'` bodies remain as a fallback.
+- Sources and generation notes: `dev/meshy/` (its README covers generation, credits and the feasibility test).
+- Build step `npm run assets:meshy` (`tools/build-meshy-bodies.mts`):
+  - fits the bodies to the UAL skeleton;
+  - simplifies to about 10k triangles;
+  - repacks a 1024 px atlas;
+  - bakes a skin, base-layer and eye mask.
+  - Output: `public/assets/characters/meshy_a.glb` and `meshy_b.glb`.
+- Works: skin tone, eye and brow colour, body and face sliders, hair, accessories.
+- Does not apply to the baked faces: brow style and lip colour.
+- Meshy licence depends on the plan of the account that generated the bodies. Check before distribution.
+- Meshy credits left: 42.
 
-## Next steps, in order
+## Known issues and next steps, in order
 
-1. Finish the five interrupted parts above.
-2. Fix the sim review findings:
-   - two people can sit on the same desk chair via computer/TV seat fallback (`src/sim/behaviors.ts`);
-   - sleep has no day/night rhythm (`src/sim/autonomy.ts` sleepTimeFactor, untilFull ends at 99.9);
-   - a single person stays at social 0 (`phoneFriend` needs friendship >= 10) - test in
-     `tests/unit/integration/bugs.test.ts`;
-   - `rebuild()` ends actions at load time and breaks batch determinism (`src/sim/simulation.ts`);
-   - minor: cooked meal lost on cancel in stage 2, conversations keep cancelling activities, phoneChat has
-     no dampening, cookMeal reason quotes the wrong price, aspiration counting conventions, weak tests.
-3. `leaveLot` is reported as a missing reference in load reports (second test in `bugs.test.ts`): add a
-   content `leaveLot` interaction or let persistence accept the sim's built-in ids.
-4. Build the renderer and `Game.ts` (`src/render`, `src/game/Game.ts`, `src/main.ts`) per the GameView
-   brief: camera, walls with cutaway, floors, furniture, people, picking, previews, creator preview,
-   portraits, Playwright screenshots in portrait/landscape/desktop.
-5. Browser acceptance run (brief section 26), review, docs (README, CONTENT_STATUS), merge.
+1. Procedural garments and hair are now the weakest visuals:
+   - the ponytail sticks out as a flat sheet;
+   - necklines read off-shoulder on the broader scanned shoulders;
+   - some premade men default to skirts or nightgowns;
+   - a man in swim trunks shows the baked base layer as an undershirt.
+2. Main chunk is over 1.2 MB; `content/index.ts` is imported both statically and dynamically.
+3. Boot progress bar is not driven.
+4. Social menu has 17+ entries in no relevance order.
+5. Bookworm "own 2 bookcases" may count the starter bookcases.
+6. Tests so far are on SwiftShader only. Record real-device runs in the device log in
+   `docs/TEST_CHECKLIST.md`.
 
 ## Commands that work
 
-`npm install`, `npm run typecheck`, `npm test`, `npm run content:check`, `node tools/build-assets.mjs`
-(needs the asset library from felixarvid2/test at `../test/assets`). `npm run build` will only produce a
-working page after step 4.
+- `npm install`
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- `npm run content:check`
+- `npm run e2e`
+- `npm run e2e:acceptance` (`-- --only=portrait|landscape|desktop`). It takes the browser lock
+  `/tmp/hearthside-browser.lock` itself; do not wrap it in another `flock`.
+- `npm run assets` (needs the asset library at `../test/assets`)
+- `npm run assets:meshy`
