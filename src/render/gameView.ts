@@ -8,7 +8,7 @@ import type { CharacterAssets, CharacterStyle } from '../characters/assets';
 import { setCharacterStyle } from '../characters/assets';
 import type { ContentDB } from '../content/types';
 import { hourOfDay } from '../core/clock';
-import { tileKey } from '../core/ids';
+import { parseEdgeKey, tileKey } from '../core/ids';
 import { rotatedSize } from '../core/geometry';
 import type { Id, Lot, WorldState } from '../core/types';
 import type { CutawayMode, GameMode, PickResult, PlacementState } from '../game/api';
@@ -51,6 +51,8 @@ export class GameView {
   private readonly buildView: BuildView;
   readonly openingThumbs: OpeningThumbs;
   private buildGrid = false;
+  /** Where the current construction preview is (kept on screen after a layout change). */
+  private buildBox: THREE.Box3 | null = null;
   private creator: CreatorScene | null = null;
   private portraits: PortraitRenderer | null = null;
   private charAssets: CharacterAssets | null = null;
@@ -221,6 +223,16 @@ export class GameView {
   /** The construction preview of the current build tool (null clears it). */
   setBuildPreview(h: BuildHighlight | null, ok: boolean, extras: BuildViewExtras): void {
     this.buildView.setHighlight(h, ok, extras, this.lot, this.world);
+    this.buildBox = null;
+    if (!h) return;
+    const box = new THREE.Box3();
+    const add = (x: number, z: number) => box.expandByPoint(this.tmpV.set(x, 0, z));
+    for (const k of [...h.newWalls, ...h.removedWalls, ...h.openingEdges, ...h.removedOpeningEdges, ...h.existingWalls]) {
+      const e = parseEdgeKey(k);
+      add(e.x, e.z); add(e.dir === 'h' ? e.x + 1 : e.x, e.dir === 'h' ? e.z : e.z + 1);
+    }
+    for (const t of h.tiles) { add(t.x, t.z); add(t.x + 1, t.z + 1); }
+    if (!box.isEmpty()) { box.max.y = 1; this.buildBox = box; }
   }
 
   /** Outline of a hovered or selected room (null clears it). */
@@ -298,6 +310,7 @@ export class GameView {
   private keepInView(): void {
     if (this.ghost) this.reveal(this.ghost, false);
     else if (this.highlighted) this.reveal({ kind: 'object', objectId: this.highlighted }, false);
+    else if (this.buildBox) this.pendingReveal = { box: this.buildBox.clone(), wait: 0.2, zoomIn: false };
   }
 
   private runPendingReveal(dt: number): void {

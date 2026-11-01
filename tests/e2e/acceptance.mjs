@@ -1595,7 +1595,7 @@ const lotSnap = (T) => T.page.evaluate(() => {
   const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId]; const hh = st.households[st.activeHouseholdId];
   return JSON.parse(JSON.stringify({ walls: lot.walls, openings: lot.openings, floors: lot.floors, funds: hh.funds }));
 });
-const footerText = (T) => T.page.locator('.bb-build-status').innerText().catch(() => '');
+const footerText = (T) => T.page.locator('.bb-build-status').textContent().catch(() => '');
 const confirmState = (T) => T.page.evaluate(() => { const b = document.querySelector('.bb-confirm'); return b && !b.closest('[hidden]') ? { disabled: b.disabled, label: b.textContent.trim() } : null; });
 
 /** Taps an enabled Confirm / Done style footer button. */
@@ -1642,6 +1642,10 @@ async function stepHomeEditor(T) {
   await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 8000 });
   await page.waitForTimeout(700);
   await T.frames(30);
+  // the new room goes on the north strip of the lot, which the house hides from the default view: look from the north
+  await T.tap(page.locator('button[aria-label="Turn right"]').first());
+  await T.tap(page.locator('button[aria-label="Turn right"]').first());
+  await page.waitForTimeout(500);
   T.check(S, 'Build opens with the tool tabs (Paint, Walls, Room, Doors, Windows, Erase)', (await page.locator('.bb-tool-tabs .tab').count()) === 6, `${await page.locator('.bb-tool-tabs .tab').count()} tabs`);
   T.check(S, 'the simulation stays paused in Build', (await page.evaluate(() => window.hearthside.game.speed())) === 0, '');
   await T.shot('m2-build-panel');
@@ -1904,7 +1908,8 @@ async function stepHomeEditor(T) {
   await selectMember(T, walker);
   const target = { x: Math.min(X0 + dims.w - 1, X0 + 3), z: Z0 + 1 };
   const tp = await pointFor(T, 'tile', target.x, target.z);
-  T.check(S, 'a tile inside the new room can be tapped (floor pick)', !!tp?.free && (await page.evaluate(([x, y]) => window.__t.pick(x, y), [tp.x, tp.y])).kind === 'floor', JSON.stringify(tp));
+  const tpPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [tp.x, tp.y]);
+  T.check(S, 'a tile inside the new room can be tapped (floor pick)', !!tp?.free && tpPick.kind === 'floor', JSON.stringify({ tp, tpPick, mode: await page.evaluate(() => window.hearthside.game.mode()), target }));
   await T.tapAt(tp.x, tp.y);
   await page.waitForTimeout(400);
   const queued = await page.evaluate((id) => window.hearthside.debug.state().people[id].queue.map((a) => a.interactionId), walker);

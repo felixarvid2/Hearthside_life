@@ -1,6 +1,1 @@
-bun-messy: 11123 -> 3999 tris, 3421 verts, 184 kB, fit 0.0192 scale 0.338/0.423/0.318 yaw 0.00, tint mean 0.79 (0.39 grey), 7938 ms
-box-braids: 17484 -> 3999 tris, 3800 verts, 209 kB, fit 0.0097 scale 0.350/0.351/0.348 yaw 0.00, tint mean 0.80 (0.33 grey), 9865 ms
-afro-puffs: 18891 -> 3979 tris, 4462 verts, 231 kB, fit 0.0120 scale 0.305/0.375/0.332 yaw -0.00, tint mean 0.86 (0.53 grey), 10194 ms
-space-buns: 20648 -> 3999 tris, 3804 verts, 200 kB, fit 0.0071 scale 0.321/0.349/0.327 yaw -0.00, tint mean 0.80 (0.46 grey), 8432 ms
-twin-tails: 13470 -> 4000 tris, 3572 verts, 187 kB, fit 0.0125 scale 0.306/0.336/0.275 yaw 0.00, tint mean 0.78 (0.36 grey), 8437 ms
-ponytail-low: 13492 -> 4000 tris, 3375 verts, 182 kB, fit 0.0086 scale 0.420/0.449/0.411 yaw 0.00, tint mean 0.82 (0.46 grey), 8046 ms
+box-braids: 38798 -> 4000 tris, 4744 verts, 239 kB, fit 0.0085 scale 0.385/0.438/0.386 yaw -0.00, tint mean 0.77 (0.24 grey), 8971 ms

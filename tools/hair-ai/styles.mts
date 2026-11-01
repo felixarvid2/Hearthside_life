@@ -51,7 +51,7 @@ export const AI_STYLES: AiStyle[] = [
     scalp: { hairline: 'natural' },
     fallback: { cap: 0.006, top: 0.007, hairline: 'natural', fringe: 0, piece: 'ponytail', length: 0.3, strand: 'straight' } },
   { id: 'box-braids', name: 'Box Braids', description: 'Long box braids that hang down the back and shoulders.', length: 'long', texture: 'braided', tags: ['braids', 'long'],
-    hair: 'long box braids: many thin neat individual braids hanging down past the shoulders',
+    hair: 'long box braids: thick neat individual braids, parted in a grid, hanging down in front of and behind the shoulders',
     scalp: { hairline: 'natural' },
     fallback: { cap: 0.006, top: 0.008, hairline: 'natural', part: 'center', fringe: 0, piece: 'braids', length: 0.3, strand: 'braided' } },
   { id: 'layered-shoulder', name: 'Layered Shoulder-Length', description: 'Soft layers that end at the shoulders with face-framing pieces.', length: 'medium', texture: 'straight', tags: ['medium', 'layers'],

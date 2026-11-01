@@ -65,3 +65,6 @@ Cached results in dev/hair-ai/raw/ are reused, so rebuilding costs nothing.
 | 2026-11-01 08:53 | fal-ai/trellis | 3D model space-buns | 0.020 |
 | 2026-11-01 08:54 | fal-ai/trellis | 3D model pompadour | 0.020 |
 | 2026-11-01 08:54 | fal-ai/trellis | 3D model twin-tails | 0.020 |
+| 2026-11-01 09:30 | fal-ai/flux/dev | image box-braids (seed 8, 1 MP) | 0.025 |
+| 2026-11-01 09:30 | fal-ai/flux/dev | image box-braids (seed 9, 1 MP) | 0.025 |
+| 2026-11-01 09:30 | fal-ai/trellis | 3D model box-braids | 0.020 |
