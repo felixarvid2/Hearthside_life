@@ -6,7 +6,7 @@ import { HEAD_SCULPT_IDS, headDeltas, headPoint, headRows, headColumns, H_MAX } 
 import { buildBodyTemplate, legPoint } from '../../../src/characters/template';
 import type { BodyTemplate } from '../../../src/characters/template';
 import { buildGarment, mergeCoverage } from '../../../src/characters/clothing';
-import { buildHair, hairlineY } from '../../../src/characters/hair';
+import { buildHair, hairlineY, HAIR_PIECE } from '../../../src/characters/hair';
 import { buildAccessory } from '../../../src/characters/accessories';
 import type { MeshData } from '../../../src/characters/meshData';
 import { SkinTransfer, armTest, trunkTest } from '../../../src/characters/skinTransfer';
@@ -179,5 +179,60 @@ describe.each(['a', 'b'] as const)('body template frame %s (real asset)', (frame
     }
     for (const f of FACIAL_HAIR.filter((x) => x.build.kind === 'shell')) finiteMesh(buildHair(t, null, f));
     for (const a of ACCESSORIES) finiteMesh(buildAccessory(t, a));
+  });
+
+  it('keeps every hairstyle within its triangle budget and gives every vertex strand data', { timeout: 60000 }, () => {
+    for (const h of HAIR) {
+      const m = buildHair(t, h, null);
+      const n = m.positions.length / 3;
+      expect(m.indices.length / 3, `${h.id} triangles`).toBeLessThanOrEqual(3100);
+      expect(m.attrs.aLock!.data.length, h.id).toBe(n * 4);
+      expect(m.attrs.aHair!.data.length, h.id).toBe(n * 4);
+      const lock = m.attrs.aLock!.data;
+      for (let i = 0; i < n; i++) {
+        const light = lock[i * 4 + 1]!, fade = lock[i * 4 + 2]!, tooth = lock[i * 4 + 3]!;
+        if (light < 0 || light > 1 || fade < 0 || fade > 1 || tooth < 0 || tooth > 0.5) throw new Error(`${h.id}: lock data out of range at ${i}`);
+      }
+      // the same style builds the same strands every time
+      expect(buildHair(t, h, null).positions).toEqual(m.positions);
+    }
+  });
+
+  it('builds styles from layered locks, not a single shell', () => {
+    const count = (id: string, piece: number) => {
+      const m = buildHair(t, HAIR.find((x) => x.id === id)!, null);
+      let k = 0;
+      for (let i = 0; i < m.positions.length / 3; i++) if (m.attrs.aHair!.data[i * 4 + 3] === piece) k++;
+      return k;
+    };
+    for (const id of ['crop-side-part', 'bob-chin', 'long-straight', 'ponytail-high', 'bun-top', 'braids-twin']) expect(count(id, HAIR_PIECE.lock) + count(id, HAIR_PIECE.curtain) + count(id, HAIR_PIECE.tail) + count(id, HAIR_PIECE.bun), id).toBeGreaterThan(200);
+    expect(count('bob-chin', HAIR_PIECE.curtain)).toBeGreaterThan(300);
+    expect(count('curly-top', HAIR_PIECE.curl)).toBeGreaterThan(300);
+    // lock cards face outward: their normals point away from the head axis on the sides of the scalp
+    const m = buildHair(t, HAIR.find((x) => x.id === 'crop-side-part')!, null);
+    let out = 0, total = 0;
+    for (let i = 0; i < m.positions.length / 3; i++) {
+      if (m.attrs.aHair!.data[i * 4 + 3] !== HAIR_PIECE.lock) continue;
+      const x = m.positions[i * 3]! - t.headOrigin[0], z = m.positions[i * 3 + 2]! - t.headOrigin[2];
+      if (Math.abs(x) < 0.04) continue;
+      total++;
+      if (x * m.normals[i * 3]! + z * m.normals[i * 3 + 2]! > 0) out++;
+    }
+    expect(total).toBeGreaterThan(50);
+    expect(out / total).toBeGreaterThan(0.9);
+  });
+
+  it('hangs long hair against the back instead of sticking out behind it', () => {
+    for (const id of ['long-straight', 'waves-shoulder', 'ponytail-high', 'braids-twin']) {
+      const m = buildHair(t, HAIR.find((x) => x.id === id)!, null);
+      let maxGap = 0;
+      for (let i = 0; i < m.positions.length / 3; i++) {
+        const y = m.positions[i * 3 + 1]!, z = m.positions[i * 3 + 2]!;
+        if (y > t.lm.neckBaseY - 0.04 || y < t.lm.chestY - 0.15 || Math.abs(m.positions[i * 3]!) > 0.1) continue;
+        const q = sampleProfile(t.profiles.torso, Math.min(y, t.lm.neckBaseY + 0.02), Math.PI);
+        maxGap = Math.max(maxGap, q.cb - q.r - z);
+      }
+      expect(maxGap, id).toBeLessThan(0.07);
+    }
   });
 });

@@ -71,6 +71,14 @@ animations, garments, hair and the creator's controls; only the skin mesh differ
 - **Hair, facial hair, glasses and earrings** are built on the parametric head and carried onto the scanned head by
   `HeadMap` (eye line, brow line and crown mapped; inside the head the offset scales with the ratio of the heads' radii,
   outside it keeps its length and follows the surface).
+- **Hair build** (`src/characters/hair.ts`, shader in `materials.ts`): a thin scalp cap dressed with layered strand cards
+  ("locks": three-vertex-wide ribbons that taper to a tip) - crown and hairline tiers, bangs, a two-layer drape for bob /
+  waves / long hair that hangs against the back, a bundle of locks for the ponytail, wound gores for the bun, spiral coils for
+  curls, soft puffs for the afro, plaited beads for the braids. At most about 3k triangles per style, one mesh, one draw
+  call, nothing per frame except skinning (long parts blend head -> neck -> spine bones by height). The shader cuts every
+  card tip into pointed strands and dissolves the scalp edge into strands with an alpha test (no blending, so no sorting),
+  adds baked ambient occlusion (`aLock`), per-clump brightness and a two-lobe anisotropic highlight band. Strand cells
+  smaller than a pixel are averaged so nothing shimmers at game distance.
 - **Numbers** (per body): about 10,000 triangles (source 20,700), 6.7-6.9k vertices, one draw call, GLB 0.55 MB (1024 px
   WebP albedo 71-74 kB, 512 px mask 8 kB), about 7 MB of GPU texture memory per frame. A person (body, outfit, hair) costs
   about as much as a classic one (same draw calls, 5 % fewer triangles; a software-rendered frame with 8 people measured

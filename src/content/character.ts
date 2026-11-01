@@ -298,7 +298,7 @@ export const HAIR: HairDef[] = [
   {
     id: 'afro-coily', name: 'Coily Afro', description: 'Full rounded afro of tight coils.',
     length: 'medium', texture: 'coily', tags: ['volume', 'coils'],
-    build: { cap: 0.012, top: 0.05, hairline: 'natural', fringe: 0, piece: 'afro', volume: 0.055, strand: 'coily' }, status: 'ready',
+    build: { cap: 0.012, top: 0.05, hairline: 'natural', fringe: 0, piece: 'afro', volume: 0.04, strand: 'coily' }, status: 'ready',
   },
   {
     id: 'braids-twin', name: 'Twin Braids', description: 'Two long plaited braids that fall behind the shoulders, center part.',

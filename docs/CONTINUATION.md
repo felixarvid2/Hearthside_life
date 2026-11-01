@@ -46,8 +46,7 @@ State on 2026-11-01: Milestone 1 is complete and playable in the browser (Vite b
 
 ## Known issues and next steps, in order
 
-1. Procedural garments and hair are now the weakest visuals:
-   - the ponytail sticks out as a flat sheet;
+1. Procedural garments are now the weakest visuals (hair was rebuilt from layered strand cards, see ASSET_GUIDE):
    - necklines read off-shoulder on the broader scanned shoulders;
    - some premade men default to skirts or nightgowns;
    - a man in swim trunks shows the baked base layer as an undershirt.

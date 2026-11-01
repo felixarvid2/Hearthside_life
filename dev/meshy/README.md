@@ -20,6 +20,8 @@ and then using image-to-3D gives much better control and is the recommended rout
 default, `classic` = the procedural bodies) chooses which one the game draws. See `docs/ASSET_GUIDE.md` (Characters) for the
 pipeline and the runtime. `dev/meshy/shootLab.mjs` takes screenshots, `--plan=bench` frame-cost numbers and
 `--plan=measure` posture anchors of `dev/characters.html` in either style.
+`--plan=hair` shoots every hairstyle (`--hairs=a,b --frames=a,b --views=front,three,side,back,drape --people=2`) close up and
+`--plan=hairlive` at game distance (walk and sit); `shots/hair/before|after|live` hold the hair rework screenshots.
 
 ## Feasibility test: Meshy body on the mannequin skeleton (dev/meshy.html)
 

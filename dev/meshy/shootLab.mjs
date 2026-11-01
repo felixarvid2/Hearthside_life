@@ -89,17 +89,22 @@ if (['hairside', 'all'].includes(PLAN)) {
 if (['hair', 'hairlive'].includes(PLAN)) {
   // every hairstyle on both frames: close views (front / three-quarter / side / back) or game distance (walk, sit)
   const ids = (opt('hairs', '') || 'buzz,crop-side-part,curly-top,bob-chin,waves-shoulder,long-straight,ponytail-high,bun-top,afro-coily,braids-twin').split(',');
+  const viewSel = (opt('views', '') || 'front,three,side,back,drape').split(',');
+  const frames = (opt('frames', '') || 'a,b').split(',');
   const COLORS = ['#6b4528', '#2b221e', '#c8a064', '#7c3a22', '#3d2a1f'];
   const closeVp = { vp: [420, 520], dpr: 1 };
   ids.forEach((h, k) => {
-    for (const f of ['a', 'b']) {
+    for (const f of frames) {
       const set = { hair: h, outfit: TEE, hairColor: COLORS[k % COLORS.length], facial: null };
       if (PLAN === 'hair') {
-        for (const [v, yaw] of [['front', 0], ['three', 0.7], ['side', 1.57], ['back', Math.PI]]) shot(`${f}_h_${h}_${v}`, closeVp, { person: solo(f), set, cam: [yaw, 0.08, 1.55, 1.58, 28] });
-        shot(`${f}_h_${h}_drape`, closeVp, { person: solo(f), set, cam: [Math.PI - 0.6, 0.1, 2.3, 1.4, 28] });
+        for (const [v, yaw] of [['front', 0], ['three', 0.7], ['side', 1.57], ['back', Math.PI]]) if (viewSel.includes(v)) shot(`${f}_h_${h}_${v}`, closeVp, { person: solo(f), set, cam: [yaw, 0.08, 1.55, 1.58, 28] });
+        if (viewSel.includes('drape')) shot(`${f}_h_${h}_drape`, closeVp, { person: solo(f), set, cam: [Math.PI - 0.6, 0.1, 2.3, 1.4, 28] });
       } else {
-        shot(`${f}_hl_${h}_walk`, LIVE, { person: solo(f), set, anim: 'walk', steps: [0.05, 8], ortho: 2.6 });
-        shot(`${f}_hl_${h}_sit`, LIVE, { person: solo(f), set, anim: 'sitIdle', posture: 'seated', steps: [0.05, 6], ortho: 2.6 });
+        // game camera: orthographic, pitch 37 deg; from the front-left and from behind-right
+        const GAME = (yaw) => [yaw, 0.65, 12, 0.9, 30];
+        shot(`${f}_hl_${h}_walk`, LIVE, { person: solo(f), set, anim: 'walk', steps: [0.05, 8], ortho: 2.6, cam: GAME(0.8) });
+        shot(`${f}_hl_${h}_walkback`, LIVE, { person: solo(f), set, anim: 'walk', steps: [0.05, 8], ortho: 2.6, cam: GAME(Math.PI + 0.8) });
+        shot(`${f}_hl_${h}_sit`, LIVE, { person: solo(f), set, anim: 'sitIdle', posture: 'seated', steps: [0.05, 6], ortho: 2.6, cam: GAME(Math.PI + 0.8) });
       }
     }
   });
@@ -157,7 +162,7 @@ try {
     const errors = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-    await page.goto(`http://127.0.0.1:${PORT}/dev/characters.html?n=14&style=${STYLE}&shadows=0`);
+    await page.goto(`http://127.0.0.1:${PORT}/dev/characters.html?n=${opt('people', '14')}&style=${STYLE}&shadows=0`);
     await page.waitForFunction(() => window.ready === true, null, { timeout: 240000 });
     await page.addStyleTag({ content: '#bar,#info{display:none!important}' });
     for (const s of list) {
