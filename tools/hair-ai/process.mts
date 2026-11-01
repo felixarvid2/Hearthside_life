@@ -43,7 +43,14 @@ export function extractHair(m: RawModel, keep: Uint8Array, T: Transform): HairMe
 export async function simplifyHair(h: HairMesh, tris: number): Promise<HairMesh> {
   await MeshoptSimplifier.ready;
   const n = h.pos.length / 3;
-  const [idx] = MeshoptSimplifier.simplifyWithAttributes(h.index, h.pos, 3, h.uv, 2, [0.6, 0.6], new Uint8Array(n), Math.min(tris * 3, h.index.length), 0.02, ['Prune', 'ErrorAbsolute']);
+  let idx = h.index as Uint32Array;
+  // generated hair has many non-manifold edges (curls, locs): when the strict simplifier stalls above the target, the permissive mode finishes the job
+  for (const flags of [['Prune', 'ErrorAbsolute'], ['ErrorAbsolute', 'Permissive']] as const) {
+    const [r] = MeshoptSimplifier.simplifyWithAttributes(h.index, h.pos, 3, h.uv, 2, [0.6, 0.6], new Uint8Array(n), Math.min(tris * 3, h.index.length), 0.02, [...flags]);
+    if (r.length === 0) continue;
+    idx = r;
+    if (idx.length <= tris * 3 * 1.03) break;
+  }
   const map = new Map<number, number>();
   const pos: number[] = [], uv: number[] = [];
   const index = new Uint32Array(idx.length);

@@ -52,7 +52,7 @@ type PreviewSource = GameAPI & { lastPaintPreview?: () => PaintPreview | null };
 
 /** Build mode panels: wall and floor finish catalogs, palettes, scope, eyedropper, undo/redo. */
 export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: BuildSession): BuildModeUI {
-  const session = sessionIn ?? new BuildSession(api, (id) => { try { api.sound(id); } catch { /* optional */ } });
+  const session = sessionIn ?? new BuildSession(api, { sound: (id) => { try { api.sound(id); } catch { /* optional */ } }, toast });
   const el = h('div', { class: 'bb-mode bb-build-mode' });
   el.hidden = true;
   root.appendChild(el);
@@ -102,7 +102,9 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     items: [{ id: 'wall', label: 'Walls', icon: 'wall' }, { id: 'floor', label: 'Floors', icon: 'floor' }],
     onChange: (id) => switchKind(id === 'floor' ? 'floor' : 'wall'),
   });
-  const subbar = h('div', { class: 'bb-subbar' }, h('div', { class: 'bb-top-tabs' }, toolTabs.el), ur.el);
+  const subbar = h('div', { class: 'bb-subbar' }, h('div', { class: 'bb-top-tabs' }, toolTabs.el));
+  // Undo / Redo live in the panel header (always reachable, whichever tab is open)
+  p.header.querySelector('.panel-actions')?.prepend(ur.el);
   const kindBar = h('div', { class: 'bb-kindbar' }, kindTabs.el);
 
   // ---- a room selected in the world (tap with no tool) ----

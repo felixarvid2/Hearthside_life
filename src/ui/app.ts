@@ -13,6 +13,7 @@ import { mountBuildMode, type BuildModeUI } from './build/buildMode';
 import { mountBuildOverlay } from './build/buildOverlay';
 import { BuildSession } from './build/buildSession';
 import { mountBuyMode } from './buy/buyMode';
+import { toast } from './kit/components';
 import { h, toggleClass } from './kit/dom';
 import { installLayoutTracking, onLayoutChange } from './kit/layout';
 import type { ModeUI } from './modes/types';
@@ -68,7 +69,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   let ledgerPanel: ReturnType<typeof createLedgerPanel> | null = null;
   let tutorial: ReturnType<typeof createTutorial> | null = null;
 
-  const buildSession = new BuildSession(api, sound);
+  const buildSession = new BuildSession(api, { sound, toast });
   cleanups.push(() => buildSession.destroy());
 
   const sh: Shell = {

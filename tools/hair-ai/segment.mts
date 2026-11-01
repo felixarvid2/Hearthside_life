@@ -25,11 +25,11 @@ export function segment(m: RawModel, opts: { hairAbove?: number } = {}): Segment
   const n = m.pos.length / 3;
   const { rep } = weldMap(m.pos);
   // average chroma over the duplicated vertices of a position
-  const sum = new Float32Array(n), cnt = new Float32Array(n);
+  const sum = new Float32Array(n), cnt = new Float32Array(n), lsum = new Float32Array(n);
   const c: Vec3 = [0, 0, 0];
-  for (let i = 0; i < n; i++) { sampleTex(m.tex, m.uv[i * 2] as number, m.uv[i * 2 + 1] as number, c); const r = rep[i] as number; sum[r] = (sum[r] as number) + relChroma(c); cnt[r] = (cnt[r] as number) + 1; }
-  const chroma = new Float32Array(n);
-  for (let i = 0; i < n; i++) { const r = rep[i] as number; chroma[i] = (sum[r] as number) / (cnt[r] as number); }
+  for (let i = 0; i < n; i++) { sampleTex(m.tex, m.uv[i * 2] as number, m.uv[i * 2 + 1] as number, c); const r = rep[i] as number; sum[r] = (sum[r] as number) + relChroma(c); cnt[r] = (cnt[r] as number) + 1; lsum[r] = (lsum[r] as number) + Math.max(c[0], c[1], c[2]); }
+  const chroma = new Float32Array(n), lum = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const r = rep[i] as number; chroma[i] = (sum[r] as number) / (cnt[r] as number); lum[i] = (lsum[r] as number) / (cnt[r] as number); }
   // welded adjacency
   const widx = Uint32Array.from(m.index, (v) => rep[v] as number);
   const adj = adjacency(n, widx);
@@ -37,7 +37,7 @@ export function segment(m: RawModel, opts: { hairAbove?: number } = {}): Segment
   const fixed = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     if (rep[i] !== i) continue;
-    if (chroma[i]! > 0.16) { p[i] = 1; fixed[i] = 1; } else if (chroma[i]! < 0.07) { p[i] = 0; fixed[i] = 1; }
+    if (chroma[i]! > 0.16) { p[i] = 1; fixed[i] = 1; } else if (chroma[i]! < 0.07 && lum[i]! > 0.3) { p[i] = 0; fixed[i] = 1; }
   }
   for (let it = 0; it < 60; it++) {
     for (let i = 0; i < n; i++) {
@@ -56,7 +56,9 @@ export function segment(m: RawModel, opts: { hairAbove?: number } = {}): Segment
   const keep = new Uint8Array(nt);
   for (let t = 0; t < nt; t++) {
     const a = m.index[t * 3] as number, b = m.index[t * 3 + 1] as number, d = m.index[t * 3 + 2] as number;
-    if (hair[a] && hair[b] && hair[d] && chroma[a]! > 0.1 && chroma[b]! > 0.1 && chroma[d]! > 0.1) keep[t] = 1;
+    // the grey fringe of mixed texels at the mannequin border is dropped, but dark texels (the shaded back of the hair) carry no chroma and stay
+    const ok = (v: number) => chroma[v]! > 0.1 || lum[v]! < 0.24;
+    if (hair[a] && hair[b] && hair[d] && ok(a) && ok(b) && ok(d)) keep[t] = 1;
   }
   // drop floaters: connected components (by welded vertices) much smaller than the largest
   const comp = new Int32Array(n).fill(-1);

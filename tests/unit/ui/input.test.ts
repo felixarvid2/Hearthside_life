@@ -264,3 +264,55 @@ describe('keyboard mapping', () => {
     expect(isTypingTarget(null)).toBe(false);
   });
 });
+
+describe('InputMachine: draw mode (Build tools that drag out a shape)', () => {
+  it('a primary drag draws instead of panning; the press point is where it starts', () => {
+    const m = new InputMachine();
+    m.setDrawMode(true);
+    m.down(touch(1, 100, 100, 0));
+    expect(m.move(touch(1, 104, 100, 10))).toEqual([]);
+    const first = m.move(touch(1, 120, 110, 20));
+    expect(m.state).toBe('drawing');
+    expect(first).toEqual([{ type: 'drawStart', x: 100, y: 100, kind: 'touch' }, { type: 'draw', x: 120, y: 110, kind: 'touch' }]);
+    expect(m.move(touch(1, 130, 112, 30))).toEqual([{ type: 'draw', x: 130, y: 112, kind: 'touch' }]);
+    expect(m.up(touch(1, 130, 112, 40))).toEqual([{ type: 'drawEnd', x: 130, y: 112, kind: 'touch', interrupted: false }]);
+    expect(m.state).toBe('idle');
+  });
+
+  it('a still press still taps in draw mode, and without draw mode a drag pans', () => {
+    const m = new InputMachine();
+    m.setDrawMode(true);
+    m.down(touch(1, 50, 50, 0));
+    expect(m.up(touch(1, 52, 51, 80))).toEqual([{ type: 'tap', x: 50, y: 50, kind: 'touch' }]);
+    m.setDrawMode(false);
+    m.down(touch(1, 50, 50, 200));
+    expect(types(m.move(touch(1, 70, 50, 210)))).toEqual(['panStart', 'pan']);
+  });
+
+  it('a second finger ends the drawing (interrupted) and starts a pinch; pointer cancel keeps the shape', () => {
+    const m = new InputMachine();
+    m.setDrawMode(true);
+    m.down(touch(1, 100, 100, 0));
+    m.move(touch(1, 140, 100, 20));
+    const out = m.down(touch(2, 200, 200, 30));
+    expect(out).toEqual([{ type: 'drawEnd', x: 140, y: 100, kind: 'touch', interrupted: true }, { type: 'panStart' }]);
+    expect(m.state).toBe('pinching');
+
+    const c = new InputMachine();
+    c.setDrawMode(true);
+    c.down(touch(1, 10, 10, 0));
+    c.move(touch(1, 60, 10, 20));
+    expect(c.cancel(1)).toEqual([{ type: 'drawEnd', x: 60, y: 10, kind: 'touch', interrupted: true }]);
+    expect(c.state).toBe('idle');
+  });
+
+  it('the left mouse button draws, the right and middle buttons still pan', () => {
+    const m = new InputMachine();
+    m.setDrawMode(true);
+    m.down(mouse(10, 10, 0, 0));
+    expect(types(m.move(mouse(40, 10, 10)))).toEqual(['drawStart', 'draw']);
+    expect(types(m.up(mouse(40, 10, 20)))).toEqual(['drawEnd']);
+    expect(types(m.down(mouse(10, 10, 100, 2)))).toEqual(['panStart']);
+    expect(m.state).toBe('panning');
+  });
+});

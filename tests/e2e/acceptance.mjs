@@ -9,7 +9,9 @@
 // acceptance scenario in each viewport (390x844 touch portrait, 844x390 touch landscape, 1280x720 desktop):
 //   1 creator -> move in, 2 live (cook, sleep, work + wage, neighbour, queue cancel), 3 buy mode (buy, move, rotate,
 //   undo/redo, exact price), 4 build mode (wall finish on one side), 5 save, reload, load and compare,
-//   6 rotate the device during a creator edit and during a placement preview.
+//   6 rotate the device during a creator edit and during a placement preview,
+//   7 Milestone 2 home editor: build a room (drag, handles, Confirm / Cancel, device rotation keeps the preview), add a
+//     door and a window, paint both sides of a new wall and an area of floor, undo and redo, then walk a person in.
 // Clicks and taps go through the real DOM (and the canvas at positions picked with view.worldToScreen/anchorOf);
 // window.hearthside.debug is only used to fast-forward time and to read state for assertions.
 // Fails on page errors, console errors and failed requests. Screenshots: tests/e2e/out/acceptance/<viewport>/.
@@ -195,6 +197,7 @@ async function runViewport(browser, vpName, vp) {
     ['4', 'Build mode: wall finish on one side', stepBuild],
     ['5', 'Save, reload, load, compare', stepSaveLoad],
     ['6', 'Rotate the device during edits', stepRotate],
+    ['7', 'Milestone 2 home editor: build a room, door, window, finishes, undo/redo, walk in', stepHomeEditor],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -496,6 +499,8 @@ function PAGE_HELPERS() {
       return finish(conv(h().game.view.worldToScreen((b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2)));
     },
     tile(x, z) { return finish(conv(h().game.view.worldToScreen(x + 0.5, 0, z + 0.5))); },
+    /** A grid vertex (corner of tiles) on the ground. */
+    vertex(x, z) { return finish(conv(h().game.view.worldToScreen(x, 0, z))); },
     /** A screen point on the wall (cutaway walls are low: tries several heights, keeps one that really picks this wall). */
     wall(wallId) {
       const [, dir, x, z] = wallId.split(':');
@@ -1577,6 +1582,343 @@ async function stepRotate(T) {
   await T.tap(page.locator('.mode-btn[data-mode="live"]'));
   await page.waitForTimeout(500);
   await T.shot('rotate-end-live');
+}
+
+// ===============================================================================================================
+// STEP 7 - Milestone 2 home editor: build a room, add a door and a window, paint each wall side and the floor,
+// undo and redo, then have a person walk in. Real taps and drags; window.hearthside only reads state.
+// ===============================================================================================================
+
+const cents = (s) => { const m = /\$([\d,]+(?:\.\d\d)?)/.exec(s ?? ''); return m ? Math.round(Number(m[1].replace(/,/g, '')) * 100) : null; };
+
+const lotSnap = (T) => T.page.evaluate(() => {
+  const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId]; const hh = st.households[st.activeHouseholdId];
+  return JSON.parse(JSON.stringify({ walls: lot.walls, openings: lot.openings, floors: lot.floors, funds: hh.funds }));
+});
+const footerText = (T) => T.page.locator('.bb-build-status').innerText().catch(() => '');
+const confirmState = (T) => T.page.evaluate(() => { const b = document.querySelector('.bb-confirm'); return b && !b.closest('[hidden]') ? { disabled: b.disabled, label: b.textContent.trim() } : null; });
+
+/** Taps an enabled Confirm / Done style footer button. */
+async function tapFooter(T, sel) {
+  const b = T.page.locator(`.bb-build-footer ${sel}`).first();
+  await T.tap(b);
+  await T.page.waitForTimeout(400);
+  await T.frames(4);
+}
+
+/**
+ * A free screen point for a world point while a drag tool is active (a one-finger drag would draw, not pan, so the camera
+ * is moved with the rig instead of with drags).
+ */
+async function freePoint(T, kind, a, b) {
+  for (let i = 0; i < 4; i++) {
+    const p = await T.page.evaluate(([k, x, z]) => window.__t[k](x, z), [kind, a, b]);
+    if (p?.free) return p;
+    const wx = kind === 'tile' ? a + 0.5 : a, wz = kind === 'tile' ? b + 0.5 : b;
+    await T.page.evaluate(([x, z]) => window.hearthside.view.rig.glideTo(x, z, undefined, 0.1), [wx, wz]);
+    await T.frames(12);
+    await settle(T);
+  }
+  return T.page.evaluate(([k, x, z]) => window.__t[k](x, z), [kind, a, b]);
+}
+
+/** Moves the camera so the north strip of the lot (where the new room goes) is in the middle of the free canvas, zoomed to fit it. */
+async function frameNorth(T, cx, cz, tilesWide) {
+  const { w, h } = T.vpInfo;
+  const free = T.vpInfo.touch && h > w ? w : T.vpInfo.touch ? w - 380 : w - 380;
+  const ppm = Math.max(26, Math.min(80, Math.floor((free - 30) / (tilesWide * 0.72))));
+  await T.page.evaluate(([x, z, p]) => window.hearthside.view.rig.glideTo(x, z, p, 0.15), [cx, cz, ppm]);
+  await T.frames(20);
+  await settle(T);
+}
+
+async function stepHomeEditor(T) {
+  const S = '7';
+  const { page, vpInfo } = T;
+  const touch = vpInfo.touch;
+  await page.evaluate(() => { window.hearthside.game.setSpeed(0); document.querySelectorAll('.toast').forEach((t) => t.remove()); });
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'live') { await T.tap(page.locator('.mode-btn[data-mode="live"]')); await page.waitForTimeout(400); }
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 8000 });
+  await page.waitForTimeout(700);
+  await T.frames(30);
+  T.check(S, 'Build opens with the tool tabs (Paint, Walls, Room, Doors, Windows, Erase)', (await page.locator('.bb-tool-tabs .tab').count()) === 6, `${await page.locator('.bb-tool-tabs .tab').count()} tabs`);
+  T.check(S, 'the simulation stays paused in Build', (await page.evaluate(() => window.hearthside.game.speed())) === 0, '');
+  await T.shot('m2-build-panel');
+  await T.audit('build panel (tool tabs)');
+
+  // ---- the floor to lay: chosen under Paint -> Floors
+  await T.tap(page.locator('.bb-build-panel .tab[data-id="floor"]'));
+  await page.waitForTimeout(300);
+  const floorCards = page.locator('.bb-build-panel .bb-designs .bb-card');
+  await floorCards.first().scrollIntoViewIfNeeded().catch(() => undefined);
+  await T.tap(floorCards.first());
+  await page.waitForTimeout(300);
+  const floorTool = await page.evaluate(() => window.hearthside.game.paintTool());
+  T.check(S, 'a floor finish is chosen (paint tool: floor)', floorTool?.kind === 'floor', JSON.stringify(floorTool));
+  T.expected.roomFloor = floorTool?.finish?.designId;
+
+  // ---- Room tool
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-room"]'));
+  await page.waitForTimeout(500);
+  await T.frames(10);
+  const roomTool = await page.evaluate(() => window.hearthside.game.buildTool());
+  T.check(S, 'the Room tab chooses the room tool (floor + a door) and ends the paint tool', roomTool?.kind === 'room' && !!roomTool.floor && (roomTool.doors?.length ?? 0) === 1 && (await page.evaluate(() => window.hearthside.game.paintTool())) === null, JSON.stringify(roomTool));
+  await T.shot('m2-room-tool');
+  await T.audit('room tool');
+
+  // ---- draw the room on the empty north strip of the lot
+  const X0 = 8, Z0 = 1, X1 = 14, Z1 = 4;
+  await frameNorth(T, (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0 + Z1 - Z0);
+  const pa = await freePoint(T, 'vertex', X0, Z0);
+  const pc = await freePoint(T, 'vertex', X1, Z1);
+  T.check(S, 'both corners of the new room are visible and free of UI', !!pa?.free && !!pc?.free, JSON.stringify({ pa, pc }));
+  const s0 = await lotSnap(T);
+
+  if (!touch) {
+    // desktop: Esc during the drag cancels; a drag applies on mouse-up
+    await page.mouse.move(pa.x, pa.y);
+    await page.mouse.down();
+    for (let i = 1; i <= 6; i++) { await page.mouse.move(pa.x + ((pc.x - pa.x) * i) / 6, pa.y + ((pc.y - pa.y) * i) / 6); await page.waitForTimeout(20); }
+    await T.frames(3);
+    const live = await footerText(T);
+    T.check(S, 'while dragging, the footer shows the measurement and the cost', /6 x 3/.test(live) && /\$/.test(live), live.replace(/\s+/g, ' '));
+    await T.shot('m2-room-dragging');
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    T.check(S, 'Esc during the drag builds nothing', JSON.stringify(await lotSnap(T)) === JSON.stringify(s0), '');
+  } else {
+    // touch: a drag only sets the preview; Cancel clears it
+    await drag(T, pa, pc);
+    await page.waitForTimeout(300);
+    await T.frames(4);
+    const live = await footerText(T);
+    const cs = await confirmState(T);
+    const nHandles = await page.locator('.bb-handle:not([hidden])').count();
+    T.check(S, 'a touch drag shows the measurement and cost, four corner handles and an enabled Confirm', /6 x 3/.test(live) && /\$/.test(live) && nHandles === 4 && cs && !cs.disabled, `${live.replace(/\s+/g, ' ')} | handles ${nHandles} | confirm ${JSON.stringify(cs)}`);
+    T.check(S, 'the preview alone builds nothing and takes no money', JSON.stringify(await lotSnap(T)) === JSON.stringify(s0), '');
+    await T.shot('m2-room-preview');
+    const hbox = await page.locator('.bb-handle[data-handle="c2"]').boundingBox();
+    T.check(S, 'the corner handles are large touch targets (>= 44 px)', !!hbox && hbox.width >= 44 && hbox.height >= 44, JSON.stringify(hbox));
+    await tapFooter(T, '.bb-cancel');
+    T.check(S, 'Cancel clears the preview and the handles but keeps the tool', (await page.locator('.bb-handle:not([hidden])').count()) === 0 && (await page.evaluate(() => window.hearthside.game.buildTool()))?.kind === 'room' && JSON.stringify(await lotSnap(T)) === JSON.stringify(s0), '');
+    // draw again, then rotate the device: the preview survives
+    const pa2 = await freePoint(T, 'vertex', X0, Z0);
+    const pc2 = await freePoint(T, 'vertex', X1, Z1);
+    await drag(T, pa2, pc2);
+    await T.frames(4);
+    const before = await footerText(T);
+    const orig = { w: vpInfo.w, h: vpInfo.h }, other = vpInfo.other;
+    await setVp(T, other.w, other.h);
+    await T.shot('m2-room-preview-rotated');
+    const afterTxt = await footerText(T);
+    const hs = await page.evaluate(() => [...document.querySelectorAll('.bb-handle:not([hidden])')].map((e) => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }));
+    T.check(S, 'rotating the device keeps the room preview (text, Confirm and four handles on screen)', afterTxt === before && hs.length === 4 && hs.every((p) => p.x > 0 && p.y > 0 && p.x < other.w && p.y < other.h) && !(await confirmState(T))?.disabled, `${hs.length} handles ${JSON.stringify(hs.map((p) => [Math.round(p.x), Math.round(p.y)]))}; text same: ${afterTxt === before}`);
+    await setVp(T, orig.w, orig.h);
+    await T.frames(6);
+    await settle(T);
+    T.check(S, 'rotating back keeps it too', (await footerText(T)) === before && (await page.locator('.bb-handle:not([hidden])').count()) === 4, '');
+    // resize with a handle: the south-east corner one tile further east
+    const hb = await page.locator('.bb-handle[data-handle="c2"]').boundingBox();
+    const hfrom = { x: hb.x + hb.width / 2, y: hb.y + hb.height / 2 };
+    const vt = await page.evaluate(([x, z]) => window.__t.vertex(x, z), [X1 + 1, Z1]);
+    await drag(T, hfrom, { x: vt.x, y: vt.y });
+    await T.frames(4);
+    const resized = await footerText(T);
+    T.check(S, 'dragging a corner handle resizes the room live (7 x 3 m)', /7 x 3/.test(resized), resized.replace(/\s+/g, ' '));
+    await T.shot('m2-room-resized');
+  }
+
+  // ---- confirm (desktop applied it on mouse-up already)
+  const costText = touch ? await footerText(T) : '';
+  const wantRoomCost = touch ? cents(costText) : null;
+  if (touch) await tapFooter(T, '.bb-confirm');
+  else {
+    const pa3 = await freePoint(T, 'vertex', X0, Z0);
+    const pc3 = await freePoint(T, 'vertex', X1, Z1);
+    await drag(T, pa3, pc3);
+    await T.frames(4);
+  }
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const s1 = await lotSnap(T);
+  const addedWalls = Object.keys(s1.walls).filter((k) => !s0.walls[k]);
+  const addedFloors = Object.keys(s1.floors).filter((k) => !s0.floors[k]);
+  const addedOpenings = Object.keys(s1.openings).filter((k) => !s0.openings[k]);
+  const dims = touch ? { w: 7, d: 3 } : { w: X1 - X0, d: Z1 - Z0 };
+  T.check(S, 'the room tool built the perimeter walls', addedWalls.length === 2 * (dims.w + dims.d), `${addedWalls.length} new walls, wanted ${2 * (dims.w + dims.d)}`);
+  T.check(S, 'the room got its floor (every tile inside) in the chosen design', addedFloors.length === dims.w * dims.d && addedFloors.every((k) => s1.floors[k].designId === T.expected.roomFloor), `${addedFloors.length} floor tiles of ${dims.w * dims.d}`);
+  T.check(S, 'the room got a door in its wall', addedOpenings.length === 1 && /door/.test(s1.openings[addedOpenings[0]].defId), JSON.stringify(addedOpenings.map((k) => s1.openings[k].defId)));
+  T.check(S, 'money was taken once, equal to the cost shown before confirming', s0.funds - s1.funds > 0 && (!wantRoomCost || s0.funds - s1.funds === wantRoomCost), `paid ${fmtMoney(s0.funds - s1.funds)}, shown ${wantRoomCost === null ? 'n/a (applied on release)' : fmtMoney(wantRoomCost)}`);
+  const room = await page.evaluate(([x, z]) => { const r = window.hearthside.game.roomAt({ x, z }); return r && { uid: r.uid, area: r.area, outdoor: r.outdoor }; }, [X0 + 1, Z0 + 1]);
+  T.check(S, 'the new walls enclose a detected room', !!room && !room.outdoor && room.area === dims.w * dims.d, JSON.stringify(room));
+  T.check(S, 'the footer is ready for the next room (Confirm off, nothing pending)', (await confirmState(T))?.disabled === true && (await page.locator('.bb-handle:not([hidden])').count()) === 0, JSON.stringify(await confirmState(T)));
+  await T.shot('m2-room-built');
+  const doorWall = Object.values(s1.openings).find((o) => /door/.test(o.defId) && !s0.openings[o.id]).wallId;
+  const doorX = Number(doorWall.split(':')[2]), doorZ = Number(doorWall.split(':')[3]);
+
+  // ---- a window in the north wall (Windows tab: catalog, then the wall)
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-window"]'));
+  await page.waitForTimeout(500);
+  const winId = await page.evaluate(() => Object.values(window.hearthside.game.content.openings).filter((d) => d.kind === 'window' && d.status === 'ready' && d.width === 1).sort((a, b) => a.price - b.price)[0]?.id);
+  const nCards = await page.locator('.bb-open-host .bb-card').count();
+  T.check(S, 'the Windows tab lists the window catalog with names and prices', nCards >= 2 && (await page.locator('.bb-open-host .bb-card .card-name').first().innerText()).length > 2 && /\$/.test(await page.locator('.bb-open-host .bb-card').first().innerText()), `${nCards} cards`);
+  await T.shot('m2-window-catalog');
+  const winCard = page.locator(`.bb-open-host .bb-card[data-def-id="${winId}"]`);
+  if (await winCard.count()) { await winCard.scrollIntoViewIfNeeded().catch(() => undefined); await T.tap(winCard); }
+  await page.waitForTimeout(300);
+  T.check(S, 'choosing a window selects the opening tool', (await page.evaluate(() => window.hearthside.game.buildTool()))?.defId === winId, winId);
+  const winWall = `0:h:${X0 + 1}:${Z0}`;
+  const wp = await pointFor(T, 'wall', winWall);
+  const s1b = await lotSnap(T);
+  await T.tapAt(wp.x, wp.y);
+  await page.waitForTimeout(400);
+  await T.frames(4);
+  if (touch) {
+    const st = await footerText(T);
+    T.check(S, 'a tap on a wall previews the window in it (money not taken yet)', /Cost|Free/.test(st) && (await lotSnap(T)).funds === s1b.funds, st.replace(/\s+/g, ' '));
+    await T.shot('m2-window-preview');
+    await tapFooter(T, '.bb-confirm');
+  }
+  await page.waitForTimeout(400);
+  const s2 = await lotSnap(T);
+  const winOpening = Object.values(s2.openings).find((o) => o.defId === winId && !s1.openings[o.id]);
+  T.check(S, 'the window is in the north wall and cost its catalog price', !!winOpening && winOpening.wallId === winWall && s1.funds - s2.funds === (await page.evaluate((id) => window.hearthside.game.content.openings[id].price, winId)), JSON.stringify(winOpening && winOpening.wallId));
+  await T.shot('m2-window-placed');
+
+  // ---- paint each side of a wall independently: the west wall, once from each side
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-paint"]'));
+  await page.waitForTimeout(400);
+  await T.tap(page.locator('.bb-build-panel .tab[data-id="wall"]'));
+  await page.waitForTimeout(300);
+  const one = page.locator('.bb-build-panel [role="radio"], .bb-build-panel button', { hasText: /^One side/ }).first();
+  if (await one.count()) await T.tap(one);
+  const wallCards = page.locator('.bb-build-panel .bb-designs .bb-card');
+  const westWall = `0:v:${X0}:${Z0 + 1}`;
+  const wb = await page.evaluate((id) => { const st = window.hearthside.debug.state(); const w = st.lots[st.activeLotId].walls[id]; return { a: w.sideA, b: w.sideB }; }, westWall);
+  const paintSide = async (cardIdx, label) => {
+    await wallCards.nth(cardIdx).scrollIntoViewIfNeeded().catch(() => undefined);
+    await T.tap(wallCards.nth(cardIdx));
+    await page.waitForTimeout(300);
+    const tool = await page.evaluate(() => window.hearthside.game.paintTool());
+    const p = await pointFor(T, 'wall', westWall);
+    const pk = await page.evaluate(([x, y]) => window.__t.pick(x, y), [p.x, p.y]);
+    if (pk.kind !== 'wall' || pk.wallId !== westWall) { T.bad(S, `${label}: the west wall is under the tap point`, JSON.stringify(pk)); return null; }
+    if (touch) { await T.tapAt(p.x, p.y); await page.waitForTimeout(350); }
+    else { await page.mouse.move(p.x, p.y); await page.waitForTimeout(250); }
+    await T.tapAt(p.x, p.y);
+    await page.waitForTimeout(500);
+    await T.frames(4);
+    return { side: pk.side, design: tool.finish.designId, palette: tool.finish.paletteId };
+  };
+  const designs = await page.evaluate(([a, b]) => ({ a, b }), [wb.a.designId, wb.b.designId]);
+  const idxOf = async (avoid) => {
+    const n = await wallCards.count();
+    for (let i = 0; i < n; i++) {
+      const lbl = ((await wallCards.nth(i).getAttribute('aria-label')) ?? '').split(',')[0];
+      const id = await page.evaluate((nm) => Object.values(window.hearthside.game.content.wallDesigns).find((d) => d.name === nm)?.id, lbl);
+      if (id && !avoid.includes(id)) return i;
+    }
+    return 0;
+  };
+  const first = await paintSide(await idxOf([designs.a, designs.b]), 'first side');
+  const afterFirst = await page.evaluate((id) => { const st = window.hearthside.debug.state(); const w = st.lots[st.activeLotId].walls[id]; return { a: w.sideA, b: w.sideB }; }, westWall);
+  T.check(S, 'painting the new wall changes only the side facing the camera', !!first && afterFirst[first.side === 'a' ? 'a' : 'b'].designId === first.design && JSON.stringify(afterFirst[first.side === 'a' ? 'b' : 'a']) === JSON.stringify(wb[first.side === 'a' ? 'b' : 'a']), `${JSON.stringify(first)} ${JSON.stringify(afterFirst)}`);
+  // turn the view half way round: the other side now faces the camera
+  await T.tap(page.locator('button[aria-label="Turn right"]').first());
+  await T.tap(page.locator('button[aria-label="Turn right"]').first());
+  await page.waitForTimeout(600);
+  await T.frames(10);
+  await settle(T);
+  const second = await paintSide(await idxOf([designs.a, designs.b, first?.design]), 'second side');
+  const afterSecond = await page.evaluate((id) => { const st = window.hearthside.debug.state(); const w = st.lots[st.activeLotId].walls[id]; return { a: w.sideA, b: w.sideB }; }, westWall);
+  T.check(S, 'the other side of the same wall takes its own finish', !!second && !!first && second.side !== first.side && afterSecond[second.side].designId === second.design && afterSecond[first.side].designId === first.design && first.design !== second.design, `${JSON.stringify({ first, second })} ${JSON.stringify(afterSecond)}`);
+  await T.shot('m2-walls-painted');
+  await T.tap(page.locator('button[aria-label="Turn left"]').first());
+  await T.tap(page.locator('button[aria-label="Turn left"]').first());
+  await page.waitForTimeout(500);
+  await T.frames(8);
+  await settle(T);
+
+  // ---- floor: paint a block of tiles with another floor (Paint -> Floors -> Area -> drag)
+  await T.tap(page.locator('.bb-build-panel .tab[data-id="floor"]'));
+  await page.waitForTimeout(300);
+  const fCards = page.locator('.bb-build-panel .bb-designs .bb-card');
+  await T.tap(fCards.nth(1));
+  await page.waitForTimeout(250);
+  const area = page.locator('.bb-build-panel [role="radio"], .bb-build-panel button', { hasText: /^Area/ }).first();
+  await T.tap(area);
+  await page.waitForTimeout(300);
+  const areaTool = await page.evaluate(() => ({ b: window.hearthside.game.buildTool(), p: window.hearthside.game.paintTool() }));
+  T.check(S, 'the Area scope uses the floor build tool (rectangle) and ends the paint tool', areaTool.b?.kind === 'floor' && areaTool.b.shape === 'rect' && areaTool.p === null, JSON.stringify(areaTool));
+  const fa = await freePoint(T, 'tile', X0, Z0);
+  const fb = await freePoint(T, 'tile', X0 + 1, Z0 + 1);
+  const s3 = await lotSnap(T);
+  await drag(T, fa, fb);
+  await T.frames(4);
+  if (touch) {
+    const txt = await footerText(T);
+    T.check(S, 'dragging over tiles previews the floor (4 tiles) with two handles', /4 floor tiles|4 m2|4 m/.test(txt) && (await page.locator('.bb-handle:not([hidden])').count()) === 2 && JSON.stringify(await lotSnap(T)) === JSON.stringify(s3), txt.replace(/\s+/g, ' '));
+    await T.shot('m2-floor-area-preview');
+    await tapFooter(T, '.bb-confirm');
+  }
+  await page.waitForTimeout(300);
+  const s4 = await lotSnap(T);
+  const changedFloors = Object.keys(s4.floors).filter((k) => JSON.stringify(s4.floors[k]) !== JSON.stringify(s3.floors[k]));
+  T.check(S, 'exactly the dragged 2 x 2 tiles got the new floor', changedFloors.length === 4 && changedFloors.every((k) => { const [, x, z] = k.split(':').map(Number); return x >= X0 && x <= X0 + 1 && z >= Z0 && z <= Z0 + 1; }), changedFloors.join(','));
+  await T.shot('m2-floor-painted');
+  // leave the floor tool: back to the Paint tab with nothing active
+  if (await page.evaluate(() => !!window.hearthside.game.buildTool())) await tapFooter(T, '.bb-cancel');
+  if (await page.evaluate(() => !!window.hearthside.game.buildTool())) await tapFooter(T, '.bb-cancel');
+
+  // ---- walls up / cutaway / down with the new walls
+  for (const mode of ['up', 'down', 'cutaway']) {
+    await page.evaluate((m) => window.hearthside.game.view.setCutaway(m), mode);
+    await T.frames(8);
+    await T.shot(`m2-walls-${mode}`);
+  }
+
+  // ---- undo and redo everything this step did (Build panel buttons)
+  const endSnap = await lotSnap(T);
+  const undoBtn = page.locator('.bb-build-panel .bb-undo button[aria-label="Undo"]');
+  const redoBtn = page.locator('.bb-build-panel .bb-undo button[aria-label="Redo"]');
+  let undone = 0;
+  for (; undone < 10 && JSON.stringify(await lotSnap(T)) !== JSON.stringify(s0); undone++) { if (await undoBtn.isDisabled()) break; await T.tap(undoBtn); await page.waitForTimeout(250); }
+  const afterUndo = await lotSnap(T);
+  T.check(S, 'undo restores the lot and the money exactly (walls, openings, floors, funds)', JSON.stringify(afterUndo) === JSON.stringify(s0), `${undone} undos`);
+  await T.shot('m2-undone');
+  let redone = 0;
+  for (; redone < 10 && JSON.stringify(await lotSnap(T)) !== JSON.stringify(endSnap); redone++) { if (await redoBtn.isDisabled()) break; await T.tap(redoBtn); await page.waitForTimeout(250); }
+  T.check(S, 'redo brings everything back exactly', JSON.stringify(await lotSnap(T)) === JSON.stringify(endSnap) && redone === undone, `${redone} redos`);
+
+  // ---- back to Live: a person walks into the new room through its door
+  await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+  await page.waitForTimeout(600);
+  await page.evaluate(() => window.hearthside.view.frameLot(true));
+  await T.frames(6);
+  let walker = await page.evaluate(() => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; return hh.memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; });
+  if (!walker) { await runUntil(T, 2400, `Object.values(st.people).some(p => p.householdId === st.activeHouseholdId && p.location.kind === 'lot')`); walker = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; }); }
+  T.check(S, 'a household member is home to walk into the new room', !!walker, String(walker));
+  if (!walker) return;
+  await selectMember(T, walker);
+  const target = { x: Math.min(X0 + dims.w - 1, X0 + 3), z: Z0 + 1 };
+  const tp = await pointFor(T, 'tile', target.x, target.z);
+  T.check(S, 'a tile inside the new room can be tapped (floor pick)', !!tp?.free && (await page.evaluate(([x, y]) => window.__t.pick(x, y), [tp.x, tp.y])).kind === 'floor', JSON.stringify(tp));
+  await T.tapAt(tp.x, tp.y);
+  await page.waitForTimeout(400);
+  const queued = await page.evaluate((id) => window.hearthside.debug.state().people[id].queue.map((a) => a.interactionId), walker);
+  T.check(S, 'the walk is queued ("Go here")', queued.length > 0, queued.join(','));
+  const inside = `(() => { const p = st.people['${walker}']; const l = p.location; return l.kind === 'lot' && l.x > ${X0} && l.x < ${X0 + dims.w} && l.z > ${Z0} && l.z < ${Z0 + dims.d}; })()`;
+  const walk = await runUntil(T, 3600, inside);
+  const pos = await page.evaluate((id) => { const l = window.hearthside.debug.state().people[id].location; return l.kind === 'lot' ? [Math.round(l.x * 10) / 10, Math.round(l.z * 10) / 10] : l.place; }, walker);
+  T.check(S, 'the person walked into the new room (through its door, around the house)', walk.done, `${walk.ticks} ticks, now at ${JSON.stringify(pos)}`);
+  T.check(S, 'the walk never crossed a wall outside a doorway', walk.viol.length === 0, JSON.stringify(walk.viol.slice(0, 3)));
+  await page.evaluate(([x, z]) => window.hearthside.view.rig.glideTo(x, z, 70, 0.1), [X0 + dims.w / 2, Z0 + dims.d / 2]);
+  await T.frames(20);
+  await settle(T);
+  await T.shot('m2-person-in-room');
+  void doorX; void doorZ;
 }
 
 main().catch((e) => { console.error('[acceptance] error', e); process.exit(1); });

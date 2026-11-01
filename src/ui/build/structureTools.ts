@@ -169,7 +169,6 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     onChange: (v) => { st.wallShape = v; choose(); },
   });
   const wallSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Build walls', dataset: { section: 'wall' } },
-    h('p', { class: 'bb-hint' }, icon('wall', 20), h('span', { text: 'Walls sit on the grid lines. A run is straightened along the way you drag.' })),
     wallShape.el, wallStyle());
 
   // ---- Room section ----
@@ -181,14 +180,19 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     onChange: (v) => { st.roomFloor = v === 'yes'; choose(); },
   });
   const floorNote = h('p', { class: 'bb-note bb-muted' });
+  const sideOptions = SIDES.map((x) => ({ id: x.id, label: x.label }));
   const doorSel = selectField({ label: 'Door', options: [{ id: '', label: 'No door' }], value: st.doorDef, onChange: (v) => { st.doorDef = v; choose(); } });
-  const doorSide = segmented<Side>({ label: 'Door on the side', value: st.doorSide, options: SIDES, onChange: (v) => { st.doorSide = v; if (st.windowSide === v) st.windowSide = OPPOSITE[v]; sideSync(); choose(); } });
+  const doorSide = selectField({ label: 'Door side', options: sideOptions, value: st.doorSide, onChange: (v) => { st.doorSide = v as Side; if (st.windowSide === v) st.windowSide = OPPOSITE[v as Side]; sideSync(); choose(); } });
   const winSel = selectField({ label: 'Window', options: [{ id: '', label: 'No window' }], value: st.windowDef, onChange: (v) => { st.windowDef = v; choose(); } });
-  const winSide = segmented<Side>({ label: 'Window on the side', value: st.windowSide, options: SIDES, onChange: (v) => { st.windowSide = v; sideSync(); choose(); } });
-  const sideSync = () => { doorSide.set(st.doorSide); winSide.set(st.windowSide); };
+  const winSide = selectField({ label: 'Window side', options: sideOptions, value: st.windowSide, onChange: (v) => { st.windowSide = v as Side; sideSync(); choose(); } });
+  const sideSync = () => { doorSide.select.value = st.doorSide; winSide.select.value = st.windowSide; };
   const roomSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Build a room', dataset: { section: 'room' } },
-    h('p', { class: 'bb-hint' }, icon('home', 20), h('span', { text: 'Drag a rectangle on the ground. Drag the round handles to resize it, then confirm. South faces the street.' })),
-    wallStyle(), floorMode.el, floorNote, doorSel.el, doorSide.el, winSel.el, winSide.el);
+    h('div', { class: 'bb-pair' }, doorSel.el, doorSide.el),
+    h('div', { class: 'bb-pair' }, winSel.el, winSide.el),
+    floorMode.el, floorNote, wallStyle());
+  const southNote = 'South faces the street.';
+  doorSide.select.title = southNote;
+  winSide.select.title = southNote;
 
   // ---- Door and Window sections ----
 
@@ -201,9 +205,9 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       options: [{ id: 'place', label: 'Place' }, { id: 'move', label: 'Move' }, { id: 'flip', label: 'Turn' }, { id: 'remove', label: 'Remove' }],
       onChange: (v) => { st.opening[kind] = v; choose(); renderOpening(kind); },
     });
-    const hint = h('p', { class: 'bb-hint' });
+    const hint = h('span', { class: 'bb-sr' });
     const host = h('div', { class: 'bb-open-host' });
-    const el = h('section', { class: 'bb-tool-section', ariaLabel: `${humanize(noun)}s`, dataset: { section: kind } }, mode.el, hint, host);
+    const el = h('section', { class: 'bb-tool-section', ariaLabel: `${humanize(noun)}s`, dataset: { section: kind } }, mode.el, host, hint);
     openingSections[kind] = { el, mode, host, hint, grid: null };
   }
 
@@ -215,7 +219,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       : m === 'move' ? `${touch() ? 'Tap' : 'Click'} a door or window to pick it up, then the wall to move it to.`
         : m === 'flip' ? `${touch() ? 'Tap' : 'Click'} a door or window to turn it around.`
           : `${touch() ? 'Tap' : 'Click'} a door or window to remove it. The wall stays.`;
-    setChildren(o.hint, icon('info', 20), h('span', { text }));
+    o.hint.title = text;
     o.mode.set(m);
     if (m !== 'place') { o.host.hidden = true; return; }
     o.host.hidden = false;
@@ -246,9 +250,8 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
 
   // ---- Erase section ----
 
-  const eraseHint = h('p', { class: 'bb-hint' });
   const eraseChips = h('div', { class: 'bb-chips', role: 'radiogroup', ariaLabel: 'What to erase' });
-  const eraseSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Erase', dataset: { section: 'erase' } }, eraseChips, eraseHint);
+  const eraseSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Erase', dataset: { section: 'erase' } }, eraseChips);
 
   function renderErase(): void {
     setChildren(eraseChips, ERASE.map((e) => {
@@ -269,7 +272,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       'floor-room': `${t[0]!.toUpperCase()}${t.slice(1)} a room to take up all of its floor.`,
       room: `${t[0]!.toUpperCase()}${t.slice(1)} a room to demolish its outer walls, doors, windows and floor. Furniture inside must be moved first.`,
     };
-    setChildren(eraseHint, icon('info', 20), h('span', { text: text[st.erase] }));
+    eraseChips.title = text[st.erase];
   }
 
   // ---- footer: live text, Turn around, Cancel, Confirm ----

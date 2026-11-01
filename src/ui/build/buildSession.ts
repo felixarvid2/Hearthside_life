@@ -8,9 +8,14 @@
 // drag tool applies on mouse-up, Esc cancels. Pointer cancel and orientation changes keep the preview: it lives here
 // and in the game, not in the DOM.
 
+import { formatMoney } from '../../core/money';
 import type { BuildPoint, BuildPreview, BuildTarget, BuildTool, GameAPI, PickResult, Result, SoundId } from '../../game/api';
-import { toast } from '../kit/components';
-import { affordReason, formatMoney } from '../buy/editorCommon';
+
+/** What the session needs from the interface around it (kept apart so the session has no DOM). */
+export interface SessionHooks {
+  sound(id: SoundId): void;
+  toast(text: string, kind?: 'info' | 'success' | 'warning' | 'error', ms?: number): void;
+}
 
 export type ToolMode = 'none' | 'drag' | 'click';
 
@@ -63,7 +68,7 @@ export function summarize(pv: BuildPreview): PreviewSummary {
   if (!pv.ok) return { state: 'bad', title: pv.reason ?? pv.reasons[0] ?? 'That cannot be built here.', detail: '' };
   const c = pv.counts;
   const bits: string[] = [];
-  if (pv.measure.text) bits.push(pv.measure.text);
+  if (pv.measure.text && !pv.label.includes(pv.measure.text)) bits.push(pv.measure.text);
   if (pv.unchanged) return { state: 'info', title: pv.reasons[0] ?? 'Nothing would change.', detail: bits.join(' · ') };
   if (c.wallsNew) bits.push(plural(c.wallsNew, 'new wall', 'new walls'));
   if (c.wallsRemoved) bits.push(`${plural(c.wallsRemoved, 'wall', 'walls')} removed`);
@@ -87,6 +92,15 @@ export function tipText(pv: BuildPreview): string {
   return pv.measure.text ? `${pv.measure.text} · ${money}` : `${pv.label} · ${money}`;
 }
 
+/** Why the household cannot pay `cost` right now, or null (free, affordable, or the sandbox). */
+function affordReason(api: GameAPI, cost: number): string | null {
+  if (cost <= 0) return null;
+  const st = api.state();
+  if (!st || st.settings.unlimitedFunds) return null;
+  const funds = st.households[st.activeHouseholdId]?.funds ?? 0;
+  return cost > funds ? `Not enough funds: costs ${formatMoney(cost)}, you have ${formatMoney(funds)}.` : null;
+}
+
 const keyOf = (t: BuildTarget | null): string => {
   if (!t) return '';
   const r = (p: BuildPoint | null | undefined) => (p ? `${Math.round(p.x * 4) / 4},${Math.round(p.z * 4) / 4}` : '-');
@@ -107,7 +121,12 @@ export class BuildSession {
   private readonly listeners = new Set<() => void>();
   private readonly offs: Array<() => void> = [];
 
-  constructor(private readonly api: GameAPI, private readonly sound: (id: SoundId) => void) {
+  private readonly sound: (id: SoundId) => void;
+  private readonly toast: SessionHooks['toast'];
+
+  constructor(private readonly api: GameAPI, hooks: SessionHooks) {
+    this.sound = hooks.sound;
+    this.toast = hooks.toast;
     this.toolKey = JSON.stringify(api.buildTool());
     this.offs.push(api.onChange((what) => {
       if (what === 'mode') { this.reset(); return; }
@@ -361,16 +380,16 @@ export class BuildSession {
   private hint(text: string): void {
     if (this.hinted === text) return;
     this.hinted = text;
-    toast(text, 'info', 2400);
+    this.toast(text, 'info', 2400);
   }
 
   private pickOpening(x: number, y: number, pick: PickResult): void {
     const pk = pick.kind === 'wall' ? pick : this.api.view.pick(x, y);
     const found = pk.kind === 'wall' ? this.api.openingAt(pk.wallId) : null;
-    if (!found) { toast('Tap a door or window to pick it up.', 'info', 2200); this.sound('error'); return; }
+    if (!found) { this.toast('Tap a door or window to pick it up.', 'info', 2200); this.sound('error'); return; }
     this.setPickedOpening(found.openingId);
     const def = this.api.content.openings[found.defId];
-    toast(`Picked up ${def?.name ?? 'the opening'}. Tap the wall to move it to.`, 'success', 2600);
+    this.toast(`Picked up ${def?.name ?? 'the opening'}. Tap the wall to move it to.`, 'success', 2600);
     this.sound('select');
   }
 
@@ -387,7 +406,7 @@ export class BuildSession {
   tapFlip(x: number, y: number, pick: PickResult, mouse: boolean): void {
     const pk = pick.kind === 'wall' ? pick : this.api.view.pick(x, y);
     const found = pk.kind === 'wall' ? this.api.openingAt(pk.wallId) : null;
-    if (!found) { toast('Tap a door or window to turn it around.', 'info', 2200); this.sound('error'); return; }
+    if (!found) { this.toast('Tap a door or window to turn it around.', 'info', 2200); this.sound('error'); return; }
     const tool: BuildTool = { kind: 'moveOpening', openingId: found.openingId, flip: !found.flip };
     this.toolKey = JSON.stringify(tool);
     this.api.setBuildTool(tool);
@@ -498,14 +517,14 @@ export class BuildSession {
     const tool = this.api.buildTool();
     const r = this.api.buildApply(t);
     if (!r.ok) {
-      toast(r.reason, 'warning', 3200);
+      this.toast(r.reason, 'warning', 3200);
       this.sound('error');
       if (quiet) { this.cancelPreviewOnly(); }
       return r;
     }
     this.sound(tool?.kind === 'floor' ? 'paint' : tool?.kind === 'eraseWall' || tool?.kind === 'eraseOpening' || tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' ? 'sell' : 'place');
     const money = (r.cost ?? 0) > 0 ? ` for ${formatMoney(r.cost ?? 0)}` : (r.cost ?? 0) < 0 ? `, ${formatMoney(-(r.cost ?? 0))} back` : '';
-    toast(`${r.label ?? 'Done'}${money}. Undo is in the panel.`, 'success', 2600);
+    this.toast(`${r.label ?? 'Done'}${money}. Undo is in the panel.`, 'success', 2600);
     this.dropTarget();
     if (tool?.kind === 'moveOpening' && tool.openingId) this.backToIdle();
     this.emit();

@@ -56,7 +56,18 @@
 .bb-cutaway .seg { padding: 0 10px; }
 
 /* ---------- Tool tabs (Paint, Walls, Room, Doors, Windows, Erase) ---------- */
-.bb-tool-tabs .tab { padding: 0 12px; }
+/* Six tabs share the row: icon over a short label */
+.bb-top-tabs { flex: 1 1 auto; min-width: 0; }
+.bb-tool-tabs { gap: 2px; }
+.bb-tool-tabs .tab {
+  flex: 1 1 0; min-width: 52px; flex-direction: column; justify-content: center; gap: 0; padding: 3px 4px; min-height: 52px;
+  border-radius: 14px; font-size: 0.75rem; line-height: 1.15;
+}
+.bb-tool-tabs .tab .icon-wrap { display: inline-flex; }
+/* Undo and redo sit in the header; the HUD already says the game is paused while building */
+.bb-build-panel .bb-paused { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; padding: 0; }
+.bb-build-panel .panel-actions { align-items: center; }
+.bb-build-panel .panel-actions .bb-undo { margin-right: 2px; }
 .bb-kindbar { margin: 0 0 8px; }
 .bb-kindbar .tabs { padding: 0; }
 .bb-tool-section { display: flex; flex-direction: column; gap: 10px; margin: 0 0 6px; }
@@ -87,10 +98,19 @@
 .bb-build-buttons .btn { flex: 1 1 0; min-width: 0; width: auto; padding: 0 10px; }
 .bb-build-buttons .bb-confirm { flex: 2 1 0; }
 .bb-build-buttons [hidden] { display: none; }
-body.is-landscape.is-compact .bb-build-footer { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px 8px; }
-body.is-landscape.is-compact .bb-build-footer .bb-build-status { padding: 3px 8px; font-size: 0.8rem; }
-body.is-landscape.is-compact .bb-build-footer .bb-build-detail { font-size: 0.78rem; }
-body.is-landscape.is-compact .bb-build-buttons .btn { flex-direction: row; min-height: var(--tap); padding: 0 8px; border-radius: 999px; font-size: 0.85rem; gap: 4px; }
+/* Short landscape screens: the side panel is too low for a footer, so the action bar floats at the bottom of the world area */
+body.is-landscape.is-compact .bb-build-footer {
+  position: fixed; z-index: 21; left: calc(8px + var(--safe-l)); bottom: calc(var(--shell-bottom) + 8px);
+  width: calc(100vw - var(--side-panel-w) - 28px - var(--safe-l) - var(--safe-r)); max-width: 560px;
+  flex-direction: row; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+}
+body.is-landscape.is-compact .bb-build-footer .bb-build-status { flex: 1 1 0; min-width: 0; padding: 4px 8px; font-size: 0.8rem; align-self: stretch; align-items: center; }
+body.is-landscape.is-compact .bb-build-footer .bb-build-detail { display: none; }
+body.is-landscape.is-compact .bb-build-buttons { flex: none; }
+body.is-landscape.is-compact .bb-build-buttons .btn { flex: none; min-height: var(--tap); padding: 0 12px; border-radius: 999px; font-size: 0.85rem; gap: 4px; flex-direction: row; }
+body.is-landscape.is-compact .bb-build-buttons .bb-confirm { padding: 0 16px; }
+body.is-landscape.is-compact .bb-build-buttons .bb-lbl-long { display: none; }
+body.is-landscape.is-compact .bb-build-buttons .bb-lbl-short { display: inline; }
 
 /* ---------- Handles for resizing the shape before confirming ---------- */
 .bb-handles { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
@@ -106,3 +126,7 @@ body.is-landscape.is-compact .bb-build-buttons .btn { flex-direction: row; min-h
 .bb-handle[hidden] { display: none; }
 .bb-build-tip { z-index: 36; transform: translate(-50%, calc(-100% - 46px)); max-width: min(78vw, 22rem); white-space: normal; text-align: center; }
 .bb-build-tip[hidden] { display: none; }
+
+.bb-pair { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 8px; }
+.bb-pair .bb-select-field .field-label { font-size: 0.8rem; }
+.bb-pair[hidden] { display: none; }

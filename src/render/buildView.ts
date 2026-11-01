@@ -100,7 +100,7 @@ export class BuildView {
     const y = 0.018;
     for (let x = 0; x <= lot.width; x++) (x % 4 === 0 ? major : minor).push(x, y, 0, x, y, lot.depth);
     for (let z = 0; z <= lot.depth; z++) (z % 4 === 0 ? major : minor).push(0, y, z, lot.width, y, z);
-    for (const [pts, opacity] of [[minor, 0.16], [major, 0.3]] as const) {
+    for (const [pts, opacity] of [[minor, 0.3], [major, 0.5]] as const) {
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
       const m = new THREE.LineBasicMaterial({ color: 0x2f2a26, transparent: true, opacity, depthWrite: false });
