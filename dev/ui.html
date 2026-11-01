@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#efe7da" />
+    <title>Hearthside Life - UI shell (mock game)</title>
+  </head>
+  <body>
+    <!-- Same structure as index.html; the mock game draws a 2D top-down view on the canvas.
+         URL params: ?start=boot|menu|live|buy|build  &speed=0..3  &mode=guided|create|sandbox  &nosaves  &failstart
+                     &boot=<ms>  &debug  &content=real (merge the real content registries when they load) -->
+    <div id="app">
+      <canvas id="game-canvas" tabindex="0" aria-label="Game world"></canvas>
+      <div id="world-overlay" class="passthrough" aria-hidden="true"></div>
+      <div id="ui-root"></div>
+    </div>
+    <script type="module" src="./ui.ts"></script>
+  </body>
+</html>

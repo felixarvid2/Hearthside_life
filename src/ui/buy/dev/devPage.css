@@ -1,0 +1,7 @@
+/* OWNER: UI editors agent. DEV ONLY: stand-in top bar for dev/buildbuy.html (the real HUD belongs to the shell). */
+.dev-topbar {
+  position: absolute; left: 0; right: 0; top: 0; height: calc(56px + var(--safe-t)); padding: var(--safe-t) calc(10px + var(--safe-r)) 0 calc(10px + var(--safe-l));
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(251, 246, 238, 0.92); box-shadow: 0 1px 6px rgba(60, 40, 20, 0.15); z-index: 30;
+}
+.dev-tag { font-size: 0.8rem; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.dev-modes { display: flex; gap: 6px; }

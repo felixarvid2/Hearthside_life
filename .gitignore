@@ -4,3 +4,13 @@ dist/
 .DS_Store
 tests/e2e/out/
 .vite/
+
+# Meshy experiment: generated decimation variants and screenshots are reproducible
+dev/meshy/variants/
+dev/meshy/shots/
+dev/hair-ai/raw/
+dev/surfaces-ai/raw/
+dev/hair-ai/shots/
+dev/hair-ai/debug/
+dev/ds-tasks/*.log
+dev/ds-tasks/logs/

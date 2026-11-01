@@ -1,0 +1,66 @@
+/* OWNER: UI editors agent. Buy mode panel styles (catalog, detail card, placement, selected object, inventory). */
+
+.bb-top-tabs { flex: 1 1 auto; min-width: 0; }
+.bb-top-tabs .tabs { padding: 2px 0; }
+
+/* ---------- Catalog ---------- */
+.bb-cats .tabs { padding: 2px 0; }
+.bb-cat-tabs .tab { min-height: var(--tap); padding: 0 12px; border: 1px solid var(--line); background: var(--paper); font-size: 0.9rem; }
+.bb-cat-tabs .tab.is-selected { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+.bb-cat-tabs .tab .icon-wrap { color: inherit; }
+.bb-browse .card-grid { grid-template-columns: repeat(auto-fill, minmax(6.3rem, 1fr)); }
+
+/* ---------- Detail card ---------- */
+.bb-detail-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: -4px -8px 6px; }
+.bb-detail-head { display: flex; gap: 12px; align-items: flex-start; }
+.bb-detail-thumb { flex: none; width: 112px; }
+.bb-detail-thumb .thumb { width: 112px; height: 112px; display: flex; border-radius: 12px; background: #fff; object-fit: contain; border: 1px solid var(--line); }
+.bb-detail-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.bb-detail-name { font-size: 1.15rem; line-height: 1.2; overflow-wrap: anywhere; }
+.bb-stars { display: inline-flex; align-items: center; gap: 1px; color: var(--ok); }
+.bb-stars .is-off { color: var(--line); }
+.bb-stars-text { margin-left: 6px; color: var(--ink-2); font-size: 0.85rem; font-weight: 700; }
+.bb-facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 10px 0; font-size: 0.9rem; }
+.bb-facts dt { color: var(--ink-3); font-weight: 700; }
+.bb-facts dd { margin: 0; color: var(--ink); line-height: 1.35; }
+.bb-stats { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; line-height: 1.35; }
+.bb-finish-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0; }
+.bb-finish-label { font-size: 0.88rem; font-weight: 700; color: var(--ink-2); min-width: 7.5em; }
+.bb-dots { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.bb-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(0, 0, 0, 0.12); }
+.bb-buy-row { position: sticky; bottom: -16px; margin: 14px -16px 0; padding: 14px 16px 10px; background: linear-gradient(to bottom, rgba(251, 246, 238, 0), var(--paper) 14px); display: flex; flex-direction: column; gap: 4px; }
+.bb-buy-row .bb-buy-reason { margin: 0; }
+.bb-buy-btn { width: 100%; }
+.bb-buy-reason { color: #8e2c24; font-weight: 600; }
+.bb-buy-reason .icon-wrap { color: #8e2c24; }
+
+/* ---------- Placement and selected object ---------- */
+.bb-place-head { display: flex; gap: 12px; align-items: center; }
+.bb-place-thumb { flex: none; width: 64px; height: 64px; }
+.bb-place-thumb .thumb { width: 64px; height: 64px; display: flex; border-radius: 10px; background: #fff; object-fit: contain; border: 1px solid var(--line); }
+.bb-place-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.bb-place-name { font-size: 1.05rem; overflow-wrap: anywhere; }
+.bb-place-source { font-size: 0.85rem; color: var(--ink-3); }
+.bb-place-cost { display: flex; gap: 8px; align-items: baseline; font-size: 0.9rem; }
+.bb-placement .bb-status-line { margin-top: 10px; }
+.bb-obj-values { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.bb-obj-finishes .field { margin: 8px 0 12px; }
+.bb-swatch-name { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--ink-3); }
+
+/* ---------- Inventory ---------- */
+.bb-inv-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.bb-inv-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 6px; border-radius: 12px; background: var(--paper-2); }
+.bb-inv-thumb { flex: none; width: 56px; height: 56px; }
+.bb-inv-thumb .thumb { width: 56px; height: 56px; display: flex; border-radius: 8px; background: #fff; object-fit: contain; }
+.bb-inv-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bb-inv-name { font-weight: 700; overflow-wrap: anywhere; }
+.bb-inv-meta { font-size: 0.8rem; color: var(--ink-3); display: inline-flex; align-items: center; gap: 4px; }
+.bb-inv-row .btn { flex: none; }
+.bb-inv-empty { padding: 8px 0; }
+
+/* ---------- Landscape phones: very little height, so the Buy row sits right under Back/Favourite ---------- */
+.bb-detail { display: flex; flex-direction: column; }
+body.is-landscape.is-compact .bb-detail-top { order: -2; }
+body.is-landscape.is-compact .bb-buy-row { order: -1; position: static; margin: 0 0 10px; padding: 0; background: none; }
+body.is-landscape.is-compact .bb-detail-thumb, body.is-landscape.is-compact .bb-detail-thumb .thumb { width: 72px; height: 72px; }
+body.is-landscape.is-compact .bb-place-thumb, body.is-landscape.is-compact .bb-place-thumb .thumb { width: 48px; height: 48px; }

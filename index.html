@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#efe7da" />
+    <meta name="description" content="Hearthside Life - an original life simulation in your browser." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%23efe7da'/%3E%3Cpath d='M3 8l5-4 5 4v5H9V9H7v4H3z' fill='%237c5a3a'/%3E%3C/svg%3E" />
+    <title>Hearthside Life</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" tabindex="0" aria-label="Game world"></canvas>
+      <div id="world-overlay" class="passthrough" aria-hidden="true"></div>
+      <div id="ui-root"></div>
+    </div>
+    <noscript>Hearthside Life needs JavaScript to run.</noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

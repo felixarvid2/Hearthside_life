@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hearthside Life - character lab</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #e9e2d6; font-family: system-ui, sans-serif; overflow: hidden; }
+    #app { position: fixed; inset: 0; }
+    #bar { position: fixed; left: 8px; top: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 2; }
+    #bar button, #bar select { font: 13px system-ui, sans-serif; padding: 6px 10px; border-radius: 8px; border: 1px solid #b9ab95; background: #fffaf2; color: #3b3125; }
+    #bar button.on { background: #e8a95a; color: #2a1d0e; }
+    #info { position: fixed; left: 8px; bottom: 8px; font: 12px ui-monospace, monospace; color: #3b3125; background: #fffaf2cc; padding: 4px 8px; border-radius: 6px; z-index: 2; white-space: pre; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="bar"></div>
+  <div id="info">loading...</div>
+  <script type="module" src="./characters.ts"></script>
+</body>
+</html>

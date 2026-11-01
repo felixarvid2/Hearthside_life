@@ -1,0 +1,103 @@
+// Original line icons for Hearthside Life (24x24, stroke = currentColor). Always pair unfamiliar icons with
+// a visible label or aria-label.
+
+const P: Record<string, string> = {
+  pause: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  play: '<path d="M7 5l11 7-11 7z"/>',
+  fast: '<path d="M4 6l7 6-7 6zM12 6l7 6-7 6z"/>',
+  faster: '<path d="M2 6l6 6-6 6zM8.5 6l6 6-6 6zM15 6l6 6-6 6z"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  next: '<path d="M9 5l7 7-7 7"/>',
+  up: '<path d="M6 15l6-6 6 6"/>',
+  down: '<path d="M6 9l6 6 6-6"/>',
+  undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-4"/>',
+  redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h4"/>',
+  rotateLeft: '<path d="M4 10a8 8 0 1 1 2 7"/><path d="M4 4v6h6"/>',
+  rotateRight: '<path d="M20 10a8 8 0 1 0-2 7"/><path d="M20 4v6h-6"/>',
+  zoomIn: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/>',
+  zoomOut: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M8 11h6"/>',
+  wallsUp: '<path d="M4 20V8l8-4 8 4v12"/><path d="M4 20h16"/>',
+  wallsCut: '<path d="M4 20v-8l8-4 8 4v8"/><path d="M4 20h16M4 14h16" stroke-dasharray="2 2"/>',
+  wallsDown: '<path d="M4 20v-3h16v3M4 20h16"/>',
+  center: '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+  live: '<circle cx="12" cy="7" r="3"/><path d="M6 20c0-4 3-6 6-6s6 2 6 6"/>',
+  buy: '<path d="M4 9h16l-1.5 10h-13z"/><path d="M8 9V7a4 4 0 018 0v2"/>',
+  build: '<path d="M3 21h18"/><path d="M6 21V10l6-5 6 5v11"/><path d="M10 21v-6h4v6"/>',
+  hunger: '<path d="M7 3v8M5 3v5a2 2 0 004 0V3M7 11v10"/><path d="M17 3c-2 0-3 2-3 6s1 4 3 4v8"/>',
+  energy: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+  hygiene: '<path d="M12 3c3 4 6 7 6 11a6 6 0 01-12 0c0-4 3-7 6-11z"/>',
+  bladder: '<path d="M8 3h8l-1 5a4 4 0 01-3 3 4 4 0 01-3-3z"/><path d="M12 11v10M9 21h6"/>',
+  fun: '<circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 2.5 3 4 3s3-1 4-3"/><path d="M9 9h.01M15 9h.01"/>',
+  social: '<path d="M4 5h11v8H9l-4 3v-3H4z"/><path d="M15 9h5v7h-1v3l-3-3h-4v-3"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  unlock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 017.5-2"/>',
+  dice: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  minus: '<path d="M5 12h14"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+  paste: '<rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5V3h6v2"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  duplicate: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M14 11v6M11 14h6"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+  check: '<path d="M5 13l4 4L19 7"/>',
+  warning: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
+  money: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 12h18"/>',
+  book: '<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 19V5"/>',
+  person: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-4 3-6 7-6s7 2 7 6M16 14c3 0 6 1.5 6 5"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  save: '<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
+  load: '<path d="M4 6h6l2 2h8v11H4z"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  export: '<path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v5h16v-5"/>',
+  import: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 15v5h16v-5"/>',
+  eyedropper: '<path d="M15 4l5 5-2 2-5-5z"/><path d="M13 6L4 15v5h5l9-9"/>',
+  roller: '<rect x="4" y="3" width="13" height="6" rx="1"/><path d="M17 6h3v5h-8v4"/><rect x="10" y="15" width="4" height="6" rx="1"/>',
+  floor: '<path d="M3 9l9-5 9 5-9 5z"/><path d="M7.5 6.5l9 5M16.5 6.5l-9 5"/>',
+  wall: '<rect x="3" y="5" width="18" height="14"/><path d="M3 10h18M3 15h18M9 5v5M15 10v5M9 15v4"/>',
+  search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+  filter: '<path d="M4 5h16l-6 8v6l-4-2v-4z"/>',
+  sell: '<path d="M3 12l9-9h9v9l-9 9z"/><circle cx="16" cy="8" r="1.5"/>',
+  move: '<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
+  box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  sparkle: '<path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',
+  shirt: '<path d="M8 3l-5 4 3 4 2-1v11h8V10l2 1 3-4-5-4c0 2-2 3-4 3s-4-1-4-3z"/>',
+  face: '<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9 15c1.5 1.3 4.5 1.3 6 0"/>',
+  hair: '<path d="M5 14c0-6 3-10 7-10s7 4 7 10"/><path d="M5 14c0 3 1 6 2 7M19 14c0 3-1 6-2 7M8 8c2 2 6 2 8 0"/>',
+  id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M14 10h4M14 14h4"/>',
+  family: '<circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="7" r="2.5"/><circle cx="12" cy="13" r="2"/><path d="M3 20c0-3 2-5 4-5M21 20c0-3-2-5-4-5M9 20c0-2 1.3-3 3-3s3 1 3 3"/>',
+  review: '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12l2 2 4-4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  bell: '<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  bed: '<path d="M3 18V8M3 14h18v4M21 18v-4a3 3 0 00-3-3H11v3"/><circle cx="7" cy="11" r="2"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+  moon: '<path d="M20 14A8 8 0 1110 4a6 6 0 0010 10z"/>',
+  sound: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>',
+  window: '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16"/>',
+  door: '<rect x="6" y="3" width="12" height="18" rx="1"/><path d="M15 12h.01"/>',
+  tag: '<path d="M3 12l9-9h9v9l-9 9z"/>',
+};
+
+export type IconName = keyof typeof P;
+
+export function iconSvg(name: string, size = 22): string {
+  const body = P[name] ?? P.info!;
+  return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+
+/** An <span> containing the icon. */
+export function icon(name: string, size = 22): HTMLSpanElement {
+  const s = document.createElement('span');
+  s.className = 'icon-wrap';
+  s.innerHTML = iconSvg(name, size);
+  return s;
+}
+
+export const ICON_NAMES = Object.keys(P);
