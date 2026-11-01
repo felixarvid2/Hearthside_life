@@ -1,57 +1,44 @@
 # Continuation note
 
-State on 2026-11-01 (handover). Work happens on branch `ccr-333d8ff5-slv7qa`, draft PR #1 (not merged). The active goal is
-**finish Milestones 2-5** (brief section 26, docs/ROADMAP.md). Milestone 1 is complete and passed the browser acceptance run in all
-three viewports.
+State on 2026-11-01. Work happens on branch `ccr-333d8ff5-slv7qa`, draft PR #1 (not merged, merge only after the user
+approves). **Milestones 1-5 are complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 6 (careers
+and economy).
 
 ## Milestone status
 
-| Milestone | Systems | Content (target) | Browser-verified |
+| Milestone | Systems | Content (target) | Verified |
 |---|---|---|---|
-| 1 Creator and foundation | done | done | yes: acceptance 122-124/124 per viewport |
-| 2 Home editor | core done (`src/building/buildPlans.ts`, `buildCommands.ts`, `src/world/structure.ts`, `roomTracker.ts`, `src/game/core/build.ts`); **Build-mode UI in progress** | done: 50 walls (48), 32 floors (32), 111 furniture (60), 9 doors, 11 windows | **no** |
-| 3 Character creator | done (hats squeeze hair `src/characters/hatFit.ts`, creator icons `src/ui/creator/garmentIcon.ts`); **final checks in progress** | 28 hairstyles (24), 54 garments (48), 15 accessories (12), 20 traits (20), 24 face presets | partly (`npm run e2e:creator`, `tests/e2e/creator-m3.mjs`) |
-| 4 Daily life | done: cleaning, dishes, messes, repairs, repairperson, skill effects, chore autonomy, 7-day playtests | 111 furniture (100) incl. hobby, kids, outdoor, dishwasher | **no** (dirt/broken overlays never seen in a browser) |
-| 5 Relationships and events | done: trust/friendship/romance axes, labels, adult romance gating, memories, 8 event types, planner, goal card | 35 socials (24), 8 event types | partly (mock UI page, portrait/landscape) |
+| 1 Creator and foundation | done | done | acceptance in all viewports |
+| 2 Home editor | walls, runs, rooms, erase, doors/windows (wide openings), floors, delete room, safety rules, undo/redo; Build-mode UI with drag, handles, Confirm/Cancel | 50 walls (48), 32 floors (32), 111 furniture (60), 9 doors, 11 windows | acceptance step 7 (room, door, window, side paint, floor, undo/redo, walk-in) in all viewports |
+| 3 Character creator | sliders, presets, outfit slots, locks, undo/redo, ties, import/export, hats squeeze hair | 28 hairstyles (24), 54 garments (48), 15 accessories (12), 20 traits (20), 24 face presets | `npm run e2e:creator` 288/288 (96 per viewport) |
+| 4 Daily life | six needs, cleaning, dishes, messes, repairs, repairperson, skill effects, chore autonomy | 111 furniture (100) incl. hobby, kids, outdoor, dishwasher | 7-day playtests (1/2/4 people), `npm run visual:m5` overlays |
+| 5 Relationships and events | friendship/trust/romance, labels, adult romance gating, memories, 8 event types, planner, goal card | 35 socials (24), 8 event types | acceptance social steps; `npm run visual:m5` goal card in landscape |
 
-What was in progress when this note was written (WIP commits on the branch; check `git log` and `git status`):
+Checks on the final state:
 
-- **Build-mode UI** (`src/ui/build/*`, `src/render/lotView.ts`, Game build preview, wide openings in lotView, catalog paging,
-  surface thumbnails re-requested after AI maps load, an M2 scenario added to `tests/e2e/acceptance.mjs`).
-- **Creator M3 final checks** (`src/characters/*`, `src/ui/creator/*`, `tests/e2e/creator-m3.mjs`). Wardrobe build keys are
-  documented in ASSET_GUIDE "Wardrobe".
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` | 80 files, 989 tests |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | passes (main chunk about 1.8 MB, warning only) |
+| `npm run e2e` | OK in desktop, portrait and landscape |
+| `npm run e2e:creator` | 288/288 |
+| `npm run e2e:acceptance`, portrait 390x844 | 160/160 |
+| `npm run e2e:acceptance`, landscape 844x390 | 160/160 |
+| `npm run e2e:acceptance`, desktop 1280x720 | 151/151 |
+| `npm run visual:m5` | 14/14 |
+
+All runs are SwiftShader emulation. Notes from the verification runs are in `dev/ds-tasks/01-progress.md`.
 
 ## Next steps, in order
 
-1. Finish the Build-mode UI if it is incomplete. With a build tool active, a one-finger drag draws walls, rooms, floors and
-   erase rectangles. Two fingers pan. Confirm and Cancel buttons show on touch, and corner handles resize a room. Cost,
-   measure and reason update live. Use `GameAPI` `setBuildTool` / `buildPreview` / `buildApply` / `buildHighlight` /
-   `rooms` / `openingAt` / `view.groundPoint` (documented at the top of `src/game/api.ts`).
-2. Run every check and fix failures:
-   - `npm run typecheck`
-   - `npm test`
-   - `npm run content:check`
-   - `npm run build`
-   - `npm run e2e`
-   - `npm run e2e:creator`
-   - `npm run e2e:acceptance -- --only=portrait`, then the same for `landscape` and `desktop`. A run takes 10-30 min under
-     SwiftShader.
-3. Browser-check the parts never seen in a real page:
-   - Build mode in all three viewports: build a room, add a door and a window, paint each wall side, undo and redo, and
-     have a person walk in.
-   - Dirt, broken, puddle and dirty-plate overlays: seed them by setting `obj.condition` and spawning messes through
-     `window.hearthside.debug`.
-   - The event goal card in landscape 844x390 with the tutorial open.
-   - The social menu `<details>` fold on small screens. The acceptance neighbour step uses `.ctx-item` selectors, so check it
-     still taps.
-   - AI hairstyles on the classic style (shots in `dev/hair-ai/shots/classic/` if that run finished).
-4. Update the docs to the verified state:
-   - `docs/CONTENT_STATUS.md` (`npm run content:check -- --markdown`)
-   - `docs/ROADMAP.md` current milestone
-   - this file
-   - the PR #1 description
-5. The PR merges only after the user approves. This repository is not covered by the standing merge approval in
-   felixarvid2/test.
+1. Milestone 6, careers and economy: career ladders, freelance income, bills and aspirations. Minimum content is 6 careers with
+   10 levels, 10 skills and 6 aspirations. There is 1 career today. Bills interact with the Milestone 4 repair costs.
+2. Performance:
+   - Main chunk is about 1.8 MB. Lazy-load the build, creator and dev modules and split `content`.
+   - Measure on a real phone.
+3. Real-device runs. Record them in the device log in `docs/TEST_CHECKLIST.md`.
 
 ## Known issues
 

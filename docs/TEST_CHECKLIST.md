@@ -60,7 +60,7 @@ Record real devices separately from emulation:
 
 | Date | Device / browser | Orientation(s) | Result |
 |---|---|---|---|
-| - | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | acceptance 122-124 passed per viewport, see CONTINUATION.md |
+| 2026-11-01 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M1-M5: acceptance 160/160 portrait, 160/160 landscape, 151/151 desktop; creator 288/288; e2e OK; visual:m5 14/14 |
 
 ## Manual browser checks, Milestone 5 (emulation only; no named device)
 

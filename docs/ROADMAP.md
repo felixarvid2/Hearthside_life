@@ -6,7 +6,7 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 2-5** in progress (systems and content done; final browser verification pending). See CONTINUATION.md.
+**Milestones 1-5 complete** (verified 2026-11-01, see CONTINUATION.md). Next: **Milestone 6 - Careers and economy**.
 
 ## Completed-project targets (brief section 2)
 
