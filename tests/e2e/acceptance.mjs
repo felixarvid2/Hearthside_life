@@ -1596,7 +1596,7 @@ const lotSnap = (T) => T.page.evaluate(() => {
   return JSON.parse(JSON.stringify({ walls: lot.walls, openings: lot.openings, floors: lot.floors, funds: hh.funds }));
 });
 const footerText = (T) => T.page.locator('.bb-build-status').textContent().catch(() => '');
-const confirmState = (T) => T.page.evaluate(() => { const b = document.querySelector('.bb-confirm'); return b && !b.closest('[hidden]') ? { disabled: b.disabled, label: b.textContent.trim() } : null; });
+const confirmState = (T) => T.page.evaluate(() => { const b = document.querySelector('.bb-build-footer .bb-confirm'); return b && !b.closest('[hidden]') ? { disabled: b.disabled, label: b.textContent.trim() } : null; });
 
 /** Taps an enabled Confirm / Done style footer button. */
 async function tapFooter(T, sel) {
@@ -1694,13 +1694,18 @@ async function stepHomeEditor(T) {
     T.check(S, 'Esc during the drag builds nothing', JSON.stringify(await lotSnap(T)) === JSON.stringify(s0), '');
   } else {
     // touch: a drag only sets the preview; Cancel clears it
+    await page.evaluate(() => {
+      window.__ptr = [];
+      const c = document.getElementById('game-canvas');
+      for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) c.addEventListener(t, (e) => { const q = window.__ptr; if (q.length < 60) q.push(`${t}:${Math.round(e.clientX)},${Math.round(e.clientY)}`); });
+    });
     await drag(T, pa, pc);
     await page.waitForTimeout(300);
     await T.frames(4);
     const live = await footerText(T);
     const cs = await confirmState(T);
     const nHandles = await page.locator('.bb-handle:not([hidden])').count();
-    T.check(S, 'a touch drag shows the measurement and cost, four corner handles and an enabled Confirm', /6 x 3/.test(live) && /\$/.test(live) && nHandles === 4 && cs && !cs.disabled, `${live.replace(/\s+/g, ' ')} | handles ${nHandles} | confirm ${JSON.stringify(cs)}`);
+    T.check(S, 'a touch drag shows the measurement and cost, four corner handles and an enabled Confirm', /6 x 3/.test(live) && /\$/.test(live) && nHandles === 4 && cs && !cs.disabled, `${live.replace(/\s+/g, ' ')} | handles ${nHandles} | confirm ${JSON.stringify(cs)} | pa ${JSON.stringify([pa.x, pa.y])} pc ${JSON.stringify([pc.x, pc.y])} | events ${JSON.stringify(await page.evaluate(() => (window.__ptr ?? []).slice(0, 14)))}`);
     T.check(S, 'the preview alone builds nothing and takes no money', JSON.stringify(await lotSnap(T)) === JSON.stringify(s0), '');
     await T.shot('m2-room-preview');
     const hbox = await page.locator('.bb-handle[data-handle="c2"]').boundingBox();

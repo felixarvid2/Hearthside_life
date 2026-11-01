@@ -224,7 +224,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     }
     stitchRings(m, vStarts, cols, false, false);
   } else if (style === 'sunhat') {
-    const hb = 0.108;
+    const hb = 0.118;
     const rows: Array<(th: number) => [number, number, number]> = [];
     rows.push(() => [hb - 0.006, 0.012, 0.6]);
     rows.push(() => [hb, 0.0165, 0.55]);
@@ -254,7 +254,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
         const base = skullPoint(th, hb - 0.002, 0.0165);
         const dir: Vec3 = v3.norm([Math.sin(th), 0, Math.cos(th)]);
         const wave = 0.007 * Math.sin(th * 3 + 0.6) * f * f;
-        const p: Vec3 = [base[0] + dir[0] * d, base[1] - 0.016 * f ** 1.5 + 0.007 * f ** 6 + wave, base[2] + dir[2] * d];
+        const p: Vec3 = [base[0] + dir[0] * d, base[1] - 0.012 * f ** 1.5 + 0.007 * f ** 6 + wave, base[2] + dir[2] * d];
         const id = addVertex(m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1] }, { faceWidth: widthMorph(th, hb) });
         if (first < 0) first = id;
       });
@@ -288,10 +288,12 @@ function bodyMorphs(t: BodyTemplate, p: Vec3, skin: Skin): Record<string, Vec3> 
 }
 
 /** Circle of the torso at height y offset outward by `off` (angle 0 = front, growing toward +x). */
-function torsoRingPoint(t: BodyTemplate, y: number, a: number, off: number): Vec3 {
+function torsoRingPoint(t: BodyTemplate, y: number, a: number, off: number, cap = Infinity): Vec3 {
   const q = sampleProfile(t.profiles.torso, y, a);
   const [da, db] = planeDir('y', a);
-  return [q.ca + (q.r + off) * da, y, q.cb + (q.r + off) * db];
+  // the torso profile is broad where the shoulders slope into the neck: `cap` keeps a scarf or chain round, close to the neck
+  const r = Math.min(q.r, cap);
+  return [q.ca + (r + off) * da, y, q.cb + (r + off) * db];
 }
 
 function buildScarf(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
@@ -313,7 +315,7 @@ function buildScarf(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
       const a = (i / K) * TAU;
       // the knot sits in front: the loop bulges and dips there
       const knot = Math.exp(-((Math.atan2(Math.sin(a - 0.35), Math.cos(a - 0.35))) ** 2) / 0.25);
-      path.push(torsoRingPoint(t, y0 - 0.006 * knot + 0.003 * Math.sin(a * 3 + k), a, 0.019 + 0.008 * knot - k * 0.002));
+      path.push(torsoRingPoint(t, y0 - 0.006 * knot + 0.003 * Math.sin(a * 3 + k), a, 0.016 + 0.008 * knot - k * 0.002, 0.082));
     }
     sweep(m, { path, rx: path.map(() => 0.021), ry: path.map(() => 0.0155), segments: 10, up: [0, 1, 0], closeStart: false, closeEnd: false }, put(k === 0 ? 1 : 0.94));
   }
@@ -327,7 +329,7 @@ function buildScarf(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
       const f = i / K;
       const y = yRing - 0.015 - f * tailLen * (lenK as number);
       const a = (a0 as number) + 0.06 * Math.sin(f * 2.4);
-      path.push(torsoRingPoint(t, y, a, 0.032 + 0.006 * Math.sin(f * 3.1)));
+      path.push(torsoRingPoint(t, y, a, 0.048 + 0.006 * Math.sin(f * 3.1), 0.125));
       rx.push(0.0075 + 0.0 * f);
       ry.push(0.0265 - 0.003 * f);
     }
@@ -351,7 +353,7 @@ function buildNecklace(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     const a = (i / K) * TAU;
     const front = Math.max(0, Math.cos(a));
     const y = yTop - drop * Math.pow(front, 2.2);
-    loop.push(torsoRingPoint(t, y, a, 0.009 + 0.012 * Math.pow(front, 2)));
+    loop.push(torsoRingPoint(t, y, a, 0.03 + 0.016 * Math.pow(front, 2), 0.1));
   }
   if (style === 'pearls') {
     // a string of beads along the loop

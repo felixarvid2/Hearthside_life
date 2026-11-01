@@ -524,9 +524,9 @@ function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: 
     const back = Math.max(0, -Math.cos(th));
     const pouch = kind === 'hood' ? Math.pow(back, 1.4) : 0;
     profile.forEach(([up, outward, tip], r) => {
-      const sag = pouch * (r === 0 ? 0 : 0.07 * (0.4 + 0.6 * Math.min(1, r / 3)));
+      const sag = pouch * (r === 0 ? 0 : 0.035 * (0.4 + 0.6 * Math.min(1, r / 3)));
       let p: Vec3 = [base[0] + out[0] * (outward as number), base[1] + (up as number) - sag, base[2] + out[2] * (outward as number)];
-      if (pouch > 0) p = [p[0] + out[0] * pouch * 0.012 * r, p[1], p[2] + out[2] * pouch * 0.012 * r];
+      if (pouch > 0) p = [p[0] + out[0] * pouch * 0.005 * r, p[1], p[2] + out[2] * pouch * 0.005 * r];
       if (kind === 'shirt' && (tip as number) > 0) {
         // collar points: longer toward the front
         const extra = 0.016 * Math.pow(frontness, 3);
