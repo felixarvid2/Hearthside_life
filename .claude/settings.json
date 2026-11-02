@@ -9,5 +9,8 @@
   },
   "enabledPlugins": {
     "tokeneconomizer@tokeneconomizer": true
+  },
+  "env": {
+    "TOKENECONOMIZER_HOME": ".tokeneconomizer"
   }
 }
