@@ -7,7 +7,7 @@
 // The hair colour multiplies the tint map in the shader (materials.ts createAiHairMaterial). Pure module (no three.js).
 
 import { planeAngle, sampleProfile } from './fit';
-import { HAIR_MORPHS, hairContext, hairMorphs, headSkinFor } from './hair';
+import { hairContext, hairMorphIds, hairMorphs, headSkinFor } from './hair';
 import { HEAD_SCULPT_IDS, headToBind } from './headShape';
 import type { MeshData } from './meshData';
 import { addVertex, computeSmoothNormals, emptyMesh } from './meshData';
@@ -41,7 +41,7 @@ export const HAIR_BODY_MARGIN = 0.012;
  * hangs over the shoulders so it does not sink into the torso.
  */
 export function buildAiHair(t: BodyTemplate, data: AiHairData): MeshData {
-  const m = emptyMesh(AI_HAIR_ATTRS, HAIR_MORPHS);
+  const m = emptyMesh(AI_HAIR_ATTRS, hairMorphIds(t));
   const c = hairContext(t, m);
   const n = data.positions.length / 3;
   for (let i = 0; i < n; i++) {

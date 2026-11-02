@@ -41,7 +41,7 @@ export function openSettings(sh: Shell): void {
   const reduced = toggleSwitch({ label: 'Reduced camera motion', hint: 'Snappier camera moves without smooth swings.', value: cfg().reducedMotion, onChange: (on) => { set({ reducedMotion: on }); sh.sound('toggle'); } });
   const text = segmented({ label: 'Text size', value: nearestTextSize(cfg().textScale), options: TEXT_SIZES.map((t) => ({ id: t.id, label: t.label })), onChange: (id) => { const t = TEXT_SIZES.find((x) => x.id === id); if (t) set({ textScale: t.value }); sh.sound('toggle'); } });
   const quality = segmented({ label: 'Graphics quality', value: cfg().quality, options: [{ id: 'low', label: 'Low (faster)' }, { id: 'high', label: 'High' }], onChange: (q) => { set({ quality: q }); sh.sound('toggle'); } });
-  const style = segmented({ label: 'Character style', value: cfg().characterStyle, options: [{ id: 'detailed', label: 'Detailed' }, { id: 'classic', label: 'Classic (lighter)' }], onChange: (v) => { set({ characterStyle: v }); sh.sound('toggle'); } });
+  const style = segmented({ label: 'Character style', value: cfg().characterStyle, options: [{ id: 'mpfb', label: 'Natural' }, { id: 'detailed', label: 'Detailed' }, { id: 'classic', label: 'Classic (lighter)' }], onChange: (v) => { set({ characterStyle: v }); sh.sound('toggle'); } });
   const shadows = toggleSwitch({ label: 'Shadows', hint: 'Soft shadows under people and furniture.', value: cfg().shadows, onChange: (on) => { set({ shadows: on }); sh.sound('toggle'); } });
 
   const noGame = 'Available while a game is running.';

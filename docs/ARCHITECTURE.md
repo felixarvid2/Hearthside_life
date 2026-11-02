@@ -217,9 +217,24 @@ Pure code (no three, no DOM), tested in `tests/unit/world/venueLayouts.test.ts` 
 
 ### characters (`src/characters`)
 - `assets.ts`: `loadCharacterAssets(baseUrl = './assets/', style = 'detailed'): Promise<CharacterAssets>` (bodies + clips) and
-  `setCharacterStyle(assets, style)`. Styles: `detailed` (scanned Meshy bodies `meshy_a/b.glb`, skin recoloured through a
+  `setCharacterStyle(assets, style)`. Styles: `mpfb` (the default, "Natural" in Settings: MakeHuman bodies
+  `mpfb_f/m.glb`, see below), `detailed` (scanned Meshy bodies `meshy_a/b.glb`, skin recoloured through a
   mask: `meshyBody.ts`, `meshyAtlas.ts`, `meshyBake.ts`, `meshyFit.ts`, `headMap.ts`, `createMeshySkinMaterial`) and `classic`
-  (procedural skin). `assets.frames` is the active set; `CharacterView.refreshStyle()` rebuilds a person after a switch.
+  (procedural skin). A style that cannot load falls back mpfb -> detailed -> classic. `assets.frames` is the active set;
+  `CharacterView.refreshStyle()` rebuilds a person after a switch.
+- MPFB style (`mpfbBody.ts`, `createMpfb*Material` in `materials.ts`; GLB contract in `tools/mpfb/README.md`): the GLB is
+  meshopt-compressed (the decoder is imported on first use) and has five or six primitives on the shared skeleton (skin, underwear,
+  eyes, iris, brows, lashes). The skin primitive is the body: `buildBodyTemplate` runs on it like on a Meshy body, so garments,
+  hair (AI and procedural) and accessories build on it, with the `HeadMap` from `extras.mpfbBody.head`. The other primitives are
+  shared geometry with their own per-person materials (5-6 draw calls per person, no extra textures per person; the skin tone,
+  iris, brow and lash colours and the lips are uniforms). Morphs: the GLB's targets are used by name. `ShapeContext.source`
+  (`BodyMorphSource`, bodyShape.ts) makes every generator (garments, hair, accessories) carry the same targets: each vertex takes the
+  deltas of the nearest skin vertices of the same body part (`MorphField`), so clothing follows every slider exactly. The creator's
+  signed sliders map to up/down target pairs (`MPFB_SLIDERS`, `mpfbInfluences`); face sliders to the signed `face_*` morphs
+  (`MPFB_FACE_SLIDERS`); the sliders without a target (arms, legs, neck, male chest, cheekbones, nose bridge, ear size, eye tilt and
+  height, brow angle) keep the displacement fields of `bodyShape.ts` / `headShape.ts`. Underwear is hidden per half under garments
+  (`createMpfbUnderwearMaterial`). Seated placement uses `POSTURE_ANCHORS.seated.mpfb`. On these bodies outer layers hang at least as loosely as the layers
+  under them (`OUTER_DRAPE_MIN` in clothing.ts), because their deeper waist lets a loose top or dress show through a tailored jacket.
 - `CharacterView.ts`: `new CharacterView(assets, content, appearance, outfit)` with `root: THREE.Group`,
   `setAppearance(a)`, `setOutfit(o)`, `play(anim: AnimId, opts?: { fade?: number })`, `update(dtSeconds)`,
   `headTop(target: THREE.Vector3): THREE.Vector3`, `setSelected(on)`, `dispose()`. Feet at origin, faces +z.

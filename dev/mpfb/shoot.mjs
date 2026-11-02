@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Screenshots of dev/mpfb.html (Meshy female | MPFB female | Meshy male | MPFB male) -> dev/mpfb/shots/.
 //   node dev/mpfb/shoot.mjs [--only=full_front,face_1] [--out=DIR] [--q=extra&query]
+//   e.g. --q='f=/dev/mpfb/out/work/mpfb_f.min.glb&m=/dev/mpfb/out/work/mpfb_m.min.glb' to look at a build made with --out=dev/mpfb/out/work --no-publish
+//   Shot groups: --only=faces (face_0..3), --only=tones (face close-ups at four skin tones), --only=facemorphs (every face morph at -1 / +1, male; facemorphs_f: female)
 // Starts its own vite dev server (port 5399) and runs Chromium (SwiftShader) under `flock /tmp/hearthside-browser.lock`.
 
 import { spawn, spawnSync } from 'node:child_process';
@@ -31,7 +33,6 @@ function loadPlaywright() {
 
 const OUT = resolve(opt('out', join(here, 'shots')));
 const EXTRA = opt('q', '');
-const ONLY = opt('only', '').split(',').filter(Boolean);
 mkdirSync(OUT, { recursive: true });
 
 const WIDE = [1600, 640];
@@ -59,6 +60,16 @@ const SHOTS = [
   ['hips_wide', WIDE, { view: 'front', clip: 'idle', morph: 'hips', v: 1 }],
 ];
 
+const FACE_MORPHS = ['face_length', 'face_width', 'face_jaw_width', 'face_chin_length', 'face_chin_prominence', 'face_cheek_fullness', 'face_nose_width', 'face_nose_length',
+  'face_eye_size', 'face_eye_spacing', 'face_lip_fullness', 'face_mouth_width', 'face_brow_height', 'face_smile'];
+const TONES = [0, 5, 9, 15]; // porcelain, olive, amber, deep ebony
+const SMALL = [520, 520];
+for (const focus of [1, 3]) {
+  for (const t of TONES) SHOTS.push([`tone_${focus}_${t}`, SMALL, { view: 'face', focus, tone: t, eye: t === 0 ? 6 : t === 5 ? 2 : t === 9 ? 1 : 0, wait: 500 }]);
+  for (const m of FACE_MORPHS) for (const v of [-1, 1]) SHOTS.push([`fm_${focus}_${m}_${v < 0 ? 'm' : 'p'}`, SMALL, { view: 'face', focus, tone: 3, morphs: { [m]: v }, wait: 350 }]);
+}
+const GROUPS = { faces: ['face_0', 'face_1', 'face_2', 'face_3'], tones: SHOTS.filter((s) => s[0].startsWith('tone_')).map((s) => s[0]), facemorphs: SHOTS.filter((s) => s[0].startsWith('fm_3_')).map((s) => s[0]), facemorphs_f: SHOTS.filter((s) => s[0].startsWith('fm_1_')).map((s) => s[0]) };
+
 async function waitForServer(url, ms) {
   const end = Date.now() + ms;
   while (Date.now() < end) {
@@ -68,6 +79,7 @@ async function waitForServer(url, ms) {
   throw new Error(`server at ${url} did not start`);
 }
 
+const ONLY = opt('only', '').split(',').filter(Boolean).flatMap((n) => GROUPS[n] ?? [n]);
 const server = spawn(process.execPath, [join(root, 'node_modules/vite/bin/vite.js'), '--config', join(root, 'dev/meshy/vite.lab.config.mjs'), '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
 let browser = null;
 try {
@@ -87,8 +99,9 @@ try {
   for (const [name, vp, set] of SHOTS) {
     if (ONLY.length && !ONLY.includes(name)) continue;
     await page.setViewportSize({ width: vp[0], height: vp[1] });
-    await page.evaluate((o) => window.lab.set({ morph: 'weight', v: 0, yaw: null, ...o }), set);
-    await page.waitForTimeout(1500);
+    const { wait, ...opts } = set;
+    await page.evaluate((o) => window.lab.set({ morph: 'weight', v: 0, yaw: null, ...o }), opts);
+    await page.waitForTimeout(wait ?? 1500);
     await page.screenshot({ path: join(OUT, `${name}.png`), timeout: 120000 });
     console.log(`[shoot] ${name}${errors.length ? `  console: ${errors.slice(0, 3).join(' | ')}` : ''}`);
   }

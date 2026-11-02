@@ -3,6 +3,7 @@
 // Open with `npx vite` and visit /dev/mpfb.html. URL params:
 //   view=full|front|threeq|face|live   focus=0..3 (close views: 0 Meshy F, 1 MPFB F, 2 Meshy M, 3 MPFB M)   clip=idle|walk|sitIdle|...
 //   morph=weight|muscle|bust|waist|hips|shoulders|belly   v=-1..1 (the last four only widen: v 0..1)   tone=<skin tone index 0..>   yaw=<radians>   clean=1 (hide the UI)
+//   face=<name>:<v>,<name>:<v>   face morphs of the GLB (face_jaw_width:1,face_smile:-0.5; -1..1)   eye=<eye colour index>   lips=0..1 (strength of the `_LIPS` tint)
 //   f=<url of the female GLB>   m=<url of the male GLB>
 // window.lab exposes hooks for the screenshot script (dev/mpfb/shoot.mjs).
 
@@ -33,7 +34,10 @@ const content: ContentDB = {
 };
 
 const BROW = '#4a3322';
-const EYE = CH.EYE_COLORS[2]!.color;
+let eyeIndex = num('eye', 2);
+const eyeColor = () => CH.EYE_COLORS[eyeIndex % CH.EYE_COLORS.length]!.color;
+const LIP_COLOR = '#b0555a';
+let lipStrength = num('lips', 0.08);
 let toneIndex = num('tone', 3);
 const tone = () => CH.SKIN_TONES[toneIndex % CH.SKIN_TONES.length]!.color;
 
@@ -41,7 +45,7 @@ function appearance(frame: BodyFrame, body: Record<string, number> = {}): Appear
   const fp = CH.FACE_PRESETS[0]!;
   return {
     frame, skin: tone(), body, bodyPresetId: CH.BODY_PRESETS.filter((b) => b.frame === frame)[0]!.id,
-    face: { presetId: fp.id, params: { ...fp.params }, eyeColor: EYE, browStyle: CH.BROW_STYLES[0]!.id, browColor: BROW, freckles: 0, blush: 0.12, lipTint: 0.15, lipColor: '#a5605a' },
+    face: { presetId: fp.id, params: { ...fp.params }, eyeColor: eyeColor(), browStyle: CH.BROW_STYLES[0]!.id, browColor: BROW, freckles: 0, blush: 0.12, lipTint: 0.15, lipColor: '#a5605a' },
     hair: { styleId: 'none', color: '#5b3824', highlight: null, facialHairId: null },
   };
 }
@@ -154,10 +158,29 @@ function recolourSkin(p: Mpfb, toneHex: string): void {
   skinMat.needsUpdate = true;
 }
 
+const lipUniforms = { lipColor: { value: new THREE.Color(LIP_COLOR) }, lipStrength: { value: lipStrength } };
+/** Lips: the skin's `_LIPS` vertex weight (0..1) shifts the skin colour towards the lip colour's hue (luminance kept, so every tone works). This is what the game's skin shader does too. */
+function patchLips(mat: THREE.MeshStandardMaterial): void {
+  if (mat.userData.lipsPatched) return;
+  mat.userData.lipsPatched = true;
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, lipUniforms);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float _lips;\nvarying float vLips;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvLips = _lips;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vLips;\nuniform vec3 lipColor;\nuniform float lipStrength;')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        vec3 lipMul = lipColor / max(dot(lipColor, vec3(0.2126, 0.7152, 0.0722)), 1e-3);
+        diffuseColor.rgb *= mix(vec3(1.0), lipMul, clamp(vLips * lipStrength, 0.0, 1.0));`);
+  };
+  mat.customProgramCacheKey = () => 'mpfb-lips';
+  mat.needsUpdate = true;
+}
+
 function tint(p: Mpfb): void {
   recolourSkin(p, tone());
   for (const m of p.meshes) {
     const mat = m.material as THREE.MeshStandardMaterial;
+    if (mat.name === 'mpfb_skin') patchLips(mat);
+    if (mat.name === 'mpfb_iris') mat.color.set(eyeColor());
     if (mat.name === 'mpfb_brows' || mat.name === 'mpfb_lashes') { mat.color.set(mat.name === 'mpfb_brows' ? BROW : '#2b2018'); mat.depthWrite = false; }
   }
 }
@@ -184,6 +207,19 @@ function setMorph(name: string, v: number): void {
   const mp = meshyParam[name];
   meshy.forEach((cv, i) => { const a = appearance(i === 0 ? 'b' : 'a', mp ? { [mp]: v } : {}); cv.setAppearance(a); });
 }
+
+/** Sets morph influences by GLB name (body 0..1, face -1..1), on top of whatever the slider morph set. */
+function applyMorphs(map: Record<string, number>): void {
+  for (const p of mpfb) {
+    if (!p) continue;
+    for (const m of p.meshes) {
+      const infl = m.morphTargetInfluences;
+      if (!infl) continue;
+      for (const [n, v] of Object.entries(map)) { const i = m.morphTargetDictionary?.[n]; if (i !== undefined) infl[i] = v; }
+    }
+  }
+}
+const parseFace = (q: string) => Object.fromEntries(q.split(',').filter(Boolean).map((kv) => { const [k, v] = kv.split(':'); return [k!, Number(v)]; }));
 
 function play(name: string): void {
   if (name === 'bind') {  // the bind pose (T-pose) of the MPFB bodies, to check the retarget without animation
@@ -252,6 +288,7 @@ async function main(): Promise<void> {
   }
   play(str('clip', 'idle'));
   if (params.has('morph')) setMorph(str('morph', 'weight'), num('v', 0));
+  if (params.has('face')) applyMorphs(parseFace(str('face', '')));
   buildBar();
   frame();
   addEventListener('resize', frame);
@@ -292,17 +329,32 @@ function buildBar(): void {
   rng.oninput = () => setMorph(sel.value, Number(rng.value));
   sel.onchange = () => { rng.value = '0'; setMorph(sel.value, 0); };
   bar.appendChild(lab2);
+  const faceNames = mpfb[0]?.morphNames.filter((n) => n.startsWith('face_')) ?? [];
+  if (faceNames.length) {
+    const fs = document.createElement('select');
+    for (const n of faceNames) fs.add(new Option(n, n));
+    const fr = document.createElement('input');
+    fr.type = 'range'; fr.min = '-1'; fr.max = '1'; fr.step = '0.05'; fr.value = '0';
+    const lab3 = document.createElement('label');
+    lab3.append('face ', fs, fr);
+    fr.oninput = () => applyMorphs({ [fs.value]: Number(fr.value) });
+    fs.onchange = () => { fr.value = '0'; };
+    bar.appendChild(lab3);
+  }
 }
 
 /** Hooks for automated screenshots. */
 const lab = {
-  set(o: { view?: ViewName; focus?: number; clip?: string; morph?: string; v?: number; yaw?: number | null; tone?: number; freeze?: number }): void {
+  set(o: { view?: ViewName; focus?: number; clip?: string; morph?: string; v?: number; yaw?: number | null; tone?: number; eye?: number; lips?: number; morphs?: Record<string, number>; freeze?: number }): void {
+    if (o.eye !== undefined) { eyeIndex = o.eye; mpfb.forEach((p) => p && tint(p)); }
+    if (o.lips !== undefined) { lipStrength = o.lips; lipUniforms.lipStrength.value = o.lips; }
     if (o.view) viewName = o.view;
     if (o.focus !== undefined) focus = o.focus;
     if (o.yaw !== undefined) turnOverride = o.yaw;
     if (o.tone !== undefined) { toneIndex = o.tone; mpfb.forEach((p) => p && tint(p)); meshy.forEach((cv, i) => cv.setAppearance(appearance(i === 0 ? 'b' : 'a'))); }
     if (o.clip) play(o.clip);
     if (o.morph) setMorph(o.morph, o.v ?? 0);
+    if (o.morphs) applyMorphs(o.morphs);
     frame();
   },
   info: () => ({ morphs: mpfb[0]?.morphNames ?? [], tone: tone() }),

@@ -11,7 +11,7 @@
 import type { BodyFrame } from '../core/types';
 import type { Landmarks, ShapeContext } from './bodyShape';
 import type { HeadMap } from './headMap';
-import { BODY_PARAM_IDS, bodyDeltas, shapeContext } from './bodyShape';
+import { BODY_PARAM_IDS, bodyDeltas, morphDeltas, shapeContext } from './bodyShape';
 import type { Profile } from './fit';
 import { fitProfile, profilePoint, sampleProfile } from './fit';
 import { HEAD_SCALE, HEAD_SCULPT_IDS, H_MAX, H_MIN, earPoint, headColumns, headDeltas, headPoint, headRows, headToBind } from './headShape';
@@ -309,7 +309,7 @@ function smoothSkins(g: Grid, iters: number, halfCols?: number): void {
 const SKIN_ATTRS = { aInfo: 4, aFace: 3 };
 
 function bodyMorphs(t: BodyTemplate, p: Vec3, skin: Skin): Record<string, Vec3> {
-  return bodyDeltas(t.ctx, p, skin) as unknown as Record<string, Vec3>;
+  return morphDeltas(t.ctx, p, skin);
 }
 
 /** Adds a grid as rings to the mesh; returns the start index of every ring. */

@@ -22,3 +22,13 @@ dev/mpfb/shots/*
 !dev/mpfb/shots/*.jpg
 
 __pycache__/
+
+# TokenEconomizer state is committed (tools/te-save.sh); locks, logs and the per-machine index are not
+.tokeneconomizer/**/*.lock
+.tokeneconomizer/**/.*.lock
+.tokeneconomizer/bin/
+.tokeneconomizer/index.json
+.tokeneconomizer/**/errors.log
+.tokeneconomizer/**/run/
+.tokeneconomizer/**/tmp/
+dev/mpfb/game-shots/

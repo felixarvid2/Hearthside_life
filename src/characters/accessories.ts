@@ -5,7 +5,7 @@
 // Hats are built around the parametric head and carried onto a Meshy head by the head map, like hair. Pure module.
 
 import type { AccessoryDef } from '../content/types';
-import { BODY_PARAM_IDS, bodyDeltas } from './bodyShape';
+import { BODY_PARAM_IDS, bodyMorphIds, morphDeltas } from './bodyShape';
 import { planeDir, profilePoint, sampleProfile, tubePoint } from './fit';
 import { EAR, H_MAX, HEAD_SCALE, headBasePoint, headDeltas, headToBind } from './headShape';
 import type { MeshData, SweepVertex } from './meshData';
@@ -23,13 +23,22 @@ export const ACC_ALL_MORPHS: readonly string[] = [...ACC_MORPHS, ...BODY_PARAM_I
 type B = Record<string, number | string | boolean>;
 const num = (b: B, k: string, d: number) => (typeof b[k] === 'number' ? (b[k] as number) : d);
 
+/**
+ * addVertex for the items on the head. On a body with authored morph targets (MPFB) the vertex also carries the body's own deltas at
+ * its position (nearest skin), so hats and glasses follow the face morphs of the GLB like the hair does.
+ */
+function addHeadVertex(t: BodyTemplate, m: MeshData, p: Vec3, skin: Skin, attrs: Record<string, ArrayLike<number>>, morph: Record<string, Vec3> = {}, n?: Vec3): number {
+  const src = t.ctx.source;
+  return addVertex(m, p, skin, attrs, src ? { ...morph, ...src.at(p, skin) } : morph, n);
+}
+
 /** Builds an accessory mesh (bind space) for a body frame. */
 export function buildAccessory(t: BodyTemplate, def: AccessoryDef): MeshData {
-  const m = emptyMesh(ACC_ATTRS, ACC_ALL_MORPHS);
+  const m = emptyMesh(ACC_ATTRS, [...ACC_MORPHS, ...bodyMorphIds(t.ctx)]);
   const skin = rigidSkin(boneIndex(t.raw, 'Head'));
   const O = t.headOrigin;
   const b = def.build;
-  const put = (morph: Record<string, Vec3>, grey = 1) => (v: SweepVertex) => addVertex(m, headToBind(O, v.p), skin, { aAcc: [0], color: [grey, grey, grey] }, morph, v.n);
+  const put = (morph: Record<string, Vec3>, grey = 1) => (v: SweepVertex) => addHeadVertex(t, m, headToBind(O, v.p), skin, { aAcc: [0], color: [grey, grey, grey] }, morph, v.n);
   if (def.kind === 'glasses') {
     const size = num(b, 'size', 1);
     const rim = num(b, 'rim', 0.0025);
@@ -146,7 +155,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     let first = -1;
     thetas.forEach((th) => {
       const [h, off, grey] = f(th);
-      const id = addVertex(m, headToBind(O, skullPoint(th, h, off)), skin, { aAcc: [0], color: [grey, grey, grey] }, { faceWidth: widthMorph(th, h) });
+      const id = addHeadVertex(t, m, headToBind(O, skullPoint(th, h, off)), skin, { aAcc: [0], color: [grey, grey, grey] }, { faceWidth: widthMorph(th, h) });
       if (first < 0) first = id;
     });
     return first;
@@ -155,7 +164,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
   const crownFan = (starts: number[], flip: boolean) => {
     // close the top with a single vertex on the crown
     const topP = headToBind(O, skullPoint(0, H_MAX, num(b, 'topOff', 0.012)));
-    const c = addVertex(m, topP, skin, { aAcc: [0], color: [1, 1, 1] }, {});
+    const c = addHeadVertex(t, m, topP, skin, { aAcc: [0], color: [1, 1, 1] }, {});
     const last = starts[starts.length - 1] as number;
     for (let k = 0; k < COLS; k++) {
       const x = last + k, y = last + ((k + 1) % COLS);
@@ -184,7 +193,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     const starts = rows.map((f) => ring(f));
     stitchRings(m, starts, COLS, false, true);
     crownFan(starts, false);
-    if (b.pom === true) sphere(m, headToBind(O, skullPoint(0, H_MAX, 0.03)), 0.017 * HEAD_SCALE, 0.017 * HEAD_SCALE, 0.017 * HEAD_SCALE, (p, n) => addVertex(m, p, skin, { aAcc: [0], color: [1, 1, 1] }, {}, n), 14);
+    if (b.pom === true) sphere(m, headToBind(O, skullPoint(0, H_MAX, 0.03)), 0.017 * HEAD_SCALE, 0.017 * HEAD_SCALE, 0.017 * HEAD_SCALE, (p, n) => addHeadVertex(t, m, p, skin, { aAcc: [0], color: [1, 1, 1] }, {}, n), 14);
   } else if (style === 'cap') {
     const hb = (th: number) => lerp(0.096, 0.128, smoothstep(-0.2, 0.9, Math.cos(th)));
     const rows: Array<(th: number) => [number, number, number]> = [];
@@ -204,7 +213,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
     const starts = rows.map((f) => ring(f));
     stitchRings(m, starts, COLS, false, true);
     const topP = crownFan(starts, false);
-    sphere(m, [topP[0], topP[1] + 0.003, topP[2]], 0.006 * HEAD_SCALE, 0.005 * HEAD_SCALE, 0.006 * HEAD_SCALE, (p, n) => addVertex(m, p, skin, { aAcc: [0], color: [1, 1, 1] }, {}, n), 8);
+    sphere(m, [topP[0], topP[1] + 0.003, topP[2]], 0.006 * HEAD_SCALE, 0.005 * HEAD_SCALE, 0.006 * HEAD_SCALE, (p, n) => addHeadVertex(t, m, p, skin, { aAcc: [0], color: [1, 1, 1] }, {}, n), 8);
     // visor: a curved sheet from the front of the band, drooping to the tip
     const L = num(b, 'brim', 0.085);
     const cols = 17, rowsN = 6;
@@ -218,7 +227,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
         const reach = d * (1 - 0.3 * (phi / 1.05) ** 2);
         const droop = 0.006 * (d / L) ** 1.6;
         const p: Vec3 = [base[0] + dir[0] * reach, base[1] - droop + 0.004 * Math.sin(Math.PI * d / L), base[2] + dir[2] * reach];
-        const id = addVertex(m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.92 : 1, r === rowsN ? 0.92 : 1, r === rowsN ? 0.92 : 1] }, { faceWidth: widthMorph(phi, hb(phi)) });
+        const id = addHeadVertex(t, m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.92 : 1, r === rowsN ? 0.92 : 1, r === rowsN ? 0.92 : 1] }, { faceWidth: widthMorph(phi, hb(phi)) });
         if (c === 0) vStarts.push(id);
       }
     }
@@ -255,7 +264,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
         const dir: Vec3 = v3.norm([Math.sin(th), 0, Math.cos(th)]);
         const wave = 0.007 * Math.sin(th * 3 + 0.6) * f * f;
         const p: Vec3 = [base[0] + dir[0] * d, base[1] - 0.012 * f ** 1.5 + 0.007 * f ** 6 + wave, base[2] + dir[2] * d];
-        const id = addVertex(m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1] }, { faceWidth: widthMorph(th, hb) });
+        const id = addHeadVertex(t, m, headToBind(O, p), skin, { aAcc: [0], color: [r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1, r === rowsN ? 0.88 : 1] }, { faceWidth: widthMorph(th, hb) });
         if (first < 0) first = id;
       });
       bStarts.push(first);
@@ -273,7 +282,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
       path.push(skullPoint(th, h, off));
     }
     sweep(m, { path, rx: path.map(() => 0.0032), ry: path.map(() => w), segments: 8, exponent: 3, up: [0, 1, 0], closeStart: false, closeEnd: false }, (v) =>
-      addVertex(m, headToBind(O, v.p), skin, { aAcc: [0], color: [1, 1, 1] }, { faceWidth: widthMorph(Math.atan2(v.p[0], v.p[2]), clamp(v.p[1], 0.06, 0.14)) }, v.n));
+      addHeadVertex(t, m, headToBind(O, v.p), skin, { aAcc: [0], color: [1, 1, 1] }, { faceWidth: widthMorph(Math.atan2(v.p[0], v.p[2]), clamp(v.p[1], 0.06, 0.14)) }, v.n));
   }
 }
 
@@ -284,7 +293,7 @@ function buildHat(m: MeshData, t: BodyTemplate, def: AccessoryDef): void {
 const NECK_BONES = /^(spine_0[1-3]|neck_01|clavicle_[lr])$/;
 
 function bodyMorphs(t: BodyTemplate, p: Vec3, skin: Skin): Record<string, Vec3> {
-  return bodyDeltas(t.ctx, p, skin) as unknown as Record<string, Vec3>;
+  return morphDeltas(t.ctx, p, skin);
 }
 
 /** Circle of the torso at height y offset outward by `off` (angle 0 = front, growing toward +x). */

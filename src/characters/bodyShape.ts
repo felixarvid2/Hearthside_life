@@ -33,11 +33,22 @@ export type BodyParamId = (typeof BODY_PARAM_IDS)[number];
 
 interface Seg { a: Vec3; dir: Vec3; len: number }
 
+/**
+ * A body whose morph targets are authored, not derived from the displacement fields (the MPFB bodies, see mpfbBody.ts): it
+ * answers, for any bind-space point with skin (a garment, hair or accessory vertex), the deltas of every one of its morph ids.
+ */
+export interface BodyMorphSource {
+  ids: readonly string[];
+  at(p: Vec3, skin: Skin): Record<string, Vec3>;
+}
+
 /** Precomputed bone segments (bone -> its main child) and landmarks for one frame. */
 export interface ShapeContext {
   boneNames: string[];
   segs: Seg[];
   lm: Landmarks;
+  /** Set for bodies with authored morph targets: generated meshes then carry these morphs instead of BODY_PARAM_IDS. */
+  source?: BodyMorphSource;
 }
 
 const CHILD: Record<string, string> = {
@@ -187,6 +198,16 @@ export function bodyDeltas(ctx: ShapeContext, p: Vec3, skin: Skin): Record<BodyP
     }
   }
   return out;
+}
+
+/** Names of the body morph targets a generated mesh (garment, hair, accessory) carries on this body. */
+export function bodyMorphIds(ctx: ShapeContext): readonly string[] {
+  return ctx.source ? ctx.source.ids : BODY_PARAM_IDS;
+}
+
+/** Body morph deltas of a point for the ids of `bodyMorphIds(ctx)`: the displacement fields, or the body's own morph targets. */
+export function morphDeltas(ctx: ShapeContext, p: Vec3, skin: Skin): Record<string, Vec3> {
+  return ctx.source ? ctx.source.at(p, skin) : (bodyDeltas(ctx, p, skin) as unknown as Record<string, Vec3>);
 }
 
 /** Clamps body values to their ParamDef ranges and drops unknown ids. */

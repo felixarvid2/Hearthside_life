@@ -21,8 +21,9 @@ import { PAINT_MORPH_IDS } from './meshyBody';
 import { STRAND_IDS, buildHair } from './hair';
 import { buildAccessory } from './accessories';
 import { HAT_FIT, addHatFit } from './hatFit';
-import type { ClothUniforms, HairUniforms, MeshySkinUniforms, SkinUniforms } from './materials';
-import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createSkinMaterial } from './materials';
+import type { ClothUniforms, HairUniforms, MeshySkinUniforms, MpfbEyeUniforms, MpfbSkinUniforms, MpfbUnderwearUniforms, SkinUniforms } from './materials';
+import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createMpfbEyeMaterial, createMpfbHairlineMaterial, createMpfbIrisMaterial, createMpfbSkinMaterial, createMpfbUnderwearMaterial, createSkinMaterial } from './materials';
+import { mpfbFaceInfluences, mpfbInfluences } from './mpfbBody';
 import { resolveOutfit } from './outfits';
 import { clamp } from './rig';
 
@@ -43,6 +44,9 @@ const ACCESSORY_LOOK: Partial<Record<AccessoryDef['kind'], { roughness: number; 
 const PLACKETS: Record<string, number> = { buttons: 1, zip: 2, short: 3, two: 4, double: 5 };
 const POCKETS: Record<string, number> = { kangaroo: 1, chest: 2, denim: 3, cargo: 4, chino: 5, welt: 6 };
 const DECORS: Record<string, number> = { cords: 1, quilt: 2, lapel: 3, wrap: 4, sash: 8 };
+
+/** The primitives an MPFB body draws on top of its skin (per character: own materials, shared geometry). */
+interface MpfbPartSlot { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial }
 
 interface GarmentSlot { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: ClothUniforms; garmentId: string }
 
@@ -108,6 +112,14 @@ export class CharacterView {
   private skinMesh!: THREE.SkinnedMesh;
   private skinMat!: THREE.MeshStandardMaterial;
   private skinU!: SkinUniforms;
+  /** MPFB bodies: eyes, brows, lashes and underwear next to the skin; `eyeU` and `underwearU` are their uniforms. */
+  private mpfbParts: Partial<Record<'eyes' | 'iris' | 'brows' | 'lashes' | 'underwear', MpfbPartSlot>> = {};
+  private eyeU: MpfbEyeUniforms | null = null;
+  private underwearU: MpfbUnderwearUniforms | null = null;
+  /** Influence of every morph target of the body, from the appearance's body sliders (applyAppearance). */
+  private bodyInfluence: Record<string, number> = {};
+  /** Face slider ids that the body's own face morphs cover (MPFB), so their displacement fields stay off. */
+  private faceCovered: ReadonlySet<string> = new Set();
   private garments = new Map<GarmentLayer, GarmentSlot>();
   private accessories: Array<{ mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial }> = [];
   private hair: { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: HairUniforms } | null = null;
@@ -181,7 +193,7 @@ export class CharacterView {
     head.updateWorldMatrix(true, false);
     const O = this.frame.template.headOrigin;
     const hairTop = Math.max((this.hair?.mesh.geometry.userData.topY as number | undefined) ?? 0, (this.aiHair?.mesh.geometry.userData.topY as number | undefined) ?? 0);
-    const crownY = Math.max(this.frame.meshy?.extras.head.crownY ?? O[1] + HEAD_OFFSET[1] + CROWN_Y * HEAD_SCALE, hairTop);
+    const crownY = Math.max((this.frame.meshy ?? this.frame.mpfb)?.extras.head.crownY ?? O[1] + HEAD_OFFSET[1] + CROWN_Y * HEAD_SCALE, hairTop);
     return target.set(O[0], crownY, O[2]).applyMatrix4(this.frame.boneInverses[hi]!).applyMatrix4(head.matrixWorld);
   }
 
@@ -231,8 +243,13 @@ export class CharacterView {
     this.bones = byName;
     this.root.add(root);
     const meshy = this.frame.meshy;
-    const { material, uniforms } = meshy ? createMeshySkinMaterial() : createSkinMaterial();
-    if (meshy) {
+    const mpfb = this.frame.mpfb;
+    const { material, uniforms } = mpfb ? createMpfbSkinMaterial() : meshy ? createMeshySkinMaterial() : createSkinMaterial();
+    if (mpfb) {
+      const mu = uniforms as MpfbSkinUniforms;
+      mu.uAlbedo.value = mpfb.skinMap;
+      mu.uSkinMean.value.fromArray(mpfb.extras.skinMean);
+    } else if (meshy) {
       const mu = uniforms as MeshySkinUniforms;
       mu.uAlbedo.value = meshy.albedo;
       mu.uMask.value = meshy.mask;
@@ -243,12 +260,44 @@ export class CharacterView {
     this.skinMat = material;
     this.skinU = uniforms;
     this.skinMesh = this.skinned(this.frame.skinGeometry, material, 'skin');
+    if (mpfb) this.buildMpfbParts(mpfb);
     this.animator = new Animator(this.root, this.assets.clips);
     this.skinU.uSelect.value = this.selected ? 1 : 0;
   }
 
+  /** Eyes, brows, lashes and underwear of an MPFB body: shared geometry, own materials, the skeleton of this person. */
+  private buildMpfbParts(mpfb: NonNullable<FrameAssets['mpfb']>): void {
+    const add = (kind: keyof typeof this.mpfbParts, material: THREE.MeshStandardMaterial) => {
+      const geometry = mpfb.parts[kind];
+      if (!geometry) { material.dispose(); return; }
+      const mesh = this.skinned(geometry, material, kind);
+      mesh.castShadow = kind === 'underwear';
+      this.mpfbParts[kind] = { mesh, material };
+    };
+    const underwear = createMpfbUnderwearMaterial(mpfb.underwear);
+    this.underwearU = underwear.uniforms;
+    add('underwear', underwear.material);
+    if (mpfb.maps.eyes) {
+      // files with an iris primitive: plain sclera here and the eye colour on the iris; older ones paint the iris into the eye texture
+      if (mpfb.parts.iris) add('eyes', new THREE.MeshStandardMaterial({ map: mpfb.maps.eyes, roughness: 0.15, metalness: 0 }));
+      else {
+        const eyes = createMpfbEyeMaterial(mpfb.maps.eyes);
+        this.eyeU = eyes.uniforms;
+        add('eyes', eyes.material);
+      }
+    }
+    if (mpfb.maps.iris) add('iris', createMpfbIrisMaterial(mpfb.maps.iris));
+    if (mpfb.maps.brows) add('brows', createMpfbHairlineMaterial(mpfb.maps.brows));
+    if (mpfb.maps.lashes) add('lashes', createMpfbHairlineMaterial(mpfb.maps.lashes));
+    for (const slot of Object.values(this.mpfbParts)) slot.mesh.renderOrder = slot.material.transparent ? 2 : 0;
+  }
+
   private teardownRig(): void {
     this.animator?.dispose();
+    for (const p of Object.values(this.mpfbParts)) p.material.dispose();
+    this.mpfbParts = {};
+    this.eyeU = null;
+    this.underwearU = null;
     for (const s of this.garments.values()) s.material.dispose();
     this.garments.clear();
     this.hair?.material.dispose();
@@ -276,11 +325,11 @@ export class CharacterView {
     const dict = mesh.morphTargetDictionary;
     const infl = mesh.morphTargetInfluences;
     if (!dict || !infl) return;
-    const body = this.appearance.body;
     const face = this.appearance.face.params;
-    for (const id of BODY_PARAM_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(body[id] ?? 0, -1, 1); }
-    for (const id of HEAD_SCULPT_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(face[id] ?? 0, -1, 1); }
-    for (const id of PAINT_MORPH_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = clamp(face[id] ?? 0, -1, 1); }
+    for (const [id, v] of Object.entries(this.bodyInfluence)) { const i = dict[id]; if (i !== undefined) infl[i] = v; }
+    // face sliders the MPFB body has its own morph for (this.bodyInfluence holds it) leave the displacement field off
+    for (const id of HEAD_SCULPT_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = this.faceCovered.has(id) ? 0 : clamp(face[id] ?? 0, -1, 1); }
+    for (const id of PAINT_MORPH_IDS) { const i = dict[id]; if (i !== undefined) infl[i] = this.faceCovered.has(id) ? 0 : clamp(face[id] ?? 0, -1, 1); }
     const hc = dict.hairClear;
     if (hc !== undefined) infl[hc] = this.hairClear;
     const hf = dict[HAT_FIT];
@@ -302,7 +351,24 @@ export class CharacterView {
     u.uMouth.value.set(p('mouthWidth'), p('lipFullness'), clamp(a.face.lipTint, 0, 1), 0);
     const stubble = a.hair.facialHairId === 'stubble' ? 1 : a.hair.facialHairId ? 0.5 : 0;
     u.uSkinFx.value.set(clamp(a.face.freckles, 0, 1), clamp(a.face.blush, 0, 1), stubble, 0);
+    const mpfb = this.frame.mpfb;
+    if (mpfb) {
+      const names = new Set(mpfb.morphNames);
+      const face = mpfbFaceInfluences(a.face.params, (n) => names.has(n));
+      this.bodyInfluence = { ...mpfbInfluences(a.body, mpfb.sex, (n) => names.has(n)), ...face.influences };
+      this.faceCovered = face.covered;
+      if (this.eyeU) this.eyeU.uEyeColor.value.set(a.face.eyeColor);
+      this.mpfbParts.iris?.material.color.set(a.face.eyeColor);
+      const brows = this.mpfbParts.brows?.material, lashes = this.mpfbParts.lashes?.material;
+      brows?.color.set(a.face.browColor);
+      lashes?.color.set(a.face.browColor).multiplyScalar(0.55);
+    } else {
+      this.bodyInfluence = {};
+      this.faceCovered = new Set();
+      for (const id of BODY_PARAM_IDS) this.bodyInfluence[id] = clamp(a.body[id] ?? 0, -1, 1);
+    }
     this.applyMorphs(this.skinMesh);
+    for (const p of Object.values(this.mpfbParts)) this.applyMorphs(p.mesh);
     for (const s of this.garments.values()) this.applyMorphs(s.mesh);
     for (const acc of this.accessories) this.applyMorphs(acc.mesh);
     this.applyHair();
@@ -470,6 +536,13 @@ export class CharacterView {
       // a bare male torso reads as skin; the female frame keeps the baked top as a minimal top
       const topWorn = this.appearance.frame === 'a' ? 1 : worn(['top', 'outer', 'full']);
       base.value.set(topWorn, worn(['bottom', 'full']), lm.crotchY + 0.12);
+    }
+    // MPFB bodies: the underwear is hidden under a garment of its half (the bra under a top, the panties and shorts under a bottom)
+    if (this.underwearU) {
+      const worn = (layers: GarmentLayer[]) => (resolved.layers.some((l) => layers.includes(l.layer)) ? 1 : 0);
+      const bottom = worn(['bottom', 'full']);
+      // the male underwear is one piece of trunks (its top edge can sit above the split): it follows the bottom garment alone
+      this.underwearU.uBase.value.set(this.frame.mpfb?.sex === 'm' ? bottom : worn(['top', 'outer', 'full']), bottom, lm.waistY);
     }
   }
 }
