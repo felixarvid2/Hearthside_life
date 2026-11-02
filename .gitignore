@@ -14,3 +14,11 @@ dev/hair-ai/shots/
 dev/hair-ai/debug/
 dev/ds-tasks/*.log
 dev/ds-tasks/logs/
+
+# MPFB body prototype: Blender intermediates and screenshots are reproducible (npm run assets:mpfb, node dev/mpfb/shoot.mjs);
+# the final GLBs and a few JPG screenshots are the exceptions
+dev/mpfb/out/
+dev/mpfb/shots/*
+!dev/mpfb/shots/*.jpg
+
+__pycache__/

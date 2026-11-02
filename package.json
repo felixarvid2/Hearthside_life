@@ -14,6 +14,7 @@
     "assets": "node tools/build-assets.mjs",
     "assets:surfaces": "node tools/build-surface-maps.mjs",
     "assets:meshy": "node --experimental-strip-types tools/build-meshy-bodies.mts",
+    "assets:mpfb": "node --experimental-strip-types --no-warnings tools/build-mpfb-bodies.mts",
     "content:check": "node --experimental-strip-types tools/content-report.ts",
     "e2e": "node tests/e2e/run-e2e.mjs",
     "e2e:acceptance": "node tests/e2e/acceptance.mjs",
