@@ -11,7 +11,10 @@
 //   undo/redo, exact price), 4 build mode (wall finish on one side), 5 save, reload, load and compare,
 //   6 rotate the device during a creator edit and during a placement preview,
 //   7 Milestone 2 home editor: build a room (drag, handles, Confirm / Cancel, device rotation keeps the preview), add a
-//     door and a window, paint both sides of a new wall and an area of floor, undo and redo, then walk a person in.
+//     door and a window, paint both sides of a new wall and an area of floor, undo and redo, then walk a person in,
+//   8 Milestone 6 careers, bills and freelance income,
+//   9 Milestone 7 neighbourhood: open the map, travel to the park and wait for the arrival, one venue activity, the away card
+//     of the person left at home, go home, open the preview of switching to another household and cancel it.
 // Clicks and taps go through the real DOM (and the canvas at positions picked with view.worldToScreen/anchorOf);
 // window.hearthside.debug is only used to fast-forward time and to read state for assertions.
 // Fails on page errors, console errors and failed requests. Screenshots: tests/e2e/out/acceptance/<viewport>/.
@@ -226,6 +229,8 @@ async function runViewport(browser, vpName, vp) {
     ['5', 'Save, reload, load, compare', stepSaveLoad],
     ['6', 'Rotate the device during edits', stepRotate],
     ['7', 'Milestone 2 home editor: build a room, door, window, finishes, undo/redo, walk in', stepHomeEditor],
+    ['8', 'Milestone 6: career panel, pay a bill, sell freelance work', stepEconomy],
+    ['9', 'Milestone 7: neighbourhood map, travel, away card, go home, household switch preview', stepNeighbourhood],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -721,7 +726,7 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
   if (keyOf(pick) !== id && (kind === 'object' || kind === 'person')) {
     // something else is drawn over the middle of the target (a person in the bed, two people standing together): try nearby points
     const offs = kind === 'object'
-      ? [[-16, 0], [16, 0], [0, -14], [0, 14], [-28, -8], [28, -8], [-28, 10], [28, 10], [0, -26], [0, 26]]
+      ? [[-16, 0], [16, 0], [0, -14], [0, 14], [-28, -8], [28, -8], [-28, 10], [28, 10], [0, -26], [0, 26], [0, -45], [0, 45], [-45, 0], [45, 0], [0, -65], [0, 65], [-60, -20], [60, -20]]
       : [[0, -12], [0, 10], [-6, 0], [6, 0], [-6, -14], [6, -14], [0, -20], [0, 18], [-10, 6], [10, 6]];
     for (const [dx, dy] of offs) {
       const pk = await T.page.evaluate(([x, y]) => window.__t.pick(x, y), [p.x + dx, p.y + dy]);
@@ -731,7 +736,24 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
   }
   T.check(S, `${label}: tap point picks the intended thing`, keyOf(pick) === id, JSON.stringify(pick));
   await T.tapAt(p.x, p.y);
-  try { await T.page.waitForSelector('.ctx-menu:not([hidden]) .ctx-item', { timeout: 4000 }); } catch { T.bad(S, `${label}: context menu opens on tap`, 'no .ctx-menu'); return null; }
+  try { await T.page.waitForSelector('.ctx-menu:not([hidden]) .ctx-item', { timeout: 4000 }); } catch {
+    // what the game made of the tap: the selection, what is under the point now, any toast ("Nothing ... can do with that"), open panels
+    const why = await T.page.evaluate(([x, y, kind, oid]) => {
+      const st = window.hearthside.debug.state();
+      const top = document.elementFromPoint(x, y);
+      return {
+        options: kind === 'object' ? window.hearthside.game.options(window.hearthside.game.selected(), { kind: 'object', objectId: oid }).map((o) => `${o.label}: ${o.enabled ? 'ok' : o.reason}`) : null,
+        mode: window.hearthside.game.mode(), selected: window.hearthside.game.selected?.() ?? null, pickNow: window.__t.pick(x, y),
+        top: top ? (top.id || top.className || top.tagName) : null, speed: st.clock.speed,
+        toasts: [...document.querySelectorAll('.toast, [role="status"]')].map((t) => t.textContent?.trim()).filter(Boolean),
+        panels: [...document.querySelectorAll('.panel:not([hidden])')].map((t) => t.className), ctxHidden: document.querySelector('.ctx-menu')?.hidden ?? null,
+        people: Object.values(st.people).filter((q) => q.householdId === st.activeHouseholdId).map((q) => ({ id: q.id, loc: q.location.kind === 'lot' ? [q.location.x, q.location.z] : q.location.kind, queue: q.queue.map((a) => `${a.interactionId}/${a.phase}/${a.source}/${a.target?.objectId ?? ''}`) })),
+      };
+    }, [p.x, p.y, kind, id]).catch((e) => String(e));
+    log(`${label}: no menu after the tap at ${Math.round(p.x)},${Math.round(p.y)}:`, JSON.stringify(why));
+    await T.shot(`${label.replace(/\W+/g, '-')}-no-menu`).catch(() => undefined);
+    T.bad(S, `${label}: context menu opens on tap`, 'no .ctx-menu'); return null;
+  }
   await T.page.waitForTimeout(250);
   await T.frames(2);
   const items = await T.page.evaluate(() => [...document.querySelectorAll('.ctx-menu .ctx-item')].map((b) => ({ label: b.querySelector('.ctx-label')?.textContent?.trim(), disabled: b.disabled, reason: b.querySelector('.ctx-reason')?.textContent?.trim() ?? null })));
@@ -897,14 +919,31 @@ async function stepLive(T) {
   const r5 = await runUntil(T, 4 * 240, `st.people['${mira}'].location.kind === 'lot'`);
   const back = await needsOf(T, mira);
   T.check(S, 'first person is back on the lot after the shift', r5.done && !back.loc.startsWith('off:'), `${back.loc} at ${JSON.stringify(await simNow(T))}`);
+  // The roommate's shift can end later than the first person's (a 9-5 business day against an 8-4 kitchen shift),
+  // so let their own shift finish before checking that it was paid.
+  const sageShift = await page.evaluate(([s, d]) => {
+    const st = window.hearthside.debug.state();
+    const p = st.people[s];
+    const lvl = p?.career ? window.hearthside.game.content.careers[p.career.careerId]?.levels.find((l) => l.level === p.career.level) : null;
+    const works = !!lvl && lvl.days.includes(d % 7);
+    return { works, end: works ? d * 1440 + lvl.end + 5 : null, now: st.clock.minutes };
+  }, [sage, day0]);
+  if (sageShift.end !== null && sageShift.now < sageShift.end) await runUntil(T, 4 * 180, `st.clock.minutes >= ${sageShift.end}`);
   const wages = await page.evaluate(([m, s, d]) => {
     const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
     const count = (id) => hh.ledger.filter((e) => e.kind === 'wage' && e.occurrence === `pay:${id}:${d}`).length;
-    return { mira: count(m), sage: count(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
+    // A career only pays for a shift that is scheduled on this weekday (the roommate may not work on day 0).
+    const worksToday = (id) => {
+      const p = st.people[id]; if (!p.career) return false;
+      const def = window.hearthside.game.content.careers[p.career.careerId];
+      const lvl = def?.levels.find((l) => l.level === p.career.level);
+      return !!lvl && lvl.days.includes(Math.floor(st.clock.minutes / 1440) % 7);
+    };
+    return { mira: count(m), sage: count(s), sageWorksToday: worksToday(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
   }, [mira, sage, day0, wageBefore.ids]);
   log('wages', JSON.stringify(wages));
   T.check(S, 'exactly one wage ledger entry for the first person\'s shift', wages.mira === 1, JSON.stringify(wages.all));
-  T.check(S, 'the roommate (own shift) was paid exactly once as well', wages.sage === 1 || startInfo.sageCareer === null, `sage entries ${wages.sage}; career ${startInfo.sageCareer}`);
+  T.check(S, 'the roommate (own shift) was paid exactly once if they worked today', wages.sage === 1 || !wages.sageWorksToday, `sage entries ${wages.sage}; career ${startInfo.sageCareer}; works today ${wages.sageWorksToday}`);
   // Milestone 4 adds expenses during a shift (groceries, repairperson), so funds need not rise overall: check instead that the
   // wage was credited and that the funds change equals exactly the new ledger entries (no money appears or vanishes).
   const seen = new Set(wageBefore.ids);
@@ -927,17 +966,28 @@ async function stepLive(T) {
   await closeAnyPanel(T);
   await page.evaluate(() => window.hearthside.view.frameLot?.(true));
 
-  // ---- sleep on a bed (right after work, before the neighbour arrives)
+  // ---- sleep on a bed (right after work, before the neighbour arrives); use one the roommate is not lying on
   await dismissMenu(T);
   await selectMember(T, mira);
   const eBefore = (await needsOf(T, mira)).energy;
+  const freeBed = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId];
+    const beds = Object.values(lot.objects).filter((b) => /^bed-/.test(b.defId));
+    const near = (b, p) => p.location.kind === 'lot' && Math.hypot(p.location.x - (b.x + 1), p.location.z - (b.z + 1)) < 1.6;
+    const free = beds.find((b) => !Object.values(st.people).some((p) => near(b, p)));
+    return (free ?? beds[0])?.id ?? null;
+  }).catch(() => null);
+  if (freeBed) startInfo.bed = freeBed;
+  log('bed to use', JSON.stringify({ bed: startInfo.bed, freeBed }));
   const bm = await tapAndOpenMenu(T, 'object', startInfo.bed, S, 'bed');
   if (bm) {
     await T.shot('live-bed-menu');
     log('bed menu', JSON.stringify(bm.items));
     T.check(S, 'bed menu offers Sleep', bm.items.some((i) => /Sleep/.test(i.label ?? '') && !i.disabled), bm.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : '')).join(' | '));
     await chooseMenu(T, /^Sleep/);
-    const r9 = await runUntil(T, 4 * 150, `st.people['${mira}'].location.kind === 'lot' && st.people['${mira}'].location.posture === 'lying'`);
+    // The person may already be lying down from an autonomous nap (posture is "lying" anywhere), so "lying" alone can
+    // be true before the queued sleep starts. Wait until they are lying at the chosen bed instead.
+    const r9 = await runUntil(T, 4 * 150, `(() => { const st = window.hearthside.debug.state(); const p = st.people['${mira}']; if (p.location.kind !== 'lot' || p.location.posture !== 'lying') return false; const b = st.lots[st.activeLotId].objects['${startInfo.bed}']; return !!b && Math.hypot(b.x + 1 - p.location.x, b.z + 1 - p.location.z) < 3.5; })()`);
     const lying = await page.evaluate((m) => { const st = window.hearthside.debug.state(); const p = st.people[m]; const lot = st.lots[st.activeLotId]; const beds = Object.values(lot.objects).filter((o) => /^bed-/.test(o.defId)); const d = beds.map((b) => Math.hypot(b.x + 1 - p.location.x, b.z + 1 - p.location.z)); return { posture: p.location.posture, x: p.location.x, z: p.location.z, nearestBed: Math.min(...d), anim: p.anim.id, at: Math.round(st.clock.minutes) }; }, mira);
     T.check(S, 'sleeping person lies in a bed (posture lying, at a bed)', r9.done && lying.posture === 'lying' && lying.nearestBed < 3.5, `${JSON.stringify(lying)} after ${(r9.ticks / 4).toFixed(0)} game minutes`);
     T.check(S, 'no wall crossing walking to bed', r9.viol.length === 0, JSON.stringify(r9.viol.slice(0, 3)));
@@ -2047,6 +2097,391 @@ async function stepHomeEditor(T) {
   await settle(T);
   await T.shot('m2-person-in-room');
   void doorX; void doorZ;
+}
+
+// ===============================================================================================================
+// STEP 8 - Milestone 6: careers, bills and freelance income
+// ===============================================================================================================
+
+async function stepEconomy(T) {
+  const S = '8';
+  const { page } = T;
+  const [mira] = T.members;
+  await page.evaluate(() => window.hearthside.game.setSpeed(0));
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  // A quick run with --fast-start has not simulated a tick yet, so no bill has been issued.
+  const noBill = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    return (st.bills ?? []).every((b) => b.householdId !== hh.id);
+  });
+  if (noBill) await page.evaluate(() => window.hearthside.debug.step(4));
+
+  // ---- career panel: the employed first person, effort switch, promotion requirements
+  await selectMember(T, mira);
+  await T.tap(page.locator(`.member[data-person-id="${mira}"]`));
+  await page.waitForSelector('.person-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+  await T.tap(page.locator('.person-panel .tab[data-id="career"]'));
+  await page.waitForTimeout(450);
+  const careerBefore = await page.evaluate((id) => {
+    const st = window.hearthside.debug.state(); const p = st.people[id];
+    return { career: p.career ? p.career.careerId : null, level: p.career?.level ?? 0, effort: p.career?.effort ?? null, name: p.career ? window.hearthside.game.content.careers[p.career.careerId]?.name ?? null : null };
+  }, mira);
+  if (careerBefore.career) {
+    const head = await page.locator('.person-panel .career-head h3').first().innerText();
+    const title = await page.locator('.person-panel .career-title').first().innerText();
+    T.check(S, 'career panel opens with the job, level and title', head.includes(careerBefore.name) && /Level \d+/.test(title), `${head} / ${title}`);
+    T.check(S, 'career panel lists the effort choice and the next promotion requirements', (await page.locator('.person-panel .segmented .seg').count()) === 3 && (await page.locator('.person-panel .req-list .req').count()) > 0, `${await page.locator('.person-panel .req-list .req').count()} requirements`);
+  } else {
+    const cards = await page.locator('.person-panel .career-choice').count();
+    T.check(S, 'career panel offers careers when the person has no job', cards >= 6, `${cards} careers offered`);
+    if (cards) {
+      await T.tap(page.locator('.person-panel .career-choice button', { hasText: 'Take job' }).first());
+      await page.waitForTimeout(350);
+    }
+  }
+  const workHard = page.locator('.person-panel .segmented .seg[data-id="hard"]').first();
+  if (await workHard.count()) {
+    await T.tap(workHard);
+    await page.waitForTimeout(300);
+    const effort = await page.evaluate((id) => window.hearthside.debug.state().people[id].career?.effort ?? null, mira);
+    T.check(S, 'choosing "Work hard" changes the stored work effort', effort === 'hard', `effort ${effort}`);
+  }
+  await T.shot('m6-career-panel');
+  await T.audit('career panel');
+
+  // ---- bills: funds button -> ledger -> Bills and payments -> Pay
+  await closeAnyPanel(T);
+  await T.tap(page.locator('.funds-btn'));
+  await page.waitForSelector('.ledger-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+  const billsBtn = page.locator('.ledger-panel .ledger-actions button', { hasText: 'Bills and payments' }).first();
+  T.check(S, 'the ledger links to household bills', await billsBtn.count() === 1, `${await billsBtn.count()} buttons`);
+  if (await billsBtn.count()) await T.tap(billsBtn);
+  await page.waitForSelector('.bills-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+  const billBefore = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    const open = (st.bills ?? []).filter((b) => b.householdId === hh.id && b.status !== 'paid').sort((a, b) => b.week - a.week);
+    return { id: open[0]?.id ?? null, amount: open[0]?.amount ?? 0, funds: hh.funds, count: (st.bills ?? []).filter((b) => b.householdId === hh.id).length, itemCount: document.querySelectorAll('.bills-panel .bill-item').length };
+  });
+  log('bill before paying', JSON.stringify(billBefore));
+  T.check(S, 'the bills panel lists the household bill', billBefore.id !== null && billBefore.itemCount >= 1, JSON.stringify(billBefore));
+  const payBtn = page.locator('.bills-panel .bill-item button', { hasText: 'Pay' }).first();
+  T.check(S, 'an unpaid bill offers a Pay button', await payBtn.count() >= 1, `${await payBtn.count()} pay buttons`);
+  if (await payBtn.count()) {
+    await T.tap(payBtn);
+    await page.waitForTimeout(400);
+    const after = await page.evaluate((id) => {
+      const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+      const b = (st.bills ?? []).find((x) => x.id === id);
+      return { status: b?.status ?? null, funds: hh.funds, occurrence: b ? `billpay:${b.id}` : null, processed: b ? st.processed[`money:billpay:${b.id}`] !== undefined : false, paidTags: document.querySelectorAll('.bills-panel .bill-item.is-paid').length };
+    }, billBefore.id);
+    T.check(S, 'paying a bill charges exactly once and marks it paid', after.status === 'paid' && after.processed && after.funds === billBefore.funds - billBefore.amount, `status ${after.status}, funds ${fmtMoney(after.funds)} (was ${fmtMoney(billBefore.funds)}), occurrence ${after.occurrence}`);
+    T.check(S, 'the paid bill is shown as paid in the panel', after.paidTags >= 1, `${after.paidTags} paid rows`);
+  }
+  await T.shot('m6-bills-paid');
+  await T.audit('bills panel');
+
+  // ---- freelance: open the computer menu and write/sell an article
+  await closeAnyPanel(T);
+  // A member who is already busy (an autonomous nap after a long day, or any queued action) would push the
+  // freelance job behind that action; pick an idle one, waiting until somebody is free if needed.
+  // The member must be idle and the computer must be usable for them: a menu whose entries are all "unavailable" (the computer is
+  // in use, or somebody has a use point reserved) folds them away and the tap cannot be tested.
+  const idleHomeMember = () => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    const lot = st.lots[st.activeLotId];
+    const computer = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop');
+    const usable = (p) => !!computer && window.hearthside.game.options(p.id, { kind: 'object', objectId: computer.id }).some((o) => o.enabled);
+    const p = hh.memberIds.map((id) => st.people[id])
+      .filter((x) => x.location.kind === 'lot' && x.queue.length === 0 && usable(x))
+      .sort((a, b) => (b.needs.energy - a.needs.energy) || (b.needs.fun - a.needs.fun))[0];
+    return { person: p?.id ?? null, computer: computer?.id ?? null };
+  };
+  const whyBusy = () => page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; const lot = st.lots[st.activeLotId];
+    const computer = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop');
+    return hh.memberIds.map((id) => { const p = st.people[id]; return { name: p.firstName, loc: p.location.kind === 'lot' ? [p.location.x, p.location.z] : p.location.kind, queue: p.queue.map((a) => `${a.interactionId}/${a.phase}/${a.source}/${a.target?.objectId ?? ''}`), options: computer && p.location.kind === 'lot' ? window.hearthside.game.options(id, { kind: 'object', objectId: computer.id }).map((o) => `${o.label}: ${o.enabled ? 'ok' : o.reason}`) : null }; });
+  });
+  let worker = await page.evaluate(idleHomeMember);
+  if (!worker.person) {
+    log('nobody can use the computer right now:', JSON.stringify(await whyBusy()));
+    await runUntil(T, 4 * 600, `(() => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; const lot = st.lots[st.activeLotId]; const c = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop'); return !!c && hh.memberIds.some((id) => { const p = st.people[id]; return p.location.kind === 'lot' && p.queue.length === 0 && g.options(id, { kind: 'object', objectId: c.id }).some((o) => o.enabled); }); })()`);
+    worker = await page.evaluate(idleHomeMember);
+    if (!worker.person) log('still nobody after waiting:', JSON.stringify(await whyBusy()));
+  }
+  T.check(S, 'a household member is home and the computer is available', !!worker.person && !!worker.computer, JSON.stringify(worker));
+  if (worker.person && worker.computer) {
+    await page.evaluate((id) => {
+      window.__m6actions = [];
+      window.__m6off?.();
+      window.__m6off = window.hearthside.game.events.on('action.finished', (e) => { if (e.personId === id) window.__m6actions.push(e); });
+    }, worker.person);
+    await selectMember(T, worker.person);
+    await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), worker.person);
+    await settle(T);
+    const salesBefore = await page.evaluate(() => {
+      const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+      return hh.ledger.filter((l) => l.kind === 'sale').length;
+    });
+    const menu = await tapAndOpenMenu(T, 'object', worker.computer, S, 'computer');
+    if (menu) {
+      log('computer menu', JSON.stringify(menu.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : ''))));
+      T.check(S, 'the computer menu offers freelance writing', menu.items.some((i) => /Write an Article/.test(i.label ?? '') && !i.disabled), menu.items.map((i) => i.label).join(' | '));
+      const picked = await chooseMenu(T, /Write an Article/);
+      T.check(S, 'picking Write an Article queues the freelance action', picked, String(picked));
+      log('freelance queued', JSON.stringify(await page.evaluate((id) => {
+        const st = window.hearthside.debug.state(); const p = st.people[id];
+        return { queue: p.queue.map((a) => ({ id: a.id, what: a.interactionId, target: a.target })), needs: p.needs, location: p.location };
+      }, worker.person)));
+      const sale = await runUntil(T, 4 * 240, `st.households[st.activeHouseholdId].ledger.filter((l) => l.kind === 'sale').length > ${salesBefore}`);
+      log('freelance after', JSON.stringify(await page.evaluate((id) => {
+        const st = window.hearthside.debug.state(); const p = st.people[id]; const hh = st.households[st.activeHouseholdId];
+        return {
+          queue: p.queue.map((a) => ({ id: a.id, what: a.interactionId, target: a.target })),
+          needs: p.needs, location: p.location, anim: p.anim, attrs: p.career ? { career: p.career.careerId, effort: p.career.effort } : null,
+          sales: hh.ledger.filter((l) => l.kind === 'sale'),
+          processed: Object.keys(st.processed).filter((k) => /freelance|cost:/.test(k)).slice(-8),
+          actions: window.__m6actions ?? [],
+          feed: st.feed.slice(-10).map((f) => f.text),
+        };
+      }, worker.person)));
+      const after = await page.evaluate(() => {
+        const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+        const sales = hh.ledger.filter((l) => l.kind === 'sale');
+        return { sales: sales.map((l) => ({ amount: l.amount, occurrence: l.occurrence ?? null })), feed: st.feed.slice(-14).map((f) => f.text) };
+      });
+      T.check(S, 'the finished article was sold and paid once', sale.done && after.sales.length === salesBefore + 1 && after.sales.at(-1).amount > 0 && /^freelance:/.test(after.sales.at(-1).occurrence ?? ''), JSON.stringify(after.sales));
+      T.check(S, 'the sale is announced in the feed', after.feed.some((f) => /sold/i.test(f)), after.feed.filter((f) => /sold/i.test(f)).slice(0, 1).join(' | '));
+      await T.shot('m6-freelance-sold');
+      await T.audit('after freelance sale');
+    }
+  }
+  await closeAnyPanel(T);
+}
+
+// ===============================================================================================================
+// STEP 9 - Milestone 7: the neighbourhood map, travelling, and the other households
+// ===============================================================================================================
+
+async function stepNeighbourhood(T) {
+  const S = '9';
+  const { page } = T;
+  const g = () => page.evaluate(() => {
+    const game = window.hearthside.game; const st = window.hearthside.debug.state(); const info = game.neighbourhood();
+    return { st: { active: st.activeLotId, hh: st.activeHouseholdId, minutes: st.clock.minutes }, info };
+  });
+  const closeMap = async () => {
+    const x = page.locator('.nbm .modal-header button[aria-label="Close"]').first();
+    if (await x.count() && await x.isVisible().catch(() => false)) { await T.tap(x); await page.waitForTimeout(250); }
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+  };
+  const openMap = async () => {
+    await T.tap(page.locator('.map-btn'));
+    await page.waitForSelector('.nbm', { timeout: 8000 });
+    await page.waitForTimeout(450);
+  };
+  const pickLot = async (lotId) => {
+    // The map pin is the real thing to tap; the list row is the fallback when a pin cannot be reached.
+    const pin = page.locator(`.nbm-pin[data-lot-id="${lotId}"]`);
+    try { await T.tap(pin); } catch {
+      await T.tap(page.locator('.nbm-toggle .seg[data-id="list"]'));
+      await T.tap(page.locator(`.nbm-row[data-lot-id="${lotId}"]`));
+    }
+    await page.waitForSelector('.nbm-detail h3', { timeout: 5000 });
+    await page.waitForTimeout(250);
+  };
+
+  await page.evaluate(() => window.hearthside.game.setSpeed(0));
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  await page.waitForSelector('.map-btn', { timeout: 5000 });
+
+  // Quiet scenario: nobody leaves for a shift in the middle of the trip, and it is daytime so the venues are open.
+  const members = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds; });
+  await page.evaluate((ids) => { for (const id of ids) window.hearthside.game.quitCareer?.(id); }, members);
+  const clock = (await g()).st.minutes % 1440;
+  if (clock < 9 * 60 || clock > 16 * 60) await runUntil(T, 4 * ((9 * 60 - clock + 1440) % 1440), 'false');
+  await T.frames(3);
+  const [first, second] = members;
+  await selectMember(T, first);
+
+  // ---- 1. the map lists the neighbourhood
+  const hud0 = await page.evaluate(() => { const b = document.querySelector('.map-btn'); const r = b.getBoundingClientRect(); return { w: r.width, h: r.height, vis: r.bottom <= innerHeight && r.right <= innerWidth && r.top >= 0 && r.left >= 0 }; });
+  T.check(S, 'the HUD has a Map button of at least 44 px, on screen', hud0.w >= 43.5 && hud0.h >= 43.5 && hud0.vis, JSON.stringify(hud0));
+  const bars = await page.evaluate(() => [...document.querySelectorAll('.hud-top, .hud-row2, .hud-bottom')].filter((b) => !b.hidden && b.offsetParent !== null).map((b) => {
+    const r = b.getBoundingClientRect();
+    const out = [...b.querySelectorAll('button')].filter((c) => c.offsetParent !== null).filter((c) => { const q = c.getBoundingClientRect(); return q.right > r.right + 1 || q.left < r.left - 1; }).map((c) => c.getAttribute('aria-label') || c.className);
+    return { bar: b.className.split(' ')[0], out, overflow: b.scrollWidth > b.clientWidth + 1 };
+  }));
+  T.check(S, 'with the Map button the HUD bars still fit: no button sticks out of its bar', bars.length > 0 && bars.every((b) => b.out.length === 0 && !b.overflow), JSON.stringify(bars));
+  await openMap();
+  const m0 = await page.evaluate(() => {
+    const info = window.hearthside.game.neighbourhood();
+    const box = document.querySelector('.nbm').getBoundingClientRect();
+    return {
+      lots: info.lots.length, venues: info.lots.filter((l) => l.kind === 'venue').length,
+      reachable: info.lots.filter((l) => l.kind === 'venue' && l.open && l.travelProblem === null).length,
+      usable: info.lots.filter((l) => l.usable).length, pins: document.querySelectorAll('.nbm-pin').length, rows: document.querySelectorAll('.nbm-row').length,
+      active: document.querySelectorAll('.nbm-pin.is-active').length, home: document.querySelectorAll('.nbm-pin.is-home').length,
+      overflowX: document.querySelector('.nbm').scrollWidth > box.width + 1, onScreen: box.left >= -1 && box.top >= -1 && box.right <= innerWidth + 1 && box.bottom <= innerHeight + 1,
+    };
+  });
+  T.check(S, 'the neighbourhood has at least 12 lots, all drawn on the map and listed', m0.lots >= 12 && m0.pins === m0.lots && m0.rows === m0.lots, JSON.stringify(m0));
+  T.check(S, 'at least 3 venues are open and can be travelled to', m0.reachable >= 3 && m0.venues >= 6, `${m0.reachable} reachable of ${m0.venues} venues (${m0.usable} laid out so far)`);
+  T.check(S, 'the active lot and the home lot are marked on the map', m0.active === 1 && m0.home === 1, `active ${m0.active}, home ${m0.home}`);
+  T.check(S, 'the map fits the screen without sideways overflow', m0.onScreen && !m0.overflowX, JSON.stringify({ onScreen: m0.onScreen, overflowX: m0.overflowX }));
+  await T.shot('m7-map');
+  await T.audit('neighbourhood map');
+  // list view
+  await T.tap(page.locator('.nbm-toggle .seg[data-id="list"]'));
+  await page.waitForTimeout(300);
+  const listVis = await page.evaluate(() => [...document.querySelectorAll('.nbm-row')].filter((e) => e.offsetParent !== null).length);
+  T.check(S, 'the list view shows the lots as rows', listVis >= 3, `${listVis} rows visible without scrolling`);
+  await T.shot('m7-list');
+  await T.tap(page.locator('.nbm-toggle .seg[data-id="map"]'));
+  await page.waitForTimeout(250);
+
+  // ---- 2. choose the park: the sheet offers Go here for the selected person
+  const park = await page.evaluate(() => window.hearthside.game.neighbourhood().lots.find((l) => l.venueType === 'park'));
+  const home = await page.evaluate(() => { const i = window.hearthside.game.neighbourhood(); return i.lots.find((l) => l.id === i.homeLotId); });
+  await pickLot(park.id);
+  const sheet = await page.evaluate(() => {
+    const go = document.querySelector('.nbm-go');
+    return {
+      title: document.querySelector('.nbm-detail h3')?.textContent ?? '', go: go ? { text: go.textContent.trim(), disabled: go.disabled, h: go.getBoundingClientRect().height } : null,
+      ticked: [...document.querySelectorAll('.nbm-chip.is-selected')].map((b) => b.dataset.personId), chips: document.querySelectorAll('.nbm-chip').length,
+      selected: window.hearthside.game.selected(),
+    };
+  });
+  T.check(S, 'the sheet of the park shows its name and a usable Go here button', sheet.title === park.name && sheet.go?.text === 'Go here' && sheet.go.disabled === false && sheet.go.h >= 43.5, JSON.stringify(sheet));
+  T.check(S, 'the selected person is ticked to go, every household member has a toggle', sheet.ticked.length === 1 && sheet.ticked[0] === sheet.selected && sheet.chips === members.length, JSON.stringify(sheet));
+  await T.shot('m7-park-sheet');
+  await T.audit('neighbourhood sheet');
+  const goBtnInView = await page.evaluate(() => { const b = document.querySelector('.nbm-go').getBoundingClientRect(); const d = document.querySelector('.nbm-detail').getBoundingClientRect(); return b.top >= d.top - 1 && b.bottom <= d.bottom + 1; });
+  T.check(S, 'Go here is reachable without scrolling the sheet', goBtnInView, String(goBtnInView));
+
+  // ---- 3. travel: the trip chip appears, the person walks out and arrives
+  const t0 = (await g()).st.minutes;
+  await T.tap(page.locator('.nbm-go'));
+  await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+  await page.waitForTimeout(600);
+  await T.frames(3);
+  const chip = await page.evaluate(() => { const c = document.querySelector('.hud-trip'); if (!c || c.hidden) return null; const r = c.getBoundingClientRect(); return { text: c.textContent.trim(), w: r.width, h: r.height, onScreen: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight }; });
+  T.check(S, 'a trip chip with the destination and the arrival time shows in the HUD', !!chip && chip.text.includes(park.name) && /arrives \d{1,2}:\d{2} [AP]M/.test(chip.text) && chip.h >= 43.5 && chip.onScreen, JSON.stringify(chip));
+  await T.shot('m7-trip-chip');
+  await T.audit('trip chip');
+  const trip = await page.evaluate(() => window.hearthside.game.neighbourhood().trip);
+  T.check(S, 'the trip is reported with the traveller, the park and an arrival 20 to 40 minutes away', !!trip && trip.lotId === park.id && trip.personIds.length === 1 && trip.personIds[0] === first && trip.arriveAt - t0 >= 19.5 && trip.arriveAt - t0 <= 40.5, JSON.stringify(trip));
+  const arrived = await runUntil(T, 4 * 90, `st.activeLotId === '${park.id}'`);
+  T.check(S, 'the group arrives and the park becomes the active lot', arrived.done, `${Math.round(arrived.ticks / 4)} game minutes`);
+  await T.frames(8);
+  await page.waitForTimeout(600);
+  const after = await page.evaluate(([a, b]) => {
+    const game = window.hearthside.game;
+    return { place: game.whereIs(a), other: b ? game.whereIs(b) : null, chipHidden: !document.querySelector('.hud-trip') || document.querySelector('.hud-trip').hidden };
+  }, [first, second]);
+  T.check(S, 'whereIs says the traveller is at the park; the chip is gone', after.place?.text === `At ${park.name}` && after.chipHidden, JSON.stringify({ place: after.place?.text, chipHidden: after.chipHidden }));
+  if (second) T.check(S, 'the household member who stayed behind is at home, off the lot', after.other?.kind === 'home' && after.other.text === 'At home', JSON.stringify(after.other));
+  await selectMember(T, first);
+  await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), first);
+  await settle(T);
+  await T.shot('m7-arrived-park');
+
+  // ---- 4. somebody who is not on the lot: the away card
+  if (second) {
+    await T.tap(page.locator(`.member[data-person-id="${second}"]`));
+    await page.waitForSelector('.away-card:not([hidden])', { timeout: 4000 }).catch(() => undefined);
+    const card = await page.evaluate(() => { const c = document.querySelector('.away-card'); if (!c || c.hidden) return null; const r = c.getBoundingClientRect(); return { text: c.textContent.trim(), goTo: [...c.querySelectorAll('button')].map((b) => b.textContent.trim()), onScreen: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, small: [...c.querySelectorAll('button')].filter((b) => b.getBoundingClientRect().height < 43.5).length }; });
+    T.check(S, 'tapping somebody off the lot shows where they are with Go to and Details', !!card && /At home/.test(card.text) && card.goTo.some((t) => /^Go to /.test(t)) && card.goTo.includes('Details') && card.onScreen && card.small === 0, JSON.stringify(card));
+    await T.shot('m7-away-card');
+    await T.audit('away card');
+    const goTo = page.locator('.away-card button', { hasText: /^Go to / }).first();
+    if (await goTo.count()) {
+      await T.tap(goTo);
+      await page.waitForSelector('.nbm .nbm-detail h3', { timeout: 6000 }).catch(() => undefined);
+      const sheetHome = await page.evaluate(() => ({ title: document.querySelector('.nbm-detail h3')?.textContent ?? '', go: document.querySelector('.nbm-go')?.textContent.trim() ?? null }));
+      T.check(S, 'Go to opens the map on that place, with Go home as the action', sheetHome.title === home.name && sheetHome.go === 'Go home', JSON.stringify(sheetHome));
+      await T.shot('m7-home-sheet');
+      await closeMap();
+    }
+  }
+
+  // ---- 5. a venue activity from the context menu
+  await selectMember(T, first);
+  const objs = await page.evaluate((id) => {
+    const game = window.hearthside.game; const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId]; const p = st.people[id];
+    if (p.location.kind !== 'lot') return [];
+    const res = [];
+    for (const o of Object.values(lot.objects)) {
+      const opts = game.options(id, { kind: 'object', objectId: o.id }).filter((x) => x.enabled && x.group === 'object');
+      if (opts.length) res.push({ id: o.id, d: Math.hypot(o.x - p.location.x, o.z - p.location.z), labels: opts.map((x) => x.label) });
+    }
+    return res.sort((a, b) => a.d - b.d).slice(0, 4);
+  }, first);
+  if (objs.length) {
+    log('park objects with options', JSON.stringify(objs));
+    let done = false;
+    for (const o of objs) {
+      const menu = await tapAndOpenMenu(T, 'object', o.id, S, 'park object');
+      if (!menu) continue;
+      const wanted = menu.items.find((i) => !i.disabled);
+      if (wanted && await chooseMenu(T, new RegExp(wanted.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))) {
+        const q = await page.evaluate((id) => window.hearthside.debug.state().people[id].queue.map((a) => a.interactionId), first);
+        T.check(S, `a venue activity is queued from the context menu (${wanted.label})`, q.length > 0, JSON.stringify(q));
+        done = true;
+        break;
+      }
+      await dismissMenu(T);
+    }
+    if (!done) T.bad(S, 'a venue activity can be queued from the context menu', 'no object menu entry could be chosen');
+    await runUntil(T, 4 * 20, 'false');
+    await T.shot('m7-venue-activity');
+  } else {
+    T.ok(S, 'a venue activity from the context menu', 'skipped: the park has no object with an enabled option yet');
+  }
+
+  // ---- 6. go home with the header button
+  await openMap();
+  const homeBtn = await page.evaluate(() => { const b = document.querySelector('.nbm-gohome'); if (!b || b.hidden) return null; const r = b.getBoundingClientRect(); return { w: r.width, h: r.height }; });
+  T.check(S, 'away from home, the map offers Go home as a 44 px button', !!homeBtn && homeBtn.w >= 43.5 && homeBtn.h >= 43.5, JSON.stringify(homeBtn));
+  await T.shot('m7-map-away');
+  if (homeBtn) {
+    await T.tap(page.locator('.nbm-gohome'));
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+    await page.waitForTimeout(500);
+    const hc = await page.evaluate(() => { const c = document.querySelector('.hud-trip'); return c && !c.hidden ? c.textContent.trim() : null; });
+    T.check(S, 'the trip chip names home as the destination', !!hc && hc.includes(home.name), String(hc));
+    const back = await runUntil(T, 4 * 90, `st.activeLotId === '${home.id}'`);
+    T.check(S, 'the household arrives home and the home lot is active again', back.done, `${Math.round(back.ticks / 4)} game minutes`);
+    await T.frames(8);
+    await page.waitForTimeout(500);
+    const placeBack = await page.evaluate((id) => window.hearthside.game.whereIs(id)?.text, first);
+    T.check(S, 'whereIs says the traveller is at home', placeBack === 'At home', String(placeBack));
+  }
+
+  // ---- 7. another household: the preview of switching, then cancel
+  await openMap();
+  const npc = await page.evaluate(() => { const i = window.hearthside.game.neighbourhood(); const hh = i.households.find((x) => !x.active && x.switchable); return hh ? { id: hh.id, name: hh.name, lotId: hh.homeLotId } : null; });
+  T.check(S, 'the neighbourhood has other households that can be played', !!npc, JSON.stringify(npc));
+  if (npc) {
+    await pickLot(npc.lotId);
+    const play = await page.evaluate(() => { const b = document.querySelector('.nbm-play'); return b ? { text: b.textContent.trim(), disabled: b.disabled, h: b.getBoundingClientRect().height } : null; });
+    T.check(S, 'the home of another household offers Play this household', !!play && play.text === 'Play this household' && !play.disabled && play.h >= 43.5, JSON.stringify(play));
+    await T.shot('m7-npc-home-sheet');
+    if (play && !play.disabled) {
+      await T.tap(page.locator('.nbm-play'));
+      await page.waitForSelector('.nbm-confirm .nbm-lines li', { timeout: 5000 }).catch(() => undefined);
+      const dlg = await page.evaluate(() => { const d = document.querySelector('.nbm-confirm'); if (!d) return null; const r = d.getBoundingClientRect(); return { title: d.querySelector('h2')?.textContent ?? '', lines: d.querySelectorAll('.nbm-lines li').length, onScreen: r.left >= -1 && r.right <= innerWidth + 1 && r.top >= -1 && r.bottom <= innerHeight + 1, buttons: [...d.querySelectorAll('.modal-footer button')].map((b) => b.textContent.trim()) }; });
+      T.check(S, 'the switch confirmation explains the consequences and offers Cancel', !!dlg && dlg.title.includes(npc.name) && dlg.lines >= 3 && dlg.onScreen && dlg.buttons.includes('Cancel') && dlg.buttons.includes('Play this household'), JSON.stringify(dlg));
+      await T.shot('m7-switch-preview');
+      await T.tap(page.locator('.nbm-confirm .modal-footer button', { hasText: 'Cancel' }));
+      await page.waitForTimeout(300);
+      const kept = await g();
+      T.check(S, 'cancelling the switch changes nothing', kept.info.activeHouseholdId === kept.st.hh && kept.info.activeHouseholdId !== npc.id && (await page.locator('.nbm-confirm').count()) === 0, `active household ${kept.info.activeHouseholdId}`);
+    }
+  }
+  await closeMap();
+  await T.audit('after neighbourhood step');
 }
 
 main().catch((e) => { console.error('[acceptance] error', e); process.exit(1); });

@@ -22,7 +22,8 @@ import { resolveSlots } from '../world/slots';
 import { DEFAULT_WALL_HEIGHT } from '../world/walls';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings,
-  MenuOption, PaintPreview, PaintTool, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo, SaveSlotInfo, SoundId, UiChange,
+  MenuOption, MovePreview, NeighbourhoodInfo, PaintPreview, PaintTool, PersonPlace, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo,
+  SaveSlotInfo, SoundId, SwitchPreview, UiChange,
 } from './api';
 import { GameAudio } from './audio';
 import type { GameCore } from './GameCore';
@@ -98,6 +99,10 @@ export class Game implements GameAPI {
         case 'state.replaced':
           if (isWorldMode(core.mode())) this.showCoreWorld(true);
           this.portraitPending.clear();
+          break;
+        case 'lot.activated':
+          // another lot is in detail now: show it and frame it
+          if (isWorldMode(core.mode())) { this.framedWorld = null; this.roomHighlight = null; this.showCoreWorld(false); }
           break;
         case 'lot.changed': if (live) { v.lotChanged(e.what); if (this.roomHighlight) this.drawRoomHighlight(); } break;
         case 'item.changed': if (live) v.itemsChanged(); break;
@@ -433,6 +438,28 @@ export class Game implements GameAPI {
   eventProblem(req: PlanEventRequest): string | null { return this.core.eventProblem(req); }
   planEvent(req: PlanEventRequest): Result & { eventId?: Id } { return this.core.planEvent(req); }
   cancelEvent(eventId: Id): Result { return this.core.cancelEvent(eventId); }
+
+  // ---- careers and household economy (Milestone 6) ----
+
+  payBill(personId: Id, billId: Id): Result & { amount?: number } { return this.core.payBill(personId, billId); }
+  setAutoPayBills(personId: Id, on: boolean): Result { return this.core.setAutoPayBills(personId, on); }
+  joinCareer(personId: Id, careerId: string): Result { return this.core.joinCareer(personId, careerId); }
+  quitCareer(personId: Id): Result { return this.core.quitCareer(personId); }
+  setCareerEffort(personId: Id, effort: 'slack' | 'normal' | 'hard'): Result { return this.core.setCareerEffort(personId, effort); }
+  resolveCareerEvent(personId: Id, optionId: string): Result { return this.core.resolveCareerEvent(personId, optionId); }
+
+  // ---- neighbourhood and other households (Milestone 7) ----
+
+  neighbourhood(): NeighbourhoodInfo | null { return this.core.neighbourhood(); }
+  whereIs(personId: Id): PersonPlace | null { return this.core.whereIs(personId); }
+  travelProblem(personIds: Id[], lotId: Id): string | null { return this.core.travelProblem(personIds, lotId); }
+  travel(personIds: Id[], lotId: Id): Result & { minutes?: number; arrivesAt?: number } { return this.core.travel(personIds, lotId); }
+  goHome(personIds?: Id[]): Result & { minutes?: number; arrivesAt?: number } { return this.core.goHome(personIds); }
+  inviteHome(hostId: Id, guestId: Id): Result { return this.core.inviteHome(hostId, guestId); }
+  switchPreview(householdId: Id): SwitchPreview | null { return this.core.switchPreview(householdId); }
+  switchHousehold(householdId: Id): Result { return this.core.switchHousehold(householdId); }
+  movePreview(lotId: Id): MovePreview | null { return this.core.movePreview(lotId); }
+  moveHousehold(lotId: Id): Result { return this.core.moveHousehold(lotId); }
 
   setMode(m: 'live' | 'buy' | 'build'): void { this.core.setMode(m); }
 

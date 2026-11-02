@@ -31,6 +31,14 @@ const ACTIVITY: MoodletDef[] = [
   m('caffeinated', 'Caffeinated', 4, 90, 'energy', 'A fresh cup of coffee.'),
   m('playtime', 'Playtime', 7, 120, 'fun', 'Lost an afternoon in make-believe.'),
   m('fixedIt', 'Fixed It!', 8, 240, 'build', 'Got a broken thing working again.'),
+  // Venues (Milestone 7)
+  m('sweetTreat', 'Sweet Treat', 5, 120, 'fun', 'A pastry that was worth every crumb.'),
+  m('freshFruit', 'Fresh and Juicy', 4, 120, 'hunger', 'Ate something fresh from the market.'),
+  m('picnicJoy', 'Picnic in the Park', 9, 240, 'fun', 'Lunch outdoors in the fresh air.'),
+  m('peaceful', 'Peaceful', 6, 150, 'sparkle', 'Watched the clouds drift by without a care.'),
+  m('stockedPantry', 'Stocked Pantry', 3, 4320, 'home', 'A full pantry makes every home-cooked meal cheaper.'),
+  m('studious', 'Studious', 5, 180, 'book', 'Got a good stretch of studying done in a quiet room.'),
+  m('clearHead', 'Clear Head', 5, 180, 'book', 'Wrote it all down and feels lighter.'),
 ];
 
 /** Moodlets from the state of the home, refreshed by the simulation while the condition holds and dropped once it does not. */
@@ -100,6 +108,9 @@ const PROGRESS: MoodletDef[] = [
   m('promoted', 'Promoted!', 20, 1440, 'briefcase', 'Moved up at work.'),
   m('payday', 'Payday', 5, 240, 'money', 'Wages just arrived.'),
   m('missedWork', 'Missed Work', -10, 480, 'briefcase', 'Did not show up for a shift.'),
+  m('newJob', 'New Job', 12, 480, 'briefcase', 'Just started a new job.'),
+  m('workPraise', 'Praise at Work', 8, 240, 'briefcase', 'Someone at work noticed the effort.'),
+  m('workBlunder', 'Work Blunder', -8, 240, 'briefcase', 'A mistake at work is still bothering them.'),
   m('skillUp', 'Getting Better', 8, 240, 'star', 'Reached a new skill level.'),
   m('milestoneReached', 'Milestone Reached', 18, 1440, 'star', 'Completed an aspiration stage.'),
   m('dreamFulfilled', 'Dream Fulfilled', 30, 2880, 'sparkle', 'Completed a lifelong aspiration.'),

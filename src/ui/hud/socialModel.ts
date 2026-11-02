@@ -82,7 +82,9 @@ export function guestCandidates(st: WorldState, host: Person, def: EventDef): Pe
 /** Where a guest is, in a few words, and whether an invitation can reach them. */
 export function guestAvailability(g: Person): { ok: boolean; text: string } {
   if (g.location.kind === 'lot') return { ok: true, text: 'Here already' };
+  if (g.location.transit) return { ok: false, text: 'On the way somewhere' };
   if (g.location.place === 'home') return { ok: true, text: 'At home' };
+  if (g.location.place === 'visiting') return { ok: true, text: 'Out in town' };
   if (g.location.place === 'work') return { ok: false, text: 'At work' };
   return { ok: false, text: 'Away' };
 }

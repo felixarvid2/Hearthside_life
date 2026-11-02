@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hearthside Life - MPFB body test</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #efe7da; font-family: system-ui, sans-serif; overflow: hidden; }
+    #app { position: fixed; inset: 0; }
+    #bar { position: fixed; left: 8px; top: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
+    #bar button, #bar select { font: 13px system-ui, sans-serif; padding: 6px 10px; border-radius: 8px; border: 1px solid #b9ab95; background: #fffaf2; color: #3b3125; }
+    #bar button.on { background: #e8a95a; color: #2a1d0e; }
+    #bar label { font: 13px system-ui, sans-serif; color: #3b3125; background: #fffaf2cc; padding: 4px 8px; border-radius: 8px; display: flex; gap: 6px; align-items: center; }
+    #info { position: fixed; left: 8px; bottom: 8px; font: 12px ui-monospace, monospace; color: #3b3125; background: #fffaf2cc; padding: 4px 8px; border-radius: 6px; z-index: 2; white-space: pre; }
+    .tag { position: fixed; transform: translate(-50%, 0); font: 600 13px system-ui, sans-serif; color: #3b3125; background: #fffaf2cc; padding: 2px 8px; border-radius: 6px; z-index: 1; pointer-events: none; white-space: nowrap; }
+    body.clean #bar, body.clean #info { display: none; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="bar"></div>
+  <div id="info">loading...</div>
+  <script type="module" src="./mpfb.ts"></script>
+</body>
+</html>

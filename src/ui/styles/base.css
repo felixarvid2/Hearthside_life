@@ -117,7 +117,7 @@ textarea.text-input { min-height: 88px; resize: vertical; }
 .swatch-custom { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 
 .segmented { display: flex; flex-wrap: wrap; gap: 4px; background: var(--paper-2); padding: 4px; border-radius: 999px; }
-.seg { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 12px; border: none; border-radius: 999px; background: transparent; cursor: pointer; font-weight: 600; color: var(--ink-2); }
+.seg { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: none; border-radius: 999px; background: transparent; cursor: pointer; font-weight: 600; color: var(--ink-2); }
 .seg.is-selected { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 
 .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; font-weight: 600; font-size: 0.9rem; }

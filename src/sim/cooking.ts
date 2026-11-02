@@ -31,9 +31,14 @@ const stageOf = (a: ActionInstance) => (typeof a.data.stage === 'number' ? a.dat
 /** Cooking skill id used for recipes and meal quality. */
 export const COOKING_SKILL = 'cooking';
 
+/** Moodlet bought with groceries at the market (the buyer's own meals cost PANTRY_DISCOUNT less while it lasts). */
+export const PANTRY_MOODLET = 'stockedPantry';
+export const PANTRY_DISCOUNT = 0.4;
+
 /** Grocery cost of a recipe for this person (gardeners save on groceries). */
 export function recipeCost(p: Person, recipe: RecipeDef): number {
-  return Math.round(recipe.cost * (1 - gardeningGroceries(p.skills.gardening?.level ?? 1)));
+  const pantry = p.moodlets.some((m) => m.id === PANTRY_MOODLET) ? 1 - PANTRY_DISCOUNT : 1;
+  return Math.round(recipe.cost * (1 - gardeningGroceries(p.skills.gardening?.level ?? 1)) * pantry);
 }
 
 /** Recipes the person can cook, best first (higher level requirement, then cheaper). */

@@ -6,6 +6,7 @@ import './styles/base.css';
 import './styles/screens.css';
 import './styles/hud.css';
 import './styles/social.css';
+import './styles/neighbourhood.css';
 import type { GameAPI, GameMode, SoundId } from '../game/api';
 import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
@@ -20,9 +21,12 @@ import { installLayoutTracking, onLayoutChange } from './kit/layout';
 import type { ModeUI } from './modes/types';
 import { createContextMenu } from './hud/contextMenu';
 import { createDevOverlay } from './hud/devOverlay';
+import { createBillsPanel } from './hud/billsPanel';
 import { createFeedPanel, createLedgerPanel, createToaster } from './hud/feed';
 import { createEventTracker } from './hud/eventTracker';
 import { openEventPlanner } from './hud/eventPlanner';
+import { createAwayCard } from './hud/awayCard';
+import { closeNeighbourhood, openNeighbourhood } from './hud/neighbourhoodPanel';
 import { createHud } from './hud/hud';
 import { ZERO_INSETS, computeInsets, sameInsets, type Insets, type Rect } from './hud/insets';
 import { createPersonPanel } from './hud/personPanel';
@@ -70,7 +74,9 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   let personPanel: ReturnType<typeof createPersonPanel> | null = null;
   let feedPanel: ReturnType<typeof createFeedPanel> | null = null;
   let ledgerPanel: ReturnType<typeof createLedgerPanel> | null = null;
+  let billsPanel: ReturnType<typeof createBillsPanel> | null = null;
   let tutorial: ReturnType<typeof createTutorial> | null = null;
+  let awayCard: ReturnType<typeof createAwayCard> | null = null;
 
   const buildSession = new BuildSession(api, { sound, toast });
   cleanups.push(() => buildSession.destroy());
@@ -83,6 +89,9 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     openGameMenu: () => { ctx.close(); openGameMenu(sh); },
     openSettings: () => openSettings(sh),
     openEventPlanner: (hostId) => { ctx.close(); openEventPlanner(sh, hostId); },
+    openNeighbourhood: (opts) => { if (api.mode() !== 'live') { toast('Return to Live mode to use the map.', 'info'); return; } ctx.close(); closePanels(); awayCard?.hide(); openNeighbourhood(sh, opts); },
+    showAwayCard: (personId, anchor) => awayCard?.show(personId, anchor),
+    hideAwayCard: () => awayCard?.hide() ?? false,
     openContextMenu: (personId, pick, at) => ctx.open(personId, pick, at),
     closeContextMenu: () => ctx.close(),
     isContextMenuOpen: () => ctx.isOpen(),
@@ -199,30 +208,35 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   cleanups.push(() => evTracker.destroy());
 
   const onPanelClosed = () => { hud.setOpenPanel(openKind()); scheduleMeasure(); };
-  const openKind = (): ShellPanelKind | null => (personPanel?.panel.isOpen() ? 'person' : feedPanel?.panel.isOpen() ? 'feed' : ledgerPanel?.panel.isOpen() ? 'ledger' : null);
+  const openKind = (): ShellPanelKind | null => (personPanel?.panel.isOpen() ? 'person' : feedPanel?.panel.isOpen() ? 'feed' : ledgerPanel?.panel.isOpen() ? 'ledger' : billsPanel?.panel.isOpen() ? 'bills' : null);
   personPanel = createPersonPanel(sh, onPanelClosed);
   feedPanel = createFeedPanel(sh, onPanelClosed);
   ledgerPanel = createLedgerPanel(sh, onPanelClosed);
-  for (const p of [personPanel.panel, feedPanel.panel, ledgerPanel.panel]) { layer.appendChild(p.el); cleanups.push(() => p.destroy()); }
+  billsPanel = createBillsPanel(sh, onPanelClosed);
+  for (const p of [personPanel.panel, feedPanel.panel, ledgerPanel.panel, billsPanel.panel]) { layer.appendChild(p.el); cleanups.push(() => p.destroy()); }
 
-  const panelOf = (kind: ShellPanelKind) => (kind === 'person' ? personPanel : kind === 'feed' ? feedPanel : ledgerPanel);
+  const panelOf = (kind: ShellPanelKind) => (kind === 'person' ? personPanel : kind === 'feed' ? feedPanel : kind === 'ledger' ? ledgerPanel : billsPanel);
   function openPanel(kind: ShellPanelKind, opts?: { personId?: Id; tab?: PersonTab }): void {
-    for (const k of ['person', 'feed', 'ledger'] as const) if (k !== kind) panelOf(k)?.close();
+    for (const k of ['person', 'feed', 'ledger', 'bills'] as const) if (k !== kind) panelOf(k)?.close();
     ctx.close();
     if (kind === 'person') {
       const id = opts?.personId ?? api.selected();
       if (!id) return;
       personPanel?.open(id, opts?.tab);
     } else if (kind === 'feed') { feedPanel?.open(); hud.markFeedSeen(); }
+    else if (kind === 'bills') billsPanel?.open();
     else ledgerPanel?.open();
     hud.setOpenPanel(openKind());
     scheduleMeasure();
   }
   function closePanels(): void {
-    personPanel?.close(); feedPanel?.close(); ledgerPanel?.close();
+    personPanel?.close(); feedPanel?.close(); ledgerPanel?.close(); billsPanel?.close();
     hud.setOpenPanel(null);
     scheduleMeasure();
   }
+
+  awayCard = createAwayCard(sh);
+  cleanups.push(() => awayCard?.destroy());
 
   tutorial = createTutorial(sh);
   layer.appendChild(tutorial.el);
@@ -412,6 +426,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       evTracker.refresh();
       buyUI?.hide(); buildUI?.hide();
       closePanels();
+      closeNeighbourhood();
       ctx.close();
       lastMode = null;
     }
@@ -447,10 +462,12 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
         break;
       }
       case 'speed': hud.onSpeed(); break;
+      case 'lot': ctx.close(); awayCard?.hide(); hud.onSelection(); hud.refresh(); personPanel?.refresh(); evTracker.refresh(); scheduleMeasure(); break;
+      case 'neighbourhood': hud.onTrip(); hud.onSelection(); break;
       case 'camera': hud.onCamera(); ctx.reposition(); break;
       case 'portraits': hud.onPortraits(); personPanel?.refresh(); break;
       case 'settings': applySettings(); break;
-      case 'state': hud.refresh(); evTracker.refresh(); personPanel?.refresh(); feedPanel?.refresh(); ledgerPanel?.refresh(); tutorial?.update(api.mode()); break;
+      case 'state': hud.refresh(); evTracker.refresh(); personPanel?.refresh(); feedPanel?.refresh(); ledgerPanel?.refresh(); billsPanel?.refresh(); tutorial?.update(api.mode()); break;
       default: break;
     }
   }));
@@ -460,6 +477,8 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       case 'state.replaced':
         ctx.close();
         closePanels();
+        closeNeighbourhood();
+        awayCard?.hide();
         hud.resetFeed();
         tutorial?.onStateReplaced();
         hud.refresh();
@@ -468,6 +487,8 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       case 'ui.request':
         if (e.what === 'editOutfits') void openWardrobe(e.personId);
         else if (e.what === 'planEvent') openEventPlanner(sh, e.personId);
+        else if (e.what === 'bills') { api.select(e.personId); openPanel('bills'); }
+        else if (e.what === 'careers') { api.select(e.personId); openPanel('person', { personId: e.personId, tab: 'career' }); }
         else if (e.what === 'focusPerson') {
           const st = api.state();
           const p = st?.people[e.personId];
@@ -491,6 +512,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     personPanel?.refresh();
     feedPanel?.refresh();
     ledgerPanel?.refresh();
+    billsPanel?.refresh();
   }, HUD_REFRESH_MS);
   cleanups.push(() => clearInterval(timer));
 

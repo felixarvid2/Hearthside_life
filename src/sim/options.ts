@@ -10,7 +10,7 @@ import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
 import { dirtOf, isBroken, wearOf } from './housekeeping';
 import { repairFee } from './housework';
 import type { SimCtx } from './context';
-import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef } from './context';
+import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef, venueRestriction } from './context';
 import { NEED_LABELS } from './needs';
 import { socialFit } from './autonomy';
 import { hasRecentMemory, knownPeople, peekRel } from './relationships';
@@ -76,6 +76,7 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
       for (const iid of offeredInteractionIds(ref.def)) {
         const def = interactionDef(ctx, iid);
         if (!def || def.status !== 'ready') continue;
+        if (venueRestriction(ctx, p, def)) continue; // a picnic at the park's tables, not at the cafe's
         // Chores only show when there is something to do: dirt to clean, a break to fix, wear to service.
         if (def.behavior === 'clean' && dirtOf(ref.obj) < 0.05) continue;
         if ((def.behavior === 'repair' || def.behavior === 'callRepair') && !isBroken(ref.obj)) continue;
@@ -159,7 +160,14 @@ function socialOptions(ctx: SimCtx, p: Person, otherId: string): InteractionOpti
     });
   rows.sort((a, b) => SECTION_ORDER.indexOf(a.o.section!) - SECTION_ORDER.indexOf(b.o.section!)
     || Number(b.o.enabled) - Number(a.o.enabled) || b.rank - a.rank || a.d.name.localeCompare(b.d.name));
-  return rows.map((x) => x.o);
+  const out = rows.map((x) => x.o);
+  // Out and about (Milestone 7): ask a person you have met to come to your home.
+  const homeId = ctx.state.households[p.householdId]?.homeLotId;
+  const here = lotLoc(p);
+  if (here && homeId && here.lotId !== homeId && other.householdId !== p.householdId) {
+    out.push({ ...option(ctx, p, 'inviteHome', `Invite ${other.firstName} to My Home`, 'home', 'social', t), section: 'special' });
+  }
+  return out;
 }
 
 function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
@@ -170,10 +178,15 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
   for (const def of defs) {
     const beh = def.behavior ?? 'generic';
     if (beh === 'leaveLot' || def.id === 'leaveLot') continue;
+    if (venueRestriction(ctx, p, def)) continue; // a jog is offered in the park only
     if (beh === 'goToWork' && !p.career) continue;
     if (beh === 'invite') {
+      // The phone lists the neighbours and everybody the caller has met; the townspeople of the generated neighbourhood
+      // (Milestone 7) are strangers until the first hello at a venue or at their door.
+      const strangers = new Set(ctx.state.neighbourhood?.npcHouseholdIds ?? []);
       for (const other of Object.values(ctx.state.people)) {
         if (other.householdId === p.householdId || !ctx.state.households[other.householdId] || ctx.state.households[other.householdId]!.isPlayable) continue;
+        if (strangers.has(other.householdId) && peekRel(ctx.state, p.id, other.id).familiarity <= 0 && peekRel(ctx.state, other.id, p.id).familiarity <= 0) continue;
         out.push({ ...option(ctx, p, def.id, `Invite ${other.firstName} Over`, def.icon, 'self', self, { personId: other.id }), section: 'phone' });
       }
       continue;
@@ -196,6 +209,10 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
         if (!other || other.householdId === p.householdId || !romanceInterest(p, other) || peekRel(ctx.state, p.id, id).romanceBlocked) continue;
         out.push({ ...option(ctx, p, def.id, `Ask ${other.firstName} on a Date`, def.icon, 'self', self, { personId: id }), section: 'phone' });
       }
+      continue;
+    }
+    if (beh === 'openBills' || beh === 'openCareers') {
+      out.push({ ...option(ctx, p, def.id, def.name, def.icon, 'self', self), section: 'phone' });
       continue;
     }
     if (beh === 'changeOutfit') {

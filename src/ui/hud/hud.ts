@@ -5,11 +5,12 @@
 
 import type { CutawayMode, GameMode } from '../../game/api';
 import { DAY_NAMES, dayIndex, formatClock, formatDay, weekday, type Speed } from '../../core/clock';
-import { formatMoney } from '../../core/money';
+import { formatMoney, formatMoneyShort } from '../../core/money';
 import { activeHousehold } from '../../core/state';
 import { h, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { layout, onLayoutChange } from '../kit/layout';
+import { tripFromState, tripView } from './neighbourhoodModel';
 import { createStrip } from './strip';
 import type { Shell } from './shell';
 
@@ -38,7 +39,9 @@ export interface Hud {
   onPortraits(): void;
   markFeedSeen(): void;
   /** Reflects which shell panel is open on the feed and funds buttons. */
-  setOpenPanel(kind: 'person' | 'feed' | 'ledger' | null): void;
+  setOpenPanel(kind: 'person' | 'feed' | 'ledger' | 'bills' | null): void;
+  /** Re-reads the trip under way (the "on the way" chip). */
+  onTrip(): void;
   resetFeed(): void;
   destroy(): void;
 }
@@ -77,7 +80,10 @@ export function createHud(sh: Shell): Hud {
   const speedGroup = h('div', { class: 'speed', role: 'group', ariaLabel: 'Game speed' }, ...speedBtns);
   const pausedNote = h('div', { class: 'paused-note', role: 'status' }, icon('pause', 16), h('span', { class: 'paused-text' }));
   pausedNote.hidden = true;
-  const fundsAmount = h('span', { class: 'funds-amount' });
+  // Two spellings of the amount: the full one, and whole dollars for narrow bars (phone landscape; CSS picks one).
+  const fundsFull = h('span', { class: 'funds-full' });
+  const fundsShort = h('span', { class: 'funds-short' });
+  const fundsAmount = h('span', { class: 'funds-amount' }, fundsFull, fundsShort);
   const fundsTag = h('span', { class: 'funds-tag', text: 'Free building' });
   fundsTag.hidden = true;
   const fundsBtn = h('button', { type: 'button', class: 'funds-btn' }, icon('money', 20), h('span', { class: 'funds-text' }, fundsAmount, fundsTag));
@@ -90,6 +96,18 @@ export function createHud(sh: Shell): Hud {
   feedBtn.addEventListener('click', () => {
     if (sh.isPanelOpen('feed')) { sh.closePanels(); sh.sound('close'); } else { sh.openPanel('feed'); sh.sound('open'); }
   });
+
+  const mapBtn = h('button', { type: 'button', class: ['hud-btn', 'map-btn'], ariaLabel: 'Neighbourhood map', title: 'Neighbourhood map' }, icon('map', 22), h('span', { class: 'hud-btn-label', text: 'Map' }));
+  mapBtn.addEventListener('click', () => { sh.sound('open'); sh.openNeighbourhood(); });
+
+  // ---- trip chip: shown while a group is on the way to another lot ----
+  const tripTitle = h('span', { class: 'trip-title' });
+  const tripSub = h('span', { class: 'trip-sub' });
+  const tripChip = h('button', { type: 'button', class: ['hud-trip', 'hud-box'], ariaLabel: 'Trip under way. Open the map' }, icon('car', 22), h('span', { class: 'trip-text' }, tripTitle, tripSub));
+  tripChip.hidden = true;
+  tripChip.addEventListener('pointerdown', (e) => e.stopPropagation());
+  tripChip.addEventListener('click', () => { sh.sound('open'); sh.openNeighbourhood(); });
+  let lastTrip = '';
 
   // ---- strip ----
   const strip = createStrip(sh);
@@ -129,7 +147,7 @@ export function createHud(sh: Shell): Hud {
   const row2 = h('div', { class: 'hud-row2' });
   const bottomBar = h('nav', { class: 'hud-bottom hud-box', ariaLabel: 'Modes and camera' });
   const cluster = h('div', { class: 'camera-cluster hud-box' });
-  const el = h('div', { class: 'hud' }, topBar, row2, bottomBar, cluster);
+  const el = h('div', { class: 'hud' }, topBar, row2, bottomBar, cluster, tripChip);
   for (const n of [topBar, row2, bottomBar, cluster]) n.addEventListener('pointerdown', (e) => e.stopPropagation());
 
   let portraitLayout: boolean | null = null;
@@ -141,12 +159,12 @@ export function createHud(sh: Shell): Hud {
     if (portrait) {
       topBar.replaceChildren(menuBtn, clock, spacer(), speedGroup, pausedNote);
       row2.replaceChildren(strip.el, spacer(), fundsBtn);
-      bottomBar.replaceChildren(modeBar, spacer(), feedBtn);
+      bottomBar.replaceChildren(modeBar, spacer(), mapBtn, feedBtn);
       cluster.replaceChildren(camGroup);
       row2.hidden = false;
       cluster.hidden = false;
     } else {
-      topBar.replaceChildren(menuBtn, clock, speedGroup, pausedNote, spacer(), feedBtn, fundsBtn);
+      topBar.replaceChildren(menuBtn, clock, speedGroup, pausedNote, spacer(), mapBtn, feedBtn, fundsBtn);
       bottomBar.replaceChildren(strip.el, modeBar, camGroup);
       row2.replaceChildren();
       row2.hidden = true;
@@ -178,7 +196,8 @@ export function createHud(sh: Shell): Hud {
     const fk = `${hh?.funds ?? 0}|${st.settings.unlimitedFunds}`;
     if (fk !== lastFunds) {
       lastFunds = fk;
-      setText(fundsAmount, formatMoney(hh?.funds ?? 0));
+      setText(fundsFull, formatMoney(hh?.funds ?? 0));
+      setText(fundsShort, formatMoneyShort(hh?.funds ?? 0));
       fundsTag.hidden = !st.settings.unlimitedFunds;
       const label = `Household funds ${formatMoney(hh?.funds ?? 0)}${st.settings.unlimitedFunds ? ', unlimited building funds' : ''}. Open the ledger`;
       fundsBtn.setAttribute('aria-label', label);
@@ -198,6 +217,21 @@ export function createHud(sh: Shell): Hud {
     }
     if (mode === 'live') strip.refresh();
     updateCentre();
+    updateTrip();
+  };
+
+  const updateTrip = () => {
+    const st = api.state();
+    const trip = st && mode === 'live' ? tripView(tripFromState(st), st.clock.minutes, (id) => st.people[id]?.firstName ?? 'Someone') : null;
+    const k = trip ? `${trip.title}|${trip.who}|${trip.arrivesText}|${Math.floor(trip.minutesLeft / 5)}` : '';
+    if (k === lastTrip) return;
+    lastTrip = k;
+    tripChip.hidden = !trip;
+    if (trip) {
+      setText(tripTitle, trip.title);
+      setText(tripSub, `${trip.who} · arrives ${trip.arrivesText}`);
+      tripChip.setAttribute('aria-label', `${trip.title}, ${trip.who}, arrives ${trip.arrivesText}. Open the map`);
+    }
   };
 
   const onSpeed = () => {
@@ -242,6 +276,9 @@ export function createHud(sh: Shell): Hud {
       b.setAttribute('aria-pressed', String(on));
     }
     strip.el.hidden = m !== 'live';
+    mapBtn.disabled = m !== 'live';
+    mapBtn.title = m === 'live' ? 'Neighbourhood map' : 'Return to Live mode to use the map';
+    lastTrip = '';
     onSpeed();
     refresh();
     sh.requestLayout();
@@ -264,9 +301,10 @@ export function createHud(sh: Shell): Hud {
     markFeedSeen: () => { feedSeen = api.state()?.feed.at(-1)?.id ?? ''; refresh(); },
     setOpenPanel: (kind) => {
       feedBtn.setAttribute('aria-expanded', String(kind === 'feed'));
-      fundsBtn.setAttribute('aria-expanded', String(kind === 'ledger'));
+      fundsBtn.setAttribute('aria-expanded', String(kind === 'ledger' || kind === 'bills'));
     },
-    resetFeed: () => { feedSeen = null; },
+    onTrip: () => { updateTrip(); },
+    resetFeed: () => { feedSeen = null; lastTrip = ''; },
     destroy: () => { unsubLayout(); el.remove(); },
   };
 }

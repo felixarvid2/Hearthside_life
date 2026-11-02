@@ -185,6 +185,12 @@ export interface InteractionDef {
   };
   /** Who may use it. */
   allowVisitors: boolean;
+  /**
+   * Where this belongs: the place types it is offered at, 'home' for any residential lot or a venue type (Lot.venueType: park,
+   * cafe, gym, library, arts, market). Absent = everywhere. A jog lists only 'park'; a picnic lists 'park' and 'home' (not the
+   * cafe terrace); computer games are for 'home' (not the library's computers).
+   */
+  venues?: string[];
   status: ContentStatus;
 }
 
@@ -335,7 +341,35 @@ export interface CareerLevelDef {
   /** Minutes after midnight. */
   start: number;
   end: number;
-  promotion: { performance: number; skills: Record<string, number> };
+  promotion: {
+    performance: number;
+    skills: Record<string, number>;
+    /** Optional days worked in the career (lifetime, counting every shift, including partial ones). */
+    days?: number;
+    /** Optional social requirement: at least one relationship of this friendship level, outside the household. */
+    relationship?: { minFriendship: number; label: string };
+  };
+  /** Short, player-facing advantages of this level (shown in the career panel). */
+  perks?: string[];
+}
+
+/** A small on-the-job decision offered at the start of a shift (content/careerEvents.ts). */
+export interface CareerEventDef {
+  id: string;
+  title: string;
+  text: string;
+  options: Array<{
+    id: string;
+    label: string;
+    description: string;
+    performance: number;
+    /** Signed cents added to the household in the same transaction-safe way as a shift bonus. */
+    pay?: Cents;
+    moodlet?: string;
+    skill?: { id: string; xp: number };
+    /** Result sentence shown in the feed. */
+    result: string;
+  }>;
 }
 
 export interface CareerDef {
@@ -443,6 +477,8 @@ export interface ContentDB {
   aspirations: Record<string, AspirationDef>;
   skills: Record<string, SkillDef>;
   careers: Record<string, CareerDef>;
+  /** Small on-the-job decisions, content/careerEvents.ts. Optional so older content fixtures stay valid. */
+  careerEvents?: Record<string, CareerEventDef>;
   moodlets: Record<string, MoodletDef>;
   recipes: Record<string, RecipeDef>;
   packs: Record<string, PackDef>;

@@ -41,6 +41,36 @@
 // Doors and windows spanning several tiles (OpeningDef.width > 1) are stored as one Opening with `span`.
 // The renderer should draw an opening over world/walls.ts openingEdgeKeys(opening) starting at its wallId edge.
 // ---------------------------------------------------------------------------------------------------------
+// Neighbourhood API (Milestone 7: lots, travel, other households). Optional members, like the event planner and the
+// economy: the standalone dev pages of other screens may omit them. All of it is plain data, never three.js objects.
+//
+//   neighbourhood()             every lot (kind, venue type, name, address, blurb, map position, household, tenure, rent or
+//                               price, opening hours, who is there, travel minutes and why the household cannot go),
+//                               every household (members, funds, where they are) and the trip under way. Read-only.
+//   whereIs(personId)           where a person is in words, for HUD badges: "At home", "At work", "At Lakeside Park",
+//                               "On the way to Lantern Hall" (PersonPlace.text), plus kind / lotId / arrival minute.
+//   travelProblem(ids, lotId)   why these household members cannot set out for the lot now (closed, at work, a trip is
+//                               under way, hosting an event...), or null. Changes nothing.
+//   travel(ids, lotId)          'Go to <venue>' / 'Visit <household>': the people walk to the lot entry and set off; they
+//                               arrive 20-40 game minutes later (`minutes`, `arrivesAt`), at the entry of the destination. It costs
+//                               nothing. Household members who stay behind go off-lot ("At home") and follow the light
+//                               schedule. The active lot switches when the group arrives (events 'travel' and 'lot.activated').
+//   goHome(ids?)                'Go home': everyone who is out (or `ids`) returns to the household's home lot.
+//   inviteHome(hostId, guestId) in person: ask somebody you have met to come to your home (a visit in about an hour).
+//                               The same entry is offered in the context menu of the person ("Invite X to My Home").
+//   switchPreview(householdId)  what switching the household you play would do, in sentences (consequences[]), or why not.
+//   switchHousehold(householdId) play another household; the previous one carries on lightly (jobs, bills, daily plan).
+//   movePreview(lotId) / moveHousehold(lotId)
+//                               move the household into an empty home that is for rent (first week up front) or for sale;
+//                               an owned home that is left is sold for 80 % of its value. Members who are out travel there.
+//
+// Rules the simulation follows (docs/ARCHITECTURE.md "Neighbourhood"):
+//  - only the active lot is simulated in detail; everybody else is placed by timestamps: at home, at work or at a venue;
+//  - a person's job, relationships, traits and looks are generated once and never rerolled when a lot loads;
+//  - each household's funds and ledger stay separate; wages and bills use the same occurrence ids as the active household;
+//  - events: 'lot.activated' (the renderer shows the new lot), 'travel' (departed / arrived), 'household.switched',
+//    'household.moved'; UiChange 'lot' and 'neighbourhood' tell the UI to re-read neighbourhood().
+// ---------------------------------------------------------------------------------------------------------
 
 import type { ContentDB } from '../content/types';
 import type { Speed } from '../core/clock';
@@ -51,10 +81,16 @@ import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, HomeEventType, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 import type { RoomDelta, Vertex } from '../world/roomTracker';
+import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
+import type { PersonPlace } from '../sim/places';
 
 export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 export { WALL_HEIGHT_PRESETS } from '../building/buildPlans';
 export type { RoomDelta, Vertex } from '../world/roomTracker';
+export type { HouseholdBrief, MovePreview, SwitchPreview } from '../sim/households';
+export type { HouseholdInfo, LotInfo, LotPerson, NeighbourhoodInfo, Tenure, TripInfo } from '../sim/neighbourhoodView';
+export type { PersonPlace, PlaceKind } from '../sim/places';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
 export type CutawayMode = 'up' | 'cutaway' | 'down';
@@ -252,7 +288,11 @@ export interface DevStats {
 
 /** What changed in UI-relevant game state (not world events, which come through `events`). */
 export type UiChange =
-  | 'mode' | 'selection' | 'speed' | 'placement' | 'paint' | 'build' | 'undo' | 'camera' | 'settings' | 'state' | 'portraits' | 'thumbnails' | 'creator';
+  | 'mode' | 'selection' | 'speed' | 'placement' | 'paint' | 'build' | 'undo' | 'camera' | 'settings' | 'state' | 'portraits' | 'thumbnails' | 'creator'
+  /** The active lot changed (travel arrived, household switched or moved): the world view shows another lot. */
+  | 'lot'
+  /** Something the neighbourhood map shows changed: a trip started or ended, a household switched or moved. */
+  | 'neighbourhood';
 
 export interface CreatorPreviewOptions {
   /** Outfit category shown in the preview. */
@@ -330,6 +370,35 @@ export interface GameAPI {
   planEvent?(req: PlanEventRequest): Result & { eventId?: Id };
   /** Calls off a planned event that has not started. */
   cancelEvent?(eventId: Id): Result;
+
+  // ---- careers and household economy (Milestone 6) ----
+  // Optional like the event planner: standalone dev mocks of other screens may omit them. Money always moves
+  // through the simulation's transact with an occurrence id.
+  /** Pays one bill of the person's household; returns the amount paid. */
+  payBill?(personId: Id, billId: Id): Result & { amount?: Cents };
+  /** Turns automatic bill payment on or off for the person's household. */
+  setAutoPayBills?(personId: Id, on: boolean): Result;
+  /** Takes a job (level 1) for a household member. */
+  joinCareer?(personId: Id, careerId: string): Result;
+  /** Quits the member's current job (a shift in progress is cancelled without pay). */
+  quitCareer?(personId: Id): Result;
+  /** 'slack' | 'normal' | 'hard': affects performance and energy. */
+  setCareerEffort?(personId: Id, effort: 'slack' | 'normal' | 'hard'): Result;
+  /** Answers the current shift's on-the-job decision. */
+  resolveCareerEvent?(personId: Id, optionId: string): Result;
+
+  // ---- neighbourhood and other households (Milestone 7; see the Neighbourhood API notes at the top) ----
+  neighbourhood?(): NeighbourhoodInfo | null;
+  whereIs?(personId: Id): PersonPlace | null;
+  travelProblem?(personIds: Id[], lotId: Id): string | null;
+  /** `minutes` of travel; the group arrives at `arrivesAt` (absolute game minute). */
+  travel?(personIds: Id[], lotId: Id): Result & { minutes?: number; arrivesAt?: number };
+  goHome?(personIds?: Id[]): Result & { minutes?: number; arrivesAt?: number };
+  inviteHome?(hostId: Id, guestId: Id): Result;
+  switchPreview?(householdId: Id): SwitchPreview | null;
+  switchHousehold?(householdId: Id): Result;
+  movePreview?(lotId: Id): MovePreview | null;
+  moveHousehold?(lotId: Id): Result;
 
   // ---- modes ----
   /** Build and Buy pause the simulation; returning to live restores the previous speed. */

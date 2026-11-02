@@ -14,7 +14,7 @@ import { choreCandidates } from './chores';
 import { availableMeals, stovesOn } from './cooking';
 import { isBroken } from './housekeeping';
 import type { SimCtx } from './context';
-import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter } from './context';
+import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, venueRestriction } from './context';
 import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
 import { eventMealsFor, eventSocialBonus, onDateTogether } from './events';
@@ -125,6 +125,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (!def || !def.autonomy.enabled || def.status !== 'ready' || def.kind !== 'object') continue;
       const beh = def.behavior ?? 'generic';
       if (NEVER_AUTONOMOUS.has(beh)) continue;
+      if (venueRestriction(ctx, p, def)) continue; // no naps in the cafe, no games on the library computers
       if (visitor && !(def.allowVisitors && VISITOR_BEHAVIORS.has(beh))) continue;
       if (def.cost && def.cost > funds) continue;
       if (beh === 'cook') {
@@ -169,6 +170,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
     for (const def of Object.values(ctx.content.interactions)) {
       if (def.kind !== 'self' || !def.autonomy.enabled || def.status !== 'ready') continue;
       if (NEVER_AUTONOMOUS.has(def.behavior ?? 'generic')) continue;
+      if (venueRestriction(ctx, p, def)) continue; // a jog is for the park
       if (def.cost && def.cost > funds) continue;
       let data: ActionRequest['data'] | undefined;
       if (def.behavior === 'invite') continue;
@@ -341,14 +343,16 @@ export function runAutonomy(ctx: SimCtx): void {
     const loc = lotLoc(p);
     if (!loc) continue;
     const visitor = isVisitor(ctx, p);
-    // The autonomy setting governs the player's household; visitors always look after themselves.
-    if (!visitor && ctx.state.households[p.householdId]?.isPlayable && !ctx.state.settings.autonomy) continue;
+    // The autonomy setting governs the player's household wherever it is (also as guests or on a venue); everybody else
+    // looks after themselves.
+    const controlled = ctx.state.households[p.householdId]?.isPlayable === true;
+    if (controlled && !ctx.state.settings.autonomy) continue;
     if (ctx.res.holder(personKey(p.id))) continue;
     const head = p.queue[0];
     if (head && !(head.source === 'autonomy' && head.phase === 'perform' && !head.cancelRequested)) continue;
     if (!canDecide(ctx, p)) continue;
     p.cooldowns[DECIDE_KEY] = ctx.now + AUTONOMY_INTERVAL;
-    const level = visitor ? 1 : ctx.state.settings.autonomyLevel;
+    const level = visitor && !controlled ? 1 : ctx.state.settings.autonomyLevel;
     if (!head) {
       const pick = choose(ctx, candidatesFor(ctx, p), AUTONOMY_MIN_SCORE[level]);
       if (pick) insertAction(ctx, p, makeAction(ctx, p, pick.req, 'autonomy'));

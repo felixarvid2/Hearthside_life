@@ -104,6 +104,92 @@ export function fillSocialDefaults(raw: Record<string, unknown>): void {
   });
 }
 
+const BILL_STATUSES = ['due', 'overdue', 'paid', 'cutoff'];
+const WORK_EFFORTS = ['slack', 'normal', 'hard'];
+
+/**
+ * Defaults for fields added to schema 1 by Milestone 6 (careers and economy): a career may carry `effort` and a
+ * pending event, a household may have its utilities cut off, settings may auto-pay bills, and the world holds
+ * weekly bills. Old saves have none of them and readers treat absent as the default; this only repairs values
+ * that would confuse the simulation (bad effort or event data, malformed bills, non-boolean flags).
+ */
+export function fillEconomyDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const str = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
+  if (isRecord(raw.settings) && raw.settings.autoPayBills !== undefined && typeof raw.settings.autoPayBills !== 'boolean') {
+    delete raw.settings.autoPayBills;
+  }
+  if (isRecord(raw.households)) {
+    for (const hh of Object.values(raw.households)) {
+      if (isRecord(hh) && hh.powerOff !== undefined && typeof hh.powerOff !== 'boolean') delete hh.powerOff;
+    }
+  }
+  if (isRecord(raw.people)) {
+    for (const p of Object.values(raw.people)) {
+      if (!isRecord(p) || !isRecord(p.career)) continue;
+      const c = p.career;
+      if (c.effort !== undefined && !(typeof c.effort === 'string' && WORK_EFFORTS.includes(c.effort))) delete c.effort;
+      if (c.pendingEvent !== undefined && c.pendingEvent !== null) {
+        const e = c.pendingEvent;
+        if (!isRecord(e) || !str(e.eventId) || !num(e.day)) delete c.pendingEvent;
+        else if (e.chosen !== undefined && !str(e.chosen)) delete e.chosen;
+      }
+    }
+  }
+  if (raw.bills === undefined) return;
+  if (!Array.isArray(raw.bills)) { delete raw.bills; return; }
+  raw.bills = raw.bills.filter((b): b is Record<string, unknown> => {
+    if (!isRecord(b)) return false;
+    if (!str(b.id) || !str(b.householdId)) return false;
+    if (!num(b.week) || !num(b.amount) || !num(b.base) || !num(b.lateFee)) return false;
+    if (!num(b.issuedAt) || !num(b.dueAt) || !num(b.graceEndsAt)) return false;
+    if (!BILL_STATUSES.includes(String(b.status))) return false;
+    if (b.paidAt !== undefined && !num(b.paidAt)) delete b.paidAt;
+    if (b.cutOffAt !== undefined && !num(b.cutOffAt)) delete b.cutOffAt;
+    return b.amount >= 0 && b.base >= 0 && b.lateFee >= 0;
+  });
+}
+
+/**
+ * Defaults for fields added to schema 1 by Milestone 7 (neighbourhood and venues): lots may carry `built`, `variant`,
+ * `blurb`, `map`, `rent` and `price`, an off-lot location may be `transit`, and the world may hold the `neighbourhood`
+ * marker. Old saves have none of them: absent `built` means the lot is built, and a world without the marker gets its
+ * neighbourhood generated when it is loaded (game/neighbourhood.ts ensureNeighbourhood), with the existing household and
+ * lots kept. This only repairs values that would confuse the simulation; a damaged marker is mended, never dropped,
+ * because dropping it would generate the neighbourhood a second time.
+ */
+export function fillNeighbourhoodDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const whole = (v: unknown): v is number => num(v) && Number.isInteger(v) && v >= 0;
+  if (isRecord(raw.lots)) {
+    for (const lot of Object.values(raw.lots)) {
+      if (!isRecord(lot)) continue;
+      if (lot.built !== undefined && typeof lot.built !== 'boolean') delete lot.built;
+      if (lot.variant !== undefined && !whole(lot.variant)) delete lot.variant;
+      if (lot.blurb !== undefined && typeof lot.blurb !== 'string') delete lot.blurb;
+      if (lot.map !== undefined && !(isRecord(lot.map) && num(lot.map.x) && num(lot.map.y))) delete lot.map;
+      if (lot.rent !== undefined && !whole(lot.rent)) delete lot.rent;
+      if (lot.price !== undefined && !whole(lot.price)) delete lot.price;
+    }
+  }
+  if (isRecord(raw.people)) {
+    for (const p of Object.values(raw.people)) {
+      if (!isRecord(p) || !isRecord(p.location)) continue;
+      if (p.location.transit !== undefined && typeof p.location.transit !== 'boolean') delete p.location.transit;
+    }
+  }
+  if (raw.neighbourhood === undefined) return;
+  const households = isRecord(raw.households) ? raw.households : {};
+  const m = isRecord(raw.neighbourhood) ? raw.neighbourhood : {};
+  const ids = Array.isArray(m.npcHouseholdIds) ? m.npcHouseholdIds.filter((id): id is string => typeof id === 'string' && isRecord(households[id])) : [];
+  const fixed: Record<string, unknown> = {
+    version: 1, street: typeof m.street === 'string' && m.street ? m.street : 'Main Street', npcHouseholdIds: ids,
+  };
+  if (typeof m.nextDoorHouseholdId === 'string' && isRecord(households[m.nextDoorHouseholdId])) fixed.nextDoorHouseholdId = m.nextDoorHouseholdId;
+  if (whole(m.moves)) fixed.moves = m.moves;
+  raw.neighbourhood = fixed;
+}
+
 /** Oldest schema version this build can still upgrade. */
 export const OLDEST_SUPPORTED_VERSION = 1;
 
@@ -175,6 +261,8 @@ export function migrate(raw: unknown, opts: MigrateOptions = {}): MigrateResult 
   if (!r.ok) return r;
   fillDailyLifeDefaults(r.data);
   fillSocialDefaults(r.data);
+  fillEconomyDefaults(r.data);
+  fillNeighbourhoodDefaults(r.data);
   return { ok: true, state: r.data as unknown as WorldState, fromVersion: r.fromVersion, toVersion: r.toVersion, migrated: r.migrated };
 }
 

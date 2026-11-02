@@ -41,7 +41,8 @@ export function traitDecayMult(ctx: Pick<SimCtx, 'content'>, p: Person, need: Ne
  */
 export function decayNeeds(ctx: SimCtx, p: Person): void {
   const loc = p.location;
-  if (loc.kind === 'offlot' && loc.place === 'home') {
+  // At home, or enjoying themselves at a venue or a friend's house the player is not on: needs drift to comfortable.
+  if (loc.kind === 'offlot' && (loc.place === 'home' || (loc.place === 'visiting' && !loc.transit))) {
     const step = (OFFLOT_HOME_DRIFT_PER_HOUR / 60) * TICK_MINUTES;
     for (const n of NEED_IDS) {
       const v = p.needs[n];

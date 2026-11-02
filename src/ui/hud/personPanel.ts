@@ -6,7 +6,7 @@ import type { ContentDB } from '../../content/types';
 import { formatClock, formatDuration } from '../../core/clock';
 import type { Person, WorldState } from '../../core/types';
 import { NEED_IDS } from '../../core/types';
-import { button, meter, panel, tabs, type Panel } from '../kit/components';
+import { button, confirmDialog, meter, panel, segmented, tabs, toast, type Panel } from '../kit/components';
 import { h, setChildren, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import {
@@ -96,11 +96,11 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
   // ---------------------------------------------------------------------------------------------
 
   const renderNeeds = (st: WorldState, pr: Person) => {
-    const sig = `needs:${pr.id}`;
+    const sig = `needs:${pr.id}:${awayText(pr, st)?.label ?? ''}`;
     if (sigs.get('needs') !== sig) {
       sigs.set('needs', sig);
       needMeters = NEED_IDS.map((id) => ({ id, m: meter({ label: NEED_LABELS[id], icon: id, value: pr.needs[id] }) }));
-      const away = awayText(pr);
+      const away = awayText(pr, st);
       setChildren(content,
         h('div', { class: 'pp-needs' }, ...needMeters.map((n) => n.m.el)),
         away ? h('p', { class: 'pp-note' }, icon('briefcase', 18), h('span', { text: `${away.label}${away.back ? ` · ${away.back}` : ''}. Needs change more slowly while away.` })) : null,
@@ -114,13 +114,13 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
   };
 
   const renderQueue = (st: WorldState, pr: Person) => {
-    const sig = `queue:${pr.id}:${pr.location.kind}:${pr.queue.map((a) => `${a.id}/${a.phase}/${a.cancelRequested ? 1 : 0}`).join(',')}`;
+    const sig = `queue:${pr.id}:${pr.location.kind}:${awayText(pr, st)?.label ?? ''}:${pr.queue.map((a) => `${a.id}/${a.phase}/${a.cancelRequested ? 1 : 0}`).join(',')}`;
     if (sigs.get('queue') !== sig) {
       sigs.set('queue', sig);
       queueProgress = null;
       const items: HTMLElement[] = [];
       if (pr.location.kind !== 'lot') {
-        const away = awayText(pr);
+        const away = awayText(pr, st);
         items.push(empty(`${pr.firstName} is away${away ? ` (${away.label.toLowerCase()}${away.back ? `, ${away.back.toLowerCase()}` : ''})` : ''}. Orders can be given when ${pr.pronouns.subject} is home.`, 'briefcase'));
       }
       const [cur, ...rest] = pr.queue;
@@ -224,16 +224,60 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     const def = c ? db.careers[c.careerId] : undefined;
     const lvl = c && def ? def.levels.find((l) => l.level === c.level) : undefined;
     const status = c ? shiftStatusText(st, c, lvl) : '';
-    const reqs = c ? promotionRequirements(db, pr, c) : null;
-    const sig = `career:${pr.id}:${c ? `${c.careerId}/${c.level}/${Math.round(c.performance)}/${c.shift?.status}/${c.daysWorked}/${status}/${reqs?.map((r) => r.text + r.met).join(';')}` : 'none'}`;
+    const reqs = c ? promotionRequirements(db, pr, c, st) : null;
+    const pending = c?.pendingEvent ? db.careerEvents?.[c.pendingEvent.eventId] : undefined;
+    const sig = `career:${pr.id}:${c ? `${c.careerId}/${c.level}/${Math.round(c.performance)}/${c.shift?.status}/${c.daysWorked}/${status}/${c.effort ?? 'normal'}/${c.pendingEvent?.eventId ?? '-'}/${c.pendingEvent?.chosen ?? '-'}/${reqs?.map((r) => r.text + r.met).join(';')}` : 'none'}`;
     if (sigs.get('career') === sig) return;
     sigs.set('career', sig);
+
+    const quit = button({
+      label: 'Quit this job', small: true, variant: 'secondary', onClick: () => {
+        void confirmDialog({
+          title: 'Quit this job?', text: `${pr.firstName} will leave ${def?.name ?? 'this career'} at level ${c?.level ?? 1}. A shift in progress is cancelled without pay.`,
+          confirm: 'Quit job', danger: true,
+        }).then((yes) => {
+          if (!yes) return;
+          const r = api.quitCareer?.(pr.id) ?? { ok: false, reason: 'That is not available here.' };
+          if (!r.ok) toast(r.reason, 'error');
+          else sh.sound('confirm');
+        });
+      },
+    });
     if (!c) {
-      content.replaceChildren(h('div', { class: 'career-none' }, h('span', { class: 'career-icon' }, icon('briefcase', 28)), h('div', {},
-        h('h3', { text: 'No job' }), h('p', { text: `${pr.firstName} has no job right now. A job brings a daily schedule, wages and promotions.` }))));
+      const careers = Object.values(db.careers).filter((d) => d.status === 'ready').sort((a, b) => a.name.localeCompare(b.name));
+      content.replaceChildren(
+        h('div', { class: 'career-none' }, h('span', { class: 'career-icon' }, icon('briefcase', 28)), h('div', {},
+          h('h3', { text: 'No job' }), h('p', { text: `${pr.firstName} has no job right now. Take one below: each has a schedule, wages, promotions and perks.` }))),
+        h('h3', { class: 'pp-subhead', text: 'Open careers' }),
+        h('ul', { class: 'career-list' }, ...careers.map((d) => {
+          const first = d.levels[0];
+          return h('li', { class: 'career-choice' },
+            h('span', { class: 'q-icon' }, icon(d.icon || 'briefcase', 22)),
+            h('div', { class: 'career-choice-main' },
+              h('span', { class: 'career-choice-name', text: d.name }),
+              h('span', { class: 'career-choice-meta', text: `${d.description} Starting pay ${first ? `${formatMoney(first.hourlyWage)}/hour` : 'unknown'}.` })),
+            button({
+              label: 'Take job', small: true, variant: 'primary', onClick: () => {
+                const r = api.joinCareer?.(pr.id, d.id) ?? { ok: false, reason: 'That is not available here.' };
+                if (!r.ok) toast(r.reason, 'error');
+                else sh.sound('confirm');
+              },
+            }));
+        })),
+      );
       return;
     }
     const name = def?.name ?? humanize(c.careerId);
+    const effort = c.effort ?? 'normal';
+    const effortPicker = segmented<'slack' | 'normal' | 'hard'>({
+      label: 'Work effort', value: effort,
+      options: [{ id: 'slack', label: 'Slack off' }, { id: 'normal', label: 'Normal' }, { id: 'hard', label: 'Work hard' }],
+      onChange: (v) => {
+        const r = api.setCareerEffort?.(pr.id, v) ?? { ok: false, reason: 'That is not available here.' };
+        if (!r.ok) toast(r.reason, 'error');
+        else sh.sound('click');
+      },
+    });
     const items: Array<HTMLElement | null> = [
       h('div', { class: 'career-head' }, h('span', { class: 'career-icon' }, icon(def?.icon ?? 'briefcase', 28)), h('div', {},
         h('h3', { text: name }),
@@ -243,9 +287,30 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
         h('dt', { text: 'Today' }), h('dd', { text: status }),
         h('dt', { text: 'Pay per shift' }), h('dd', { text: lvl ? `${formatMoney(shiftPay(lvl))} (${formatMoney(lvl.hourlyWage)} an hour)` : 'Unknown' }),
         h('dt', { text: 'Days worked' }), h('dd', { text: String(c.daysWorked) })),
+      effortPicker.el,
       h('h3', { class: 'pp-subhead', text: 'Performance' }),
       signedBar('Performance', c.performance, 'perf'),
     ];
+    if (lvl?.perks?.length) {
+      items.push(h('h3', { class: 'pp-subhead', text: 'Perks' }));
+      items.push(h('ul', { class: 'perk-list' }, ...lvl.perks.map((p) => h('li', {}, icon('star', 16), h('span', { text: p })))));
+    }
+    if (pending && c.pendingEvent) {
+      const chosen = c.pendingEvent.chosen;
+      items.push(h('div', { class: 'career-event' },
+        h('div', { class: 'career-event-head' }, icon('briefcase', 18), h('strong', { text: pending.title })),
+        h('p', { text: pending.text }),
+        h('div', { class: 'career-event-options' }, ...pending.options.map((o) => button({
+          label: o.label, small: true, variant: chosen === o.id ? 'primary' : 'secondary', disabled: !!chosen,
+          onClick: () => {
+            const r = api.resolveCareerEvent?.(pr.id, o.id) ?? { ok: false, reason: 'That is not available here.' };
+            if (!r.ok) toast(r.reason, 'error');
+            else sh.sound('confirm');
+          },
+        }))),
+        chosen ? h('p', { class: 'pp-note' }, icon('check', 16), h('span', { text: `Decision made: ${pending.options.find((o) => o.id === chosen)?.label ?? chosen}.` })) : null,
+      ));
+    }
     if (reqs && reqs.length) {
       const next = def?.levels.find((l) => l.level === c.level + 1);
       items.push(h('h3', { class: 'pp-subhead', text: `Promotion${next ? ` to ${next.title}` : ''}` }));
@@ -254,6 +319,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
       items.push(h('p', { class: 'pp-note' }, icon('star', 18), h('span', { text: 'Top of the career. Well done!' })));
     }
     if (c.shift?.status === 'atWork' && lvl) items.push(h('p', { class: 'pp-note' }, icon('clock', 18), h('span', { text: `Expected home around ${formatClock(lvl.end)}.` })));
+    items.push(h('div', { class: 'career-actions' }, quit));
     content.replaceChildren(...items.filter((x): x is HTMLElement => !!x));
   };
 
@@ -327,7 +393,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     if (!st || !pr) { close(); return; }
     const mood = api.mood(pr.id);
     const cur = pr.queue[0];
-    const away = awayText(pr);
+    const away = awayText(pr, st);
     const doingText = away ? `${away.label}${away.back ? ` · ${away.back}` : ''}` : cur ? `${interactionName(db, cur.interactionId)}` : 'Idle';
     const hs = `${pr.id}|${pr.firstName} ${pr.lastName}|${mood.label}|${moodTone(mood.value)}|${mood.reasons.join(';')}|${doingText}`;
     if (hs !== headSig) {

@@ -15,19 +15,27 @@ export type GameEvent =
   | { type: 'social'; actorId: Id; targetId: Id; socialId: string; accepted: boolean; line: string }
   | { type: 'need.low'; personId: Id; need: NeedId; value: number }
   | { type: 'money'; householdId: Id; amount: Cents; balance: Cents; label: string }
-  | { type: 'career'; personId: Id; what: 'leftForWork' | 'returned' | 'paid' | 'promoted' | 'demoted' | 'missed' | 'late'; amount?: Cents }
+  | { type: 'career'; personId: Id; what: 'leftForWork' | 'returned' | 'paid' | 'promoted' | 'demoted' | 'missed' | 'late' | 'joined' | 'quit' | 'event'; amount?: Cents }
   | { type: 'skill.level'; personId: Id; skillId: string; level: number }
   | { type: 'aspiration'; personId: Id; what: 'objective' | 'stage' | 'complete'; text: string }
   | { type: 'relationship'; fromId: Id; toId: Id; what: 'status' | 'value'; text?: string }
   | { type: 'feed'; entryId: Id }
   | { type: 'notify'; text: string; kind: 'info' | 'warning' | 'error' }
   /** The simulation asks the UI to open a screen (e.g. the wardrobe editor after `editOutfits`). */
-  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent'; personId: Id }
+  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent' | 'bills' | 'careers'; personId: Id }
   | { type: 'item.changed'; itemId: Id; lotId: Id }
   /** A home event was planned, started, progressed, ended or cancelled (the HUD tracker refreshes). */
   | { type: 'homeEvent'; eventId: Id; what: 'planned' | 'started' | 'goal' | 'ended' | 'cancelled' }
   /** An object became dirtier or cleaner (visible stages only), broke or was repaired. The renderer refreshes its overlays. */
-  | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' };
+  | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' }
+  /** The detailed (active) lot changed: the renderer shows `lotId`, `fromLotId` is the lot that was left. */
+  | { type: 'lot.activated'; lotId: Id; fromLotId: Id }
+  /** Lot travel: people set out for a lot, arrived there (the lot is now active) or a trip could not finish. */
+  | { type: 'travel'; what: 'departed' | 'arrived'; personIds: Id[]; lotId: Id }
+  /** The player now runs another household (`toId`); `fromId` is simulated lightly from now on. */
+  | { type: 'household.switched'; fromId: Id; toId: Id }
+  /** A household moved to another home lot. */
+  | { type: 'household.moved'; householdId: Id; fromLotId: Id | null; toLotId: Id };
 
 type Handler<E> = (e: E) => void;
 

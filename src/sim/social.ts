@@ -12,7 +12,7 @@ import type { ActionInstance, Person, Relationship } from '../core/types';
 import { endAction } from './actions';
 import { behaviorFor } from './behaviors';
 import type { SimCtx } from './context';
-import { clamp, householdOf, lotLoc, setThought, socialDef } from './context';
+import { clamp, householdOf, lotLoc, setThought, socialDef, venueTypeOf } from './context';
 import { addMoodlet, computeMood } from './mood';
 import { changeNeed } from './needs';
 import { makeAction } from './queue';
@@ -26,6 +26,7 @@ import { canPlanEvent, noteSocial, planEventFromSocial } from './events';
 import {
   ANGRY_MOOD, JEALOUSY_FRIENDSHIP, JEALOUSY_RIVAL_FRIENDSHIP, JEALOUSY_TRUST, ROMANCE_MIN_MOOD, SOCIAL_ACCEPT_MAX,
   SOCIAL_ACCEPT_MIN, SOCIAL_RECENT_DECAY_MINUTES, SOCIAL_SPAM_PENALTY, SOCIAL_WAIT_MINUTES, TAKEN_PENALTY, WITNESS_RADIUS,
+  LIBRARY_LOUD_CATEGORIES, LIBRARY_LOUD_PENALTY,
 } from './tuning';
 
 export { romanceInterest } from '../core/relations';
@@ -161,6 +162,8 @@ export function socialAcceptance(ctx: SimCtx, actor: Person, target: Person, def
     p += ctx.content.traits[t]?.effects.socialReceive?.[def.category] ?? 0;
   }
   p -= recentUses(toTarget, def.id, ctx.now) * SOCIAL_SPAM_PENALTY;
+  // The library's quiet rule: jokes and quarrels are poorly received in the reading room.
+  if (LIBRARY_LOUD_CATEGORIES.includes(def.category) && venueTypeOf(ctx, actor) === 'library') p -= LIBRARY_LOUD_PENALTY;
   p += charismaAcceptance(actor.skills.charisma?.level ?? 1);
   p += memoryModifier(target, actor.id, def.category, ctx.now);
   const label = toActor.label;

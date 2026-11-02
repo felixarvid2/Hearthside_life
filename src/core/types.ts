@@ -54,6 +54,26 @@ export interface WorldState {
    * (sim/events.ts EVENT_HISTORY). Optional in saves: absent = none (persistence/schema.ts fillSocialDefaults).
    */
   homeEvents?: HomeEvent[];
+  /** Weekly household bills, oldest first; bounded by sim/economy.ts BILL_LIMIT. Optional in older saves. */
+  bills?: Bill[];
+  /**
+   * Marker of the generated neighbourhood (Milestone 7, game/neighbourhood.ts): written once when the lot records
+   * and the named NPC households were created, never regenerated. Absent in older saves, which get one on load.
+   */
+  neighbourhood?: NeighbourhoodState;
+}
+
+/** What the neighbourhood generator recorded about itself (so it is generated exactly once). */
+export interface NeighbourhoodState {
+  version: 1;
+  /** Street name the lots are on. */
+  street: string;
+  /** Households the generator created (the original next-door neighbours are not listed). */
+  npcHouseholdIds: Id[];
+  /** The next-door household of the new world (their number is on every phone from the start). */
+  nextDoorHouseholdId?: Id;
+  /** Number of household moves so far (keeps move occurrence ids unique). */
+  moves?: number;
 }
 
 export type StartMode = 'guided' | 'create' | 'sandbox';
@@ -78,6 +98,8 @@ export interface SimSettings {
   visitors: boolean;
   /** Live speed when last saved (0 = paused). Absent in older saves, which load paused. */
   speed?: 0 | 1 | 2 | 3;
+  /** Pay each new bill as soon as it is issued (Milestone 6). Absent = off. */
+  autoPayBills?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -95,10 +117,13 @@ export interface Household {
   /** Objects bought but not placed (inventory). */
   inventory: InventoryEntry[];
   isPlayable: boolean;
+  /** Utilities are cut off because a bill stayed unpaid past its grace period (Milestone 6). */
+  powerOff?: boolean;
 }
 
 export type LedgerKind =
-  | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start' | 'repair';
+  | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start' | 'repair'
+  | 'career';
 
 export interface LedgerEntry {
   id: Id;
@@ -149,6 +174,21 @@ export interface Lot {
   objects: Record<Id, PlacedObject>;
   /** Exterior ground style for unfloored tiles. */
   ground: 'grass' | 'dirt' | 'paving';
+  /**
+   * Milestone 7: false/absent on lots whose layout has not been built yet. Lots are built lazily, once, the first time
+   * somebody travels there (world/lotBuilders.ts), and then persisted like any other lot. Absent = built (older saves).
+   */
+  built?: boolean;
+  /** House or venue layout variant passed to the lot builder. */
+  variant?: number;
+  /** Short description for the neighbourhood map. */
+  blurb?: string;
+  /** Position on the neighbourhood map, 0..100 in both directions (x east, y south). */
+  map?: { x: number; y: number };
+  /** Weekly rent when this is a rental home. A rental has no owner; its tenant is the household whose homeLotId it is. */
+  rent?: Cents;
+  /** Asking price when the lot is for sale (vacant homes only). */
+  price?: Cents;
 }
 
 export interface TilePos { x: number; z: number; level: number }
@@ -288,7 +328,15 @@ export interface Pronouns { subject: string; object: string; possessive: string 
 
 export type PersonLocation =
   | { kind: 'lot'; lotId: Id; level: number; x: number; z: number; facing: number; posture: Posture }
-  | { kind: 'offlot'; place: 'work' | 'school' | 'home' | 'errand' | 'visiting'; lotId?: Id; since: GameMinutes; until: GameMinutes | null };
+  | {
+    kind: 'offlot'; place: 'work' | 'school' | 'home' | 'errand' | 'visiting';
+    /** home: the home lot; visiting: the lot visited (a venue or another home); work: the lot they left from; transit: the destination. */
+    lotId?: Id;
+    since: GameMinutes;
+    until: GameMinutes | null;
+    /** Milestone 7: travelling to `lotId`, arriving at `until`. */
+    transit?: boolean;
+  };
 
 /** Posture decides which navigation/occupancy rules apply. Seated/lying people do not occupy their approach tile. */
 export type Posture = 'standing' | 'walking' | 'seated' | 'lying';
@@ -315,6 +363,48 @@ export interface CareerState {
     workedMinutes: number;
     lateMinutes: number;
   } | null;
+  /** How hard the person works (chosen while employed). Absent = 'normal'. */
+  effort?: WorkEffort;
+  /** A small on-the-job decision waiting during the current shift (Milestone 6, content/careerEvents.ts). */
+  pendingEvent?: CareerEventState | null;
+}
+
+export type WorkEffort = 'slack' | 'normal' | 'hard';
+
+export interface CareerEventState {
+  eventId: string;
+  /** Day the shift started on (`shift:<personId>:<day>`). */
+  day: number;
+  /** Option id once the player (or the shift end) picked one. */
+  chosen?: string;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Bills (Milestone 6)
+// ---------------------------------------------------------------------------------------------
+
+export type BillStatus = 'due' | 'overdue' | 'paid' | 'cutoff';
+
+/**
+ * A weekly household bill. `amount` includes any late fee. Money moves only through transact (occurrence
+ * `billpay:<id>`); late fees and cut-offs use their own occurrence markers so save/load cannot repeat them.
+ */
+export interface Bill {
+  id: Id;
+  householdId: Id;
+  /** Week index since world start (0 = first week). */
+  week: number;
+  /** Amount owed now (base plus any late fee). */
+  amount: Cents;
+  /** Original utilities plus property tax before late fees. */
+  base: Cents;
+  lateFee: Cents;
+  issuedAt: GameMinutes;
+  dueAt: GameMinutes;
+  graceEndsAt: GameMinutes;
+  status: BillStatus;
+  paidAt?: GameMinutes;
+  cutOffAt?: GameMinutes;
 }
 
 export interface AspirationState {
@@ -491,7 +581,7 @@ export interface ScheduledEvent {
   /** Unique occurrence id, e.g. `visit:<personId>:<day>`; also used in WorldState.processed. */
   occurrence: string;
   at: GameMinutes;
-  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd';
+  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'careerEvent' | 'travelArrive';
   personId?: Id;
   householdId?: Id;
   data?: Record<string, string | number | boolean | null>;

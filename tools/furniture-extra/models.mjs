@@ -261,8 +261,191 @@ function gardenChair() {
   return m;
 }
 
+
+// ---------------------------------------------------------------------------------------------
+// Neighbourhood venues (Milestone 7): park, playground, cafe, market, gym and library furnishings.
+// ---------------------------------------------------------------------------------------------
+
+/** Park tree (2 x 2 tiles): a trunk with a root flare and a canopy of overlapping leaf domes with a few blossoms. */
+function tree() {
+  const m = new Model('tree');
+  const c = 1;
+  m.lathe('woodDark', c, c, [[0.34, 0], [0.22, 0.22], [0.16, 0.9], [0.13, 1.9]], 8); // trunk with root flare
+  m.rod('woodDark', [c, 1.5, c], [c - 0.5, 2.2, c + 0.15], 0.08); // two forks into the canopy
+  m.rod('woodDark', [c, 1.6, c], [c + 0.45, 2.3, c - 0.15], 0.08);
+  const dome = (cx, cz, y, r, h) => m.lathe('plant', cx, cz, [[0.0, y], [r * 0.72, y + h * 0.1], [r, y + h * 0.45], [r * 0.8, y + h * 0.82], [0.0, y + h]], 10);
+  dome(c, c, 2.15, 0.92, 1.6); // crown
+  dome(0.62, 1.2, 1.95, 0.52, 1.1);
+  dome(1.4, 0.78, 2.05, 0.52, 1.15);
+  dome(1.38, 1.42, 1.9, 0.5, 1.0);
+  dome(0.7, 0.62, 2.35, 0.42, 0.9);
+  for (const [x, y, z] of [[0.55, 2.7, 1.45], [1.45, 3.0, 0.7], [0.9, 3.55, 0.8], [1.5, 2.6, 1.6], [0.45, 2.3, 0.85], [1.05, 3.4, 1.3]]) {
+    m.lathe('carpet', x, z, [[0.0, y - 0.06], [0.07, y - 0.02], [0.07, y + 0.03], [0.0, y + 0.07]], 5); // blossoms
+  }
+  return m;
+}
+
+/** Round clipped shrub (1 x 1 tile) with a few flowers. */
+function shrub() {
+  const m = new Model('shrub');
+  m.cylY('woodDark', 0.5, 0.5, 0, 0.12, 0.05, 0.05, 6);
+  m.lathe('plant', 0.5, 0.5, [[0.0, 0.1], [0.3, 0.16], [0.43, 0.4], [0.4, 0.68], [0.24, 0.9], [0.0, 0.98]], 9);
+  for (const [x, y, z] of [[0.3, 0.7, 0.62], [0.66, 0.6, 0.66], [0.55, 0.88, 0.4], [0.4, 0.45, 0.8]]) {
+    m.lathe('carpet', x, z, [[0.0, y - 0.05], [0.06, y], [0.0, y + 0.06]], 5);
+  }
+  return m;
+}
+
+/** Park fountain (2 x 2 tiles): a stone basin with water, a central column and an upper bowl. */
+function fountain() {
+  const m = new Model('fountain');
+  const c = 1;
+  m.lathe('metal', c, c, [[0.9, 0], [0.92, 0.38], [0.84, 0.42]], 16); // outer basin wall
+  m.lathe('metal', c, c, [[0.84, 0.42], [0.76, 0.42]], 16, { caps: false });
+  m.cylY('glass', c, c, 0.3, 0.34, 0.78, 0.78, 16); // water
+  m.lathe('metal', c, c, [[0.0, 0.34], [0.2, 0.36], [0.16, 0.9]], 10); // pedestal
+  m.lathe('metal', c, c, [[0.16, 0.9], [0.55, 1.05], [0.52, 1.12], [0.0, 1.0]], 12, { caps: false }); // upper bowl
+  m.cylY('glass', c, c, 1.04, 1.08, 0.5, 0.5, 12); // water in the bowl
+  m.cylY('metal', c, c, 1.08, 1.5, 0.07, 0.04, 8); // spout
+  m.lathe('glass', c, c, [[0.0, 1.62], [0.08, 1.52], [0.02, 1.45]], 6, { caps: false }); // spray
+  return m;
+}
+
+/** Playground tower with a ladder and a slide (2 x 2 tiles); the front (+z) side is the play side. */
+function playgroundSlide() {
+  const m = new Model('playground-slide');
+  const x0 = 0.12, x1 = 0.9, z0 = 0.12, z1 = 0.9, top = 1.15;
+  for (const [x, z] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) m.box('carpetBlue', [x - 0.04, 0, z - 0.04], [x + 0.04, top + 0.8, z + 0.04]); // posts
+  m.box('wood', [x0 - 0.02, top - 0.05, z0 - 0.02], [x1 + 0.02, top, z1 + 0.02]); // platform
+  for (const z of [z0, z1]) m.box('woodDark', [x0, top, z - 0.02], [x1, top + 0.45, z + 0.02]); // fence panels
+  m.box('woodDark', [x0 - 0.02, top, z0], [x0 + 0.02, top + 0.45, z1]);
+  m.hexa('carpet', [[x0 - 0.12, top + 0.8, z0 - 0.12], [x1 + 0.12, top + 0.8, z0 - 0.12], [x1 + 0.12, top + 0.8, z1 + 0.12], [x0 - 0.12, top + 0.8, z1 + 0.12],
+    [x0 + 0.1, top + 1.08, z0 + 0.1], [x1 - 0.1, top + 1.08, z0 + 0.1], [x1 - 0.1, top + 1.08, z1 - 0.1], [x0 + 0.1, top + 1.08, z1 - 0.1]]); // roof
+  // ladder on the front of the tower (towards +z)
+  for (const x of [0.3, 0.72]) m.rod('metal', [x, 0, 1.45], [x, top, z1], 0.04);
+  for (let i = 1; i <= 4; i++) { const t = i / 5; m.rod('metal', [0.3, top * t, 1.45 - (1.45 - z1) * t], [0.72, top * t, 1.45 - (1.45 - z1) * t], 0.035); }
+  // chute: from the platform's east edge down to the ground at x 1.9
+  const w = 0.5, cz = 0.51;
+  m.slab('metal', [x1, top - 0.02, cz - w / 2], [1.0, -1.0, 0], [0, 0.04, 0], [0, 0, w]); // bed of the chute
+  for (const dz of [-w / 2, w / 2]) m.slab('carpet', [x1, top - 0.02, cz + dz - (dz < 0 ? 0.03 : 0)], [1.0, -1.0, 0], [0, 0.18, 0], [0, 0, 0.03]);
+  m.box('woodDark', [1.86, 0, cz - w / 2], [1.9, 0.05, cz + w / 2]);
+  return m;
+}
+
+/** A-frame swing set with two swings (2 x 2 tiles); the swings hang in the middle of the footprint, seats face +z. */
+function swingSet() {
+  const m = new Model('swing-set');
+  const barY = 2.05, zc = 1.0;
+  m.rod('metalDark', [0.1, barY, zc], [1.9, barY, zc], 0.07);
+  for (const x of [0.1, 1.9]) {
+    m.rod('metalDark', [x, barY, zc], [x, 0, 0.25], 0.06);
+    m.rod('metalDark', [x, barY, zc], [x, 0, 1.75], 0.06);
+  }
+  for (const x of [0.62, 1.38]) {
+    for (const dx of [-0.17, 0.17]) m.rod('metal', [x + dx, barY, zc], [x + dx, 0.5, zc], 0.015); // chains
+    m.box('carpet', [x - 0.22, 0.44, zc - 0.1], [x + 0.22, 0.5, zc + 0.1]); // seat
+  }
+  return m;
+}
+
+/** Service counter module (1 x 1 tile): a worktop with a cash register, a pastry display case and a menu board. */
+function serviceCounter() {
+  const m = new Model('service-counter');
+  m.box('wood', [0.04, 0, 0.1], [0.96, 0.88, 0.96]); // body
+  m.box('woodDark', [0.06, 0, 0.9], [0.94, 0.1, 0.99]); // kick plate
+  m.box('woodDark', [0.1, 0.18, 0.96], [0.9, 0.8, 0.985]); // front panel
+  m.box('metal', [0.02, 0.88, 0.06], [0.98, 0.92, 1.0]); // worktop
+  m.box('woodDark', [0.04, 0.92, 0.06], [0.96, 1.4, 0.14]); // menu board behind the counter
+  m.box('carpetWhite', [0.12, 1.02, 0.14], [0.88, 1.34, 0.15]);
+  for (const y of [1.2, 1.12, 1.04]) m.box('metalDark', [0.18, y, 0.15], [0.62, y + 0.025, 0.155]); // menu lines
+  m.box('carpet', [0.7, 1.02, 0.15], [0.82, 1.16, 0.155]);
+  // cash register
+  m.box('metalDark', [0.12, 0.92, 0.38], [0.44, 1.0, 0.7]);
+  m.slab('metalDark', [0.14, 1.0, 0.5], [0.28, 0, 0], [0, 0.22, -0.1], [0, 0.04, 0.12]); // screen on its back
+  m.box('glass', [0.16, 1.02, 0.54], [0.38, 1.18, 0.56]);
+  m.box('metal', [0.14, 0.93, 0.62], [0.42, 0.97, 0.68]); // keys
+  // pastry case
+  m.box('woodDark', [0.54, 0.92, 0.3], [0.92, 0.95, 0.8]);
+  m.box('glass', [0.55, 0.95, 0.31], [0.91, 1.22, 0.79]);
+  m.box('woodDark', [0.54, 1.22, 0.3], [0.92, 1.25, 0.8]);
+  for (const [x, z, mat] of [[0.64, 0.44, 'carpet'], [0.78, 0.44, 'wood'], [0.64, 0.66, 'wood'], [0.78, 0.66, 'carpet']]) m.cylY(mat, x, z, 0.95, 1.03, 0.055, 0.045, 8); // pastries
+  return m;
+}
+
+/** Market produce stall (2 x 1 tiles): crates of fruit and vegetables under a striped awning. */
+function produceStand() {
+  const m = new Model('produce-stand');
+  for (const x of [0.1, 1.9]) { m.box('woodDark', [x - 0.04, 0, 0.1], [x + 0.04, 2.0, 0.18]); m.box('woodDark', [x - 0.04, 0, 0.82], [x + 0.04, 1.35, 0.9]); }
+  m.box('wood', [0.08, 0.2, 0.2], [1.92, 0.62, 0.9]); // table
+  m.box('woodDark', [0.08, 0.62, 0.2], [1.92, 0.66, 0.9]);
+  // sloped display trays at the front
+  m.slab('wood', [0.14, 0.66, 0.5], [0.8, 0, 0], [0, 0.14, 0.4], [0, 0, 0.02]);
+  m.slab('wood', [1.06, 0.66, 0.5], [0.8, 0, 0], [0, 0.14, 0.4], [0, 0, 0.02]);
+  const heap = (mat, x, z, r) => m.lathe(mat, x, z, [[0.0, 0.74], [r, 0.78], [r * 0.9, 0.88], [0.0, 0.98]], 7);
+  heap('carpet', 0.32, 0.72, 0.17); heap('plant', 0.62, 0.72, 0.17); heap('wood', 0.9, 0.72, 0.16);
+  heap('carpetBlue', 1.2, 0.72, 0.15); heap('carpet', 1.48, 0.72, 0.16); heap('plant', 1.74, 0.72, 0.15);
+  for (const [x, mat] of [[0.35, 'plant'], [0.85, 'carpet'], [1.35, 'wood'], [1.7, 'plant']]) { // crates on the table top
+    m.box('woodDark', [x - 0.2, 0.62, 0.24], [x + 0.2, 0.84, 0.46]);
+    m.lathe(mat, x, 0.35, [[0.0, 0.8], [0.17, 0.84], [0.0, 0.96]], 6);
+  }
+  const stripes = ['carpet', 'carpetWhite'];
+  for (let i = 0; i < 8; i++) { // striped awning sloping towards the front
+    const x = 0.04 + i * 0.24;
+    m.slab(stripes[i % 2], [x, 2.05, 0.05], [0.24, 0, 0], [0, -0.28, 0.98], [0, 0.03, 0]);
+  }
+  return m;
+}
+
+/** Drinks and snacks vending machine (1 x 1 tile), back against the wall. */
+function vendingMachine() {
+  const m = new Model('vending-machine');
+  m.box('carpetBlue', [0.1, 0, 0.1], [0.9, 1.85, 0.78]); // cabinet
+  m.box('metalDark', [0.1, 0, 0.1], [0.9, 0.08, 0.8]);
+  m.box('glass', [0.16, 0.7, 0.78], [0.64, 1.75, 0.8]); // display window
+  for (const [i, y] of [[0, 1.55], [1, 1.35], [2, 1.15], [3, 0.95]]) {
+    m.box('metal', [0.17, y - 0.04, 0.78], [0.63, y - 0.02, 0.84]); // shelf
+    for (let k = 0; k < 4; k++) m.box(['carpet', 'plant', 'wood', 'carpetWhite'][(i + k) % 4], [0.2 + k * 0.11, y - 0.02, 0.8], [0.28 + k * 0.11, y + 0.14, 0.86]);
+  }
+  m.box('metalDark', [0.68, 0.7, 0.78], [0.86, 1.75, 0.82]); // keypad panel
+  m.box('glass', [0.7, 1.55, 0.82], [0.84, 1.68, 0.84]);
+  for (let i = 0; i < 6; i++) m.box('metal', [0.71 + (i % 2) * 0.07, 1.2 + Math.floor(i / 2) * 0.1, 0.82], [0.75 + (i % 2) * 0.07, 1.26 + Math.floor(i / 2) * 0.1, 0.84]);
+  m.box('metalDark', [0.2, 0.18, 0.78], [0.8, 0.5, 0.82]); // delivery bin
+  m.box('metal', [0.26, 0.24, 0.82], [0.74, 0.44, 0.84]);
+  return m;
+}
+
+/** Notebook, open book and a green-shaded desk lamp (1 x 1 tile) for a study desk. */
+function studyNotes() {
+  const m = new Model('study-notes');
+  m.slab('carpetBlue', [0.2, 0.0, 0.3], [0.5, 0, 0], [0, 0.03, 0], [0, 0, 0.42]); // book cover
+  m.slab('carpetWhite', [0.22, 0.03, 0.32], [0.46, 0, 0], [0, 0.03, 0], [0, 0, 0.38]);
+  m.box('metalDark', [0.44, 0.06, 0.32], [0.46, 0.065, 0.7]); // spine gutter
+  m.slab('carpetWhite', [0.12, 0.0, 0.62], [0.28, 0, 0], [0, 0.015, 0], [0, 0, 0.3]); // loose notes
+  m.rod('carpet', [0.36, 0.02, 0.78], [0.62, 0.02, 0.9], 0.02); // pencil
+  m.cylY('metalDark', 0.82, 0.3, 0, 0.03, 0.1, 0.1, 10); // lamp base
+  m.rod('metal', [0.82, 0.03, 0.3], [0.82, 0.38, 0.3], 0.02);
+  m.lathe('plant', 0.82, 0.38, [[0.14, 0.36], [0.1, 0.44], [0.03, 0.5]], 8, { caps: false }); // green shade
+  return m;
+}
+
+/** Row of gym lockers (1 x 1 tile), back against the wall. */
+function lockerBank() {
+  const m = new Model('locker-bank');
+  m.box('metalMedium', [0.04, 0, 0.06], [0.96, 1.9, 0.62]);
+  m.box('metalDark', [0.04, 0, 0.06], [0.96, 0.1, 0.64]);
+  for (let i = 0; i < 3; i++) {
+    const x0 = 0.07 + i * 0.3;
+    m.box('carpetBlue', [x0, 0.14, 0.62], [x0 + 0.27, 1.84, 0.645]); // door
+    for (let k = 0; k < 4; k++) m.box('metalDark', [x0 + 0.06 + k * 0.045, 1.58, 0.645], [x0 + 0.075 + k * 0.045, 1.76, 0.655]); // vents
+    m.box('metalLight', [x0 + 0.2, 0.95, 0.645], [x0 + 0.24, 1.1, 0.66]); // handle
+  }
+  m.box('metalDark', [0.02, 1.9, 0.04], [0.98, 1.95, 0.66]); // top cap
+  return m;
+}
+
 export const EXTRA_MODELS = {
   dishwasher, easel, piano, treadmill, weightBench, chessTable, crib, toyChest, grill, patioSet, gardenBed, gardenBench, gardenChair,
+  tree, shrub, fountain, playgroundSlide, swingSet, serviceCounter, produceStand, vendingMachine, studyNotes, lockerBank,
 };
 
 /** Builds every model keyed by its asset name (the GLB file name). */

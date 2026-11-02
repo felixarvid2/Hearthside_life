@@ -160,7 +160,8 @@ function play(reloadInside: boolean): Story {
   const dateEvt = () => core.state()!.homeEvents!.find((e) => e.id === (date as { eventId: Id }).eventId)!;
   expect(core.state()!.homeEvents!.length).toBe(eventsBefore + 1);
   expect(dateEvt().status).toBe('invited');
-  until(core, () => dateEvt().status === 'running', 4 * 60 * 40);
+  // (guests arrive within minutes of the start; the exact minute depends on the ids, which the neighbourhood shifts)
+  until(core, () => dateEvt().status === 'running' && onLot(core, quinn), 4 * 60 * 72);
   expect(onLot(core, quinn)).toBe(true);
   expect(dateEvt().catered).toBeGreaterThan(0);
   if (reloadInside) reload(core);
@@ -186,7 +187,7 @@ function play(reloadInside: boolean): Story {
   const party = core.planEvent({ type: 'dinnerParty', hostId: maren, guestIds: [harriet, kofi, quinn], startAt: partyAt });
   expect(party.ok, JSON.stringify(party)).toBe(true);
   const partyEvt = () => core.state()!.homeEvents!.find((e) => e.id === (party as { eventId: Id }).eventId)!;
-  until(core, () => partyEvt().status === 'running', 4 * 60 * 40);
+  until(core, () => partyEvt().status === 'running', 4 * 60 * 72);
   until(core, () => now(core) >= partyEvt().startAt + 45, 4 * 60);
   expect(partyEvt().arrivedIds.slice().sort()).toEqual([harriet, kofi, quinn].sort());
   for (const g of [harriet, kofi, quinn]) expect(onLot(core, g)).toBe(true);

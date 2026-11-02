@@ -53,10 +53,10 @@ Read `src/core/types.ts`, `src/content/types.ts` and the files in `src/core/` be
 |---|---|---|
 | `src/core/` | main session | types, ids, rng, clock, money, geometry, events, commands, state helpers, nav contract, drafts, anim ids |
 | `src/content/types.ts`, `src/content/index.ts` | main session | definition types and the registry aggregator |
-| `src/content/{objects,interactions,socials,traits,aspirations,skills,careers,moodlets,recipes,packs,preferences}.ts`, `src/content/validate.ts`, `tools/content-report.ts` | content | gameplay data and validation |
+| `src/content/{objects,interactions,socials,traits,aspirations,skills,careers,careerEvents,moodlets,recipes,packs,preferences}.ts`, `src/content/validate.ts`, `tools/content-report.ts` | content | gameplay data and validation |
 | `src/content/surfaces.ts`, `surfaces2.ts`, `src/render/textures/` | surfaces | wall and floor designs, door/window defs, procedural and detail-map painters (`public/assets/surfaces`), texture cache, thumbnails |
-| `src/world/`, `src/building/` | world | lots, walls, rooms, navigation, placement, starter lots, build/buy commands |
-| `src/sim/` | sim | people, needs, moods, actions, reservations, autonomy, social, relationships, careers, skills, aspirations, visitors |
+| `src/world/`, `src/building/` | world | lots, walls, rooms, navigation, placement, starter lots, build/buy commands, neighbourhood lot records and lazy layouts (`neighbourhood.ts`, `lotBuilders.ts`), venue and home layouts (`venues.ts`, `homes.ts`) |
+| `src/sim/` | sim | people, needs, moods, actions, reservations, autonomy, social, relationships, careers, skills, aspirations, economy and bills, visitors, lot travel, the light schedule of other households, household switching and moving (`places.ts`, `townlife.ts`, `lotTravel.ts`, `households.ts`, `neighbourhoodView.ts`) |
 | `src/characters/`, `src/content/character.ts` | characters | rig assembly, body/face deformation, procedural hair and clothing, animation, creator model |
 | `src/persistence/` | persistence | IndexedDB saves, slots, autosave, backup, migrations, import/export, templates |
 | `src/render/` (except textures), `src/game/` | render | renderer, camera, lot/object/people views, picking, overlays, game loop and GameAPI |
@@ -163,6 +163,34 @@ The UI talks to it only through the build section of `GameAPI` (documented at th
   `buildHighlight()`; `GameAPI.highlightRoom(uid)` outlines a room; `thumbnails.opening(defId)` renders door/window pictures
   (`render/openingThumbs.ts`, one per frame). `render/lotView.ts` cuts a hole in every edge a wide opening spans (and in the posts between).
 - Not done yet: move/resize/duplicate whole rooms (delete room exists), wall height change on existing walls, diagonal walls, upper floors.
+
+### Venue and home layouts (Milestone 7)
+
+Pure code (no three, no DOM), tested in `tests/unit/world/venueLayouts.test.ts` (layouts) and `tests/unit/integration/venueActivities.test.ts` (activities).
+
+- `src/world/venues.ts`: `buildVenueLot(state, content, lotId, venueType)` for `'park' | 'cafe' | 'gym' | 'library' | 'arts' | 'market'` and
+  `buildResidentialLot(state, content, lotId, variant)` (re-exported from `homes.ts`; six homes, variants wrap, `RESIDENTIAL_VARIANTS` lists name,
+  bedrooms, beds and how many people they sleep). Both fill an EMPTY lot (throws otherwise) with the starter house's own helpers (`housekit.ts`
+  `buildHouse`, `validatePlacement` for every furnishing) and then throw if `lotProblems()` finds anything. Lot sizes: park, arts centre, market
+  32 x 32; cafe, gym, library and all homes 24 x 24; entry in the middle of the south edge. A plan is written for that size and centred on a bigger
+  lot; a smaller lot is refused; another entry tile works (decor on the entry is dropped, the path starts at the real entry). Park and arts centre
+  set `lot.ground = 'grass'`; the park's playground fence is a 1.1 m wall with a gate gap. Builders are deterministic and never draw from `state.rng`.
+- `src/world/lotCheck.ts`: `lotProblems(state, content, lotId): string[]` (empty = usable): every door tile and slot approach reachable from the
+  entry, every slot usable (never through a wall), interactive slotless objects have a free side, every placement re-validates, wall-hung objects
+  keep their wall, and no free tile is sealed off (nobody can be trapped). `lotAscii()` prints a map for debugging layouts.
+- `src/world/planKit.ts`: shorthand for plans (`F`, `line`, `openings`, `area`, `outline`), `shiftPlan`, `planOffset`, `applyTints` (per-venue recolours of
+  chairs, sofas, awnings; a list of swatches is dealt out in order).
+- Venue furniture (original models, `tools/furniture-extra`, `npm run assets` or `node tools/build-extra-furniture.mjs`): `tree-park`, `shrub-round`,
+  `fountain-park`, `playground-slide`, `swing-set`, `service-counter` (coffee, pastry, sandwich), `produce-stand` (fruit, groceries), `vending-machine`,
+  `study-notes` (study, journal on a desk) and `locker-bank`.
+- Venue activities (`content/interactions.ts`, `VENUE`): purchases use the interaction `cost` (one `transact` with occurrence `cost:<actionId>`, charged when
+  the action starts); `buyGroceries` gives the `stockedPantry` moodlet, which makes the buyer's own groceries 40% cheaper for three days
+  (`sim/cooking.ts` `recipeCost`). `InteractionDef.venues` restricts where an interaction is offered ('home' = any residential lot, else a venue
+  type): `goForJog` is for the park, `havePicnic` for the park and homes, `playComputerGames` for homes, `danceSolo` not in the library. Nobody
+  sleeps or naps on a public venue (`sim/context.ts` `venueRestriction`, used by menus, checks and autonomy). In a library loud socials (funny, mean)
+  are 25% less likely to be accepted (`sim/social.ts`).
+- `dev/venues.html` (`npx vite`, open `/dev/venues.html?lot=cafe&view=iso`) renders any lot from above or from the four dollhouse angles with the
+  game's own views; `flock /tmp/hearthside-browser.lock node dev/venues-shots.mjs <outDir> [lots] [views]` takes the screenshots.
 
 ### sim (`src/sim`)
 - `people.ts`: `createPerson(state, content, draft: PersonDraft, householdId, location: PersonLocation): Person`
@@ -304,15 +332,22 @@ and floor designs `oak-planks`, `checker-tile`, `carpet-plush`, `hex-mosaic`, `s
 (with `palettes[0]` as the default). Openings `door-panel` (door), `door-glazed` (door), `window-sash`,
 `window-wide` (windows), all 1 tile wide.
 
-**Careers**: `culinary` with 10 levels (M1's off-lot career). **Skills**: all 16 defined; M1 activities train
-cooking, logic, programming, charisma, fitness, gardening, music.
+**Careers**: seven 10-level tracks - `culinary`, `journalism`, `software`, `medicine`, `music`, `business` and
+`landscaping` - each with its own schedule, wage curve and promotion requirements (see below). **Skills**: 16
+defined, 10 of them `ready` (cooking, logic, programming, handiness, gardening, painting, music, writing,
+charisma, fitness); activities, work and freelance jobs train them.
 
 ## Simulation flow per tick
 
 1. Advance clock by `TICK_MINUTES`.
 2. Process due `state.schedule` entries in time order (each occurrence once).
 3. Careers: start commutes for shifts starting within 60 min (autonomy or player `goToWork`), mark missed
-   shifts, return people whose shift ended, pay once per completed/partial shift.
+   shifts, return people whose shift ended, pay once per completed/partial shift. At most one on-the-job
+   decision per shift is offered (answered in the Career tab, defaults to its first option at shift end).
+3b. Bills: issue this week's household bill, apply a late fee once past the due date, cut utilities off once
+   past the grace period, and repair a stale power flag.
+3c. Every 15 minutes, the light world (Milestone 7): pay finished shifts and weekly bills of everybody outside the played
+   household; every 30 minutes also move them between home, work and the venues by their daily plan.
 4. Needs decay for everyone (traits, posture, object quality); off-lot people decay at a reduced rate.
 5. Run each on-lot person's current action through its phases:
    validate -> reserve -> route -> prepare -> perform -> apply -> cleanup.
@@ -416,3 +451,180 @@ Pure code (no three, no DOM), tested in `tests/unit/sim/{relationships,romance,m
 **Saves**: all new fields are optional (`Relationship.label`, `Relationship.romanceBlocked`, `Memory.resolved`, `WorldState.homeEvents`,
 `ScheduledEvent.kind` `eventStart`/`eventEnd`). `persistence/schema.ts fillSocialDefaults` drops unknown labels and malformed events;
 the schema version stays 1.
+
+## Careers and economy (Milestone 6)
+
+Pure code (no three, no DOM), tested in `tests/unit/sim/{careers,freelance,economy,aspirations}.test.ts`,
+`tests/unit/persistence/economy.test.ts` and the headless playtest `tests/unit/integration/economy.test.ts`.
+The acceptance run drives the career tab, a bill payment and a freelance sale through the real UI (step 8).
+
+**Content**: seven 10-level careers - culinary, journalism, software, medicine, music, business and landscaping -
+each with a title, hourly wage, weekly work days, start/end time, promotion requirements (performance, skill
+levels, days worked, sometimes a friendly colleague outside the household) and perks. Ten ready skills cover
+them; every career's skills are trained by at least one in-game activity or freelance job. Eight aspirations
+include `successful-career` (reach a career level) and `fortune-builder` (household funds), plus the M6 objective
+kinds `careerLevel`, `ownObjects` with `bought: true` and `homeValue`. Five `CareerEventDef`s
+(`src/content/careerEvents.ts`) are small on-the-job decisions with a performance change, optional pay (positive
+or negative) and an optional skill or moodlet effect.
+
+**Careers** (`src/sim/careers.ts`, state in `Person.career: CareerState`)
+- `CareerState { careerId, level, performance -100..100, joinedAt, daysWorked, shift, effort, pendingEvent }`.
+   `Shift` is `{ occurrence, status: upcoming | commuting | atWork | done | missed, workedMinutes, lateMinutes }`.
+- A shift occurrence is `shift:<personId>:<day>`; the person autonomously queues `goToWork`
+  `COMMUTE_LEAD_MINUTES` (45) before the start while on the lot, and the player may cancel or start it from the
+  phone/computer. Reaching the lot entry goes off-lot; a shift counts once it was already open when the person
+  joined. Not arriving by the shift's midpoint is a missed shift (`MISSED_SHIFT_PERFORMANCE` -15 plus a moodlet).
+- Pay is `hourlyWage x workedMinutes / 60`, paid once at shift end with occurrence `pay:<personId>:<day>`
+  through `transact`; lateness shortens the paid time. The shift also trains the career's skills.
+- Performance is added at the start of a shift from mood, traits, relevant skill levels, an energy/fun penalty
+  and the chosen effort (`hard` +3, `normal` 0, `slack` -4), and again at the end from completion, lateness,
+  effort and skill fit. Hard work costs 8 energy, slacking leaves 4 more.
+- Promotion is checked after each shift against the current level's `promotion` (performance, skills, days and
+  an optional mutual friendship outside the household); on success the person moves up and performance resets
+  to 10. Performance at or below `DEMOTION_PERFORMANCE` (-60) demotes one level (not below 1), checked on
+  promotion failure and on a missed shift.
+- Player commands: `joinCareer` (level 1, effort normal), `quitCareer` (cancels an upcoming/running shift
+  without pay and brings an at-work person home), `setCareerEffort`, `resolveCareerEvent`. A pending career
+  event is shown in the Career tab; if unanswered it resolves to its first option at the end of the shift.
+  Occurrences `careerevent:<personId>:<day>` / `careereventpay:<personId>:<day>` make the outcome once-only.
+- `careerInfo()` gives the UI the title, level, performance, next shift, expected pay and lateness; `shiftText()`
+  formats the schedule.
+
+**Freelance income** (`src/sim/behaviors.ts`, behavior `freelance`)
+- Interactions: `writeArticle`, `writeBook`, `programGig`, `paintToSell`, `busk`, each training its skill.
+  Base fees are 1800 / 9000 / 3200 / 2400 / 600 cents; the fee is
+  `max(100, round(base x (0.55 + skillLevel x 0.12)))`, so a better skill pays more. At completion the fee is
+  paid once through `transact` with occurrence `freelance:<personId>:<actionId>` and a feed line; an interrupted
+  action pays nothing and replay/save cannot pay twice.
+
+**Bills** (`src/sim/economy.ts`, `Bill[]` in `WorldState.bills`)
+- One bill per playable household per game week (`billWeek`, 7 days from the start), occurrence
+  `bill:<householdId>:<week>`. The amount is property tax (0.25 % of land value plus placed objects and
+  openings, minimum $45) plus utilities ($22 base + $5 per electronics + $9 per appliance on the home lot).
+  Bills are due after 3 days and go overdue with a 10 % late fee (minimum $5) once (`billlate:<id>`); after two
+  more days the utilities are cut off (`billcut:<id>`), `Household.powerOff` is set and a feed warning is posted.
+  The bill list is capped at 16, dropping paid old bills first.
+- Payment is `payBill` -> `transact(..., -amount, 'bill', ..., { occurrence: 'billpay:<billId>' })`, so the
+  charge applies at most once across save/load; paying restores power when no cut-off bill remains. Auto-pay
+  (`settings.autoPayBills`, toggled in the Bills panel) pays each bill as it is issued and reports a failure in
+  the feed. `powerIsOff`/`needsPower` block electronics and appliances with the reason `Power is off`;
+  `updateBills` also repairs a stale `powerOff` flag on load.
+- API/UI: `GameAPI.bills/payBill/setAutoPayBills`; `ui/hud/billsPanel.ts` (opened from the funds/ledger panel,
+  the phone's "Bills and payments", or the mailbox) shows owed total, due dates, late fees, power state,
+  auto-pay and Pay buttons. The Career tab of the person panel (`ui/hud/personPanel.ts`) shows the job, level,
+  performance bar, next requirements, schedule, pay, effort segmented control, pending decision, join list and
+  Quit. The phone/computer offer job search; the phone and mailbox open bills.
+
+**Aspirations**: stage rewards are paid once through `transact` with occurrence
+`aspiration:<personId>:<aspirationId>:<stage>`. `ownObjects` objectives may set `bought: true`, which ignores
+objects present in the starter house (`boughtAt` before `START_MINUTE`), so Bookworm no longer counts the
+starter bookcases.
+
+**Saves**: all M6 fields are optional additions to schema 1 - `Bill` (with `paidAt`/`cutOffAt`), `WorldState.bills`,
+`Household.powerOff`, `settings.autoPayBills`, `CareerState.effort`/`pendingEvent`. `fillEconomyDefaults` in
+`persistence/schema.ts` drops malformed bills, unknown efforts, bad pending decisions and non-boolean flags;
+old saves load unchanged.
+
+## Neighbourhood (Milestone 7)
+
+Pure code (no three, no DOM), tested in `tests/unit/world/neighbourhood.test.ts`, `tests/unit/sim/townlife.test.ts`,
+`tests/unit/persistence/neighbourhood.test.ts` and the headless playtests `tests/unit/integration/{neighbourhood,travel,venues}.test.ts`.
+The API for the interface (map, travel, switching) is documented at the top of `src/game/api.ts`.
+
+**One active lot.** Only the active lot (`state.activeLotId`) is simulated in detail: only people on it have `location.kind === 'lot'`,
+walk, queue actions and are ticked by `runPerson`. Every other lot is plain data in `state.lots` and every other person has an off-lot
+location (`home`, `work`, `visiting` a lot, or `transit`). A lot's state *is* the world state, so leaving a lot "saves" it and entering it
+"loads" it with nothing to copy: a round trip leaves both lots byte-identical (the only things that change are the people on them).
+
+**Lot records** (`world/neighbourhood.ts LOT_SPECS`, `createNeighbourhoodLots`): a new world has 14 lots: the player's home and the house next
+door (built at once, as before) plus twelve generated records with `built: false` - six public venues (`park` Lakeside Park 32x32, `cafe`
+Kettle & Crumb, `gym` Foundry Fitness, `library` Pagebridge Library, `arts` Lantern Hall 32x32, `market` Greengage Market 32x32), four homes of
+named NPC households (two rented, two owned) and two empty homes (Marigold Flat for rent, Hazelbank House for sale). Optional `Lot` fields:
+`built`, `variant`, `blurb`, `map` {x,y} (0..100, for the map UI), `rent` (weekly; a lot with `rent` and no owner is a rental), `price`.
+`VENUES` holds opening hours and the capacity of each venue type; `travelMinutes` is 20-40 minutes by map distance.
+
+**Lazy layouts** (`world/lotBuilders.ts`): a generated lot is laid out exactly once, by `ensureLotBuilt`, the first time somebody travels there
+(`startTrip`) or the household switches to it. It calls `buildVenueLot` / `buildResidentialLot` from `world/venues.ts` (STUB_BUILDERS / `setLotBuilders`
+replace them in tests); a builder that throws leaves the lot untouched and the trip is refused with a readable reason. The result is ordinary lot
+data that is saved with the world. Builders must be deterministic and never draw from the world rng.
+
+**NPC households** (`game/neighbourhood.ts generateNeighbourhood`, called by `createNewWorld`): four named households of one or two adults with
+shared or different surnames, seeded names, three traits, aspiration, likes, appearance and wardrobe from `randomPersonDraft`, at least one job per
+household, ties between members, relationships between the households (friends, acquaintances, a rivalry) and starting funds as a `start` ledger
+entry, so every household ledger adds up to its funds. They live off-lot at home. Names come from a generator seeded by the world seed and the world
+rng is put back afterwards, so generating the neighbourhood does not change the world's random future. `state.neighbourhood` records that it happened;
+`ensureNeighbourhood` (run by `GameCore.replaceState`, i.e. on every load and import) generates the same neighbourhood around an old save
+(household, lot and next-door neighbours untouched) and does nothing when the marker exists. A person's job, traits, looks and relationships are
+never regenerated; lot changes only move people between locations. `fillNeighbourhoodDefaults` (persistence) repairs malformed optional fields and
+mends, never drops, a damaged marker.
+
+**Trips** (`sim/lotTravel.ts`): `travel(personIds, lotId)` ("Go to <venue>", "Visit <household>") and `goHome`. `travelProblem` checks: the people
+belong to the played household, are not at work/at school/already travelling, no other trip is under way, the household is not hosting a planned
+event (ambient visits do not count), and a venue is open when they would arrive. Each traveller on the lot walks to the lot entry (`travelTo`
+action) and is "in transit" (`location.transit`, `lotId` = destination, `until` = arrival); people left at home go at once. One `travelArrive` entry
+(occurrence `travel:<first traveller>:<minute>`) is scheduled 20-40 minutes later. Travel costs nothing. At arrival `activateLot` makes the destination
+the active lot: everybody on the old lot who is not travelling goes off-lot (household members: at home; townies: where the plan has them, a venue's
+patrons stay "at the venue"), the light schedule is brought up to date, people already there (residents at home, patrons at a venue) are placed on
+indoor/open tiles, and the travellers appear at the lot entry. Events: `lot.activated`, `travel`. Household members left behind are "at home" off-lot
+and follow the light schedule; `goHome` brings them back. A person in transit without a trip (a damaged save) is sent home by the hourly
+`reconcileStrays`, which also takes anybody stray off non-active lots.
+
+**Work from any lot**: `updateCareers` queues `goToWork` wherever the person is; `startShift` remembers the lot they left from in `location.lotId`.
+When the shift ends (`returnHome`) the worker returns to the household's current lot, or home if they set out from home while the household was
+elsewhere (also for people left at home, who leave for work from there without walking). Pay and counting use the same occurrences as ever
+(`shift:<id>:<day>`, `pay:<id>:<day>`).
+
+**The light schedule** (`sim/townlife.ts`): for everybody outside the played household, `plannedPlace(state, content, person, now)` is a pure function of
+job, traits, likes and the clock: at work during a shift (20 minutes early), at home from 22:30 to 07:00, and in free time each 90-minute slot either
+home or at one of the open venues (weights from traits such as athletic/bookish/music-lover and likes; at most `VENUES[type].capacity` people per
+venue, the rest stay home). Every 30 minutes `syncPresence` moves people to where the plan says: off-lot by just changing `location` (so "who is at the
+park" is always readable from the state and survives saving), on the active lot by walking in from the entry or out through `leaveLot`. Guests,
+people in a conversation or an event are left alone (`engagement`); somebody about to be visited may only leave a venue for home. Every 15 minutes:
+`lightCareers` pays a finished shift once (`pay:<person>:<day>`, marks `shift:<person>:<day>`), `lightBills` pays the weekly bill of each household not
+played once (`bill:<hh>:<week>` marks the week, charge `billpay:npc:<hh>:<week>`), only when the household can afford it (no debt, no fee, no cut-off, no
+Bill record) and pays any bill left open from when it was played; `lightSocial` lets townies at the same inactive venue slowly get to know each other
+(friendship capped at 35). Needs of people off-lot at home or visiting drift to comfortable values (`decayNeeds`); relationship decay (M5) is global.
+No pathfinding happens off the active lot.
+
+**Venues on the active lot**: patrons are not "visitors" (`isVisitor` is false on a venue): they may use anything the venue offers, with their own
+household's money; chores are not done by townies; venue electronics do not depend on anybody's power bill. The played household's own autonomy
+setting governs its members on every lot (as guests or patrons they wait for orders when it is off). The menu of a person away from their home offers
+"Invite X to My Home" (`inviteHome`): X says yes when they know you (`INVITE_MIN_FAMILIARITY` 8) and like you (`INVITE_MIN_FRIENDSHIP` 10, trust not
+negative) - a visible rule, no dice - heads off, and a `visitArrive` (data.lotId = your home) is scheduled about an hour later; `arrive` waits (up to
+4 hours) until the household is home, so the visit never lands on a venue. The phone lists the people next door and everybody the caller has met; the
+townspeople are strangers until the first hello.
+
+**Household switching** (`sim/households.ts`): `switchPreview(householdId)` returns `consequences[]` (who you will play, that the previous
+household is simulated lightly - plan, jobs paid once, bills paid automatically from its own funds - that each household keeps its own money and
+history, that nothing is rerolled) or the reason it cannot be done (a trip under way, a planned event, no home, no adult). `switchHousehold` makes the
+previous household NPC (`isPlayable` false, members `isNpc`, off-lot at home, orders dropped), the new one playable (exactly one household is ever
+`isPlayable`), calls its members who are out in town home (shifts that are running stay running and keep their worked minutes), and activates its home
+lot. Occurrence ids are shared with the played flow, so nothing is paid twice by switching; every ledger stays `sum(entries) === funds`.
+
+**Moving house**: `movePreview(lotId)` / `moveHousehold(lotId)` move the played household into an empty home that is for rent (first week paid up
+front, the rent replaces the property tax in the weekly bill: `BillBreakdown.rent`) or for sale (the asking price). An owned home that is left sells
+for 80 % of its value (`SALE_RATE`; the furniture stays) and becomes available again; a rental is handed back. Money moves through `transact` with
+`move:<household>:<n>:cost|sale` occurrences. Members who are out travel to the new home like any trip.
+
+**Saves**: every M7 field is optional in schema 1 (`Lot.built/variant/blurb/map/rent/price`, `PersonLocation.transit`, `ScheduledEvent.kind
+'travelArrive'`, `WorldState.neighbourhood`). Old saves load unchanged and are completed on load.
+
+**Interface** (`ui/hud/neighbourhoodModel.ts` pure, tested in `tests/unit/ui/neighbourhoodModel.test.ts`; `neighbourhoodPanel.ts`, `awayCard.ts`,
+`styles/neighbourhood.css`): the HUD Map button (top bar in landscape, bottom bar in portrait; live mode only) opens a modal with the street as pins
+positioned from `LotInfo.map` (or a list of the same lots; the choice is per opening), the trip under way, and a detail sheet of the chosen lot (beside
+the map on wide screens, over it on narrow ones). The sheet shows the marks (active lot, home), open/closed and hours, tenure and rent/price, travel
+minutes, who is there, and the actions: "Go here" with a toggle per household member (the selected person ticked; members at work, at school or in transit
+are disabled with the reason), "Go home" for the home lot (the header button sends everybody who is out), "Move here" for empty homes (movePreview lines
+and cost in a confirmation), "Play this household" for NPC homes (switchPreview consequences in a confirmation). A disabled action shows
+`travelProblem()` / the preview's reason under it. While a trip is under way a chip in the HUD (bottom left, above the bar) names the destination and the
+arrival time and opens the map; it reads `activeTrip` from the world, so it needs no extra call. Tapping a household member who is not on the lot selects
+them without moving the camera and opens a small card ("At Lakeside Park", "Go to ...", "Details"); the strip badge icon follows the kind of place. The
+map redraws on UiChange 'lot', 'neighbourhood', 'state' and 'selection' only when the data changed. The mock game (`ui/dev/mockGame.ts`) schedules a
+`travelArrive` entry, so the chip and the map work on `dev/ui.html`. Acceptance step 9 drives all of it in the three viewports.
+
+**Not done / remaining** (see also docs/CONTINUATION.md): the phone has no app list, so the map is not reachable from the phone menu; venue activities that charge
+money are the venue content's job (`InteractionDef.cost` is charged to the actor's household; there is no market stock or cafe menu system);
+townies never change jobs or homes by themselves, and NPC households never move; furniture is not carried along when moving (the old home keeps it);
+no weddings or dates away from home (a date is still planned at home); renting out the player's home, tenants and landlords are not modelled;
+travel has no taxi fee; only one trip at a time; group travel always switches the active lot (a split household cannot be watched on two lots).
+

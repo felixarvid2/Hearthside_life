@@ -69,11 +69,28 @@ body.is-landscape .clock-day { font-size: 0.85rem; }
 .funds-btn .icon-wrap { color: var(--good); }
 .funds-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 .funds-amount { font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.funds-short { display: none; }
 .funds-tag { font-size: 0.75rem; font-weight: 700; color: #1f5f57; }
 .hud-row2 .funds-btn { box-shadow: var(--shadow); min-height: 48px; }
 .feed-badge { position: absolute; top: 3px; right: 3px; }
 .feed-btn[aria-expanded='true'], .funds-btn[aria-expanded='true'] { background: var(--paper-3); box-shadow: inset 0 -3px 0 var(--accent); }
 body.is-portrait .feed-btn { flex-direction: column; gap: 2px; min-width: 56px; min-height: 52px; font-size: 0.75rem; padding: 4px 8px; }
+
+/* Phone landscape: the top bar holds Menu, clock, speed, Map, Feed and funds in about 820 px. Funds drop their cents (the aria-label keeps
+   them), Map and Feed keep just their icons (their labels are for screen readers), and the clock may shrink (its day text is cut with an ellipsis). */
+body.is-landscape.is-compact .funds-full { display: none; }
+body.is-landscape.is-compact .funds-short { display: inline; }
+body.is-landscape.is-compact .clock { flex: 0 1 auto; min-width: 0; overflow: hidden; justify-content: flex-start; }
+body.is-landscape.is-compact .clock-time { flex: none; }
+body.is-landscape.is-compact .clock-day { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+body.is-landscape.is-compact .clock-paused { flex: none; }
+body.is-landscape.is-compact .funds-amount { white-space: nowrap; }
+@media (max-width: 720px) {
+  /* the pause button in the speed group shows the state too */
+  body.is-landscape.is-compact .clock.is-paused .clock-paused { display: none; }
+  body.is-landscape.is-compact .feed-btn .hud-btn-label { display: none; }
+  body.is-landscape.is-compact .feed-btn { padding: 0; width: var(--tap); }
+}
 
 /* household strip */
 .hud-strip { min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; flex: 0 1 auto; }
@@ -334,3 +351,45 @@ body.is-compact.shell-side-open .tutorial-card.is-collapsed .tut-body { display:
 @keyframes tap-ripple { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
 #game-canvas.is-dragging { cursor: grabbing; }
 body.reduced-motion .camera-cluster { transition: none; }
+
+/* ---------- Careers and household bills (Milestone 6) ---------- */
+.career-list, .perk-list, .bill-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.career-choice { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.career-choice-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.career-choice-name { font-weight: 800; }
+.career-choice-meta { color: var(--ink-2); font-size: 0.82rem; line-height: 1.3; }
+.career-choice .btn { flex: none; }
+.perk-list li { display: flex; gap: 6px; align-items: flex-start; font-size: 0.88rem; color: var(--ink-2); }
+.perk-list .icon-wrap { color: var(--accent); flex: none; }
+.career-event { border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2, var(--paper)); padding: 10px; margin: 12px 0; display: flex; flex-direction: column; gap: 7px; }
+.career-event-head { display: flex; gap: 6px; align-items: center; color: var(--accent); }
+.career-event p { margin: 0; color: var(--ink-2); font-size: 0.88rem; }
+.career-event-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.career-actions { margin-top: 14px; display: flex; justify-content: flex-end; }
+.ledger-actions { display: flex; gap: 6px; margin: 6px 0 2px; }
+.bills-summary { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 8px; }
+.bills-owed { font-size: 1.45rem; font-weight: 850; color: var(--ink); font-variant-numeric: tabular-nums; }
+.bills-house { font-size: 0.82rem; color: var(--ink-2); }
+.bills-auto { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.bills-auto-text { display: flex; gap: 8px; align-items: flex-start; flex: 1; min-width: 0; }
+.bills-auto-text > div { display: flex; flex-direction: column; gap: 2px; }
+.bills-auto-text span { color: var(--ink-2); font-size: 0.82rem; line-height: 1.3; }
+.bills-notice { margin-top: 8px; }
+.bills-power { display: flex; gap: 8px; align-items: flex-start; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--critical); background: rgba(190, 50, 45, 0.08); color: var(--critical); }
+.bills-power > div { display: flex; flex-direction: column; gap: 2px; }
+.bills-power span { font-size: 0.82rem; color: var(--ink-2); }
+.bill-item { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.bill-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.bill-head { display: flex; gap: 6px; align-items: center; }
+.bill-week { font-size: 0.78rem; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.bill-amount { font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bill-meta { font-size: 0.8rem; color: var(--ink-2); line-height: 1.3; }
+.bill-tag-due { background: rgba(70, 120, 200, 0.12); }
+.bill-tag-overdue { background: rgba(210, 140, 30, 0.16); }
+.bill-tag-cutoff { background: rgba(190, 50, 45, 0.14); color: var(--critical); }
+.bill-tag-paid { background: rgba(60, 150, 80, 0.14); }
+.bill-done { color: var(--good); flex: none; }
+@media (max-width: 520px) {
+  .career-choice { align-items: flex-start; flex-wrap: wrap; }
+  .career-choice .btn { margin-left: 32px; }
+}

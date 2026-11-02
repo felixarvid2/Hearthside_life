@@ -12,7 +12,7 @@ Run the relevant checks after each milestone; do not repeat unrelated tests just
 | `npm run content:check` | Registry validation and distinct-design counts (CONTENT_STATUS numbers) |
 | `npm run e2e` | Playwright (Chromium, SwiftShader) smoke and acceptance run with screenshots in desktop, portrait and landscape |
 | `npm run e2e:creator` | Milestone 3 creator acceptance through the real creator UI in 390x844 and 844x390 touch and 1280x720 desktop: live face and body sliders (preview must change), body and face presets, outfit slots with the new garments and thumbnails, hats / scarf / necklace / watch / bracelet, randomize with locks, undo/redo, household ties, appearance and household import/export (including substitutions), Move In and a comparison with the game; screenshots and `report.json` in `tests/e2e/out/creator-m3/` |
-| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 10 minutes per touch viewport and up to 30 on desktop under SwiftShader; `--only=portrait` runs one) |
+| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation, M6 career panel / bill payment / freelance sale) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 10 minutes per touch viewport and up to 30 on desktop under SwiftShader; `--only=portrait` runs one) |
 
 Key automated areas (brief section 25):
 
@@ -31,6 +31,13 @@ Key automated areas (brief section 25):
   after witnessed flirting, memory bounds and timed effects, event lifecycle (plan, invite, start, goals, end) with the reward applied once
   across save/load, save defaults for the new optional fields, and a headless playtest (befriend the neighbour, a date at home, a
   dinner party for three) that must end identically with and without a reload in the middle.
+- **Careers and economy (M6)**: shift pay once per occurrence, lateness and missed shifts, performance from mood/skills/effort,
+  promotion (including the friendship requirement) and demotion, joining and quitting (mid-shift quit cancels pay), career
+  decisions resolved once, freelance fees scaling with skill and paid once (also after save/load and interrupted work), weekly
+  bills with property tax and utilities, late fee and cut-off after the grace period, power blocking electronics with a
+  readable reason, payment restoring power exactly once, auto-pay, malformed economy fields repaired on load, aspiration stage
+  rewards paid once, Bookworm ignoring starter bookcases, and a 14-day headless playtest with two roommates (jobs, a freelance
+  sale, every bill paid, at least one promotion, ledger sum equals funds, deterministic with a fixed seed).
 - **Headless playtests**: several game days with autonomy (nobody stuck, needs maintained, meals cooked, work
   paid once, the neighbour visits), and the Milestone 1 acceptance scenario without rendering.
 
@@ -61,6 +68,8 @@ Record real devices separately from emulation:
 | Date | Device / browser | Orientation(s) | Result |
 |---|---|---|---|
 | 2026-11-01 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M1-M5: acceptance 160/160 portrait, 160/160 landscape, 151/151 desktop; creator 288/288; e2e OK; visual:m5 14/14 |
+| 2026-11-01 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M1-M6: acceptance 175/175 portrait, 175/175 landscape, 164/164 desktop |
+| 2026-11-02 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M1-M7: acceptance 203/203 portrait, 200/201 landscape (step 2 random social did not raise the relationship; unrelated to M7), 194/194 desktop; step 9 29/29 in each viewport; typecheck clean, npm test 95 files / 1190 tests, content:check 0 errors 0 warnings, build passes |
 
 ## Manual browser checks, Milestone 5 (emulation only; no named device)
 
@@ -69,3 +78,19 @@ Mean / Special; unavailable entries fold under "Unavailable (n)" on small screen
 label, friendship, trust and romance bars, running memory effects and an expandable memory list with dates; phone -> Plan an Event
 (type, guests, time, live reason when it cannot be done, Send invitations); the event card on the HUD shows the countdown, goals and
 the result, and cancels a planned event.
+
+## Manual browser checks, Milestone 6 (emulation only; no named device)
+
+Portrait 390x844, landscape 844x390 and desktop 1280x720:
+
+- Person panel -> Career: an employed person shows the career name, level and title, a performance bar, the requirements for the next
+  level (met and unmet), the weekly schedule and pay, and the Work hard / Normal / Slack off control; the stored effort changes. An
+  unemployed person sees the career list with Take job; taking one adds the job, and Quit asks for confirmation.
+- A pending on-the-job decision appears in the Career tab and its choice changes performance (and possibly pay) once.
+- Funds button -> Bills and payments (or phone -> Bills and Payments / mailbox): weekly bill with amount, due date and breakdown;
+  Pay deducts exactly the bill amount and marks it paid; Auto-pay toggles and pays the next bill on arrival. Letting a bill pass its
+  due date adds one late fee, and the grace period cuts the power: electronics and appliances show "Power is off"; paying restores
+  them.
+- Freelance: at the computer, Write an Article / Write a Book / Take a Programming Gig complete and pay once (feed line "sold"); at
+  the easel, Sell a Painting; at the piano, Busk. Higher skill pays more.
+- Aspirations: Bookworm after buying (not starting with) two bookcases; stage rewards appear once in the ledger.

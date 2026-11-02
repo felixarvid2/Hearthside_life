@@ -152,6 +152,7 @@ function checkLocation(v: unknown, path: string, lots: Obj, errors: string[], wa
     expect(errors, isNum(loc.since), `${path}.since`, 'must be a number');
     expect(errors, loc.until === null || isNum(loc.until), `${path}.until`, 'must be a number or null');
     if (isStr(loc.lotId) && !has(lots, loc.lotId)) addProblem(warnings, `${path}.lotId refers to a lot that does not exist (${loc.lotId})`);
+    if (loc.transit === true && !isStr(loc.lotId)) addProblem(warnings, `${path} is in transit without a destination lot`);
   } else {
     addProblem(errors, `${path}.kind must be 'lot' or 'offlot'`);
   }

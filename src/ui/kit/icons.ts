@@ -83,6 +83,17 @@ const P: Record<string, string> = {
   window: '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M12 4v16M4 12h16"/>',
   door: '<rect x="6" y="3" width="12" height="18" rx="1"/><path d="M15 12h.01"/>',
   tag: '<path d="M3 12l9-9h9v9l-9 9z"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  map: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  pin: '<path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>',
+  park: '<circle cx="12" cy="9" r="6"/><path d="M12 15v6M9 21h6"/>',
+  cafe: '<path d="M4 9h12v6a4 4 0 01-4 4H8a4 4 0 01-4-4z"/><path d="M16 11h2a2 2 0 010 4h-2"/><path d="M8 3v3M12 3v3"/>',
+  gym: '<path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/>',
+  arts: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  market: '<path d="M3 10h18l-2 10H5z"/><path d="M8 10l3-6M16 10l-3-6"/>',
+  car: '<path d="M4 17h16v-4l-2-5H6l-2 5z"/><path d="M4 13h16"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/>',
+  swap: '<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
 };
 
 export type IconName = keyof typeof P;

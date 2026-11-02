@@ -117,7 +117,8 @@ export function canPlanEvent(ctx: SimCtx, host: Person, guestIds: Id[], type: Ho
     }
     const gl = lotLoc(g);
     if (!gl) {
-      if (g.location.kind !== 'offlot' || g.location.place !== 'home') return `${g.firstName} isn't home right now.`;
+      // At home, or out at a venue (the phone reaches them); at work, in transit or elsewhere they cannot be asked.
+      if (g.location.kind !== 'offlot' || g.location.transit || (g.location.place !== 'home' && g.location.place !== 'visiting')) return `${g.firstName} isn't home right now.`;
       if (gh?.isPlayable) return `${g.firstName} isn't here.`;
     }
   }

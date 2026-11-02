@@ -6,14 +6,15 @@ import { offeredInteractionIds } from '../content/capabilities';
 import { BOOK_MAX_LEVEL } from '../content/skillEffects';
 import type { InteractionDef } from '../content/types';
 import { facingDir } from '../core/geometry';
-import { transact } from '../core/state';
+import { addFeed, transact } from '../core/state';
 import type { ActionInstance, OutfitCategory, Person, Posture } from '../core/types';
 import { OUTFIT_CATEGORIES } from '../core/types';
 import type { ObjRef, SimCtx } from './context';
 import {
-  behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef,
+  behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
 import { cookBehavior, eatMealBehavior } from './cooking';
+import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
 import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
 import { socialBehavior } from './social';
@@ -22,7 +23,10 @@ import {
   candidateFree, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
   clearUsePoint,
 } from './steps';
-import { goHereBehavior, goToWorkBehavior, inviteBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior } from './travel';
+import {
+  goHereBehavior, goToWorkBehavior, inviteBehavior, inviteHomeBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior,
+  travelToBehavior,
+} from './travel';
 import {
   READ_SEAT_RADIUS, SLEEP_NIGHT_BEDTIME, SLEEP_NIGHT_END, SLEEP_WAKE_BEFORE_SHIFT, SLEEP_WAKE_MINUTE, SLEEP_WAKE_SPREAD,
   TV_SEAT_RADIUS,
@@ -48,17 +52,32 @@ export function targetObject(ctx: SimCtx, p: Person, a: ActionInstance): ObjRef 
   return objectRef(ctx, loc.lotId, a.target.objectId);
 }
 
+/**
+ * Whose utilities power the object a person is using: the owner of the lot (a home), nobody's for a public venue, else
+ * the person's own household.
+ */
+function powerHouseholdOf(ctx: SimCtx, p: Person): string {
+  const loc = lotLoc(p);
+  const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+  if (lot?.kind === 'venue') return '';
+  const owner = lot?.ownerHouseholdId;
+  return owner && ctx.state.households[owner] ? owner : p.householdId;
+}
+
 /** Checks shared by object and self interactions: target present, visitor rules, affordability. */
 export function interactionCheck(ctx: SimCtx, p: Person, a: ActionInstance, ignoreCost = false): string | null {
   const def = interactionDef(ctx, a.interactionId);
   if (!def) return 'That interaction is not available.';
   if (isVisitor(ctx, p) && !def.allowVisitors) return 'Only residents can do that.';
+  const restricted = venueRestriction(ctx, p, def);
+  if (restricted) return restricted;
   if (def.kind === 'object') {
     if (a.target.kind !== 'object') return 'Pick an object.';
     const ref = targetObject(ctx, p, a);
     if (!ref) return 'It is gone.';
     if (!offeredInteractionIds(ref.def).includes(def.id)) return `Can't do that with the ${objectName(ctx, ref.def.id)}.`;
     if (isBroken(ref.obj) && !BROKEN_OK_BEHAVIORS.has(def.behavior ?? 'generic')) return 'Broken';
+    if (needsPower(ref.def) && powerIsOff(ctx.state, powerHouseholdOf(ctx, p))) return 'Power is off';
   }
   if (!ignoreCost && def.cost && a.data.charged !== true) {
     const hh = ctx.state.households[p.householdId];
@@ -320,6 +339,68 @@ const computerBehavior: Behavior = {
   interruptible: true,
 };
 
+/**
+ * Freelance work (Milestone 6): articles, books, programming gigs, paintings and busking. The action trains its
+ * skill as usual; on completion it sells the result for a fee that scales with that skill. Payment goes through
+ * transact with occurrence `freelance:<personId>:<actionId>`, so a completed sale can never pay twice.
+ */
+const FREELANCE_BASE: Record<string, number> = {
+  writeArticle: 1800, writeBook: 9000, programGig: 3200, paintToSell: 2400, busk: 600,
+};
+
+export function freelanceFee(interactionId: string, skillLevel: number): number {
+  const base = FREELANCE_BASE[interactionId] ?? 1000;
+  return Math.max(100, Math.round(base * (0.55 + Math.max(1, Math.min(10, skillLevel)) * 0.12)));
+}
+
+const freelanceBehavior: Behavior = {
+  check: interactionCheck,
+  reserve(ctx, p, a) {
+    const target = targetObject(ctx, p, a);
+    if (target?.def.tags.includes('computer')) {
+      const seats = computerSeats(ctx, p, target);
+      if (seats.length > 0 && !pickUsePoint(ctx, p, a, 'seat', seats, { plan: true, what: 'chair' })) return null;
+    }
+    return defOf(ctx, a).kind === 'object' ? reservePrimary(ctx, p, a) : null;
+  },
+  step(ctx, p, a) {
+    const target = targetObject(ctx, p, a);
+    if (target?.def.tags.includes('computer') && hasUsePoint(a, 'seat')) {
+      return seatStep(ctx, p, a, defOf(ctx, a), target);
+    }
+    return primaryStep(ctx, p, a);
+  },
+  begin: chargeCost,
+  apply(ctx, p, a) {
+    const def = defOf(ctx, a);
+    const skillId = def.skill?.id;
+    const level = skillId ? p.skills[skillId]?.level ?? 1 : 1;
+    const fee = freelanceFee(def.id, level);
+    const r = transact(ctx.state, ctx.events, p.householdId, fee, 'sale', `${def.name} (${p.firstName})`, { occurrence: `freelance:${p.id}:${a.id}` });
+    if (r.ok) {
+      const quality = level >= 7 ? 'a strong piece' : level >= 4 ? 'a solid piece' : 'a modest piece';
+      addFeed(ctx.state, ctx.events, 'money', `${p.firstName} sold ${quality} for $${(fee / 100).toFixed(2)}.`, p.id);
+    }
+  },
+  interruptible: true,
+};
+
+/** Phone or mailbox shortcuts that open the household bills panel. */
+const openBillsBehavior: Behavior = {
+  check: interactionCheck,
+  reserve: () => null,
+  step: primaryStep,
+  apply(ctx, p) { ctx.events.emit({ type: 'ui.request', what: 'bills', personId: p.id }); },
+};
+
+/** Phone or computer job search: opens the career panel, where a new job can be taken or the current one quit. */
+const openCareersBehavior: Behavior = {
+  check: interactionCheck,
+  reserve: (ctx, p, a) => (defOf(ctx, a).kind === 'object' ? reservePrimary(ctx, p, a) : null),
+  step: primaryStep,
+  apply(ctx, p) { ctx.events.emit({ type: 'ui.request', what: 'careers', personId: p.id }); },
+};
+
 /** Skills a skill book (readSkillBook, data.skillId) can teach, and the title of each book. */
 export const SKILL_BOOKS: Readonly<Record<string, string>> = {
   cooking: 'Cookbook', handiness: 'Home Repair Manual', gardening: 'Gardening Almanac', charisma: 'Public Speaking Guide',
@@ -453,10 +534,15 @@ function buildRegistry(): Record<string, Behavior> {
     goToWork: goToWorkBehavior,
     goHere: goHereBehavior,
     leaveLot: leaveLotBehavior,
+    travelTo: travelToBehavior,
+    inviteHome: inviteHomeBehavior,
     invite: inviteBehavior,
     phoneChat: phoneChatBehavior,
     phoneDate: phoneDateBehavior,
     planEvent: planEventBehavior,
+    freelance: freelanceBehavior,
+    openBills: openBillsBehavior,
+    openCareers: openCareersBehavior,
     social: socialBehavior,
   };
 }

@@ -63,6 +63,9 @@ export const SOCIAL_ACCEPT_MIN = 0.03;
 export const SOCIAL_ACCEPT_MAX = 0.97;
 /** Social: acceptance penalty per recent use of the same social on the same person. */
 export const SOCIAL_SPAM_PENALTY = 0.15;
+/** Library quiet rule: acceptance penalty for loud social categories said in a library. */
+export const LIBRARY_LOUD_PENALTY = 0.25;
+export const LIBRARY_LOUD_CATEGORIES: readonly string[] = ['funny', 'mean'];
 /** Social: one recent use is forgotten per this many game minutes. */
 export const SOCIAL_RECENT_DECAY_MINUTES = 60;
 /** Social autonomy approaches someone busy with an activity only when the actor's social is below this. */
