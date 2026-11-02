@@ -609,7 +609,20 @@ for 80 % of its value (`SALE_RATE`; the furniture stays) and becomes available a
 **Saves**: every M7 field is optional in schema 1 (`Lot.built/variant/blurb/map/rent/price`, `PersonLocation.transit`, `ScheduledEvent.kind
 'travelArrive'`, `WorldState.neighbourhood`). Old saves load unchanged and are completed on load.
 
-**Not done / remaining** (see also docs/CONTINUATION.md): the neighbourhood map UI and HUD badges beyond `awayText`; venue activities that charge
+**Interface** (`ui/hud/neighbourhoodModel.ts` pure, tested in `tests/unit/ui/neighbourhoodModel.test.ts`; `neighbourhoodPanel.ts`, `awayCard.ts`,
+`styles/neighbourhood.css`): the HUD Map button (top bar in landscape, bottom bar in portrait; live mode only) opens a modal with the street as pins
+positioned from `LotInfo.map` (or a list of the same lots; the choice is per opening), the trip under way, and a detail sheet of the chosen lot (beside
+the map on wide screens, over it on narrow ones). The sheet shows the marks (active lot, home), open/closed and hours, tenure and rent/price, travel
+minutes, who is there, and the actions: "Go here" with a toggle per household member (the selected person ticked; members at work, at school or in transit
+are disabled with the reason), "Go home" for the home lot (the header button sends everybody who is out), "Move here" for empty homes (movePreview lines
+and cost in a confirmation), "Play this household" for NPC homes (switchPreview consequences in a confirmation). A disabled action shows
+`travelProblem()` / the preview's reason under it. While a trip is under way a chip in the HUD (bottom left, above the bar) names the destination and the
+arrival time and opens the map; it reads `activeTrip` from the world, so it needs no extra call. Tapping a household member who is not on the lot selects
+them without moving the camera and opens a small card ("At Lakeside Park", "Go to ...", "Details"); the strip badge icon follows the kind of place. The
+map redraws on UiChange 'lot', 'neighbourhood', 'state' and 'selection' only when the data changed. The mock game (`ui/dev/mockGame.ts`) schedules a
+`travelArrive` entry, so the chip and the map work on `dev/ui.html`. Acceptance step 9 drives all of it in the three viewports.
+
+**Not done / remaining** (see also docs/CONTINUATION.md): the phone has no app list, so the map is not reachable from the phone menu; venue activities that charge
 money are the venue content's job (`InteractionDef.cost` is charged to the actor's household; there is no market stock or cafe menu system);
 townies never change jobs or homes by themselves, and NPC households never move; furniture is not carried along when moving (the old home keeps it);
 no weddings or dates away from home (a date is still planned at home); renting out the player's home, tenants and landlords are not modelled;

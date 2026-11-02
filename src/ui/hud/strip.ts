@@ -8,6 +8,7 @@ import { placeOf } from '../../sim/places';
 import { h, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { initials, moodTone } from './format';
+import { awayIconName, awayInfo } from './neighbourhoodModel';
 import type { Shell } from './shell';
 
 const AWAY_LABELS: Record<string, string> = { work: 'At work', school: 'At school', errand: 'Out', visiting: 'Visiting', home: 'Away' };
@@ -29,6 +30,7 @@ interface MemberView {
   img: HTMLImageElement;
   ini: HTMLElement;
   badge: HTMLElement;
+  badgeIcon: string;
   name: HTMLElement;
   sig: string;
 }
@@ -57,16 +59,19 @@ export function createStrip(sh: Shell): Strip {
         const person = st?.people[p.id];
         if (!person) return;
         if (api.selected() === p.id) {
+          sh.hideAwayCard();
           if (sh.isPanelOpen('person')) { sh.closePanels(); sh.sound('close'); }
           else { sh.openPanel('person', { personId: p.id }); sh.sound('open'); }
         } else {
           api.select(p.id);
           sh.sound('select');
-          if (person.location.kind === 'lot') api.view.focusPerson(p.id);
+          // Somebody off the active lot cannot be centred: a card says where they are and offers to go there.
+          if (person.location.kind === 'lot') { sh.hideAwayCard(); api.view.focusPerson(p.id); }
+          else if (!sh.isPanelOpen('person')) sh.showAwayCard(p.id, btn);
           if (sh.isPanelOpen('person')) sh.openPanel('person', { personId: p.id });
         }
       });
-      return { id: p.id, btn, ring, img, ini, badge, name, sig: '' };
+      return { id: p.id, btn, ring, img, ini, badge, badgeIcon: 'briefcase', name, sig: '' };
     });
     list.replaceChildren(...views.map((v) => v.btn));
   };
@@ -100,6 +105,9 @@ export function createStrip(sh: Shell): Strip {
       v.btn.setAttribute('aria-pressed', String(selected));
       v.ring.dataset.tone = tone;
       v.badge.hidden = !away;
+      const kind = awayInfo(st!, p)?.kind;
+      const want = kind ? awayIconName(kind) : 'briefcase';
+      if (want !== v.badgeIcon) { v.badgeIcon = want; v.badge.replaceChildren(icon(want, 14)); }
       // away: the badge shows why, the name line shows the return time (the full text is in the label)
       setText(v.name, away?.at ? away.at : p.firstName);
       const label = `${p.firstName} ${p.lastName}, mood ${mood.label}${away ? `, ${away.label.toLowerCase()}${away.back ? `, ${away.back.toLowerCase()}` : ''}` : ''}${selected ? ', selected. Tap again for details' : ''}`;

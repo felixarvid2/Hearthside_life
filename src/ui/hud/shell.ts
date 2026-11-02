@@ -23,6 +23,11 @@ export interface Shell {
   openSettings(): void;
   /** Opens the event planner (phone -> Plan an Event) for a household member. */
   openEventPlanner(hostId: Id): void;
+  /** Opens the neighbourhood map (HUD Map button); `lotId` shows that place's sheet. */
+  openNeighbourhood(opts?: { lotId?: Id }): void;
+  /** Shows the "where is X" card for a household member who is off the active lot, next to `anchor`. */
+  showAwayCard(personId: Id, anchor: HTMLElement): void;
+  hideAwayCard(): boolean;
   openContextMenu(personId: Id, pick: PickResult, at?: { x: number; y: number }): void;
   closeContextMenu(): boolean;
   isContextMenuOpen(): boolean;

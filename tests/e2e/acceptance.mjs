@@ -11,7 +11,10 @@
 //   undo/redo, exact price), 4 build mode (wall finish on one side), 5 save, reload, load and compare,
 //   6 rotate the device during a creator edit and during a placement preview,
 //   7 Milestone 2 home editor: build a room (drag, handles, Confirm / Cancel, device rotation keeps the preview), add a
-//     door and a window, paint both sides of a new wall and an area of floor, undo and redo, then walk a person in.
+//     door and a window, paint both sides of a new wall and an area of floor, undo and redo, then walk a person in,
+//   8 Milestone 6 careers, bills and freelance income,
+//   9 Milestone 7 neighbourhood: open the map, travel to the park and wait for the arrival, one venue activity, the away card
+//     of the person left at home, go home, open the preview of switching to another household and cancel it.
 // Clicks and taps go through the real DOM (and the canvas at positions picked with view.worldToScreen/anchorOf);
 // window.hearthside.debug is only used to fast-forward time and to read state for assertions.
 // Fails on page errors, console errors and failed requests. Screenshots: tests/e2e/out/acceptance/<viewport>/.
@@ -227,6 +230,7 @@ async function runViewport(browser, vpName, vp) {
     ['6', 'Rotate the device during edits', stepRotate],
     ['7', 'Milestone 2 home editor: build a room, door, window, finishes, undo/redo, walk in', stepHomeEditor],
     ['8', 'Milestone 6: career panel, pay a bill, sell freelance work', stepEconomy],
+    ['9', 'Milestone 7: neighbourhood map, travel, away card, go home, household switch preview', stepNeighbourhood],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -2226,6 +2230,231 @@ async function stepEconomy(T) {
     }
   }
   await closeAnyPanel(T);
+}
+
+// ===============================================================================================================
+// STEP 9 - Milestone 7: the neighbourhood map, travelling, and the other households
+// ===============================================================================================================
+
+async function stepNeighbourhood(T) {
+  const S = '9';
+  const { page } = T;
+  const g = () => page.evaluate(() => {
+    const game = window.hearthside.game; const st = window.hearthside.debug.state(); const info = game.neighbourhood();
+    return { st: { active: st.activeLotId, hh: st.activeHouseholdId, minutes: st.clock.minutes }, info };
+  });
+  const closeMap = async () => {
+    const x = page.locator('.nbm .modal-header button[aria-label="Close"]').first();
+    if (await x.count() && await x.isVisible().catch(() => false)) { await T.tap(x); await page.waitForTimeout(250); }
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+  };
+  const openMap = async () => {
+    await T.tap(page.locator('.map-btn'));
+    await page.waitForSelector('.nbm', { timeout: 8000 });
+    await page.waitForTimeout(450);
+  };
+  const pickLot = async (lotId) => {
+    // The map pin is the real thing to tap; the list row is the fallback when a pin cannot be reached.
+    const pin = page.locator(`.nbm-pin[data-lot-id="${lotId}"]`);
+    try { await T.tap(pin); } catch {
+      await T.tap(page.locator('.nbm-toggle .seg[data-id="list"]'));
+      await T.tap(page.locator(`.nbm-row[data-lot-id="${lotId}"]`));
+    }
+    await page.waitForSelector('.nbm-detail h3', { timeout: 5000 });
+    await page.waitForTimeout(250);
+  };
+
+  await page.evaluate(() => window.hearthside.game.setSpeed(0));
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  await page.waitForSelector('.map-btn', { timeout: 5000 });
+
+  // Quiet scenario: nobody leaves for a shift in the middle of the trip, and it is daytime so the venues are open.
+  const members = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds; });
+  await page.evaluate((ids) => { for (const id of ids) window.hearthside.game.quitCareer?.(id); }, members);
+  const clock = (await g()).st.minutes % 1440;
+  if (clock < 9 * 60 || clock > 16 * 60) await runUntil(T, 4 * ((9 * 60 - clock + 1440) % 1440), 'false');
+  await T.frames(3);
+  const [first, second] = members;
+  await selectMember(T, first);
+
+  // ---- 1. the map lists the neighbourhood
+  const hud0 = await page.evaluate(() => { const b = document.querySelector('.map-btn'); const r = b.getBoundingClientRect(); return { w: r.width, h: r.height, vis: r.bottom <= innerHeight && r.right <= innerWidth && r.top >= 0 && r.left >= 0 }; });
+  T.check(S, 'the HUD has a Map button of at least 44 px, on screen', hud0.w >= 43.5 && hud0.h >= 43.5 && hud0.vis, JSON.stringify(hud0));
+  const bars = await page.evaluate(() => [...document.querySelectorAll('.hud-top, .hud-row2, .hud-bottom')].filter((b) => !b.hidden && b.offsetParent !== null).map((b) => {
+    const r = b.getBoundingClientRect();
+    const out = [...b.querySelectorAll('button')].filter((c) => c.offsetParent !== null).filter((c) => { const q = c.getBoundingClientRect(); return q.right > r.right + 1 || q.left < r.left - 1; }).map((c) => c.getAttribute('aria-label') || c.className);
+    return { bar: b.className.split(' ')[0], out, overflow: b.scrollWidth > b.clientWidth + 1 };
+  }));
+  T.check(S, 'with the Map button the HUD bars still fit: no button sticks out of its bar', bars.length > 0 && bars.every((b) => b.out.length === 0 && !b.overflow), JSON.stringify(bars));
+  await openMap();
+  const m0 = await page.evaluate(() => {
+    const info = window.hearthside.game.neighbourhood();
+    const box = document.querySelector('.nbm').getBoundingClientRect();
+    return {
+      lots: info.lots.length, venues: info.lots.filter((l) => l.kind === 'venue').length,
+      reachable: info.lots.filter((l) => l.kind === 'venue' && l.open && l.travelProblem === null).length,
+      usable: info.lots.filter((l) => l.usable).length, pins: document.querySelectorAll('.nbm-pin').length, rows: document.querySelectorAll('.nbm-row').length,
+      active: document.querySelectorAll('.nbm-pin.is-active').length, home: document.querySelectorAll('.nbm-pin.is-home').length,
+      overflowX: document.querySelector('.nbm').scrollWidth > box.width + 1, onScreen: box.left >= -1 && box.top >= -1 && box.right <= innerWidth + 1 && box.bottom <= innerHeight + 1,
+    };
+  });
+  T.check(S, 'the neighbourhood has at least 12 lots, all drawn on the map and listed', m0.lots >= 12 && m0.pins === m0.lots && m0.rows === m0.lots, JSON.stringify(m0));
+  T.check(S, 'at least 3 venues are open and can be travelled to', m0.reachable >= 3 && m0.venues >= 6, `${m0.reachable} reachable of ${m0.venues} venues (${m0.usable} laid out so far)`);
+  T.check(S, 'the active lot and the home lot are marked on the map', m0.active === 1 && m0.home === 1, `active ${m0.active}, home ${m0.home}`);
+  T.check(S, 'the map fits the screen without sideways overflow', m0.onScreen && !m0.overflowX, JSON.stringify({ onScreen: m0.onScreen, overflowX: m0.overflowX }));
+  await T.shot('m7-map');
+  await T.audit('neighbourhood map');
+  // list view
+  await T.tap(page.locator('.nbm-toggle .seg[data-id="list"]'));
+  await page.waitForTimeout(300);
+  const listVis = await page.evaluate(() => [...document.querySelectorAll('.nbm-row')].filter((e) => e.offsetParent !== null).length);
+  T.check(S, 'the list view shows the lots as rows', listVis >= 3, `${listVis} rows visible without scrolling`);
+  await T.shot('m7-list');
+  await T.tap(page.locator('.nbm-toggle .seg[data-id="map"]'));
+  await page.waitForTimeout(250);
+
+  // ---- 2. choose the park: the sheet offers Go here for the selected person
+  const park = await page.evaluate(() => window.hearthside.game.neighbourhood().lots.find((l) => l.venueType === 'park'));
+  const home = await page.evaluate(() => { const i = window.hearthside.game.neighbourhood(); return i.lots.find((l) => l.id === i.homeLotId); });
+  await pickLot(park.id);
+  const sheet = await page.evaluate(() => {
+    const go = document.querySelector('.nbm-go');
+    return {
+      title: document.querySelector('.nbm-detail h3')?.textContent ?? '', go: go ? { text: go.textContent.trim(), disabled: go.disabled, h: go.getBoundingClientRect().height } : null,
+      ticked: [...document.querySelectorAll('.nbm-chip.is-selected')].map((b) => b.dataset.personId), chips: document.querySelectorAll('.nbm-chip').length,
+      selected: window.hearthside.game.selected(),
+    };
+  });
+  T.check(S, 'the sheet of the park shows its name and a usable Go here button', sheet.title === park.name && sheet.go?.text === 'Go here' && sheet.go.disabled === false && sheet.go.h >= 43.5, JSON.stringify(sheet));
+  T.check(S, 'the selected person is ticked to go, every household member has a toggle', sheet.ticked.length === 1 && sheet.ticked[0] === sheet.selected && sheet.chips === members.length, JSON.stringify(sheet));
+  await T.shot('m7-park-sheet');
+  await T.audit('neighbourhood sheet');
+  const goBtnInView = await page.evaluate(() => { const b = document.querySelector('.nbm-go').getBoundingClientRect(); const d = document.querySelector('.nbm-detail').getBoundingClientRect(); return b.top >= d.top - 1 && b.bottom <= d.bottom + 1; });
+  T.check(S, 'Go here is reachable without scrolling the sheet', goBtnInView, String(goBtnInView));
+
+  // ---- 3. travel: the trip chip appears, the person walks out and arrives
+  const t0 = (await g()).st.minutes;
+  await T.tap(page.locator('.nbm-go'));
+  await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+  await page.waitForTimeout(600);
+  await T.frames(3);
+  const chip = await page.evaluate(() => { const c = document.querySelector('.hud-trip'); if (!c || c.hidden) return null; const r = c.getBoundingClientRect(); return { text: c.textContent.trim(), w: r.width, h: r.height, onScreen: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight }; });
+  T.check(S, 'a trip chip with the destination and the arrival time shows in the HUD', !!chip && chip.text.includes(park.name) && /arrives \d{1,2}:\d{2} [AP]M/.test(chip.text) && chip.h >= 43.5 && chip.onScreen, JSON.stringify(chip));
+  await T.shot('m7-trip-chip');
+  await T.audit('trip chip');
+  const trip = await page.evaluate(() => window.hearthside.game.neighbourhood().trip);
+  T.check(S, 'the trip is reported with the traveller, the park and an arrival 20 to 40 minutes away', !!trip && trip.lotId === park.id && trip.personIds.length === 1 && trip.personIds[0] === first && trip.arriveAt - t0 >= 19.5 && trip.arriveAt - t0 <= 40.5, JSON.stringify(trip));
+  const arrived = await runUntil(T, 4 * 90, `st.activeLotId === '${park.id}'`);
+  T.check(S, 'the group arrives and the park becomes the active lot', arrived.done, `${Math.round(arrived.ticks / 4)} game minutes`);
+  await T.frames(8);
+  await page.waitForTimeout(600);
+  const after = await page.evaluate(([a, b]) => {
+    const game = window.hearthside.game;
+    return { place: game.whereIs(a), other: b ? game.whereIs(b) : null, chipHidden: !document.querySelector('.hud-trip') || document.querySelector('.hud-trip').hidden };
+  }, [first, second]);
+  T.check(S, 'whereIs says the traveller is at the park; the chip is gone', after.place?.text === `At ${park.name}` && after.chipHidden, JSON.stringify({ place: after.place?.text, chipHidden: after.chipHidden }));
+  if (second) T.check(S, 'the household member who stayed behind is at home, off the lot', after.other?.kind === 'home' && after.other.text === 'At home', JSON.stringify(after.other));
+  await selectMember(T, first);
+  await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), first);
+  await settle(T);
+  await T.shot('m7-arrived-park');
+
+  // ---- 4. somebody who is not on the lot: the away card
+  if (second) {
+    await T.tap(page.locator(`.member[data-person-id="${second}"]`));
+    await page.waitForSelector('.away-card:not([hidden])', { timeout: 4000 }).catch(() => undefined);
+    const card = await page.evaluate(() => { const c = document.querySelector('.away-card'); if (!c || c.hidden) return null; const r = c.getBoundingClientRect(); return { text: c.textContent.trim(), goTo: [...c.querySelectorAll('button')].map((b) => b.textContent.trim()), onScreen: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, small: [...c.querySelectorAll('button')].filter((b) => b.getBoundingClientRect().height < 43.5).length }; });
+    T.check(S, 'tapping somebody off the lot shows where they are with Go to and Details', !!card && /At home/.test(card.text) && card.goTo.some((t) => /^Go to /.test(t)) && card.goTo.includes('Details') && card.onScreen && card.small === 0, JSON.stringify(card));
+    await T.shot('m7-away-card');
+    await T.audit('away card');
+    const goTo = page.locator('.away-card button', { hasText: /^Go to / }).first();
+    if (await goTo.count()) {
+      await T.tap(goTo);
+      await page.waitForSelector('.nbm .nbm-detail h3', { timeout: 6000 }).catch(() => undefined);
+      const sheetHome = await page.evaluate(() => ({ title: document.querySelector('.nbm-detail h3')?.textContent ?? '', go: document.querySelector('.nbm-go')?.textContent.trim() ?? null }));
+      T.check(S, 'Go to opens the map on that place, with Go home as the action', sheetHome.title === home.name && sheetHome.go === 'Go home', JSON.stringify(sheetHome));
+      await T.shot('m7-home-sheet');
+      await closeMap();
+    }
+  }
+
+  // ---- 5. a venue activity from the context menu
+  await selectMember(T, first);
+  const objs = await page.evaluate((id) => {
+    const game = window.hearthside.game; const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId]; const p = st.people[id];
+    if (p.location.kind !== 'lot') return [];
+    const res = [];
+    for (const o of Object.values(lot.objects)) {
+      const opts = game.options(id, { kind: 'object', objectId: o.id }).filter((x) => x.enabled && x.group === 'object');
+      if (opts.length) res.push({ id: o.id, d: Math.hypot(o.x - p.location.x, o.z - p.location.z), labels: opts.map((x) => x.label) });
+    }
+    return res.sort((a, b) => a.d - b.d).slice(0, 4);
+  }, first);
+  if (objs.length) {
+    log('park objects with options', JSON.stringify(objs));
+    let done = false;
+    for (const o of objs) {
+      const menu = await tapAndOpenMenu(T, 'object', o.id, S, 'park object');
+      if (!menu) continue;
+      const wanted = menu.items.find((i) => !i.disabled);
+      if (wanted && await chooseMenu(T, new RegExp(wanted.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))) {
+        const q = await page.evaluate((id) => window.hearthside.debug.state().people[id].queue.map((a) => a.interactionId), first);
+        T.check(S, `a venue activity is queued from the context menu (${wanted.label})`, q.length > 0, JSON.stringify(q));
+        done = true;
+        break;
+      }
+      await dismissMenu(T);
+    }
+    if (!done) T.bad(S, 'a venue activity can be queued from the context menu', 'no object menu entry could be chosen');
+    await runUntil(T, 4 * 20, 'false');
+    await T.shot('m7-venue-activity');
+  } else {
+    T.ok(S, 'a venue activity from the context menu', 'skipped: the park has no object with an enabled option yet');
+  }
+
+  // ---- 6. go home with the header button
+  await openMap();
+  const homeBtn = await page.evaluate(() => { const b = document.querySelector('.nbm-gohome'); if (!b || b.hidden) return null; const r = b.getBoundingClientRect(); return { w: r.width, h: r.height }; });
+  T.check(S, 'away from home, the map offers Go home as a 44 px button', !!homeBtn && homeBtn.w >= 43.5 && homeBtn.h >= 43.5, JSON.stringify(homeBtn));
+  await T.shot('m7-map-away');
+  if (homeBtn) {
+    await T.tap(page.locator('.nbm-gohome'));
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+    await page.waitForTimeout(500);
+    const hc = await page.evaluate(() => { const c = document.querySelector('.hud-trip'); return c && !c.hidden ? c.textContent.trim() : null; });
+    T.check(S, 'the trip chip names home as the destination', !!hc && hc.includes(home.name), String(hc));
+    const back = await runUntil(T, 4 * 90, `st.activeLotId === '${home.id}'`);
+    T.check(S, 'the household arrives home and the home lot is active again', back.done, `${Math.round(back.ticks / 4)} game minutes`);
+    await T.frames(8);
+    await page.waitForTimeout(500);
+    const placeBack = await page.evaluate((id) => window.hearthside.game.whereIs(id)?.text, first);
+    T.check(S, 'whereIs says the traveller is at home', placeBack === 'At home', String(placeBack));
+  }
+
+  // ---- 7. another household: the preview of switching, then cancel
+  await openMap();
+  const npc = await page.evaluate(() => { const i = window.hearthside.game.neighbourhood(); const hh = i.households.find((x) => !x.active && x.switchable); return hh ? { id: hh.id, name: hh.name, lotId: hh.homeLotId } : null; });
+  T.check(S, 'the neighbourhood has other households that can be played', !!npc, JSON.stringify(npc));
+  if (npc) {
+    await pickLot(npc.lotId);
+    const play = await page.evaluate(() => { const b = document.querySelector('.nbm-play'); return b ? { text: b.textContent.trim(), disabled: b.disabled, h: b.getBoundingClientRect().height } : null; });
+    T.check(S, 'the home of another household offers Play this household', !!play && play.text === 'Play this household' && !play.disabled && play.h >= 43.5, JSON.stringify(play));
+    await T.shot('m7-npc-home-sheet');
+    if (play && !play.disabled) {
+      await T.tap(page.locator('.nbm-play'));
+      await page.waitForSelector('.nbm-confirm .nbm-lines li', { timeout: 5000 }).catch(() => undefined);
+      const dlg = await page.evaluate(() => { const d = document.querySelector('.nbm-confirm'); if (!d) return null; const r = d.getBoundingClientRect(); return { title: d.querySelector('h2')?.textContent ?? '', lines: d.querySelectorAll('.nbm-lines li').length, onScreen: r.left >= -1 && r.right <= innerWidth + 1 && r.top >= -1 && r.bottom <= innerHeight + 1, buttons: [...d.querySelectorAll('.modal-footer button')].map((b) => b.textContent.trim()) }; });
+      T.check(S, 'the switch confirmation explains the consequences and offers Cancel', !!dlg && dlg.title.includes(npc.name) && dlg.lines >= 3 && dlg.onScreen && dlg.buttons.includes('Cancel') && dlg.buttons.includes('Play this household'), JSON.stringify(dlg));
+      await T.shot('m7-switch-preview');
+      await T.tap(page.locator('.nbm-confirm .modal-footer button', { hasText: 'Cancel' }));
+      await page.waitForTimeout(300);
+      const kept = await g();
+      T.check(S, 'cancelling the switch changes nothing', kept.info.activeHouseholdId === kept.st.hh && kept.info.activeHouseholdId !== npc.id && (await page.locator('.nbm-confirm').count()) === 0, `active household ${kept.info.activeHouseholdId}`);
+    }
+  }
+  await closeMap();
+  await T.audit('after neighbourhood step');
 }
 
 main().catch((e) => { console.error('[acceptance] error', e); process.exit(1); });

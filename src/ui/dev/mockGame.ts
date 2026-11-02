@@ -15,7 +15,7 @@ import { EventBus } from '../../core/events';
 import { MINUTES_PER_DAY, SPEED_MINUTES_PER_SECOND, START_MINUTE, formatClock, minuteOfDay, type Speed } from '../../core/clock';
 import type { HouseholdDraft, PersonDraft } from '../../core/drafts';
 import { edgeKey, newId, pairKey, relKey, tileKey } from '../../core/ids';
-import { addFeed, addHousehold, createEmptyWorld, householdMembers, transact } from '../../core/state';
+import { addFeed, addHousehold, createEmptyWorld, householdMembers, markProcessed, transact } from '../../core/state';
 import type { Tile } from '../../core/nav';
 import type {
   ActionInstance, Appearance, CareerState, Cents, FinishRef, HomeEvent, Id, Lot, NeedId, Needs, Person, PersonLocation, Pronouns,
@@ -838,34 +838,49 @@ export class MockGame implements GameAPI {
       const p = w.people[id];
       if (p) p.location = { kind: 'offlot', place: 'errand', lotId, since: w.clock.minutes, until: arrivesAt, transit: true };
     }
+    const occurrence = `travel:${personIds[0]}:${Math.round(w.clock.minutes)}`;
+    w.schedule.push({ occurrence, at: arrivesAt, kind: 'travelArrive', data: { lotId, personIds: personIds.join(','), fromLotId: w.activeLotId } });
     this.events.emit({ type: 'travel', what: 'departed', personIds, lotId });
     this.emit('neighbourhood');
+    this.emit('state');
+    // The mock clock may be paused: the trip also ends a couple of real seconds after it began.
     setTimeout(() => {
-      if (this.world !== w) return;
-      const fromId = w.activeLotId;
-      for (const p of Object.values(w.people)) {
-        if (p.location.kind === 'lot' && !personIds.includes(p.id)) p.location = { kind: 'offlot', place: 'home', lotId: w.households[p.householdId]?.homeLotId ?? undefined, since: w.clock.minutes, until: null };
-      }
-      w.activeLotId = lotId;
-      personIds.forEach((id, i) => {
-        const p = w.people[id];
-        if (p) p.location = { kind: 'lot', lotId, level: 0, x: to.entry.x + 0.5 + i, z: to.entry.z + 0.5, facing: Math.PI, posture: 'standing' };
-      });
-      addFeed(w, this.events, 'info', `${personIds.map((id) => w.people[id]?.firstName).join(' and ')} arrived at ${to.name}.`, personIds[0]);
-      this.events.emit({ type: 'lot.activated', lotId, fromLotId: fromId });
-      this.events.emit({ type: 'travel', what: 'arrived', personIds, lotId });
-      this.emit('lot');
-      this.emit('neighbourhood');
-      this.emit('state');
+      const ev = w.schedule.find((e) => e.occurrence === occurrence);
+      if (ev && this.world === w) { w.schedule.splice(w.schedule.indexOf(ev), 1); this.finishTrip(w, ev); }
     }, 2500);
     return { ok: true, minutes, arrivesAt };
+  }
+
+  /** A trip came due: the travellers arrive and the destination becomes the active lot. */
+  private finishTrip(w: WorldState, ev: { occurrence: string; data?: Record<string, string | number | boolean | null> }): void {
+    markProcessed(w, ev.occurrence);
+    const lotId = String(ev.data?.lotId ?? '');
+    const personIds = String(ev.data?.personIds ?? '').split(',').filter(Boolean);
+    const to = w.lots[lotId];
+    if (!to) return;
+    const fromId = w.activeLotId;
+    for (const p of Object.values(w.people)) {
+      if (p.location.kind === 'lot' && !personIds.includes(p.id)) p.location = { kind: 'offlot', place: 'home', lotId: w.households[p.householdId]?.homeLotId ?? undefined, since: w.clock.minutes, until: null };
+    }
+    w.activeLotId = lotId;
+    personIds.forEach((id, i) => {
+      const p = w.people[id];
+      if (p) p.location = { kind: 'lot', lotId, level: 0, x: to.entry.x + 0.5 + i, z: to.entry.z + 0.5, facing: Math.PI, posture: 'standing' };
+    });
+    addFeed(w, this.events, 'info', `${personIds.map((id) => w.people[id]?.firstName).join(' and ')} arrived at ${to.name}.`, personIds[0]);
+    this.events.emit({ type: 'lot.activated', lotId, fromLotId: fromId });
+    this.events.emit({ type: 'travel', what: 'arrived', personIds, lotId });
+    this.emit('lot');
+    this.emit('neighbourhood');
+    this.emit('state');
   }
 
   goHome(personIds?: Id[]): Result & { minutes?: number; arrivesAt?: number } {
     const w = this.world;
     const hh = w ? w.households[w.activeHouseholdId] : undefined;
     if (!w || !hh?.homeLotId) return { ok: false, reason: 'There is no home to go to.' };
-    const ids = personIds ?? hh.memberIds.filter((id) => w.people[id]?.location.kind === 'lot');
+    const ids = personIds ?? hh.memberIds.filter((id) => { const loc = w.people[id]?.location; return loc?.kind === 'lot' && loc.lotId !== hh.homeLotId; });
+    if (ids.length === 0) return { ok: false, reason: 'Everybody is already home.' };
     return this.travel(ids, hh.homeLotId);
   }
 
@@ -1228,6 +1243,7 @@ export class MockGame implements GameAPI {
     for (const ev of [...w.schedule]) {
       if (ev.at > w.clock.minutes) continue;
       w.schedule.splice(w.schedule.indexOf(ev), 1);
+      if (ev.kind === 'travelArrive') { this.finishTrip(w, ev); continue; }
       const p = ev.personId ? w.people[ev.personId] : undefined;
       if (!p || !hh) continue;
       p.location = { kind: 'lot', lotId: w.activeLotId, level: 0, x: 12.5, z: 22.5, facing: Math.PI, posture: 'standing' };
