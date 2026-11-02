@@ -22,6 +22,15 @@ import type {
   Rot, SimSettings, StartMode, Wardrobe, WorldState,
 } from '../../core/types';
 import { NEED_IDS } from '../../core/types';
+import { Rng, seedRng } from '../../core/rng';
+import type { MovePreview, NeighbourhoodInfo, PersonPlace, SwitchPreview } from '../../game/api';
+import { movePreview as simMovePreview, switchPreview as simSwitchPreview } from '../../sim/households';
+import { travelProblem as simTravelProblem } from '../../sim/lotTravel';
+import { neighbourhoodInfo } from '../../sim/neighbourhoodView';
+import { placeOf } from '../../sim/places';
+import { Reservations } from '../../sim/reservations';
+import type { SimCtx } from '../../sim/context';
+import { createNeighbourhoodLots, travelMinutes } from '../../world/neighbourhood';
 
 export interface MockOptions {
   content: ContentDB;
@@ -792,6 +801,132 @@ export class MockGame implements GameAPI {
     try { localStorage.setItem('hearthside.mock.settings', JSON.stringify(this.cfg)); } catch { /* ignore */ }
     this.emit('settings');
   }
+  // ---------------------------------------------------------------------------------------------
+  // Neighbourhood (Milestone 7): the pure read/preview functions run for real on the mock world; travel and household
+  // changes are simplified (the mock has no simulation clock for schedules): trips take a couple of real seconds.
+  // ---------------------------------------------------------------------------------------------
+
+  private simCtx(): SimCtx | null {
+    const w = this.world;
+    if (!w) return null;
+    const nav = { findPath: () => [], isWalkable: () => true, canStep: () => true, slotsOf: () => [], standTilesNear: () => [], invalidate: () => undefined, stats: () => ({ routeRequests: 0, lastRouteMs: 0 }) };
+    return { state: w, content: this.content, nav, events: this.events, rng: new Rng(w.rng), res: new Reservations(), now: w.clock.minutes, counters: { routeRequests: 0 } };
+  }
+
+  neighbourhood(): NeighbourhoodInfo | null { const c = this.simCtx(); return c ? neighbourhoodInfo(c) : null; }
+
+  whereIs(personId: Id): PersonPlace | null {
+    const p = this.world?.people[personId];
+    return this.world && p ? placeOf(this.world, p) : null;
+  }
+
+  travelProblem(personIds: Id[], lotId: Id): string | null {
+    const c = this.simCtx();
+    return c ? simTravelProblem(c, personIds, lotId) : 'No game is running.';
+  }
+
+  travel(personIds: Id[], lotId: Id): Result & { minutes?: number; arrivesAt?: number } {
+    this.log('travel', { personIds, lotId });
+    const c = this.simCtx(), w = this.world;
+    if (!c || !w) return { ok: false, reason: 'No game is running.' };
+    const problem = simTravelProblem(c, personIds, lotId);
+    if (problem) return { ok: false, reason: problem };
+    const from = w.lots[w.activeLotId]!, to = w.lots[lotId]!;
+    const minutes = travelMinutes(from, to);
+    const arrivesAt = w.clock.minutes + minutes;
+    for (const id of personIds) {
+      const p = w.people[id];
+      if (p) p.location = { kind: 'offlot', place: 'errand', lotId, since: w.clock.minutes, until: arrivesAt, transit: true };
+    }
+    this.events.emit({ type: 'travel', what: 'departed', personIds, lotId });
+    this.emit('neighbourhood');
+    setTimeout(() => {
+      if (this.world !== w) return;
+      const fromId = w.activeLotId;
+      for (const p of Object.values(w.people)) {
+        if (p.location.kind === 'lot' && !personIds.includes(p.id)) p.location = { kind: 'offlot', place: 'home', lotId: w.households[p.householdId]?.homeLotId ?? undefined, since: w.clock.minutes, until: null };
+      }
+      w.activeLotId = lotId;
+      personIds.forEach((id, i) => {
+        const p = w.people[id];
+        if (p) p.location = { kind: 'lot', lotId, level: 0, x: to.entry.x + 0.5 + i, z: to.entry.z + 0.5, facing: Math.PI, posture: 'standing' };
+      });
+      addFeed(w, this.events, 'info', `${personIds.map((id) => w.people[id]?.firstName).join(' and ')} arrived at ${to.name}.`, personIds[0]);
+      this.events.emit({ type: 'lot.activated', lotId, fromLotId: fromId });
+      this.events.emit({ type: 'travel', what: 'arrived', personIds, lotId });
+      this.emit('lot');
+      this.emit('neighbourhood');
+      this.emit('state');
+    }, 2500);
+    return { ok: true, minutes, arrivesAt };
+  }
+
+  goHome(personIds?: Id[]): Result & { minutes?: number; arrivesAt?: number } {
+    const w = this.world;
+    const hh = w ? w.households[w.activeHouseholdId] : undefined;
+    if (!w || !hh?.homeLotId) return { ok: false, reason: 'There is no home to go to.' };
+    const ids = personIds ?? hh.memberIds.filter((id) => w.people[id]?.location.kind === 'lot');
+    return this.travel(ids, hh.homeLotId);
+  }
+
+  inviteHome(hostId: Id, guestId: Id): Result {
+    this.log('inviteHome', { hostId, guestId });
+    const w = this.world;
+    const guest = w?.people[guestId];
+    if (!w || !guest) return { ok: false, reason: 'Unknown person.' };
+    addFeed(w, this.events, 'social', `${guest.firstName} will come over in about an hour.`, hostId);
+    return { ok: true };
+  }
+
+  switchPreview(householdId: Id): SwitchPreview | null { const c = this.simCtx(); return c ? simSwitchPreview(c, householdId) : null; }
+
+  switchHousehold(householdId: Id): Result {
+    this.log('switchHousehold', householdId);
+    const c = this.simCtx(), w = this.world;
+    if (!c || !w) return { ok: false, reason: 'No game is running.' };
+    const preview = simSwitchPreview(c, householdId);
+    if (!preview.ok) return { ok: false, reason: preview.reason ?? 'Not possible.' };
+    const old = w.households[w.activeHouseholdId]!, next = w.households[householdId]!;
+    for (const id of old.memberIds) { const p = w.people[id]; if (p) { p.isNpc = true; p.location = { kind: 'offlot', place: 'home', lotId: old.homeLotId ?? undefined, since: w.clock.minutes, until: null }; } }
+    old.isPlayable = false;
+    next.isPlayable = true;
+    w.activeHouseholdId = next.id;
+    const fromId = w.activeLotId;
+    w.activeLotId = next.homeLotId!;
+    next.memberIds.forEach((id, i) => {
+      const p = w.people[id];
+      const lot = w.lots[next.homeLotId!]!;
+      if (p) { p.isNpc = false; p.location = { kind: 'lot', lotId: lot.id, level: 0, x: lot.entry.x + 0.5 + i, z: lot.entry.z + 0.5, facing: Math.PI, posture: 'standing' }; }
+    });
+    this.sel = next.memberIds[0] ?? null;
+    addFeed(w, this.events, 'info', `You are now playing the ${next.name} household.`);
+    this.events.emit({ type: 'household.switched', fromId: old.id, toId: next.id });
+    this.events.emit({ type: 'lot.activated', lotId: w.activeLotId, fromLotId: fromId });
+    this.emit('selection');
+    this.emit('lot');
+    this.emit('neighbourhood');
+    this.emit('state');
+    return { ok: true };
+  }
+
+  movePreview(lotId: Id): MovePreview | null { const c = this.simCtx(); return c ? simMovePreview(c, lotId) : null; }
+
+  moveHousehold(lotId: Id): Result {
+    this.log('moveHousehold', lotId);
+    const c = this.simCtx(), w = this.world;
+    if (!c || !w) return { ok: false, reason: 'No game is running.' };
+    const pv = simMovePreview(c, lotId);
+    if (!pv.ok) return { ok: false, reason: pv.reason ?? 'Not possible.' };
+    const hh = w.households[w.activeHouseholdId]!;
+    transact(w, this.events, hh.id, -pv.cost, 'bill', 'Moving in');
+    hh.homeLotId = lotId;
+    addFeed(w, this.events, 'info', `The ${hh.name} household moved to ${w.lots[lotId]!.name}.`);
+    this.events.emit({ type: 'household.moved', householdId: hh.id, fromLotId: null, toLotId: lotId });
+    this.emit('neighbourhood');
+    this.emit('state');
+    return { ok: true };
+  }
+
   eventProblem(req: PlanEventRequest): string | null {
     const w = this.world;
     const def = this.content.events?.[req.type];
@@ -896,6 +1031,16 @@ export class MockGame implements GameAPI {
     const june = this.personFromDraft(w, draft('June', 'Whitlock', SHE, '#e2b99a', '#a3622b', ['cheerful', 'romantic', 'neat'], null, null), nh.id, { kind: 'offlot', place: 'home', since: 0, until: null });
     june.isNpc = true;
     nh.memberIds.push(june.id);
+    // The neighbourhood: twelve more lot records (empty here), June's house on the map, a rental and a house for sale.
+    const lots = createNeighbourhoodLots(w, new Rng(seedRng(7)), 'Willow Lane');
+    lot.map = { x: 40, y: 84 };
+    const juneHome = w.lots[lots.byKey.res1!]!;
+    juneHome.name = 'Whitlock Cottage';
+    delete juneHome.rent;
+    juneHome.ownerHouseholdId = nh.id;
+    nh.homeLotId = juneHome.id;
+    june.location = { kind: 'offlot', place: 'home', lotId: juneHome.id, since: 0, until: null };
+    w.neighbourhood = { version: 1, street: 'Willow Lane', npcHouseholdIds: [], nextDoorHouseholdId: nh.id };
     const ada = members[0], theo = members[1];
     if (ada) {
       this.setRel(w, ada.id, june.id, 30, 18, 0);

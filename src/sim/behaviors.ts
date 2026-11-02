@@ -11,7 +11,7 @@ import type { ActionInstance, OutfitCategory, Person, Posture } from '../core/ty
 import { OUTFIT_CATEGORIES } from '../core/types';
 import type { ObjRef, SimCtx } from './context';
 import {
-  behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef,
+  behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
 import { cookBehavior, eatMealBehavior } from './cooking';
 import { needsPower, powerIsOff } from './economy';
@@ -23,7 +23,10 @@ import {
   candidateFree, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
   clearUsePoint,
 } from './steps';
-import { goHereBehavior, goToWorkBehavior, inviteBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior } from './travel';
+import {
+  goHereBehavior, goToWorkBehavior, inviteBehavior, inviteHomeBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior,
+  travelToBehavior,
+} from './travel';
 import {
   READ_SEAT_RADIUS, SLEEP_NIGHT_BEDTIME, SLEEP_NIGHT_END, SLEEP_WAKE_BEFORE_SHIFT, SLEEP_WAKE_MINUTE, SLEEP_WAKE_SPREAD,
   TV_SEAT_RADIUS,
@@ -49,18 +52,32 @@ export function targetObject(ctx: SimCtx, p: Person, a: ActionInstance): ObjRef 
   return objectRef(ctx, loc.lotId, a.target.objectId);
 }
 
+/**
+ * Whose utilities power the object a person is using: the owner of the lot (a home), nobody's for a public venue, else
+ * the person's own household.
+ */
+function powerHouseholdOf(ctx: SimCtx, p: Person): string {
+  const loc = lotLoc(p);
+  const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+  if (lot?.kind === 'venue') return '';
+  const owner = lot?.ownerHouseholdId;
+  return owner && ctx.state.households[owner] ? owner : p.householdId;
+}
+
 /** Checks shared by object and self interactions: target present, visitor rules, affordability. */
 export function interactionCheck(ctx: SimCtx, p: Person, a: ActionInstance, ignoreCost = false): string | null {
   const def = interactionDef(ctx, a.interactionId);
   if (!def) return 'That interaction is not available.';
   if (isVisitor(ctx, p) && !def.allowVisitors) return 'Only residents can do that.';
+  const restricted = venueRestriction(ctx, p, def);
+  if (restricted) return restricted;
   if (def.kind === 'object') {
     if (a.target.kind !== 'object') return 'Pick an object.';
     const ref = targetObject(ctx, p, a);
     if (!ref) return 'It is gone.';
     if (!offeredInteractionIds(ref.def).includes(def.id)) return `Can't do that with the ${objectName(ctx, ref.def.id)}.`;
     if (isBroken(ref.obj) && !BROKEN_OK_BEHAVIORS.has(def.behavior ?? 'generic')) return 'Broken';
-    if (needsPower(ref.def) && powerIsOff(ctx.state, p.householdId)) return 'Power is off';
+    if (needsPower(ref.def) && powerIsOff(ctx.state, powerHouseholdOf(ctx, p))) return 'Power is off';
   }
   if (!ignoreCost && def.cost && a.data.charged !== true) {
     const hh = ctx.state.households[p.householdId];
@@ -517,6 +534,8 @@ function buildRegistry(): Record<string, Behavior> {
     goToWork: goToWorkBehavior,
     goHere: goHereBehavior,
     leaveLot: leaveLotBehavior,
+    travelTo: travelToBehavior,
+    inviteHome: inviteHomeBehavior,
     invite: inviteBehavior,
     phoneChat: phoneChatBehavior,
     phoneDate: phoneDateBehavior,

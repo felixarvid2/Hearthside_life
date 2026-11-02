@@ -96,11 +96,11 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
   // ---------------------------------------------------------------------------------------------
 
   const renderNeeds = (st: WorldState, pr: Person) => {
-    const sig = `needs:${pr.id}`;
+    const sig = `needs:${pr.id}:${awayText(pr, st)?.label ?? ''}`;
     if (sigs.get('needs') !== sig) {
       sigs.set('needs', sig);
       needMeters = NEED_IDS.map((id) => ({ id, m: meter({ label: NEED_LABELS[id], icon: id, value: pr.needs[id] }) }));
-      const away = awayText(pr);
+      const away = awayText(pr, st);
       setChildren(content,
         h('div', { class: 'pp-needs' }, ...needMeters.map((n) => n.m.el)),
         away ? h('p', { class: 'pp-note' }, icon('briefcase', 18), h('span', { text: `${away.label}${away.back ? ` · ${away.back}` : ''}. Needs change more slowly while away.` })) : null,
@@ -114,13 +114,13 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
   };
 
   const renderQueue = (st: WorldState, pr: Person) => {
-    const sig = `queue:${pr.id}:${pr.location.kind}:${pr.queue.map((a) => `${a.id}/${a.phase}/${a.cancelRequested ? 1 : 0}`).join(',')}`;
+    const sig = `queue:${pr.id}:${pr.location.kind}:${awayText(pr, st)?.label ?? ''}:${pr.queue.map((a) => `${a.id}/${a.phase}/${a.cancelRequested ? 1 : 0}`).join(',')}`;
     if (sigs.get('queue') !== sig) {
       sigs.set('queue', sig);
       queueProgress = null;
       const items: HTMLElement[] = [];
       if (pr.location.kind !== 'lot') {
-        const away = awayText(pr);
+        const away = awayText(pr, st);
         items.push(empty(`${pr.firstName} is away${away ? ` (${away.label.toLowerCase()}${away.back ? `, ${away.back.toLowerCase()}` : ''})` : ''}. Orders can be given when ${pr.pronouns.subject} is home.`, 'briefcase'));
       }
       const [cur, ...rest] = pr.queue;
@@ -393,7 +393,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     if (!st || !pr) { close(); return; }
     const mood = api.mood(pr.id);
     const cur = pr.queue[0];
-    const away = awayText(pr);
+    const away = awayText(pr, st);
     const doingText = away ? `${away.label}${away.back ? ` · ${away.back}` : ''}` : cur ? `${interactionName(db, cur.interactionId)}` : 'Idle';
     const hs = `${pr.id}|${pr.firstName} ${pr.lastName}|${mood.label}|${moodTone(mood.value)}|${mood.reasons.join(';')}|${doingText}`;
     if (hs !== headSig) {

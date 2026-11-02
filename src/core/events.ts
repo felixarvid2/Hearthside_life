@@ -27,7 +27,15 @@ export type GameEvent =
   /** A home event was planned, started, progressed, ended or cancelled (the HUD tracker refreshes). */
   | { type: 'homeEvent'; eventId: Id; what: 'planned' | 'started' | 'goal' | 'ended' | 'cancelled' }
   /** An object became dirtier or cleaner (visible stages only), broke or was repaired. The renderer refreshes its overlays. */
-  | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' };
+  | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' }
+  /** The detailed (active) lot changed: the renderer shows `lotId`, `fromLotId` is the lot that was left. */
+  | { type: 'lot.activated'; lotId: Id; fromLotId: Id }
+  /** Lot travel: people set out for a lot, arrived there (the lot is now active) or a trip could not finish. */
+  | { type: 'travel'; what: 'departed' | 'arrived'; personIds: Id[]; lotId: Id }
+  /** The player now runs another household (`toId`); `fromId` is simulated lightly from now on. */
+  | { type: 'household.switched'; fromId: Id; toId: Id }
+  /** A household moved to another home lot. */
+  | { type: 'household.moved'; householdId: Id; fromLotId: Id | null; toLotId: Id };
 
 type Handler<E> = (e: E) => void;
 

@@ -11,7 +11,7 @@ import type { CareerDef, CareerLevelDef, ContentDB } from '../content/types';
 import { TICK_MINUTES, atDayMinute, dayIndex, formatClock, weekday, DAY_NAMES } from '../core/clock';
 import { facingTo } from '../core/geometry';
 import { addFeed, isProcessed, markProcessed, transact } from '../core/state';
-import type { CareerEventState, GameMinutes, Person, WorldState, WorkEffort } from '../core/types';
+import type { CareerEventState, GameMinutes, Lot, Person, WorldState, WorkEffort } from '../core/types';
 import { abortQueue, requestCancel } from './actions';
 import { checkAspiration } from './aspirations';
 import type { SimCtx } from './context';
@@ -134,6 +134,7 @@ export function updateCareers(ctx: SimCtx): void {
   for (const p of Object.values(ctx.state.people)) {
     const cs = p.career;
     if (!cs || p.isNpc || !ctx.content.careers[cs.careerId]) continue;
+    // Not on the active lot: in transit, or on the way somewhere (Milestone 7) - the shift clock still runs only at work.
     if (cs.shift?.status === 'atWork') {
       const w = shiftWindowOf(ctx.content, p, cs.shift.occurrence);
       if (!w) { cs.shift.status = 'done'; returnHome(ctx, p); continue; }
@@ -157,6 +158,10 @@ export function updateCareers(ctx: SimCtx): void {
         if (!p.queue.some((a) => a.interactionId === 'goToWork')) {
           insertAction(ctx, p, makeAction(ctx, p, { interactionId: 'goToWork', target: { kind: 'self' } }, 'schedule'));
         }
+      } else if (sh.status === 'upcoming' && p.location.kind === 'offlot' && p.location.place === 'home' && !p.location.transit
+        && ctx.now >= w.start - COMMUTE_LEAD_MINUTES && !isProcessed(ctx.state, commuteKey)) {
+        // Left at home while the household is out (Milestone 7): they leave for work from there, with nobody to walk.
+        startShift(ctx, p, '');
       }
       break;
     }
@@ -205,7 +210,9 @@ export function startShift(ctx: SimCtx, p: Person, keepActionId: string): void {
     cs.pendingEvent = { eventId: ctx.rng.pick(eventIds), day: w.day };
   }
   abortQueue(ctx, p, null, keepActionId);
-  p.location = { kind: 'offlot', place: 'work', since: ctx.now, until: w.end };
+  // The lot they set out from (a venue is fine, Milestone 7) decides where they come back to.
+  const origin = p.location.kind === 'lot' ? p.location.lotId : p.location.lotId ?? householdOf(ctx, p)?.homeLotId ?? undefined;
+  p.location = { kind: 'offlot', place: 'work', ...(origin ? { lotId: origin } : {}), since: ctx.now, until: w.end };
   p.thought = null;
   setAnim(p, 'idle', ctx.now);
   ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'location' });
@@ -214,6 +221,24 @@ export function startShift(ctx: SimCtx, p: Person, keepActionId: string): void {
   addFeed(ctx.state, ctx.events, 'career', late > 0
     ? `${p.firstName} left for work ${Math.round(late)} min late.`
     : `${p.firstName} left for work.`, p.id);
+}
+
+/**
+ * Marks the person as being at work for the shift now running, without any walking (the light schedule of people
+ * outside the player's household, Milestone 7). Pay and counting happen later in townlife.lightCareers.
+ */
+export function beginLightShift(ctx: SimCtx, p: Person): void {
+  const cs = p.career;
+  if (!cs) return;
+  const day = dayIndex(ctx.now);
+  for (const d of [day - 1, day]) {
+    const w = shiftOn(ctx.content, p, d);
+    if (w && ctx.now >= w.start - 20 && ctx.now < w.end) {
+      if (cs.shift?.occurrence !== w.occurrence) cs.shift = { occurrence: w.occurrence, status: 'atWork', workedMinutes: 0, lateMinutes: 0 };
+      if (p.location.kind === 'offlot' && p.location.place === 'work') p.location.until = w.end;
+      return;
+    }
+  }
 }
 
 function endShift(ctx: SimCtx, p: Person, w: ShiftWindow): void {
@@ -384,13 +409,35 @@ export function resolveCareerEvent(ctx: SimCtx, p: Person, optionId: string): Ca
   return { ok: true };
 }
 
-/** Puts a returning person at their home lot's entry and lets them walk in. */
-function returnHome(ctx: SimCtx, p: Person): void {
+/**
+ * Where a worker goes when the shift ends (Milestone 7): back to the lot the household is on now (they may have gone
+ * to work from a venue), or home when they set out from their home while the household was elsewhere. Workers of a
+ * household outside the player's control always go home.
+ */
+function returnLot(ctx: SimCtx, p: Person): Lot | undefined {
   const hh = householdOf(ctx, p);
-  const lotId = hh?.homeLotId ?? ctx.state.activeLotId;
-  const lot = ctx.state.lots[lotId];
+  const home = hh?.homeLotId ? ctx.state.lots[hh.homeLotId] : undefined;
+  if (!hh || hh.id !== ctx.state.activeHouseholdId) return home;
+  const active = ctx.state.lots[ctx.state.activeLotId];
+  const from = p.location.kind === 'offlot' ? p.location.lotId : undefined;
+  if (home && from === home.id && home.id !== active?.id) return home;
+  return active ?? home;
+}
+
+/** Puts a returning person at the entry of the lot they come back to and lets them walk in. */
+function returnHome(ctx: SimCtx, p: Person): void {
+  const lot = returnLot(ctx, p);
   if (!lot) {
     p.location = { kind: 'offlot', place: 'home', since: ctx.now, until: null };
+    return;
+  }
+  const lotId = lot.id;
+  if (lotId !== ctx.state.activeLotId) {
+    // The household is elsewhere: the worker is simply at home again (off-lot).
+    p.location = { kind: 'offlot', place: 'home', lotId, since: ctx.now, until: null };
+    setAnim(p, 'idle', ctx.now);
+    ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'location' });
+    ctx.events.emit({ type: 'career', personId: p.id, what: 'returned' });
     return;
   }
   const x = lot.entry.x + 0.5, z = lot.entry.z + 0.5;

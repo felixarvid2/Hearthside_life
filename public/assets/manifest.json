@@ -5047,6 +5047,552 @@
     }
    ],
    "original": true
+  },
+  "tree": {
+   "file": "furniture/tree.glb",
+   "thumb": "furniture/thumbs/tree.png",
+   "min": [
+    0.04,
+    0,
+    0.0625
+   ],
+   "max": [
+    0.96,
+    1.875,
+    0.9478
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true
+  },
+  "shrub": {
+   "file": "furniture/shrub.glb",
+   "thumb": "furniture/thumbs/shrub.png",
+   "min": [
+    0.048,
+    0,
+    0.0383
+   ],
+   "max": [
+    0.465,
+    0.49,
+    0.4617
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true
+  },
+  "fountain": {
+   "file": "furniture/fountain.glb",
+   "thumb": "furniture/thumbs/fountain.png",
+   "min": [
+    0.04,
+    0,
+    0.04
+   ],
+   "max": [
+    0.96,
+    0.81,
+    0.96
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true
+  },
+  "playgroundSlide": {
+   "file": "furniture/playgroundSlide.glb",
+   "thumb": "furniture/thumbs/playgroundSlide.png",
+   "min": [
+    0,
+    -0.0043,
+    0
+   ],
+   "max": [
+    0.95,
+    1.115,
+    0.734
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true
+  },
+  "swingSet": {
+   "file": "furniture/swingSet.glb",
+   "thumb": "furniture/thumbs/swingSet.png",
+   "min": [
+    0.035,
+    -0.0052,
+    0.1109
+   ],
+   "max": [
+    0.965,
+    1.0425,
+    0.8891
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true
+  },
+  "serviceCounter": {
+   "file": "furniture/serviceCounter.glb",
+   "thumb": "furniture/thumbs/serviceCounter.png",
+   "min": [
+    0.01,
+    0,
+    0.03
+   ],
+   "max": [
+    0.49,
+    0.7,
+    0.5
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true
+  },
+  "produceStand": {
+   "file": "furniture/produceStand.glb",
+   "thumb": "furniture/thumbs/produceStand.png",
+   "min": [
+    0.02,
+    0,
+    0.025
+   ],
+   "max": [
+    0.98,
+    1.04,
+    0.515
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true
+  },
+  "vendingMachine": {
+   "file": "furniture/vendingMachine.glb",
+   "thumb": "furniture/thumbs/vendingMachine.png",
+   "min": [
+    0.05,
+    0,
+    0.05
+   ],
+   "max": [
+    0.45,
+    0.925,
+    0.43
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true
+  },
+  "studyNotes": {
+   "file": "furniture/studyNotes.glb",
+   "thumb": "furniture/thumbs/studyNotes.png",
+   "min": [
+    0.06,
+    0,
+    0.1024
+   ],
+   "max": [
+    0.48,
+    0.25,
+    0.46
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    }
+   ],
+   "original": true
+  },
+  "lockerBank": {
+   "file": "furniture/lockerBank.glb",
+   "thumb": "furniture/thumbs/lockerBank.png",
+   "min": [
+    0.01,
+    0,
+    0.02
+   ],
+   "max": [
+    0.49,
+    0.975,
+    0.33
+   ],
+   "materials": [
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    }
+   ],
+   "original": true
   }
  }
 }

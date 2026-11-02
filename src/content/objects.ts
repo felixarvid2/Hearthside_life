@@ -158,6 +158,17 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   rugDoormat: [[0, 0, -0.237], [0.4293, 0.01, 0]],
   kitchenCabinetCornerRound: [[0, 0, -0.45], [0.45, 0.45, 0]],
   coatRack: [[0, 0, -0.1344], [0.448, 0.28, 0]],
+  // Milestone 7 venue furniture (original models built by tools/furniture-extra)
+  tree: [[0.04, 0, 0.0625], [0.96, 1.875, 0.9478]],
+  shrub: [[0.048, 0, 0.0383], [0.465, 0.49, 0.4617]],
+  fountain: [[0.04, 0, 0.04], [0.96, 0.81, 0.96]],
+  playgroundSlide: [[0, -0.0043, 0], [0.95, 1.115, 0.734]],
+  swingSet: [[0.035, -0.0052, 0.1109], [0.965, 1.0425, 0.8891]],
+  serviceCounter: [[0.01, 0, 0.03], [0.49, 0.7, 0.5]],
+  produceStand: [[0.02, 0, 0.025], [0.98, 1.04, 0.515]],
+  vendingMachine: [[0.05, 0, 0.05], [0.45, 0.925, 0.43]],
+  studyNotes: [[0.06, 0, 0.1024], [0.48, 0.25, 0.46]],
+  lockerBank: [[0.01, 0, 0.02], [0.49, 0.975, 0.33]],
 };
 
 /** Axis-aligned bounds in rot-0 local space. */
@@ -1076,14 +1087,14 @@ const OUTDOOR_OBJECTS: ObjectDef[] = [
     tags: ['bench', 'seat', 'outdoor'], packs: ['garden-patio'], tier: 'standard', price: dollars(260), quality: 3, functional: true,
     footprint: FP21, layer: 'floor', blocksMovement: true,
     slots: [sit('left', gardenBenchFit.at(0.27, 0.6), 0.55, [0, 1]), sit('right', gardenBenchFit.at(0.73, 0.6), 0.55, [1, 1])],
-    interactions: ['sit'], stats: { comfort: 4, environment: 2 }, finishes: [woodR(['wood', 'woodDark'])],
+    interactions: ['sit', 'watchClouds'], stats: { comfort: 4, environment: 2 }, finishes: [woodR(['wood', 'woodDark'])],
   }),
   obj(gardenChairFit, {
     id: 'chair-adirondack', name: 'Adirondack Chair', category: 'outdoor', subcategory: 'chair', rooms: ['outdoor'], style: 'coastal',
     description: 'A wide, reclined chair of painted slats with broad arms. Sink in with a view of the garden.',
     tags: ['chair', 'seat', 'outdoor'], packs: ['garden-patio', 'coastal-home'], tier: 'standard', price: dollars(150), quality: 3, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [sit('seat', gardenChairFit.at(0.5, 0.6), 0.4, [0, 1])],
-    interactions: ['sit'], stats: { comfort: 5, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
+    interactions: ['sit', 'watchClouds'], stats: { comfort: 5, environment: 1 }, finishes: [woodR(['wood', 'woodDark'])],
   }),
   obj(slatChairFit, {
     id: 'chair-slatted', name: 'Slatted Patio Chair', category: 'outdoor', subcategory: 'chair', rooms: ['outdoor', 'dining'], style: 'cottage',
@@ -1096,7 +1107,7 @@ const OUTDOOR_OBJECTS: ObjectDef[] = [
     id: 'table-patio', name: 'Patio Table with Parasol', category: 'outdoor', subcategory: 'table', rooms: ['outdoor', 'dining'], style: 'coastal',
     description: 'A round garden table with a striped parasol through the middle. Meals can be served here; seat people on chairs around it.',
     tags: ['table', 'dining', 'surface', 'outdoor', 'cleanable'], packs: ['garden-patio', 'coastal-home'], tier: 'standard', price: dollars(540), quality: 3, functional: true,
-    footprint: FP22, layer: 'floor', blocksMovement: true, surfaceHeight: 0.76, stats: { environment: 3 },
+    footprint: FP22, layer: 'floor', blocksMovement: true, surfaceHeight: 0.76, interactions: ['havePicnic'], stats: { environment: 3 },
     finishes: [region('canopy', 'Parasol', ['carpet'], FABRIC), woodR(['wood', 'woodDark'])],
   }),
   obj(grillFit, {
@@ -1275,10 +1286,105 @@ const HOME_3: ObjectDef[] = [
   }),
 ];
 
+// =============================================================================================
+// Milestone 7: neighbourhood venue furniture (park, playground, cafe, market, gym and library). Ten original models built by
+// tools/furniture-extra; they are used by src/world/venues.ts and can be bought like any other design.
+// =============================================================================================
+
+const treeFit = fit('tree', FP22, 2);
+const shrubFit = fit('shrub', FP11, 2);
+const fountainFit = fit('fountain', FP22, 2);
+const slideFit = fit('playgroundSlide', FP22, 2);
+const swingFit = fit('swingSet', FP22, 2);
+const serviceFit = fit('serviceCounter', FP11, 2, { back: 0.02 });
+const produceFit = fit('produceStand', FP21, 2);
+const vendingFit = fit('vendingMachine', FP11, 2, { back: WALL_GAP });
+const studyFit = fit('studyNotes', FP11, 2);
+const lockerFit = fit('lockerBank', FP11, 2, { back: WALL_GAP });
+
+const BARK: Swatch[] = [
+  sw('bark', 'Bark', '#ad754c'), sw('dark-bark', 'Dark Bark', '#6b4a33'), sw('birch', 'Birch', '#e6dfd0'), sw('grey-bark', 'Grey Bark', '#8a8076'),
+  sw('redwood', 'Redwood', '#9a5a3c'), sw('ash-bark', 'Ash', '#b7ada0'),
+];
+
+const VENUE_OBJECTS: ObjectDef[] = [
+  obj(treeFit, {
+    id: 'tree-park', name: 'Park Tree', category: 'outdoor', subcategory: 'tree', rooms: ['outdoor'], style: 'botanical',
+    description: 'A broad shade tree with a dense crown and a scattering of blossom. Blocks the sun and the view, and makes any lawn look like a park.',
+    tags: ['tree', 'plant', 'decor', 'outdoor', 'garden'], packs: ['garden-patio', 'botanical-living'], tier: 'standard', price: dollars(420), quality: 3, functional: false,
+    footprint: FP22, layer: 'floor', blocksMovement: true, stats: { environment: 5 },
+    finishes: [region('trunk', 'Bark', ['woodDark'], BARK), region('blossom', 'Blossom', ['carpet'], FABRIC)],
+  }),
+  obj(shrubFit, {
+    id: 'shrub-round', name: 'Round Shrub', category: 'outdoor', subcategory: 'planter', rooms: ['outdoor'], style: 'botanical',
+    description: 'A neatly clipped round shrub with a few flowers: for borders, paths and tidy corners of the garden.',
+    tags: ['plant', 'shrub', 'decor', 'outdoor', 'garden'], packs: ['garden-patio', 'botanical-living'], tier: 'budget', price: dollars(70), quality: 2, functional: false,
+    footprint: FP11, layer: 'floor', blocksMovement: true, stats: { environment: 2 },
+    finishes: [region('blossom', 'Flowers', ['carpet'], FABRIC)],
+  }),
+  obj(fountainFit, {
+    id: 'fountain-park', name: 'Stone Fountain', category: 'outdoor', subcategory: 'fountain', rooms: ['outdoor'], style: 'classic',
+    description: 'A two-tier stone fountain in a round basin. A centrepiece for a square, a park or a big garden.',
+    tags: ['fountain', 'water', 'decor', 'outdoor'], packs: ['garden-patio', 'classic-townhouse'], tier: 'luxury', price: dollars(1450), quality: 4, functional: false,
+    footprint: FP22, layer: 'floor', blocksMovement: true, stats: { environment: 7 }, finishes: [region('stone', 'Stone', ['metal'], METAL)],
+  }),
+  obj(slideFit, {
+    id: 'playground-slide', name: 'Playground Tower and Slide', category: 'kids', subcategory: 'playground', rooms: ['outdoor', 'kids'], style: 'playful',
+    description: 'A little tower with a roof, a ladder and a long metal slide. Climb up and whoosh down: great fun, and a mood lift.',
+    tags: ['play', 'playground', 'outdoor', 'slide'], packs: ['kids-storybook', 'garden-patio'], tier: 'standard', price: dollars(980), quality: 3, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true, slots: [useFront('use', 1, slideFit, 2)],
+    interactions: ['playOnSlide'], stats: { fun: 1.1, environment: 2 }, finishes: [region('frame', 'Posts', ['carpetBlue'], FABRIC_BLUE), region('roof', 'Roof', ['carpet'], FABRIC)],
+  }),
+  obj(swingFit, {
+    id: 'swing-set', name: 'Swing Set', category: 'kids', subcategory: 'playground', rooms: ['outdoor', 'kids'], style: 'playful',
+    description: 'A steel A-frame with two swings. Sit on a seat and pump your legs: a little Fitness and a lot of fun.',
+    tags: ['play', 'playground', 'outdoor', 'swing'], packs: ['kids-storybook', 'garden-patio'], tier: 'standard', price: dollars(640), quality: 3, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true,
+    slots: [sit('left', swingFit.at(0.296, 0.5), 0.5, [0, 2]), sit('right', swingFit.at(0.704, 0.5), 0.5, [1, 2])],
+    interactions: ['swing'], stats: { fun: 1, environment: 2 }, finishes: [darkMetalR('Frame'), region('seats', 'Seats', ['carpet'], FABRIC)],
+  }),
+  obj(serviceFit, {
+    id: 'service-counter', name: 'Service Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen', 'dining'], style: 'classic',
+    description: 'A shop counter with a cash register, a glass pastry case and a menu board. Customers buy a coffee, a pastry or a sandwich here.',
+    tags: ['counter', 'service', 'register', 'food', 'cleanable'], packs: ['everyday-essentials', 'classic-townhouse'], tier: 'standard', price: dollars(520), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, serviceFit, 1)],
+    interactions: ['buyCoffee', 'buyPastry', 'buySandwich'], stats: { environment: 2 }, finishes: [woodR(['wood', 'woodDark']), counterR()],
+  }),
+  obj(produceFit, {
+    id: 'produce-stand', name: 'Market Produce Stall', category: 'outdoor', subcategory: 'stall', rooms: ['outdoor', 'kitchen'], style: 'cottage',
+    description: 'A wooden stall under a striped awning, heaped with fruit and vegetables. Buy a bag of fruit, or stock the pantry so home cooking costs less.',
+    tags: ['stall', 'market', 'food', 'outdoor', 'cleanable'], packs: ['garden-patio', 'cozy-cottage'], tier: 'standard', price: dollars(460), quality: 3, functional: true,
+    footprint: FP21, layer: 'floor', blocksMovement: true,
+    slots: [useFront('left', 0.5, produceFit, 1), useFront('right', 1.5, produceFit, 1)],
+    interactions: ['buyProduce', 'buyGroceries'], stats: { environment: 3 }, finishes: [woodR(['wood', 'woodDark']), region('awning', 'Awning', ['carpet'], FABRIC)],
+  }),
+  obj(vendingFit, {
+    id: 'vending-machine', name: 'Vending Machine', category: 'kitchen', subcategory: 'appliance', rooms: ['kitchen', 'study'], style: 'modern',
+    description: 'A tall vending machine with rows of snacks and cold drinks. Drop in a few coins for a bite or a cold can.',
+    tags: ['appliance', 'vending', 'food', 'electronics', 'cleanable'], packs: ['everyday-essentials'], tier: 'standard', price: dollars(1100), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, vendingFit, 1)],
+    interactions: ['buyVendingSnack', 'buyVendingDrink'], stats: { environment: 1 }, finishes: [region('body', 'Cabinet', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+  obj(studyFit, {
+    id: 'study-notes', name: 'Study Set', category: 'hobby', subcategory: 'study', rooms: ['study', 'bedroom'], style: 'classic',
+    description: 'An open textbook, a notebook and a green-shaded lamp for a desk. Pull a chair up and study logic or write in a journal.',
+    tags: ['desk', 'study', 'books', 'writing'], packs: ['classic-townhouse', 'creative-studio'], tier: 'budget', price: dollars(90), quality: 3, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['studyHard', 'writeJournal'], stats: { skill: 1, fun: 1, environment: 1 }, finishes: [region('cover', 'Cover', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+  obj(lockerFit, {
+    id: 'locker-bank', name: 'Locker Bank', category: 'storage', subcategory: 'locker', rooms: ['bathroom', 'bedroom'], style: 'industrial',
+    description: 'Three tall steel lockers with louvred vents: a changing-room staple. Decorative.',
+    tags: ['locker', 'storage', 'decor'], packs: ['industrial-loft'], tier: 'standard', price: dollars(380), quality: 3, functional: false,
+    footprint: FP11, layer: 'floor', blocksMovement: true, stats: { environment: 1 },
+    finishes: [metalR(['metalMedium']), region('doors', 'Doors', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+];
+
 /** Every buy-mode object definition (ready and in development). */
 export const OBJECTS: ObjectDef[] = [
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
-  ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3,
+  ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS,
 ];
 

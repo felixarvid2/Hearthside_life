@@ -23,6 +23,9 @@ import { createEmptyWorld } from '../core/state';
 import type { FinishRef, Household, Id, Lot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import { describeReport, exportWorld as exportWorldJson, importWorld as importWorldJson, type SaveStore } from '../persistence/index';
 import { isManualSlot, isSlotId } from '../persistence/types';
+import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
+import type { PersonPlace } from '../sim/places';
 import { Simulation } from '../sim/simulation';
 import { LotNav } from '../world/nav';
 import type {
@@ -36,6 +39,7 @@ import { evaluatePaint, finishAt, paintCommand, paintTargetFor, sameFinish, type
 import { evaluatePlacement, isUnchangedMove, placementCommand } from './core/placement';
 import { emptySlots, NO_STORAGE, toSlotInfo } from './core/saves';
 import { createNewWorld } from './newWorld';
+import { ensureNeighbourhood } from './neighbourhood';
 
 export type { PaintHighlight } from './core/paint';
 
@@ -106,6 +110,21 @@ export class GameCore {
       blocked: () => (this.world ? (this.currentMode === 'build' ? null : 'Open Build mode first.') : 'No game is running.'),
       changed: () => { this.notify('build'); },
     });
+    this.events.on('lot.activated', () => {
+      // The people the player controls are where the lot is now; keep a selected person who is on it.
+      const w = this.world;
+      const members = w?.households[w.activeHouseholdId]?.memberIds ?? [];
+      const onLot = members.find((id) => w?.people[id]?.location.kind === 'lot');
+      const selOnLot = this.sel !== null && w?.people[this.sel]?.location.kind === 'lot';
+      if (!selOnLot && onLot && onLot !== this.sel) { this.sel = onLot; this.notify('selection'); }
+      this.notify('lot');
+      this.notify('neighbourhood');
+      this.notify('state');
+      this.autosaves.request();
+    });
+    for (const type of ['travel', 'household.switched', 'household.moved'] as const) {
+      this.events.on(type, () => { this.notify('neighbourhood'); this.notify('state'); });
+    }
     this.autosaves = new AutosavePolicy({
       saves: o.saves,
       getState: () => this.world,
@@ -185,6 +204,8 @@ export class GameCore {
    * previews and selections, and emits state.replaced. The mode is unchanged.
    */
   replaceState(state: WorldState): void {
+    // Saves from before Milestone 7 have no neighbourhood: generate it (deterministically, once) around what exists.
+    ensureNeighbourhood(state, this.content);
     this.world = state;
     this.place = null;
     this.tool = null;
@@ -460,6 +481,88 @@ export class GameCore {
   resolveCareerEvent(personId: Id, optionId: string): Result {
     if (!this.world) return fail('No game is running.');
     return this.afterEconomy(this.sim.resolveCareerEvent(personId, optionId));
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Neighbourhood and other households (Milestone 7)
+  // ---------------------------------------------------------------------------------------------
+
+  /** Trips and household changes need the live world (Buy and Build pause the clock and own the lot). */
+  private liveOnly(): string | null {
+    if (!this.world) return 'No game is running.';
+    if (this.currentMode !== 'live') return 'Return to the live view first.';
+    return null;
+  }
+
+  neighbourhood(): NeighbourhoodInfo | null { return this.world ? this.sim.neighbourhood() : null; }
+
+  whereIs(personId: Id): PersonPlace | null { return this.world ? this.sim.whereIs(personId) : null; }
+
+  travelProblem(personIds: Id[], lotId: Id): string | null {
+    if (!this.world) return 'No game is running.';
+    return this.sim.travelProblem(personIds, lotId);
+  }
+
+  travel(personIds: Id[], lotId: Id): Result & { minutes?: number; arrivesAt?: number } {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.travel(personIds, lotId);
+    if (!r.ok) return fail(r.reason);
+    this.notify('neighbourhood');
+    this.notify('state');
+    this.autosaves.request();
+    return { ok: true, minutes: r.minutes, arrivesAt: r.arriveAt };
+  }
+
+  goHome(personIds?: Id[]): Result & { minutes?: number; arrivesAt?: number } {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.travelHome(personIds);
+    if (!r.ok) return fail(r.reason);
+    this.notify('neighbourhood');
+    this.notify('state');
+    this.autosaves.request();
+    return { ok: true, minutes: r.minutes, arrivesAt: r.arriveAt };
+  }
+
+  /** In person: `hostId` asks `guestId` (on the same lot, away from the host's home) to come over. */
+  inviteHome(hostId: Id, guestId: Id): Result {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.queue(hostId, { interactionId: 'inviteHome', target: { kind: 'person', personId: guestId }, source: 'player' });
+    return r.ok ? OK : fail(r.reason);
+  }
+
+  switchPreview(householdId: Id): SwitchPreview | null { return this.world ? this.sim.switchPreview(householdId) : null; }
+
+  switchHousehold(householdId: Id): Result {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.switchHousehold(householdId);
+    if (!r.ok) return fail(r.reason ?? 'Could not switch households.');
+    const w = this.world!;
+    const first = w.households[w.activeHouseholdId]?.memberIds.find((id) => w.people[id]?.location.kind === 'lot') ?? w.households[w.activeHouseholdId]?.memberIds[0] ?? null;
+    this.sel = first;
+    this.undoStack.clear();
+    this.notify('selection');
+    this.notify('lot');
+    this.notify('neighbourhood');
+    this.notify('state');
+    this.autosaves.request();
+    return OK;
+  }
+
+  movePreview(lotId: Id): MovePreview | null { return this.world ? this.sim.movePreview(lotId) : null; }
+
+  moveHousehold(lotId: Id): Result {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.moveHousehold(lotId);
+    if (!r.ok) return fail(r.reason ?? 'Could not move.');
+    this.notify('neighbourhood');
+    this.notify('state');
+    this.autosaves.request();
+    return OK;
   }
 
   // ---------------------------------------------------------------------------------------------

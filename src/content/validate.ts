@@ -32,6 +32,8 @@ const SOCIAL_SECTIONS = ['friendly', 'romantic', 'mean', 'special'];
 const PREFERENCE_GROUPS = ['activity', 'music', 'decor', 'food', 'topic'];
 /** Source materials that are never recoloured (they carry light, glass or foliage). */
 const FIXED_MATERIALS = ['glass', 'lamp', 'plant'];
+/** Places an interaction can be restricted to (InteractionDef.venues): any residential lot or a venue type. */
+const INTERACTION_PLACES = ['home', 'park', 'cafe', 'gym', 'library', 'arts', 'market'];
 const ROOMS = ['kitchen', 'living', 'bedroom', 'bathroom', 'dining', 'study', 'kids', 'outdoor'];
 
 /** Milestone 1 shared object ids (docs/ARCHITECTURE.md): footprint, layer and the interactions they must offer. */
@@ -152,6 +154,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     }
     if (i.cost !== undefined && !isCents(i.cost)) err(`${w}: cost must be integer cents >= 0`);
     moodlet(w, i.moodletOnComplete);
+    for (const v of i.venues ?? []) if (!INTERACTION_PLACES.includes(v)) err(`${w}: unknown place '${v}' in venues`);
     if (i.status === 'ready' && blank(i.behavior)) err(`${w}: ready interaction without behavior`);
     const m1 = M1_INTERACTIONS[i.id];
     if (m1 && i.behavior !== m1) err(`${w}: M1 contract expects behavior '${m1}', got '${i.behavior}'`);

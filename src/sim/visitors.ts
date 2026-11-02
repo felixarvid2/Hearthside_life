@@ -12,6 +12,7 @@ import type { GameMinutes, Id, Person, ScheduledEvent, WorldState } from '../cor
 import { requestCancel } from './actions';
 import { guestArrived, runEventEntry, startAmbientEvent } from './events';
 import { runScheduledTask } from './housework';
+import { completeTrip } from './lotTravel';
 import type { SimCtx } from './context';
 import { lotLoc, setAnim } from './context';
 import { insertAction, makeAction } from './queue';
@@ -87,6 +88,7 @@ export function processSchedule(ctx: SimCtx): void {
     else if (e.kind === 'visitLeave' && p) depart(ctx, p);
     else if (e.kind === 'eventStart' || e.kind === 'eventEnd') runEventEntry(ctx, e);
     else if (e.kind === 'custom') runScheduledTask(ctx, e);
+    else if (e.kind === 'travelArrive') completeTrip(ctx, e);
     // Other kinds (bills) are handled by later milestones; returns from work use career state.
   }
 }
@@ -94,9 +96,17 @@ export function processSchedule(ctx: SimCtx): void {
 function arrive(ctx: SimCtx, p: Person, e: ScheduledEvent): void {
   const invited = typeof e.data?.invitedBy === 'string';
   if (!invited && !ctx.state.settings.visitors) return;
-  if (p.location.kind !== 'offlot' || p.location.place !== 'home') return;
+  if (p.location.kind !== 'offlot' || p.location.transit) return;
+  // Visits go to the host's home lot (Milestone 7). While the household is somewhere else the visit waits (a little
+  // while) instead of arriving at a venue or never; a visitor who is out comes straight from there.
+  const host = ctx.state.households[ctx.state.activeHouseholdId];
+  const hostLotId = typeof e.data?.lotId === 'string' ? e.data.lotId : host?.homeLotId ?? ctx.state.activeLotId;
   const lot = ctx.state.lots[ctx.state.activeLotId];
-  if (!lot || ctx.state.households[p.householdId]?.homeLotId === lot.id) return;
+  if (!lot) return;
+  if (lot.id !== hostLotId) { deferVisit(ctx, e); return; }
+  // Someone at work cannot come to an event (they are simply missed); an ordinary visit waits until they are free.
+  if (p.location.place === 'work') { if (typeof e.data?.eventId !== 'string') deferVisit(ctx, e); return; }
+  if (ctx.state.households[p.householdId]?.homeLotId === lot.id) return;
   const x = lot.entry.x + 0.5, z = lot.entry.z + 0.5;
   p.location = { kind: 'lot', lotId: lot.id, level: lot.entry.level, x, z, posture: 'standing', facing: facingTo(x, z, lot.width / 2, lot.depth / 2) };
   p.queue = [];
@@ -117,6 +127,14 @@ function arrive(ctx: SimCtx, p: Person, e: ScheduledEvent): void {
     const t = walkInTile(ctx, p);
     if (t) insertAction(ctx, p, makeAction(ctx, p, { interactionId: 'goHere', target: { kind: 'tile', x: t.x, z: t.z, level: lot.entry.level } }, 'schedule'));
   }
+}
+
+/** Tries a visit again in 15 minutes until its patience (data.until, default 3 hours after it was due) runs out. */
+function deferVisit(ctx: SimCtx, e: ScheduledEvent): void {
+  const until = typeof e.data?.until === 'number' ? e.data.until : e.at + 180;
+  if (ctx.now + 15 > until) return;
+  delete ctx.state.processed[e.occurrence];
+  ctx.state.schedule.push({ ...e, at: ctx.now + 15, data: { ...(e.data ?? {}), until } });
 }
 
 /** The social a newcomer uses to introduce themself: 'introduce', else the first greeting social. */
@@ -180,7 +198,7 @@ export function ensureDepartures(ctx: SimCtx): void {
   for (const p of Object.values(ctx.state.people)) {
     const loc = lotLoc(p);
     if (!loc || ctx.state.households[p.householdId]?.homeLotId === loc.lotId) continue;
-    if (!p.isNpc) continue;
+    if (!p.isNpc || ctx.state.lots[loc.lotId]?.kind === 'venue') continue;
     if (p.queue.some((a) => a.interactionId === 'leaveLot')) continue;
     if (ctx.state.schedule.some((e) => e.kind === 'visitLeave' && e.personId === p.id)) continue;
     ctx.state.schedule.push({ occurrence: `leave:${p.id}:${Math.round(ctx.now)}`, at: ctx.now + 60, kind: 'visitLeave', personId: p.id });

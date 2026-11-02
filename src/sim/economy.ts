@@ -1,7 +1,7 @@
 // Household economy (Milestone 6): weekly bills, late fees and utility cut-offs.
 //
 // A bill is issued once per household per week (occurrence `bill:<householdId>:<week>`). It covers property tax
-// (a small percentage of the home's value) plus utilities that grow with the number of electronics and
+// (a small percentage of the home's value, or the weekly rent of a rented home) plus utilities that grow with the number of electronics and
 // appliances on the home lot. Payment is a normal `transact` with occurrence `billpay:<billId>`, so it can never
 // be applied twice. Late fees and cut-offs carry their own occurrence markers (`billlate:<id>`, `billcut:<id>`),
 // and power is derived from the unpaid bills of the household, so save/load cannot lose or repeat a step.
@@ -49,7 +49,10 @@ export function homeLotValue(state: WorldState, householdId: Id): Cents {
 }
 
 export interface BillBreakdown {
+  /** Property tax of an owned home (0 for a rental). */
   propertyTax: Cents;
+  /** Weekly rent of a rental home (Milestone 7; 0 for an owned home). It replaces the property tax. */
+  rent: Cents;
   utilities: Cents;
   electronics: number;
   appliances: number;
@@ -60,19 +63,21 @@ export interface BillBreakdown {
 export function billBreakdown(state: WorldState, content: ContentDB, householdId: Id): BillBreakdown {
   const lotId = state.households[householdId]?.homeLotId;
   const lot = lotId ? state.lots[lotId] : undefined;
+  const rented = !!lot && lot.rent !== undefined && lot.ownerHouseholdId !== householdId;
   let electronics = 0, appliances = 0;
   if (lot) {
     for (const obj of Object.values(lot.objects)) {
-      if (obj.ownerHouseholdId !== householdId) continue;
+      if (obj.ownerHouseholdId !== householdId && !(rented && obj.ownerHouseholdId === null)) continue;
       const def = content.objects[obj.defId];
       if (!def) continue;
       if (def.tags.includes('electronics')) electronics++;
       if (def.tags.includes('appliance')) appliances++;
     }
   }
-  const propertyTax = Math.max(BILL_PROPERTY_TAX_MIN, Math.round(homeLotValue(state, householdId) * BILL_PROPERTY_TAX_RATE));
+  const propertyTax = rented ? 0 : Math.max(BILL_PROPERTY_TAX_MIN, Math.round(homeLotValue(state, householdId) * BILL_PROPERTY_TAX_RATE));
+  const rent = rented ? lot!.rent! : 0;
   const utilities = BILL_UTILITIES_BASE + electronics * BILL_UTILITY_ELECTRONICS + appliances * BILL_UTILITY_APPLIANCE;
-  return { propertyTax, utilities, electronics, appliances, base: propertyTax + utilities };
+  return { propertyTax, rent, utilities, electronics, appliances, base: propertyTax + rent + utilities };
 }
 
 /** Week index since the world started (the first week is 0). */

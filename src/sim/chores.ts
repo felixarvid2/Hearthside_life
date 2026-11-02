@@ -36,7 +36,7 @@ function bestHandiness(ctx: SimCtx, p: Person): number {
 /** All chore candidates for a resident on their own lot. */
 export function choreCandidates(ctx: SimCtx, p: Person, h: ChoreHelpers): Candidate[] {
   const loc = lotLoc(p);
-  if (!loc || isVisitor(ctx, p) || !ctx.content.interactions.cleanObject) return [];
+  if (!loc || isVisitor(ctx, p) || ctx.state.lots[loc.lotId]?.kind === 'venue' || !ctx.content.interactions.cleanObject) return [];
   const level = ctx.state.settings.autonomyLevel;
   const hh = ctx.state.households[p.householdId];
   const funds = hh?.funds ?? 0;

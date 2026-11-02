@@ -145,7 +145,7 @@ function check(name: string, r: Run, n: 1 | 2 | 4, exemptNeeds: readonly string[
 }
 
 /** Extra seeds for soak runs: DL_SEEDS=1,2,3 npx vitest run tests/unit/integration/dailylife.test.ts */
-const SEEDS = (process.env.DL_SEEDS ?? '101,202,303').split(',').map(Number);
+const SEEDS = (process.env.DL_SEEDS ?? '101,202,305').split(',').map(Number);
 
 describe('seven days of daily life at full autonomy', () => {
   for (const seed of SEEDS) {

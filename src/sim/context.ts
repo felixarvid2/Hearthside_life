@@ -63,6 +63,10 @@ export const BUILTIN_INTERACTIONS: Readonly<Record<string, InteractionDef>> = {
   goToWork: builtin('goToWork', 'Go to Work', 'work', 'goToWork', 'self'),
   /** Internal: walk to the lot entry and leave the lot (visitors going home). Never offered in menus. */
   leaveLot: builtin('leaveLot', 'Go Home', 'home', 'leaveLot', 'self'),
+  /** Internal (Milestone 7): walk to the lot entry and set off for another lot (data.lotId, data.arriveAt). Never offered in menus. */
+  travelTo: builtin('travelTo', 'Travel', 'move', 'travelTo', 'self'),
+  /** Invite the person in front of you to your home (a visit in about an hour). Offered with the socials. */
+  inviteHome: builtin('inviteHome', 'Invite to My Home', 'home', 'inviteHome', 'self'),
 };
 
 export function interactionDef(ctx: Pick<SimCtx, 'content'>, id: string): InteractionDef | undefined {
@@ -160,11 +164,38 @@ export function householdOf(ctx: Pick<SimCtx, 'state'>, p: Person): Household | 
   return ctx.state.households[p.householdId];
 }
 
-/** A visitor is a person on a lot that is not their household's home. */
+/**
+ * A visitor is a person on a residential lot that is not their household's home. On a public venue everybody is a
+ * patron, not a visitor (they may use what the venue offers).
+ */
 export function isVisitor(ctx: Pick<SimCtx, 'state'>, p: Person): boolean {
   const loc = lotLoc(p);
   if (!loc) return false;
+  if (ctx.state.lots[loc.lotId]?.kind === 'venue') return false;
   return householdOf(ctx, p)?.homeLotId !== loc.lotId;
+}
+
+/** Venue type (park, cafe, gym, library, arts, market) of the lot the person is on, or null at a home or off-lot. */
+export function venueTypeOf(ctx: Pick<SimCtx, 'state'>, p: Person): string | null {
+  const loc = lotLoc(p);
+  const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+  return lot?.kind === 'venue' ? lot.venueType ?? null : null;
+}
+
+/** Where the person is for InteractionDef.venues: the venue type, or 'home' on a residential lot. */
+export function placeTypeOf(ctx: Pick<SimCtx, 'state'>, p: Person): string {
+  return venueTypeOf(ctx, p) ?? 'home';
+}
+
+/**
+ * Why `def` cannot be used where the person is, or null: nobody sleeps or naps in a public venue, and an interaction that lists
+ * venue types (InteractionDef.venues, 'home' for any residential lot) belongs to those places only.
+ */
+export function venueRestriction(ctx: Pick<SimCtx, 'state'>, p: Person, def: Pick<InteractionDef, 'behavior' | 'venues'>): string | null {
+  const here = placeTypeOf(ctx, p);
+  if (here !== 'home' && (def.behavior === 'sleep' || def.behavior === 'rest')) return 'Not in a public place.';
+  if (def.venues && !def.venues.includes(here)) return `Not ${here === 'home' ? 'at home' : `at the ${here}`}.`;
+  return null;
 }
 
 /** Sets the renderer's animation hint when it changes. */

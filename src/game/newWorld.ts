@@ -1,6 +1,7 @@
 // New-world composition (pure: no three.js, no DOM, no storage). Builds the Milestone 1 neighbourhood for a
 // fresh game: a furnished 24 x 24 starter home for the playable household, the neighbours' smaller house next
-// door, the people created from creator drafts, household ties, starting funds and the first neighbour visit.
+// door, the people created from creator drafts, household ties, starting funds and the first neighbour visit, and
+// the rest of the neighbourhood (twelve more lots, venues and named NPC households, game/neighbourhood.ts).
 // The same seed and drafts always give the same world (JSON-identical).
 
 import type { ContentDB } from '../content/types';
@@ -13,6 +14,7 @@ import { addFeed, addHousehold, createEmptyWorld, markProcessed, transact } from
 import { dollars } from '../core/money';
 import type { Cents, Id, Lot, PersonLocation, StartMode, WorldState } from '../core/types';
 import { applyHouseholdTies, createPerson } from '../sim/people';
+import { generateNeighbourhood } from './neighbourhood';
 import { FIRST_VISIT_MINUTE } from '../sim/tuning';
 import { neighbours, scheduleVisit } from '../sim/visitors';
 import { createLot, inLot } from '../world/lots';
@@ -84,7 +86,8 @@ export function createNewWorld(content: ContentDB, opts: NewWorldOptions): World
     name: names.pick(NEIGHBOR_NAMES), address: neighborAddress, width: LOT_SIZE, depth: LOT_SIZE, kind: 'residential',
     landValue: NEIGHBOR_LAND_VALUE, entry: { ...NEIGHBOR_ENTRY },
   });
-  const nh = addHousehold(state, neighbor.name.trim() || neighbor.members[0]?.lastName || 'Neighbours', NEIGHBOR_FUNDS, next.id, false);
+  const nh = addHousehold(state, neighbor.name.trim() || neighbor.members[0]?.lastName || 'Neighbours', 0, next.id, false);
+  transact(state, null, nh.id, NEIGHBOR_FUNDS, 'start', 'Starting funds', { occurrence: `start:${nh.id}` });
   next.ownerHouseholdId = nh.id;
   furnishNeighborHouse(state, content, next.id);
 
@@ -108,6 +111,9 @@ export function createNewWorld(content: ContentDB, opts: NewWorldOptions): World
     kind: 'offlot', place: 'home', lotId: next.id, since: state.clock.minutes, until: null,
   }).id);
   applyHouseholdTies(state, neighborIds, neighbor.ties);
+
+  // The rest of the neighbourhood: twelve more lot records and the named households that live in them (Milestone 7).
+  generateNeighbourhood(state, content);
 
   // First neighbour visit on day 0 at 17:00, exactly as the simulation's ensureFirstVisit would schedule it.
   const first = neighbours(state)[0];

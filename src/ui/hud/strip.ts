@@ -3,7 +3,8 @@
 
 import { formatClock } from '../../core/clock';
 import { householdMembers } from '../../core/state';
-import type { Person } from '../../core/types';
+import type { Person, WorldState } from '../../core/types';
+import { placeOf } from '../../sim/places';
 import { h, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { initials, moodTone } from './format';
@@ -11,9 +12,13 @@ import type { Shell } from './shell';
 
 const AWAY_LABELS: Record<string, string> = { work: 'At work', school: 'At school', errand: 'Out', visiting: 'Visiting', home: 'Away' };
 
-export function awayText(p: Person): { label: string; back: string; at: string } | null {
+/**
+ * Away badge text for a person who is not on the active lot. With the world state (Milestone 7) the label says where they
+ * are: "At Lakeside Park", "At home", "At work", "On the way to Lantern Hall".
+ */
+export function awayText(p: Person, state?: WorldState | null): { label: string; back: string; at: string } | null {
   if (p.location.kind !== 'offlot') return null;
-  const label = AWAY_LABELS[p.location.place] ?? 'Away';
+  const label = state ? placeOf(state, p).text : AWAY_LABELS[p.location.place] ?? 'Away';
   return { label, back: p.location.until !== null ? `Back ${formatClock(p.location.until)}` : '', at: p.location.until !== null ? formatClock(p.location.until) : '' };
 }
 
@@ -85,7 +90,7 @@ export function createStrip(sh: Shell): Strip {
       if (!p) continue;
       const mood = api.mood(v.id);
       const tone = moodTone(mood.value);
-      const away = awayText(p);
+      const away = awayText(p, st);
       const selected = sel === v.id;
       const sig = `${selected}|${tone}|${mood.label}|${away?.label ?? ''}|${away?.back ?? ''}`;
       if (sig === v.sig) continue;

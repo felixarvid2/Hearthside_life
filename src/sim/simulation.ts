@@ -34,6 +34,15 @@ import { decayRelationships, syncBonds } from './relationships';
 import { RESERVING_PHASES, Reservations, reservationKeys } from './reservations';
 import { recentUses } from './social';
 import { dailyDropIn, ensureDepartures, ensureFirstVisit, processSchedule } from './visitors';
+import { moveHousehold, movePreview, switchHousehold, switchPreview } from './households';
+import type { MovePreview, SwitchPreview } from './households';
+import { startTrip, startTripHome, travelProblem } from './lotTravel';
+import type { TripResult } from './lotTravel';
+import { neighbourhoodInfo } from './neighbourhoodView';
+import type { NeighbourhoodInfo } from './neighbourhoodView';
+import { placeOf } from './places';
+import type { PersonPlace } from './places';
+import { reconcileStrays, runLightWorld } from './townlife';
 import type { ActionRequest, InteractionOption, QueueResult } from './types';
 
 export type { ActionRequest, InteractionOption, QueueResult } from './types';
@@ -101,6 +110,8 @@ export class Simulation {
     // 3. Careers and household bills
     updateCareers(ctx);
     updateBills(ctx);
+    // 3c. Everybody outside the household: jobs, bills and where they are, from timestamps (Milestone 7)
+    if (minuteOfDay(ctx.now) % 15 === 0) runLightWorld(ctx);
     // 4. Needs
     const people = Object.values(state.people);
     for (const p of people) decayNeeds(ctx, p);
@@ -119,6 +130,7 @@ export class Simulation {
       for (const p of people) if (!p.isNpc) checkAspiration(ctx, p);
       ensureDepartures(ctx);
       ensureEventEnds(ctx);
+      reconcileStrays(ctx);
     }
     spoilMeals(ctx);
     this.events.emit({ type: 'tick', minutes: ctx.now });
@@ -344,6 +356,52 @@ export class Simulation {
     if (!hh.isPlayable) return { ok: false, reason: `${p.firstName} decides for themself.` };
     setAutoPay(ctx.state, !!on);
     return { ok: true };
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Neighbourhood (Milestone 7)
+  // ---------------------------------------------------------------------------------------------
+
+  /** Why these household members cannot set out for the lot now, or null. Pure. */
+  travelProblem(personIds: Id[], lotId: Id): string | null {
+    return travelProblem(this.ctx(), personIds, lotId);
+  }
+
+  /** Sets members of the household the player runs off for a lot; see sim/lotTravel.ts. */
+  travel(personIds: Id[], lotId: Id): TripResult {
+    return startTrip(this.ctx(), personIds, lotId);
+  }
+
+  /** Everybody who is out goes home (or just `personIds`). */
+  travelHome(personIds?: Id[]): TripResult {
+    return startTripHome(this.ctx(), personIds);
+  }
+
+  /** Where a person is, in words. */
+  whereIs(personId: Id): PersonPlace | null {
+    const p = this.getState().people[personId];
+    return p ? placeOf(this.getState(), p) : null;
+  }
+
+  /** Lots, households, who is where, and the trip under way. */
+  neighbourhood(): NeighbourhoodInfo {
+    return neighbourhoodInfo(this.ctx());
+  }
+
+  switchPreview(householdId: Id): SwitchPreview {
+    return switchPreview(this.ctx(), householdId);
+  }
+
+  switchHousehold(householdId: Id): { ok: boolean; reason?: string } {
+    return switchHousehold(this.ctx(), householdId);
+  }
+
+  movePreview(lotId: Id): MovePreview {
+    return movePreview(this.ctx(), lotId);
+  }
+
+  moveHousehold(lotId: Id): { ok: boolean; reason?: string } {
+    return moveHousehold(this.ctx(), lotId);
   }
 
   /** Current mood with its reasons. */

@@ -185,6 +185,12 @@ export interface InteractionDef {
   };
   /** Who may use it. */
   allowVisitors: boolean;
+  /**
+   * Where this belongs: the place types it is offered at, 'home' for any residential lot or a venue type (Lot.venueType: park,
+   * cafe, gym, library, arts, market). Absent = everywhere. A jog lists only 'park'; a picnic lists 'park' and 'home' (not the
+   * cafe terrace); computer games are for 'home' (not the library's computers).
+   */
+  venues?: string[];
   status: ContentStatus;
 }
 

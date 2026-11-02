@@ -130,7 +130,7 @@ const LEISURE: InteractionDef[] = [
     autonomy: { enabled: true, ads: { fun: 24 }, tags: ['tv', 'fun'] }, allowVisitors: true,
   }),
   def({
-    id: 'playComputerGames', name: 'Play Computer Games', description: 'Play games at the computer, seated at a chair in front of the desk when there is one.',
+    id: 'playComputerGames', venues: ['home'], name: 'Play Computer Games', description: 'Play games at the computer, seated at a chair in front of the desk when there is one.',
     icon: 'fun', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 28, energy: -2 }, moodletOnComplete: 'gamingHigh',
@@ -414,7 +414,7 @@ const SELF: InteractionDef[] = [
     autonomy: { enabled: false, ads: {}, tags: [] }, allowVisitors: true,
   }),
   def({
-    id: 'danceSolo', name: 'Dance', description: 'Dance like nobody is watching. Fun, and a little Fitness.',
+    id: 'danceSolo', venues: ['home', 'park', 'cafe', 'gym', 'arts', 'market'], name: 'Dance', description: 'Dance like nobody is watching. Fun, and a little Fitness.',
     icon: 'fun', kind: 'self', behavior: 'generic', posture: 'standing',
     anims: { perform: 'dance' },
     duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { fun: 20, energy: -6 }, skill: { id: 'fitness', xpPerHour: 20 },
@@ -480,5 +480,130 @@ const SELF: InteractionDef[] = [
   }),
 ];
 
+/**
+ * Venue activities (Milestone 7). Everything bought here is paid once through the interaction `cost`: a transaction with the
+ * occurrence `cost:<actionId>`, charged when the action starts, so a cancelled order costs nothing and a finished one can never
+ * charge twice. On a public venue everyone is a patron who may use what the venue offers (sim/context.ts isVisitor), so the
+ * counters, stands, gym equipment, easels and desks need no visitor flag; the self activity `goForJog` lists its venue type.
+ * Prices are about twice the home equivalents (a $2 coffee at home is $4 at the cafe) and buy a little more.
+ */
+const VENUE: InteractionDef[] = [
+  // Cafe counter
+  def({
+    id: 'buyCoffee', name: 'Buy a Coffee', description: 'Order a fresh coffee at the counter for $4: +18 energy and a little cheer.',
+    icon: 'energy', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 5 }, needsOnComplete: { energy: 18, fun: 2 }, cost: dollars(4),
+    moodletOnComplete: 'caffeinated',
+    autonomy: { enabled: true, ads: { energy: 18 }, tags: ['food', 'coffee', 'drink', 'cafe'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'buyPastry', name: 'Buy a Pastry', description: 'A flaky pastry from the display case for $5: +28 hunger and a sweet moment.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 6 }, needsOnComplete: { hunger: 28, fun: 4 }, cost: dollars(5),
+    moodletOnComplete: 'sweetTreat',
+    autonomy: { enabled: true, ads: { hunger: 28 }, tags: ['food', 'snack', 'cafe'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'buySandwich', name: 'Buy a Sandwich', description: 'A proper lunch from the counter for $9: +50 hunger and a little energy.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 8 }, needsOnComplete: { hunger: 50, energy: 4 }, cost: dollars(9),
+    moodletOnComplete: 'goodMeal',
+    autonomy: { enabled: true, ads: { hunger: 50 }, tags: ['food', 'meal', 'cafe'] }, allowVisitors: true,
+  }),
+  // Vending machine (gym, library, arts centre, market)
+  def({
+    id: 'buyVendingSnack', name: 'Buy a Snack', description: 'Pick a bag of crisps or a cereal bar from the machine for $2.50: +16 hunger.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 3 }, needsOnComplete: { hunger: 16, fun: 1 }, cost: 250,
+    autonomy: { enabled: true, ads: { hunger: 16 }, tags: ['food', 'snack', 'vending'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'buyVendingDrink', name: 'Buy a Drink', description: 'A cold drink from the machine for $2: +8 energy and +2 fun.',
+    icon: 'energy', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 3 }, needsOnComplete: { energy: 8, fun: 2 }, cost: dollars(2),
+    autonomy: { enabled: true, ads: { energy: 8 }, tags: ['food', 'drink', 'vending'] }, allowVisitors: true,
+  }),
+  // Market stall
+  def({
+    id: 'buyProduce', name: 'Buy Fresh Fruit', description: 'A bag of fruit from the stall for $3: +20 hunger and +3 energy.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 6 }, needsOnComplete: { hunger: 20, energy: 3 }, cost: dollars(3),
+    moodletOnComplete: 'freshFruit',
+    autonomy: { enabled: true, ads: { hunger: 20 }, tags: ['food', 'snack', 'market', 'fresh'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'buyGroceries', name: 'Buy Groceries', description: 'Stock up the pantry for $24. For three days every meal you cook costs 40% less in groceries.',
+    icon: 'money', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 15 }, cost: dollars(24),
+    moodletOnComplete: 'stockedPantry',
+    autonomy: { enabled: false, ads: {}, tags: ['food', 'groceries', 'market'] }, allowVisitors: true,
+  }),
+  // Park and playground
+  def({
+    id: 'goForJog', venues: ['park'], name: 'Go for a Jog', description: 'Jog laps of the park paths: trains Fitness but costs energy and hygiene, and it clears the head.',
+    icon: 'energy', kind: 'self', behavior: 'generic', posture: 'standing',
+    anims: { perform: 'jog' },
+    duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { energy: -9, hygiene: -6, fun: 9 }, skill: { id: 'fitness', xpPerHour: 55 },
+    moodletOnComplete: 'energized',
+    autonomy: { enabled: true, ads: { fun: 9 }, tags: ['active', 'fitness', 'skill', 'outdoor', 'jog'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'havePicnic', venues: ['park', 'home'], name: 'Have a Picnic', description: 'Unpack a picnic basket at the table for $8: +36 hunger and plenty of fresh air.',
+    icon: 'hunger', kind: 'object', behavior: 'snack', posture: 'standing',
+    anims: { perform: 'eat' },
+    duration: { kind: 'fixed', minutes: 35 }, needsOnComplete: { hunger: 36, fun: 8 }, cost: dollars(8),
+    moodletOnComplete: 'picnicJoy',
+    autonomy: { enabled: true, ads: { hunger: 36, fun: 8 }, tags: ['food', 'picnic', 'outdoor', 'social'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'watchClouds', name: 'Watch the Clouds', description: 'Lean back and watch the clouds go by for 40 minutes. Free, restful and good for the mood.',
+    icon: 'sparkle', kind: 'object', slotKinds: ['sit'], behavior: 'generic', posture: 'seated',
+    anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
+    duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { fun: 10, energy: 5 },
+    moodletOnComplete: 'peaceful',
+    autonomy: { enabled: true, ads: { fun: 8, energy: 4 }, tags: ['relax', 'outdoor', 'clouds'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'playOnSlide', name: 'Play on the Slide', description: 'Climb the ladder and whoosh down the slide, again and again. Great fun.',
+    icon: 'fun', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'dance' },
+    duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 26, energy: -6 },
+    moodletOnComplete: 'playtime',
+    autonomy: { enabled: true, ads: { fun: 20 }, tags: ['play', 'outdoor', 'fun', 'playground'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'swing', name: 'Swing', description: 'Sit on a swing and pump your legs. A little Fitness, a lot of fun.',
+    icon: 'fun', kind: 'object', slotKinds: ['sit'], behavior: 'generic', posture: 'seated',
+    anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
+    duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 22, energy: -4 }, skill: { id: 'fitness', xpPerHour: 12 },
+    moodletOnComplete: 'playtime',
+    autonomy: { enabled: true, ads: { fun: 18 }, tags: ['play', 'outdoor', 'fun', 'playground'] }, allowVisitors: true,
+  }),
+  // Library study desk
+  def({
+    id: 'studyHard', name: 'Study', description: 'Work through logic puzzles and problem sets in the quiet of the reading room. Trains Logic.',
+    icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
+    anims: { perform: 'read' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 4, energy: -3 }, skill: { id: 'logic', xpPerHour: 60 },
+    moodletOnComplete: 'studious',
+    autonomy: { enabled: true, ads: { fun: 4 }, tags: ['study', 'reading', 'skill', 'logic'] },
+  }),
+  def({
+    id: 'writeJournal', name: 'Write in a Journal', description: 'Put thoughts, stories and drafts on paper at a quiet desk. Trains Writing.',
+    icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 50 }, needsPerHour: { fun: 8, energy: -3 }, skill: { id: 'writing', xpPerHour: 55 },
+    moodletOnComplete: 'clearHead',
+    autonomy: { enabled: true, ads: { fun: 8 }, tags: ['study', 'writing', 'creative', 'skill'] },
+  }),
+];
+
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE];

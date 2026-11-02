@@ -109,6 +109,7 @@ npm run e2e            # end-to-end tests
   - `creator.html`
   - `buildbuy.html`
   - `meshy.html`: lab comparing the procedural body with the raw Meshy fit (`dev/meshy/`)
+  - `venues.html`: the generated venue and home lots from above or from the four dollhouse angles (`?lot=cafe&view=iso`); `dev/venues-shots.mjs` takes screenshots into `dev/venues-shots/` (JPEG)
 
 ## Documentation
 

@@ -5,13 +5,14 @@ import { addFeed } from '../core/state';
 import type { Tile } from '../core/nav';
 import type { ActionInstance, Person } from '../core/types';
 import { abortQueue } from './actions';
-import { commutableShift, nextShift, shiftText, startShift } from './careers';
+import { beginLightShift, commutableShift, nextShift, shiftText, startShift } from './careers';
 import type { SimCtx } from './context';
 import { clamp, interactionDef, lotLoc, setAnim, tileOfLoc } from './context';
 import { addMoodlet } from './mood';
 import { applyRelDelta, decayRecent, ensureRel, peekRel } from './relationships';
 import { isAdult } from '../core/relations';
 import { resolveSocial, socialRequirementReason } from './social';
+import { makeAction } from './queue';
 import type { Behavior, Step } from './steps';
 import { defDuration, performRates } from './steps';
 import { INVITE_DELAY_MINUTES, PHONE_FRIENDSHIP_CAP, SOCIAL_RECENT_DECAY_MINUTES } from './tuning';
@@ -48,12 +49,16 @@ function walkStep(goal: Step['goal']): Step {
   return { goal, posture: 'standing', performAnim: 'idle', duration: { kind: 'instant' }, rates: {} };
 }
 
-/** Takes a person off the lot (work, home...). Their remaining queue is ended. */
-export function goOffLot(ctx: SimCtx, p: Person, place: 'home' | 'work' | 'visiting' | 'errand', keepActionId?: string): void {
+/**
+ * Takes a person off the lot (work, home, a venue...). Their remaining queue is ended. `lotId` names the lot they are
+ * visiting; at home it defaults to the household's home lot.
+ */
+export function goOffLot(ctx: SimCtx, p: Person, place: 'home' | 'work' | 'visiting' | 'errand', keepActionId?: string, lotId?: string): void {
   if (!lotLoc(p)) return;
   abortQueue(ctx, p, null, keepActionId);
   const homeLotId = ctx.state.households[p.householdId]?.homeLotId ?? undefined;
-  p.location = { kind: 'offlot', place, ...(place === 'home' && homeLotId ? { lotId: homeLotId } : {}), since: ctx.now, until: null };
+  const at = lotId ?? (place === 'home' ? homeLotId : undefined);
+  p.location = { kind: 'offlot', place, ...(at ? { lotId: at } : {}), since: ctx.now, until: null };
   p.thought = null;
   setAnim(p, 'idle', ctx.now);
   ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'location' });
@@ -103,10 +108,43 @@ export const leaveLotBehavior: Behavior = {
   end(ctx, p, a, result) { if (result === 'failed') leaveForHome(ctx, p, a); },
 };
 
+/**
+ * Where a leaving person goes (data.to: 'venue' + data.lotId, 'work', 'home'; absent = a guest going home). People
+ * following the light schedule leave quietly; guests who say goodbye get a line in the feed.
+ */
 function leaveForHome(ctx: SimCtx, p: Person, a: ActionInstance): void {
   if (!lotLoc(p)) return;
-  goOffLot(ctx, p, 'home', a.id);
-  addFeed(ctx.state, ctx.events, 'social', `${p.firstName} went home.`, p.id);
+  const to = a.data.to;
+  const venueId = typeof a.data.lotId === 'string' && ctx.state.lots[a.data.lotId] ? a.data.lotId : null;
+  if (to === 'venue' && venueId) goOffLot(ctx, p, 'visiting', a.id, venueId);
+  else if (to === 'work') { goOffLot(ctx, p, 'work', a.id); beginLightShift(ctx, p); }
+  else {
+    goOffLot(ctx, p, 'home', a.id);
+    if (to === undefined) addFeed(ctx.state, ctx.events, 'social', `${p.firstName} went home.`, p.id);
+  }
+}
+
+/** Walk to the lot entry and set off for another lot: in transit until data.arriveAt (lot travel, sim/lotTravel.ts). */
+export const travelToBehavior: Behavior = {
+  check(ctx, _p, a) {
+    return typeof a.data.lotId === 'string' && ctx.state.lots[a.data.lotId] ? null : 'Unknown place.';
+  },
+  reserve: () => null,
+  step: (ctx, p) => { const g = entryGoal(ctx, p); return typeof g === 'string' ? g : walkStep(g); },
+  apply(ctx, p, a) { departForTrip(ctx, p, a); },
+  end(ctx, p, a, result) { if (result === 'failed') departForTrip(ctx, p, a); },
+};
+
+/** Puts the person in transit to data.lotId (arriving at data.arriveAt). Leaves even when the way is blocked. */
+export function departForTrip(ctx: SimCtx, p: Person, a: ActionInstance): void {
+  if (!lotLoc(p)) return;
+  const lotId = typeof a.data.lotId === 'string' ? a.data.lotId : undefined;
+  const until = typeof a.data.arriveAt === 'number' ? a.data.arriveAt : ctx.now;
+  abortQueue(ctx, p, null, a.id);
+  p.location = { kind: 'offlot', place: 'errand', ...(lotId ? { lotId } : {}), since: ctx.now, until, transit: true };
+  p.thought = null;
+  setAnim(p, 'idle', ctx.now);
+  ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'location' });
 }
 
 function phoneTarget(ctx: SimCtx, a: ActionInstance): Person | undefined {
@@ -130,8 +168,10 @@ export const inviteBehavior: Behavior = {
     const other = phoneTarget(ctx, a);
     if (!other || other.id === p.id) return 'Choose someone to invite.';
     if (other.householdId === p.householdId) return 'They live here.';
-    if (other.location.kind === 'lot') return `${other.firstName} is already visiting somewhere.`;
-    if (other.location.place !== 'home') return `${other.firstName} isn't home right now.`;
+    if (other.location.kind === 'lot') return `${other.firstName} is already out visiting.`;
+    if (other.location.transit) return `${other.firstName} is on the way somewhere.`;
+    if (other.location.place === 'work') return `${other.firstName} is at work right now.`;
+    if (other.location.place !== 'home' && other.location.place !== 'visiting' && other.location.place !== 'errand') return `${other.firstName} isn't free right now.`;
     if (isVisitPending(ctx.state, other.id)) return `${other.firstName} is already on the way.`;
     return null;
   },
@@ -218,5 +258,62 @@ export const phoneDateBehavior: Behavior = {
     const other = phoneTarget(ctx, a);
     const def = ctx.content.socials.askOnDate;
     if (other && def) resolveSocial(ctx, p, other, def);
+  },
+};
+
+/** Friendship (their view of you) an invited person needs to say yes, and how well they must know you to be asked. */
+export const INVITE_MIN_FRIENDSHIP = 10;
+export const INVITE_MIN_FAMILIARITY = 8;
+/** A visit that cannot happen yet (the household is away) is tried again for this long. */
+export const VISIT_PATIENCE_MINUTES = 240;
+
+/**
+ * Invite the person in front of you to your home (Milestone 7; target = the guest). They say yes when they like you
+ * enough (a clear rule, no dice), head home and come to your door about an hour later, wherever you are by then
+ * the visit waits for you to be home.
+ */
+export const inviteHomeBehavior: Behavior = {
+  check(ctx, p, a) {
+    const other = a.target.kind === 'person' ? ctx.state.people[a.target.personId] : undefined;
+    if (!other || other.id === p.id) return 'Choose someone to invite.';
+    if (other.householdId === p.householdId) return 'They live with you.';
+    const here = lotLoc(p), there = lotLoc(other);
+    if (!here || !there || here.lotId !== there.lotId) return `${other.firstName} isn't here.`;
+    const home = ctx.state.households[p.householdId]?.homeLotId;
+    if (!home) return 'There is no home to invite them to.';
+    if (here.lotId === home) return `${other.firstName} is already at your home.`;
+    if (isVisitPending(ctx.state, other.id)) return `${other.firstName} is already on the way.`;
+    if (peekRel(ctx.state, other.id, p.id).familiarity < INVITE_MIN_FAMILIARITY) return `Get to know ${other.firstName} a little better first.`;
+    return null;
+  },
+  reserve: () => null,
+  step(_ctx, _p, a) {
+    if (a.target.kind !== 'person') return 'Choose someone to invite.';
+    return {
+      goal: { kind: 'person', personId: a.target.personId, label: 'them' }, posture: 'standing', performAnim: 'talk',
+      duration: { kind: 'fixed', minutes: 3 }, rates: { social: 20 },
+    };
+  },
+  apply(ctx, p, a) {
+    const other = a.target.kind === 'person' ? ctx.state.people[a.target.personId] : undefined;
+    const home = ctx.state.households[p.householdId]?.homeLotId;
+    if (!other || !home) return;
+    const back = peekRel(ctx.state, other.id, p.id);
+    if (back.friendship < INVITE_MIN_FRIENDSHIP || back.trust < 0) {
+      addFeed(ctx.state, ctx.events, 'social', `${other.firstName} politely turned ${p.firstName}'s invitation down.`, p.id);
+      return;
+    }
+    const at = ctx.now + INVITE_DELAY_MINUTES;
+    scheduleVisit(ctx.state, other.id, at, `invite:${other.id}:${Math.round(ctx.now)}`, { invitedBy: p.id, lotId: home, until: at + VISIT_PATIENCE_MINUTES });
+    applyRelDelta(ctx.state, p.id, other.id, { familiarity: 1 }, ctx.now);
+    applyRelDelta(ctx.state, other.id, p.id, { familiarity: 1, friendship: 1 }, ctx.now);
+    addFeed(ctx.state, ctx.events, 'social', `${other.firstName} will come over to ${ctx.state.lots[home]?.name ?? 'the house'} in about an hour.`, p.id);
+    // They head off now; the schedule brings them to the door.
+    if (lotLoc(other)) {
+      other.queue = other.queue.filter((x) => x.phase !== 'queued');
+      if (other.queue[0]) other.queue[0].cancelRequested = true;
+      other.queue.push(makeAction(ctx, other, { interactionId: 'leaveLot', target: { kind: 'self' }, data: { to: 'home' } }, 'schedule'));
+      ctx.events.emit({ type: 'person.changed', personId: other.id, what: 'queue' });
+    }
   },
 };
