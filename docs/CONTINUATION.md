@@ -78,6 +78,12 @@ only; git, curl and rm are blocked, so a supervising session commits its work. T
 
 ## Working conventions
 
+- TokenEconomizer (https://github.com/microsoft/TokenEconomizer, Apache-2.0) is enabled for this repository in
+  `.claude/settings.json` (project scope). New Claude Code sessions load it: tool pruning and the failure-loop guard are
+  on, micro-skills off (default). It learns in `~/.tokeneconomizer`, so it pays off on a machine that keeps that folder;
+  a fresh cloud container starts from nothing each time. Check with `/tokeneconomizer:status`, turn off for one session
+  with `TE_DISABLE=1 claude`, and give pruned tools back with `/tokeneconomizer:toolprune restore`.
+
 - Browser runs share `/tmp/hearthside-browser.lock`. Wrap custom Playwright scripts in `flock /tmp/hearthside-browser.lock ...`,
   but never wrap `tests/e2e/acceptance.mjs` or `run-e2e.mjs`, which take the lock themselves (a nested lock deadlocks).
 - Before every commit, scan for the fal key:
