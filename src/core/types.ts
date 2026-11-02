@@ -93,7 +93,12 @@ export interface SimSettings {
   autonomyLevel: 0 | 1 | 2;
   /** Free building in sandbox. */
   unlimitedFunds: boolean;
-  aging: 'off' | 'long' | 'normal';
+  /** Milestone 8: 'custom' uses `agingDays`. */
+  aging: 'off' | 'long' | 'normal' | 'custom';
+  /** Milestone 8: days spent in each life stage when aging is 'custom' (elder = days before the optional end of life). */
+  agingDays?: Partial<Record<LifeStage, number>>;
+  /** Milestone 8: elders may pass away peacefully at the end of their stage. Absent = off. */
+  elderEndOfLife?: boolean;
   /** Allow neighbours to drop by on their own. */
   visitors: boolean;
   /** Live speed when last saved (0 = paused). Absent in older saves, which load paused. */
@@ -189,6 +194,44 @@ export interface Lot {
   rent?: Cents;
   /** Asking price when the lot is for sale (vacant homes only). */
   price?: Cents;
+  /** Milestone 9: fences and gates keyed by edgeKey(level, dir, x, z) (src/world/fences.ts). Absent = none. */
+  fences?: Record<string, Fence>;
+  /** Milestone 9: roofs (src/world/roofs.ts). Absent = none. */
+  roofs?: Record<Id, Roof>;
+  /** Milestone 9: ground paint per level-0 tile keyed by tileKey(0, x, z); missing = `ground`. */
+  terrain?: Record<string, string>;
+}
+
+/** Milestone 9: a fence or gate on one grid edge (same edge convention as Wall). `defId` is a FenceDef id. */
+export interface Fence {
+  id: string;
+  level: number;
+  dir: EdgeDir;
+  x: number;
+  z: number;
+  defId: string;
+  /** Colour/finish variant index of the FenceDef. */
+  variant?: number;
+  purchasePrice?: Cents;
+}
+
+/** Milestone 9: a roof over a tile rectangle [x0,x1) x [z0,z1), resting on top of `level` (its walls' top). */
+export interface Roof {
+  id: Id;
+  level: number;
+  x0: number;
+  z0: number;
+  x1: number;
+  z1: number;
+  /** RoofStyleDef id (gable, hip, flat, ...). */
+  styleId: string;
+  /** Ridge direction for directional styles. */
+  ridge: EdgeDir;
+  /** Pitch in degrees (flat styles ignore it). */
+  pitch: number;
+  /** Roof material/colour finish. */
+  finish: FinishRef;
+  purchasePrice?: Cents;
 }
 
 export interface TilePos { x: number; z: number; level: number }
@@ -322,6 +365,25 @@ export interface Person {
   thought: { icon: string; text: string; until: GameMinutes } | null;
   createdAt: GameMinutes;
   isNpc: boolean;
+  /** Milestone 8: whole game days lived in the current life stage (advanced at the daily rollover when aging is on). */
+  stageDays?: number;
+  /** Milestone 8: ids of the person's parents (the family graph; siblings and grandparents are derived). */
+  parentIds?: Id[];
+  /** Milestone 8: school state for children and teens. */
+  school?: SchoolState | null;
+}
+
+/** Milestone 8: school attendance and performance (children and teens). */
+export interface SchoolState {
+  /** SchoolDef id ('elementary' for children, 'high' for teens). */
+  schoolId: string;
+  /** -100..100; drives the grade letter and report cards. */
+  performance: number;
+  /** Game day of the last homework finished (homework is due each school day). */
+  homeworkDay: number;
+  /** Days attended / missed in the current term. */
+  attended: number;
+  missed: number;
 }
 
 export interface Pronouns { subject: string; object: string; possessive: string } // e.g. she/her/her
