@@ -5,6 +5,12 @@
 import type { GameSettings } from './api';
 
 export const SETTINGS_KEY = 'hearthside.settings.v1';
+/**
+ * Version stamped on every saved settings object. Saves from before it was introduced (no `version`) were written while
+ * 'detailed' (the Meshy bodies) was the default style and cannot be told apart from a deliberate choice of it, so they are moved
+ * to the new default 'mpfb' once (see migrateSettings).
+ */
+export const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   masterVolume: 0.8,
@@ -13,7 +19,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   reducedMotion: false,
   textScale: 1,
   quality: 'high',
-  characterStyle: 'detailed', // 'classic' = the procedural bodies (also the fallback when the scanned ones fail to load)
+  characterStyle: 'mpfb', // 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback)
   shadows: true,
   showStats: false,
   tutorial: true,
@@ -42,10 +48,22 @@ export function mergeSettings(base: GameSettings, patch: Partial<GameSettings> |
   const ts = num(patch.textScale);
   if (ts !== null) out.textScale = clamp(ts, 0.9, 1.3);
   if (patch.quality === 'low' || patch.quality === 'high') out.quality = patch.quality;
-  if (patch.characterStyle === 'detailed' || patch.characterStyle === 'classic') out.characterStyle = patch.characterStyle;
+  if (patch.characterStyle === 'mpfb' || patch.characterStyle === 'detailed' || patch.characterStyle === 'classic') out.characterStyle = patch.characterStyle;
   for (const k of ['reducedMotion', 'shadows', 'showStats', 'tutorial'] as const) {
     if (typeof patch[k] === 'boolean') out[k] = patch[k] as boolean;
   }
+  return out;
+}
+
+/**
+ * One-time migration of a stored settings object: a save without `version` that has the character style 'detailed' (or none)
+ * moves to 'mpfb'. 'classic' was never the default, so it stays; anything stored with the current version is left alone, so
+ * choosing 'detailed' again in Settings sticks. Returns a new object (and whether it changed the style).
+ */
+export function migrateSettings(stored: Partial<GameSettings> & { version?: number }): Partial<GameSettings> & { version: number } {
+  const out = { ...stored, version: SETTINGS_VERSION };
+  const old = typeof stored.version !== 'number' || stored.version < 2;
+  if (old && (stored.characterStyle === 'detailed' || stored.characterStyle === undefined)) out.characterStyle = 'mpfb';
   return out;
 }
 
@@ -57,14 +75,19 @@ export function loadSettings(): GameSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return base;
-    return mergeSettings(base, JSON.parse(raw) as Partial<GameSettings>);
+    const parsed = JSON.parse(raw) as Partial<GameSettings> & { version?: number };
+    const stored = parsed && typeof parsed === 'object' ? parsed : {};
+    const migrated = migrateSettings(stored);
+    const settings = mergeSettings(base, migrated);
+    if (stored.version !== SETTINGS_VERSION) saveSettings(settings);
+    return settings;
   } catch {
     return base;
   }
 }
 
 export function saveSettings(s: GameSettings): void {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch { /* storage unavailable: keep in memory */ }
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...s, version: SETTINGS_VERSION })); } catch { /* storage unavailable: keep in memory */ }
 }
 
 /** Applies the settings that live in the document: text scale and reduced motion. */

@@ -1,7 +1,7 @@
 # Continuation note
 
-State on 2026-11-02. Work happens on branch `ccr-333d8ff5-slv7qa`, PR #1 (Milestones 1-5) is merged; Milestones 6 and 7 are on
-PR #2 (open; merge only after the user approves). **Milestones 1-7 are complete and verified** (brief section 26,
+State on 2026-11-02. Work happens on branch `ccr-333d8ff5-slv7qa`. PR #1 (Milestones 1-5) and PR #2 (Milestones 6-7) are
+merged; the MPFB body switch is on PR #3 (merge only after the user approves). **Milestones 1-7 are complete and verified** (brief section 26,
 docs/ROADMAP.md). The next milestone is 8 (family and life stages).
 
 ## Milestone status
@@ -21,24 +21,24 @@ Checks on the final state:
 | Check | Result |
 |---|---|
 | `npm run typecheck` | clean |
-| `npm test` | 95 files, 1190 tests |
+| `npm test` | 96 files, 1229 tests |
 | `npm run content:check` | 0 errors, 0 warnings |
 | `npm run build` | passes (main chunk about 1.8 MB, warning only) |
 | `npm run e2e` | OK in desktop, portrait and landscape |
 | `npm run e2e:creator` | 288/288 |
 | `npm run e2e:acceptance`, portrait 390x844 | 203/203 |
-| `npm run e2e:acceptance`, landscape 844x390 | 200/201 (step 2 random social did not raise the relationship; unrelated to M7) |
+| `npm run e2e:acceptance`, landscape 844x390 | 202/202 |
 | `npm run e2e:acceptance`, desktop 1280x720 | 194/194 |
 | `npm run visual:m5` | 14/14 |
 
-Step 9 (M7: map, travel to the park, venue activity, go home, switch preview) passes 29/29 in each viewport after the
+Checks rerun after the MPFB switch (MPFB is the default style). Step 9 (M7: map, travel to the park, venue activity, go home, switch preview) passes 29/29 in each viewport after the
 phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the verification runs are in `dev/ds-tasks/01-progress.md`.
 
 ## Next steps, in order
 
 1. Milestone 8, family and life stages: school, family graph, dependent care, aging, household splitting. Needs all seven
    life stages; build on the M3 creator and the M7 household switching.
-2. Optional: switch people to MPFB bodies (see "MPFB body prototype" below).
+2. Done: people use the MPFB bodies by default (see "MPFB bodies" below). Left: brow styles, the garment hem flare on the female body, real-device performance.
 3. Performance:
    - Main chunk is about 1.8 MB. Lazy-load the build, creator and dev modules and split `content`.
    - Measure on a real phone.
@@ -70,9 +70,10 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Assets and AI generation
 
-- **People.** People use Meshy-generated base bodies (`dev/meshy/`, `npm run assets:meshy` builds
-  `public/assets/characters/meshy_{a,b}.glb`). Settings > Display offers characterStyle detailed or classic. Meshy
-  credits left: 42.
+- **People.** Three character styles (Settings > Display, `GameSettings.characterStyle`): `mpfb` ("Natural", the default), `detailed`
+  (Meshy bodies: `dev/meshy/`, `npm run assets:meshy` builds `public/assets/characters/meshy_{a,b}.glb`) and `classic` (procedural).
+  Saved settings from before the version stamp are moved once from `detailed` to `mpfb` (`migrateSettings`; a saved `classic` stays).
+  Meshy credits left: 42.
 - **fal.ai.** The key is in the user's repo `felixarvid2/apis`, file `Fal.ai`, cloned to `/home/user/apis`. Read it at run
   time; never print or commit it. Use `queue.fal.run` or `fal.run`, never `api.fal.ai`, where a proxy overrides auth.
   - Budget: $10 total, about $1.25 spent. Ledgers: `dev/hair-ai/LEDGER.md` and `dev/surfaces-ai/LEDGER.md`.
@@ -81,13 +82,18 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   `dev/hair-ai/raw/` (gitignored, so a fresh clone has to regenerate them, which costs money).
 - **AI surface maps.** `npm run assets:surfaces` builds them from `dev/surfaces-ai/raw/` (gitignored).
 - **Licences.** Check the Meshy, FLUX and TRELLIS output terms before distribution (see `public/assets/LICENSES.md`).
-- **MPFB body prototype.** Blender 4.5.15, MPFB 2.0.18 and MakeHuman CC0 asset packs are installed outside the repo
-  (see `tools/mpfb/README.md`). `npm run assets:mpfb` builds `public/assets/characters/mpfb_{f,m}.glb` (about 0.55 MB,
-  meshopt, 10 morph targets, bound to the UAL skeleton; existing clips play). Viewer: `dev/mpfb.html`; screenshots in
-  `dev/mpfb/shots/*.jpg`. Not wired into the game.
-  - Integration estimate: 4-6 days (loader, skin shader, face paint, hair headMap, garments, creator sliders to morphs,
-    height via root scale, draw call merge).
-  - Male underwear is CC-BY (Elvaerwyn) and should be replaced. Faces need presets; the male body needs more build.
+- **MPFB bodies.** Blender 4.5.15, MPFB 2.0.18 and MakeHuman CC0 asset packs are installed outside the repo (see
+  `tools/mpfb/README.md`, which also defines the GLB format). `npm run assets:mpfb` builds `public/assets/characters/mpfb_{f,m}.glb`
+  (meshopt, 24 morph targets: 10 body, 14 signed face; skin, underwear, eyes, iris, brows, lashes on the UAL skeleton). They are the
+  game's default people since the MPFB integration: `src/characters/mpfbBody.ts` (pure: slider -> morph maps, tone maths,
+  `MorphField`, assembly), `assets.ts` (loader, meshopt decoder imported on first use), `createMpfb*Material` in `materials.ts`,
+  `CharacterView` (extra meshes, underwear flags). See ARCHITECTURE.md "characters". Viewer: `dev/mpfb.html`; lab shots of the
+  integration: `node dev/mpfb/shootLab.mjs --plan=bodies|faces|faceeach|outfits|hats|leaks` (`dev/characters.html?style=mpfb`).
+  - Garments, hair and accessories carry the body's own morph targets by nearest-skin-vertex transfer (per body part), so they follow
+    every slider; sliders without a target (arms, legs, neck, male chest, cheekbones, nose bridge, ear size, eye tilt/height, brow
+    angle) use the old displacement fields. `MPFB_SLIDERS` gains are lower than the GLB's `sliderGain` (a full creator slider moves the
+    surface 3-4 cm like the other styles; the GLB gain of 3 / 2 for weight / muscle is for the viewer's full macro).
+  - Not supported on the MPFB bodies: the eight brow styles (one brow mesh), the height slider (none exists).
 
 ## Running agents on DeepSeek (saves the Claude quota)
 

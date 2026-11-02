@@ -250,8 +250,8 @@ export interface GameSettings {
   reducedMotion: boolean;
   textScale: number; // 0.9..1.3
   quality: 'low' | 'high';
-  /** 'detailed': scanned bodies; 'classic': the procedural bodies (fallback, lighter). */
-  characterStyle: 'detailed' | 'classic';
+  /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter). */
+  characterStyle: 'mpfb' | 'detailed' | 'classic';
   shadows: boolean;
   showStats: boolean;
   tutorial: boolean;

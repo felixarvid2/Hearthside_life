@@ -8,7 +8,7 @@
 // per style. Pure module.
 
 import type { FacialHairDef, HairDef } from '../content/types';
-import { BODY_PARAM_IDS, bodyDeltas } from './bodyShape';
+import { BODY_PARAM_IDS, bodyMorphIds, morphDeltas } from './bodyShape';
 import { sampleProfile } from './fit';
 import { HEAD_OFFSET, HEAD_SCALE, HEAD_SCULPT_IDS, H_MAX, H_MIN, headDeltas, headNormal, headPoint, headToBind } from './headShape';
 import type { MeshData, SweepVertex } from './meshData';
@@ -23,6 +23,8 @@ import type { BodyTemplate } from './template';
  */
 export const HAIR_ATTRS = { aHair: 4, aFlow: 3, aLock: 4 };
 export const HAIR_MORPHS: readonly string[] = [...BODY_PARAM_IDS, ...HEAD_SCULPT_IDS, 'hairClear'];
+/** The morph targets of a hair mesh on `t` (the body's own morph ids on an MPFB body). */
+export function hairMorphIds(t: BodyTemplate): readonly string[] { return [...bodyMorphIds(t.ctx), ...HEAD_SCULPT_IDS, 'hairClear']; }
 /** Extra distance (m) the 'hairClear' morph moves hanging hair away from the back at influence 1 (bulky tops). */
 export const HAIR_CLEAR = 0.03;
 /** Piece ids: 0 cap, 1 curl/coil, 2 drape, 3 tail/braid, 4 bun, 5 tie, 6 facial hair, 7 scalp lock. */
@@ -66,7 +68,7 @@ export function headSkinFor(c: Ctx, yBind: number, yLocal: number): Skin {
 }
 
 export function hairMorphs(c: Ctx, p: Vec3, skin: Skin, headLocal: Vec3 | null, theta: number): Record<string, Vec3> {
-  const out = bodyDeltas(c.t.ctx, p, skin) as unknown as Record<string, Vec3>;
+  const out = { ...morphDeltas(c.t.ctx, p, skin) };
   const hang = smoothstep(c.t.lm.neckBaseY + 0.03, c.t.lm.neckBaseY - 0.05, p[1]);
   if (hang > 0) out.hairClear = [Math.sign(p[0]) * HAIR_CLEAR * 0.2 * hang, 0, -HAIR_CLEAR * hang];
   if (headLocal) {
@@ -685,7 +687,7 @@ function buildFacialHair(c: Ctx, def: FacialHairDef): void {
 
 /** Builds hair (and optional facial hair) for a body frame. */
 export function buildHair(t: BodyTemplate, def: HairDef | null, facial: FacialHairDef | null): MeshData {
-  const m = emptyMesh(HAIR_ATTRS, HAIR_MORPHS);
+  const m = emptyMesh(HAIR_ATTRS, hairMorphIds(t));
   const raw = t.raw;
   const c: Ctx = { t, m, head: boneIndex(raw, 'Head'), neck: boneIndex(raw, 'neck_01'), spine3: boneIndex(raw, 'spine_03'), spine2: boneIndex(raw, 'spine_02'), O: t.headOrigin, rnd: rng(hashStr(def?.id ?? 'facial')) };
   if (def) {

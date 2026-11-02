@@ -32,7 +32,7 @@ const content = characterContent();
 const params = new URLSearchParams(location.search);
 const MAX_PEOPLE = Number(params.get('n') ?? 99);
 const SHADOWS = params.get('shadows') !== '0';
-const STYLE = params.get('style') === 'classic' ? 'classic' : 'detailed';
+const STYLE = params.get('style') === 'classic' ? 'classic' : params.get('style') === 'mpfb' ? 'mpfb' : 'detailed';
 const swatch = (list: Array<{ color: string }>, i: number) => (list[i % list.length] as { color: string }).color;
 
 function appearance(i: number, frame: BodyFrame, hairId: string): Appearance {
@@ -243,7 +243,7 @@ const lab = {
     p.setAppearance(a);
     if (o.outfit) { labOutfits[i] = outfitFor(o.outfit, i, o.accessories); p.setOutfit(labOutfits[i]!); }
   },
-  async style(s: 'classic' | 'detailed'): Promise<string> {
+  async style(s: 'classic' | 'detailed' | 'mpfb'): Promise<string> {
     const now = await setCharacterStyle(labAssets, s);
     for (const p of people) p.refreshStyle();
     return now;
@@ -296,6 +296,8 @@ const lab = {
   person(i: number): { x: number; z: number } { const p = people[i]!; return { x: p.root.position.x, z: p.root.position.z }; },
   count(): number { return people.length; },
   stats(): { calls: number; triangles: number } { return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }; },
+  /** GPU resources currently held (leak checks: they must not grow when people are rebuilt or the style is switched back and forth). */
+  memory(): { geometries: number; textures: number; programs: number } { return { geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0 }; },
   /** Debug: hides the skin mesh of person i (shows garment shells alone). */
   hideSkin(i: number, hide = true): void { const m = people[i]!.root.getObjectByName('skin'); if (m) m.visible = !hide; },
   only(indices: number[] | null): void { people.forEach((p, i) => { p.root.visible = !indices || indices.includes(i); }); },

@@ -433,6 +433,157 @@ export function createMeshySkinMaterial(): { material: THREE.MeshStandardMateria
 }
 
 // ---------------------------------------------------------------------------------------------
+// Skin and parts of an MPFB body
+// ---------------------------------------------------------------------------------------------
+
+/** Uniforms of the MPFB skin: the shared SkinUniforms plus the skin texture and the mean colour the tone recolour is relative to. */
+export interface MpfbSkinUniforms extends SkinUniforms {
+  uAlbedo: THREE.IUniform<THREE.Texture | null>;
+  /** Mean linear colour of the skin texture: the texel that maps to exactly the chosen tone. */
+  uSkinMean: THREE.IUniform<THREE.Vector3>;
+}
+
+const PSKIN_FRAG_HEAD = /* glsl */ `
+varying vec4 vInfo;
+varying vec3 vFace;
+varying vec2 vMsUv;
+varying float vCover;
+varying float vLips;
+uniform sampler2D uAlbedo;
+uniform vec3 uSkinMean;
+uniform vec3 uLipColor;
+uniform vec3 uHairColor;
+uniform vec4 uMouth; // width, fullness, lipTint, -
+uniform vec4 uSkinFx; // freckles, blush, stubble, -
+uniform float uSelect;
+float hsHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float hsLuma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+`;
+
+// The painted albedo recoloured to the chosen tone: tone * (luminance ratio * (1 - C) + per-channel ratio * C), see mpfbBody.recolourTexel.
+const PSKIN_FRAG_PAINT = /* glsl */ `
+#include <color_fragment>
+if (vCover > 0.5) discard;                            // under an opaque garment: nothing of the body can poke through
+{
+  vec3 tone = diffuseColor.rgb;                       // material.color: the chosen skin tone (linear)
+  vec3 tex = texture2D(uAlbedo, vMsUv).rgb;           // painted albedo (linear)
+  float l = hsLuma(tex) / hsLuma(uSkinMean);
+  vec3 col = tone * (l * ${f(1 - 0.35)} + (tex / uSkinMean) * ${f(0.35)});
+  // lips: the skin's _LIPS weight shifts the colour towards the lip colour's hue, keeping luminance (every tone works)
+  col *= mix(vec3(1.0), uLipColor / max(hsLuma(uLipColor), 1e-3), clamp(vLips * uMouth.z * 0.5, 0.0, 1.0));
+  if (vInfo.x > 4.5 && vInfo.x < 5.5) {
+    vec3 fp = vFace;
+    if (fp.z > 0.02) {
+      float ax = abs(fp.x);
+      float cheek = exp(-(pow(ax - 0.045, 2.0) + pow(fp.y - 0.062, 2.0)) / (2.0 * 0.015 * 0.015));
+      col = mix(col, col * vec3(1.12, 0.74, 0.76), uSkinFx.y * cheek * 0.55);
+      if (uSkinFx.x > 0.01) {
+        float region = exp(-pow(ax - 0.026, 2.0) / (2.0 * 0.021 * 0.021) - pow(fp.y - 0.073, 2.0) / (2.0 * 0.012 * 0.012));
+        vec2 cell = fp.xy / 0.0034;
+        vec2 ci = floor(cell);
+        vec2 cf = fract(cell);
+        float h = hsHash(ci);
+        vec2 c = vec2(hsHash(ci + 7.1), hsHash(ci + 3.3)) * 0.6 + 0.2;
+        float r = (0.16 + 0.14 * hsHash(ci + 1.7));
+        float dotM = step(0.45, h) * (1.0 - smoothstep(r - 0.1, r + 0.1, length(cf - c)));
+        col = mix(col, col * vec3(0.68, 0.55, 0.47), dotM * region * uSkinFx.x * 0.85);
+      }
+      if (uSkinFx.z > 0.01) {
+        float lowerFace = smoothstep(0.052, 0.036, fp.y) * smoothstep(-0.03, -0.004, fp.y);
+        float lipGap = 1.0 - exp(-(fp.x * fp.x) / (2.0 * 0.019 * 0.019) - pow(fp.y - 0.029, 2.0) / (2.0 * 0.0075 * 0.0075));
+        float upper = smoothstep(0.05, 0.044, fp.y) * smoothstep(0.034, 0.038, fp.y) * smoothstep(0.03, 0.02, ax);
+        float sm = clamp(lowerFace * lipGap + upper, 0.0, 1.0) * smoothstep(0.06, 0.07, length(vec2(ax, fp.z)));
+        float grain = 0.7 + 0.3 * hsHash(floor(fp.xy / 0.0007));
+        col = mix(col, mix(col * 0.55, uHairColor * 0.8, 0.5), sm * uSkinFx.z * 0.55 * grain);
+      }
+    }
+  }
+  diffuseColor.rgb = col;
+}
+diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.08 + vec3(0.04, 0.03, 0.0), uSelect);
+`;
+
+const MPSKIN_VERT_HEAD = `${MSKIN_VERT_HEAD}attribute float aLips;\nvarying float vLips;\n`;
+const MPSKIN_VERT_COVER = MSKIN_VERT_COVER.replace('vInfo = aInfo;', 'vInfo = aInfo;\nvLips = aLips;');
+
+/** Per-character skin material of an MPFB body: the painted albedo recoloured to the chosen tone, face paint, push-in under garments. */
+export function createMpfbSkinMaterial(): { material: THREE.MeshStandardMaterial; uniforms: MpfbSkinUniforms } {
+  const material = new THREE.MeshStandardMaterial({ color: '#c99a78', roughness: 0.62, metalness: 0 });
+  const uniforms: MpfbSkinUniforms = {
+    uCoverTorso: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uCoverLimbs: { value: new THREE.Vector4(0, 10, 0, 0.03) },
+    uEyeColor: { value: new THREE.Color('#5e3b1f') },
+    uBrowColor: { value: new THREE.Color('#3d2a1f') },
+    uLipColor: { value: new THREE.Color('#b5525a') },
+    uHairColor: { value: new THREE.Color('#3d2a1f') },
+    uEye: { value: new THREE.Vector4() },
+    uBrow: { value: new THREE.Vector4() },
+    uMouth: { value: new THREE.Vector4() },
+    uSkinFx: { value: new THREE.Vector4() },
+    uSelect: { value: 0 },
+    uAlbedo: { value: null },
+    uSkinMean: { value: new THREE.Vector3(0.3986, 0.2295, 0.1613) },
+  };
+  patch(material, 'hs-mpfb-skin-v2', uniforms as unknown as Uniforms,
+    [['#include <common>', `#include <common>\n${MPSKIN_VERT_HEAD}`], ['#include <morphtarget_vertex>', MPSKIN_VERT_COVER]],
+    [['#include <common>', `#include <common>\n${PSKIN_FRAG_HEAD}`], ['#include <color_fragment>', PSKIN_FRAG_PAINT]]);
+  return { material, uniforms };
+}
+
+/** Uniforms of the MPFB eye material. */
+export interface MpfbEyeUniforms { uEyeColor: THREE.IUniform<THREE.Color> }
+
+/**
+ * Eyes of an MPFB body: the eyeball texture with its iris recoloured. The iris is the saturated part of the texture (the sclera is
+ * grey-pink); it takes the chosen eye colour times the painted light and dark structure of the iris.
+ */
+export function createMpfbEyeMaterial(map: THREE.Texture): { material: THREE.MeshStandardMaterial; uniforms: MpfbEyeUniforms } {
+  const material = new THREE.MeshStandardMaterial({ map, roughness: 0.15, metalness: 0 });
+  const uniforms: MpfbEyeUniforms = { uEyeColor: { value: new THREE.Color('#5e3b1f') } };
+  patch(material, 'hs-mpfb-eye-v1', uniforms as unknown as Uniforms, [],
+    [['#include <common>', '#include <common>\nuniform vec3 uEyeColor;'],
+      ['#include <map_fragment>', `#include <map_fragment>
+{
+  vec3 t = diffuseColor.rgb;
+  float mx = max(t.r, max(t.g, t.b)), mn = min(t.r, min(t.g, t.b));
+  float iris = smoothstep(0.3, 0.52, (mx - mn) / (mx + 1e-4));
+  float lum = dot(t, vec3(0.2126, 0.7152, 0.0722));
+  diffuseColor.rgb = mix(t, uEyeColor * clamp(lum / 0.2, 0.25, 1.7), iris);
+}`]]);
+  return { material, uniforms };
+}
+
+/** The iris of an MPFB body: a neutral grey texture (fibres, dark limbal ring, black pupil) multiplied by the eye colour. */
+export function createMpfbIrisMaterial(map: THREE.Texture): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({ map, roughness: 0.2, metalness: 0 });
+}
+
+/** Uniforms of the MPFB underwear material. */
+export interface MpfbUnderwearUniforms {
+  /** Top worn (0/1), bottom worn (0/1), height (bind space) that separates the top from the bottom. */
+  uBase: THREE.IUniform<THREE.Vector3>;
+}
+
+/** Underwear of an MPFB body: plain, and hidden per half (top, bottom) where a garment is worn over it. */
+export function createMpfbUnderwearMaterial(color: THREE.Color): { material: THREE.MeshStandardMaterial; uniforms: MpfbUnderwearUniforms } {
+  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0 });
+  const uniforms: MpfbUnderwearUniforms = { uBase: { value: new THREE.Vector3(0, 0, 1) } };
+  patch(material, 'hs-mpfb-underwear-v1', uniforms as unknown as Uniforms,
+    [['#include <common>', '#include <common>\nvarying float vUwY;'], ['#include <begin_vertex>', '#include <begin_vertex>\nvUwY = position.y;']],
+    [['#include <common>', '#include <common>\nvarying float vUwY;\nuniform vec3 uBase;'],
+      ['#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif ((vUwY > uBase.z ? uBase.x : uBase.y) > 0.5) discard;']]);
+  return { material, uniforms };
+}
+
+/** Brows and lashes of an MPFB body: the alpha texture tinted by the material colour, drawn after the skin without writing depth. */
+export function createMpfbHairlineMaterial(map: THREE.Texture): THREE.MeshStandardMaterial {
+  const material = new THREE.MeshStandardMaterial({ map, roughness: 0.8, metalness: 0, transparent: true, depthWrite: false });
+  // the painted strokes are thin: harden their alpha so they read at game distances
+  patch(material, 'hs-mpfb-hairline-v1', {}, [], [['#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.a = smoothstep(0.0, 0.5, diffuseColor.a);']]);
+  return material;
+}
+
+// ---------------------------------------------------------------------------------------------
 // Cloth
 // ---------------------------------------------------------------------------------------------
 

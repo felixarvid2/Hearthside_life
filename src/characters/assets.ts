@@ -9,13 +9,18 @@ import type { AiHairData } from './aiHair';
 import { HeadMap } from './headMap';
 import { buildMeshyMesh } from './meshyBody';
 import type { MeshyExtras } from './meshyBody';
+import type { MpfbExtras, MpfbPart, MpfbPrim } from './mpfbBody';
+import { MPFB_PARTS, assembleMpfb } from './mpfbBody';
 import type { RawBody, Vec3 } from './rig';
 import type { BodyTemplate } from './template';
 import { buildBodyTemplate } from './template';
 import { toGeometry } from './geometry';
 
-/** 'detailed': the scanned Meshy bodies (public/assets/characters/meshy_*.glb); 'classic': the procedural bodies. */
-export type CharacterStyle = 'detailed' | 'classic';
+/**
+ * 'mpfb': the natural MakeHuman bodies (public/assets/characters/mpfb_*.glb, labelled "Natural" in Settings); 'detailed': the
+ * scanned Meshy bodies (meshy_*.glb); 'classic': the procedural bodies.
+ */
+export type CharacterStyle = 'mpfb' | 'detailed' | 'classic';
 
 /** Textures and build data of a Meshy body frame. */
 export interface MeshyFrame {
@@ -24,12 +29,29 @@ export interface MeshyFrame {
   extras: MeshyExtras;
 }
 
+/** Textures, extra primitives and morph facts of an MPFB body frame (the skin primitive is `FrameAssets.skinGeometry`). */
+export interface MpfbFrame {
+  extras: MpfbExtras;
+  sex: 'f' | 'm';
+  skinMap: THREE.Texture;
+  /** Colour textures of the eyes (sclera), the iris (neutral grey, tinted by the eye colour), brows and lashes. */
+  maps: Partial<Record<'eyes' | 'iris' | 'brows' | 'lashes', THREE.Texture>>;
+  /** Shared geometry of the primitives drawn on top of the skin (same skeleton, same morph targets). */
+  parts: Partial<Record<Exclude<MpfbPart, 'skin'>, THREE.BufferGeometry>>;
+  /** Colour of the underwear material in the GLB. */
+  underwear: THREE.Color;
+  /** Names of every morph target the body's meshes may carry (body morphs, then the displacement-field sliders). */
+  morphNames: readonly string[];
+}
+
 export interface FrameAssets {
   frame: BodyFrame;
-  /** Cache key of everything generated for this frame ('a', 'b' for classic bodies; 'am', 'bm' for Meshy bodies). */
+  /** Cache key of everything generated for this frame ('a', 'b' for classic bodies; 'am', 'bm' for Meshy bodies; 'ap', 'bp' for MPFB). */
   key: string;
   /** Present for Meshy bodies: the skin shader recolours its albedo through the mask. */
   meshy: MeshyFrame | null;
+  /** Present for MPFB bodies: textures, the primitives on top of the skin and the morph target names. */
+  mpfb: MpfbFrame | null;
   raw: RawBody;
   template: BodyTemplate;
   /** Bind-pose bone hierarchy; cloned per character. */
@@ -84,14 +106,17 @@ export async function loadCharacterAssets(baseUrl = './assets/', style: Characte
  */
 export async function setCharacterStyle(assets: CharacterAssets, style: CharacterStyle): Promise<CharacterStyle> {
   let want = style;
-  if (!assets.sets[want]) {
+  // a style that cannot be loaded falls back to the next simpler one: mpfb -> detailed -> classic
+  const chain: CharacterStyle[] = style === 'mpfb' ? ['mpfb', 'detailed', 'classic'] : style === 'detailed' ? ['detailed', 'classic'] : ['classic'];
+  for (const [i, s] of chain.entries()) {
+    want = s;
+    if (assets.sets[s]) break;
     try {
-      assets.sets[want] = await loadFrameSet(assets.baseUrl, want);
+      assets.sets[s] = await loadFrameSet(assets.baseUrl, s);
+      break;
     } catch (e) {
-      if (want === 'classic') throw e;
-      console.warn('[characters] detailed bodies unavailable, using the classic bodies', e);
-      want = 'classic';
-      assets.sets.classic ??= await loadFrameSet(assets.baseUrl, 'classic');
+      if (i === chain.length - 1) throw e;
+      console.warn(`[characters] ${s} bodies unavailable, trying ${chain[i + 1]}`, e);
     }
   }
   assets.style = want;
@@ -100,6 +125,13 @@ export async function setCharacterStyle(assets: CharacterAssets, style: Characte
 }
 
 async function loadFrameSet(base: string, style: CharacterStyle): Promise<Record<BodyFrame, FrameAssets>> {
+  if (style === 'mpfb') {
+    // meshopt-compressed GLBs; the decoder (a small wasm module) is only fetched when this style is used
+    const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+    const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+    const [m, f] = await Promise.all(['mpfb_m', 'mpfb_f'].map((n) => loader.loadAsync(`${base}characters/${n}.glb`)));
+    return { a: mpfbFrameFromGltf('a', m!.scene), b: mpfbFrameFromGltf('b', f!.scene) };
+  }
   const loader = new GLTFLoader();
   const names = style === 'detailed' ? ['meshy_a', 'meshy_b'] : ['body_a', 'body_b'];
   const [a, b] = await Promise.all(names.map((n) => loader.loadAsync(`${base}characters/${n}.glb`)));
@@ -120,7 +152,7 @@ function frameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets {
   rootBone.updateMatrixWorld(true);
   sm.geometry.dispose();
   return {
-    frame, key: frame, meshy: null, raw, template, rootBone,
+    frame, key: frame, meshy: null, mpfb: null, raw, template, rootBone,
     boneNames: skeleton.bones.map((bn) => bn.name),
     boneInverses: skeleton.boneInverses.map((m) => m.clone()),
     skinGeometry: toGeometry(template.skinMesh, `skin-${frame}`),
@@ -157,10 +189,73 @@ function meshyFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAsset
   sm.geometry.dispose();
   mat.dispose();
   return {
-    frame, key: `${frame}m`, meshy: { albedo, mask, extras }, raw, template, rootBone,
+    frame, key: `${frame}m`, meshy: { albedo, mask, extras }, mpfb: null, raw, template, rootBone,
     boneNames: skeleton.bones.map((bn) => bn.name),
     boneInverses: skeleton.boneInverses.map((m) => m.clone()),
     skinGeometry: toGeometry(skinMesh, `skin-${frame}m`),
+  };
+}
+
+/**
+ * An MPFB body GLB: five skinned primitives (skin, underwear, eyes, brows, lashes) on the shared skeleton with the same morph targets,
+ * named in the mesh extras. The skin primitive is the body (template, garments and hair are fitted to it); the others are kept as
+ * shared geometry that every CharacterView draws as extra meshes on its own skeleton.
+ */
+function mpfbFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets {
+  const meshes: Partial<Record<MpfbPart, THREE.SkinnedMesh>> = {};
+  let extras: MpfbExtras | undefined;
+  scene.traverse((o) => {
+    if (o.userData?.mpfbBody) extras = o.userData.mpfbBody as MpfbExtras;
+    const sm = o as THREE.SkinnedMesh;
+    if (!sm.isSkinnedMesh) return;
+    const part = ((sm.material as THREE.Material).name ?? '').replace(/^mpfb_/, '') as MpfbPart;
+    if ((MPFB_PARTS as readonly string[]).includes(part)) meshes[part] = sm;
+  });
+  const skinMesh = meshes.skin;
+  if (!skinMesh || !extras) throw new Error(`mpfb body ${frame}: missing skin primitive or extras`);
+  const mats = Object.fromEntries(MPFB_PARTS.map((p) => [p, meshes[p]?.material as THREE.MeshStandardMaterial | undefined])) as Record<MpfbPart, THREE.MeshStandardMaterial | undefined>;
+  const skinMap = mats.skin?.map;
+  if (!skinMap) throw new Error(`mpfb body ${frame}: no skin texture`);
+  const maps: MpfbFrame['maps'] = {};
+  for (const p of ['eyes', 'iris', 'brows', 'lashes'] as const) { const t = mats[p]?.map; if (t) maps[p] = t; }
+  for (const t of [skinMap, ...Object.values(maps)]) { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 4; }
+  const prims = Object.fromEntries(MPFB_PARTS.filter((p) => meshes[p]).map((p) => [p, mpfbPrim(meshes[p]!)])) as Partial<Record<MpfbPart, MpfbPrim>>;
+  const skeleton = skinMesh.skeleton;
+  const raw = rawFromMesh(frame, skinMesh);
+  const { template, meshes: built, source } = assembleMpfb(raw, prims, extras);
+  const parts: MpfbFrame['parts'] = {};
+  for (const p of MPFB_PARTS) if (p !== 'skin' && built[p]) parts[p] = toGeometry(built[p]!, `${p}-${frame}p`);
+  const rootBone = skeleton.bones.find((bn) => !(bn.parent && (bn.parent as THREE.Bone).isBone)) ?? skeleton.bones[0]!;
+  rootBone.removeFromParent();
+  rootBone.updateMatrixWorld(true);
+  const underwear = mats.underwear?.color.clone() ?? new THREE.Color('#d9d3c9');
+  for (const sm of Object.values(meshes)) { sm.geometry.dispose(); (sm.material as THREE.Material).dispose(); }
+  return {
+    frame, key: `${frame}p`, meshy: null, mpfb: { extras, sex: extras.sex, skinMap, maps, parts, underwear, morphNames: source.ids }, raw, template, rootBone,
+    boneNames: skeleton.bones.map((bn) => bn.name),
+    boneInverses: skeleton.boneInverses.map((m) => m.clone()),
+    skinGeometry: toGeometry(built.skin!, `skin-${frame}p`),
+  };
+}
+
+/** A primitive of a loaded MPFB GLB as plain arrays (morph targets by name, relative). */
+function mpfbPrim(sm: THREE.SkinnedMesh): MpfbPrim {
+  const g = sm.geometry;
+  const raw = rawFromMesh('a', sm);
+  const targets: Record<string, Float32Array> = {};
+  const dict = sm.morphTargetDictionary ?? {};
+  for (const [name, i] of Object.entries(dict)) {
+    const a = g.morphAttributes.position?.[i];
+    if (a) targets[name] = attributeArray(a as THREE.BufferAttribute, 3);
+  }
+  const uv = g.getAttribute('uv');
+  // the `_LIPS` vertex attribute of the skin: three.js's GLTFLoader names it `_lips`
+  const lipsAttr = g.getAttribute('_lips');
+  let lips: Float32Array | null = null;
+  if (lipsAttr) { lips = new Float32Array(lipsAttr.count); for (let i = 0; i < lips.length; i++) lips[i] = lipsAttr.getX(i); }
+  return {
+    positions: raw.positions, normals: attributeArray(g.getAttribute('normal'), 3), uv: uv ? attributeArray(uv, 2) : null, lips,
+    joints: raw.joints, weights: raw.weights, index: raw.index, targets,
   };
 }
 
@@ -282,6 +377,11 @@ export function disposeCharacterAssets(assets: CharacterAssets): void {
       f.skinGeometry.dispose();
       f.meshy?.albedo.dispose();
       f.meshy?.mask.dispose();
+      if (f.mpfb) {
+        f.mpfb.skinMap.dispose();
+        for (const t of Object.values(f.mpfb.maps)) t.dispose();
+        for (const g of Object.values(f.mpfb.parts)) g.dispose();
+      }
     }
   }
 }

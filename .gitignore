@@ -31,3 +31,4 @@ __pycache__/
 .tokeneconomizer/**/errors.log
 .tokeneconomizer/**/run/
 .tokeneconomizer/**/tmp/
+dev/mpfb/game-shots/

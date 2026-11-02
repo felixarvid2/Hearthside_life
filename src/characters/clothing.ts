@@ -7,7 +7,7 @@
 // fragment-level cut-offs in bind space (see CutParams, applied by the cloth shader). Pure module.
 
 import type { GarmentDef } from '../content/types';
-import { BODY_PARAM_IDS, bodyDeltas } from './bodyShape';
+import { bodyMorphIds, morphDeltas } from './bodyShape';
 import { hullRadii, sampleProfile } from './fit';
 import type { MeshData } from './meshData';
 import { addVertex, computeSmoothNormals, emptyMesh, mirrorMesh, stitchRings, sweep, v3 } from './meshData';
@@ -265,7 +265,7 @@ function shellRings(t: BodyTemplate, g: Grid, part: 'torso' | 'leg' | 'arm', ss:
 // ---------------------------------------------------------------------------------------------
 
 function morphsAt(t: BodyTemplate, p: Vec3, skin: Skin): Record<string, Vec3> {
-  return bodyDeltas(t.ctx, p, skin) as unknown as Record<string, Vec3>;
+  return morphDeltas(t.ctx, p, skin);
 }
 
 function emitRings(m: MeshData, t: BodyTemplate, rings: Ring[], panel: number, flip: boolean, closed = true): number[][] {
@@ -281,7 +281,7 @@ function emitRings(m: MeshData, t: BodyTemplate, rings: Ring[], panel: number, f
   return out;
 }
 
-function newMesh(): MeshData { return emptyMesh(CLOTH_ATTRS, BODY_PARAM_IDS); }
+function newMesh(t: BodyTemplate): MeshData { return emptyMesh(CLOTH_ATTRS, bodyMorphIds(t.ctx)); }
 
 function mirrored(t: BodyTemplate, m: MeshData): MeshData {
   return mirrorMesh(m, (j) => t.boneMirror[j] ?? j, { aCloth: [0] });
@@ -354,7 +354,7 @@ function legPieces(m: MeshData, t: BodyTemplate, yHem: number, thickness: number
       });
     }
   }
-  const left = newMesh();
+  const left = newMesh(t);
   emitRings(left, t, withRim(rings, 'last', [0, -1, 0], rim), panel, true);
   merge(m, left);
   merge(m, mirrored(t, left));
@@ -378,7 +378,7 @@ function sleevePieces(m: MeshData, t: BodyTemplate, xEnd: number, thickness: num
     slope: lerp(0.5, 0.0, clamp(loose, 0, 1)),
     wave: shape.puff ? (s) => shape.puff! * Math.abs(Math.sin((Math.PI * Math.abs(s)) / 0.078)) * smoothstep(x0 + 0.02, x0 + 0.08, s) : undefined,
   });
-  const left = newMesh();
+  const left = newMesh(t);
   emitRings(left, t, withRim(rings, 'last', [1, 0, 0], rim), panel, false);
   merge(m, left);
   merge(m, mirrored(t, left));
@@ -657,10 +657,13 @@ function strapZone(t: BodyTemplate, strap: number): { inner: number; outer: numb
 }
 
 /** Builds the geometry, body coverage and shader cut parameters of one garment for a body template. */
+/** Least drape of an outer layer's torso on bodies with authored morphs (0.85 is the loosest layer underneath, the hoodie). */
+const OUTER_DRAPE_MIN = 0.9;
+
 export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
   const b = def.build;
   const lm = t.lm;
-  const m = newMesh();
+  const m = newMesh(t);
   const shape = str(b, 'shape', 'shirt');
   const layerT = def.layer === 'outer' ? 0.019 : def.layer === 'top' ? 0.011 : def.layer === 'full' ? 0.0095 : 0.0075;
   const thickness = num(b, 'thickness', layerT);
@@ -676,7 +679,10 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     const neck = neckline(t, neckName);
     const yTop = Math.min(Math.max(neck.backY, heightAtHalfWidth(t, 0.095)) + 0.03, (t.torso.s[t.torso.rows - 1] as number) - 0.01);
     const puff = num(b, 'puff', 0);
-    torsoPiece(m, t, { yBottom: yHem, yTop, thickness: bodyT, drape: num(b, 'drape', 0.5), overBottoms: def.layer === 'top' || def.layer === 'outer', rim: hemRim && !noHem ? hemRim : 0, puff });
+    // On a body with a deep waist (MPFB) a loose layer underneath hangs straight from the chest: an outer layer must hang at least as
+    // loosely, or what is under it shows through at the waist.
+    const drape = def.layer === 'outer' && t.ctx.source ? Math.max(num(b, 'drape', 0.5), OUTER_DRAPE_MIN) : num(b, 'drape', 0.5);
+    torsoPiece(m, t, { yBottom: yHem, yTop, thickness: bodyT, drape, overBottoms: def.layer === 'top' || def.layer === 'outer', rim: hemRim && !noHem ? hemRim : 0, puff });
     cuts.neck = [neck.backY, neck.depth, neck.halfW, neck.shape];
     const sleeve = num(b, 'sleeve', 0);
     let xEnd = 0;
@@ -797,7 +803,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     cover.armMaxX = xEnd;
     if (leg > 0) { cover.torso.yMin = lm.crotchY - 0.05; cover.legMinY = yHem; }
   } else if (shape === 'shoe') {
-    const left = newMesh();
+    const left = newMesh(t);
     shoePiece(left, t, b);
     const style = str(b, 'style', 'sneaker');
     cuts.hem[0] = num(b, 'sole', 0.02);

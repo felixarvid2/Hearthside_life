@@ -3,7 +3,7 @@
 // the same displacement fields the garments use (bodyShape.ts, headShape.ts) so clothing follows the body exactly.
 // The build step (tools/build-meshy-bodies.mts) writes the geometry; this module derives the rest at load. Pure.
 
-import { BODY_PARAM_IDS, bodyDeltas } from './bodyShape';
+import { BODY_PARAM_IDS, morphDeltas } from './bodyShape';
 import type { HeadMap, MeshyHeadInfo } from './headMap';
 import { sampleRadius } from './headMap';
 import { EAR, FACE_LAYOUT as FL, HEAD_OFFSET, HEAD_SCALE, HEAD_SCULPT_IDS, headDeltas } from './headShape';
@@ -12,7 +12,7 @@ import { emptyMesh } from './meshData';
 import type { RawBody, Skin, Vec3 } from './rig';
 import { dominantBone, smoothstep } from './rig';
 import type { BodyTemplate } from './template';
-import { PART, SKIN_MORPHS } from './template';
+import { PART } from './template';
 
 /** Stored in the extras of the body node of meshy_a.glb / meshy_b.glb. */
 export interface MeshyExtras {
@@ -53,7 +53,8 @@ export function paintDeltas(p: Vec3): Record<(typeof PAINT_MORPH_IDS)[number], V
 /** Ear growth (parameter earSize at +1): the ears of the scanned head stick out of the skull radius; they scale about the ear anchor. */
 function earDelta(p: Vec3, local: Vec3, table: MeshyHeadInfo['table']): Vec3 {
   const out = Math.hypot(p[0] - table.axisX, p[2] - table.axisZ) - sampleRadius(table, Math.atan2(p[0] - table.axisX, p[2] - table.axisZ), p[1]);
-  const w = smoothstep(0.004, 0.012, out) * smoothstep(0.02, 0.05, Math.abs(local[0]));
+  // only the sides of the head: the nose and the corners of the mouth also stick out of the skull radius on some heads
+  const w = smoothstep(0.004, 0.012, out) * smoothstep(0.02, 0.05, Math.abs(local[0])) * (1 - smoothstep(0.015, 0.04, local[2]));
   if (w <= 0) return [0, 0, 0];
   const a: Vec3 = [Math.sign(local[0]) * (EAR.x - 0.004), EAR.y, EAR.z];
   return [(local[0] - a[0]) * 0.24 * w, (local[1] - a[1]) * 0.24 * w, (local[2] - a[2]) * 0.24 * w];
@@ -87,16 +88,22 @@ export interface MeshyBuildInput {
   uv: Float32Array;
   template: BodyTemplate;
   headMap: HeadMap;
+  /**
+   * MPFB bodies: the body morph ids and where their deltas come from for vertex i (its own authored targets). Without these the
+   * displacement fields of `template.ctx` provide BODY_PARAM_IDS.
+   */
+  body?: { ids: readonly string[]; at: (i: number, p: Vec3, skin: Skin) => Record<string, Vec3> };
 }
 
 /** The skin MeshData of a Meshy body: attributes, body morphs (all 10 sliders) and face sculpt morphs. */
 export function buildMeshyMesh(inp: MeshyBuildInput): MeshData {
   const { raw, normals, uv, template: t, headMap } = inp;
   const n = raw.positions.length / 3;
-  const m = emptyMesh(SKIN_ATTRS_MESHY, [...SKIN_MORPHS, ...PAINT_MORPH_IDS]);
+  const bodyIds = inp.body?.ids ?? BODY_PARAM_IDS;
+  const m = emptyMesh(SKIN_ATTRS_MESHY, [...bodyIds, ...HEAD_SCULPT_IDS, ...PAINT_MORPH_IDS]);
   const chinY = headMap.chinM;
   const O = t.headOrigin;
-  const morphNames = [...BODY_PARAM_IDS, ...HEAD_SCULPT_IDS, ...PAINT_MORPH_IDS] as string[];
+  const morphNames = [...bodyIds, ...HEAD_SCULPT_IDS, ...PAINT_MORPH_IDS] as string[];
   for (let i = 0; i < n; i++) {
     const p: Vec3 = [raw.positions[i * 3] as number, raw.positions[i * 3 + 1] as number, raw.positions[i * 3 + 2] as number];
     const skin: Skin = {
@@ -120,7 +127,7 @@ export function buildMeshyMesh(inp: MeshyBuildInput): MeshData {
       theta = Math.atan2(local[0], local[2]);
     }
     m.attrs.aFace!.data.push(local[0], local[1], local[2]);
-    const body = bodyDeltas(t.ctx, p, skin) as unknown as Record<string, Vec3>;
+    const body = inp.body ? inp.body.at(i, p, skin) : morphDeltas(t.ctx, p, skin);
     const head = hw > 0 ? ({ ...headDeltas(local, theta), ...paintDeltas(local), earSize: earDelta(p, local, headMap.info.table) } as unknown as Record<string, Vec3>) : null;
     for (const id of morphNames) {
       const arr = m.morphs[id] as number[];
