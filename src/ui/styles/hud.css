@@ -69,11 +69,28 @@ body.is-landscape .clock-day { font-size: 0.85rem; }
 .funds-btn .icon-wrap { color: var(--good); }
 .funds-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 .funds-amount { font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.funds-short { display: none; }
 .funds-tag { font-size: 0.75rem; font-weight: 700; color: #1f5f57; }
 .hud-row2 .funds-btn { box-shadow: var(--shadow); min-height: 48px; }
 .feed-badge { position: absolute; top: 3px; right: 3px; }
 .feed-btn[aria-expanded='true'], .funds-btn[aria-expanded='true'] { background: var(--paper-3); box-shadow: inset 0 -3px 0 var(--accent); }
 body.is-portrait .feed-btn { flex-direction: column; gap: 2px; min-width: 56px; min-height: 52px; font-size: 0.75rem; padding: 4px 8px; }
+
+/* Phone landscape: the top bar holds Menu, clock, speed, Map, Feed and funds in about 820 px. Funds drop their cents (the aria-label keeps
+   them), Map and Feed keep just their icons (their labels are for screen readers), and the clock may shrink (its day text is cut with an ellipsis). */
+body.is-landscape.is-compact .funds-full { display: none; }
+body.is-landscape.is-compact .funds-short { display: inline; }
+body.is-landscape.is-compact .clock { flex: 0 1 auto; min-width: 0; overflow: hidden; justify-content: flex-start; }
+body.is-landscape.is-compact .clock-time { flex: none; }
+body.is-landscape.is-compact .clock-day { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+body.is-landscape.is-compact .clock-paused { flex: none; }
+body.is-landscape.is-compact .funds-amount { white-space: nowrap; }
+@media (max-width: 720px) {
+  /* the pause button in the speed group shows the state too */
+  body.is-landscape.is-compact .clock.is-paused .clock-paused { display: none; }
+  body.is-landscape.is-compact .feed-btn .hud-btn-label { display: none; }
+  body.is-landscape.is-compact .feed-btn { padding: 0; width: var(--tap); }
+}
 
 /* household strip */
 .hud-strip { min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; touch-action: pan-x; flex: 0 1 auto; }

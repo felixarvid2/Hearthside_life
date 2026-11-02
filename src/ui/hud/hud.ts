@@ -5,7 +5,7 @@
 
 import type { CutawayMode, GameMode } from '../../game/api';
 import { DAY_NAMES, dayIndex, formatClock, formatDay, weekday, type Speed } from '../../core/clock';
-import { formatMoney } from '../../core/money';
+import { formatMoney, formatMoneyShort } from '../../core/money';
 import { activeHousehold } from '../../core/state';
 import { h, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
@@ -80,7 +80,10 @@ export function createHud(sh: Shell): Hud {
   const speedGroup = h('div', { class: 'speed', role: 'group', ariaLabel: 'Game speed' }, ...speedBtns);
   const pausedNote = h('div', { class: 'paused-note', role: 'status' }, icon('pause', 16), h('span', { class: 'paused-text' }));
   pausedNote.hidden = true;
-  const fundsAmount = h('span', { class: 'funds-amount' });
+  // Two spellings of the amount: the full one, and whole dollars for narrow bars (phone landscape; CSS picks one).
+  const fundsFull = h('span', { class: 'funds-full' });
+  const fundsShort = h('span', { class: 'funds-short' });
+  const fundsAmount = h('span', { class: 'funds-amount' }, fundsFull, fundsShort);
   const fundsTag = h('span', { class: 'funds-tag', text: 'Free building' });
   fundsTag.hidden = true;
   const fundsBtn = h('button', { type: 'button', class: 'funds-btn' }, icon('money', 20), h('span', { class: 'funds-text' }, fundsAmount, fundsTag));
@@ -193,7 +196,8 @@ export function createHud(sh: Shell): Hud {
     const fk = `${hh?.funds ?? 0}|${st.settings.unlimitedFunds}`;
     if (fk !== lastFunds) {
       lastFunds = fk;
-      setText(fundsAmount, formatMoney(hh?.funds ?? 0));
+      setText(fundsFull, formatMoney(hh?.funds ?? 0));
+      setText(fundsShort, formatMoneyShort(hh?.funds ?? 0));
       fundsTag.hidden = !st.settings.unlimitedFunds;
       const label = `Household funds ${formatMoney(hh?.funds ?? 0)}${st.settings.unlimitedFunds ? ', unlimited building funds' : ''}. Open the ledger`;
       fundsBtn.setAttribute('aria-label', label);

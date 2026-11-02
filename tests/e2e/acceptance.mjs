@@ -736,7 +736,24 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
   }
   T.check(S, `${label}: tap point picks the intended thing`, keyOf(pick) === id, JSON.stringify(pick));
   await T.tapAt(p.x, p.y);
-  try { await T.page.waitForSelector('.ctx-menu:not([hidden]) .ctx-item', { timeout: 4000 }); } catch { T.bad(S, `${label}: context menu opens on tap`, 'no .ctx-menu'); return null; }
+  try { await T.page.waitForSelector('.ctx-menu:not([hidden]) .ctx-item', { timeout: 4000 }); } catch {
+    // what the game made of the tap: the selection, what is under the point now, any toast ("Nothing ... can do with that"), open panels
+    const why = await T.page.evaluate(([x, y, kind, oid]) => {
+      const st = window.hearthside.debug.state();
+      const top = document.elementFromPoint(x, y);
+      return {
+        options: kind === 'object' ? window.hearthside.game.options(window.hearthside.game.selected(), { kind: 'object', objectId: oid }).map((o) => `${o.label}: ${o.enabled ? 'ok' : o.reason}`) : null,
+        mode: window.hearthside.game.mode(), selected: window.hearthside.game.selected?.() ?? null, pickNow: window.__t.pick(x, y),
+        top: top ? (top.id || top.className || top.tagName) : null, speed: st.clock.speed,
+        toasts: [...document.querySelectorAll('.toast, [role="status"]')].map((t) => t.textContent?.trim()).filter(Boolean),
+        panels: [...document.querySelectorAll('.panel:not([hidden])')].map((t) => t.className), ctxHidden: document.querySelector('.ctx-menu')?.hidden ?? null,
+        people: Object.values(st.people).filter((q) => q.householdId === st.activeHouseholdId).map((q) => ({ id: q.id, loc: q.location.kind === 'lot' ? [q.location.x, q.location.z] : q.location.kind, queue: q.queue.map((a) => `${a.interactionId}/${a.phase}/${a.source}/${a.target?.objectId ?? ''}`) })),
+      };
+    }, [p.x, p.y, kind, id]).catch((e) => String(e));
+    log(`${label}: no menu after the tap at ${Math.round(p.x)},${Math.round(p.y)}:`, JSON.stringify(why));
+    await T.shot(`${label.replace(/\W+/g, '-')}-no-menu`).catch(() => undefined);
+    T.bad(S, `${label}: context menu opens on tap`, 'no .ctx-menu'); return null;
+  }
   await T.page.waitForTimeout(250);
   await T.frames(2);
   const items = await T.page.evaluate(() => [...document.querySelectorAll('.ctx-menu .ctx-item')].map((b) => ({ label: b.querySelector('.ctx-label')?.textContent?.trim(), disabled: b.disabled, reason: b.querySelector('.ctx-reason')?.textContent?.trim() ?? null })));
@@ -2168,19 +2185,29 @@ async function stepEconomy(T) {
   await closeAnyPanel(T);
   // A member who is already busy (an autonomous nap after a long day, or any queued action) would push the
   // freelance job behind that action; pick an idle one, waiting until somebody is free if needed.
+  // The member must be idle and the computer must be usable for them: a menu whose entries are all "unavailable" (the computer is
+  // in use, or somebody has a use point reserved) folds them away and the tap cannot be tested.
   const idleHomeMember = () => {
     const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
     const lot = st.lots[st.activeLotId];
     const computer = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop');
+    const usable = (p) => !!computer && window.hearthside.game.options(p.id, { kind: 'object', objectId: computer.id }).some((o) => o.enabled);
     const p = hh.memberIds.map((id) => st.people[id])
-      .filter((x) => x.location.kind === 'lot' && x.queue.length === 0)
+      .filter((x) => x.location.kind === 'lot' && x.queue.length === 0 && usable(x))
       .sort((a, b) => (b.needs.energy - a.needs.energy) || (b.needs.fun - a.needs.fun))[0];
     return { person: p?.id ?? null, computer: computer?.id ?? null };
   };
+  const whyBusy = () => page.evaluate(() => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; const lot = st.lots[st.activeLotId];
+    const computer = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop');
+    return hh.memberIds.map((id) => { const p = st.people[id]; return { name: p.firstName, loc: p.location.kind === 'lot' ? [p.location.x, p.location.z] : p.location.kind, queue: p.queue.map((a) => `${a.interactionId}/${a.phase}/${a.source}/${a.target?.objectId ?? ''}`), options: computer && p.location.kind === 'lot' ? window.hearthside.game.options(id, { kind: 'object', objectId: computer.id }).map((o) => `${o.label}: ${o.enabled ? 'ok' : o.reason}`) : null }; });
+  });
   let worker = await page.evaluate(idleHomeMember);
   if (!worker.person) {
-    await runUntil(T, 4 * 600, `(() => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; const lot = st.lots[st.activeLotId]; return !!Object.values(lot.objects).find((o) => o.defId === 'computer-desktop') && hh.memberIds.some((id) => { const p = st.people[id]; return p.location.kind === 'lot' && p.queue.length === 0; }); })()`);
+    log('nobody can use the computer right now:', JSON.stringify(await whyBusy()));
+    await runUntil(T, 4 * 600, `(() => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; const lot = st.lots[st.activeLotId]; const c = Object.values(lot.objects).find((o) => o.defId === 'computer-desktop'); return !!c && hh.memberIds.some((id) => { const p = st.people[id]; return p.location.kind === 'lot' && p.queue.length === 0 && g.options(id, { kind: 'object', objectId: c.id }).some((o) => o.enabled); }); })()`);
     worker = await page.evaluate(idleHomeMember);
+    if (!worker.person) log('still nobody after waiting:', JSON.stringify(await whyBusy()));
   }
   T.check(S, 'a household member is home and the computer is available', !!worker.person && !!worker.computer, JSON.stringify(worker));
   if (worker.person && worker.computer) {

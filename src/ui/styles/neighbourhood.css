@@ -17,6 +17,8 @@ body.is-portrait .map-btn { flex-direction: column; gap: 2px; min-width: 56px; m
 /* The Map button joins the landscape top bar: on phone-sized landscape the Menu button keeps just its icon (it has a label for screen readers). */
 body.is-landscape.is-compact .menu-btn .hud-btn-label { display: none; }
 body.is-landscape.is-compact .menu-btn { padding: 0; width: var(--tap); }
+body.is-landscape.is-compact .map-btn { padding: 0; width: var(--tap); }
+body.is-landscape.is-compact .map-btn .hud-btn-label { display: none; }
 body.is-landscape.is-compact .hud-trip { max-width: min(320px, 38vw); }
 
 /* ---------- Away card ---------- */
