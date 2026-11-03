@@ -3192,17 +3192,23 @@ async function stepExterior(T) {
     // a row z where the line (the h edge row z, every x) crosses no wall, and a gate column x whose tiles two steps each way are free
     const lineClear = (z) => { for (let x = 0; x < lot.width; x++) if (lot.walls[`0:h:${x}:${z}`]) return false; return true; };
     const colFree = (x, z) => { for (let dz = -2; dz <= 2; dz++) if (blocked.has(`${x},${z + dz}`)) return false; for (let dz = -2; dz <= 1; dz++) if (lot.walls[`0:h:${x}:${z + dz}`]) return false; return true; };
-    // no floor tile of the home (any room, on the ground floor) in the two tile rows the line runs between, so the line
-    // never divides a room (a full run has built rooms in the yard); the yard south of the house comes first, then the north strip
-    const floorRows = new Set(Object.keys(lot.floors).filter((k) => k.startsWith('0:')).map((k) => Number(k.split(':')[2])));
-    const roomFree = (z) => { for (let r = z - 1; r <= z + 2; r++) if (floorRows.has(r)) return false; return true; };
-    for (const z of [19, 20, 21, 18, 17, 16, 2, 1, 3]) {
-      if (z + 2 >= lot.depth || z < 3 && z - 2 < 0 || !lineClear(z) || !roomFree(z)) continue;
+    // never divide a room: no walled floor tile (a floor with a wall on one of its sides; bare path tiles are fine) in the tile rows
+    // the line runs between or the rows of its two walking tiles. A full run builds rooms in the north strip or the yard.
+    const wallRows = new Set();
+    for (const k of Object.keys(lot.floors)) {
+      const [lv, x, z] = k.split(':').map(Number);
+      if (lv !== 0) continue;
+      if (lot.walls[`0:h:${x}:${z}`] || lot.walls[`0:h:${x}:${z + 1}`] || lot.walls[`0:v:${x}:${z}`] || lot.walls[`0:v:${x + 1}:${z}`]) wallRows.add(z);
+    }
+    const roomFree = (z) => { for (let r = z - 1; r <= z + 2; r++) if (wallRows.has(r)) return false; return true; };
+    for (const z of [19, 20, 21, 18, 17, 16]) {
+      if (z + 2 >= lot.depth || !lineClear(z) || !roomFree(z)) continue;
       for (const x of [12, 11, 13, 10, 14, 9, 15, 8, 16]) if (colFree(x, z)) return { z, x };
     }
     return { z: -1, x: -1 };
   });
   const row = pick.z, GX = pick.x;
+  if (process.env.EXT_DEBUG) { const dump = await page.evaluate(() => { const st = window.hearthside.debug.state(); const l = st.lots[st.activeLotId]; return { entry: l.entry, w: l.width, d: l.depth, levels: l.levels, walls: Object.keys(l.walls), floors: Object.keys(l.floors), objs: Object.values(l.objects).map((o) => [o.defId, o.x, o.z, o.rot, o.level]) }; }); (await import('node:fs')).writeFileSync(`/tmp/ext-debug-${T.vpInfo.w}.json`, JSON.stringify({ pick, ...dump })); }
   T.check(S, 'there is a clear yard row and gate column for a fence line', row > 0 && GX >= 0, JSON.stringify(pick));
   const Z0 = row;
   const f0 = await snap();
