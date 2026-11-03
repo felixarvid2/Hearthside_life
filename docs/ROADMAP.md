@@ -6,7 +6,7 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-7 complete** (verified 2026-11-02, see CONTINUATION.md). Next: **Milestone 8 - Family and life stages**.
+**Milestones 1-9 complete** (M1-7 verified 2026-11-02; M8 and M9 on PR #4, see CONTINUATION.md). Next: **Milestone 10 - Complete catalogs**.
 
 ## Completed-project targets (brief section 2)
 
@@ -63,6 +63,20 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 - One neighbour household visits; the neighbourhood view and lot travel are M7.
 - Multi-floor data exists (`level` everywhere) but only the ground floor is built and navigated (M9).
 
+## Milestone 8 and 9 (complete, on PR #4)
+
+- **Milestone 8, family and life stages.** Seven life stages (baby, toddler, child, teen, young adult, adult, elder), each with its
+  own MPFB body (lazy-loaded, UAL skeleton scaled per stage, elders stoop, babies lie in a crib or are carried). Aging is off, long,
+  normal or custom per stage, with an optional elder end of life. Birthdays, school with performance, homework and report cards,
+  a babysitter, adoption from the computer, moving out (household split), age-gated interactions and family socials, six family
+  furniture models, portraits by life stage. Acceptance step 10 (`stepFamily`).
+- **Milestone 9, multiple floors and exteriors.** Levels 0-2 with upper-floor support rules and balconies up to 2 tiles out. Stairs
+  are objects that cut a stairwell in the floor above (undo restores it); people path across levels and never stop on a stair.
+  HUD level selector and a two-storey Hazelbank loft. 12 roof styles and 11 finishes with auto roof. 24 fence designs (123 variants)
+  and 12 gates (64 variants); a fence that would seal someone in is refused with "Add a gate". 12 terrain paints. 16 garden objects,
+  10 crops, planting, watering, weeding, daily growth and harvest at 75 % of value. 9 straight and 4 spiral stairs in the catalogue.
+  Saves stay at schema 1 with optional fields. Acceptance steps 11 (`stepFloors`, `stepExterior`) and `--steps=12`.
+
 ## Unfinished systems after M1 (by dependency)
 
 1. Wall/room/door drawing tools (pure systems done, see ARCHITECTURE.md "Build mode construction"; Build-mode UI and rendering pending); move/resize/duplicate rooms still open (M2).
@@ -72,8 +86,8 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 5. Done in M5 (see ARCHITECTURE.md "Relationships and events"): romance ladder, dates, events with invitations, jealousy after exclusivity. Open: weddings as events, group conversations, gifts as objects. Dates are still planned at home.
 6. Done in M6 (see ARCHITECTURE.md "Careers and economy"): seven careers with promotions/demotions and work effort, freelance income, weekly bills with late fees and utility cut-offs, auto-pay, and career/wealth aspirations. Open: renting vs owning beyond property tax, more careers and aspiration stages (M11).
 7. Done in M7 (see ARCHITECTURE.md "Neighbourhood"): neighbourhood map, 14 lot records (target 12), including 2 empty homes, 6 venues, 4 NPC households, household switching, off-lot reconciliation. Open: community events, NPC household movement and job changes, furniture moving with a household (M8 and later).
-8. Life stages, school, aging, adoption (M8).
-9. Upper floors, stairs, roofs, fences, gardens, balconies (M9).
+8. Done in M8 (see ARCHITECTURE.md "Family and life stages"): seven life stages, aging, birthdays, school, babysitter, adoption, moving out. Open: teen jobs, children in town households, the sitter for other households, more life-stage detail (see CONTINUATION.md).
+9. Done in M9 (see ARCHITECTURE.md "Floors", "Exterior"): levels 0-2, stairs, balconies, roofs, fences and gates, terrain paint, gardens. Open: the spiral and length-4 stairs are less tested.
 10. Seasons, weather, pools (M12).
 
 ## Optional expansions (not part of the required plan)

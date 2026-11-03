@@ -94,3 +94,43 @@ Portrait 390x844, landscape 844x390 and desktop 1280x720:
 - Freelance: at the computer, Write an Article / Write a Book / Take a Programming Gig complete and pay once (feed line "sold"); at
   the easel, Sell a Painting; at the piano, Busk. Higher skill pays more.
 - Aspirations: Bookworm after buying (not starting with) two bookcases; stage rewards appear once in the ledger.
+
+## Manual browser checks, Milestone 8 (emulation only; no named device)
+
+Portrait 390x844, landscape 844x390 and desktop 1280x720:
+
+- Life stages: a household with a baby, a toddler, a child, a teen, a young adult and an elder shows each person at their own
+  size and body. A baby lies in a crib or is carried; an elder stoops; portraits show the life stage.
+- Aging (Settings > aging): off never ages anyone; long, normal and custom (custom shows per-stage days) age a child to a teen on
+  schedule. Elder end of life, when on, removes an elder cleanly; the last grown-up of a household with children is kept.
+- Birthdays: the birthday shows once per person and stage (event, memory, Birthday moodlet, a family feed entry). "Age up now"
+  at a cake works once per day.
+- School: a child or teen leaves at 08:00 and comes back at 14:00 (teens 15:00); no school in the holiday week. Not leaving by 09:30
+  is a missed day. The School tab shows performance and the weekly report card; homework can be done at a desk, table or computer
+  once per school day.
+- Babysitter: a need at zero for three hours calls the sitter once ($25, debt allowed).
+- Adoption: at the computer, adopt a child; the child joins the household and appears in the Family tab.
+- Moving out: the split dialog moves an adult out with a cost; the new household keeps its own funds and can be switched to.
+- Age-gated interactions: a toddler sees only the interactions that list toddlers; social menus hide or disable entries the
+  age rules do not allow, with a reason.
+- Family view: the Family tab shows parents, children, siblings and grandparents, and the family dialogs open from it.
+
+## Manual browser checks, Milestone 9 (emulation only; no named device)
+
+Portrait 390x844, landscape 844x390 and desktop 1280x720:
+
+- Floors: Build mode builds a floor on level 1 only over a wall of level 0 or a floored room; a floor with no support is refused with
+  a reason. A balcony more than 2 tiles from supported floor is refused.
+- Balcony railing: a balcony edge without a fence or wall shows a warning, and the build still goes ahead.
+- Stairs: the Build panel's Stairs tab places a straight stair; the floor above gets a stairwell, and undo restores the floor. Erase
+  stairs removes it. People walk up and down and do not stop on the stair. A spiral stair is placed and walked the same way.
+- Level selector: the HUD selector switches floors; the people, objects and walls of the chosen floor are shown and the upper
+  floors are hidden. Following a person on another floor switches the floor. Hazelbank loft is reachable by the stair.
+- Roofs: Roof tool places a roof over a rectangle on a level with a style and a finish; the price per m2 changes with style and
+  finish. The Roof toggle shows and hides roofs. Auto roof covers enclosed rooms with no floor above.
+- Fences and gates: a fence run places one design per drag; a fence that would seal someone in or cut off part of the house is
+  refused with "Add a gate". A gate lets people through.
+- Terrain: paint the lot ground with one of the 12 paints; painting back to the lot's own ground removes the paint.
+- Garden: plant seeds in the vegetable patch, water, weed, and harvest after growth; the harvest sells at 75 % of the market value
+  once.
+- Camera bar: the 7 buttons fit and can be tapped at 390 px. Phones narrower than 390 px were not measured.
