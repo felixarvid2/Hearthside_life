@@ -2,7 +2,7 @@
 
 Generated with `npm run content:check -- --markdown` (tools/content-report.ts). Counts are **distinct designs**; palettes, swatches and colours are variants and never counted as designs. Entries with status `dev` are not selectable in the game and are not counted toward targets.
 
-Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met, as are the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows), the Milestone 3 character minimums (24 hairstyles, 48 garments, 12 accessories, 20 traits), the Milestone 4 furniture minimum (100 distinct furniture designs), the Milestone 5 social minimum (24 social interactions) and the Milestone 6 career minimum (6 careers with 10 levels each, 10 ready skills and 6 aspirations). Milestone 8 adds six family furniture models (bassinet, changing table, high chair, potty chair, toddler bed, birthday cake); Milestone 9 adds 13 staircases (9 straight, 4 spiral), 12 roof styles with 11 finishes, 24 fence designs, 12 gates, 12 terrain paints, 16 garden objects and 10 crops (see "Milestone 9 exterior").
+Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met, as are the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows), the Milestone 3 character minimums (24 hairstyles, 48 garments, 12 accessories, 20 traits), the Milestone 4 furniture minimum (100 distinct furniture designs), the Milestone 5 social minimum (24 social interactions) and the Milestone 6 career minimum (6 careers with 10 levels each, 10 ready skills and 6 aspirations). Milestone 8 adds six family furniture models (bassinet, changing table, high chair, potty chair, toddler bed, birthday cake); Milestone 9 adds 13 staircases (9 straight, 4 spiral), 12 roof styles with 11 finishes, 24 fence designs, 12 gates, 12 terrain paints, 16 garden objects and 10 crops (see "Milestone 9 exterior"). After M8, teens have 4 part-time jobs with 3 levels each.
 
 Milestone 7 adds ten venue furnishings (park tree, shrub, fountain, playground slide and swing set, service counter, produce stall, vending machine, study set, locker bank) and fourteen venue activities; the neighbourhood lots they furnish are listed in docs/ARCHITECTURE.md. Full-project targets are delivered in Milestone 10.
 
@@ -66,6 +66,7 @@ garment variants = solid plus allowed patterns per ready garment (colours are fr
 | aspirations | 8 | 0 | 24 stages | - | - | - | - | 6 | 12 |
 | skills | 13 | 6 | - | - | - | - | - | 10 | 16 |
 | careers (10 levels) | 7 | 0 | 70 levels | 1 | - | - | - | 6 | 12 |
+| part-time jobs (3 levels) | 4 | 0 | 12 levels | - | - | - | - | - | 4 |
 | recipes | 6 | 0 | - | - | - | - | - | - | - |
 | moodlets | 107 | 0 | - | - | - | - | - | - | - |
 | packs | 12 | 0 | - | - | - | - | - | - | 12 |
