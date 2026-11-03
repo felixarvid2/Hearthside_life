@@ -50,3 +50,5 @@ await stack(['faces_b', 'faces_a'], { left: 0, top: 0, width: 1500, height: 360 
 await stack(['sit_b', 'sit_b_side', 'sit_a', 'sit_a_side'], LINE, 1000, 'stages_sitting.jpg');
 await stack(['walk_b', 'walk_b_side', 'walk_a', 'walk_a_side'], LINE, 1000, 'stages_walking.jpg');
 await grid(['held_f_front', 'held_f_side', 'held_m_walk', 'held_teen_front', 'crib_baby', 'crib_baby_dressed', 'bed_child', 'bed_elder'], 4, { left: 0, top: 0, width: 640, height: 700 }, 300, 'stages_held_crib.jpg', 76);
+// in the real game (dev/mpfb/shootGame.mjs): a household with a child, a baby held by an adult, and the classic style's scaled adult rig
+await grid(['game_family', 'game_held', 'game_classic_family'], 3, { left: 260, top: 80, width: 600, height: 520 }, 400, 'stages_ingame.jpg', 78);

@@ -2537,21 +2537,28 @@ async function stepFloors(T) {
   // have built on the lot in a full run, so the place is looked up, preferring the north strip)
   const spot = await page.evaluate(() => {
     const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+    const defs = window.hearthside.game.content.objects;
     const busy = new Set();
     for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) busy.add(`${x},${z}`); }
-    for (const w of Object.values(lot.walls)) if (w.level === 0) { for (const [x, z] of w.dir === 'h' ? [[w.x, w.z], [w.x, w.z - 1]] : [[w.x, w.z], [w.x - 1, w.z]]) busy.add(`${x},${z}`); }
-    for (const o of Object.values(lot.objects)) { const d = window.hearthside.game.content.objects[o.defId]; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) busy.add(`${o.x + i},${o.z + j}`); }
-    const free = (x0, z0, w, d) => { for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + w; x++) if (x < 0 || z < 0 || x >= lot.width || z >= lot.depth || busy.has(`${x},${z}`)) return false; return true; };
-    // the room plus a one tile margin all round (the west margin holds the balcony tile)
-    for (let z = 0; z + 5 <= lot.depth; z++) for (let x = 3; x + 9 <= lot.width; x++) {
-      const zz = Math.max(0, z - 1);
-      if (free(x - 1, zz, 10, z + 5 - zz)) return { x, z };
+    for (const o of Object.values(lot.objects)) { const d = defs[o.defId]; if (o.level !== 0) continue; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) busy.add(`${o.x + i},${o.z + j}`); }
+    const wall = (dir, x, z) => !!lot.walls[`0:${dir}:${x}:${z}`];
+    // a room of rw x 4 tiles at (x0, z0): tiles empty, no wall on any of its edges (the perimeter would share it), a lot tile west of it
+    const fits = (x0, z0, rw) => {
+      if (x0 < 1 || x0 + rw > lot.width || z0 + 4 > lot.depth) return false;
+      for (let z = z0; z < z0 + 4; z++) for (let x = x0; x < x0 + rw; x++) if (busy.has(`${x},${z}`)) return false;
+      for (let x = x0; x < x0 + rw; x++) for (let z = z0; z <= z0 + 4; z++) if (wall('h', x, z)) return false;
+      for (let z = z0; z < z0 + 4; z++) for (let x = x0; x <= x0 + rw; x++) if (wall('v', x, z)) return false;
+      return true;
+    };
+    // the north half of the lot first: the fence line the exterior part of this step draws crosses the south yard and must not run through a room
+    for (const maxZ of [11, lot.depth]) for (const rw of [8, 7, 6]) for (let z = 0; z <= maxZ; z++) for (let x = 1; x + rw <= lot.width; x++) {
+      if (fits(x, z, rw)) return { x, z, rw, w: lot.width, d: lot.depth };
     }
     return null;
   });
   T.check(S, 'there is an empty stretch of the lot for the new rooms', !!spot, JSON.stringify(spot));
   if (!spot) return;
-  const X0 = spot.x, Z0 = spot.z, X1 = X0 + 8, Z1 = Z0 + 4;
+  const W = spot.rw, X0 = spot.x, Z0 = spot.z, X1 = X0 + W, Z1 = Z0 + 4;
   const northish = Z1 <= 7;
   const farTile = await page.evaluate(() => {
     const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
@@ -2617,7 +2624,7 @@ async function stepFloors(T) {
   await page.waitForTimeout(500);
   await T.frames(6);
   const s1 = await floorsSnap(T);
-  T.check(S, 'the ground room has its walls (2 x (8 + 4)) and 32 floor tiles on level 0', onLevel(s1.walls, 0).length - onLevel(s0.walls, 0).length === 24 && onLevel(s1.floors, 0).length - onLevel(s0.floors, 0).length === 32, `new: ${onLevel(s1.walls, 0).length - onLevel(s0.walls, 0).length} walls, ${onLevel(s1.floors, 0).length - onLevel(s0.floors, 0).length} floors; room at ${X0},${Z0}`);
+  T.check(S, 'the ground room has its walls (2 x (width + 4)) and a floor tile for every m2 on level 0', onLevel(s1.walls, 0).length - onLevel(s0.walls, 0).length === 2 * (W + 4) && onLevel(s1.floors, 0).length - onLevel(s0.floors, 0).length === W * 4, `new: ${onLevel(s1.walls, 0).length - onLevel(s0.walls, 0).length} walls, ${onLevel(s1.floors, 0).length - onLevel(s0.floors, 0).length} floors; room at ${X0},${Z0}`);
   T.check(S, 'the room cost money', s0.funds - s1.funds > 0, fmtMoney(s0.funds - s1.funds));
   await T.shot('m9-ground-room');
 
@@ -2676,7 +2683,7 @@ async function stepFloors(T) {
   await T.frames(4);
   if (touch) {
     const txt = await footerText(T);
-    T.check(S, 'the Floor 2 preview names the room and the cost', /8 x 4/.test(txt) && /\$/.test(txt), txt.replace(/\s+/g, ' '));
+    T.check(S, 'the Floor 2 preview names the room and the cost', new RegExp(`${W} x 4`).test(txt) && /\$/.test(txt), txt.replace(/\s+/g, ' '));
     await T.shot('m9-floor2-preview');
     await tapFooter(T, '.bb-confirm');
   }
@@ -2684,12 +2691,12 @@ async function stepFloors(T) {
   await T.frames(8);
   const s3 = await floorsSnap(T);
   const upWalls = onLevel(s3.walls, 1), upFloors = onLevel(s3.floors, 1);
-  T.check(S, 'Floor 2 has the room: walls 2 x (8 + 4) on level 1 and 29 floor tiles (32 minus the 3-tile stairwell)', upWalls.length === 24 && upFloors.length === 29, `${upWalls.length} walls, ${upFloors.length} floors`);
+  T.check(S, 'Floor 2 has the room: walls 2 x (width + 4) on level 1 and a floor tile per m2 minus the 3-tile stairwell', upWalls.length === 2 * (W + 4) && upFloors.length === W * 4 - 3, `${upWalls.length} walls, ${upFloors.length} floors`);
   T.check(S, 'the stairwell has no floor above the stairs', [1, 2, 3].every((i) => !s3.floors[`1:${X0 + i}:${Z0 + 2}`]), '');
   T.check(S, 'the lot counts two floors', s3.levels === 2, `levels ${s3.levels}`);
   T.check(S, 'the upper room was paid for', s2.funds - s3.funds > 0, fmtMoney(s2.funds - s3.funds));
   const rooms1 = await page.evaluate(() => window.hearthside.game.rooms(1).filter((r) => !r.outdoor).map((r) => r.area));
-  T.check(S, 'the upper walls enclose a room on level 1', rooms1.length === 1 && rooms1[0] === 29 + 3 || rooms1.some((a) => a >= 29), JSON.stringify(rooms1));
+  T.check(S, 'the upper walls enclose a room on level 1', rooms1.some((a) => a >= W * 4 - 3), JSON.stringify(rooms1));
   await T.shot('m9-floor2-room');
   await T.audit('floors: Floor 2 built');
 
@@ -2704,7 +2711,7 @@ async function stepFloors(T) {
   if (!walker) return;
   await selectMember(T, walker);
   const down0 = await page.evaluate((id) => window.hearthside.debug.state().people[id].location.level, walker);
-  const target = { x: X0 + 5, z: Z0 + 2 };
+  const target = { x: X1 - 1, z: Z0 + 2 };
   const tp = await framePairAt(T, [target.x + 0.5, 3, target.z + 0.5], [target.x + 0.5, 3, target.z + 0.5], 0);
   const tpPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [tp.a.x, tp.a.y]);
   T.check(S, 'a tile of the upper room can be tapped (floor pick on level 1)', !!tp.a?.free && tpPick.kind === 'floor' && tpPick.level === 1 && tpPick.tile.x === target.x && tpPick.tile.z === target.z, JSON.stringify({ tp: tp.a, tpPick }));
@@ -2762,10 +2769,20 @@ async function stepFloors(T) {
   const farPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [fp.a.x, fp.a.y]);
   const farPv = await page.evaluate((pk) => window.hearthside.game.paintPreview(pk), farPick);
   T.check(S, 'a floor tile with nothing under it is refused with a reason (no support, out of balcony reach)', !!farPv && farPv.ok === false && /balcony|wall or a floored room/i.test(farPv.reason ?? ''), JSON.stringify({ farPick, farPv }));
-  // a tile right beside the room's west wall (nothing below it, a wall on its edge): a balcony within reach
-  const bal = { x: X0 - 1, z: Z0 + 2 };
-  const bp = await framePairAt(T, [bal.x + 0.5, 3, bal.z + 0.5], [bal.x + 0.5, 3, bal.z + 0.5], 0);
-  const balPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [bp.a.x, bp.a.y]);
+  // a tile right beside one of the room's walls (nothing below it, a wall on its edge): a balcony within reach. The camera sees only some
+  // sides over the walls, so the tiles around the room are tried until one can be picked on screen.
+  const ring = [];
+  for (let i = 0; i < 4; i++) ring.push({ x: X0 - 1, z: Z0 + i }, { x: X1, z: Z0 + i });
+  for (let i = 0; i < W; i++) ring.push({ x: X0 + i, z: Z0 - 1 }, { x: X0 + i, z: Z1 });
+  let bal = ring[0], bp = null, balPick = null;
+  for (const c of ring) {
+    if (c.x < 0 || c.z < 0 || c.x >= spot.w || c.z >= spot.d) continue;
+    const q = await framePairAt(T, [c.x + 0.5, 3, c.z + 0.5], [c.x + 0.5, 3, c.z + 0.5], 0);
+    if (!q.a?.free) continue;
+    const pk = await page.evaluate(([x, y]) => window.__t.pick(x, y), [q.a.x, q.a.y]);
+    if (pk.kind === 'floor' && pk.level === 1 && pk.tile.x === c.x && pk.tile.z === c.z) { bal = c; bp = q; balPick = pk; break; }
+    if (!bp) { bal = c; bp = q; balPick = pk; }
+  }
   T.check(S, 'the balcony tile is under the tap point on level 1', !!bp.a?.free && balPick.kind === 'floor' && balPick.level === 1 && balPick.tile.x === bal.x && balPick.tile.z === bal.z, JSON.stringify({ bp: bp.a, balPick }));
   await T.tapAt(bp.a.x, bp.a.y);
   await page.waitForTimeout(400);
@@ -2797,7 +2814,7 @@ async function stepFloors(T) {
   T.check(S, 'removing the staircase is refused while somebody is upstairs (reason shown)', !!rm && rm.ok === false && /stuck|stairs/i.test(rm.reason ?? ''), JSON.stringify(rm && { ok: rm.ok, reason: rm.reason }));
   await page.evaluate(() => window.hearthside.game.setBuildTool(null));
   const endSnap = await floorsSnap(T);
-  T.check(S, 'the finished structure is intact: 2 floors, the staircase, both rooms', endSnap.levels === 2 && Object.values(endSnap.objects).some((o) => o.defId === STAIR) && onLevel(endSnap.walls, 1).length === 24 && onLevel(endSnap.walls, 0).length >= 24, '');
+  T.check(S, 'the finished structure is intact: 2 floors, the staircase, both rooms', endSnap.levels === 2 && Object.values(endSnap.objects).some((o) => o.defId === STAIR) && onLevel(endSnap.walls, 1).length === 2 * (W + 4) && onLevel(endSnap.walls, 0).length >= 24, '');
 
   await T.tap(page.locator('.mode-btn[data-mode="live"]'));
   await page.waitForTimeout(500);
@@ -3175,8 +3192,12 @@ async function stepExterior(T) {
     // a row z where the line (the h edge row z, every x) crosses no wall, and a gate column x whose tiles two steps each way are free
     const lineClear = (z) => { for (let x = 0; x < lot.width; x++) if (lot.walls[`0:h:${x}:${z}`]) return false; return true; };
     const colFree = (x, z) => { for (let dz = -2; dz <= 2; dz++) if (blocked.has(`${x},${z + dz}`)) return false; for (let dz = -2; dz <= 1; dz++) if (lot.walls[`0:h:${x}:${z + dz}`]) return false; return true; };
-    for (const z of [19, 20, 21, 18, 17, 16]) {
-      if (z + 2 >= lot.depth || !lineClear(z)) continue;
+    // no floor tile of the home (any room, on the ground floor) in the two tile rows the line runs between, so the line
+    // never divides a room (a full run has built rooms in the yard); the yard south of the house comes first, then the north strip
+    const floorRows = new Set(Object.keys(lot.floors).filter((k) => k.startsWith('0:')).map((k) => Number(k.split(':')[2])));
+    const roomFree = (z) => { for (let r = z - 1; r <= z + 2; r++) if (floorRows.has(r)) return false; return true; };
+    for (const z of [19, 20, 21, 18, 17, 16, 2, 1, 3]) {
+      if (z + 2 >= lot.depth || z < 3 && z - 2 < 0 || !lineClear(z) || !roomFree(z)) continue;
       for (const x of [12, 11, 13, 10, 14, 9, 15, 8, 16]) if (colFree(x, z)) return { z, x };
     }
     return { z: -1, x: -1 };
@@ -3337,7 +3358,7 @@ async function stepExterior(T) {
     const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
     const o = Object.values(lot.objects).find((x) => x.defId === 'garden-vegpatch');
     const hh = st.households[st.activeHouseholdId];
-    return o ? { id: o.id, member: hh.memberIds.find((m) => st.people[m].location.kind === 'lot') } : null;
+    return o ? { id: o.id, at: [o.x, o.z], member: hh.memberIds.find((m) => st.people[m].location.kind === 'lot' && st.people[m].location.level === 0) ?? hh.memberIds.find((m) => st.people[m].location.kind === 'lot') } : null;
   });
   if (bed.ok && garden) {
     const act = async (interactionId) => {
@@ -3356,7 +3377,7 @@ async function stepExterior(T) {
     const g0 = await bedState();
     const plant = await act('gardenPlant');
     const g1 = await bedState();
-    T.check(S, 'Plant Seeds puts a crop in the bed for the seed price ($3)', plant.ok && !!g1.garden?.crop && g1.ledger.includes('Plant Seeds:-300'), JSON.stringify({ plant, crop: g1.garden?.crop }));
+    T.check(S, 'Plant Seeds puts a crop in the bed for the seed price ($3)', plant.ok && !!g1.garden?.crop && g1.ledger.includes('Plant Seeds:-300'), JSON.stringify({ plant, crop: g1.garden?.crop, bed: garden.at, who: await page.evaluate((m) => { const p = window.hearthside.debug.state().people[m]; return { loc: p.location, act: p.action?.interactionId ?? null, q: p.queue.map((a) => a.interactionId) }; }, garden.member) }));
     const nope = await page.evaluate(([m, o]) => { const opt = window.hearthside.game.options(m, { kind: 'object', objectId: o }).find((x) => x.interactionId === 'gardenHarvest'); return opt ? { enabled: opt.enabled, reason: opt.reason } : null; }, [garden.member, garden.id]);
     T.check(S, 'Harvest is greyed out with a reason while the crop grows', !!nope && nope.enabled === false && /ripe|planted/i.test(nope.reason ?? ''), JSON.stringify(nope));
     const watered = await act('gardenWater');

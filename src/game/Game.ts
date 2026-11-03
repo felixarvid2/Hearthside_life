@@ -405,7 +405,7 @@ export class Game implements GameAPI {
       portrait: (person: PersonDraft) => {
         const pr = this.gameView.portraitRenderer;
         if (!pr) return Promise.resolve('');
-        return pr.request(person.appearance, outfitFor(person, 'everyday'));
+        return pr.request(person.appearance, outfitFor(person, 'everyday'), person.lifeStage);
       },
     };
   }
@@ -609,12 +609,12 @@ export class Game implements GameAPI {
     const pr = this.gameView.portraitRenderer;
     if (!p || !pr) return null;
     const outfit = outfitFor(p, 'everyday');
-    const key = portraitKey(p.appearance, outfit);
+    const key = portraitKey(p.appearance, outfit, p.lifeStage);
     const hit = pr.cached(key);
     if (hit) return hit;
     if (!this.portraitPending.has(key)) {
       this.portraitPending.add(key);
-      void pr.request(p.appearance, outfit).then((url) => {
+      void pr.request(p.appearance, outfit, p.lifeStage).then((url) => {
         this.portraitPending.delete(key);
         if (url) this.emit('portraits');
       });

@@ -17,7 +17,7 @@ function hash(s: string): string {
 
 function portraitKey(p: PersonDraft): string {
   const cur = p.outfits.current;
-  return hash(JSON.stringify([p.appearance, p.outfits.outfits[cur.category]?.[cur.index] ?? null]));
+  return hash(JSON.stringify([p.appearance, p.outfits.outfits[cur.category]?.[cur.index] ?? null, p.lifeStage]));
 }
 
 let pointerIsDown = false;
