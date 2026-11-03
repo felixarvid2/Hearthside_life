@@ -2660,7 +2660,7 @@ async function stepFloors(T) {
   const s2 = await floorsSnap(T);
   const stair = Object.values(s2.objects).find((o) => o.defId === STAIR);
   T.check(S, 'the staircase stands in the room on level 0 (turned east, 3 tiles long) and cost its price', !!stair && stair.level === 0 && stair.rot === 1 && stair.z === Z0 + 2 && stair.x === X0 + 1 && s1.funds - s2.funds === stairDef.price, JSON.stringify(stair));
-  T.check(S, 'the stairs have a model (procedural mesh, no missing-model placeholder)', await page.evaluate((id) => { const b = window.hearthside.view.objects.boxOf(id); return !!b && b.max.y - b.min.y > 2.5; }, stair?.id), '');
+  T.check(S, 'the stairs have a model (procedural mesh, no missing-model placeholder)', await page.waitForFunction((id) => { const o = window.hearthside.view.objects; const b = o.boxOf(id); return !!b && b.max.y - b.min.y > 2.5 && o.hasModel(id); }, stair?.id, { timeout: 8000 }).then(() => true, () => false), '');
   await T.shot('m9-stairs-placed');
 
   // ---- Floor 2: the selector, the camera and the room over the room

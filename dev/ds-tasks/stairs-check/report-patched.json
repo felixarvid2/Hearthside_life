@@ -1,0 +1,421 @@
+{
+  "shots": [
+    "01-floor1-cutaway",
+    "02-floor1-walls-up",
+    "03-floor2-stairwell-cutaway",
+    "04-floor2-stairwell-walls-up",
+    "05-floor2-stairwell-cutaway-rot2",
+    "06-climb-0-floor1-view",
+    "06-climb-1-floor1-view",
+    "07-climb-1-floor2-view",
+    "06-climb-2-floor1-view",
+    "08-floor2-after-climb"
+  ],
+  "diag": {
+    "floor1Cutaway": {
+      "label": "floor1 cutaway",
+      "found": true,
+      "visible": true,
+      "meshes": 2,
+      "tris": 292,
+      "mats": [
+        "wood:#e59a64",
+        "rail:#f1ece3"
+      ],
+      "level": 0,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3.88,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421917967,
+        "y": 412.8854075212,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086580484403,
+        "y": -7.394191145834039,
+        "visible": true
+      }
+    },
+    "floor1Up": {
+      "label": "floor1 walls up",
+      "found": true,
+      "visible": true,
+      "meshes": 2,
+      "tris": 292,
+      "mats": [
+        "wood:#e59a64",
+        "rail:#f1ece3"
+      ],
+      "level": 0,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3.88,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421917967,
+        "y": 412.8854075212,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086580484403,
+        "y": -7.394191145834039,
+        "visible": true
+      }
+    },
+    "floor2Cutaway": {
+      "label": "floor2 cutaway",
+      "found": true,
+      "visible": true,
+      "meshes": 2,
+      "tris": 292,
+      "mats": [
+        "wood:#e59a64",
+        "rail:#f1ece3"
+      ],
+      "level": 1,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3.88,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421917968,
+        "y": 700.3941911382256,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086580484403,
+        "y": 280.1145924711914,
+        "visible": true
+      }
+    },
+    "floor2Up": {
+      "label": "floor2 walls up",
+      "found": true,
+      "visible": true,
+      "meshes": 2,
+      "tris": 292,
+      "mats": [
+        "wood:#e59a64",
+        "rail:#f1ece3"
+      ],
+      "level": 1,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3.88,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421917968,
+        "y": 700.3941911382256,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086580484403,
+        "y": 280.1145924711914,
+        "visible": true
+      }
+    },
+    "climb0": {
+      "loc": {
+        "x": 9.5,
+        "z": 15.250000000000007,
+        "level": 0,
+        "rise": 0.75
+      },
+      "personPos": {
+        "x": 12.5,
+        "z": 20.30000000000001,
+        "y": 0
+      },
+      "sc": {
+        "x": 640.0000000000007,
+        "y": 162.0151971790751,
+        "visible": true
+      },
+      "vis": null,
+      "stair": {
+        "label": "climb 0",
+        "found": true,
+        "visible": true,
+        "meshes": 2,
+        "tris": 292,
+        "mats": [
+          "wood:#e59a64",
+          "rail:#f1ece3"
+        ],
+        "level": 0,
+        "box": {
+          "min": [
+            9,
+            0,
+            13
+          ],
+          "max": [
+            10,
+            3.88,
+            16
+          ]
+        },
+        "foot": {
+          "x": 585.5527779150186,
+          "y": 379.2671562995366,
+          "visible": true
+        },
+        "head": {
+          "x": 842.9396464144361,
+          "y": -111.05904214533665,
+          "visible": false
+        }
+      }
+    },
+    "climb1": {
+      "loc": {
+        "x": 9.5,
+        "z": 14.500000000000007,
+        "level": 0,
+        "rise": 1.5
+      },
+      "personPos": {
+        "x": 9.5,
+        "z": 15.250000000000007,
+        "y": 0.75
+      },
+      "sc": {
+        "x": 640.0000000000007,
+        "y": 78.15846862410932,
+        "visible": true
+      },
+      "vis": null,
+      "stair": {
+        "label": "climb 1",
+        "found": true,
+        "visible": true,
+        "meshes": 2,
+        "tris": 292,
+        "mats": [
+          "wood:#e59a64",
+          "rail:#f1ece3"
+        ],
+        "level": 0,
+        "box": {
+          "min": [
+            9,
+            0,
+            13
+          ],
+          "max": [
+            10,
+            3.88,
+            16
+          ]
+        },
+        "foot": {
+          "x": 511.3065658904313,
+          "y": 423.9496421080657,
+          "visible": true
+        },
+        "head": {
+          "x": 768.6934343898487,
+          "y": -66.37655633680757,
+          "visible": false
+        }
+      }
+    },
+    "climb2": {
+      "loc": {
+        "x": 9.5,
+        "z": 13.000000000000007,
+        "level": 0,
+        "rise": 2.75
+      },
+      "personPos": {
+        "x": 9.5,
+        "z": 14.500000000000007,
+        "y": 1.5
+      },
+      "sc": {
+        "x": 640.0000000000006,
+        "y": -61.60274563416678,
+        "visible": false
+      },
+      "vis": null,
+      "stair": {
+        "label": "climb 2",
+        "found": true,
+        "visible": true,
+        "meshes": 2,
+        "tris": 292,
+        "mats": [
+          "wood:#e59a64",
+          "rail:#f1ece3"
+        ],
+        "level": 0,
+        "box": {
+          "min": [
+            9,
+            0,
+            13
+          ],
+          "max": [
+            10,
+            3.88,
+            16
+          ]
+        },
+        "foot": {
+          "x": 362.81414184125606,
+          "y": 513.3146137251239,
+          "visible": true
+        },
+        "head": {
+          "x": 620.2010103406736,
+          "y": 22.988415280250628,
+          "visible": true
+        }
+      }
+    }
+  },
+  "errors": [],
+  "setup": {
+    "lot": {
+      "id": "lot_3f",
+      "name": "Hazelbank House",
+      "tenure": "for-sale",
+      "price": 2100000,
+      "rent": null
+    },
+    "preview": {
+      "ok": true,
+      "lotId": "lot_3f",
+      "mode": "buy",
+      "cost": 2100000,
+      "proceeds": 2897200,
+      "lines": [
+        "Hazelbank House costs $21000.00. You will own it, and pay property tax on it.",
+        "Your home Hearthstone Cottage is sold for $28972.00 (80 % of its value). The furniture stays with the house.",
+        "Everyone who is with you travels there (20 to 40 minutes); anyone at work comes home to the new place."
+      ]
+    },
+    "move": {
+      "ok": true
+    }
+  },
+  "info": {
+    "lot": "Hazelbank House",
+    "levels": 2,
+    "stairs": [
+      {
+        "id": "obj_6c",
+        "defId": "stair-straight-basic",
+        "level": 0,
+        "x": 9,
+        "z": 13,
+        "rot": 0,
+        "finishes": {
+          "wood": "honey-oak",
+          "rail": "white"
+        },
+        "purchasePrice": 120000,
+        "boughtAt": -960,
+        "ownerHouseholdId": "hh_2",
+        "condition": {
+          "dirt": 0,
+          "broken": false
+        }
+      }
+    ],
+    "members": [
+      {
+        "id": "per_2w",
+        "name": "Theo",
+        "loc": {
+          "kind": "lot",
+          "lotId": "lot_3f",
+          "level": 0,
+          "x": 12.5,
+          "z": 20.30000000000001,
+          "facing": 3.141592653589793,
+          "posture": "walking"
+        }
+      },
+      {
+        "id": "per_2x",
+        "name": "Sasha",
+        "loc": {
+          "kind": "lot",
+          "lotId": "lot_3f",
+          "level": 0,
+          "x": 12.5,
+          "z": 22.5,
+          "facing": 3.1891757568667765,
+          "posture": "standing"
+        }
+      }
+    ]
+  },
+  "state": {
+    "asset": "proc:stair-straight-1x3",
+    "isLoaded": false,
+    "hasFailed": false,
+    "stalePending": true,
+    "placeholder": true,
+    "hasModel": false
+  },
+  "patched": {
+    "isLoaded": true,
+    "placeholder": false,
+    "hasModel": true
+  },
+  "walker": "per_2w",
+  "goTo": {
+    "ok": true
+  },
+  "climbSamples": [
+    {
+      "x": 12.5,
+      "z": 19.89999999999999,
+      "level": 0,
+      "rise": 0
+    },
+    {
+      "x": 9.5,
+      "z": 13.000000000000007,
+      "level": 0,
+      "rise": 2.75
+    }
+  ],
+  "maxRise": 2.75
+}

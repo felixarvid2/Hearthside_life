@@ -524,6 +524,9 @@ export class ObjectsView {
     return best;
   }
 
+  /** True when the object shows its real model (not still loading, not the missing-model placeholder). */
+  hasModel(id: Id): boolean { const e = this.objects.get(id); return !!e && !e.placeholder; }
+
   boxOf(id: Id): THREE.Box3 | null { return this.objects.get(id)?.box ?? this.items.get(id)?.box ?? null; }
 
   dispose(): void {

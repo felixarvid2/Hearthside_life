@@ -71,10 +71,9 @@ export class ObjectAssets {
       // Milestone 9: staircases are meshes built at runtime
       if (isProceduralAsset(asset)) {
         const scene = proceduralModel(asset);
-        if (!scene) { this.failed.add(asset); this.pending.delete(asset); return null; }
+        if (!scene) { this.failed.add(asset); return null; }
         const tpl = this.makeTemplate(scene);
         this.templates.set(asset, tpl);
-        this.pending.delete(asset);
         return tpl;
       }
       const entry = this.manifest?.furniture[asset];
@@ -88,11 +87,13 @@ export class ObjectAssets {
         console.warn(`[render] model ${asset} failed to load`, e);
         this.failed.add(asset);
         return null;
-      } finally {
-        this.pending.delete(asset);
       }
     })();
+    // cleared once settled (never inside the loader: the procedural branch settles synchronously, before this set,
+    // and would leave a stale entry that hides a later purge of its template)
     this.pending.set(asset, p);
+    const mine = p;
+    void mine.finally(() => { if (this.pending.get(asset) === mine) this.pending.delete(asset); });
     return p;
   }
 

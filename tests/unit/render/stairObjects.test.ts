@@ -62,6 +62,18 @@ describe('staircase objects in ObjectsView', () => {
   });
 });
 
+describe('staircase models after a purge', () => {
+  it('a runtime model purged by a lot change is built again on the next load', async () => {
+    const assets = new ObjectAssets('./assets/');
+    expect(await assets.load('proc:stair-straight-1x3')).not.toBeNull();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(assets.purgeUnused()).toBe(1);
+    expect(assets.isLoaded('proc:stair-straight-1x3')).toBe(false);
+    expect(await assets.load('proc:stair-straight-1x3')).not.toBeNull();
+    expect(assets.isLoaded('proc:stair-straight-1x3')).toBe(true);
+  });
+});
+
 describe('staircase placement in the world', () => {
   it('a stair turned a quarter fills its rotated footprint and rises toward the head', async () => {
     const state = createEmptyWorld(3, 'create');
