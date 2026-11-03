@@ -15,14 +15,19 @@
 // - Objects: every object slot that was usable stays usable (a bed keeps a usable side, a fridge keeps its
 //   front), and an object that could be reached from the lot entry still can (no sealed furniture).
 //   Parts of the lot that were already cut off before the change are not judged.
+// - Floors above the ground (Milestone 9, world/levels.ts levelProblems): a build may not leave an upper floor without support,
+//   an upper wall without floor, furniture without floor under it, a floor in a stairwell, or a tall wall under an upper floor;
+//   nobody is left standing on a floor that is erased. Reachability counts the staircases: the check below runs over every level.
 // - Recovery for people: there is none; a wall near a person is refused with their name in the reason.
 
 import type { ContentDB, OpeningDef } from '../content/types';
 import { edgeKey, parseEdgeKey } from '../core/ids';
 import type { Tile } from '../core/nav';
 import type { FinishRef, Id, Lot, Opening, Person, PlacedObject, Wall, WorldState } from '../core/types';
+import { reachableAll, usableLinks } from './levelNav';
+import { levelsInUse, newLevelProblems, stairGeometry, stairLinks, type LevelProblem } from './levels';
 import { hasLevel, inLot } from './lots';
-import { buildNavGrid, edgePassable, isFree, reachableMask, type NavGrid } from './navgrid';
+import { buildNavGrid, edgePassable, isFree, VOID_ID, type NavGrid } from './navgrid';
 import { accessPoints, backEdges, objectTiles } from './placement';
 import { slotAccess, type AccessContext } from './slots';
 import { edgeInLot, edgeTiles, openingEdgeKeys, openingSpan } from './walls';
@@ -217,12 +222,33 @@ export function validateDiff(state: WorldState, content: ContentDB, lot: Lot, di
     const [lv, x, z] = d.key.split(':').map(Number) as [number, number, number];
     if (lv !== level || !inLot(lot, x, z)) reject({ kind: 'tile', x, z, reason: 'Off the lot.' }, 'Floors have to stay on the lot.');
   }
+  // nobody is left on a floor that is taken away
+  for (const d of diff.floors) {
+    if (!d.before || d.after || level < 1) continue;
+    const [, x, z] = d.key.split(':').map(Number) as [number, number, number];
+    const p = peopleOnLevel(state, lot, level).find((q) => q.location.kind === 'lot' && Math.floor(q.location.x) === x && Math.floor(q.location.z) === z);
+    if (p) reject({ kind: 'person', personId: p.id, reason: 'Standing there.' }, `${p.firstName} is standing on that floor.`);
+  }
+
+  // --- floors, walls and furniture above the ground ---
+  if (out.reasons.length === 0) {
+    for (const p of newLevelProblems(lot, virtual, content)) reject(problemConflict(p), p.text);
+  }
 
   // --- access and people ---
-  const needsAccessCheck = added.length > 0
+  const needsAccessCheck = added.length > 0 || diff.floors.some((d) => d.before && !d.after && level >= 1)
     || diff.openings.some((d) => d.before && (!d.after || d.after.wallId !== d.before.wallId || openingSpan(d.after) !== openingSpan(d.before)));
   if (needsAccessCheck && out.reasons.length === 0) connectivity(state, content, lot, virtual, level, reject);
   return out;
+}
+
+function problemConflict(p: LevelProblem): BuildConflict | null {
+  switch (p.kind) {
+    case 'floor':
+    case 'hole': { const [, x, z] = p.key.split(':').map(Number) as [number, number, number]; return { kind: 'tile', x, z, reason: p.text }; }
+    case 'wall': return { kind: 'edge', key: p.key.replace(/^tall:/, ''), reason: p.text };
+    case 'object': return { kind: 'object', objectId: p.key, reason: p.text };
+  }
 }
 
 type Reject = (c: BuildConflict | null, reason: string) => void;
@@ -294,6 +320,7 @@ function checkOpening(
         if (!inLot(lot, t.x, t.z)) continue;
         if (!isFree(grid, t.x, t.z)) {
           const id = grid.occupantIds[grid.occupant[t.z * grid.width + t.x] ?? -1];
+          if (id === VOID_ID) continue; // Milestone 9: a door onto open air upstairs (a balcony may follow)
           const o = id ? lot.objects[id] : undefined;
           const name = (o && content.objects[o.defId]?.name) ?? 'furniture';
           reject({ kind: 'tile', x: t.x, z: t.z, reason: 'Blocked.' }, `The ${name} blocks the doorway.`);
@@ -315,33 +342,61 @@ function reachesEntry(g: NavGrid, mask: Uint8Array, t: Tile): boolean {
   return false;
 }
 
-function connectivity(state: WorldState, content: ContentDB, lot: Lot, virtual: Lot, level: number, reject: Reject): void {
-  if (lot.entry.level !== level || !inLot(lot, lot.entry.x, lot.entry.z)) return;
-  const before = buildNavGrid(lot, content, level);
-  const after = buildNavGrid(virtual, content, level);
-  const entry = { x: lot.entry.x, z: lot.entry.z };
-  const maskB = reachableMask(before, entry);
-  const maskA = reachableMask(after, entry);
+interface LevelReach { grids: NavGrid[]; masks: Uint8Array[] }
 
-  for (const p of peopleOnLevel(state, lot, level)) {
-    if (p.location.kind !== 'lot') continue;
+/** Navigation grids of every level in use plus what can be reached from the lot entry across the staircases. */
+export function levelReach(lot: Lot, content: ContentDB, minLevels = 1): LevelReach {
+  const n = Math.max(1, levelsInUse(lot), minLevels);
+  const grids: NavGrid[] = [];
+  for (let l = 0; l < n; l++) grids.push(buildNavGrid(lot, content, l));
+  const links = usableLinks(grids, stairLinks(lot, content));
+  const seeds = lot.entry.level < n && inLot(lot, lot.entry.x, lot.entry.z) ? [{ x: lot.entry.x, z: lot.entry.z, level: lot.entry.level }] : [];
+  return { grids, masks: reachableAll({ grids, links }, seeds) };
+}
+
+/** The first person who could reach the lot entry on `before` but not on `after` (stairs removed or moved, walls built). */
+export function strandedPerson(state: WorldState, content: ContentDB, before: Lot, after: Lot, minLevels = 1): Person | null {
+  const b = levelReach(before, content, minLevels), a = levelReach(after, content, minLevels);
+  for (const p of Object.values(state.people).sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))) {
+    if (p.location.kind !== 'lot' || p.location.lotId !== before.id) continue;
+    const l = p.location.level;
+    const gb = b.grids[l], ga = a.grids[l];
+    if (!gb || !ga) continue;
+    const t = { x: Math.floor(p.location.x), z: Math.floor(p.location.z) };
+    if (!inLot(before, t.x, t.z)) continue;
+    if (reachesEntry(gb, b.masks[l]!, t) && !reachesEntry(ga, a.masks[l]!, t)) return p;
+  }
+  return null;
+}
+
+function connectivity(state: WorldState, content: ContentDB, lot: Lot, virtual: Lot, level: number, reject: Reject): void {
+  if (!inLot(lot, lot.entry.x, lot.entry.z)) return;
+  const b = levelReach(lot, content, level + 1), a = levelReach(virtual, content, level + 1);
+
+  for (const p of Object.values(state.people).sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))) {
+    if (p.location.kind !== 'lot' || p.location.lotId !== lot.id) continue;
+    const l = p.location.level;
+    const gb = b.grids[l], ga = a.grids[l];
+    if (!gb || !ga) continue;
     const t = { x: Math.floor(p.location.x), z: Math.floor(p.location.z) };
     if (!inLot(lot, t.x, t.z)) continue;
-    if (reachesEntry(before, maskB, t) && !reachesEntry(after, maskA, t)) {
+    if (reachesEntry(gb, b.masks[l]!, t) && !reachesEntry(ga, a.masks[l]!, t)) {
       reject({ kind: 'person', personId: p.id, reason: 'Would be trapped.' }, `${p.firstName} would be trapped. Leave a way out first.`);
     }
   }
 
-  const ctxB: AccessContext = { grid: before, content, objectById: (id) => lot.objects[id] };
-  const ctxA: AccessContext = { grid: after, content, objectById: (id) => virtual.objects[id] };
   const reachable = (tiles: Tile[], mask: Uint8Array, g: NavGrid) => tiles.some((t) => mask[t.z * g.width + t.x] === 1);
-  for (const o of sortedObjects(lot, level)) {
+  for (const o of Object.values(lot.objects).sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))) {
     const def = content.objects[o.defId];
-    if (!def) continue;
+    const before = b.grids[o.level], after = a.grids[o.level];
+    if (!def || !before || !after) continue;
+    const maskB = b.masks[o.level]!, maskA = a.masks[o.level]!;
+    const ctxB: AccessContext = { grid: before, content, objectById: (id) => lot.objects[id] };
+    const ctxA: AccessContext = { grid: after, content, objectById: (id) => virtual.objects[id] };
     if (def.slots.length > 0) {
-      const b = slotAccess(ctxB, o, def);
-      const a = slotAccess(ctxA, o, def);
-      const lost = b.findIndex((s, i) => s.usable && !a[i]?.usable);
+      const sb = slotAccess(ctxB, o, def);
+      const sa = slotAccess(ctxA, o, def);
+      const lost = sb.findIndex((s, i) => s.usable && !sa[i]?.usable);
       if (lost >= 0) {
         reject({ kind: 'object', objectId: o.id, reason: 'Would lose a side.' }, `It would cut off a side of the ${def.name} that people use.`);
         continue;
@@ -354,4 +409,26 @@ function connectivity(state: WorldState, content: ContentDB, lot: Lot, virtual: 
       reject({ kind: 'object', objectId: o.id, reason: 'Would be sealed in.' }, `It would block access to the ${def.name}. Leave a way in first.`);
     }
   }
+}
+
+/**
+ * Why a staircase cannot be sold, stored or moved to `to` right now: somebody is on it, or somebody upstairs (or downstairs)
+ * would lose their way to the lot entry. Null when it is fine or the object is not a staircase.
+ */
+export function stairChangeReason(
+  state: WorldState, content: ContentDB, lot: Lot, obj: PlacedObject, to?: { x: number; z: number; rot: PlacedObject['rot']; level: number },
+): string | null {
+  const def = content.objects[obj.defId];
+  const geo = stairGeometry(obj, def);
+  if (!geo) return null;
+  for (const p of Object.values(state.people)) {
+    if (p.location.kind !== 'lot' || p.location.lotId !== lot.id || !p.location.rise) continue;
+    if (geo.footprint.some((t) => t.x === Math.floor((p.location as { x: number }).x) && t.z === Math.floor((p.location as { z: number }).z))) {
+      return `${p.firstName} is on the stairs.`;
+    }
+  }
+  const objects = { ...lot.objects };
+  if (to) objects[obj.id] = { ...obj, ...to }; else delete objects[obj.id];
+  const stranded = strandedPerson(state, content, lot, { ...lot, objects }, obj.level + 2);
+  return stranded ? `${stranded.firstName} would be stuck on another floor. Leave a way down first.` : null;
 }

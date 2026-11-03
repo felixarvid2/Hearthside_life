@@ -7,6 +7,7 @@
 // existence, finish material names and that every scaled model fits inside its footprint.
 
 import { ANIM_IDS } from '../core/anim';
+import { STAGE_ORDER } from '../core/lifeStages';
 import { NEED_IDS, OUTFIT_CATEGORIES } from '../core/types';
 import type { BondStatus, Posture } from '../core/types';
 import type {
@@ -21,13 +22,14 @@ export interface ManifestModel { min: number[]; max: number[]; materials: Array<
 export interface ValidationResult { errors: string[]; warnings: string[] }
 
 const TIERS: readonly PriceTier[] = ['budget', 'standard', 'premium', 'luxury'];
-const CATEGORIES: readonly CatalogCategory[] = ['seating', 'beds', 'tables', 'storage', 'kitchen', 'bathroom', 'lighting', 'electronics', 'hobby', 'decor', 'outdoor', 'kids'];
+const CATEGORIES: readonly CatalogCategory[] = ['seating', 'beds', 'tables', 'storage', 'kitchen', 'bathroom', 'lighting', 'electronics', 'hobby', 'decor', 'outdoor', 'kids', 'stairs'];
 const LAYERS: readonly PlacementLayer[] = ['floor', 'rug', 'wall', 'surface', 'ceiling'];
 const SLOT_KINDS: readonly SlotKind[] = ['sit', 'sleep', 'use', 'stand'];
 const POSTURES: readonly Posture[] = ['standing', 'walking', 'seated', 'lying'];
 const SOCIAL_CATEGORIES: readonly SocialCategory[] = ['greeting', 'friendly', 'funny', 'deep', 'support', 'mean', 'romantic', 'family', 'status'];
 const TRAIT_CATEGORIES: readonly TraitCategory[] = ['social', 'tidiness', 'energy', 'creativity', 'leisure', 'lifestyle'];
 const BOND_STATUSES: readonly BondStatus[] = ['acquaintance', 'friend', 'closeFriend', 'rival', 'partner', 'engaged', 'spouse', 'exPartner'];
+const LIFE_STAGE_IDS: readonly string[] = STAGE_ORDER;
 const SOCIAL_SECTIONS = ['friendly', 'romantic', 'mean', 'special'];
 const PREFERENCE_GROUPS = ['activity', 'music', 'decor', 'food', 'topic'];
 /** Source materials that are never recoloured (they carry light, glass or foliage). */
@@ -156,6 +158,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     moodlet(w, i.moodletOnComplete);
     for (const v of i.venues ?? []) if (!INTERACTION_PLACES.includes(v)) err(`${w}: unknown place '${v}' in venues`);
     if (i.status === 'ready' && blank(i.behavior)) err(`${w}: ready interaction without behavior`);
+    for (const a of i.ages ?? []) if (!has(LIFE_STAGE_IDS, a)) err(`${w}: unknown life stage '${a}' in ages`);
     const m1 = M1_INTERACTIONS[i.id];
     if (m1 && i.behavior !== m1) err(`${w}: M1 contract expects behavior '${m1}', got '${i.behavior}'`);
   }
@@ -204,7 +207,16 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     const m = o.model;
     if (blank(m.asset) || !(m.scale > 0) || !finite(m.yaw) || m.offset.length !== 3 || !m.offset.every(finite)) err(`${w}: incomplete model transform`);
     const entry = opts.models?.[m.asset];
-    if (opts.models && !entry) err(`${w}: model '${m.asset}' is not in the asset manifest`);
+    // Milestone 9: 'proc:' assets are meshes built at runtime (render/stairModel.ts), not manifest models
+    if (opts.models && !entry && !m.asset.startsWith('proc:')) err(`${w}: model '${m.asset}' is not in the asset manifest`);
+    if (o.stair) {
+      const st = o.stair;
+      if (st.length !== 3 && st.length !== 4) err(`${w}: stair length must be 3 or 4`);
+      if (st.kind !== 'straight' && st.kind !== 'spiral') err(`${w}: stair kind must be straight or spiral`);
+      if (st.kind === 'straight' && (fd !== st.length || fw > 2)) err(`${w}: a straight stair is 1 or 2 wide and as deep as its length (${st.length})`);
+      if (st.kind === 'spiral' && (fw !== 2 || fd !== 2)) err(`${w}: a spiral stair has a 2 x 2 footprint`);
+      if (o.layer !== 'floor' || !o.blocksMovement) err(`${w}: stairs are blocking floor objects`);
+    }
     if (entry) {
       const b = fittedBounds(m, [[entry.min[0] ?? 0, entry.min[1] ?? 0, entry.min[2] ?? 0], [entry.max[0] ?? 0, entry.max[1] ?? 0, entry.max[2] ?? 0]]);
       const tol = 0.02;
@@ -323,12 +335,23 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     if (!(s.autonomy.weight >= 0)) err(`${w}: autonomy weight must be >= 0`);
     for (const k of ['minTrust', 'maxTrust'] as const) if (r[k] !== undefined && !finite(r[k])) err(`${w}: ${k} is not a number`);
     if (r.minTrust !== undefined && r.maxTrust !== undefined && r.minTrust > r.maxTrust) err(`${w}: trust range is empty`);
+    for (const st of [...(r.actorStages ?? []), ...(r.targetStages ?? [])]) if (!has(LIFE_STAGE_IDS, st)) err(`${w}: unknown life stage '${st}'`);
     if (r.memory && (r.memory.kinds.length === 0 || !(r.memory.withinMinutes > 0))) err(`${w}: bad memory requirement`);
     if (s.section !== undefined && !has(SOCIAL_SECTIONS, s.section)) err(`${w}: bad menu section '${s.section}'`);
     if (s.cost !== undefined && !(Number.isInteger(s.cost) && s.cost > 0)) err(`${w}: cost must be a positive whole number of cents`);
     if (s.startsEvent !== undefined && !db.events?.[s.startsEvent]) err(`${w}: unknown event '${s.startsEvent}'`);
     if (r.romantic && s.category !== 'romantic' && s.category !== 'status') err(`${w}: romantic requirement outside the romantic and status categories`);
     if (s.category === 'romantic' && ready && !r.romantic && !r.status) err(`${w}: romantic socials must require romantic: true (adults and interest)`);
+  }
+
+  // ---- Schools (Milestone 8) ----
+  for (const sc of Object.values(db.schools ?? {})) {
+    const w = `school '${sc.id}'`;
+    if (sc.status === 'ready' && (blank(sc.name) || blank(sc.description) || blank(sc.icon))) err(`${w}: missing name, description or icon`);
+    if (sc.stages.length === 0) err(`${w}: needs at least one life stage`);
+    for (const st of sc.stages) if (!has(LIFE_STAGE_IDS, st)) err(`${w}: unknown life stage '${st}'`);
+    if (sc.days.length === 0 || sc.days.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) err(`${w}: days must be 0..6`);
+    if (!(sc.start >= 0 && sc.end > sc.start && sc.end <= 24 * 60)) err(`${w}: bad school hours`);
   }
 
   // ---- Events ----

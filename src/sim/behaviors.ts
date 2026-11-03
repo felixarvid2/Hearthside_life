@@ -14,6 +14,7 @@ import {
   behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
 import { cookBehavior, eatMealBehavior } from './cooking';
+import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
 import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
@@ -24,7 +25,7 @@ import {
   clearUsePoint,
 } from './steps';
 import {
-  goHereBehavior, goToWorkBehavior, inviteBehavior, inviteHomeBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior,
+  goHereBehavior, goToSchoolBehavior, goToWorkBehavior, inviteBehavior, inviteHomeBehavior, leaveLotBehavior, phoneChatBehavior, phoneDateBehavior, planEventBehavior,
   travelToBehavior,
 } from './travel';
 import {
@@ -33,6 +34,11 @@ import {
 } from './tuning';
 import { atDayMinute, dayIndex, hourOfDay } from '../core/clock';
 import { nextShift } from './careers';
+import { ageUp, ageUpProblem } from './aging';
+import { adoptionStartProblem } from './adoption';
+import { careBehavior } from './care';
+import { completeHomework, homeworkProblem, nextSchoolDay } from './school';
+import { addMoodlet } from './mood';
 
 // ---------------------------------------------------------------------------------------------
 // Shared helpers
@@ -264,6 +270,9 @@ function morningWake(ctx: SimCtx, p: Person): number | null {
   let wake = atDayMinute(day, SLEEP_WAKE_MINUTE + (hashString(p.id) % (SLEEP_WAKE_SPREAD / 15 + 1)) * 15);
   const shift = nextShift(ctx.state, ctx.content, p, ctx.now);
   if (shift && shift.start - SLEEP_WAKE_BEFORE_SHIFT < wake) wake = Math.max(ctx.now + 60, shift.start - SLEEP_WAKE_BEFORE_SHIFT);
+  // Pupils are up in time for school.
+  const school = p.school ? nextSchoolDay(ctx.state, ctx.content, p, ctx.now) : null;
+  if (school && school.start - SLEEP_WAKE_BEFORE_SHIFT < wake && school.start - ctx.now < 24 * 60) wake = Math.max(ctx.now + 60, school.start - SLEEP_WAKE_BEFORE_SHIFT);
   return wake;
 }
 
@@ -502,6 +511,47 @@ const editOutfitsBehavior: Behavior = {
   },
 };
 
+/** Homework (Milestone 8): at a desk, table or computer, sitting down at a chair in front of it when there is one. */
+const homeworkBehavior: Behavior = {
+  ...computerBehavior,
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    return r ?? homeworkProblem(ctx, p);
+  },
+  apply(ctx, p) { completeHomework(ctx, p, false); },
+};
+
+/** Phone or computer: the adoption agency (Milestone 8) opens the adoption dialog. */
+const openAdoptBehavior: Behavior = {
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    return r ?? adoptionStartProblem(ctx, p);
+  },
+  reserve: (ctx, p, a) => (defOf(ctx, a).kind === 'object' ? reservePrimary(ctx, p, a) : null),
+  step: primaryStep,
+  apply(ctx, p) { ctx.events.emit({ type: 'ui.request', what: 'adopt', personId: p.id }); },
+};
+
+/** Age up now at a birthday cake (Milestone 8): the birthday comes early, the people around celebrate. */
+const ageUpBehavior: Behavior = {
+  ...genericBehavior,
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    return r ?? ageUpProblem(ctx, p);
+  },
+  apply(ctx, p) {
+    const loc = lotLoc(p);
+    const r = ageUp(ctx, p, 'cake');
+    if (!r.ok || !loc) return;
+    for (const o of Object.values(ctx.state.people)) {
+      const ol = lotLoc(o);
+      if (o.id === p.id || !ol || ol.lotId !== loc.lotId || dist(ol.x, ol.z, loc.x, loc.z) > 6) continue;
+      addMoodlet(ctx.content, o, 'celebrating', ctx.now, 'birthday');
+    }
+  },
+  interruptible: false,
+};
+
 // ---------------------------------------------------------------------------------------------
 // Registry (built lazily so module import order never matters)
 // ---------------------------------------------------------------------------------------------
@@ -532,6 +582,11 @@ function buildRegistry(): Record<string, Behavior> {
     service: serviceBehavior,
     callRepair: callRepairBehavior,
     goToWork: goToWorkBehavior,
+    goToSchool: goToSchoolBehavior,
+    care: careBehavior,
+    homework: homeworkBehavior,
+    ageUp: ageUpBehavior,
+    openAdopt: openAdoptBehavior,
     goHere: goHereBehavior,
     leaveLot: leaveLotBehavior,
     travelTo: travelToBehavior,
@@ -544,6 +599,7 @@ function buildRegistry(): Record<string, Behavior> {
     openBills: openBillsBehavior,
     openCareers: openCareersBehavior,
     social: socialBehavior,
+    garden: gardenBehavior,
   };
 }
 

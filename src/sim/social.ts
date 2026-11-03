@@ -16,6 +16,8 @@ import { clamp, householdOf, lotLoc, setThought, socialDef, venueTypeOf } from '
 import { addMoodlet, computeMood } from './mood';
 import { changeNeed } from './needs';
 import { makeAction } from './queue';
+import { socialStageReason } from './gating';
+import { applySocialEffect, socialEffectProblem } from './socialEffects';
 import {
   addMemory, applyRelDelta, bondOf, commitmentOf, decayRecent, ensureRel, familyTie, hasRecentMemory, memoryModifier, peekRel,
   refreshLabel, resolveMemories, setBondStatus, statusLabel,
@@ -83,6 +85,10 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
   const rel = peekRel(ctx.state, actor.id, target.id);
   const bond = bondOf(ctx.state, actor.id, target.id);
   const r = def.requires;
+  const stageReason = socialStageReason(def, actor, target);
+  if (stageReason) return stageReason;
+  if (r.otherHousehold && actor.householdId === target.householdId) return `${target.firstName} already lives here.`;
+  if (r.sameHousehold && actor.householdId !== target.householdId) return `${target.firstName} doesn't live here.`;
   if (r.notStatus && bond && r.notStatus.includes(bond.status)) return `Already ${statusLabel(bond.status, true)}.`;
   if (r.minFamiliarity !== undefined && rel.familiarity < r.minFamiliarity) {
     return rel.familiarity <= 0 ? 'Needs an introduction first.' : `Needs to know ${target.firstName} better.`;
@@ -118,6 +124,10 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
   }
   if (def.startsEvent) {
     const reason = canPlanEvent(ctx, actor, [target.id], def.startsEvent);
+    if (reason) return reason;
+  }
+  if (def.effect) {
+    const reason = socialEffectProblem(ctx, actor, target, def);
     if (reason) return reason;
   }
   return null;
@@ -261,6 +271,7 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   if (householdOf(ctx, actor)?.isPlayable || householdOf(ctx, target)?.isPlayable) addFeed(ctx.state, ctx.events, 'social', line, actor.id);
   witnessCheating(ctx, actor, target, def, accepted);
   if (accepted && def.startsEvent) planEventFromSocial(ctx, actor, target, def.startsEvent);
+  if (accepted && def.effect) applySocialEffect(ctx, actor, target, def);
   noteSocial(ctx, actor, target, def, accepted);
   return accepted;
 }

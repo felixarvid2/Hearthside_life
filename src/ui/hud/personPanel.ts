@@ -15,6 +15,10 @@ import {
   skillProgress, type MemoryRow, type RelationshipRow,
 } from './format';
 import { awayText } from './strip';
+import { familyTree } from '../creator/familyTree';
+import { isSchoolStage } from '../../core/lifeStages';
+import { openAdoptDialog, openSplitDialog } from './familyDialogs';
+import { birthdayText, stageName, treeModel } from './familyModel';
 import type { PersonTab, Shell } from './shell';
 
 const TABS: Array<{ id: PersonTab; label: string; icon: string }> = [
@@ -25,6 +29,7 @@ const TABS: Array<{ id: PersonTab; label: string; icon: string }> = [
   { id: 'skills', label: 'Skills', icon: 'chart' },
   { id: 'aspiration', label: 'Aspiration', icon: 'star' },
   { id: 'traits', label: 'Traits', icon: 'sparkle' },
+  { id: 'family', label: 'Family', icon: 'family' },
 ];
 
 export interface PersonPanel {
@@ -68,9 +73,10 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
 
   const p = panel({ title: 'Person', className: 'person-panel', initialHeight: 'half', onClose: () => { pid = null; onClosed(); } });
   const moodChip = h('span', { class: 'mood-chip' });
+  const stageChip = h('span', { class: 'stage-chip' });
   const doing = h('span', { class: 'pp-doing' });
   const reasons = h('ul', { class: 'mood-reasons', ariaLabel: 'Mood reasons' });
-  const head = h('div', { class: 'pp-head' }, h('div', { class: 'pp-head-row' }, moodChip, doing), reasons);
+  const head = h('div', { class: 'pp-head' }, h('div', { class: 'pp-head-row' }, moodChip, stageChip, doing), reasons);
   const tabBar = tabs({ label: 'Person details', items: TABS, value: tab, onChange: (id) => { setTab(id as PersonTab); sh.sound('click'); } });
   const content = h('div', { class: 'pp-content', role: 'tabpanel' });
   const sticky = h('div', { class: 'pp-sticky' }, head, tabBar.el);
@@ -220,6 +226,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
   };
 
   const renderCareer = (st: WorldState, pr: Person) => {
+    if (pr.lifeStage === 'baby' || pr.lifeStage === 'toddler' || isSchoolStage(pr.lifeStage)) { renderSchool(st, pr); return; }
     const c = pr.career;
     const def = c ? db.careers[c.careerId] : undefined;
     const lvl = c && def ? def.levels.find((l) => l.level === c.level) : undefined;
@@ -323,6 +330,92 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     content.replaceChildren(...items.filter((x): x is HTMLElement => !!x));
   };
 
+
+  /** The School tab (children and teens): schedule, today, grade, homework. Babies and toddlers see a short note. */
+  const renderSchool = (_st: WorldState, pr: Person) => {
+    const info = api.family?.(pr.id)?.school ?? null;
+    const sig = `school:${pr.id}:${pr.lifeStage}:${info ? `${info.status}/${info.statusText}/${Math.round(info.performance)}/${info.grade}/${info.lastGrade}/${info.attended}/${info.missed}/${info.homeworkDue}` : 'none'}`;
+    if (sigs.get('career') === sig) return;
+    sigs.set('career', sig);
+    if (!info) {
+      content.replaceChildren(empty(pr.lifeStage === 'baby' || pr.lifeStage === 'toddler'
+        ? `${pr.firstName} is too little for school. Children start school as they grow up.`
+        : `${pr.firstName} does not go to school.`, 'book'));
+      return;
+    }
+    const hw = button({
+      icon: 'book', label: 'Do homework', small: true, variant: 'primary', disabled: !info.homeworkDue,
+      title: info.homeworkDue ? 'Sit down at a desk, table or computer' : info.homeworkText,
+      onClick: () => {
+        const r = api.doHomework?.(pr.id) ?? { ok: false, reason: 'That is not available here.' };
+        if (!r.ok) toast(r.reason, 'warning'); else { sh.sound('confirm'); }
+      },
+    });
+    content.replaceChildren(
+      h('div', { class: 'career-head' }, h('span', { class: 'career-icon' }, icon('book', 28)), h('div', {},
+        h('h3', { text: info.schoolName }),
+        h('p', { class: 'career-title', text: `${info.days}, ${info.hours}` }))),
+      h('dl', { class: 'facts school-facts' },
+        h('dt', { text: 'Today' }), h('dd', { text: info.statusText }),
+        h('dt', { text: 'Grade' }), h('dd', { text: `${info.grade}${info.lastGrade ? ` (last report card: ${info.lastGrade})` : ''}` }),
+        h('dt', { text: 'Attendance' }), h('dd', { text: `${info.attended} days attended, ${info.missed} missed` }),
+        h('dt', { text: 'Homework' }), h('dd', { text: info.homeworkText })),
+      h('h3', { class: 'pp-subhead', text: 'Performance' }),
+      signedBar('Performance', info.performance, 'perf'),
+      h('p', { class: 'pp-note' }, icon('info', 18), h('span', { text: 'Going to school and doing homework raise performance; missing school and a low mood lower it. A parent or teen can use Help with Homework. A report card comes every week.' })),
+      h('div', { class: 'career-actions' }, hw),
+    );
+  };
+
+  /** The Family tab: stage and birthday, the tree, relatives and household actions (adopt, move out). */
+  const renderFamily = (st: WorldState, pr: Person) => {
+    const info = api.family?.(pr.id) ?? null;
+    if (!info) { content.replaceChildren(empty('Family details are not available here.', 'family')); return; }
+    const mine = pr.householdId === st.activeHouseholdId && !pr.isNpc;
+    const sig = `family:${pr.id}:${info.stage}:${info.stageDays}:${info.daysToBirthday}:${info.aging}:${info.ageUp.ok}:${info.ageUp.reason ?? ''}:${info.adopt.ok}:${info.household.members}:${info.relatives.map((r) => `${r.id}.${r.text}.${r.stage}`).join(',')}:${info.treeIds.join('+')}:${Object.keys(st.people).length}`;
+    if (sigs.get('family') === sig) return;
+    sigs.set('family', sig);
+    const fraction = info.stageLength ? Math.min(1, info.stageDays / info.stageLength) : null;
+    const items: Array<HTMLElement | null> = [
+      h('div', { class: 'family-stage' },
+        h('div', { class: 'family-stage-main' },
+          h('span', { class: 'stage-chip stage-big', text: info.stageLabel }),
+          h('span', { class: 'family-birthday', text: info.aging === 'off' ? 'Aging is off (Settings > Household life).' : birthdayText(info.daysToBirthday) })),
+        fraction !== null ? progress('Time in this stage', fraction, `${info.stageDays} of ${info.stageLength} days`) : null,
+        mine ? button({
+          icon: 'star', label: 'Age up now', small: true, variant: 'secondary', disabled: !info.ageUp.ok,
+          title: info.ageUp.ok ? 'Celebrate the birthday now, at the birthday cake' : info.ageUp.reason ?? '',
+          onClick: () => { const r = api.ageUpNow?.(pr.id) ?? { ok: false, reason: 'That is not available here.' }; if (!r.ok) toast(r.reason, 'warning'); else sh.sound('confirm'); },
+        }) : null,
+        mine && !info.ageUp.ok && info.ageUp.reason ? h('p', { class: 'pp-note' }, icon('info', 16), h('span', { text: info.ageUp.reason })) : null),
+    ];
+    if (info.treeIds.length > 1) {
+      const model = treeModel(st, info.treeIds, pr.id);
+      items.push(h('h3', { class: 'pp-subhead', text: 'Family tree' }), h('div', { class: 'pp-tree' }, familyTree(model.draft, model.current)));
+    }
+    items.push(h('h3', { class: 'pp-subhead', text: info.relatives.length ? `Relatives (${info.relatives.length})` : 'Relatives' }));
+    items.push(info.relatives.length
+      ? h('ul', { class: 'relative-list' }, ...info.relatives.map((r) => h('li', { class: 'relative-row', dataset: { personId: r.id } },
+        h('span', { class: 'relative-name', text: r.name }),
+        h('span', { class: 'tag tag-family', text: r.text }),
+        h('span', { class: 'relative-meta', text: `${r.stageLabel}${r.household ? ', same household' : `, ${r.where.toLowerCase()}`}` }))))
+      : h('p', { class: 'pp-note' }, icon('info', 16), h('span', { text: `${pr.firstName} has no relatives in town yet. Adopt a child, or get to know people and ask them to move in.` })));
+    if (mine) {
+      const actions: HTMLElement[] = [];
+      actions.push(button({
+        icon: 'heart', label: 'Adopt a child...', small: true, variant: 'secondary', disabled: !info.adopt.ok, title: info.adopt.ok ? 'Adopt a baby, toddler, child or teen' : info.adopt.reason ?? '',
+        onClick: () => { sh.sound('open'); openAdoptDialog(sh, pr.id); },
+      }));
+      actions.push(button({
+        icon: 'home', label: 'Move out or in...', small: true, variant: 'secondary',
+        title: 'Let somebody move out to a home of their own, or move in with another household',
+        onClick: () => { sh.sound('open'); openSplitDialog(sh, pr.id); },
+      }));
+      items.push(h('div', { class: 'career-actions family-actions' }, ...actions), !info.adopt.ok && info.adopt.reason ? h('p', { class: 'pp-note' }, icon('info', 16), h('span', { text: info.adopt.reason })) : null);
+    }
+    content.replaceChildren(...items.filter((x): x is HTMLElement => !!x));
+  };
+
   const renderSkills = (_st: WorldState, pr: Person) => {
     const entries = Object.entries(pr.skills).filter(([, s]) => s.level > 1 || s.xp > 0).sort((a, b) => b[1].level - a[1].level || b[1].xp - a[1].xp);
     const sig = `skills:${pr.id}:${entries.map(([id, s]) => `${id}/${s.level}/${Math.floor(s.xp)}`).join(',')}`;
@@ -395,9 +488,15 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     const cur = pr.queue[0];
     const away = awayText(pr, st);
     const doingText = away ? `${away.label}${away.back ? ` · ${away.back}` : ''}` : cur ? `${interactionName(db, cur.interactionId)}` : 'Idle';
-    const hs = `${pr.id}|${pr.firstName} ${pr.lastName}|${mood.label}|${moodTone(mood.value)}|${mood.reasons.join(';')}|${doingText}`;
+    const fam = api.family?.(pr.id);
+    const stageText = fam ? `${stageName(pr.lifeStage)}${fam.daysToBirthday !== null && pr.lifeStage !== 'elder' ? ` · ${birthdayText(fam.daysToBirthday).toLowerCase()}` : ''}` : stageName(pr.lifeStage);
+    const hs = `${pr.id}|${pr.firstName} ${pr.lastName}|${mood.label}|${moodTone(mood.value)}|${mood.reasons.join(';')}|${doingText}|${stageText}`;
     if (hs !== headSig) {
       headSig = hs;
+      stageChip.textContent = stageText;
+      const careerTabSpans = tabBar.el.querySelectorAll('[data-id="career"] > span');
+      const careerTab = careerTabSpans[careerTabSpans.length - 1]; // the label comes after the icon
+      if (careerTab) careerTab.textContent = isSchoolStage(pr.lifeStage) || pr.lifeStage === 'baby' || pr.lifeStage === 'toddler' ? 'School' : 'Career';
       p.setTitle(`${pr.firstName} ${pr.lastName}`);
       p.el.setAttribute('aria-label', `${pr.firstName} ${pr.lastName}`);
       moodChip.dataset.tone = moodTone(mood.value);
@@ -419,6 +518,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
       case 'skills': renderSkills(st, pr); break;
       case 'aspiration': renderAspiration(st, pr); break;
       case 'traits': renderTraits(st, pr); break;
+      case 'family': renderFamily(st, pr); break;
       default: break;
     }
     toggleClass(p.el, 'is-away', !!away);

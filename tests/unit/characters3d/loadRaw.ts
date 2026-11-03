@@ -76,11 +76,14 @@ export async function loadAiHairFile(id: string) {
   };
 }
 
-/** A built MPFB body GLB (public/assets/characters/mpfb_{f,m}.glb): the skin primitive's RawBody, every primitive's arrays and the extras. */
-export async function loadMpfbBody(sex: 'f' | 'm') {
+/**
+ * A built MPFB body GLB (public/assets/characters/mpfb_{f,m}.glb, or another body of the same format such as a life stage's
+ * `mpfb_child_f`): the skin primitive's RawBody, every primitive's arrays and the extras.
+ */
+export async function loadMpfbBody(sex: 'f' | 'm', file = `mpfb_${sex}`) {
   await MeshoptDecoder.ready;
   const io = new NodeIO().registerExtensions([EXTMeshoptCompression, EXTTextureWebP, KHRMeshQuantization]).registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
-  const doc = await io.read(`${root}mpfb_${sex}.glb`);
+  const doc = await io.read(`${root}${file}.glb`);
   const r = doc.getRoot();
   const mesh = r.listMeshes()[0]!;
   const names = (mesh.getExtras() as { targetNames: string[] }).targetNames;

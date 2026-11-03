@@ -268,3 +268,38 @@ export const EVENT_GOAL_SHARE = 0.7;
 export const RECONCILE_WINDOW_DAYS = 3;
 export const RECONCILE_COOLDOWN_DAYS = 7;
 export const RECONCILE_CHANCE = 0.6;
+
+// ---------------------------------------------------------------------------------------------
+// Milestone 8: school, care and family
+// ---------------------------------------------------------------------------------------------
+
+/** School: goToSchool is queued this many minutes before the first bell. */
+export const SCHOOL_COMMUTE_LEAD_MINUTES = 45;
+/** School: a pupil who has not left by this many minutes after the start has missed the day. */
+export const SCHOOL_MISS_AFTER_MINUTES = 90;
+/** School: performance changes (-100..100). */
+export const SCHOOL_ATTEND_PERFORMANCE = 3;
+export const SCHOOL_MISSED_PERFORMANCE = -5;
+export const SCHOOL_HOMEWORK_PERFORMANCE = 5;
+export const SCHOOL_HOMEWORK_HELP_BONUS = 2;
+export const SCHOOL_HOMEWORK_MISSED_PERFORMANCE = -3;
+/** School: mood at the start of the day that raises or lowers performance a little. */
+export const SCHOOL_LOW_MOOD = -20;
+export const SCHOOL_HIGH_MOOD = 30;
+/** Four school weeks, then one week off. */
+export const SCHOOL_WEEKS_ON = 4;
+
+/** Care: a baby's or toddler's need that stays at zero this long calls the emergency sitter. */
+export const CARE_NEGLECT_MINUTES = 180;
+/** Care: the emergency sitter's fee (cents) and what they restore a need to. */
+export const SITTER_FEE = 2500;
+export const SITTER_RESTORE = 70;
+/** Care: a need at or below this counts as empty. */
+export const CARE_EMPTY_NEED = 1;
+/** Care: caregivers step in when a dependent's need falls below this (autonomy). */
+export const CARE_AUTONOMY_NEED = 45;
+
+/** Adoption: fees by life stage (cents). */
+export const ADOPTION_FEES = { baby: 250000, toddler: 200000, child: 150000, teen: 100000 } as const;
+/** Households hold at most this many people. */
+export const MAX_HOUSEHOLD_SIZE = 8;

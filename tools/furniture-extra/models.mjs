@@ -443,9 +443,115 @@ function lockerBank() {
   return m;
 }
 
+
+// --- Milestone 8: family furniture (bassinet, high chair, toddler bed, potty, changing table, birthday cake) ---------
+
+/** Wicker bassinet on a wooden stand with a hood (1 x 1 tile). */
+function bassinet() {
+  const m = new Model('bassinet');
+  for (const [x, z] of [[0.2, 0.2], [0.8, 0.2], [0.2, 0.8], [0.8, 0.8]]) m.rod('wood', [x, 0, z], [x, 0.5, z], 0.05);
+  m.rod('wood', [0.2, 0.16, 0.2], [0.8, 0.16, 0.2], 0.03); // cross bars
+  m.rod('wood', [0.2, 0.16, 0.8], [0.8, 0.16, 0.8], 0.03);
+  m.box('woodDark', [0.14, 0.5, 0.14], [0.86, 0.55, 0.86]); // base
+  m.box('woodDark', [0.14, 0.55, 0.14], [0.86, 0.8, 0.18]); // back wall
+  m.box('woodDark', [0.14, 0.55, 0.82], [0.86, 0.75, 0.86]); // front wall
+  m.box('woodDark', [0.14, 0.55, 0.18], [0.18, 0.8, 0.82]); // sides
+  m.box('woodDark', [0.82, 0.55, 0.18], [0.86, 0.8, 0.82]);
+  m.box('carpetWhite', [0.18, 0.55, 0.18], [0.82, 0.63, 0.82]); // mattress
+  m.box('carpetBlue', [0.2, 0.63, 0.4], [0.8, 0.67, 0.8]); // blanket
+  m.box('carpetWhite', [0.28, 0.63, 0.2], [0.72, 0.7, 0.38]); // pillow
+  // hood over the head end
+  m.box('carpetWhite', [0.12, 0.8, 0.12], [0.88, 0.85, 0.5]);
+  m.box('carpetWhite', [0.12, 0.55, 0.12], [0.16, 0.85, 0.5]);
+  m.box('carpetWhite', [0.84, 0.55, 0.12], [0.88, 0.85, 0.5]);
+  return m;
+}
+
+/** High chair with a tray (1 x 1 tile, seat toward +z). */
+function highChair() {
+  const m = new Model('high-chair');
+  for (const [x, z] of [[0.25, 0.3], [0.75, 0.3], [0.2, 0.8], [0.8, 0.8]]) m.rod('wood', [x, 0, z], [x, 0.62, z], 0.05);
+  m.box('wood', [0.2, 0.62, 0.25], [0.8, 0.68, 0.8]); // seat
+  m.box('carpetBlue', [0.24, 0.68, 0.3], [0.76, 0.72, 0.76]); // cushion
+  m.box('woodDark', [0.2, 0.68, 0.22], [0.8, 1.15, 0.28]); // back
+  m.box('woodDark', [0.2, 0.68, 0.28], [0.25, 0.9, 0.78]); // arms
+  m.box('woodDark', [0.75, 0.68, 0.28], [0.8, 0.9, 0.78]);
+  m.box('carpetWhite', [0.18, 0.88, 0.62], [0.82, 0.92, 0.98]); // tray
+  m.box('woodDark', [0.18, 0.92, 0.95], [0.82, 0.96, 0.98]); // tray lip
+  m.rod('metal', [0.2, 0.2, 0.8], [0.8, 0.2, 0.8], 0.03); // foot bar
+  return m;
+}
+
+/** Toddler bed: a low bed with side rails (1 x 2 tiles). */
+function toddlerBed() {
+  const m = new Model('toddler-bed');
+  const x0 = 0.1, x1 = 0.9, z0 = 0.15, z1 = 1.85;
+  for (const [x, z] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) m.box('wood', [x - 0.04, 0, z - 0.04], [x + 0.04, 0.55, z + 0.04]);
+  m.box('wood', [x0 - 0.04, 0.12, z0 - 0.03], [x1 + 0.04, 0.2, z1 + 0.03]); // base frame
+  m.box('carpetWhite', [x0, 0.2, z0], [x1, 0.3, z1]); // mattress
+  m.box('carpet', [x0 + 0.02, 0.3, z0 + 0.6], [x1 - 0.02, 0.34, z1 - 0.02]); // blanket
+  m.box('carpetWhite', [x0 + 0.12, 0.3, z0 + 0.06], [x1 - 0.12, 0.38, z0 + 0.4]); // pillow
+  m.box('woodDark', [x0 - 0.04, 0.2, z0 - 0.04], [x1 + 0.04, 0.6, z0 + 0.02]); // headboard
+  m.box('woodDark', [x0 - 0.04, 0.2, z1 - 0.02], [x1 + 0.04, 0.4, z1 + 0.04]); // footboard
+  for (const x of [x0, x1]) { // side rails with a gap in the middle for climbing in
+    m.box('woodDark', [x - 0.02, 0.38, z0], [x + 0.02, 0.42, z0 + 0.7]);
+    m.box('woodDark', [x - 0.02, 0.38, z1 - 0.5], [x + 0.02, 0.42, z1]);
+    for (const z of [z0 + 0.15, z0 + 0.35, z0 + 0.55, z1 - 0.35, z1 - 0.15]) m.box('woodDark', [x - 0.015, 0.2, z - 0.015], [x + 0.015, 0.38, z + 0.015]);
+  }
+  return m;
+}
+
+/** Potty chair (1 x 1 tile, backrest at the back). */
+function pottyChair() {
+  const m = new Model('potty-chair');
+  m.cylY('carpetBlue', 0.5, 0.55, 0.0, 0.3, 0.2, 0.25, 12); // body
+  m.cylY('carpetWhite', 0.5, 0.58, 0.3, 0.34, 0.24, 0.24, 12); // rim
+  m.cylY('metalDark', 0.5, 0.58, 0.335, 0.34, 0.14, 0.14, 12); // opening
+  m.box('carpetBlue', [0.28, 0.3, 0.26], [0.72, 0.62, 0.34]); // backrest
+  m.box('carpetWhite', [0.26, 0.6, 0.24], [0.74, 0.65, 0.36]);
+  return m;
+}
+
+/** Changing table: a pad with raised edges on a chest with shelves (1 x 1 tile). */
+function changingTable() {
+  const m = new Model('changing-table');
+  m.box('wood', [0.06, 0, 0.1], [0.94, 0.9, 0.9]); // chest
+  m.box('woodDark', [0.04, 0.9, 0.08], [0.96, 0.95, 0.92]); // top
+  m.box('carpetWhite', [0.1, 0.95, 0.14], [0.9, 1.02, 0.86]); // pad
+  m.box('woodDark', [0.04, 0.95, 0.08], [0.96, 1.08, 0.12]); // raised edges
+  m.box('woodDark', [0.04, 0.95, 0.88], [0.96, 1.05, 0.92]);
+  m.box('woodDark', [0.04, 0.95, 0.08], [0.08, 1.08, 0.92]);
+  m.box('woodDark', [0.92, 0.95, 0.08], [0.96, 1.08, 0.92]);
+  m.box('woodDark', [0.1, 0.45, 0.9], [0.9, 0.5, 0.92]); // shelf divider seen from the front
+  for (const y of [0.1, 0.5]) { // open shelves with baskets
+    m.box('carpetBlue', [0.12, y, 0.9], [0.46, y + 0.28, 0.93]);
+    m.box('carpet', [0.54, y, 0.9], [0.88, y + 0.28, 0.93]);
+  }
+  return m;
+}
+
+/** Birthday cake on a plate with three candles (1 x 1 tile, stands on a table or counter). */
+function birthdayCake() {
+  const m = new Model('birthday-cake');
+  m.cylY('carpetWhite', 0.5, 0.5, 0, 0.03, 0.4, 0.4, 16); // plate
+  m.cylY('wood', 0.5, 0.5, 0.03, 0.2, 0.3, 0.3, 16); // sponge
+  m.cylY('carpetWhite', 0.5, 0.5, 0.2, 0.26, 0.31, 0.31, 16); // icing
+  m.cylY('carpet', 0.5, 0.5, 0.26, 0.28, 0.22, 0.22, 16); // jam top
+  for (const [x, z] of [[0.38, 0.5], [0.5, 0.58], [0.62, 0.5]]) {
+    m.cylY('carpetBlue', x, z, 0.28, 0.42, 0.018, 0.018, 6); // candle
+    m.cylY('wood', x, z, 0.42, 0.47, 0.012, 0.004, 6); // flame
+  }
+  for (let k = 0; k < 8; k++) { // icing dots
+    const t = (k / 8) * Math.PI * 2;
+    m.cylY('carpet', 0.5 + 0.28 * Math.cos(t), 0.5 + 0.28 * Math.sin(t), 0.26, 0.3, 0.03, 0.025, 6);
+  }
+  return m;
+}
+
 export const EXTRA_MODELS = {
   dishwasher, easel, piano, treadmill, weightBench, chessTable, crib, toyChest, grill, patioSet, gardenBed, gardenBench, gardenChair,
   tree, shrub, fountain, playgroundSlide, swingSet, serviceCounter, produceStand, vendingMachine, studyNotes, lockerBank,
+  bassinet, highChair, toddlerBed, pottyChair, changingTable, birthdayCake,
 };
 
 /** Builds every model keyed by its asset name (the GLB file name). */

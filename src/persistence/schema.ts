@@ -190,6 +190,127 @@ export function fillNeighbourhoodDefaults(raw: Record<string, unknown>): void {
   raw.neighbourhood = fixed;
 }
 
+// ---------------------------------------------------------------------------------------------
+// Milestone 8 (family and life stages): fill defaults
+// ---------------------------------------------------------------------------------------------
+
+const AGING_MODES = ['off', 'long', 'normal', 'custom'];
+const LIFE_STAGE_KEYS = ['baby', 'toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'];
+const NEED_KEYS = ['hunger', 'energy', 'hygiene', 'bladder', 'fun', 'social'];
+
+/**
+ * Defaults for fields added to schema 1 by Milestone 8: `settings.aging` may be 'custom' with `agingDays` and `elderEndOfLife`;
+ * a person may carry `stageDays`, `parentIds`, `school` and `careSince`. Old saves have none of them and readers treat
+ * absent as the default (aging off, stage days 0, no parents, no school). This repairs what would confuse the simulation:
+ * an unknown aging mode becomes 'off', custom stage lengths are whole days in 1..120, parent ids point at existing people
+ * (at most two, never themselves), a damaged school record is mended or dropped. Applied to every loaded world.
+ */
+export function fillFamilyDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const whole = (v: unknown): v is number => num(v) && Number.isInteger(v) && v >= 0;
+  if (isRecord(raw.settings)) {
+    const st = raw.settings;
+    if (!AGING_MODES.includes(String(st.aging))) st.aging = 'off';
+    if (st.agingDays !== undefined) {
+      if (!isRecord(st.agingDays)) delete st.agingDays;
+      else {
+        const days = st.agingDays;
+        for (const k of Object.keys(days)) {
+          const v = days[k];
+          if (!LIFE_STAGE_KEYS.includes(k) || !num(v)) delete days[k];
+          else days[k] = Math.max(1, Math.min(120, Math.round(v)));
+        }
+      }
+    }
+    if (st.elderEndOfLife !== undefined && typeof st.elderEndOfLife !== 'boolean') delete st.elderEndOfLife;
+  }
+  if (!isRecord(raw.people)) return;
+  const people = raw.people;
+  for (const [id, p] of Object.entries(people)) {
+    if (!isRecord(p)) continue;
+    if (p.stageDays !== undefined) { if (num(p.stageDays) && p.stageDays >= 0) p.stageDays = Math.floor(p.stageDays); else delete p.stageDays; }
+    if (p.parentIds !== undefined) {
+      const ids = Array.isArray(p.parentIds) ? [...new Set(p.parentIds.filter((x): x is string => typeof x === 'string' && x !== id && isRecord(people[x])))].slice(0, 2) : [];
+      if (ids.length > 0) p.parentIds = ids; else delete p.parentIds;
+    }
+    if (p.school !== undefined && p.school !== null) {
+      const s = p.school;
+      if (!isRecord(s) || typeof s.schoolId !== 'string' || !s.schoolId) delete p.school;
+      else {
+        s.performance = num(s.performance) ? Math.max(-100, Math.min(100, s.performance)) : 0;
+        if (!num(s.homeworkDay)) s.homeworkDay = -1;
+        if (!whole(s.attended)) s.attended = 0;
+        if (!whole(s.missed)) s.missed = 0;
+        if (s.lastGrade !== undefined && typeof s.lastGrade !== 'string') delete s.lastGrade;
+        if (s.reportWeek !== undefined && !whole(s.reportWeek)) delete s.reportWeek;
+      }
+    }
+    if (p.careSince !== undefined) {
+      if (!isRecord(p.careSince)) delete p.careSince;
+      else {
+        const cs = p.careSince;
+        for (const k of Object.keys(cs)) if (!NEED_KEYS.includes(k) || !num(cs[k])) delete cs[k];
+        if (Object.keys(cs).length === 0) delete p.careSince;
+      }
+    }
+  }
+}
+
+// ===== Milestone 9 exterior (fences, roofs, terrain paint, garden beds): fill and repair ===================================
+/**
+ * Defaults for fields added to schema 1 by the Milestone 9 exterior work: a lot may carry `fences` (keyed by edge key), `roofs` (keyed by
+ * id) and `terrain` (tile key -> paint id), and an object may carry `garden` (crop bed state). Old saves have none of them and the game
+ * reads absent as "nothing", so no data is added; this drops records that would confuse the renderer or the simulation (a fence
+ * without an edge, a roof without a rectangle, a paint that is not text, a garden state with bad numbers). Applied to every loaded world.
+ */
+export function fillExteriorDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const int = (v: unknown): v is number => num(v) && Number.isInteger(v);
+  if (!isRecord(raw.lots)) return;
+  for (const lot of Object.values(raw.lots)) {
+    if (!isRecord(lot)) continue;
+    if (lot.fences !== undefined) {
+      if (!isRecord(lot.fences)) delete lot.fences;
+      else {
+        for (const [key, f] of Object.entries(lot.fences)) {
+          if (!isRecord(f) || typeof f.defId !== 'string' || !int(f.level) || !int(f.x) || !int(f.z) || (f.dir !== 'h' && f.dir !== 'v')) { delete lot.fences[key]; continue; }
+          f.id = key;
+          if (f.variant !== undefined && !int(f.variant)) delete f.variant;
+          if (f.purchasePrice !== undefined && !int(f.purchasePrice)) delete f.purchasePrice;
+          if (f.boughtAt !== undefined && !num(f.boughtAt)) delete f.boughtAt;
+        }
+      }
+    }
+    if (lot.roofs !== undefined) {
+      if (!isRecord(lot.roofs)) delete lot.roofs;
+      else {
+        for (const [id, r] of Object.entries(lot.roofs)) {
+          const rect = isRecord(r) && [r.level, r.x0, r.z0, r.x1, r.z1].every(int) && (r.x1 as number) > (r.x0 as number) && (r.z1 as number) > (r.z0 as number);
+          if (!isRecord(r) || !rect || typeof r.styleId !== 'string' || !isRecord(r.finish) || typeof r.finish.designId !== 'string' || typeof r.finish.paletteId !== 'string') { delete lot.roofs[id]; continue; }
+          r.id = id;
+          if (r.ridge !== 'h' && r.ridge !== 'v') r.ridge = 'h';
+          if (!num(r.pitch)) r.pitch = 30;
+          if (r.purchasePrice !== undefined && !int(r.purchasePrice)) delete r.purchasePrice;
+          if (r.boughtAt !== undefined && !num(r.boughtAt)) delete r.boughtAt;
+        }
+      }
+    }
+    if (lot.terrain !== undefined) {
+      if (!isRecord(lot.terrain)) delete lot.terrain;
+      else for (const [key, v] of Object.entries(lot.terrain)) if (typeof v !== 'string' || !/^\d+:\d+:\d+$/.test(key)) delete lot.terrain[key];
+    }
+    if (isRecord(lot.objects)) {
+      for (const o of Object.values(lot.objects)) {
+        if (!isRecord(o) || o.garden === undefined) continue;
+        const g = o.garden;
+        const ok = isRecord(g) && (g.crop === null || typeof g.crop === 'string') && [g.growth, g.need, g.water, g.weeds, g.day, g.harvests].every(num);
+        if (!ok) delete o.garden;
+      }
+    }
+  }
+}
+// ===== end Milestone 9 exterior =====================================================================================
+
 /** Oldest schema version this build can still upgrade. */
 export const OLDEST_SUPPORTED_VERSION = 1;
 
@@ -263,7 +384,38 @@ export function migrate(raw: unknown, opts: MigrateOptions = {}): MigrateResult 
   fillSocialDefaults(r.data);
   fillEconomyDefaults(r.data);
   fillNeighbourhoodDefaults(r.data);
+  fillFloorsDefaults(r.data);
+  fillExteriorDefaults(r.data); // Milestone 9 exterior (M9-ext block above)
   return { ok: true, state: r.data as unknown as WorldState, fromVersion: r.fromVersion, toVersion: r.toVersion, migrated: r.migrated };
+}
+
+// ---- Milestone 9: floors (M9-core) ----
+
+/**
+ * Milestone 9 adds levels 0-2. Old saves only use level 0, so there is nothing to convert: this repairs what would confuse the
+ * floors code. `lot.levels` is kept at the number of floors in use (at least 1, at most 3) and a person's `rise` (height on a
+ * staircase) must be a finite number or is dropped.
+ */
+export function fillFloorsDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  if (isRecord(raw.lots)) {
+    for (const lot of Object.values(raw.lots)) {
+      if (!isRecord(lot)) continue;
+      let top = 0;
+      const bump = (l: unknown) => { if (num(l) && l > top) top = l; };
+      if (isRecord(lot.floors)) for (const k of Object.keys(lot.floors)) bump(Number(k.split(':')[0]));
+      if (isRecord(lot.walls)) for (const w of Object.values(lot.walls)) if (isRecord(w)) bump(w.level);
+      if (isRecord(lot.objects)) for (const o of Object.values(lot.objects)) if (isRecord(o)) bump(o.level);
+      const used = Math.min(3, Math.max(1, Math.floor(top) + 1));
+      if (!num(lot.levels) || !Number.isInteger(lot.levels) || lot.levels < used || lot.levels > 3) lot.levels = used;
+    }
+  }
+  if (isRecord(raw.people)) {
+    for (const p of Object.values(raw.people)) {
+      if (!isRecord(p) || !isRecord(p.location) || p.location.kind !== 'lot') continue;
+      if (p.location.rise !== undefined && !num(p.location.rise)) delete p.location.rise;
+    }
+  }
 }
 
 export interface ValidationResult {

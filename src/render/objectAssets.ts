@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ObjectDef } from '../content/types';
+import { isProceduralAsset, proceduralModel, proceduralThumb } from './stairModel';
 
 export interface ManifestModel { file: string; thumb?: string; min: number[]; max: number[]; materials: Array<{ name: string; color: number[] }> }
 export interface Manifest { furniture: Record<string, ManifestModel> }
@@ -50,6 +51,7 @@ export class ObjectAssets {
   }
 
   thumbUrl(asset: string): string {
+    if (isProceduralAsset(asset)) return proceduralThumb(asset);
     const m = this.manifest?.furniture[asset];
     return `${this.baseUrl}${m?.thumb ?? `furniture/thumbs/${asset}.png`}`;
   }
@@ -66,6 +68,14 @@ export class ObjectAssets {
     let p = this.pending.get(asset);
     if (p) return p;
     p = (async () => {
+      // Milestone 9: staircases are meshes built at runtime
+      if (isProceduralAsset(asset)) {
+        const scene = proceduralModel(asset);
+        if (!scene) { this.failed.add(asset); return null; }
+        const tpl = this.makeTemplate(scene);
+        this.templates.set(asset, tpl);
+        return tpl;
+      }
       const entry = this.manifest?.furniture[asset];
       if (!entry) { this.failed.add(asset); return null; }
       try {
@@ -77,11 +87,13 @@ export class ObjectAssets {
         console.warn(`[render] model ${asset} failed to load`, e);
         this.failed.add(asset);
         return null;
-      } finally {
-        this.pending.delete(asset);
       }
     })();
+    // cleared once settled (never inside the loader: the procedural branch settles synchronously, before this set,
+    // and would leave a stale entry that hides a later purge of its template)
     this.pending.set(asset, p);
+    const mine = p;
+    void mine.finally(() => { if (this.pending.get(asset) === mine) this.pending.delete(asset); });
     return p;
   }
 
@@ -207,7 +219,8 @@ export class ObjectAssets {
   purgeUnused(keep: ReadonlySet<string> = new Set()): number {
     let n = 0;
     for (const [asset, tpl] of this.templates) {
-      if (tpl.refs > 0 || keep.has(asset)) continue;
+      // runtime-built models (stairs) are small and may have been built synchronously during the same lot change
+      if (tpl.refs > 0 || keep.has(asset) || isProceduralAsset(asset)) continue;
       tpl.scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose(); });
       const all = [...tpl.base.values(), ...[...tpl.sets.values()].flatMap((s) => [...s.values()]), ...(tpl.ghost ? [...tpl.ghost.values()] : [])];
       for (const m of all) { this.lampMaterials.delete(m); m.dispose(); }

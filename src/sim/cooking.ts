@@ -319,7 +319,7 @@ export const eatMealBehavior: Behavior = {
       } else {
         const x = a.data.useX, z = a.data.useZ;
         if (typeof x !== 'number' || typeof z !== 'number') return 'The food is gone.';
-        goal = { kind: 'tile', tile: { x, z }, ...(item ? { face: { x: item.position.x, z: item.position.z } } : {}), label: 'food' };
+        goal = { kind: 'tile', tile: { x, z, ...(item ? { level: item.position.level } : {}) }, ...(item ? { face: { x: item.position.x, z: item.position.z } } : {}), label: 'food' };
       }
       return { goal, posture: 'standing', performAnim: 'pickUp', duration: { kind: 'fixed', minutes: 1 }, rates: {} };
     }

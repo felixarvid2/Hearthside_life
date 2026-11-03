@@ -643,3 +643,82 @@ townies never change jobs or homes by themselves, and NPC households never move;
 no weddings or dates away from home (a date is still planned at home); renting out the player's home, tenants and landlords are not modelled;
 travel has no taxi fee; only one trip at a time; group travel always switches the active lot (a split household cannot be watched on two lots).
 
+
+## Floors (Milestone 9, M9-core)
+
+Levels 0-2 on every lot; `LEVEL_HEIGHT` is 3.0 m and level L is drawn at y = L x 3. Walls are 2.8 m, so the 0.2 m between a wall top and the next
+level is the slab. `Lot.levels` only counts the floors in use (`world/levels.ts syncLevels`, called by every build command); `hasLevel` accepts 0-2.
+
+**Rules** (`world/levels.ts levelProblems`, enforced by `structure.ts validateDiff`, `plans.ts planFloorPaint` and `placement.ts`; a build may not add a problem):
+a floor tile on level L >= 1 needs a standard-height wall of level L-1 on one of its edges, or a floored tile inside an enclosed room of level L-1 below it;
+a tile with no room below is a balcony and must lie within 2 tiles (Chebyshev) of such a tile; a wall of level L >= 1 needs floor on one side; furniture
+needs floor under its footprint; no floor in a stairwell; a tall (3.6 m) wall may not stand under an upper floor. A balcony edge without a fence or wall is
+only a warning (`balconyWarnings`, `BuildPlan.warnings`, `BuildPreview.warnings`). Nobody is left standing on a floor that is erased.
+
+**Stairs**: an `ObjectDef` with `stair: { length, kind }` (content/types.ts). Straight: footprint w x length, rising toward the back (-z at rot 0), `foot`
+tile in front of the front row, `head` tile on level + 1 behind the back row, one link per column. Spiral: 2 x 2, front-left to back-right (length 3) or
+back-left (length 4). `world/levels.ts stairGeometry/stairLinks` give the links; placing a stair cuts the floor above its footprint (`buyObject`,
+`moveObject`, `placeFromInventory` record and restore the cut tiles); floors painted later skip the stairwell. A stair cannot be sold, stored or moved while
+someone is on it or would be left without a way to the entry (`structure.ts stairChangeReason`). Models are built at runtime: asset ids `proc:...`
+(`render/stairModel.ts`, `registerProceduralModel` for more designs), recoloured by the finish regions `wood` and `rail` of the object.
+
+**Navigation**: grids per level (`navgrid.ts`: above the ground only floored tiles are walkable; fences are walls, gates are doors), one graph across
+levels in `world/levelNav.ts`. `NavProvider.findPath(lotId, level, from, goals)` takes goals on other levels (`Tile.level`) and returns nodes that carry
+`level` (and `rise`, metres above that level's floor, on stair cells) whenever the path leaves `level`; a path that stays on one level is exactly as before.
+Slots of objects above the ground carry `level` and an approach tile with `level`.
+
+**Walking** (`sim/stairs.ts`, `sim/movement.ts`): route waypoints may carry `level` and `rise`; height eases toward the next waypoint, the stride costs
+1.6 x (`STAIR_SLOWDOWN`), `location.level` flips at the top (going down: at the first stair cell) and `location.rise` is set only on the stair. People do
+not stop on a stair (`settleOnStairs` finishes an interrupted crossing); when the floor under someone is taken away they end up on the floor below
+(`unstick`). On lots with a staircase `sim/context.ts lotObjects` offers the furniture of every floor to autonomy.
+
+**lotCheck** checks every level: doors, slots, sealed pockets, with the staircases as the way up (`structure.ts levelReach`), plus `levelProblems`.
+
+**Rendering and camera**: `LotView` builds floors, walls and openings per level into groups at y = level x 3 (upper slabs are 0.2 m thick with a ceiling
+underneath); levels above the active one are hidden, cutaway applies to the active level only. `GameView.setActiveLevel` also drives objects, people
+(`PeopleView.setActiveLevel`, heights from `location.level + rise`), the build grid and `CameraRig.setLevelHeight` (the ground plane for panning and picking).
+Picks report the active level. The API: `view.level() / setLevel() / levels()`; the HUD selector is `ui/hud/levelSelector.ts`; Build has a Stairs tab
+(`ui/build/stairTools.ts`, build tools `stairs` and `eraseStairs`). Following or selecting a person on another floor switches the floor.
+
+**Saves**: nothing new is required (schema 1); `PersonLocation.rise`, `ActionInstance.route[].level/rise` are optional and `fillFloorsDefaults` keeps
+`lot.levels` equal to the floors in use. **Starter content**: Hazelbank House (for sale) has a loft above its whole ground floor, reached by a straight stair.
+
+## Family and life stages (Milestone 8, M8-sim)
+
+Files: `core/lifeStages.ts` (stage order, lengths, predicates), `sim/aging.ts`, `family.ts`, `familyView.ts`, `school.ts`, `care.ts`, `adoption.ts`, `split.ts`, `socialEffects.ts`, `gating.ts`; content `school.ts`, `family.ts`; UI `ui/hud/personPanel.ts` (Family tab, School tab), `familyDialogs.ts`, `familyModel.ts`, `ui/screens/settings.ts` (aging).
+
+- **Aging.** `SimSettings.aging` is off, long (2.5 x), normal (baby 3, toddler 5, child 10, teen 10, young adult 14, adult 20, elder 14 game days) or custom (`agingDays`, 1..120). `Person.stageDays` advances in the daily rollover (`dailyAging`). A birthday (`ageUp`) is once only per person and stage (`birthday:<pid>:<stage>`): event `birthday`, a memory, the Birthday moodlet, a `family` feed entry (toast), and `migrateStage` (school record, job dropped for children and teens, wardrobe, three traits + aspiration for a new young adult, posture). The "Age up now" birthday (`ageUpNow` at a cake, `careBirthday` for little ones) is the same code with a one-per-day cooldown (`cooldowns['@birthday']`). Elders stay elders unless `elderEndOfLife`: then `passAway` removes them cleanly (`removePerson`), except the last member of the household you run or the last grown-up of children.
+- **Family graph.** `Person.parentIds` (at most two) is the only stored fact; `sim/family.ts` derives children, siblings (shared parent or a sibling bond), grandparents, aunts and uncles, nieces and nephews and cousins, and `linkParent`/`setFamilyTie` keep `Bond.familyAtoB` in step. `applyHouseholdTies` sets `parentIds` from creator ties. The Family tab draws `ui/creator/familyTree.ts` from `treeModel`.
+- **School.** `school:<pid>:<day>` follows the careers pattern (commute lead, `goToSchool` -> off-lot place 'school' -> home). Weekdays 08:00-14:00 (elementary, children) and 08:00-15:00 (high, teens); week 5 of every 5 is a holiday. Not leaving by 09:30 is a missed day. `SchoolState.performance` (-100..100): attendance +3, homework +5 (+2 helped), missed day -5, missed homework -3, low mood at the start -1.5. Homework is once per school day (`homework:<pid>:<day>`) at any desk, table or computer (tag capability `doHomework`); weekly report cards `report:<pid>:<week>`. Other households use `townlife.lightSchool` (no walking).
+- **Care.** Babies lie in cribs or bassinets (`settleBaby`), never act and are carried by a caregiver during Feed, Change Diaper, Cuddle and Play. Toddlers act within the interactions that list `toddler` in `ages`. `careWishes` lets caregivers notice needs by themselves. A need at zero for 3 hours calls the emergency sitter (`sitter:<pid>:<day>:<n>`, $25 through `transact`, debt allowed).
+- **Gating.** `InteractionDef.ages` (absent = default by behaviour, `sim/gating.ts`), `SocialDef.requires.actorStages/targetStages`; checked by `requestReason`, `socialRequirementReason`, the menus and `candidatesFor`.
+- **Adoption / moving.** `adopt` (`adopt:<hh>:<n>`) and `splitHousehold` (`split:<hh>:<n>:out|in|cost`) charge through `transact`; "Ask to move in" (`moveInNpc`) joins an NPC and their dependents to your household.
+- **Saves.** Schema stays 1. `fillFamilyDefaults` (persistence/schema.ts) repairs the optional fields; old saves load with aging off.
+
+## Exterior: roofs, fences, terrain, garden, staircase designs (Milestone 9, M9-ext)
+
+Files: `content/exterior.ts` (fence and gate designs, roof styles and finishes, terrain paints, crops, the four gardening interactions; exposed as `ContentDB.exterior`),
+`content/exteriorObjects.ts` (16 garden objects and 12 staircases as ObjectDefs; model bounds in the generated `content/exteriorModels.ts`),
+`world/{fences,fencePieces,roofs,terrain,gardenGrowth,gardenLayout}.ts` (pure rules and geometry), `building/exterior{Plans,Commands}.ts`, `sim/garden.ts`,
+`render/{exteriorView,fenceView,roofView,terrainView,gardenView,exteriorTextures}.ts`, `ui/build/exterior{Tools,Thumbs,Hints}.ts`, models in `tools/exterior/`
+(`node tools/build-exterior.mjs` writes the GLBs, thumbnails, manifest entries flagged `exterior` and `content/exteriorModels.ts`).
+
+- **Fences and gates** (`Lot.fences`, keyed by `edgeKey`, any level). A design is a list of square rods in the edge frame (`fencePieces`); 24 fences, 12 gates (`gate-` ids,
+  `isGateDef`), colour variants by index. Nav reads `fenceEdgeState` ('wall' blocks, 'gate' passes like a door). A run keeps identical fences and every gate on its way, swaps
+  other designs (new price charged, old refunded). Safety: no wall on the edge, floor beside it upstairs, nobody shut in (`strandedPerson`) and no floored tile cut off the lot
+  entry (a gate is a passage). `FenceView` merges everything per level into one vertex-coloured mesh (glass separate and translucent).
+- **Roofs** (`Lot.roofs`, a rectangle on a level). `buildRoofMesh(style, w, d, ridge, pitch)` returns slope, gable, trim and glass triangles (12 styles: gable, hip, flat, shed,
+  mansard, gambrel, pyramid, dutch-gable, saltbox, butterfly, clerestory, a-frame), eaves 0.45 m, gables closed by triangles in the colour of the wall below. 11 finishes with
+  34 colour palettes (`Roof.finish = { designId: finish, paletteId }`), procedural textures. Price = area x (style + finish) per m2. `autoRoofRects` covers every enclosed room that
+  has no floor above it; the auto roof replaces roofs it overlaps. A roof needs support (floor or walls), no floor above, no overlap. Drawn only when roofs are on, the walls are
+  up (or a roof tool is open) and the active level is at or above the roof's level (`RoofView.visibleFor`); the HUD Roof button and `view.setRoofsVisible` toggle them.
+- **Terrain** (`Lot.terrain`, tile key -> paint id on level 0, open ground only). 12 paints; the lot's own ground (`lot.ground`) is the default and painting it back removes the
+  entry. `TerrainView` draws one atlas-textured quad layer, `EnvironmentView` draws `lot.ground` dirt and paving.
+- **Build tools.** `BuildTool` kinds `fence`, `eraseFence`, `roof`, `eraseRoof`, `terrain` resolve to an `ExteriorRequest` (`game/core/build.ts`), previewed with `planExterior`
+  and applied as `exteriorCommand` (one transact, undo/redo, `lot.changed` what 'fences' | 'roofs' | 'terrain'). The Build panel has Roof, Fence and Garden tabs.
+- **Garden.** `PlacedObject.garden` (crop, growth, need, water, weeds, day, harvests) on the vegetable patch, orchard tree and herb planter. `advanceGardens` runs from the daily rollover
+  (deterministic: a watered bed grows a day per day, a dry one a third, a weedy one half; nothing dies). Plant ($3 seeds), Water, Weed and Harvest are the 'garden' behaviour in
+  `sim/garden.ts`; a harvest sells the produce for 75 % of its market value, once (`harvest:<object>:<count>`). `GardenView` draws the crops by growth stage.
+- **Staircases.** 8 straight (1 or 2 wide, 3 or 4 long) and 4 spiral designs, `ObjectDef.stair`, category 'stairs', models rising toward -z with one tread per walked cell
+  (`tools/exterior/stairs.mjs`).
+- **Saves.** Schema 1; `fillExteriorDefaults` drops malformed records, `checkExterior` / `checkGarden` validate the rest.

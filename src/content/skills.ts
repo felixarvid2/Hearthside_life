@@ -52,7 +52,7 @@ export const SKILLS: SkillDef[] = [
     { level: 2, text: 'Home-grown herbs and vegetables cut grocery bills by 2% per level.' },
     { level: 10, text: `Groceries cost ${fx.gardening10} less.` },
     { level: 2, text: 'Required for promotion in the Landscaping career.' },
-    { level: 3, text: '(later) Plant, tend and harvest garden crops.' },
+    { level: 3, text: 'Plant, tend and harvest garden crops: bigger harvests from every third level.' },
   ]),
   skill('painting', 'Painting', 'roller', 'ready', 'Putting brush to canvas. Practised at an easel.', [
     { level: 2, text: 'Painting is more fun: 4% more fun per level.' },
@@ -93,6 +93,17 @@ export const SKILLS: SkillDef[] = [
   ]),
   skill('creativity', 'Creativity', 'star', 'dev', 'Imagination that feeds every artistic pursuit.', [
     { level: 3, text: '(later) Creative projects finish faster.' },
+  ]),
+  skill('motor', 'Motor Skills', 'energy', 'ready', 'Crawling, standing and walking. Little ones learn by being helped to their feet and by playing.', [
+    { level: 2, text: 'Walks steadily.' },
+    { level: 5, text: 'Runs and climbs.' },
+  ]),
+  skill('talking', 'Talking', 'social', 'ready', 'First words and sentences. Little ones learn by being talked to and read to.', [
+    { level: 2, text: 'Says first words.' },
+    { level: 5, text: 'Speaks in full sentences.' },
+  ]),
+  skill('potty', 'Potty Training', 'bladder', 'ready', 'Learning to use the potty. A toddler needs the potty chair and a patient helper.', [
+    { level: 3, text: 'Uses the potty without help.' },
   ]),
   skill('research', 'Research', 'search', 'dev', 'Finding and connecting information.', [
     { level: 3, text: '(later) Research topics at the computer.' },

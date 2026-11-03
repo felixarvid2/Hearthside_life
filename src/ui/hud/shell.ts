@@ -6,7 +6,7 @@ import type { BuildSession } from '../build/buildSession';
 import type { TutorialSignal } from './tutorialSteps';
 
 export type ShellPanelKind = 'person' | 'feed' | 'ledger' | 'bills';
-export type PersonTab = 'needs' | 'queue' | 'relationships' | 'career' | 'skills' | 'aspiration' | 'traits';
+export type PersonTab = 'needs' | 'queue' | 'relationships' | 'career' | 'skills' | 'aspiration' | 'traits' | 'family';
 
 export interface Shell {
   api: GameAPI;

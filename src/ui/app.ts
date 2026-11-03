@@ -2,11 +2,13 @@
 // panels (Buy/Build, from other modules), the creator and the wardrobe, shows toasts, applies settings and
 // reports covered screen areas to api.view.setInsets so the camera keeps the focus visible.
 
+import { openAdoptDialog } from './hud/familyDialogs';
 import './styles/base.css';
 import './styles/screens.css';
 import './styles/hud.css';
 import './styles/social.css';
 import './styles/neighbourhood.css';
+import './styles/family.css';
 import type { GameAPI, GameMode, SoundId } from '../game/api';
 import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
@@ -487,6 +489,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       case 'ui.request':
         if (e.what === 'editOutfits') void openWardrobe(e.personId);
         else if (e.what === 'planEvent') openEventPlanner(sh, e.personId);
+        else if (e.what === 'adopt') openAdoptDialog(sh, e.personId);
         else if (e.what === 'bills') { api.select(e.personId); openPanel('bills'); }
         else if (e.what === 'careers') { api.select(e.personId); openPanel('person', { personId: e.personId, tab: 'career' }); }
         else if (e.what === 'focusPerson') {

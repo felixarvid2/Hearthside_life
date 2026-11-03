@@ -5,12 +5,12 @@
 
 import * as THREE from 'three';
 import type { AnimId } from '../core/anim';
-import type { Appearance, GarmentLayer, Outfit, Posture } from '../core/types';
+import type { Appearance, GarmentLayer, LifeStage, Outfit, Posture } from '../core/types';
 import type { AccessoryDef, ContentDB, GarmentDef } from '../content/types';
 import type { AiHairData } from './aiHair';
 import { buildAiHair, isMeshHair, topOf } from './aiHair';
 import type { AiHairAsset, CharacterAssets, FrameAssets } from './assets';
-import { cachedGeometry, cloneSkeleton, loadAiHair } from './assets';
+import { STAGE_HEIGHTS, cachedGeometry, cloneSkeleton, loadAiHair, requestStageBody, resolveBody, stageBodyOf } from './assets';
 import { Animator } from './animation';
 import { BODY_PARAM_IDS } from './bodyShape';
 import type { Coverage, CutParams } from './clothing';
@@ -24,8 +24,19 @@ import { HAT_FIT, addHatFit } from './hatFit';
 import type { ClothUniforms, HairUniforms, MeshySkinUniforms, MpfbEyeUniforms, MpfbSkinUniforms, MpfbUnderwearUniforms, SkinUniforms } from './materials';
 import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createMpfbEyeMaterial, createMpfbHairlineMaterial, createMpfbIrisMaterial, createMpfbSkinMaterial, createMpfbUnderwearMaterial, createSkinMaterial } from './materials';
 import { mpfbFaceInfluences, mpfbInfluences } from './mpfbBody';
+import type { BindBone } from './stagePose';
+import { CRADLE, CRADLE_PAIRS, STOOP_BONES, applyCradle, applyStoop, bindBones, stageLook } from './stagePose';
 import { resolveOutfit } from './outfits';
+import { seatedPlacement } from './posture';
 import { clamp } from './rig';
+
+/**
+ * The youngAdult is the adult body with a younger face: the face morphs added to the creator's sliders (rounder, softer, bigger eyes,
+ * a shorter chin). Other stages have their own bodies, so their faces come from the body itself.
+ */
+const STAGE_FACE: Partial<Record<LifeStage, Record<string, number>>> = {
+  youngAdult: { face_cheek_fullness: 0.3, face_eye_size: 0.22, face_length: -0.18, face_jaw_width: -0.12, face_chin_length: -0.18, face_nose_length: -0.1, face_lip_fullness: 0.1 },
+};
 
 const BROW_INDEX: Record<string, number> = { natural: 0, straight: 1, 'soft-arch': 2, 'high-arch': 3, thick: 4, thin: 5, bushy: 6, angled: 7 };
 
@@ -126,6 +137,21 @@ export class CharacterView {
   /** The generated hairstyle (aiHair.ts), when the chosen style is one and its GLB is loaded; facial hair stays in `hair`. */
   private aiHair: { mesh: THREE.SkinnedMesh; material: THREE.MeshStandardMaterial; uniforms: HairUniforms } | null = null;
   private animator!: Animator;
+  /** Life stage: picks the body (a stage body when loaded, else the adult scaled to the stage's height), poses and face. */
+  private stage: LifeStage;
+  /** Uniform scale of the root that stands in for a stage body that is not loaded (1 for the adults and own bodies). */
+  private bodyScale = 1;
+  /** Whether the stage's own body is drawn (false: the adult rig scaled, or the adult stages). */
+  private ownBody = false;
+  /** Bind data of the arms for the cradle hold, and how far the hold is blended in (0..1, eased toward `cradleOn`). */
+  private cradleBind: Map<string, BindBone> | null = null;
+  /** What the clips wrote to the bones the pose effects turn (restored before the next sampling). */
+  private fxSaved = new Map<THREE.Bone, THREE.Quaternion>();
+  private babyUpright = false;
+  private cradleOn = false;
+  private cradleWeight = 0;
+  /** How far the stoop is blended in (the posture decides the target). */
+  private stoopWeight = 0;
   private appearance: Appearance;
   private outfit: Outfit;
   private selected = false;
@@ -138,21 +164,26 @@ export class CharacterView {
   /** Problems found while resolving the outfit (unknown ids etc.). */
   issues: string[] = [];
 
-  constructor(private assets: CharacterAssets, private content: ContentDB, appearance: Appearance, outfit: Outfit) {
+  constructor(private assets: CharacterAssets, private content: ContentDB, appearance: Appearance, outfit: Outfit, lifeStage: LifeStage = 'adult') {
     this.appearance = structuredClone(appearance);
     this.outfit = structuredClone(outfit);
+    this.stage = lifeStage;
     this.root.name = 'character';
     this.buildRig();
     this.applyAppearance();
     this.applyOutfit();
     this.play('idle', { fade: 0 });
+    this.loadStageBody();
   }
 
   // ---- public API ----
 
-  setAppearance(a: Appearance): void {
-    const frameChanged = a.frame !== this.appearance.frame || this.assets.frames[a.frame] !== this.frame;
+  /** `lifeStage` is the person's life stage (the stage body, poses and face follow it); omitted: unchanged. */
+  setAppearance(a: Appearance, lifeStage: LifeStage = this.stage): void {
+    const body = resolveBody(this.assets, a.frame, lifeStage);
+    const frameChanged = a.frame !== this.appearance.frame || body.fa !== this.frame || body.scale !== this.bodyScale || lifeStage !== this.stage;
     this.appearance = structuredClone(a);
+    this.stage = lifeStage;
     if (frameChanged) {
       this.teardownRig();
       this.buildRig();
@@ -160,13 +191,45 @@ export class CharacterView {
       this.play(this.lastAnim.id, { fade: 0, posture: this.lastAnim.posture });
     }
     this.applyAppearance();
+    if (frameChanged) this.loadStageBody();
   }
 
-  /** Rebuilds the person on the assets' current character style (after setCharacterStyle). */
+  get lifeStage(): LifeStage { return this.stage; }
+
+  /** Whether this person is drawn with the body of their life stage (false: the adult body, scaled to the stage's height for a child). */
+  get hasOwnBody(): boolean { return this.ownBody || stageBodyOf(this.stage) === null; }
+
+  /** Rebuilds the person on the assets' current character style (after setCharacterStyle) or with a stage body that has just loaded. */
   refreshStyle(): void {
-    if (this.disposed || this.assets.frames[this.appearance.frame] === this.frame) return;
+    if (this.disposed) return;
+    const body = resolveBody(this.assets, this.appearance.frame, this.stage);
+    if (body.fa === this.frame && body.scale === this.bodyScale) return;
     this.setAppearance(this.appearance);
   }
+
+  /** The first person of a life stage starts the download of its body; the view is rebuilt with it when it arrives. */
+  private loadStageBody(): void {
+    if (this.ownBody || stageBodyOf(this.stage) === null || this.assets.style !== 'mpfb') return;
+    const stage = this.stage;
+    void requestStageBody(this.assets, stage).then((set) => { if (set && !this.disposed && this.stage === stage) this.refreshStyle(); });
+  }
+
+  /** Cradle the arms for holding a baby (the carrier's side of a held baby; blended in and out). */
+  setCarrying(on: boolean): void { this.cradleOn = on; }
+  get carrying(): boolean { return this.cradleOn; }
+
+  /** World position of the middle of a baby cradled in this person's arms (the baby's yaw is this root's yaw plus `CRADLE.yaw`). */
+  cradlePoint(target: THREE.Vector3): THREE.Vector3 {
+    const k = STAGE_HEIGHTS[this.stage] / 1.8;
+    this.root.updateWorldMatrix(true, false);
+    return target.set(CRADLE.x * k, CRADLE.y * k, CRADLE.z * k).applyMatrix4(this.root.matrixWorld);
+  }
+
+  /** How high the bind pelvis sits compared with the adult skeleton (0.918 m up the root): about 1 for adults, less for a stage body. */
+  get pelvisRatio(): number { return (this.frame.rootBone.getObjectByName('pelvis')?.position.length() ?? 0.918) / 0.918; }
+
+  /** Standing height of this person's life stage in metres (STAGE_HEIGHTS). */
+  get stageHeight(): number { return STAGE_HEIGHTS[this.stage]; }
 
   setOutfit(o: Outfit): void {
     this.outfit = structuredClone(o);
@@ -177,19 +240,57 @@ export class CharacterView {
   play(anim: AnimId, opts: { fade?: number; posture?: Posture } = {}): void {
     if (this.disposed) return;
     this.lastAnim = { id: anim, posture: opts.posture };
-    this.animator.play(anim, opts);
+    // a baby only lies (in a crib, on a mat, in somebody's arms); in the creator and portraits it sits up
+    if (this.stage === 'baby') this.animator.play(this.babyUpright ? 'sitIdle' : 'sleep', { ...opts, posture: this.babyUpright ? 'seated' : 'lying' });
+    else this.animator.play(anim, opts);
+  }
+
+  /** A baby sits up instead of lying (previews and portraits). The caller lowers the root by `floorDrop`. */
+  setBabyUpright(on: boolean): void {
+    if (on === this.babyUpright) return;
+    this.babyUpright = on;
+    this.play(this.lastAnim.id, { fade: 0, posture: this.lastAnim.posture });
+  }
+
+  /** How far the root must be lowered so the sitting baby's bottom rests on the floor (0 for everybody else). */
+  get floorDrop(): number {
+    if (this.stage !== 'baby' || !this.babyUpright) return 0;
+    return -seatedPlacement({ x: 0, y: 0, z: 0 }, 0, this.appearance.frame, this.assets.style, { stage: 'baby', own: this.ownBody }).y;
   }
 
   update(dtSeconds: number): void {
     if (this.disposed) return;
-    this.animator.update(Math.min(dtSeconds, 0.1));
+    const dt = Math.min(dtSeconds, 0.1);
+    // give the bones back what the clips wrote last time: the mixer skips a track whose value did not change, so a bone that was
+    // turned for the stoop or the cradle would otherwise be turned again every frame
+    for (const [bone, q] of this.fxSaved) bone.quaternion.copy(q);
+    this.animator.update(dt);
+    this.applyPoseFx(dt);
+  }
+
+  /** The stage's stoop (upright only) and the cradle hold, put on the skeleton after the clips were sampled. */
+  private applyPoseFx(dt: number): void {
+    const look = stageLook(this.stage);
+    this.fxSaved.clear();
+    const needStoop = look.stoop > 0, needCradle = this.cradleOn || this.cradleWeight > 0;
+    if (needStoop) for (const n of STOOP_BONES) { const b = this.bones.get(n); if (b) this.fxSaved.set(b, b.quaternion.clone()); }
+    if (needCradle) for (const n of Object.keys(CRADLE_PAIRS)) { const b = this.bones.get(n); if (b) this.fxSaved.set(b, b.quaternion.clone()); }
+    const ease = (v: number, target: number, rate: number) => v + Math.sign(target - v) * Math.min(Math.abs(target - v), dt * rate);
+    const posture = this.animator.posture;
+    this.stoopWeight = ease(this.stoopWeight, posture === 'standing' ? 1 : posture === 'seated' ? 0.4 : 0, 2.5);
+    if (look.stoop && this.stoopWeight > 0) applyStoop(this.bones, look.stoop * this.stoopWeight);
+    this.cradleWeight = ease(this.cradleWeight, this.cradleOn ? 1 : 0, 4);
+    if (this.cradleWeight > 0) {
+      this.cradleBind ??= bindBones(this.frame.rootBone, CRADLE_PAIRS);
+      applyCradle(this.bones, this.cradleBind, this.cradleWeight);
+    }
   }
 
   /** World position of the top of the head (hair included), following the animated Head bone. */
   headTop(target: THREE.Vector3): THREE.Vector3 {
     const head = this.bones.get('Head');
     const hi = this.frame.boneNames.indexOf('Head');
-    if (!head || hi < 0) return target.copy(this.root.position).setY(this.root.position.y + 1.9);
+    if (!head || hi < 0) return target.copy(this.root.position).setY(this.root.position.y + STAGE_HEIGHTS[this.stage] + 0.1);
     head.updateWorldMatrix(true, false);
     const O = this.frame.template.headOrigin;
     const hairTop = Math.max((this.hair?.mesh.geometry.userData.topY as number | undefined) ?? 0, (this.aiHair?.mesh.geometry.userData.topY as number | undefined) ?? 0);
@@ -237,7 +338,15 @@ export class CharacterView {
   // ---- internals ----
 
   private buildRig(): void {
-    this.frame = this.assets.frames[this.appearance.frame];
+    const body = resolveBody(this.assets, this.appearance.frame, this.stage);
+    this.frame = body.fa;
+    this.bodyScale = body.scale;
+    this.ownBody = body.own;
+    this.root.scale.setScalar(body.scale);
+    this.stoopWeight = 0;
+    this.cradleWeight = 0;
+    this.cradleBind = null;
+    this.fxSaved.clear();
     const { root, skeleton, byName } = cloneSkeleton(this.frame);
     this.skeleton = skeleton;
     this.bones = byName;
@@ -261,7 +370,7 @@ export class CharacterView {
     this.skinU = uniforms;
     this.skinMesh = this.skinned(this.frame.skinGeometry, material, 'skin');
     if (mpfb) this.buildMpfbParts(mpfb);
-    this.animator = new Animator(this.root, this.assets.clips);
+    this.animator = new Animator(this.root, body.clips, stageLook(this.stage).cadence);
     this.skinU.uSelect.value = this.selected ? 1 : 0;
   }
 
@@ -355,7 +464,9 @@ export class CharacterView {
     if (mpfb) {
       const names = new Set(mpfb.morphNames);
       const face = mpfbFaceInfluences(a.face.params, (n) => names.has(n));
-      this.bodyInfluence = { ...mpfbInfluences(a.body, mpfb.sex, (n) => names.has(n)), ...face.influences };
+      const influences = { ...face.influences };
+      for (const [morph, v] of Object.entries(STAGE_FACE[this.stage] ?? {})) if (names.has(morph)) influences[morph] = clamp((influences[morph] ?? 0) + v, -1, 1);
+      this.bodyInfluence = { ...mpfbInfluences(a.body, mpfb.sex, (n) => names.has(n)), ...influences };
       this.faceCovered = face.covered;
       if (this.eyeU) this.eyeU.uEyeColor.value.set(a.face.eyeColor);
       this.mpfbParts.iris?.material.color.set(a.face.eyeColor);

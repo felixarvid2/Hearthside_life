@@ -11,6 +11,7 @@ import { clamp, interactionDef, lotLoc, setAnim, tileOfLoc } from './context';
 import { addMoodlet } from './mood';
 import { applyRelDelta, decayRecent, ensureRel, peekRel } from './relationships';
 import { isAdult } from '../core/relations';
+import { beginLightSchool, commutableSchool, startSchoolDay } from './school';
 import { resolveSocial, socialRequirementReason } from './social';
 import { makeAction } from './queue';
 import type { Behavior, Step } from './steps';
@@ -42,7 +43,7 @@ function entryGoal(ctx: SimCtx, p: Person): Step['goal'] | string {
   const loc = lotLoc(p);
   const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
   if (!loc || !lot) return `${p.firstName} isn't on a lot.`;
-  return { kind: 'tile', tile: { x: lot.entry.x, z: lot.entry.z }, label: 'street' };
+  return { kind: 'tile', tile: { x: lot.entry.x, z: lot.entry.z, level: lot.entry.level }, label: 'street' };
 }
 
 function walkStep(goal: Step['goal']): Step {
@@ -53,7 +54,7 @@ function walkStep(goal: Step['goal']): Step {
  * Takes a person off the lot (work, home, a venue...). Their remaining queue is ended. `lotId` names the lot they are
  * visiting; at home it defaults to the household's home lot.
  */
-export function goOffLot(ctx: SimCtx, p: Person, place: 'home' | 'work' | 'visiting' | 'errand', keepActionId?: string, lotId?: string): void {
+export function goOffLot(ctx: SimCtx, p: Person, place: 'home' | 'work' | 'school' | 'visiting' | 'errand', keepActionId?: string, lotId?: string): void {
   if (!lotLoc(p)) return;
   abortQueue(ctx, p, null, keepActionId);
   const homeLotId = ctx.state.households[p.householdId]?.homeLotId ?? undefined;
@@ -69,13 +70,13 @@ export const goHereBehavior: Behavior = {
   check(ctx, p, a) {
     const loc = lotLoc(p);
     if (!loc || a.target.kind !== 'tile') return "Can't go there.";
-    if (!ctx.nav.isWalkable(loc.lotId, loc.level, a.target.x, a.target.z)) return "Can't go there.";
+    if (!ctx.nav.isWalkable(loc.lotId, a.target.level ?? loc.level, a.target.x, a.target.z)) return "Can't go there.";
     return null;
   },
   reserve: () => null,
   step(_ctx, _p, a) {
     if (a.target.kind !== 'tile') return "Can't go there.";
-    return walkStep({ kind: 'tile', tile: { x: a.target.x, z: a.target.z }, label: 'there' });
+    return walkStep({ kind: 'tile', tile: { x: a.target.x, z: a.target.z, level: a.target.level ?? 0 }, label: 'there' });
   },
   interruptible: true,
 };
@@ -99,6 +100,17 @@ export const goToWorkBehavior: Behavior = {
   },
 };
 
+/** Walk to the lot entry and leave for school (Milestone 8). */
+export const goToSchoolBehavior: Behavior = {
+  check(ctx, p) {
+    if (!p.school) return 'Does not go to school.';
+    return commutableSchool(ctx, p) ? null : 'There is no school right now.';
+  },
+  reserve: () => null,
+  step: (ctx, p) => { const g = entryGoal(ctx, p); return typeof g === 'string' ? g : walkStep(g); },
+  apply(ctx, p, a) { startSchoolDay(ctx, p, a.id); },
+};
+
 /** Walk to the lot entry and go home (visitors). Leaves even when the way is blocked. */
 export const leaveLotBehavior: Behavior = {
   check: () => null,
@@ -118,6 +130,7 @@ function leaveForHome(ctx: SimCtx, p: Person, a: ActionInstance): void {
   const venueId = typeof a.data.lotId === 'string' && ctx.state.lots[a.data.lotId] ? a.data.lotId : null;
   if (to === 'venue' && venueId) goOffLot(ctx, p, 'visiting', a.id, venueId);
   else if (to === 'work') { goOffLot(ctx, p, 'work', a.id); beginLightShift(ctx, p); }
+  else if (to === 'school') { goOffLot(ctx, p, 'school', a.id); beginLightSchool(ctx, p); }
   else {
     goOffLot(ctx, p, 'home', a.id);
     if (to === undefined) addFeed(ctx.state, ctx.events, 'social', `${p.firstName} went home.`, p.id);

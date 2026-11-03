@@ -25,7 +25,7 @@ interface Row { label: string; ready: number; dev: number; variants?: number | s
 
 /** Full-project catalog targets per buy category (brief section 16). */
 const CATEGORY_TARGETS: Record<CatalogCategory, number> = {
-  seating: 64, beds: 40, tables: 48, storage: 48, kitchen: 56, bathroom: 36, lighting: 64, electronics: 28, hobby: 36, decor: 64, outdoor: 40, kids: 36,
+  seating: 64, beds: 40, tables: 48, storage: 48, kitchen: 56, bathroom: 36, lighting: 64, electronics: 28, hobby: 36, decor: 64, outdoor: 40, kids: 36, stairs: 12,
 };
 
 /** Interaction behaviours that are movement or UI shortcuts rather than activities (brief section 2 counting). */
@@ -114,6 +114,31 @@ async function main(): Promise<void> {
     ],
     note: `activities exclude moves and menus (behaviors ${NOT_ACTIVITIES.join(', ')}); no social is also counted as an activity.`,
   });
+
+  // Milestone 9 exterior: roofs, fences and gates, terrain paint, garden objects and staircases (content/exterior.ts, exteriorObjects.ts).
+  const ex = db.exterior;
+  if (ex) {
+    const fences = Object.values(ex.fences), finishesList = Object.values(ex.roofFinishes);
+    const gardenObjs = objects.filter((o) => o.category === 'outdoor' && o.id.startsWith('garden-'));
+    const stairs = objects.filter((o) => o.stair);
+    const nVariants = (list: typeof fences) => list.filter((d) => d.status === 'ready').reduce((n, d) => n + d.variants.length, 0);
+    sections.push({
+      title: 'Milestone 9 exterior',
+      rows: [
+        { label: 'roof styles', ...count(Object.values(ex.roofStyles)), variants: '-', target: 12 },
+        { label: 'roof finishes', ...count(finishesList), variants: finishesList.filter((f) => f.status === 'ready').reduce((n, f) => n + f.palettes.length, 0), target: 8 },
+        { label: 'fence designs', ...count(fences.filter((d) => d.kind === 'fence')), variants: nVariants(fences.filter((d) => d.kind === 'fence')), target: 24 },
+        { label: 'gate designs', ...count(fences.filter((d) => d.kind === 'gate')), variants: nVariants(fences.filter((d) => d.kind === 'gate')), target: 12 },
+        { label: 'terrain paints', ...count(Object.values(ex.terrain)), variants: '-', target: 8 },
+        { label: 'garden objects', ...count(gardenObjs), variants: gardenObjs.filter((o) => o.status === 'ready').reduce((n, o) => n + o.finishes.reduce((m, r) => m + r.swatches.length, 0), 0), target: 12 },
+        { label: 'garden crops', ready: Object.keys(ex.crops).length, dev: 0, variants: `${new Set(Object.values(ex.crops).map((c) => c.kind)).size} kinds` },
+        { label: 'staircases (straight)', ...count(stairs.filter((o) => o.stair!.kind === 'straight')), variants: '-', target: 8 },
+        { label: 'staircases (spiral)', ...count(stairs.filter((o) => o.stair!.kind === 'spiral')), variants: '-', target: 4 },
+      ],
+      note: 'variants = colour palettes (roof finishes), colour variants (fences and gates), finish swatches (garden objects); garden objects are the outdoor ' +
+        "objects with a 'garden-' id; the staircase rows count objects with the `stair` field.",
+    });
+  }
 
   const result = validator.validateContent(db, { models: manifest.furniture });
 

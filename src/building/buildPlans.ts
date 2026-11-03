@@ -31,6 +31,7 @@ import { footprintTiles } from '../core/geometry';
 import { edgeKey, parseEdgeKey, tileKey } from '../core/ids';
 import { dollars } from '../core/money';
 import type { Cents, EdgeDir, FinishRef, Id, Lot, Opening, Wall, WorldState } from '../core/types';
+import { balconyWarnings, balconyWarningText, stairHoles } from '../world/levels';
 import { hasLevel, inLot } from '../world/lots';
 import { computeRooms, roomAt } from '../world/rooms';
 import {
@@ -263,6 +264,8 @@ export interface BuildPlan {
   rooms: { before: number; after: number };
   /** The exact change; opening ids of new openings are placeholders ('pending:n') until a command applies it. */
   diff: BuildDiff;
+  /** Milestone 9: things worth knowing that do not block the build (a balcony without a railing). */
+  warnings?: string[];
 }
 
 export const PENDING_PREFIX = 'pending:';
@@ -408,11 +411,13 @@ function planWalls(state: WorldState, content: ContentDB, lot: Lot, req: Extract
     const fc = finishCheck(content, 'floor', req.floor.finish);
     if (typeof fc === 'string') { d.reasons.push(fc); return d; }
     const done = new Set<string>();
+    const holes = level >= 1 ? stairHoles(lot, content, level) : null;
     for (const t of req.floor.tiles) {
       const key = tileKey(level, t.x, t.z);
       if (done.has(key)) continue;
       done.add(key);
       if (!inLot(lot, t.x, t.z)) { d.reasons.push('Floors have to stay on the lot.'); continue; }
+      if (holes?.has(`${t.x},${t.z}`)) continue; // the stairwell stays open
       const before = lot.floors[key];
       if (before && before.designId === req.floor.finish.designId && before.paletteId === req.floor.finish.paletteId) continue;
       d.diff.floors.push({ key, before: before ? copy(before) : null, after: { designId: req.floor.finish.designId, paletteId: req.floor.finish.paletteId } });
@@ -626,6 +631,12 @@ export function planBuild(state: WorldState, content: ContentDB, lotId: Id, hous
   } else {
     const n = indoorRooms(lot, level);
     plan.rooms = { before: n, after: n };
+  }
+  if (plan.ok && level >= 1) {
+    const had = new Set(balconyWarnings(lot, content).map((w) => `${w.level}:${w.edge}`));
+    const fresh = balconyWarnings(virtualLot(lot, d.diff), content).filter((w) => !had.has(`${w.level}:${w.edge}`));
+    const text = balconyWarningText(fresh);
+    if (text.length > 0) plan.warnings = text;
   }
   return plan;
 }

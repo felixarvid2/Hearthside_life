@@ -84,6 +84,9 @@ import type { RoomDelta, Vertex } from '../world/roomTracker';
 import type { MovePreview, SwitchPreview } from '../sim/households';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
+import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
+import type { FamilyInfo } from '../sim/familyView';
+import type { SplitPreview, SplitTarget } from '../sim/split';
 
 export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 export { WALL_HEIGHT_PRESETS } from '../building/buildPlans';
@@ -91,6 +94,10 @@ export type { RoomDelta, Vertex } from '../world/roomTracker';
 export type { HouseholdBrief, MovePreview, SwitchPreview } from '../sim/households';
 export type { HouseholdInfo, LotInfo, LotPerson, NeighbourhoodInfo, Tenure, TripInfo } from '../sim/neighbourhoodView';
 export type { PersonPlace, PlaceKind } from '../sim/places';
+export type { AdoptionPreview, AdoptionSpec, AdoptStage } from '../sim/adoption';
+export type { FamilyInfo, RelativeInfo } from '../sim/familyView';
+export type { SplitPreview, SplitTarget } from '../sim/split';
+export type { SchoolInfo } from '../sim/school';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
 export type CutawayMode = 'up' | 'cutaway' | 'down';
@@ -184,7 +191,21 @@ export type BuildTool =
   | { kind: 'eraseOpening' }
   | { kind: 'floor'; finish: FinishRef; shape: 'tile' | 'rect' | 'room' }
   | { kind: 'eraseFloor'; shape: 'tile' | 'rect' | 'room' }
-  | { kind: 'deleteRoom' };
+  | { kind: 'deleteRoom' }
+  // Milestone 9: staircases. `stairs` places the ObjectDef `defId` (a stair) on the active level at the tapped tile, turned `rot` quarter
+  // turns (a rise toward the back of the object); `eraseStairs` sells the staircase under the pointer (from either floor it joins).
+  | { kind: 'stairs'; defId: string; rot?: number }
+  | { kind: 'eraseStairs' }
+  // Milestone 9 exterior (building/exteriorPlans.ts). `fence` is a drag along a straight run; a gate design is placed on the tapped edge.
+  // `roof` is a dragged rectangle ('rect') or the whole house at once ('auto'); `terrain` paints one tile or a dragged rectangle.
+  | { kind: 'fence'; defId: string; variant?: number }
+  | { kind: 'eraseFence' }
+  | { kind: 'roof'; shape: 'rect' | 'auto'; spec: RoofToolSpec }
+  | { kind: 'eraseRoof' }
+  | { kind: 'terrain'; paintId: string; shape: 'tile' | 'rect' };
+
+/** Style, pitch, ridge direction (null = along the long side) and finish of the roof tool. */
+export interface RoofToolSpec { styleId: string; pitch?: number; ridge?: 'h' | 'v' | null; finish: FinishRef }
 
 /** Where the tool acts: `from` (press) and `to` (current drag point), or the wall under the pointer for openings. */
 export interface BuildTarget {
@@ -217,6 +238,8 @@ export interface BuildPreview {
   /** Indoor room counts before/after, e.g. before 1, after 2 = the wall splits a room. */
   rooms: { before: number; after: number };
   highlight: BuildHighlight | null;
+  /** Milestone 9: things worth knowing that do not block the build (a balcony without a railing). */
+  warnings?: string[];
 }
 
 /** An enclosed (or outdoor) region of the lot. `uid` survives edits that leave the room unchanged. */
@@ -400,6 +423,24 @@ export interface GameAPI {
   movePreview?(lotId: Id): MovePreview | null;
   moveHousehold?(lotId: Id): Result;
 
+  // ---- family and life stages (Milestone 8; sim/aging.ts, school.ts, care.ts, adoption.ts, split.ts) ----
+  // Optional like the other newer sections. Everything is plain data.
+  //   family(personId)        stage, days to the next birthday (null when aging is off), relatives, school and what the
+  //                           household can do (age up with a birthday cake, adopt). Read-only.
+  //   ageUpNow(personId)      queues the birthday at a birthday cake on the lot ("Age up now"); a caregiver celebrates with a baby.
+  //   doHomework(personId)    sends a child or teen to the nearest desk, table or computer when homework is due.
+  //   adoptPreview / adopt    adopt a baby, toddler, child or teen (stage, sex, name); the fee is charged once (`adopt:<hh>:<n>`).
+  //   splitPreview / splitHousehold(personIds, target)
+  //                           members move out to a vacant home (rent or buy) or in with another household; funds are shared by
+  //                           headcount; the result names the new household, which `switchHousehold` can then play.
+  family?(personId: Id): FamilyInfo | null;
+  ageUpNow?(personId: Id): Result;
+  doHomework?(personId: Id): Result;
+  adoptPreview?(adopterId: Id, spec: AdoptionSpec): AdoptionPreview | null;
+  adopt?(adopterId: Id, spec: AdoptionSpec): Result & { personId?: Id };
+  splitPreview?(personIds: Id[], target: SplitTarget): SplitPreview | null;
+  splitHousehold?(personIds: Id[], target: SplitTarget): Result & { householdId?: Id };
+
   // ---- modes ----
   /** Build and Buy pause the simulation; returning to live restores the previous speed. */
   setMode(m: 'live' | 'buy' | 'build'): void;
@@ -471,7 +512,20 @@ export interface GameAPI {
     rotate(dir: 1 | -1): void;
     cutaway(): CutawayMode;
     setCutaway(mode: CutawayMode): void;
+    /** Milestone 9: roofs shown or hidden (the camera bar's Roof toggle). Roofs only draw with the walls up or while a roof tool is open. Optional so mocks stay valid. */
+    roofsVisible?(): boolean;
+    setRoofsVisible?(on: boolean): void;
+    /** A roof tool is open: roofs show whatever the wall mode is. */
+    setRoofEdit?(on: boolean): void;
     focusPerson(personId: Id): void;
+    /**
+     * Milestone 9 (optional: the dev mocks omit them). The floor being viewed and worked on (0-2): floors above it are hidden,
+     * the cutaway, picking, build tools, placement and the camera plane follow it. `levels().count` is the number of floors in
+     * use; Build mode may also open the next, empty one (up to `max`). Following or selecting a person on another floor switches it.
+     */
+    level?(): number;
+    setLevel?(level: number): void;
+    levels?(): { count: number; max: number };
     /** Eases the camera to a picked person, object or item if it is off-screen, hidden behind panels or small. */
     reveal(pick: PickResult): void;
     /** Screen position (CSS px, relative to the canvas) of a world point. */

@@ -3,10 +3,11 @@
 // Entries with status 'dev' are never shown as selectable finished content and never counted.
 
 import type {
-  BodyFrame, BondStatus, Cents, EventGoalKind, GarmentLayer, HomeEventType, Hex, MemoryKind, NeedId, OutfitCategory, Posture,
+  BodyFrame, BondStatus, Cents, EventGoalKind, GarmentLayer, HomeEventType, Hex, LifeStage, MemoryKind, NeedId, OutfitCategory, Posture,
   WorldItemKind,
 } from '../core/types';
 import type { AnimId } from '../core/anim';
+import type { ExteriorContent } from './exterior';
 
 export type ContentStatus = 'ready' | 'dev';
 export type PriceTier = 'budget' | 'standard' | 'premium' | 'luxury';
@@ -67,7 +68,7 @@ export interface OpeningDef {
 
 export type CatalogCategory =
   | 'seating' | 'beds' | 'tables' | 'storage' | 'kitchen' | 'bathroom' | 'lighting' | 'electronics'
-  | 'hobby' | 'decor' | 'outdoor' | 'kids';
+  | 'hobby' | 'decor' | 'outdoor' | 'kids' | 'stairs';
 
 export type PlacementLayer = 'floor' | 'rug' | 'wall' | 'surface' | 'ceiling';
 export type SlotKind = 'sit' | 'sleep' | 'use' | 'stand';
@@ -144,8 +145,21 @@ export interface ObjectDef {
   interactions: string[];
   stats: ObjectStats;
   finishes: FinishRegion[];
+  /**
+   * Milestone 9: this object is a staircase. Semantics (src/world/levels.ts):
+   * - `straight`: footprint w x `length` (w 1 or 2). In rot-0 local space the stair rises toward -z: its foot is the front
+   *   (+z) row, its head the back (-z) row. People enter on the tile just in front of the foot row and arrive on the tile just
+   *   behind the head row, one level up (one link per footprint column).
+   * - `spiral`: square footprint (w = d >= 2). The foot is the front row, the head the back row, walked as a curve.
+   * `length` is the number of tiles walked on the stair (the rise of LEVEL_HEIGHT is spread over them).
+   * The footprint of the level above it has no floor (a hole). Stairs are placed on a level that has a floor (level >= 1).
+   */
+  stair?: StairSpec;
   status: ContentStatus;
 }
+
+/** Milestone 9: see ObjectDef.stair. */
+export interface StairSpec { length: 3 | 4; kind: 'straight' | 'spiral' }
 
 // ---------------------------------------------------------------------------------------------
 // Interactions (object and self) and social interactions
@@ -191,6 +205,12 @@ export interface InteractionDef {
    * cafe terrace); computer games are for 'home' (not the library's computers).
    */
   venues?: string[];
+  /**
+   * Milestone 8: the life stages that may use it. Absent = the default for its behaviour (sim/gating.ts): babies nothing,
+   * toddlers only what lists 'toddler', children eat/sleep/bathroom/fun/computer/homework, teens everything except
+   * adult romance, careers and bills.
+   */
+  ages?: LifeStage[];
   status: ContentStatus;
 }
 
@@ -243,6 +263,15 @@ export interface SocialDef {
     private?: boolean;
     /** Needs a recent memory (of either person) of one of these kinds involving the other. */
     memory?: { kinds: MemoryKind[]; withinMinutes: number };
+    /**
+     * Milestone 8: life stages of the actor and of the target. Absent = every stage from child up (babies and toddlers cannot
+     * hold a conversation); child socials such as "Play tag" and "Tickle" list the stages they are for.
+     */
+    actorStages?: LifeStage[];
+    targetStages?: LifeStage[];
+    /** Milestone 8: the target must live in another household / in the actor's own household. */
+    otherHousehold?: boolean;
+    sameHousehold?: boolean;
   };
   /** Menu section; default from the category (status -> special, romantic -> romantic, mean -> mean, else friendly). */
   section?: SocialSection;
@@ -266,6 +295,8 @@ export interface SocialDef {
   autonomy: { enabled: boolean; weight: number };
   /** Counts as one of the activities in content totals only when true (see brief Section 2). */
   alsoActivity: boolean;
+  /** Milestone 8: extra effect on acceptance, implemented in sim/family.ts (teach:talking, teach:motor, teach:potty, homework, moveIn). */
+  effect?: string;
   status: ContentStatus;
 }
 
@@ -382,6 +413,20 @@ export interface CareerDef {
   status: ContentStatus;
 }
 
+/** Milestone 8: a school (content/school.ts). `days` use 0 = Monday ... 6 = Sunday, times are minutes after midnight. */
+export interface SchoolDef {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  /** Life stages that attend. */
+  stages: LifeStage[];
+  days: number[];
+  start: number;
+  end: number;
+  status: ContentStatus;
+}
+
 export interface MoodletDef { id: string; name: string; description: string; icon: string; value: number; minutes: number }
 
 export interface RecipeDef {
@@ -479,6 +524,8 @@ export interface ContentDB {
   careers: Record<string, CareerDef>;
   /** Small on-the-job decisions, content/careerEvents.ts. Optional so older content fixtures stay valid. */
   careerEvents?: Record<string, CareerEventDef>;
+  /** Milestone 8: schools of children and teens, content/school.ts. Optional so older content fixtures stay valid. */
+  schools?: Record<string, SchoolDef>;
   moodlets: Record<string, MoodletDef>;
   recipes: Record<string, RecipeDef>;
   packs: Record<string, PackDef>;
@@ -498,6 +545,8 @@ export interface ContentDB {
   eyeColors: Swatch[];
   /** Social event types (dates, parties, visits), content/events.ts. Optional so older content fixtures stay valid. */
   events?: Record<string, EventDef>;
+  /** Milestone 9: fences and gates, roof styles and finishes, terrain paints and garden crops (content/exterior.ts). Optional so older fixtures stay valid. */
+  exterior?: ExteriorContent;
   /** Likes/dislikes the creator offers, grouped: 'activity' | 'music' | 'decor' | 'food' | 'topic'. */
   preferences: Array<{ id: string; group: string; name: string }>;
 }

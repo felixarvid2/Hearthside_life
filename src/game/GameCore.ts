@@ -20,10 +20,14 @@ import type { HouseholdDraft } from '../core/drafts';
 import { EventBus } from '../core/events';
 import type { Tile } from '../core/nav';
 import { createEmptyWorld } from '../core/state';
-import type { FinishRef, Household, Id, Lot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
+import { MAX_STAGE_DAYS, MIN_STAGE_DAYS, STAGE_ORDER } from '../core/lifeStages';
+import type { FinishRef, Household, Id, LifeStage, Lot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import { describeReport, exportWorld as exportWorldJson, importWorld as importWorldJson, type SaveStore } from '../persistence/index';
 import { isManualSlot, isSlotId } from '../persistence/types';
+import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
+import type { FamilyInfo } from '../sim/familyView';
 import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { SplitPreview, SplitTarget } from '../sim/split';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
 import { Simulation } from '../sim/simulation';
@@ -122,9 +126,18 @@ export class GameCore {
       this.notify('state');
       this.autosaves.request();
     });
-    for (const type of ['travel', 'household.switched', 'household.moved'] as const) {
+    for (const type of ['travel', 'household.switched', 'household.moved', 'family'] as const) {
       this.events.on(type, () => { this.notify('neighbourhood'); this.notify('state'); });
     }
+    for (const type of ['birthday', 'school', 'care'] as const) this.events.on(type, () => { this.notify('state'); });
+    // A person who passed away (or left) while selected: select somebody else from the household.
+    this.events.on('person.removed', (e) => {
+      if (this.sel !== e.personId) return;
+      const w = this.world;
+      const members = w?.households[w.activeHouseholdId]?.memberIds ?? [];
+      this.sel = members.find((id) => id !== e.personId && w?.people[id]?.location.kind === 'lot') ?? members.find((id) => id !== e.personId) ?? null;
+      this.notify('selection');
+    });
     this.autosaves = new AutosavePolicy({
       saves: o.saves,
       getState: () => this.world,
@@ -371,11 +384,11 @@ export class GameCore {
     return r.ok ? OK : fail(r.reason);
   }
 
-  /** Walk to a tile ("Go here") on the person's current level. */
+  /** Walk to a tile ("Go here"); a tile without a level is on the person's current level (Milestone 9: stairs are used on the way). */
   goTo(personId: Id, tile: Tile): Result {
     const p = this.world?.people[personId];
     if (!p) return fail('Unknown person.');
-    const level = p.location.kind === 'lot' ? p.location.level : 0;
+    const level = tile.level ?? (p.location.kind === 'lot' ? p.location.level : 0);
     const r = this.sim.queue(personId, { interactionId: 'goHere', target: { kind: 'tile', x: Math.floor(tile.x), z: Math.floor(tile.z), level }, source: 'player' });
     return r.ok ? OK : fail(r.reason);
   }
@@ -566,6 +579,64 @@ export class GameCore {
   }
 
   // ---------------------------------------------------------------------------------------------
+  // Family and life stages (Milestone 8)
+  // ---------------------------------------------------------------------------------------------
+
+  family(personId: Id): FamilyInfo | null { return this.world ? this.sim.family(personId) : null; }
+
+  private afterFamily(): void {
+    this.notify('state');
+    this.notify('neighbourhood');
+    this.autosaves.request();
+  }
+
+  /** "Age up now": the birthday at a birthday cake on the lot (a caregiver celebrates with a baby or toddler). */
+  ageUpNow(personId: Id): Result {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.ageUpNow(personId);
+    if (!r.ok) return fail(r.reason);
+    this.notify('state');
+    return OK;
+  }
+
+  /** Sends a pupil to do the homework that is due. */
+  doHomework(personId: Id): Result {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.doHomework(personId);
+    if (!r.ok) return fail(r.reason);
+    this.notify('state');
+    return OK;
+  }
+
+  adoptPreview(adopterId: Id, spec: AdoptionSpec): AdoptionPreview | null { return this.world ? this.sim.adoptionPreview(adopterId, spec) : null; }
+
+  adopt(adopterId: Id, spec: AdoptionSpec): Result & { personId?: Id } {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.adopt(adopterId, spec);
+    if (!r.ok) return fail(r.reason);
+    this.afterFamily();
+    return { ok: true, personId: r.personId };
+  }
+
+  splitPreview(personIds: Id[], target: SplitTarget): SplitPreview | null { return this.world ? this.sim.splitPreview(personIds, target) : null; }
+
+  splitHousehold(personIds: Id[], target: SplitTarget): Result & { householdId?: Id } {
+    const blocked = this.liveOnly();
+    if (blocked) return fail(blocked);
+    const r = this.sim.splitHousehold(personIds, target);
+    if (!r.ok) return fail(r.reason);
+    const w = this.world!;
+    if (this.sel !== null && !w.households[w.activeHouseholdId]?.memberIds.includes(this.sel)) {
+      this.sel = w.households[w.activeHouseholdId]?.memberIds.find((id) => w.people[id]?.location.kind === 'lot') ?? w.households[w.activeHouseholdId]?.memberIds[0] ?? null;
+      this.notify('selection');
+    }
+    this.afterFamily();
+    return { ok: true, householdId: r.householdId };
+  }
+
+  // ---------------------------------------------------------------------------------------------
   // Construction plumbing
   // ---------------------------------------------------------------------------------------------
 
@@ -683,6 +754,11 @@ export class GameCore {
   }
 
   placement(): PlacementState | null { return this.place; }
+
+  /** Milestone 9: the placement ghost follows the floor being worked on. */
+  setPlacementLevel(level: number): void {
+    if (this.place && this.place.level !== level) this.setPlacement({ ...this.place, level });
+  }
 
   /** Moves the placement preview to a tile (footprint origin = minimum corner after rotation). */
   placementTile(x: number, z: number): void {
@@ -889,7 +965,16 @@ export class GameCore {
     if (typeof patch.autonomy === 'boolean') set('autonomy', patch.autonomy);
     if (patch.autonomyLevel === 0 || patch.autonomyLevel === 1 || patch.autonomyLevel === 2) set('autonomyLevel', patch.autonomyLevel);
     if (typeof patch.visitors === 'boolean') set('visitors', patch.visitors);
-    if (patch.aging === 'off' || patch.aging === 'long' || patch.aging === 'normal') set('aging', patch.aging);
+    if (patch.aging === 'off' || patch.aging === 'long' || patch.aging === 'normal' || patch.aging === 'custom') set('aging', patch.aging);
+    if (typeof patch.elderEndOfLife === 'boolean') set('elderEndOfLife', patch.elderEndOfLife);
+    if (patch.agingDays && typeof patch.agingDays === 'object') {
+      const days: Partial<Record<LifeStage, number>> = { ...(s.agingDays ?? {}) };
+      for (const stage of STAGE_ORDER) {
+        const v = patch.agingDays[stage];
+        if (typeof v === 'number' && Number.isFinite(v)) days[stage] = Math.max(MIN_STAGE_DAYS, Math.min(MAX_STAGE_DAYS, Math.round(v)));
+      }
+      if (JSON.stringify(days) !== JSON.stringify(s.agingDays ?? {})) { s.agingDays = days; changed = true; }
+    }
     if (typeof patch.unlimitedFunds === 'boolean' && state.startMode === 'sandbox') set('unlimitedFunds', patch.unlimitedFunds);
     if (typeof patch.autoPayBills === 'boolean') set('autoPayBills', patch.autoPayBills);
     if (changed) { this.notify('state'); this.notify('settings'); }

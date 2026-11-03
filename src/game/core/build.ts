@@ -5,6 +5,12 @@
 // never touch the state.
 
 import { buildCommand, type BuildCommand } from '../../building/buildCommands';
+import { buyObject, sellObject } from '../../building/commands';
+import { exteriorCommand, type ExteriorCommand } from '../../building/exteriorCommands';
+import { fenceRunRequest, gateRequest, nearestFenceEdge, planExterior, roofRectRequest, type ExteriorPlan, type ExteriorRequest } from '../../building/exteriorPlans';
+import { exteriorOf } from '../../content/exterior';
+import { planBuy, planSell, type BuyRequest } from '../../building/plans';
+import { rotatedSize } from '../../core/geometry';
 import {
   eraseRectRequest, eraseRunRequest, eraseSegmentRequest, normalizeRect, planBuild, straightenRun, tileRectTiles, wallRectRequest,
   wallRunRequest, wallSegmentRequest, type BuildPlan, type BuildRequest, type EdgeRef, type OpeningSpec, type Point,
@@ -15,7 +21,7 @@ import type { UndoableCommand } from '../../core/commands';
 import type { EventBus } from '../../core/events';
 import { edgeKey } from '../../core/ids';
 import type { Tile } from '../../core/nav';
-import type { FinishRef, Id, Lot, WorldState } from '../../core/types';
+import type { FinishRef, Id, Lot, Rot, WorldState } from '../../core/types';
 import { hasLevel, inLot } from '../../world/lots';
 import { RoomTracker, roomOutlines, type RoomDelta, type TrackedRoom } from '../../world/roomTracker';
 import { openingEdgeKeys, openingOnWall, openingSpan } from '../../world/walls';
@@ -83,7 +89,11 @@ function shiftEdge(e: EdgeRef, by: number): EdgeRef { return e.dir === 'h' ? { d
 export type Resolved =
   | { ok: false; reason: string }
   | { ok: true; build: BuildRequest; extra?: { openingId?: Id } }
-  | { ok: true; paint: { target: PaintTarget; finish: FinishRef } };
+  | { ok: true; paint: { target: PaintTarget; finish: FinishRef } }
+  /** Milestone 9: buy a staircase / sell one (object commands, previewed like the rest). */
+  | { ok: true; object: { place: BuyRequest } | { remove: Id } }
+  /** Milestone 9 exterior: fences, gates, roofs and terrain paint (building/exteriorPlans.ts). */
+  | { ok: true; exterior: ExteriorRequest };
 
 const bad = (reason: string): Resolved => ({ ok: false, reason });
 
@@ -176,7 +186,58 @@ export function resolveBuild(content: ContentDB, lot: Lot, tool: BuildTool, targ
       return { ok: true, build: { kind: 'eraseFloor', level, tiles } };
     }
     case 'deleteRoom': return { ok: true, build: { kind: 'deleteRoom', level, tile: snapTile(from) } };
+    case 'stairs': {
+      const def = content.objects[tool.defId];
+      if (!def?.stair) return bad('Choose a staircase first.');
+      const rot = ((((Math.trunc(tool.rot ?? 0) % 4) + 4) % 4) as Rot);
+      const size = rotatedSize(def.footprint, rot);
+      const t = snapTile(from);
+      // the pointer is on the middle of the footprint
+      return { ok: true, object: { place: { defId: def.id, x: t.x - Math.floor((size.w - 1) / 2), z: t.z - Math.floor((size.d - 1) / 2), rot, level } } };
+    }
+    case 'fence': {
+      const def = exteriorOf(content).fences[tool.defId];
+      if (!def) return bad('Choose a fence design first.');
+      if (def.kind === 'gate') {
+        const e = nearestEdge(lot, level, from, false);
+        return e ? { ok: true, exterior: gateRequest(level, e, def.id, tool.variant ?? 0) } : bad('Point at the lot.');
+      }
+      const a = snapVertex(lot, from);
+      const run = fenceRunRequest(level, a, straightenRun(a, snapVertex(lot, to ?? from)), def.id, tool.variant ?? 0);
+      return run.ok ? { ok: true, exterior: run.request } : bad(run.reason);
+    }
+    case 'eraseFence': {
+      const e = nearestFenceEdge(lot, level, from);
+      return e ? { ok: true, exterior: { kind: 'eraseFence', level, edges: [e] } } : bad('There is no fence there.');
+    }
+    case 'roof': {
+      const spec = { styleId: tool.spec.styleId, finish: tool.spec.finish, ...(tool.spec.pitch !== undefined ? { pitch: tool.spec.pitch } : {}), ...(tool.spec.ridge ? { ridge: tool.spec.ridge } : {}) };
+      if (tool.shape === 'auto') return { ok: true, exterior: { kind: 'autoRoof', spec } };
+      const r = roofRectRequest(level, snapVertex(lot, from), snapVertex(lot, to ?? from), spec);
+      return r.ok ? { ok: true, exterior: r.request } : bad(r.reason);
+    }
+    case 'eraseRoof': return { ok: true, exterior: { kind: 'eraseRoof', tile: snapTile(from) } };
+    case 'terrain': {
+      const a = snapTile(from);
+      return { ok: true, exterior: { kind: 'terrain', paintId: tool.paintId, tiles: tool.shape === 'rect' ? tileRectTiles(a, snapTile(to ?? from)) : [a] } };
+    }
+    case 'eraseStairs': {
+      const t = snapTile(from);
+      const found = stairAt(content, lot, level, t.x, t.z);
+      return found ? { ok: true, object: { remove: found } } : bad('Point at a staircase.');
+    }
   }
+}
+
+/** The staircase whose footprint covers the tile on `level` (or on the level below, where it opens into this one). */
+function stairAt(content: ContentDB, lot: Lot, level: number, x: number, z: number): Id | null {
+  for (const o of Object.values(lot.objects).sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    const def = content.objects[o.defId];
+    if (!def?.stair || (o.level !== level && o.level + 1 !== level)) continue;
+    const s = rotatedSize(def.footprint, o.rot);
+    if (x >= o.x && x < o.x + s.w && z >= o.z && z < o.z + s.d) return o.id;
+  }
+  return null;
 }
 
 /** First edge key for an opening of `span` tiles centred on the wall under the pointer. */
@@ -292,8 +353,49 @@ export class BuildTools {
       };
       return { resolved, preview };
     }
+    if ('object' in resolved) return { resolved, preview: this.objectPreview(state, lot, hh.id, resolved.object, target.level ?? 0) };
+    if ('exterior' in resolved) return { resolved, preview: this.exteriorPreview(planExterior(state, this.d.content, lot.id, hh.id, resolved.exterior)) };
     const plan = planBuild(state, this.d.content, lot.id, hh.id, resolved.build);
     return { resolved, preview: this.fromPlan(plan) };
+  }
+
+  /** Preview of buying or selling a staircase. */
+  private objectPreview(state: WorldState, lot: Lot, householdId: Id, o: { place: BuyRequest } | { remove: Id }, level: number): BuildPreview {
+    const none = { ...KINDLESS_COUNTS };
+    if ('place' in o) {
+      const p = planBuy(state, this.d.content, lot.id, householdId, o.place);
+      const name = p.def?.name ?? 'staircase';
+      return {
+        ok: p.ok, ...(p.ok ? {} : { reason: p.reasons[0] ?? 'That cannot be built.' }), reasons: p.reasons, label: `Build ${name}`,
+        cost: p.cost, charge: Math.max(0, p.cost), refund: 0, counts: none, measure: { lengthM: 0, text: p.def ? `${p.def.footprint.w} x ${p.def.footprint.d} m` : '' },
+        rooms: { before: 0, after: 0 },
+        highlight: { level, newWalls: [], existingWalls: [], removedWalls: [], openingEdges: [], removedOpeningEdges: [], tiles: p.tiles.map((t) => ({ x: t.x, z: t.z })), blocked: [] },
+        ...(p.warnings && p.warnings.length > 0 ? { warnings: p.warnings } : {}),
+      };
+    }
+    const p = planSell(state, this.d.content, lot.id, householdId, o.remove);
+    const obj = lot.objects[o.remove];
+    const name = (obj && this.d.content.objects[obj.defId]?.name) ?? 'staircase';
+    return {
+      ok: p.ok, ...(p.ok ? {} : { reason: p.reasons[0] ?? 'That cannot be removed.' }), reasons: p.reasons, label: `Remove ${name}`,
+      cost: p.cost, charge: 0, refund: Math.max(0, -p.cost), counts: none, measure: { lengthM: 0, text: '' }, rooms: { before: 0, after: 0 },
+      highlight: { level: obj?.level ?? level, newWalls: [], existingWalls: [], removedWalls: [], openingEdges: [], removedOpeningEdges: [], tiles: p.tiles.map((t) => ({ x: t.x, z: t.z })), blocked: [] },
+    };
+  }
+
+  /** Preview of a fence, roof or paint plan (Milestone 9): edges and tiles ride in the usual highlight. */
+  private exteriorPreview(plan: ExteriorPlan): BuildPreview {
+    const h = plan.highlight;
+    return {
+      ok: plan.ok, ...(plan.ok ? {} : { reason: plan.reasons[0] ?? 'That cannot be built.' }), reasons: plan.reasons,
+      ...(plan.noop ? { unchanged: true as const } : {}), label: plan.label, cost: plan.cost, charge: plan.charge, refund: plan.refund,
+      counts: { ...KINDLESS_COUNTS }, measure: { lengthM: plan.measure.lengthM, ...(plan.measure.areaM2 !== undefined ? { areaM2: plan.measure.areaM2 } : {}), text: plan.measure.text },
+      rooms: { before: 0, after: 0 },
+      highlight: {
+        level: h.level, newWalls: h.newEdges, existingWalls: h.existingEdges, removedWalls: h.removedEdges, openingEdges: [], removedOpeningEdges: [],
+        tiles: h.tiles, blocked: h.blocked,
+      },
+    };
   }
 
   private emptyPreview(reason: string): BuildPreview {
@@ -305,6 +407,7 @@ export class BuildTools {
       ok: plan.ok, ...(plan.ok ? {} : { reason: plan.reasons[0] ?? 'That cannot be built.' }), reasons: plan.reasons,
       ...(plan.noop ? { unchanged: true as const } : {}), label: plan.label, cost: plan.cost, charge: plan.charge, refund: plan.refund,
       counts: plan.counts, measure: plan.measure, rooms: plan.rooms, highlight: plan.highlight,
+      ...(plan.warnings && plan.warnings.length > 0 ? { warnings: plan.warnings } : {}),
     };
   }
 
@@ -331,17 +434,21 @@ export class BuildTools {
     const r = ev.resolved;
     if (!r.ok) return fail(r.reason);
     const before = this.trackedRooms(lot, lvl);
-    const cmd: UndoableCommand = 'paint' in r ? paintCommand(lot.id, hh.id, r.paint.target, r.paint.finish) : buildCommand(lot.id, hh.id, r.build);
+    const cmd: UndoableCommand = 'paint' in r ? paintCommand(lot.id, hh.id, r.paint.target, r.paint.finish)
+      : 'object' in r ? ('place' in r.object ? buyObject(lot.id, hh.id, r.object.place) : sellObject(lot.id, hh.id, r.object.remove))
+        : 'exterior' in r ? exteriorCommand(lot.id, hh.id, r.exterior)
+          : buildCommand(lot.id, hh.id, r.build);
     const before0 = new Set(Object.keys(lot.openings));
     const res = this.d.run(cmd);
     if (!res.ok) return res;
     this.setHighlight(null);
-    const plan = (cmd as BuildCommand).plan;
+    const plan = (cmd as BuildCommand | ExteriorCommand).plan;
+    const exterior = 'exterior' in r;
     const after = this.tracker.current(lot.id, lvl);
     const placedId = Object.keys(lot.openings).find((id) => !before0.has(id));
     const openingId = placedId ?? ('extra' in r ? r.extra?.openingId : undefined);
     return {
-      ok: true, cost: plan ? plan.cost : pv.cost, label: plan ? plan.label : pv.label, counts: plan ? plan.counts : pv.counts,
+      ok: true, cost: plan ? plan.cost : pv.cost, label: plan ? plan.label : pv.label, counts: plan && !exterior ? (plan as BuildPlan).counts : pv.counts,
       rooms: RoomTracker.delta(before, after), ...(openingId ? { openingId } : {}),
     };
   }

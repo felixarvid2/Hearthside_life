@@ -19,6 +19,7 @@ import {
   joinCareer, quitCareer, resolveCareerEvent, setCareerEffort, updateCareers,
 } from './careers';
 import { spoilMeals } from './cooking';
+import { advanceGardens } from './garden';
 import { payBill, setAutoPay, updateBills } from './economy';
 import { cancelEvent, canPlanEvent, dailyReconciliation, ensureEventEnds, planEvent } from './events';
 import type { PlanRequest, PlanResult } from './events';
@@ -43,6 +44,20 @@ import type { NeighbourhoodInfo } from './neighbourhoodView';
 import { placeOf } from './places';
 import type { PersonPlace } from './places';
 import { reconcileStrays, runLightWorld } from './townlife';
+import { ageUp, dailyAging } from './aging';
+import { adopt, adoptionPreview } from './adoption';
+import type { AdoptionPreview, AdoptionSpec, AdoptResult } from './adoption';
+import { updateCare } from './care';
+import { familyInfo } from './familyView';
+import type { FamilyInfo } from './familyView';
+import { reportCards, updateSchool } from './school';
+import { splitHousehold, splitPreview } from './split';
+import type { SplitPreview, SplitResult, SplitTarget } from './split';
+import { cakeOnLot } from './care';
+import { HOMEWORK_INTERACTION, offeredInteractionIds } from '../content/capabilities';
+import { isDependentStage } from '../core/lifeStages';
+import { lotObjects } from './context';
+import { isBroken } from './housekeeping';
 import type { ActionRequest, InteractionOption, QueueResult } from './types';
 
 export type { ActionRequest, InteractionOption, QueueResult } from './types';
@@ -72,7 +87,7 @@ export class Simulation {
     // Resync automatically; explicit rebuild()/onLotChanged() calls from game code stay valid (idempotent).
     o.events.on('state.replaced', () => { this.seen = null; });
     o.events.on('person.removed', () => { this.seen = null; });
-    o.events.on('lot.changed', (e) => { if (e.what !== 'floors' && this.getState().lots[e.lotId]) this.onLotChanged(e.lotId); });
+    o.events.on('lot.changed', (e) => { if (e.what !== 'floors' && e.what !== 'roofs' && e.what !== 'terrain' && this.getState().lots[e.lotId]) this.onLotChanged(e.lotId); });
   }
 
   /** Context for the current state; rebuilds runtime caches first when the state object was replaced. */
@@ -109,6 +124,8 @@ export class Simulation {
     processSchedule(ctx);
     // 3. Careers and household bills
     updateCareers(ctx);
+    updateSchool(ctx);
+    updateCare(ctx);
     updateBills(ctx);
     // 3c. Everybody outside the household: jobs, bills and where they are, from timestamps (Milestone 7)
     if (minuteOfDay(ctx.now) % 15 === 0) runLightWorld(ctx);
@@ -151,6 +168,10 @@ export class Simulation {
     syncBonds(ctx.state, ctx.events, ctx.now);
     dailyDropIn(ctx, day);
     dailyReconciliation(ctx, day);
+    // Family (Milestone 8): the week's report cards, then the day's aging and birthdays.
+    reportCards(ctx, day);
+    dailyAging(ctx);
+    advanceGardens(ctx.state, ctx.events, day); // Milestone 9: crops grow by the day
   }
 
   /** Queues an interaction or social. Player orders precede autonomous ones and cancel a running autonomous action. */
@@ -402,6 +423,74 @@ export class Simulation {
 
   moveHousehold(lotId: Id): { ok: boolean; reason?: string } {
     return moveHousehold(this.ctx(), lotId);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Family and life stages (Milestone 8)
+  // ---------------------------------------------------------------------------------------------
+
+  /** Stage, birthday countdown, relatives, school and what the household can do for family. */
+  family(personId: Id): FamilyInfo | null {
+    return familyInfo(this.ctx(), personId);
+  }
+
+  /**
+   * "Age up now" for a member of the household: queues the birthday at a birthday cake on the lot. A baby or toddler is
+   * celebrated by a caregiver (Celebrate a Birthday).
+   */
+  ageUpNow(personId: Id): QueueResult {
+    const ctx = this.ctx();
+    const p = ctx.state.people[personId];
+    if (!p) return { ok: false, reason: 'Unknown person.' };
+    if (!ctx.state.households[p.householdId]?.isPlayable) return { ok: false, reason: `${p.firstName} decides for themself.` };
+    const lotId = lotLoc(p)?.lotId ?? ctx.state.activeLotId;
+    if (!lotId || !cakeOnLot(ctx, lotId)) return { ok: false, reason: 'Needs a birthday cake on a table or counter (Buy mode, Decor).' };
+    if (isDependentStage(p.lifeStage)) {
+      const carer = (ctx.state.households[p.householdId]?.memberIds ?? []).map((id) => ctx.state.people[id]).find((o) => o && o.id !== p.id && !isDependentStage(o.lifeStage) && o.lifeStage !== 'child' && !!lotLoc(o));
+      if (!carer) return { ok: false, reason: 'A teen or adult at home has to celebrate with a little one.' };
+      return this.queue(carer.id, { interactionId: 'careBirthday', target: { kind: 'person', personId: p.id }, source: 'player' });
+    }
+    const lot = ctx.state.lots[lotId];
+    const cake = lot && Object.values(lot.objects).find((o) => ctx.content.objects[o.defId]?.tags.includes('cake'));
+    if (!cake) return { ok: false, reason: 'Needs a birthday cake.' };
+    return this.queue(personId, { interactionId: 'ageUpNow', target: { kind: 'object', objectId: cake.id, slotId: null }, source: 'player' });
+  }
+
+  /** Sends a pupil to do the homework due, at the nearest desk, table or computer. */
+  doHomework(personId: Id): QueueResult {
+    const ctx = this.ctx();
+    const p = ctx.state.people[personId];
+    const loc = p ? lotLoc(p) : null;
+    if (!p || !loc) return { ok: false, reason: 'Unknown person.' };
+    const def = ctx.content.interactions[HOMEWORK_INTERACTION];
+    if (!def) return { ok: false, reason: 'That interaction is not available.' };
+    const spots = lotObjects(ctx, loc.lotId, loc.level)
+      .filter((r) => !isBroken(r.obj) && offeredInteractionIds(r.def).includes(def.id))
+      .sort((a, b) => Math.hypot(a.obj.x - loc.x, a.obj.z - loc.z) - Math.hypot(b.obj.x - loc.x, b.obj.z - loc.z));
+    if (spots.length === 0) return { ok: false, reason: 'Needs a desk, table or computer.' };
+    let last: QueueResult = { ok: false, reason: 'No desk is free.' };
+    for (const r of spots.slice(0, 4)) {
+      last = this.queue(personId, { interactionId: def.id, target: { kind: 'object', objectId: r.obj.id, slotId: null }, source: 'player' });
+      if (last.ok) return last;
+    }
+    return last;
+  }
+
+  adoptionPreview(adopterId: Id, spec: AdoptionSpec): AdoptionPreview { return adoptionPreview(this.ctx(), adopterId, spec); }
+
+  adopt(adopterId: Id, spec: AdoptionSpec): AdoptResult { return adopt(this.ctx(), adopterId, spec); }
+
+  splitPreview(personIds: Id[], target: SplitTarget): SplitPreview { return splitPreview(this.ctx(), personIds, target); }
+
+  splitHousehold(personIds: Id[], target: SplitTarget): SplitResult { return splitHousehold(this.ctx(), personIds, target); }
+
+  /** Test and developer hook: the birthday happens now (no cake needed), once per person and stage. */
+  birthdayNow(personId: Id): { ok: boolean; reason?: string } {
+    const ctx = this.ctx();
+    const p = ctx.state.people[personId];
+    if (!p) return { ok: false, reason: 'Unknown person.' };
+    const r = ageUp(ctx, p, 'time');
+    return r.ok ? { ok: true } : { ok: false, reason: r.reason };
   }
 
   /** Current mood with its reasons. */

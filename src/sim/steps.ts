@@ -215,7 +215,7 @@ export function usePointGoal(ctx: SimCtx, p: Person, a: ActionInstance, prefix: 
   }
   const x = a.data[`${prefix}X`], z = a.data[`${prefix}Z`];
   if (typeof x !== 'number' || typeof z !== 'number') return 'Nothing to use.';
-  return { kind: 'tile', tile: { x, z }, face: objectCenter(ref), label };
+  return { kind: 'tile', tile: { x, z, level: ref.obj.level }, face: objectCenter(ref), label };
 }
 
 /** Object referenced by a use point, if it still exists. */

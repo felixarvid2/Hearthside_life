@@ -34,7 +34,7 @@ const LYING_OFFSETS = { hunger: 3.5, bladder: 6 };
 
 const REST: InteractionDef[] = [
   def({
-    id: 'sleep', name: 'Sleep', description: 'Go to bed and sleep until fully rested (at most 10 hours). Changes into sleepwear while in bed.',
+    id: 'sleep', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Sleep', description: 'Go to bed and sleep until fully rested (at most 10 hours). Changes into sleepwear while in bed.',
     icon: 'bed', kind: 'object', slotKinds: ['sleep'], behavior: 'sleep', posture: 'lying',
     anims: { prepare: 'lieDown', perform: 'sleep', cleanup: 'getUp' },
     duration: { kind: 'untilFull', need: 'energy', maxMinutes: 600 },
@@ -42,7 +42,7 @@ const REST: InteractionDef[] = [
     autonomy: { enabled: true, ads: { energy: 80 }, tags: ['rest', 'sleep'] },
   }),
   def({
-    id: 'nap', name: 'Nap', description: 'Lie down for a 90-minute nap. Beds restore more energy than sofas.',
+    id: 'nap', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Nap', description: 'Lie down for a 90-minute nap. Beds restore more energy than sofas.',
     icon: 'moon', kind: 'object', slotKinds: ['sleep', 'sit'], behavior: 'rest', posture: 'lying',
     anims: { prepare: 'lieDown', perform: 'sleep', cleanup: 'getUp' },
     duration: { kind: 'fixed', minutes: 90 },
@@ -50,7 +50,7 @@ const REST: InteractionDef[] = [
     autonomy: { enabled: true, ads: { energy: 20 }, tags: ['rest', 'nap'] },
   }),
   def({
-    id: 'sit', name: 'Sit', description: 'Sit down for a while. Comfortable seats lift the mood.',
+    id: 'sit', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Sit', description: 'Sit down for a while. Comfortable seats lift the mood.',
     icon: 'person', kind: 'object', slotKinds: ['sit'], behavior: 'sit', posture: 'seated',
     anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
     duration: { kind: 'fixed', minutes: 30 },
@@ -78,7 +78,7 @@ const FOOD: InteractionDef[] = [
     autonomy: { enabled: true, ads: { hunger: 55 }, tags: ['food', 'cooking', 'creative'] },
   }),
   def({
-    id: 'eatMeal', name: 'Eat', description: 'Take a portion and eat it at a table when a chair is free, otherwise standing.',
+    id: 'eatMeal', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Eat', description: 'Take a portion and eat it at a table when a chair is free, otherwise standing.',
     icon: 'hunger', kind: 'item', behavior: 'eatMeal', posture: 'seated',
     anims: { prepare: 'pickUp', perform: 'eat' },
     // Hunger comes from the portion (RecipeDef.hunger scaled by meal quality), applied by the eatMeal behaviour.
@@ -123,7 +123,7 @@ const BATHROOM: InteractionDef[] = [
 
 const LEISURE: InteractionDef[] = [
   def({
-    id: 'watchTv', name: 'Watch TV', description: 'Watch from a free seat within 5 m that faces the screen, or standing in front of it.',
+    id: 'watchTv', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Watch TV', description: 'Watch from a free seat within 5 m that faces the screen, or standing in front of it.',
     icon: 'fun', kind: 'object', slotKinds: ['use'], behavior: 'watchTv', posture: 'seated',
     anims: { perform: 'watchTv' },
     duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 24 }, moodletOnComplete: 'entertained',
@@ -277,7 +277,7 @@ const HOBBY: InteractionDef[] = [
     autonomy: { enabled: true, ads: { fun: 12 }, tags: ['chess', 'game', 'skill', 'fun'] }, allowVisitors: true,
   }),
   def({
-    id: 'playWithToys', name: 'Play with Toys', description: 'Dig through the toys and build, stack and make-believe for half an hour.',
+    id: 'playWithToys', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Play with Toys', description: 'Dig through the toys and build, stack and make-believe for half an hour.',
     icon: 'fun', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
     anims: { perform: 'interact' },
     duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { fun: 22, energy: -2 },

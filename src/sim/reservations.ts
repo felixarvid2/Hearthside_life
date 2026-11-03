@@ -32,6 +32,8 @@ export function reservationKeys(a: ActionInstance): string[] {
   }
   if (a.target.kind === 'item' && d.itemTaken !== true) keys.push(`item:${a.target.itemId}`);
   if (a.target.kind === 'person' && d.social === true && d.role !== 'listen') keys.push(`person:${a.target.personId}`);
+  // Looking after a baby or toddler (Milestone 8): one caregiver at a time.
+  if (a.target.kind === 'person' && a.interactionId.startsWith('care')) keys.push(`person:${a.target.personId}`);
   return keys;
 }
 

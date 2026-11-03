@@ -29,7 +29,7 @@ describe('content registry', () => {
     expect(ready(db.socials).length).toBeGreaterThanOrEqual(24); // Milestone 5 minimum
     expect(ready(db.traits).length).toBeGreaterThanOrEqual(20);
     expect(ready(db.aspirations).length).toBeGreaterThanOrEqual(6);
-    expect(Object.keys(db.skills)).toHaveLength(16);
+    expect(Object.keys(db.skills)).toHaveLength(19); // 16 plus the toddler skills of Milestone 8 (motor, talking, potty)
     for (const id of ['cooking', 'logic', 'programming', 'charisma', 'fitness', 'gardening', 'music']) expect(db.skills[id]?.status).toBe('ready');
     expect(db.careers.culinary?.levels).toHaveLength(10);
     expect(ready(db.recipes).length).toBeGreaterThanOrEqual(4);
@@ -62,7 +62,8 @@ describe('content registry', () => {
   });
 
   it('fits every model in its footprint, centred in x, bottom on the floor (wall items mounted)', () => {
-    for (const o of OBJECTS) {
+    // 'proc:' models (staircases) are built at runtime to fill their footprint exactly: there is no manifest model to fit
+    for (const o of OBJECTS.filter((x) => !x.model.asset.startsWith('proc:'))) {
       const b = fittedBounds(o.model)!;
       expect(b, o.id).not.toBeNull();
       expect(b.x0).toBeGreaterThanOrEqual(-0.001);

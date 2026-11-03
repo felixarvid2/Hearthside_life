@@ -23,12 +23,15 @@ import {
   DROP_IN_CHANCE, DROP_IN_EARLIEST, DROP_IN_LATEST, FIRST_VISIT_MINUTE, VISIT_MAX_MINUTES, VISIT_MIN_MINUTES,
 } from './tuning';
 
-/** People of other, non-playable households (neighbours), in household order. */
+/** People of other, non-playable households (neighbours), in household order. Babies, toddlers and children never call on their own. */
 export function neighbours(state: WorldState): Person[] {
   const out: Person[] = [];
   for (const hh of Object.values(state.households)) {
     if (hh.id === state.activeHouseholdId || hh.isPlayable) continue;
-    for (const id of hh.memberIds) { const p = state.people[id]; if (p) out.push(p); }
+    for (const id of hh.memberIds) {
+      const p = state.people[id];
+      if (p && p.lifeStage !== 'baby' && p.lifeStage !== 'toddler' && p.lifeStage !== 'child') out.push(p);
+    }
   }
   return out;
 }

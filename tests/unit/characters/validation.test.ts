@@ -141,7 +141,7 @@ describe('member and household validation', () => {
     expect(msgs).toEqual(expect.arrayContaining([
       'identity: First name is required.',
       'identity: Last name is required.',
-      'identity: This life stage cannot be created yet (available: adult).',
+      'identity: This life stage cannot be created yet (available: youngAdult, adult).',
       'hair: Hairstyle "mohawk-9000" is not available.',
       'faceBody: Eye colour is not valid.',
       'faceBody: Body control "build" is out of range.',
@@ -166,7 +166,7 @@ describe('member and household validation', () => {
     const kids = household(1);
     kids.members[0]!.lifeStage = 'child';
     kids.members[0]!.traits = [];
-    expect(validateHousehold(kids, content, { lifeStages: ['child'] })).toContain('Young children need at least one adult in the household.');
+    expect(validateHousehold(kids, content, { lifeStages: ['child'] })).toContain('The household needs at least one young adult or older.');
   });
 
   it('prefixes member issues with the member name', () => {

@@ -16,6 +16,7 @@ import { edgeKey, parseEdgeKey, tileKey } from '../core/ids';
 import type { CutawayMode } from '../game/api';
 import type { PaintHighlight } from '../game/GameCore';
 import type { FinishRef, Lot, Opening, Wall } from '../core/types';
+import { LEVEL_HEIGHT, levelY, MAX_LEVELS } from '../world/levels';
 import { computeRooms } from '../world/rooms';
 import { openingEdgeKeys, openingsByWall, tileOnSide } from '../world/walls';
 import { buildOpeningMesh, openingCutout, setDoorOpen, WALL_THICKNESS } from './openingMeshes';
@@ -29,10 +30,12 @@ const CAP_H = 0.035;
 const CAP_OUT = 0.012;
 const TEX_H = 2.8;
 export const SLAB_DEPTH = 0.08;
+/** Thickness of an upper floor's slab: the gap between a 2.8 m wall and the next level (Milestone 9). */
+export const UPPER_SLAB_DEPTH = LEVEL_HEIGHT - 2.8;
 
 interface Hole { a: number; b: number; bottom: number; top: number }
 
-export interface DoorInfo { group: THREE.Group; x: number; z: number; open: number; target: number }
+export interface DoorInfo { group: THREE.Group; x: number; z: number; level: number; open: number; target: number }
 
 export interface WallHit { wallId: string; side: 'a' | 'b'; distance: number; point: THREE.Vector3 }
 
@@ -43,9 +46,11 @@ export class LotView {
   private openingGroup = new THREE.Group();
   private previewGroup = new THREE.Group();
   private lot: Lot | null = null;
-  /** Wall ids currently drawn lowered. */
+  /** Wall ids currently drawn lowered (walls of the active level only). */
   private lowered = new Set<string>();
   private indoor: Uint8Array = new Uint8Array(0);
+  /** Milestone 9: the floor being worked on. Levels above it are hidden, the walls of this level take the cutaway. */
+  private activeLevel = 0;
   /** Wall edge -> the opening covering it (every spanned edge of a wide opening maps to the same opening). */
   private openingByEdge: Record<string, Opening> = {};
   private mode: CutawayMode = 'cutaway';
@@ -54,6 +59,7 @@ export class LotView {
   private readonly trim = new THREE.MeshStandardMaterial({ color: 0xf3ead9, roughness: 0.7, name: 'wall-trim' });
   private readonly cap = new THREE.MeshStandardMaterial({ color: 0xe9dcc6, roughness: 0.65, name: 'wall-cap' });
   private readonly slab = new THREE.MeshStandardMaterial({ color: 0xcdbfa9, roughness: 0.9, name: 'floor-slab' });
+  private readonly ceiling = new THREE.MeshStandardMaterial({ color: 0xeee6d8, roughness: 0.95, name: 'floor-ceiling' });
   private readonly openingsByWall = new Map<string, THREE.Group>();
   readonly doors: DoorInfo[] = [];
   private previewMats: Array<{ mat: THREE.MeshStandardMaterial; tex: THREE.Texture | null }> = [];
@@ -123,11 +129,56 @@ export class LotView {
   }
 
   /** Rebuild after a construction change. */
-  update(lot: Lot, what: 'walls' | 'floors' | 'objects' | 'openings' | 'all'): void {
-    if (what === 'objects') return;
+  update(lot: Lot, what: 'walls' | 'floors' | 'objects' | 'openings' | 'fences' | 'roofs' | 'terrain' | 'all'): void {
+    // objects, and the exterior layers other views draw (fences, roofs, terrain), leave walls and floors as they are
+    if (what === 'objects' || what === 'fences' || what === 'roofs' || what === 'terrain') return;
     this.lot = lot;
     if (what === 'floors') { this.buildFloors(); this.pruneMaterials(); return; }
     this.build(lot);
+  }
+
+  /** Milestone 9: shows levels 0..level, takes the cutaway on `level` and picks walls there. */
+  setActiveLevel(level: number): void {
+    const next = Math.max(0, Math.min(MAX_LEVELS - 1, Math.trunc(level)));
+    if (next === this.activeLevel) return;
+    this.activeLevel = next;
+    if (!this.lot) return;
+    this.computeIndoor();
+    this.computeLowered();
+    this.buildWalls();
+    this.buildOpenings();
+    this.applyLevelVisibility();
+    this.pruneMaterials();
+  }
+
+  getActiveLevel(): number { return this.activeLevel; }
+
+  private applyLevelVisibility(): void {
+    for (const g of [this.floorGroup, this.wallGroup, this.openingGroup]) {
+      for (const c of g.children) {
+        const level = c.userData.level as number | undefined;
+        if (level !== undefined) c.visible = level <= this.activeLevel;
+      }
+    }
+  }
+
+  /** A group for one level's meshes (positioned at the level's height). */
+  private levelGroup(parent: THREE.Group, level: number): THREE.Group {
+    const g = new THREE.Group();
+    g.userData.level = level;
+    g.position.y = levelY(level);
+    g.visible = level <= this.activeLevel;
+    parent.add(g);
+    return g;
+  }
+
+  /** Levels that hold floors or walls. */
+  private levelsPresent(): number[] {
+    const lot = this.lot!;
+    const set = new Set<number>([0]);
+    for (const k of Object.keys(lot.floors)) set.add(Number(k.split(':')[0]));
+    for (const w of Object.values(lot.walls)) set.add(w.level);
+    return [...set].filter((l) => Number.isInteger(l) && l >= 0 && l < MAX_LEVELS).sort((a, b) => a - b);
   }
 
   clear(): void {
@@ -139,7 +190,10 @@ export class LotView {
   }
 
   private clearGroup(g: THREE.Group): void {
-    for (const c of [...g.children]) { c.removeFromParent(); const m = c as THREE.Mesh; if (m.isMesh) m.geometry.dispose(); }
+    for (const c of [...g.children]) {
+      c.removeFromParent();
+      c.traverse((n) => { const m = n as THREE.Mesh; if (m.isMesh) m.geometry.dispose(); });
+    }
   }
 
   /** Drops materials no current mesh uses. */
@@ -157,7 +211,7 @@ export class LotView {
   private computeIndoor(): void {
     const lot = this.lot!;
     this.indoor = new Uint8Array(lot.width * lot.depth);
-    for (const r of computeRooms(lot, 0)) {
+    for (const r of computeRooms(lot, this.activeLevel)) {
       if (r.outdoor) continue;
       for (const t of r.tiles) this.indoor[t.z * lot.width + t.x] = 1;
     }
@@ -172,12 +226,19 @@ export class LotView {
   private buildFloors(): void {
     const lot = this.lot!;
     this.clearGroup(this.floorGroup);
+    for (const level of this.levelsPresent()) this.buildFloorLevel(lot, level, this.levelGroup(this.floorGroup, level));
+  }
+
+  /** One level's floors: merged per finish, a thin slab below (thicker on upper levels, with a ceiling underneath). */
+  private buildFloorLevel(lot: Lot, level: number, parent: THREE.Group): void {
     const buckets = new Map<string, { f: FinishRef; b: GeoBuilder }>();
     const slab = new GeoBuilder();
-    const floored = (x: number, z: number) => !!lot.floors[tileKey(0, x, z)];
+    const under = new GeoBuilder();
+    const depth = level === 0 ? SLAB_DEPTH : UPPER_SLAB_DEPTH;
+    const floored = (x: number, z: number) => !!lot.floors[tileKey(level, x, z)];
     for (const [key, f] of Object.entries(lot.floors)) {
       const [lv, xs, zs] = key.split(':');
-      if (Number(lv) !== 0) continue;
+      if (Number(lv) !== level) continue;
       const x = Number(xs), z = Number(zs);
       const k = `${f.designId}:${f.paletteId}`;
       let e = buckets.get(k);
@@ -185,22 +246,25 @@ export class LotView {
       const r = this.repeatOf('floor', f);
       e.b.quad([x, 0, z], [x + 1, 0, z], [x + 1, 0, z + 1], [x, 0, z + 1], [0, 1, 0],
         [[x / r, z / r], [(x + 1) / r, z / r], [(x + 1) / r, (z + 1) / r], [x / r, (z + 1) / r]]);
-      const y0 = -SLAB_DEPTH;
+      const y0 = -depth;
       if (!floored(x, z - 1)) slab.quad([x, y0, z], [x + 1, y0, z], [x + 1, 0, z], [x, 0, z], [0, 0, -1]);
       if (!floored(x, z + 1)) slab.quad([x, y0, z + 1], [x + 1, y0, z + 1], [x + 1, 0, z + 1], [x, 0, z + 1], [0, 0, 1]);
       if (!floored(x - 1, z)) slab.quad([x, y0, z], [x, y0, z + 1], [x, 0, z + 1], [x, 0, z], [-1, 0, 0]);
       if (!floored(x + 1, z)) slab.quad([x + 1, y0, z], [x + 1, y0, z + 1], [x + 1, 0, z + 1], [x + 1, 0, z], [1, 0, 0]);
+      // the underside of an upper floor is the ceiling of the room below
+      if (level > 0) under.quad([x, y0, z + 1], [x + 1, y0, z + 1], [x + 1, y0, z], [x, y0, z], [0, -1, 0]);
     }
     for (const { f, b } of buckets.values()) {
       const m = new THREE.Mesh(b.build(), this.material('floor', f));
       m.receiveShadow = true;
       m.name = 'floor';
-      this.floorGroup.add(m);
+      parent.add(m);
     }
-    if (!slab.empty) {
-      const m = new THREE.Mesh(slab.build(), this.slab);
+    for (const [b, mat] of [[slab, this.slab], [under, this.ceiling]] as const) {
+      if (b.empty) continue;
+      const m = new THREE.Mesh(b.build(), mat);
       m.receiveShadow = true;
-      this.floorGroup.add(m);
+      parent.add(m);
     }
   }
 
@@ -226,7 +290,7 @@ export class LotView {
     this.lowered.clear();
     if (this.mode === 'up') return;
     for (const w of Object.values(lot.walls)) {
-      if (w.level !== 0) continue;
+      if (w.level !== this.activeLevel) continue;
       if (this.mode === 'down') { this.lowered.add(w.id); continue; }
       const camSide: 'a' | 'b' = w.dir === 'h' ? (this.viewDir.z > 0 ? 'b' : 'a') : (this.viewDir.x > 0 ? 'b' : 'a');
       const far = tileOnSide(w, camSide === 'a' ? 'b' : 'a');
@@ -280,6 +344,12 @@ export class LotView {
     const lot = this.lot!;
     this.clearGroup(this.wallGroup);
     this.boxes.clear();
+    for (const level of this.levelsPresent()) this.buildWallLevel(lot, level, this.levelGroup(this.wallGroup, level));
+  }
+
+  /** One level's walls in the level's local space (y = 0 at its floor). */
+  private buildWallLevel(lot: Lot, level: number, parent: THREE.Group): void {
+    const y0 = levelY(level);
     const tex = new Map<string, { f: FinishRef; b: GeoBuilder }>();
     const trim = new GeoBuilder();
     const caps = new GeoBuilder();
@@ -289,8 +359,8 @@ export class LotView {
       if (!e) { this.material('wall', f); e = { f, b: new GeoBuilder() }; tex.set(k, e); }
       return e.b;
     };
-    const walls = Object.values(lot.walls).filter((w) => w.level === 0);
-    const has = (dir: 'h' | 'v', x: number, z: number) => lot.walls[edgeKey(0, dir, x, z)];
+    const walls = Object.values(lot.walls).filter((w) => w.level === level);
+    const has = (dir: 'h' | 'v', x: number, z: number) => lot.walls[edgeKey(level, dir, x, z)];
 
     for (const w of walls) {
       const H = this.wallHeight(w);
@@ -331,8 +401,8 @@ export class LotView {
       }
       // picking box: the drawn part only
       const box = new THREE.Box3();
-      if (w.dir === 'h') box.set(this.tmpV.set(w.x, 0, w.z - HT), new THREE.Vector3(w.x + 1, H + CAP_H, w.z + HT));
-      else box.set(this.tmpV.set(w.x - HT, 0, w.z), new THREE.Vector3(w.x + HT, H + CAP_H, w.z + 1));
+      if (w.dir === 'h') box.set(this.tmpV.set(w.x, y0, w.z - HT), new THREE.Vector3(w.x + 1, y0 + H + CAP_H, w.z + HT));
+      else box.set(this.tmpV.set(w.x - HT, y0, w.z), new THREE.Vector3(w.x + HT, y0 + H + CAP_H, w.z + 1));
       this.boxes.set(w.id, box);
     }
 
@@ -383,14 +453,14 @@ export class LotView {
       m.castShadow = true;
       m.receiveShadow = true;
       m.name = 'walls';
-      this.wallGroup.add(m);
+      parent.add(m);
     }
     for (const [b, mat] of [[trim, this.trim], [caps, this.cap]] as const) {
       if (b.empty) continue;
       const m = new THREE.Mesh(b.build(), mat);
       m.castShadow = true;
       m.receiveShadow = true;
-      this.wallGroup.add(m);
+      parent.add(m);
     }
   }
 
@@ -401,7 +471,7 @@ export class LotView {
   private clearOpenings(): void {
     for (const c of [...this.openingGroup.children]) {
       c.removeFromParent();
-      if (c.userData.ownGeometry) (c as THREE.Mesh).geometry.dispose();
+      c.traverse((n) => { if (n.userData.ownGeometry) (n as THREE.Mesh).geometry.dispose(); });
     }
     this.openingsByWall.clear();
     this.doors.length = 0;
@@ -410,11 +480,17 @@ export class LotView {
   private buildOpenings(): void {
     const lot = this.lot!;
     this.clearOpenings();
-    const staticGeos = new Map<THREE.Material, THREE.BufferGeometry[]>();
+    const staticByLevel = new Map<number, Map<THREE.Material, THREE.BufferGeometry[]>>();
+    const levelGroups = new Map<number, THREE.Group>();
+    const groupOf = (level: number) => {
+      let g = levelGroups.get(level);
+      if (!g) { g = this.levelGroup(this.openingGroup, level); levelGroups.set(level, g); }
+      return g;
+    };
     for (const o of Object.values(lot.openings)) {
       const w = lot.walls[o.wallId];
       const def: OpeningDef | undefined = this.content.openings[o.defId];
-      if (!w || !def || w.level !== 0) continue;
+      if (!w || !def || w.level >= MAX_LEVELS) continue;
       if (openingEdgeKeys(o).some((k) => this.lowered.has(k))) continue; // lowered walls show the hole only
       const g = buildOpeningMesh(def, { flip: o.flip });
       const holder = new THREE.Group();
@@ -423,13 +499,15 @@ export class LotView {
       else { holder.position.set(w.x, 0, w.z + def.width / 2); holder.rotation.y = -Math.PI / 2; }
       holder.traverse((n) => { const m = n as THREE.Mesh; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
       if (def.kind === 'door') {
-        this.openingGroup.add(holder);
+        groupOf(w.level).add(holder);
         this.openingsByWall.set(w.id, holder);
-        this.doors.push({ group: g, x: holder.position.x, z: holder.position.z, open: 0, target: 0 });
+        this.doors.push({ group: g, x: holder.position.x, z: holder.position.z, level: w.level, open: 0, target: 0 });
         continue;
       }
       // windows never move: bake them into per-material merged meshes (a few draw calls for all windows)
       holder.updateMatrixWorld(true);
+      const staticGeos = staticByLevel.get(w.level) ?? new Map<THREE.Material, THREE.BufferGeometry[]>();
+      staticByLevel.set(w.level, staticGeos);
       holder.traverse((n) => {
         const m = n as THREE.Mesh;
         if (!m.isMesh || Array.isArray(m.material)) return;
@@ -440,15 +518,17 @@ export class LotView {
         staticGeos.set(m.material, list);
       });
     }
-    for (const [mat, list] of staticGeos) {
-      const merged = mergeGeometries(list, false);
-      for (const g of list) g.dispose();
-      if (!merged) continue;
-      const m = new THREE.Mesh(merged, mat);
-      m.userData.ownGeometry = true;
-      m.castShadow = true;
-      m.receiveShadow = true;
-      this.openingGroup.add(m);
+    for (const [level, staticGeos] of staticByLevel) {
+      for (const [mat, list] of staticGeos) {
+        const merged = mergeGeometries(list, false);
+        for (const g of list) g.dispose();
+        if (!merged) continue;
+        const m = new THREE.Mesh(merged, mat);
+        m.userData.ownGeometry = true;
+        m.castShadow = true;
+        m.receiveShadow = true;
+        groupOf(level).add(m);
+      }
     }
   }
 
@@ -478,7 +558,7 @@ export class LotView {
       const d = hit.distanceTo(ray.origin);
       if (d >= maxDistance || (best && d >= best.distance)) continue;
       const w = lot.walls[id];
-      if (!w) continue;
+      if (!w || w.level !== this.activeLevel) continue;
       const side: 'a' | 'b' = w.dir === 'h' ? (hit.z > w.z ? 'b' : hit.z < w.z ? 'a' : (ray.direction.z < 0 ? 'b' : 'a')) : (hit.x > w.x ? 'b' : hit.x < w.x ? 'a' : (ray.direction.x < 0 ? 'b' : 'a'));
       best = { wallId: id, side, distance: d, point: hit.clone() };
     }
@@ -523,7 +603,8 @@ export class LotView {
         const plane = w.dir === 'h' ? w.z : w.x;
         const sign = s.side === 'b' ? 1 : -1;
         const o = plane + sign * (HT + E);
-        const P = (sv: number, y: number): V3 => (w.dir === 'h' ? [sv, y, o] : [o, y, sv]);
+        const wy = levelY(w.level);
+        const P = (sv: number, y: number): V3 => (w.dir === 'h' ? [sv, y + wy, o] : [o, y + wy, sv]);
         const n: V3 = w.dir === 'h' ? [0, 0, sign] : [sign, 0, 0];
         for (const q of faceRects(along - HT, along + 1 + HT, this.holesFor(w, H), H)) {
           b.quad(P(q.s0, q.y0), P(q.s1, q.y0), P(q.s1, q.y1), P(q.s0, q.y1), n,
@@ -531,9 +612,10 @@ export class LotView {
         }
       }
     } else {
+      const fy = levelY(h.level) + E;
       for (const t of h.tiles) {
         const x = t.x, z = t.z;
-        b.quad([x, E, z], [x + 1, E, z], [x + 1, E, z + 1], [x, E, z + 1], [0, 1, 0],
+        b.quad([x, fy, z], [x + 1, fy, z], [x + 1, fy, z + 1], [x, fy, z + 1], [0, 1, 0],
           [[x / r, z / r], [(x + 1) / r, z / r], [(x + 1) / r, (z + 1) / r], [x / r, (z + 1) / r]]);
       }
     }
@@ -548,6 +630,7 @@ export class LotView {
     this.trim.dispose();
     this.cap.dispose();
     this.slab.dispose();
+    this.ceiling.dispose();
   }
 }
 

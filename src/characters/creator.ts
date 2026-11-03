@@ -69,8 +69,25 @@ const RANDOMIZE_ORDER: readonly LockCategory[] = ['identity', 'body', 'hair', 'f
 export const MAX_HOUSEHOLD_MEMBERS = 8;
 export const HOUSEHOLD_NAME_MAX_LENGTH = 40;
 export const UNDO_LIMIT = 100;
-/** Life stages the creator can make in this milestone. */
-export const CREATOR_LIFE_STAGES: readonly LifeStage[] = ['adult'];
+/** Every life stage the creator can make once all bodies exist (Milestone 8). */
+export const CREATOR_LIFE_STAGES: readonly LifeStage[] = LIFE_STAGES;
+
+/**
+ * Stages offered before their body exists are never listed: until the character bodies of a stage are delivered the creator
+ * only offers young adult and adult. The game registers `stageBodyAvailable` of src/characters/assets.ts (when that export
+ * exists) with `setStageBodyAvailability`; tests may register their own.
+ */
+const GUARDED_STAGES: readonly LifeStage[] = ['youngAdult', 'adult'];
+let bodyAvailable: ((stage: LifeStage) => boolean) | null = null;
+export function setStageBodyAvailability(fn: ((stage: LifeStage) => boolean) | null): void { bodyAvailable = fn; }
+
+/** The life stages the creator offers right now: those with a delivered body (young adult and adult until then). */
+export function availableLifeStages(): readonly LifeStage[] {
+  const fn = bodyAvailable;
+  if (!fn) return GUARDED_STAGES;
+  const out = CREATOR_LIFE_STAGES.filter((s) => GUARDED_STAGES.includes(s) || fn(s));
+  return out.length > 0 ? out : GUARDED_STAGES;
+}
 
 export const FAMILY_TIES: readonly FamilyTie[] = ['parent', 'child', 'sibling', 'partner', 'spouse', 'roommate', 'none'];
 /** Romantic ties: adults only, at most one per person (partner or spouse), never between ancestor and descendant. */
@@ -119,7 +136,7 @@ export function memberIssues(p: PersonDraft, index: number, content: ContentDB, 
   const out: CreatorIssue[] = [];
   const at = (step: CreatorStep) => (message: string) => { out.push({ member: index, step, message }); };
   const identity = at('identity'), faceBody = at('faceBody'), hair = at('hair'), clothing = at('clothing'), personality = at('personality');
-  const stages = opts.lifeStages ?? CREATOR_LIFE_STAGES;
+  const stages = opts.lifeStages ?? availableLifeStages();
   const adult = ADULT_STAGES.includes(p.lifeStage);
 
   if (!p.firstName.trim()) identity('First name is required.');
@@ -164,7 +181,7 @@ export function memberIssues(p: PersonDraft, index: number, content: ContentDB, 
       if (other !== id && traitsConflict(content, id, other)) personality(`${traitName(id)} and ${traitName(other)} are opposites; keep only one.`);
     }
   });
-  if (readyDefs(content.aspirations).length > 0 && !p.aspirationId) personality('Choose an aspiration.');
+  if (adult && readyDefs(content.aspirations).length > 0 && !p.aspirationId) personality('Choose an aspiration.');
   if (p.aspirationId && !inRegistry(content.aspirations, p.aspirationId)) personality('The aspiration is not available.');
   if (p.careerId && !inRegistry(content.careers, p.careerId)) personality('The job is not available.');
   if (p.careerId && !adult) personality('Only adults can have a job.');
@@ -285,8 +302,14 @@ export function householdIssues(draft: HouseholdDraft, content: ContentDB, opts:
   if (draft.members.length > MAX_HOUSEHOLD_MEMBERS) add(`A household can have at most ${MAX_HOUSEHOLD_MEMBERS} people.`);
   draft.members.forEach((p, i) => out.push(...memberIssues(p, i, content, opts)));
   out.push(...tieIssues(draft));
-  const dependents = draft.members.some((p) => ['baby', 'toddler', 'child'].includes(p.lifeStage));
-  if (dependents && !draft.members.some((p) => ADULT_STAGES.includes(p.lifeStage))) add('Young children need at least one adult in the household.');
+  // Life stages (Milestone 8): somebody has to run the household, and little ones need a parent or guardian in it.
+  const grown = (i: number) => ADULT_STAGES.includes(draft.members[i]?.lifeStage ?? 'adult');
+  if (draft.members.length > 0 && !draft.members.some((p) => ADULT_STAGES.includes(p.lifeStage))) add('The household needs at least one young adult or older.');
+  draft.members.forEach((p, i) => {
+    if (p.lifeStage !== 'baby' && p.lifeStage !== 'toddler') return;
+    const hasGuardian = draft.members.some((_, j) => j !== i && grown(j) && tieBetween(draft, i, j) === 'parent');
+    if (!hasGuardian) out.push({ member: i, step: 'household', message: `A ${p.lifeStage} needs a parent or guardian in the household: set a Parent tie to a young adult or older.` });
+  });
   return out;
 }
 
@@ -589,6 +612,15 @@ export class CreatorSession {
       possessive: cleanText(p0.possessive, PRONOUN_MAX_LENGTH),
     };
     return this.mutateMember('Pronouns', (p) => { p.pronouns = next; }, typeof v === 'string' ? undefined : 'pronouns');
+  }
+  /** Sets the life stage of the current person (only stages with a body: `availableLifeStages()`). */
+  setLifeStage(stage: LifeStage): CreatorResult {
+    if (!LIFE_STAGES.includes(stage)) return fail('Unknown life stage.');
+    if (!availableLifeStages().includes(stage)) return fail('That life stage is not available yet.');
+    return this.mutateMember('Life stage', (p) => {
+      p.lifeStage = stage;
+      if (!ADULT_STAGES.includes(stage)) p.careerId = null;
+    });
   }
   setBio(v: string): CreatorResult { return this.mutateMember('Bio', (p) => { p.bio = cleanText(v, BIO_MAX_LENGTH); }, 'bio'); }
   setVoicePreset(id: string): CreatorResult {

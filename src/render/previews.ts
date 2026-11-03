@@ -6,6 +6,7 @@ import type { ContentDB } from '../content/types';
 import { footprintTiles, rotationOriginShift, rotYaw } from '../core/geometry';
 import type { Lot, PlacedObject } from '../core/types';
 import type { PlacementState } from '../game/api';
+import { levelY } from '../world/levels';
 import { resolveSlots } from '../world/slots';
 import type { ObjectAssets } from './objectAssets';
 
@@ -73,12 +74,12 @@ export class PlacementPreview {
     // support height for surface items
     let y = groundAt(p.x + 0.5, p.z + 0.5);
     if (def.layer === 'surface') {
-      y = 0;
+      y = levelY(p.level);
       for (const o of Object.values(lot.objects)) {
-        if (o.id === p.objectId) continue;
+        if (o.id === p.objectId || o.level !== p.level) continue;
         const sd = this.content.objects[o.defId];
         if (!sd?.surfaceHeight) continue;
-        if (footprintTiles(o.x, o.z, sd.footprint, o.rot).some((t) => t.x === p.x && t.z === p.z)) { y = sd.surfaceHeight; break; }
+        if (footprintTiles(o.x, o.z, sd.footprint, o.rot).some((t) => t.x === p.x && t.z === p.z)) { y = levelY(p.level) + sd.surfaceHeight; break; }
       }
     }
     const shift = rotationOriginShift(def.footprint, p.rot);
@@ -96,7 +97,7 @@ export class PlacementPreview {
     });
     // approach dots
     const obj: PlacedObject = {
-      id: '__preview', defId: p.defId, level: 0, x: p.x, z: p.z, rot: p.rot, finishes: {}, purchasePrice: 0, boughtAt: 0,
+      id: '__preview', defId: p.defId, level: p.level, x: p.x, z: p.z, rot: p.rot, finishes: {}, purchasePrice: 0, boughtAt: 0,
       ownerHouseholdId: null, condition: { dirt: 0, broken: false },
     };
     const approach = new Map<string, { x: number; z: number }>();

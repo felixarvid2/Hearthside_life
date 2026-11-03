@@ -4,13 +4,16 @@
 
 import * as THREE from 'three';
 import type { AnimId } from '../src/core/anim';
-import type { Appearance, BodyFrame, GarmentChoice, GarmentLayer, Outfit } from '../src/core/types';
+import type { Appearance, BodyFrame, GarmentChoice, GarmentLayer, LifeStage, Outfit } from '../src/core/types';
 import type { ContentDB } from '../src/content/types';
 import * as CH from '../src/content/character';
-import { loadAiHair, loadCharacterAssets, setCharacterStyle } from '../src/characters/assets';
+import { loadAiHair, loadCharacterAssets, requestStageBody, setCharacterStyle } from '../src/characters/assets';
 import { isMeshHair } from '../src/characters/aiHair';
 import type { CharacterAssets } from '../src/characters/assets';
 import { CharacterView } from '../src/characters/CharacterView';
+import { lyingPlacement, seatedPlacement } from '../src/characters/posture';
+import { CRADLE } from '../src/characters/stagePose';
+import { STAGE_HEIGHTS } from '../src/characters/stages';
 
 function byId<T extends { id: string }>(list: readonly T[]): Record<string, T> {
   return Object.fromEntries(list.map((x) => [x.id, x]));
@@ -165,6 +168,9 @@ function updateCamera(): void {
 }
 
 const people: CharacterView[] = [];
+/** Held babies of the current lab.scene: baby index -> carrier index. */
+const holds = new Map<number, number>();
+const sceneProps: THREE.Object3D[] = [];
 let labAssets: CharacterAssets;
 let labOutfits: Outfit[] = [];
 let currentAnim: AnimId = 'idle';
@@ -225,10 +231,91 @@ function buildBar(): void {
   for (const [label, fn] of ctl) { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; bar.appendChild(b); }
 }
 
+interface SceneSpec {
+  stage: LifeStage;
+  frame: BodyFrame;
+  x: number;
+  z?: number;
+  yaw?: number;
+  outfit?: string[];
+  accessories?: string[];
+  hair?: string;
+  skin?: string;
+  look?: number;
+  body?: Record<string, number>;
+  face?: Record<string, number>;
+  anim?: AnimId;
+  posture?: 'standing' | 'seated' | 'lying';
+  /** Seat or mattress height (props are boxes). */
+  seat?: number;
+  /** A baby sits up (creator preview and portraits). */
+  upright?: boolean;
+  /** Index of the person holding this baby. */
+  heldBy?: number;
+  /** Moves the person so the top of the head is at this height. */
+  alignHead?: number;
+}
+
+/** Seat, bed or crib block under a sitting or lying person (a rough stand-in for furniture). */
+function addProp(kind: 'seat' | 'bed' | 'crib', x: number, z: number, height: number, rotY = 0): void {
+  const mat = new THREE.MeshStandardMaterial({ color: kind === 'seat' ? '#8a6a4a' : '#d8d2c8', roughness: 0.8 });
+  const group = new THREE.Group();
+  if (kind === 'seat') {
+    const seatBox = new THREE.Mesh(new THREE.BoxGeometry(0.5, height, 0.5), mat);
+    seatBox.position.y = height / 2;
+    group.add(seatBox);
+  } else if (kind === 'bed') {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(1.0, height, 2.0), mat);
+    b.position.y = height / 2;
+    group.add(b);
+  } else {
+    // crib: mattress block on legs, four rails of bars
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.06, 1.3), mat);
+    base.position.y = height - 0.03;
+    group.add(base);
+    const bar = new THREE.MeshStandardMaterial({ color: '#c9a77c', roughness: 0.7 });
+    for (const sx of [-1, 1]) for (let zi = -6; zi <= 6; zi++) {
+      const r = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.5, 0.025), bar);
+      r.position.set(sx * 0.35, height + 0.25, zi * 0.1);
+      group.add(r);
+    }
+    for (const sz of [-1, 1]) {
+      const r = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.5, 0.03), bar);
+      r.position.set(0, height + 0.25, sz * 0.65);
+      group.add(r);
+    }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const l = new THREE.Mesh(new THREE.BoxGeometry(0.05, height, 0.05), bar);
+      l.position.set(sx * 0.35, height / 2, sz * 0.65);
+      group.add(l);
+    }
+  }
+  group.position.set(x, 0, z);
+  group.rotation.y = rotY;
+  scene.add(group);
+  sceneProps.push(group);
+}
+
+function clearProps(): void {
+  for (const o of sceneProps.splice(0)) o.removeFromParent();
+}
+
+/** Puts held babies into the cradle of their carrier (the same maths as PeopleView). */
+function syncHolds(): void {
+  for (const [baby, carrier] of holds) {
+    const c = people[carrier]!, b = people[baby]!;
+    c.cradlePoint(tmpV);
+    const pl = lyingPlacement({ x: tmpV.x, y: tmpV.y, z: tmpV.z }, c.root.rotation.y + CRADLE.yaw, { stage: 'baby', own: b.hasOwnBody });
+    b.root.position.set(pl.x, pl.y, pl.z);
+    b.root.rotation.y = pl.yaw;
+  }
+}
+const tmpV = new THREE.Vector3();
+
 /** Hooks for automated screenshots. */
 const lab = {
   /** Replaces person i: appearance fields (skin, body, face, hair) and an outfit given as garment ids. */
-  set(i: number, o: { frame?: BodyFrame; skin?: string; hair?: string; hairColor?: string; facial?: string | null; body?: Record<string, number>; face?: Record<string, number>; eyeColor?: string; browColor?: string; freckles?: number; blush?: number; outfit?: string[]; accessories?: string[] }): void {
+  set(i: number, o: { stage?: LifeStage; frame?: BodyFrame; skin?: string; hair?: string; hairColor?: string; facial?: string | null; body?: Record<string, number>; face?: Record<string, number>; eyeColor?: string; browColor?: string; freckles?: number; blush?: number; outfit?: string[]; accessories?: string[] }): void {
     const p = people[i]!;
     const a = appearance(i, o.frame ?? (i % 2 === 0 ? 'a' : 'b'), o.hair ?? CH.HAIR[0]!.id);
     if (o.skin) a.skin = o.skin;
@@ -240,8 +327,14 @@ const lab = {
     if (o.browColor) a.face.browColor = o.browColor;
     if (o.freckles !== undefined) a.face.freckles = o.freckles;
     if (o.blush !== undefined) a.face.blush = o.blush;
-    p.setAppearance(a);
+    p.setAppearance(a, o.stage ?? p.lifeStage);
     if (o.outfit) { labOutfits[i] = outfitFor(o.outfit, i, o.accessories); p.setOutfit(labOutfits[i]!); }
+  },
+  /** Loads the bodies of life stages (the natural style loads a stage body on first use) and rebuilds the people drawn with them. */
+  async preload(stages: LifeStage[]): Promise<boolean[]> {
+    const done = await Promise.all(stages.map(async (st) => !!(await requestStageBody(labAssets, st))));
+    for (const p of people) p.refreshStyle();
+    return done;
   },
   async style(s: 'classic' | 'detailed' | 'mpfb'): Promise<string> {
     const now = await setCharacterStyle(labAssets, s);
@@ -302,10 +395,58 @@ const lab = {
   hideSkin(i: number, hide = true): void { const m = people[i]!.root.getObjectByName('skin'); if (m) m.visible = !hide; },
   only(indices: number[] | null): void { people.forEach((p, i) => { p.root.visible = !indices || indices.includes(i); }); },
   place(i: number, x: number, z: number, rotY = 0, y = 0): void { const p = people[i]!; p.root.position.set(x, y, z); p.root.rotation.y = rotY; },
-  step(dt: number, n = 1): void { for (let k = 0; k < n; k++) for (const p of people) p.update(dt); },
+  step(dt: number, n = 1): void { for (let k = 0; k < n; k++) { for (const p of people) p.update(dt); syncHolds(); } },
+  /** Advances one person's animation by `seconds` (walk-cycle phase). */
+  stepOne(i: number, seconds: number): void { for (let t = 0; t < seconds; t += 0.05) people[i]!.update(0.05); syncHolds(); },
+  /**
+   * Life-stage scene: people 0..n-1 set up from specs (stage, frame, outfit, where and how they stand, sit, lie or are held), the rest
+   * hidden. Seats and cribs are props at the person's place; sitting and lying use the game's posture anchors (characters/posture.ts).
+   */
+  scene(specs: SceneSpec[]): void {
+    clearProps();
+    holds.clear();
+    people.forEach((p, k) => { p.root.visible = k < specs.length; p.setCarrying(false); });
+    specs.forEach((sp, k) => {
+      const p = people[k]!;
+      const a = appearance(sp.look ?? k, sp.frame, sp.hair ?? CH.HAIR[(sp.look ?? k) % CH.HAIR.length]!.id);
+      a.hair.facialHairId = sp.stage === 'adult' || sp.stage === 'elder' || sp.stage === 'youngAdult' ? a.hair.facialHairId : null;
+      if (sp.skin) a.skin = sp.skin;
+      if (sp.body) a.body = { ...a.body, ...sp.body };
+      if (sp.face) a.face.params = { ...a.face.params, ...sp.face };
+      p.setAppearance(a, sp.stage);
+      p.setBabyUpright(!!sp.upright);
+      labOutfits[k] = outfitFor(sp.outfit ?? [], sp.look ?? k, sp.accessories ?? []);
+      p.setOutfit(labOutfits[k]!);
+      const posture = sp.posture ?? 'standing';
+      const facing = sp.yaw ?? 0;
+      const so = { stage: sp.stage, own: p.hasOwnBody };
+      p.root.rotation.set(0, facing, 0);
+      p.root.position.set(sp.x, 0, sp.z ?? 0);
+      if (posture === 'seated') {
+        const seatH = sp.seat ?? 0.45;
+        addProp('seat', sp.x, sp.z ?? 0, seatH, facing);
+        const pl = seatedPlacement({ x: sp.x, y: seatH, z: sp.z ?? 0 }, facing, sp.frame, labAssets.style, so);
+        p.root.position.set(pl.x, pl.y, pl.z); p.root.rotation.y = pl.yaw;
+      } else if (posture === 'lying' && sp.heldBy === undefined) {
+        const bedH = sp.seat ?? 0.5;
+        addProp(sp.stage === 'baby' ? 'crib' : 'bed', sp.x, sp.z ?? 0, bedH, facing);
+        const pl = lyingPlacement({ x: sp.x, y: bedH, z: sp.z ?? 0 }, facing, so);
+        p.root.position.set(pl.x, pl.y, pl.z); p.root.rotation.y = pl.yaw;
+      } else if (sp.upright) p.root.position.y = -p.floorDrop;
+      if (sp.heldBy !== undefined) { holds.set(k, sp.heldBy); people[sp.heldBy]!.setCarrying(true); }
+      p.play(sp.anim ?? 'idle', { fade: 0, posture });
+    });
+    lab.step(0.05, 8);
+    // portraits of a line-up: every head at the same height (the feet may float)
+    specs.forEach((sp, k) => { if (sp.alignHead !== undefined) { const p = people[k]!; p.headTop(tmpV); p.root.position.y += sp.alignHead - tmpV.y; } });
+  },
+  clearProps,
+  pelvisRatio(i: number): number { return people[i]!.pelvisRatio; },
+  /** Standing heights of the life stages (STAGE_HEIGHTS). */
+  stageHeights: () => ({ ...STAGE_HEIGHTS }),
   current: () => currentAnim,
   /** Skinned-pose measurements of person i in its current pose (root-relative, metres). */
-  measure(i: number): Record<string, number> {
+  measure(i: number, scale = 1): Record<string, number> {
     const pv = people[i]!;
     pv.root.updateMatrixWorld(true);
     const skin = pv.root.getObjectByName('skin') as THREE.SkinnedMesh;
@@ -320,20 +461,14 @@ const lab = {
       v.applyMatrix4(skin.matrixWorld).applyMatrix4(inv);
       const part = info.getX(k), by = pos.getY(k);
       minY = Math.min(minY, v.y); maxZ = Math.max(maxZ, v.z); minZ = Math.min(minZ, v.z);
-      if ((part === 0 || part === 1) && by > 0.78 && by < 1.0 && v.y < seatY) { seatY = v.y; seatZ = v.z; }
+      if ((part === 0 || part === 1) && by > 0.85 * 0.917 * scale && by < 1.09 * 0.917 * scale && v.y < seatY) { seatY = v.y; seatZ = v.z; }
       if (part === 5) { headX += v.x; headY += v.y; headZ += v.z; hn++; }
       if (part === 4) { footZ += v.z; footY += v.y; fn++; }
     }
     return { minY, seatY, seatZ, headX: headX / hn, headY: headY / hn, headZ: headZ / hn, footZ: footZ / fn, footY: footY / fn, maxZ, minZ };
   },
   /** Adds a simple seat (box) or bed proxy for alignment checks. */
-  prop(kind: 'seat' | 'bed', x: number, z: number, height: number, rotY = 0): void {
-    const g = kind === 'seat' ? new THREE.BoxGeometry(0.5, height, 0.5) : new THREE.BoxGeometry(1.0, height, 2.0);
-    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: kind === 'seat' ? '#8a6a4a' : '#d8d2c8', roughness: 0.8 }));
-    m.position.set(x, height / 2, z);
-    m.rotation.y = rotY;
-    scene.add(m);
-  },
+  prop(kind: 'seat' | 'bed' | 'crib', x: number, z: number, height: number, rotY = 0): void { addProp(kind, x, z, height, rotY); },
 };
 
 main().catch((e) => { document.getElementById('info')!.textContent = String(e?.stack ?? e); console.error(e); });

@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import type { AnimId } from '../core/anim';
 import type { Posture } from '../core/types';
+import { LOCOMOTION_CLIPS } from './stagePose';
 
 export interface AnimSpec {
   /** Source clip name (lower body too unless `upper` is set). */
@@ -130,7 +131,8 @@ export class Animator {
   private time = 0;
   private postureNow: Posture = 'standing';
 
-  constructor(root: THREE.Object3D, private clips: Map<string, THREE.AnimationClip>) {
+  /** `cadence` speeds up (or slows down) the walk and jog cycles: short-legged stages take quicker steps (stagePose.ts). */
+  constructor(root: THREE.Object3D, private clips: Map<string, THREE.AnimationClip>, private cadence = 1) {
     this.mixer = new THREE.AnimationMixer(root);
     this.mixer.addEventListener('finished', (e) => this.onFinished(e.action as THREE.AnimationAction));
   }
@@ -177,7 +179,7 @@ export class Animator {
     a.reset();
     a.clampWhenFinished = true;
     a.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
-    const speed = spec.speed ?? 1;
+    const speed = (spec.speed ?? 1) * (LOCOMOTION_CLIPS.has(spec.clip) ? this.cadence : 1);
     if (spec.pose) {
       a.setLoop(THREE.LoopOnce, 1);
       a.time = spec.pose === 'first' ? 0 : a.getClip().duration;

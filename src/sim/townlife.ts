@@ -26,10 +26,12 @@ import { entrySpots, homeLocation, isControlled, placeOnLot, takeOffLot, visitin
 import { insertAction, makeAction } from './queue';
 import { applyRelDelta, peekRel } from './relationships';
 import { beginLightShift, shiftOn } from './careers';
+import { beginLightSchool, lightSchool, schoolDayOn } from './school';
+import { isDependentStage } from '../core/lifeStages';
 import { walkInTile } from './travel';
 import type { ActionData } from './types';
 
-export type Place = { kind: 'home' } | { kind: 'work' } | { kind: 'venue'; lotId: Id };
+export type Place = { kind: 'home' } | { kind: 'work' } | { kind: 'school' } | { kind: 'venue'; lotId: Id };
 
 /** Slots of the free-time day: 07:00 to 22:30 in 90-minute blocks. */
 export const SLOT_MINUTES = 90;
@@ -70,6 +72,10 @@ export function venueWeight(content: ContentDB, p: Person, venueType: string): n
  */
 export function plannedPlace(state: WorldState, content: ContentDB, p: Person, now: number): Place {
   const day = dayIndex(now), mod = minuteOfDay(now);
+  // Babies and toddlers stay at home; pupils are at school during school hours (Milestone 8).
+  if (isDependentStage(p.lifeStage)) return HOME;
+  const sw = schoolDayOn(content, p, day);
+  if (sw && now >= sw.start - WORK_LEAD_MINUTES && now < sw.end) return { kind: 'school' };
   if (p.career) {
     for (const d of [day - 1, day]) {
       const w = shiftOn(content, p, d);
@@ -177,6 +183,7 @@ function homeLotIdOf(state: WorldState, p: Person): Id | null {
 function isAt(state: WorldState, p: Person, place: Place): boolean {
   const loc = p.location;
   if (place.kind === 'work') return loc.kind === 'offlot' && loc.place === 'work';
+  if (place.kind === 'school') return loc.kind === 'offlot' && loc.place === 'school';
   const target = place.kind === 'home' ? homeLotIdOf(state, p) : place.lotId;
   if (loc.kind === 'lot') return loc.lotId === target;
   if (place.kind === 'home') return loc.place === 'home';
@@ -187,6 +194,7 @@ function isAt(state: WorldState, p: Person, place: Place): boolean {
 function offLotFor(state: WorldState, p: Person, place: Place, now: number): PersonLocation {
   if (place.kind === 'home') return homeLocation(state, p, now);
   if (place.kind === 'venue') return visitingLocation(place.lotId, now);
+  if (place.kind === 'school') return { kind: 'offlot', place: 'school', since: now, until: null };
   return { kind: 'offlot', place: 'work', since: now, until: null };
 }
 
@@ -204,7 +212,7 @@ function moveTo(ctx: SimCtx, p: Person, place: Place): void {
   }
   const target = place.kind === 'home' ? homeLotIdOf(state, p) : place.kind === 'venue' ? place.lotId : null;
   const lot = target ? state.lots[target] : undefined;
-  if (lot && lot.id === state.activeLotId && place.kind !== 'work') {
+  if (lot && lot.id === state.activeLotId && place.kind !== 'work' && place.kind !== 'school') {
     // Arrives on the lot the player is on: walks in from the entry.
     placeOnLot(ctx, p, lot, entrySpots(ctx, lot, 1)[0]!);
     const t = walkInTile(ctx, p);
@@ -213,6 +221,7 @@ function moveTo(ctx: SimCtx, p: Person, place: Place): void {
   }
   p.location = offLotFor(state, p, place, ctx.now);
   if (place.kind === 'work') beginLightShift(ctx, p);
+  if (place.kind === 'school') beginLightSchool(ctx, p);
   ctx.events.emit({ type: 'person.changed', personId: p.id, what: 'location' });
 }
 
@@ -229,6 +238,7 @@ export function syncPresence(ctx: SimCtx, force = false): void {
     if (busy === 'soft' && !force && !(place.kind === 'home' && p.location.kind === 'offlot' && p.location.place === 'visiting')) continue;
     if (isAt(ctx.state, p, place)) {
       if (place.kind === 'work') beginLightShift(ctx, p);
+      if (place.kind === 'school') beginLightSchool(ctx, p);
       continue;
     }
     // A person on a lot who is a guest elsewhere is not pulled around by the plan.
@@ -318,6 +328,7 @@ export function lightSocial(ctx: SimCtx): void {
 export function runLightWorld(ctx: SimCtx): void {
   const mod = Math.round(minuteOfDay(ctx.now));
   lightCareers(ctx);
+  lightSchool(ctx, (p) => !isControlled(ctx.state, p));
   lightBills(ctx);
   if (mod % 30 === 0) { syncPresence(ctx); lightSocial(ctx); }
 }

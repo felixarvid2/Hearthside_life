@@ -12,7 +12,7 @@ import type { MenuOption } from '../../game/api';
 
 /** Sub-groups inside a menu group, in display order ('' = entries without a section). */
 const SECTIONS: Partial<Record<MenuOption['group'], Array<{ id: string; label: string }>>> = {
-  social: [{ id: 'friendly', label: 'Friendly' }, { id: 'romantic', label: 'Romantic' }, { id: 'mean', label: 'Mean' }, { id: 'special', label: 'Special' }],
+  social: [{ id: 'care', label: 'Look after' }, { id: 'friendly', label: 'Friendly' }, { id: 'romantic', label: 'Romantic' }, { id: 'mean', label: 'Mean' }, { id: 'special', label: 'Special' }],
   self: [{ id: '', label: '' }, { id: 'phone', label: 'Phone' }],
 };
 

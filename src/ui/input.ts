@@ -133,7 +133,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
         return;
       case 'floor': {
         if (!sel) { needSelection(); return; }
-        const r = api.goTo(sel, pick.tile);
+        const r = api.goTo(sel, { ...pick.tile, level: pick.level });
         if (r.ok) { ripple(at); sh.sound('tap'); } else { toast(r.reason, 'warning', 2600); sh.sound('error'); }
         return;
       }

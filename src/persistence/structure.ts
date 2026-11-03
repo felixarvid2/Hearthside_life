@@ -66,7 +66,7 @@ function checkSettings(v: unknown, errors: string[]): void {
   expect(errors, isBool(st.autonomy), 'settings.autonomy', 'must be true or false');
   expect(errors, st.autonomyLevel === 0 || st.autonomyLevel === 1 || st.autonomyLevel === 2, 'settings.autonomyLevel', 'must be 0, 1 or 2');
   expect(errors, isBool(st.unlimitedFunds), 'settings.unlimitedFunds', 'must be true or false');
-  expect(errors, st.aging === 'off' || st.aging === 'long' || st.aging === 'normal', 'settings.aging', "must be 'off', 'long' or 'normal'");
+  expect(errors, st.aging === 'off' || st.aging === 'long' || st.aging === 'normal' || st.aging === 'custom', 'settings.aging', "must be 'off', 'long', 'normal' or 'custom'");
   expect(errors, isBool(st.visitors), 'settings.visitors', 'must be true or false');
 }
 
@@ -106,6 +106,10 @@ function checkPerson(id: string, v: unknown, households: Obj, lots: Obj, errors:
   expect(errors, isStr(p.firstName), `${path}.firstName`, 'must be text');
   expect(errors, isStr(p.lastName), `${path}.lastName`, 'must be text');
   checkLifeStage(p.lifeStage, `${path}.lifeStage`, errors);
+  // Milestone 8 (family): optional fields; problems are warnings (the fill step in schema.ts repairs most of them).
+  if (p.parentIds !== undefined && !(Array.isArray(p.parentIds) && p.parentIds.every((x) => isStr(x)))) addProblem(warnings, `${path}.parentIds is not a list of person ids`);
+  if (p.stageDays !== undefined && !(isNum(p.stageDays) && (p.stageDays as number) >= 0)) addProblem(warnings, `${path}.stageDays is not a number of days`);
+  if (p.school !== undefined && p.school !== null && !(isRecord(p.school) && isStr((p.school as Obj).schoolId))) addProblem(warnings, `${path}.school is not a school record`);
   checkAppearance(p.appearance, `${path}.appearance`, errors);
   checkWardrobe(p.outfits, `${path}.outfits`, errors);
   checkNeeds(p.needs, `${path}.needs`, errors);
@@ -146,6 +150,7 @@ function checkLocation(v: unknown, path: string, lots: Obj, errors: string[], wa
   if (loc.kind === 'lot') {
     expect(errors, isStr(loc.lotId) && has(lots, loc.lotId), `${path}.lotId`, `refers to a lot that does not exist (${String(loc.lotId)})`);
     for (const k of ['level', 'x', 'z', 'facing']) expect(errors, isNum(loc[k]), `${path}.${k}`, 'must be a number');
+    if (loc.rise !== undefined) expect(errors, isNum(loc.rise), `${path}.rise`, 'must be a number');
     expect(errors, isStr(loc.posture) && POSTURES.includes(loc.posture), `${path}.posture`, `must be one of ${POSTURES.join(', ')}`);
   } else if (loc.kind === 'offlot') {
     expect(errors, isStr(loc.place) && OFFLOT_PLACES.includes(loc.place), `${path}.place`, `must be one of ${OFFLOT_PLACES.join(', ')}`);
@@ -186,7 +191,7 @@ function checkLot(id: string, v: unknown, households: Obj, errors: string[], war
   expect(errors, lot.kind === 'residential' || lot.kind === 'venue', `${path}.kind`, "must be 'residential' or 'venue'");
   expect(errors, isInt(lot.width) && (lot.width as number) > 0, `${path}.width`, 'must be a positive whole number');
   expect(errors, isInt(lot.depth) && (lot.depth as number) > 0, `${path}.depth`, 'must be a positive whole number');
-  expect(errors, isInt(lot.levels) && (lot.levels as number) >= 1, `${path}.levels`, 'must be a whole number from 1');
+  expect(errors, isInt(lot.levels) && (lot.levels as number) >= 1 && (lot.levels as number) <= 3, `${path}.levels`, 'must be a whole number from 1 to 3');
   expect(errors, lot.ground === 'grass' || lot.ground === 'dirt' || lot.ground === 'paving', `${path}.ground`, "must be 'grass', 'dirt' or 'paving'");
   if (expect(errors, isRecord(lot.entry), `${path}.entry`, 'must be a tile position')) {
     for (const k of ['x', 'z', 'level']) expect(errors, isNum((lot.entry as Obj)[k]), `${path}.entry.${k}`, 'must be a number');
@@ -213,7 +218,13 @@ function checkLot(id: string, v: unknown, households: Obj, errors: string[], war
       checkFinish(wall.sideB, `${wp}.sideB`, errors);
     }
   }
-  if (hasFloors) for (const [key, f] of Object.entries(lot.floors as Obj)) checkFinish(f, `${path}.floors.${key}`, errors);
+  if (hasFloors) {
+    for (const [key, f] of Object.entries(lot.floors as Obj)) {
+      checkFinish(f, `${path}.floors.${key}`, errors);
+      const level = Number(key.split(':')[0]);
+      if (!(Number.isInteger(level) && level >= 0 && level <= 2)) addProblem(warnings, `${path}.floors.${key} is on a floor that does not exist`);
+    }
+  }
   if (hasOpenings) {
     for (const [key, o] of Object.entries(lot.openings as Obj)) {
       const op = `${path}.openings.${key}`;
@@ -227,9 +238,58 @@ function checkLot(id: string, v: unknown, households: Obj, errors: string[], war
   }
   if (hasObjects) {
     const objects = lot.objects as Obj;
-    for (const [key, o] of Object.entries(objects)) checkObject(`${path}.objects.${key}`, o, objects, errors, key);
+    for (const [key, o] of Object.entries(objects)) {
+      checkObject(`${path}.objects.${key}`, o, objects, errors, key);
+      if (isRecord(o)) checkGarden(`${path}.objects.${key}`, o, errors); // Milestone 9 exterior
+    }
+  }
+  checkExterior(path, lot, errors, warnings); // Milestone 9 exterior
+}
+
+// ===== Milestone 9 exterior: checks for fences, roofs, terrain paint and garden beds ================================================
+function checkExterior(path: string, lot: Obj, errors: string[], warnings: string[]): void {
+  if (lot.fences !== undefined && expect(errors, isRecord(lot.fences), `${path}.fences`, 'must be an object')) {
+    for (const [key, f] of Object.entries(lot.fences as Obj)) {
+      const fp = `${path}.fences.${key}`;
+      if (!expect(errors, isRecord(f), fp, 'must be a fence')) continue;
+      const fence = f as Obj;
+      expect(errors, fence.id === key, `${fp}.id`, `must equal its key "${key}"`);
+      expect(errors, isStr(fence.defId), `${fp}.defId`, 'must be text');
+      expect(errors, fence.dir === 'h' || fence.dir === 'v', `${fp}.dir`, "must be 'h' or 'v'");
+      for (const k of ['level', 'x', 'z']) expect(errors, isInt(fence[k]), `${fp}.${k}`, 'must be a whole number');
+      if ((fence.dir === 'h' || fence.dir === 'v') && isInt(fence.level) && isInt(fence.x) && isInt(fence.z) && key !== edgeKey(fence.level as number, fence.dir, fence.x as number, fence.z as number)) {
+        addProblem(errors, `${fp} sits at ${edgeKey(fence.level as number, fence.dir, fence.x as number, fence.z as number)}, which does not match its id`);
+      }
+      if (isRecord(lot.walls) && has(lot.walls as Obj, key)) addProblem(warnings, `${fp} shares its edge with a wall`);
+    }
+  }
+  if (lot.roofs !== undefined && expect(errors, isRecord(lot.roofs), `${path}.roofs`, 'must be an object')) {
+    for (const [id, r] of Object.entries(lot.roofs as Obj)) {
+      const rp = `${path}.roofs.${id}`;
+      if (!expect(errors, isRecord(r), rp, 'must be a roof')) continue;
+      const roof = r as Obj;
+      expect(errors, roof.id === id, `${rp}.id`, `must equal its key "${id}"`);
+      expect(errors, isStr(roof.styleId), `${rp}.styleId`, 'must be text');
+      expect(errors, roof.ridge === 'h' || roof.ridge === 'v', `${rp}.ridge`, "must be 'h' or 'v'");
+      expect(errors, isNum(roof.pitch), `${rp}.pitch`, 'must be a number');
+      for (const k of ['level', 'x0', 'z0', 'x1', 'z1']) expect(errors, isInt(roof[k]), `${rp}.${k}`, 'must be a whole number');
+      if (isInt(roof.x0) && isInt(roof.x1) && isInt(roof.z0) && isInt(roof.z1) && ((roof.x1 as number) <= (roof.x0 as number) || (roof.z1 as number) <= (roof.z0 as number))) addProblem(errors, `${rp} has an empty rectangle`);
+      checkFinish(roof.finish, `${rp}.finish`, errors);
+    }
+  }
+  if (lot.terrain !== undefined && expect(errors, isRecord(lot.terrain), `${path}.terrain`, 'must be an object')) {
+    for (const [key, v] of Object.entries(lot.terrain as Obj)) expect(errors, isStr(v), `${path}.terrain.${key}`, 'must be a paint id (text)');
   }
 }
+
+function checkGarden(path: string, o: Obj, errors: string[]): void {
+  if (o.garden === undefined) return;
+  if (!expect(errors, isRecord(o.garden), `${path}.garden`, 'must be a garden state')) return;
+  const g = o.garden as Obj;
+  expect(errors, g.crop === null || isStr(g.crop), `${path}.garden.crop`, 'must be text or null');
+  for (const k of ['growth', 'need', 'water', 'weeds', 'day', 'harvests']) expect(errors, isNum(g[k]), `${path}.garden.${k}`, 'must be a number');
+}
+// ===== end Milestone 9 exterior =====================================================================================
 
 function checkRelationships(relationships: Obj, bonds: Obj, people: Obj, warnings: string[]): void {
   for (const [key, r] of Object.entries(relationships)) {

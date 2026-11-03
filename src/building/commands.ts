@@ -8,8 +8,10 @@
 import type { CommandContext, CommandResult, UndoableCommand } from '../core/commands';
 import type { GameEvent } from '../core/events';
 import type { Tile } from '../core/nav';
+import { tileKey } from '../core/ids';
 import { transact } from '../core/state';
-import type { Cents, FinishRef, Id, InventoryEntry, PlacedObject } from '../core/types';
+import type { Cents, FinishRef, Id, InventoryEntry, Lot, PlacedObject, Rot } from '../core/types';
+import { stairFootprint, syncLevels } from '../world/levels';
 import { copyRecord, makePlacedObject } from '../world/objects';
 import { validatePlacement } from '../world/placement';
 import { setWallSideFinish, wallSideFinish, type WallSide } from '../world/walls';
@@ -24,8 +26,30 @@ const fail = (reasons: string[] | string): CommandResult => ({ ok: false, reason
 const OK: CommandResult = { ok: true };
 
 export function emit(ctx: CommandContext, lotId: Id, what: LotWhat): void {
+  const lot = ctx.state.lots[lotId];
+  if (lot) syncLevels(lot);
   ctx.events.emit({ type: 'lot.changed', lotId, what });
 }
+
+/** A floor tile cut out for a stairwell (Milestone 9): restored exactly when the command is undone. */
+interface CutFloor { key: string; floor: FinishRef }
+
+/** The floor of the level above that a staircase of `defId` at this pose opens up (empty for other objects). */
+function stairwellCut(ctx: CommandContext, lotId: Id, defId: string, pose: { x: number; z: number; rot: Rot; level: number }): CutFloor[] {
+  const lot = ctx.state.lots[lotId];
+  const def = ctx.content.objects[defId];
+  if (!lot || !def?.stair) return [];
+  const out: CutFloor[] = [];
+  for (const t of stairFootprint(def, pose.x, pose.z, pose.rot)) {
+    const key = tileKey(pose.level + 1, t.x, t.z);
+    const floor = lot.floors[key];
+    if (floor) out.push({ key, floor: { designId: floor.designId, paletteId: floor.paletteId } });
+  }
+  return out;
+}
+
+function applyCut(lot: Lot, cut: readonly CutFloor[]): void { for (const c of cut) delete lot.floors[c.key]; }
+function undoCut(lot: Lot, cut: readonly CutFloor[]): void { for (const c of cut) lot.floors[c.key] = { ...c.floor }; }
 
 /** Charges an expense; returns the amount actually taken (0 in the sandbox or for free items). */
 export function charge(ctx: CommandContext, householdId: Id, price: Cents, kind: 'purchase' | 'build', label: string): { ok: true; charged: Cents } | { ok: false; reason: string } {
@@ -61,6 +85,7 @@ export function buyObject(lotId: Id, householdId: Id, req: BuyRequest): Undoable
   let name = req.defId;
   let price = 0;
   let charged = 0;
+  let cut: CutFloor[] = [];
   return {
     get label() { return `Buy ${name}`; },
     apply(ctx) {
@@ -79,16 +104,19 @@ export function buyObject(lotId: Id, householdId: Id, req: BuyRequest): Undoable
       record = copyRecord(obj);
       price = def.price;
       charged = paid.charged;
-      emit(ctx, lotId, 'objects');
+      cut = stairwellCut(ctx, lotId, def.id, obj);
+      applyCut(lot, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
       return OK;
     },
     revert(ctx) {
       const lot = ctx.state.lots[lotId];
       if (!lot || !record) return;
       delete lot.objects[record.id];
+      undoCut(lot, cut);
       refund(ctx, householdId, charged, `Returned ${name}`);
       charged = 0;
-      emit(ctx, lotId, 'objects');
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
     },
     reapply(ctx) {
       const lot = ctx.state.lots[lotId];
@@ -100,7 +128,9 @@ export function buyObject(lotId: Id, householdId: Id, req: BuyRequest): Undoable
       if (!paid.ok) return paid;
       lot.objects[record.id] = { ...copyRecord(record), purchasePrice: paid.charged };
       charged = paid.charged;
-      emit(ctx, lotId, 'objects');
+      cut = stairwellCut(ctx, lotId, record.defId, record);
+      applyCut(lot, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
       return OK;
     },
   };
@@ -111,6 +141,7 @@ export function moveObject(lotId: Id, objectId: Id, to: Pose): UndoableCommand {
   let before: (Pose & { supportId?: Id }) | null = null;
   let after: (Pose & { supportId?: Id }) | null = null;
   let label = 'Move object';
+  let cut: CutFloor[] = [];
   return {
     get label() { return label; },
     apply(ctx) {
@@ -122,14 +153,18 @@ export function moveObject(lotId: Id, objectId: Id, to: Pose): UndoableCommand {
       before = poseOf(obj);
       after = { x: to.x, z: to.z, rot: to.rot, level: to.level, ...(plan.supportId ? { supportId: plan.supportId } : {}) };
       setPose(obj, after);
-      emit(ctx, lotId, 'objects');
+      cut = stairwellCut(ctx, lotId, obj.defId, to);
+      applyCut(ctx.state.lots[lotId]!, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
       return OK;
     },
     revert(ctx) {
-      const obj = ctx.state.lots[lotId]?.objects[objectId];
-      if (!obj || !before) return;
+      const lot = ctx.state.lots[lotId];
+      const obj = lot?.objects[objectId];
+      if (!lot || !obj || !before) return;
       setPose(obj, before);
-      emit(ctx, lotId, 'objects');
+      undoCut(lot, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
     },
     reapply(ctx) {
       const lot = ctx.state.lots[lotId];
@@ -140,7 +175,9 @@ export function moveObject(lotId: Id, objectId: Id, to: Pose): UndoableCommand {
       const v = validatePlacement(ctx.state, ctx.content, lotId, { defId: obj.defId, ...after, ignoreObjectId: objectId });
       if (!v.ok) return fail(v.reasons);
       setPose(obj, after);
-      emit(ctx, lotId, 'objects');
+      cut = stairwellCut(ctx, lotId, obj.defId, after);
+      applyCut(lot, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
       return OK;
     },
   };
@@ -253,6 +290,7 @@ export function placeFromInventory(lotId: Id, householdId: Id, index: number, to
   let placed: PlacedObject | null = null;
   let slot = index;
   let name = 'object';
+  let cut: CutFloor[] = [];
   return {
     get label() { return `Place ${name}`; },
     apply(ctx) {
@@ -269,7 +307,9 @@ export function placeFromInventory(lotId: Id, householdId: Id, index: number, to
       placed = copyRecord(obj);
       hh.inventory.splice(index, 1);
       lot.objects[obj.id] = obj;
-      emit(ctx, lotId, 'objects');
+      cut = stairwellCut(ctx, lotId, obj.defId, obj);
+      applyCut(lot, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
       return OK;
     },
     revert(ctx) {
@@ -277,8 +317,9 @@ export function placeFromInventory(lotId: Id, householdId: Id, index: number, to
       const hh = ctx.state.households[householdId];
       if (!lot || !hh || !entry || !placed) return;
       delete lot.objects[placed.id];
+      undoCut(lot, cut);
       hh.inventory.splice(Math.min(slot, hh.inventory.length), 0, copyRecord(entry));
-      emit(ctx, lotId, 'objects');
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
     },
     reapply(ctx) {
       const lot = ctx.state.lots[lotId];
@@ -292,7 +333,9 @@ export function placeFromInventory(lotId: Id, householdId: Id, index: number, to
       slot = i;
       hh.inventory.splice(i, 1);
       lot.objects[id] = copyRecord(placed);
-      emit(ctx, lotId, 'objects');
+      cut = stairwellCut(ctx, lotId, placed.defId, placed);
+      applyCut(lot, cut);
+      emit(ctx, lotId, cut.length > 0 ? 'all' : 'objects');
       return OK;
     },
   };

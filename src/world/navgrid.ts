@@ -12,8 +12,14 @@
 import type { ContentDB } from '../content/types';
 import { blockingTiles } from '../core/geometry';
 import type { Tile } from '../core/nav';
+import { tileKey } from '../core/ids';
 import type { Id, Lot } from '../core/types';
+import { fenceEdgeState } from './fences';
+import { stairHoles } from './levels';
 import { openingEdgeKeys } from './walls';
+
+/** Occupant id of tiles of an upper level that have no floor (or a stairwell hole): nobody can stand there. */
+export const VOID_ID = '__void__';
 
 /** Edge states stored in NavGrid.hEdges / vEdges. */
 export const EDGE_OPEN = 0;
@@ -67,6 +73,17 @@ export function buildNavGrid(lot: Lot, content: ContentDB, level: number, o: Gri
     if (blocksMovement(def)) block(obj.id, blockingTiles(obj.x, obj.z, def, obj.rot));
   }
   if (o.extra) block(o.extra.id, o.extra.tiles);
+  // Milestone 9: above the ground floor only floored tiles can be walked on (balconies included, stairwells not)
+  if (level >= 1) {
+    const holes = stairHoles(lot, content, level);
+    const voidIdx = occupantIds.length;
+    occupantIds.push(VOID_ID);
+    for (let z = 0; z < D; z++) {
+      for (let x = 0; x < W; x++) {
+        if (lot.floors[tileKey(level, x, z)] === undefined || holes.has(`${x},${z}`)) occupant[z * W + x] = voidIdx;
+      }
+    }
+  }
 
   const doors = new Set<string>();
   for (const op of Object.values(lot.openings)) if (content.openings[op.defId]?.kind === 'door') for (const k of openingEdgeKeys(op)) doors.add(k);
@@ -77,6 +94,18 @@ export function buildNavGrid(lot: Lot, content: ContentDB, level: number, o: Gri
       if (wall.x >= 0 && wall.x < W && wall.z >= 0 && wall.z <= D) hEdges[wall.z * W + wall.x] = state;
     } else if (wall.x >= 0 && wall.x <= W && wall.z >= 0 && wall.z < D) {
       vEdges[wall.z * (W + 1) + wall.x] = state;
+    }
+  }
+  // Milestone 9: a fence is a wall edge and a gate behaves like a door (a wall on the same edge wins)
+  for (const f of Object.values(lot.fences ?? {})) {
+    if (f.level !== level) continue;
+    const fs = fenceEdgeState(lot, level, f.dir, f.x, f.z);
+    if (fs === 'open') continue;
+    const state = fs === 'gate' ? EDGE_DOOR : EDGE_WALL;
+    if (f.dir === 'h') {
+      if (f.x >= 0 && f.x < W && f.z >= 0 && f.z <= D && hEdges[f.z * W + f.x] === EDGE_OPEN) hEdges[f.z * W + f.x] = state;
+    } else if (f.x >= 0 && f.x <= W && f.z >= 0 && f.z < D && vEdges[f.z * (W + 1) + f.x] === EDGE_OPEN) {
+      vEdges[f.z * (W + 1) + f.x] = state;
     }
   }
   return { width: W, depth: D, level, occupant, occupantIds, hEdges, vEdges };
@@ -147,15 +176,18 @@ const DIRS8: ReadonlyArray<readonly [number, number]> = [[0, -1], [1, 0], [0, 1]
 
 /**
  * Tiles reachable from `start` (4-neighbour flood fill; diagonal steps never add connectivity because
- * they require both orthogonal neighbours). Returns a mask indexed z * width + x. The start tile is
- * included even when it is not walkable.
+ * they require both orthogonal neighbours). Returns a mask indexed z * width + x. The start tile(s) are
+ * included even when not walkable.
  */
-export function reachableMask(g: NavGrid, start: Tile, free: FreeFn = (x, z) => isFree(g, x, z)): Uint8Array {
+export function reachableMask(g: NavGrid, start: Tile | readonly Tile[], free: FreeFn = (x, z) => isFree(g, x, z)): Uint8Array {
   const W = g.width;
   const mask = new Uint8Array(W * g.depth);
-  if (!inGrid(g, start.x, start.z)) return mask;
-  const queue: number[] = [start.z * W + start.x];
-  mask[start.z * W + start.x] = 1;
+  const queue: number[] = [];
+  for (const s of Array.isArray(start) ? (start as readonly Tile[]) : [start as Tile]) {
+    if (!inGrid(g, s.x, s.z) || mask[s.z * W + s.x]) continue;
+    mask[s.z * W + s.x] = 1;
+    queue.push(s.z * W + s.x);
+  }
   for (let qi = 0; qi < queue.length; qi++) {
     const i = queue[qi] as number;
     const x = i % W, z = (i - x) / W;
@@ -180,7 +212,7 @@ function octile(ax: number, az: number, bx: number, bz: number): number {
 }
 
 /** Binary min-heap ordered by (f, h, insertion sequence) so equal-cost searches resolve identically. */
-class OpenHeap {
+export class OpenHeap {
   private f: number[] = [];
   private h: number[] = [];
   private s: number[] = [];

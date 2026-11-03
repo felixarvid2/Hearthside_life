@@ -3,8 +3,8 @@
 // the view's picking; everything that changes the world goes through GameCore. Also owns the main loop,
 // player settings (localStorage), sound, thumbnails, portraits and the main-menu backdrop.
 
-import { loadCharacterAssets } from '../characters/assets';
-import { NEIGHBOR_HOUSEHOLD } from '../characters/creator';
+import { loadCharacterAssets, stageBodyAvailable } from '../characters/assets';
+import { NEIGHBOR_HOUSEHOLD, setStageBodyAvailability } from '../characters/creator';
 import { outfitFor } from '../characters/outfits';
 import type { ContentDB, OpeningDef } from '../content/types';
 import type { Speed } from '../core/clock';
@@ -22,7 +22,7 @@ import { resolveSlots } from '../world/slots';
 import { DEFAULT_WALL_HEIGHT } from '../world/walls';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings,
-  MenuOption, MovePreview, NeighbourhoodInfo, PaintPreview, PaintTool, PersonPlace, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo,
+  AdoptionPreview, AdoptionSpec, FamilyInfo, MenuOption, MovePreview, NeighbourhoodInfo, SplitPreview, SplitTarget, PaintPreview, PaintTool, PersonPlace, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo,
   SaveSlotInfo, SoundId, SwitchPreview, UiChange,
 } from './api';
 import { GameAudio } from './audio';
@@ -68,6 +68,8 @@ export class Game implements GameAPI {
   constructor(readonly core: GameCore, opts: GameOptions) {
     this.content = core.content;
     this.events = core.events;
+    // The creator offers the life stages whose bodies exist (Milestone 8).
+    setStageBodyAvailability(stageBodyAvailable);
     this.assetBase = opts.assetBase ?? './assets/';
     this.settingsValue = loadSettings();
     applyDocumentSettings(this.settingsValue);
@@ -305,7 +307,7 @@ export class Game implements GameAPI {
     }
     this.gameView.setBuildPreview(hl?.highlight ?? null, hl?.ok ?? true, {
       wallHeight: (tool?.kind === 'wall' || tool?.kind === 'room') && tool.spec?.height ? tool.spec.height : DEFAULT_WALL_HEIGHT,
-      tileMode: tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' ? 'remove' : 'add',
+      tileMode: tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' || tool?.kind === 'eraseStairs' ? 'remove' : 'add',
       openings,
     });
   }
@@ -314,7 +316,7 @@ export class Game implements GameAPI {
 
   private drawRoomHighlight(): void {
     const h = this.roomHighlight;
-    const room = h ? this.core.rooms(0).find((r) => r.uid === h.uid) : undefined;
+    const room = h ? this.core.rooms(this.gameView.getActiveLevel()).find((r) => r.uid === h.uid) : undefined;
     this.gameView.setRoomOutline(room && h ? { outlines: room.outlines, tiles: room.tiles } : null, h?.style ?? 'hover');
   }
 
@@ -403,7 +405,7 @@ export class Game implements GameAPI {
       portrait: (person: PersonDraft) => {
         const pr = this.gameView.portraitRenderer;
         if (!pr) return Promise.resolve('');
-        return pr.request(person.appearance, outfitFor(person, 'everyday'));
+        return pr.request(person.appearance, outfitFor(person, 'everyday'), person.lifeStage);
       },
     };
   }
@@ -427,7 +429,12 @@ export class Game implements GameAPI {
   // ---- live mode ----
 
   selected(): Id | null { return this.core.selected(); }
-  select(personId: Id | null): void { this.core.select(personId); }
+  select(personId: Id | null): void {
+    this.core.select(personId);
+    // Milestone 9: selecting somebody on another floor brings that floor into view
+    const level = personId ? this.gameView.personLevel(personId) : null;
+    if (level !== null && level !== this.gameView.getActiveLevel() && this.core.mode() === 'live') this.setLevel(level);
+  }
   options(personId: Id, pick: PickResult): MenuOption[] { return this.core.options(personId, pick); }
   queue(personId: Id, option: MenuOption): Result { return this.core.queue(personId, option); }
   goTo(personId: Id, tile: Tile): Result { return this.core.goTo(personId, tile); }
@@ -461,13 +468,29 @@ export class Game implements GameAPI {
   movePreview(lotId: Id): MovePreview | null { return this.core.movePreview(lotId); }
   moveHousehold(lotId: Id): Result { return this.core.moveHousehold(lotId); }
 
+  // ---- family and life stages (Milestone 8) ----
+
+  family(personId: Id): FamilyInfo | null { return this.core.family(personId); }
+  ageUpNow(personId: Id): Result { return this.core.ageUpNow(personId); }
+  doHomework(personId: Id): Result { return this.core.doHomework(personId); }
+  adoptPreview(adopterId: Id, spec: AdoptionSpec): AdoptionPreview | null { return this.core.adoptPreview(adopterId, spec); }
+  adopt(adopterId: Id, spec: AdoptionSpec): Result & { personId?: Id } { return this.core.adopt(adopterId, spec); }
+  splitPreview(personIds: Id[], target: SplitTarget): SplitPreview | null { return this.core.splitPreview(personIds, target); }
+  splitHousehold(personIds: Id[], target: SplitTarget): Result & { householdId?: Id } { return this.core.splitHousehold(personIds, target); }
+
   setMode(m: 'live' | 'buy' | 'build'): void { this.core.setMode(m); }
 
   // ---- buy ----
 
-  startPlacement(defId: string): Result { return this.core.startPlacement(defId); }
-  startMove(objectId: Id): Result { return this.core.startMove(objectId); }
-  startPlaceFromInventory(index: number): Result { return this.core.startPlaceFromInventory(index); }
+  startPlacement(defId: string): Result { return this.onFloor(this.core.startPlacement(defId)); }
+  startMove(objectId: Id): Result { return this.onFloor(this.core.startMove(objectId)); }
+  startPlaceFromInventory(index: number): Result { return this.onFloor(this.core.startPlaceFromInventory(index)); }
+
+  /** Milestone 9: a new placement starts on the floor being viewed. */
+  private onFloor(r: Result): Result {
+    if (r.ok) this.core.setPlacementLevel(this.gameView.getActiveLevel());
+    return r;
+  }
   placement(): PlacementState | null { return this.core.placement(); }
 
   placementAt(screenX: number, screenY: number): void {
@@ -475,6 +498,7 @@ export class Game implements GameAPI {
     if (!p) return;
     const tile = this.gameView.tileAt(screenX, screenY);
     if (!tile) return;
+    this.core.setPlacementLevel(this.gameView.getActiveLevel());
     const def = this.content.objects[p.defId];
     const size = def ? rotatedSize(def.footprint, p.rot) : { w: 1, d: 1 };
     this.core.placementTile(tile.x - Math.floor((size.w - 1) / 2), tile.z - Math.floor((size.d - 1) / 2));
@@ -534,6 +558,16 @@ export class Game implements GameAPI {
 
   // ---- camera and view ----
 
+  /** Milestone 9: switches the floor being viewed and worked on (Build, Buy and Live). */
+  private setLevel(level: number): void {
+    const v = this.gameView;
+    const from = v.getActiveLevel();
+    v.setActiveLevel(level);
+    if (v.getActiveLevel() === from) return;
+    this.core.setPlacementLevel(v.getActiveLevel());
+    this.emit('camera');
+  }
+
   private makeViewApi(): GameAPI['view'] {
     const v = () => this.gameView;
     return {
@@ -548,11 +582,19 @@ export class Game implements GameAPI {
         v().setCutaway(m);
         this.emit('camera');
       },
+      roofsVisible: () => v().getRoofsVisible(),
+      setRoofsVisible: (on: boolean) => { v().setRoofsVisible(on); this.emit('camera'); },
+      setRoofEdit: (on: boolean) => { v().setRoofEdit(on); this.emit('camera'); },
       focusPerson: (id) => {
         const p = v().personPosition(id);
+        const level = v().personLevel(id);
+        if (level !== null) this.setLevel(level);
         if (p) v().focusOn(p.x, p.z, true);
         this.emit('camera');
       },
+      level: () => v().getActiveLevel(),
+      setLevel: (level) => this.setLevel(level),
+      levels: () => ({ count: v().levelCount(), max: 3 }),
       worldToScreen: (x, y, z) => v().worldToScreen(x, y, z),
       reveal: (pick) => v().reveal(pick),
       anchorOf: (pick) => v().anchorOf(pick),
@@ -567,12 +609,12 @@ export class Game implements GameAPI {
     const pr = this.gameView.portraitRenderer;
     if (!p || !pr) return null;
     const outfit = outfitFor(p, 'everyday');
-    const key = portraitKey(p.appearance, outfit);
+    const key = portraitKey(p.appearance, outfit, p.lifeStage);
     const hit = pr.cached(key);
     if (hit) return hit;
     if (!this.portraitPending.has(key)) {
       this.portraitPending.add(key);
-      void pr.request(p.appearance, outfit).then((url) => {
+      void pr.request(p.appearance, outfit, p.lifeStage).then((url) => {
         this.portraitPending.delete(key);
         if (url) this.emit('portraits');
       });
