@@ -73,7 +73,7 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - Town children are only generated for new worlds; older saves keep their childless town households.
   - The sitter only serves the household you play.
   - The move-out dialog scrolls in phone landscape.
-  - Babies have no curled pose. Elder wrinkles are a procedural map (albedo and shading only, no geometry).
+  - Babies have no curled pose. Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry).
   - Feet slide a little when walking.
   - The sim does not mark carrying explicitly (`peopleView` uses a heuristic).
 - M9 floors and exteriors:

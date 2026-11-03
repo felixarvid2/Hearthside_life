@@ -319,13 +319,18 @@ describe.skipIf(!have)('garment fit by stage', () => {
 });
 
 describe.skipIf(!have)('elder wrinkles', () => {
-  it('darkens the forehead and not the back of the head', async () => {
-    const { wrinkleIntensity } = await import('../../../src/characters/materials');
+  it('darkens the forehead, crow\'s feet and under-eye lines and not the back of the head', async () => {
+    const { ageShading, wrinkleIntensity } = await import('../../../src/characters/materials');
     expect(wrinkleIntensity([0, 0.152, 0.07])).toBeGreaterThan(0.3);
     expect(wrinkleIntensity([0, 0.169, 0.07])).toBeGreaterThan(0.2);
     expect(wrinkleIntensity([0.05, 0.0985, 0.06])).toBeGreaterThan(0.3); // crow's feet
+    expect(wrinkleIntensity([0.03, 0.0837, 0.07])).toBeGreaterThan(0.2); // under-eye line
     expect(wrinkleIntensity([0, 0.152, -0.07])).toBe(0);
     expect(wrinkleIntensity([0, 0.0, 0.07])).toBe(0); // chin
+    // broad age shading: the under-eye hollow and the nasolabial region, never the back of the head
+    expect(ageShading([0.032, 0.0835, 0.07])).toBeGreaterThan(0.2);
+    expect(ageShading([0.029, 0.048, 0.07])).toBeGreaterThan(0.1);
+    expect(ageShading([0, 0.152, -0.07])).toBe(0);
   });
 
   it('gives only the elder a shared wrinkle map', async () => {
@@ -339,7 +344,11 @@ describe.skipIf(!have)('elder wrinkles', () => {
     expect(map).not.toBeNull();
     expect(map!.image.width).toBe(512);
     const data = map!.image.data as Uint8Array;
+    expect(data.length).toBe(512 * 512 * 2); // red: lines, green: broad age shading
     expect(data.some((v) => v > 40)).toBe(true);
+    let shadedTexels = 0;
+    for (let i = 1; i < data.length; i += 2) if ((data[i] as number) > 40) shadedTexels++;
+    expect(shadedTexels).toBeGreaterThan(500);
     expect(wrinkleMapForStage('elder', elderGeo)).toBe(map); // one texture, built once
     expect(wrinkleMapForStage('adult', adultGeo)).toBeNull();
     expect(wrinkleMapForStage('teen', elderGeo)).toBeNull();
