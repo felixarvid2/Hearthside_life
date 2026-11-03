@@ -743,6 +743,19 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
       if (keyOf(pk) === id && fr) { log(`${label}: centre pick was ${JSON.stringify(pick)}; using offset ${dx},${dy}`); p = { ...p, x: p.x + dx, y: p.y + dy }; pick = pk; break; }
     }
   }
+  // a wall that stays up (seen from this camera turn) can still hide the whole object: turn the camera and look again
+  for (let turn = 0; turn < 3 && kind === 'object' && keyOf(pick) !== id; turn++) {
+    log(`${label}: pick was ${JSON.stringify(pick)}; turning the camera`);
+    await T.page.evaluate(() => window.hearthside.game.view.rotate(1));
+    await T.frames(30);
+    const q = await pointFor(T, kind, id, undefined);
+    if (!q?.free) continue;
+    for (const [dx, dy] of [[0, 0], [-16, 0], [16, 0], [0, -14], [0, 14], [0, -26], [0, 26]]) {
+      const pk = await T.page.evaluate(([x, y]) => window.__t.pick(x, y), [q.x + dx, q.y + dy]);
+      const fr = await T.page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.id === 'game-canvas'; }, [q.x + dx, q.y + dy]);
+      if (keyOf(pk) === id && fr) { p = { ...q, x: q.x + dx, y: q.y + dy }; pick = pk; break; }
+    }
+  }
   T.check(S, `${label}: tap point picks the intended thing`, keyOf(pick) === id, JSON.stringify(pick));
   await T.tapAt(p.x, p.y);
   try { await T.page.waitForSelector('.ctx-menu:not([hidden]) .ctx-item', { timeout: 4000 }); } catch {
