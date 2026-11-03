@@ -1,8 +1,8 @@
 # Continuation note
 
-State on 2026-11-02. Work happens on branch `ccr-333d8ff5-slv7qa`. PR #1 (Milestones 1-5) and PR #2 (Milestones 6-7) are
-merged; the MPFB body switch is on PR #3 (merge only after the user approves). **Milestones 1-7 are complete and verified** (brief section 26,
-docs/ROADMAP.md). The next milestone is 8 (family and life stages).
+State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PR #1 (Milestones 1-5), PR #2 (Milestones 6-7) and PR #3 (MPFB
+bodies) are merged. Milestones 8 and 9 are on PR #4 (draft, not merged; merge only after the user approves). **Milestones 1-9 are complete
+and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete catalogs).
 
 ## Milestone status
 
