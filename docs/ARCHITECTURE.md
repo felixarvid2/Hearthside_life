@@ -705,8 +705,10 @@ Files: `content/exterior.ts` (fence and gate designs, roof styles and finishes, 
 
 - **Fences and gates** (`Lot.fences`, keyed by `edgeKey`, any level). A design is a list of square rods in the edge frame (`fencePieces`); 24 fences, 12 gates (`gate-` ids,
   `isGateDef`), colour variants by index. Nav reads `fenceEdgeState` ('wall' blocks, 'gate' passes like a door). A run keeps identical fences and every gate on its way, swaps
-  other designs (new price charged, old refunded). Safety: no wall on the edge, floor beside it upstairs, nobody shut in (`strandedPerson`) and no floored tile cut off the lot
-  entry (a gate is a passage). `FenceView` merges everything per level into one vertex-coloured mesh (glass separate and translucent).
+  other designs (new price charged, old refunded). A drag builds one straight run, both legs of an L (dominant direction first), or with Shift (desktop) / the panel's Rectangle
+  toggle the four sides of a rectangle loop; the whole path is one request, one plan, one transact and one undo step, so the safety check applies to the complete set. Safety: no wall on
+  the edge, floor beside it upstairs, nobody shut in (`strandedPerson`) and no floored tile cut off the lot entry (a gate is a passage). `FenceView` merges everything per level into one
+  vertex-coloured mesh (glass separate and translucent).
 - **Roofs** (`Lot.roofs`, a rectangle on a level). `buildRoofMesh(style, w, d, ridge, pitch)` returns slope, gable, trim and glass triangles (12 styles: gable, hip, flat, shed,
   mansard, gambrel, pyramid, dutch-gable, saltbox, butterfly, clerestory, a-frame), eaves 0.45 m, gables closed by triangles in the colour of the wall below. 11 finishes with
   34 colour palettes (`Roof.finish = { designId: finish, paletteId }`), procedural textures. Price = area x (style + finish) per m2. `autoRoofRects` covers every enclosed room that

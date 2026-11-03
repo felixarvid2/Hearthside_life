@@ -29,7 +29,7 @@ import { indoorTiles, paintBlockReason, storedPaint, terrainAt } from '../world/
 import { edgeInLot, edgeTiles } from '../world/walls';
 import { chargeFor, editAccess, RESALE_RATE, saleValue } from './plans';
 import type { BuildConflict, EdgeRef, Point } from './buildPlans';
-import { runEdges, tileRectTiles } from './buildPlans';
+import { normalizeRect, rectPerimeter, runEdges, tileRectTiles } from './buildPlans';
 
 const LONG_AGO = -MINUTES_PER_DAY;
 const NOT_ENOUGH = 'Not enough household funds.';
@@ -255,9 +255,10 @@ function planFence(state: WorldState, content: ContentDB, lot: Lot, req: Extract
     if (before) d.refund += fenceRefund(state, content, before);
     if (def.kind === 'gate') d.counts.gates++; else d.counts.fences++;
   }
-  const n = d.counts.fences + d.counts.gates;
-  d.measure = { lengthM: edges.length, text: def.kind === 'gate' ? def.name : `${edges.length} m of ${def.name.toLowerCase()}` };
-  if (n > 0) d.label = def.kind === 'gate' ? `Place ${def.name.toLowerCase()}` : `Build ${n} m of ${def.name.toLowerCase()}`;
+  // the whole path counts (kept gates and identical fences included), so an L or a loop reports its full length once
+  const total = d.highlight.newEdges.length + d.highlight.existingEdges.length;
+  d.measure = { lengthM: total, text: def.kind === 'gate' ? def.name : `${total} m of ${def.name.toLowerCase()}` };
+  if (total > 0) d.label = def.kind === 'gate' ? `Place ${def.name.toLowerCase()}` : `Build ${total} m of ${def.name.toLowerCase()}`;
   return d;
 }
 
@@ -473,6 +474,33 @@ export function fenceRunRequest(level: number, from: Point, to: Point, defId: st
   const edges = runEdges(from, to);
   if (!edges) return { ok: false, reason: from.x === to.x && from.z === to.z ? 'Drag to set the fence length.' : 'Fences run in straight lines.' };
   return { ok: true, request: { kind: 'fence', level, edges, defId, variant } };
+}
+
+/**
+ * A fence drag between two grid vertices: a straight run on one row or column, or two runs for an L when the end is at
+ * least 2 m off both (less is snapped straight), starting with the dominant direction (a long drag first, then the shorter leg). One request, so one preview, one
+ * confirmation, one transaction and one undo step.
+ */
+export function fencePathRequest(level: number, from: Point, to: Point, defId: string, variant = 0): ExteriorBuilt {
+  if (![from.x, from.z, to.x, to.z].every(Number.isInteger)) return { ok: false, reason: 'Fences snap to the grid.' };
+  if (from.x === to.x && from.z === to.z) return { ok: false, reason: 'Drag to set the fence length.' };
+  if (from.x === to.x || from.z === to.z) return fenceRunRequest(level, from, to, defId, variant);
+  // a leg shorter than 2 m is drag wobble, not an L: snap it straight as before
+  const dx = Math.abs(to.x - from.x), dz = Math.abs(to.z - from.z);
+  if (Math.min(dx, dz) < 2) return fenceRunRequest(level, from, dx >= dz ? { x: to.x, z: from.z } : { x: from.x, z: to.z }, defId, variant);
+  const corner = Math.abs(to.x - from.x) >= Math.abs(to.z - from.z) ? { x: to.x, z: from.z } : { x: from.x, z: to.z };
+  const first = runEdges(from, corner), second = runEdges(corner, to);
+  if (!first || !second) return { ok: false, reason: 'Fences run in straight lines.' };
+  return { ok: true, request: { kind: 'fence', level, edges: [...first, ...second], defId, variant } };
+}
+
+/** The four sides of the rectangle between two grid vertices as one closed fence loop (a degenerate drag is a straight run). */
+export function fenceRectRequest(level: number, a: Point, b: Point, defId: string, variant = 0): ExteriorBuilt {
+  if (![a.x, a.z, b.x, b.z].every(Number.isInteger)) return { ok: false, reason: 'Fences snap to the grid.' };
+  const r = normalizeRect(a, b);
+  if (r.x1 === r.x0 && r.z1 === r.z0) return { ok: false, reason: 'Drag to size the fence loop.' };
+  if (r.x1 === r.x0 || r.z1 === r.z0) return fenceRunRequest(level, a, b, defId, variant);
+  return { ok: true, request: { kind: 'fence', level, edges: rectPerimeter(r), defId, variant } };
 }
 
 /** A gate on one edge (it replaces a fence there, or stands on its own). */

@@ -7,8 +7,8 @@ export function exteriorHint(tool: BuildTool, touch: boolean): string {
   switch (tool.kind) {
     case 'fence':
       return touch
-        ? 'Drag along the ground to draw a fence run, adjust the ends, then confirm. A gate goes on one tapped edge.'
-        : 'Drag along the ground to draw a fence; let go to build it. A gate design goes on the edge you click. Esc cancels.';
+        ? 'Drag to draw a fence run or an L, or switch to Rectangle for a loop. Adjust the ends, then confirm. A gate goes on one tapped edge.'
+        : 'Drag to draw a fence run or an L; hold Shift to draw a rectangle loop. Let go to build it. A gate design goes on the edge you click. Esc cancels.';
     case 'roof':
       return tool.shape === 'auto'
         ? (touch ? 'Check the auto roof in the preview, then confirm.' : 'Press Build to roof the whole house at once.')

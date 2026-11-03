@@ -16,7 +16,7 @@ import {
 } from './format';
 import { awayText } from './strip';
 import { familyTree } from '../creator/familyTree';
-import { isSchoolStage } from '../../core/lifeStages';
+import { careersForStage } from '../../sim/careers';
 import { openAdoptDialog, openSplitDialog } from './familyDialogs';
 import { birthdayText, stageName, treeModel } from './familyModel';
 import type { PersonTab, Shell } from './shell';
@@ -226,16 +226,28 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
   };
 
   const renderCareer = (st: WorldState, pr: Person) => {
-    if (pr.lifeStage === 'baby' || pr.lifeStage === 'toddler' || isSchoolStage(pr.lifeStage)) { renderSchool(st, pr); return; }
+    if (pr.lifeStage === 'baby' || pr.lifeStage === 'toddler' || pr.lifeStage === 'child') { renderSchool(st, pr); return; }
+    const teen = pr.lifeStage === 'teen';
     const c = pr.career;
     const def = c ? db.careers[c.careerId] : undefined;
     const lvl = c && def ? def.levels.find((l) => l.level === c.level) : undefined;
     const status = c ? shiftStatusText(st, c, lvl) : '';
     const reqs = c ? promotionRequirements(db, pr, c, st) : null;
     const pending = c?.pendingEvent ? db.careerEvents?.[c.pendingEvent.eventId] : undefined;
-    const sig = `career:${pr.id}:${c ? `${c.careerId}/${c.level}/${Math.round(c.performance)}/${c.shift?.status}/${c.daysWorked}/${status}/${c.effort ?? 'normal'}/${c.pendingEvent?.eventId ?? '-'}/${c.pendingEvent?.chosen ?? '-'}/${reqs?.map((r) => r.text + r.met).join(';')}` : 'none'}`;
+    // A teenager with a part-time job still goes to school, so the panel shows both.
+    const school = teen ? api.family?.(pr.id)?.school ?? null : null;
+    const schoolSig = school ? `${school.statusText}/${Math.round(school.performance)}/${school.grade}/${school.attended}/${school.missed}/${school.homeworkDue}` : 'none';
+    const sig = `career:${pr.id}:${pr.lifeStage}:${schoolSig}:${c ? `${c.careerId}/${c.level}/${Math.round(c.performance)}/${c.shift?.status}/${c.daysWorked}/${status}/${c.effort ?? 'normal'}/${c.pendingEvent?.eventId ?? '-'}/${c.pendingEvent?.chosen ?? '-'}/${reqs?.map((r) => r.text + r.met).join(';')}` : 'none'}`;
     if (sigs.get('career') === sig) return;
     sigs.set('career', sig);
+    const schoolNote = school
+      ? h('div', { class: 'career-school' },
+        h('h3', { class: 'pp-subhead', text: 'School' }),
+        h('dl', { class: 'facts school-facts' },
+          h('dt', { text: 'Today' }), h('dd', { text: school.statusText }),
+          h('dt', { text: 'Grade' }), h('dd', { text: school.grade }),
+          h('dt', { text: 'Homework' }), h('dd', { text: school.homeworkText })))
+      : null;
 
     const quit = button({
       label: 'Quit this job', small: true, variant: 'secondary', onClick: () => {
@@ -251,26 +263,32 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
       },
     });
     if (!c) {
-      const careers = Object.values(db.careers).filter((d) => d.status === 'ready').sort((a, b) => a.name.localeCompare(b.name));
+      const careers = careersForStage(db, pr.lifeStage);
       content.replaceChildren(
-        h('div', { class: 'career-none' }, h('span', { class: 'career-icon' }, icon('briefcase', 28)), h('div', {},
-          h('h3', { text: 'No job' }), h('p', { text: `${pr.firstName} has no job right now. Take one below: each has a schedule, wages, promotions and perks.` }))),
-        h('h3', { class: 'pp-subhead', text: 'Open careers' }),
-        h('ul', { class: 'career-list' }, ...careers.map((d) => {
-          const first = d.levels[0];
-          return h('li', { class: 'career-choice' },
-            h('span', { class: 'q-icon' }, icon(d.icon || 'briefcase', 22)),
-            h('div', { class: 'career-choice-main' },
-              h('span', { class: 'career-choice-name', text: d.name }),
-              h('span', { class: 'career-choice-meta', text: `${d.description} Starting pay ${first ? `${formatMoney(first.hourlyWage)}/hour` : 'unknown'}.` })),
-            button({
-              label: 'Take job', small: true, variant: 'primary', onClick: () => {
-                const r = api.joinCareer?.(pr.id, d.id) ?? { ok: false, reason: 'That is not available here.' };
-                if (!r.ok) toast(r.reason, 'error');
-                else sh.sound('confirm');
-              },
-            }));
-        })),
+        ...(schoolNote ? [schoolNote] : []),
+        h('div', { class: 'career-none' }, h('span', { class: 'career-icon' }, icon(teen ? 'clock' : 'briefcase', 28)), h('div', {},
+          h('h3', { text: teen ? 'No part-time job' : 'No job' }),
+          h('p', { text: teen
+            ? `${pr.firstName} can take one part-time job around school. Shifts are after class and at weekends.`
+            : `${pr.firstName} has no job right now. Take one below: each has a schedule, wages, promotions and perks.` }))),
+        h('h3', { class: 'pp-subhead', text: teen ? 'Part-time jobs open to teens' : 'Open careers' }),
+        careers.length === 0
+          ? h('p', { class: 'pp-note', text: 'No jobs of that kind are open right now.' })
+          : h('ul', { class: 'career-list' }, ...careers.map((d) => {
+            const first = d.levels[0];
+            return h('li', { class: 'career-choice' },
+              h('span', { class: 'q-icon' }, icon(d.icon || 'briefcase', 22)),
+              h('div', { class: 'career-choice-main' },
+                h('span', { class: 'career-choice-name', text: d.name }),
+                h('span', { class: 'career-choice-meta', text: `${d.description} Starting pay ${first ? `${formatMoney(first.hourlyWage)}/hour` : 'unknown'}.` })),
+              button({
+                label: 'Take job', small: true, variant: 'primary', onClick: () => {
+                  const r = api.joinCareer?.(pr.id, d.id) ?? { ok: false, reason: 'That is not available here.' };
+                  if (!r.ok) toast(r.reason, 'error');
+                  else sh.sound('confirm');
+                },
+              }));
+          })),
       );
       return;
     }
@@ -288,12 +306,13 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     const items: Array<HTMLElement | null> = [
       h('div', { class: 'career-head' }, h('span', { class: 'career-icon' }, icon(def?.icon ?? 'briefcase', 28)), h('div', {},
         h('h3', { text: name }),
-        h('p', { class: 'career-title', text: `Level ${c.level}${def ? ` of ${def.levels.length}` : ''}${lvl ? ` · ${lvl.title}` : ''}` }))),
+        h('p', { class: 'career-title', text: `${def?.partTime ? 'Part-time · ' : ''}Level ${c.level}${def ? ` of ${def.levels.length}` : ''}${lvl ? ` · ${lvl.title}` : ''}` }))),
       h('dl', { class: 'facts' },
         h('dt', { text: 'Schedule' }), h('dd', { text: lvl ? `${formatDays(lvl.days)}, ${formatShiftHours(lvl)}` : 'Unknown' }),
         h('dt', { text: 'Today' }), h('dd', { text: status }),
         h('dt', { text: 'Pay per shift' }), h('dd', { text: lvl ? `${formatMoney(shiftPay(lvl))} (${formatMoney(lvl.hourlyWage)} an hour)` : 'Unknown' }),
         h('dt', { text: 'Days worked' }), h('dd', { text: String(c.daysWorked) })),
+      schoolNote,
       effortPicker.el,
       h('h3', { class: 'pp-subhead', text: 'Performance' }),
       signedBar('Performance', c.performance, 'perf'),
@@ -323,7 +342,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
       items.push(h('h3', { class: 'pp-subhead', text: `Promotion${next ? ` to ${next.title}` : ''}` }));
       items.push(h('ul', { class: 'req-list' }, ...reqs.map((r) => h('li', { class: ['req', r.met && 'is-met'] }, icon(r.met ? 'check' : 'clock', 18), h('span', { text: `${r.met ? 'Done: ' : 'Needed: '}${r.text}` })))));
     } else if (reqs) {
-      items.push(h('p', { class: 'pp-note' }, icon('star', 18), h('span', { text: 'Top of the career. Well done!' })));
+      items.push(h('p', { class: 'pp-note' }, icon('star', 18), h('span', { text: def?.partTime ? 'Top of this job. Well done!' : 'Top of the career. Well done!' })));
     }
     if (c.shift?.status === 'atWork' && lvl) items.push(h('p', { class: 'pp-note' }, icon('clock', 18), h('span', { text: `Expected home around ${formatClock(lvl.end)}.` })));
     items.push(h('div', { class: 'career-actions' }, quit));
@@ -496,7 +515,10 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
       stageChip.textContent = stageText;
       const careerTabSpans = tabBar.el.querySelectorAll('[data-id="career"] > span');
       const careerTab = careerTabSpans[careerTabSpans.length - 1]; // the label comes after the icon
-      if (careerTab) careerTab.textContent = isSchoolStage(pr.lifeStage) || pr.lifeStage === 'baby' || pr.lifeStage === 'toddler' ? 'School' : 'Career';
+      if (careerTab) {
+        careerTab.textContent = pr.lifeStage === 'baby' || pr.lifeStage === 'toddler' || pr.lifeStage === 'child'
+          ? 'School' : pr.lifeStage === 'teen' ? 'School & job' : 'Career';
+      }
       p.setTitle(`${pr.firstName} ${pr.lastName}`);
       p.el.setAttribute('aria-label', `${pr.firstName} ${pr.lastName}`);
       moodChip.dataset.tone = moodTone(mood.value);

@@ -441,6 +441,10 @@ export interface MpfbSkinUniforms extends SkinUniforms {
   uAlbedo: THREE.IUniform<THREE.Texture | null>;
   /** Mean linear colour of the skin texture: the texel that maps to exactly the chosen tone. */
   uSkinMean: THREE.IUniform<THREE.Vector3>;
+  /** Age-line intensity of an elder, baked into the head's own UV layout (null for the younger stages). */
+  uWrinkleMap: THREE.IUniform<THREE.Texture | null>;
+  /** Elder wrinkle look: line albedo darkening, broad age-shading darkening, normal (bump) strength. */
+  uWrinkleFx: THREE.IUniform<THREE.Vector3>;
 }
 
 const PSKIN_FRAG_HEAD = /* glsl */ `
@@ -456,6 +460,17 @@ uniform vec3 uHairColor;
 uniform vec4 uMouth; // width, fullness, lipTint, -
 uniform vec4 uSkinFx; // freckles, blush, stubble, -
 uniform float uSelect;
+#ifdef HAS_WRINKLES
+uniform sampler2D uWrinkleMap;
+uniform vec3 uWrinkleFx; // line albedo, age-shading albedo, normal strength
+// Slope of the red (line) channel over one screen pixel, for the bump normal below.
+vec2 hsWrinkleGrad() {
+  vec2 dx = dFdx(vMsUv);
+  vec2 dy = dFdy(vMsUv);
+  float h = texture2D(uWrinkleMap, vMsUv).r;
+  return vec2(texture2D(uWrinkleMap, vMsUv + dx).r - h, texture2D(uWrinkleMap, vMsUv + dy).r - h);
+}
+#endif
 float hsHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float hsLuma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
 `;
@@ -469,6 +484,14 @@ if (vCover > 0.5) discard;                            // under an opaque garment
   vec3 tex = texture2D(uAlbedo, vMsUv).rgb;           // painted albedo (linear)
   float l = hsLuma(tex) / hsLuma(uSkinMean);
   vec3 col = tone * (l * ${f(1 - 0.35)} + (tex / uSkinMean) * ${f(0.35)});
+#ifdef HAS_WRINKLES
+  if (vInfo.x > 4.5 && vInfo.x < 5.5) {
+    // age lines and hollows baked from the head's own UV layout: a little darkening only, so every skin tone keeps its colour.
+    // Red is the line pattern (also used for the bump normal), green the broad under-eye and nasolabial shading.
+    vec2 wm = texture2D(uWrinkleMap, vMsUv).rg;
+    col *= 1.0 - uWrinkleFx.x * wm.r - uWrinkleFx.y * wm.g;
+  }
+#endif
   // lips: the skin's _LIPS weight shifts the colour towards the lip colour's hue, keeping luminance (every tone works)
   col *= mix(vec3(1.0), uLipColor / max(hsLuma(uLipColor), 1e-3), clamp(vLips * uMouth.z * 0.5, 0.0, 1.0));
   if (vInfo.x > 4.5 && vInfo.x < 5.5) {
@@ -503,11 +526,182 @@ if (vCover > 0.5) discard;                            // under an opaque garment
 diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.08 + vec3(0.04, 0.03, 0.0), uSelect);
 `;
 
+/**
+ * Bend the head normal by the wrinkle map so the creases catch the light. The response is the standard screen-space bump
+ * gradient (Mikkelsen): the map is a groove (negative height), and only the head part takes part.
+ */
+const PSKIN_FRAG_NORMAL = /* glsl */ `
+#include <normal_fragment_begin>
+#ifdef HAS_WRINKLES
+// derivatives outside the branch: some drivers give undefined results in non-uniform control flow
+vec2 hsSlope = -hsWrinkleGrad() * uWrinkleFx.z; // the lines are grooves, so the height is the negative of the map
+vec3 hsSigmaX = normalize(dFdx(-vViewPosition));
+vec3 hsSigmaY = normalize(dFdy(-vViewPosition));
+if (vInfo.x > 4.5 && vInfo.x < 5.5) {
+  vec3 r1 = cross(hsSigmaY, normal);
+  vec3 r2 = cross(normal, hsSigmaX);
+  float det = dot(hsSigmaX, r1) * faceDirection;
+  vec3 grad = sign(det) * (hsSlope.x * r1 + hsSlope.y * r2);
+  normal = normalize(abs(det) * normal - grad);
+}
+#endif
+`;
+
 const MPSKIN_VERT_HEAD = `${MSKIN_VERT_HEAD}attribute float aLips;\nvarying float vLips;\n`;
 const MPSKIN_VERT_COVER = MSKIN_VERT_COVER.replace('vInfo = aInfo;', 'vInfo = aInfo;\nvLips = aLips;');
 
+// ---------------------------------------------------------------------------------------------
+// Elder wrinkles
+// ---------------------------------------------------------------------------------------------
+
+const WRINKLE_SIZE = 512;
+let wrinkleTexture: THREE.DataTexture | null = null;
+let wrinkleTried = false;
+
+const sstep = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/** Soft Gaussian line from (ax, ay) to (bx, by): 1 on the line, fading over about `sigma` metres. */
+function lineMask(x: number, y: number, ax: number, ay: number, bx: number, by: number, sigma: number): number {
+  const dx = bx - ax, dy = by - ay;
+  const l2 = dx * dx + dy * dy;
+  const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+  const d = Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
+  return Math.exp(-(d * d) / (2 * sigma * sigma));
+}
+
+/** A soft Gaussian patch around (cx, cy) with radii (sx, sy); used for the broad age shading. */
+function softPatch(x: number, y: number, cx: number, cy: number, sx: number, sy: number): number {
+  const dx = (x - cx) / sx, dy = (y - cy) / sy;
+  return Math.exp(-0.5 * (dx * dx + dy * dy));
+}
+
+/** The head's front-facing weight, so nothing shows through the back of the skull. */
+function frontWeight(z: number): number {
+  return sstep(0.012, 0.045, z);
+}
+
+/**
+ * Age-line pattern in the head's local face coordinates (x = lateral, y = up from the chin, z = forward; FACE_LAYOUT).
+ * Wide, soft forehead lines, glabella, crow's feet fanning from the outer eye corners, lines under the eyes and deep
+ * nasolabial folds. The lines are a few millimetres wide on purpose: at close range they read clearly, and in the distance
+ * the mipmaps turn them into a soft age texture instead of shimmer. Baked into the head UVs, so it follows every slider,
+ * face morph and skin tone. Red channel of the wrinkle map.
+ */
+export function wrinkleIntensity(p: readonly number[]): number {
+  const x = p[0] as number, y = p[1] as number, z = p[2] as number;
+  const front = frontWeight(z);
+  if (front <= 0) return 0;
+  const ax = Math.abs(x);
+  let w = 0;
+  // forehead: three deep horizontal lines with a slight wave, fading toward the temples
+  const temple = 1 - sstep(0.050, 0.074, ax);
+  for (const [cy, amp, sigma] of [[0.135, 0.8, 0.0032], [0.152, 1.0, 0.0040], [0.169, 0.85, 0.0033]] as const) {
+    const wave = 0.0022 * Math.sin(x * 55 + cy * 40) + 0.001 * Math.sin(x * 120 + 1.7);
+    w = Math.max(w, amp * temple * Math.exp(-((y - (cy + wave)) ** 2) / (2 * sigma * sigma)));
+  }
+  // glabella: short vertical lines between the brows
+  w = Math.max(w, 0.8 * lineMask(ax, y, 0.0075, 0.116, 0.0095, 0.142, 0.0021) * sstep(0.0, 0.003, ax));
+  w = Math.max(w, 0.45 * lineMask(ax, y, 0.0125, 0.118, 0.0145, 0.139, 0.0019) * sstep(0.0, 0.003, ax));
+  // crow's feet: four lines fanning from the outer eye corner
+  for (const [ex, ey, amp, sigma] of [[0.0615, 0.1125, 0.75, 0.0020], [0.0665, 0.1015, 0.9, 0.0022], [0.0645, 0.0925, 0.8, 0.0021], [0.0575, 0.0850, 0.6, 0.0019]] as const) {
+    w = Math.max(w, amp * lineMask(ax, y, 0.0455, 0.0985, ex, ey, sigma));
+  }
+  // under-eye: two soft lines under the lower lid
+  w = Math.max(w, 0.5 * lineMask(ax, y, 0.0160, 0.0875, 0.0330, 0.0810, 0.0024));
+  w = Math.max(w, 0.48 * lineMask(ax, y, 0.0330, 0.0810, 0.0490, 0.0860, 0.0024));
+  w = Math.max(w, 0.3 * lineMask(ax, y, 0.0210, 0.0810, 0.0410, 0.0750, 0.0020));
+  // nasolabial folds: deep, from beside the nose down and out past the mouth corners
+  w = Math.max(w, 1.0 * lineMask(ax, y, 0.0195, 0.0640, 0.0295, 0.0465, 0.0032));
+  w = Math.max(w, 0.9 * lineMask(ax, y, 0.0295, 0.0465, 0.0385, 0.0295, 0.0032));
+  // a fainter parallel line outside the fold, and the marionette line below the mouth corner
+  w = Math.max(w, 0.35 * lineMask(ax, y, 0.0255, 0.0620, 0.0360, 0.0460, 0.0026));
+  w = Math.max(w, 0.4 * lineMask(ax, y, 0.0205, 0.0290, 0.0250, 0.0120, 0.0022));
+  return w < 0.004 ? 0 : Math.min(1, w) * front;
+}
+
+/**
+ * Broad, faint age shading in the same face coordinates: the hollow under each eye, the sunken nasolabial region, the
+ * temples and the cheek hollows. This is the low-frequency part of the look, so it survives mipmapping and keeps the face
+ * reading as old in the wide lineup. Green channel of the wrinkle map.
+ */
+export function ageShading(p: readonly number[]): number {
+  const x = p[0] as number, y = p[1] as number, z = p[2] as number;
+  const front = frontWeight(z);
+  if (front <= 0) return 0;
+  const ax = Math.abs(x);
+  let s = 0;
+  s = Math.max(s, 0.55 * softPatch(ax, y, 0.032, 0.0835, 0.021, 0.0095)); // under-eye hollow
+  s = Math.max(s, 0.5 * softPatch(ax, y, 0.029, 0.048, 0.014, 0.016)); // nasolabial hollow
+  s = Math.max(s, 0.18 * softPatch(ax, y, 0.062, 0.118, 0.014, 0.020)); // temple
+  s = Math.max(s, 0.16 * softPatch(ax, y, 0.052, 0.058, 0.016, 0.014)); // cheek hollow
+  return s < 0.004 ? 0 : Math.min(1, s) * front;
+}
+
+/** Rasterises `wrinkleIntensity` (red) and `ageShading` (green) into the head's UV layout. Shared by every elder, built once. */
+export function bakeWrinkleTexture(geometry: THREE.BufferGeometry): THREE.DataTexture | null {
+  const pos = geometry.getAttribute('position');
+  const uv = geometry.getAttribute('uv');
+  const face = geometry.getAttribute('aFace');
+  const info = geometry.getAttribute('aInfo');
+  const index = geometry.getIndex();
+  if (!pos || !uv || !face || !info || !index) return null;
+  const S = WRINKLE_SIZE;
+  const data = new Uint8Array(S * S * 2);
+  for (let t = 0; t < index.count; t += 3) {
+    const a = index.getX(t), b = index.getX(t + 1), c = index.getX(t + 2);
+    if (Math.abs(info.getX(a) - 5) > 0.5 || Math.abs(info.getX(b) - 5) > 0.5 || Math.abs(info.getX(c) - 5) > 0.5) continue;
+    const au = uv.getX(a) * (S - 1), av = uv.getY(a) * (S - 1);
+    const bu = uv.getX(b) * (S - 1), bv = uv.getY(b) * (S - 1);
+    const cu = uv.getX(c) * (S - 1), cv = uv.getY(c) * (S - 1);
+    if (Math.max(Math.abs(au - bu), Math.abs(bu - cu), Math.abs(au - cu)) > S * 0.5) continue; // island seam
+    const x0 = Math.max(0, Math.floor(Math.min(au, bu, cu))), x1 = Math.min(S - 1, Math.ceil(Math.max(au, bu, cu)));
+    const y0 = Math.max(0, Math.floor(Math.min(av, bv, cv))), y1 = Math.min(S - 1, Math.ceil(Math.max(av, bv, cv)));
+    const den = (bv - cv) * (au - cu) + (cu - bu) * (av - cv);
+    if (Math.abs(den) < 1e-9) continue;
+    for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
+      const sx = px + 0.5, sy = py + 0.5;
+      const w0 = ((bv - cv) * (sx - cu) + (cu - bu) * (sy - cv)) / den;
+      const w1 = ((cv - av) * (sx - cu) + (au - cu) * (sy - cv)) / den;
+      const w2 = 1 - w0 - w1;
+      if (w0 < -0.03 || w1 < -0.03 || w2 < -0.03) continue;
+      const p = [0, 1, 2].map((k) => w0 * face.getComponent(a, k) + w1 * face.getComponent(b, k) + w2 * face.getComponent(c, k));
+      const o = (py * S + px) * 2;
+      const v = Math.round(wrinkleIntensity(p) * 255);
+      if (v > (data[o] as number)) data[o] = v;
+      const s = Math.round(ageShading(p) * 255);
+      if (s > (data[o + 1] as number)) data[o + 1] = s;
+    }
+  }
+  // close one-texel gaps at island edges so the filtered texture does not dim the lines and hollows
+  const grown = data.slice();
+  for (let y = 1; y < S - 1; y++) for (let x = 1; x < S - 1; x++) {
+    const o = (y * S + x) * 2;
+    if (data[o] || data[o + 1]) continue;
+    for (let c = 0; c < 2; c++) {
+      grown[o + c] = Math.max(data[o - 2 + c] as number, data[o + 2 + c] as number, data[o - S * 2 + c] as number, data[o + S * 2 + c] as number);
+    }
+  }
+  const tex = new THREE.DataTexture(grown, S, S, THREE.RGFormat, THREE.UnsignedByteType);
+  tex.flipY = false;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.generateMipmaps = true;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+/** Elder wrinkle map: one small texture built from the first elder body and reused by every elder (all MPFB bodies share UVs). */
+export function wrinkleMapForStage(stage: string, geometry: THREE.BufferGeometry): THREE.DataTexture | null {
+  if (stage !== 'elder') return null;
+  if (!wrinkleTried) { wrinkleTried = true; wrinkleTexture = bakeWrinkleTexture(geometry); }
+  return wrinkleTexture;
+}
+
 /** Per-character skin material of an MPFB body: the painted albedo recoloured to the chosen tone, face paint, push-in under garments. */
-export function createMpfbSkinMaterial(): { material: THREE.MeshStandardMaterial; uniforms: MpfbSkinUniforms } {
+export function createMpfbSkinMaterial(wrinkleMap: THREE.Texture | null = null): { material: THREE.MeshStandardMaterial; uniforms: MpfbSkinUniforms } {
   const material = new THREE.MeshStandardMaterial({ color: '#c99a78', roughness: 0.62, metalness: 0 });
   const uniforms: MpfbSkinUniforms = {
     uCoverTorso: { value: new THREE.Vector4(0, 0, 0, 0) },
@@ -523,10 +717,14 @@ export function createMpfbSkinMaterial(): { material: THREE.MeshStandardMaterial
     uSelect: { value: 0 },
     uAlbedo: { value: null },
     uSkinMean: { value: new THREE.Vector3(0.3986, 0.2295, 0.1613) },
+    uWrinkleMap: { value: wrinkleMap },
+    uWrinkleFx: { value: new THREE.Vector3(0.42, 0.24, 2.0) },
   };
-  patch(material, 'hs-mpfb-skin-v2', uniforms as unknown as Uniforms,
+  patch(material, `hs-mpfb-skin-v4${wrinkleMap ? '-w' : ''}`, uniforms as unknown as Uniforms,
     [['#include <common>', `#include <common>\n${MPSKIN_VERT_HEAD}`], ['#include <morphtarget_vertex>', MPSKIN_VERT_COVER]],
-    [['#include <common>', `#include <common>\n${PSKIN_FRAG_HEAD}`], ['#include <color_fragment>', PSKIN_FRAG_PAINT]]);
+    [['#include <common>', `#include <common>\n${PSKIN_FRAG_HEAD}`], ['#include <color_fragment>', PSKIN_FRAG_PAINT],
+      ['#include <normal_fragment_begin>', PSKIN_FRAG_NORMAL]],
+    wrinkleMap ? { HAS_WRINKLES: '' } : {});
   return { material, uniforms };
 }
 

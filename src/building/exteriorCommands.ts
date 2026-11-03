@@ -11,8 +11,8 @@ import { newId } from '../core/ids';
 import { transact } from '../core/state';
 import type { Cents, Id } from '../core/types';
 import {
-  applyExteriorDiff, exteriorDiffMatchesLot, fenceRunRequest, gateRequest, isEmptyExteriorDiff, planExterior, revertExteriorDiff, roofRectRequest,
-  PENDING_ROOF, type ExteriorBuilt, type ExteriorDiff, type ExteriorPlan, type ExteriorRequest, type RoofSpec,
+  applyExteriorDiff, exteriorDiffMatchesLot, fencePathRequest, fenceRectRequest, fenceRunRequest, gateRequest, isEmptyExteriorDiff, planExterior,
+  revertExteriorDiff, roofRectRequest, PENDING_ROOF, type ExteriorBuilt, type ExteriorDiff, type ExteriorPlan, type ExteriorRequest, type RoofSpec,
 } from './exteriorPlans';
 import type { EdgeRef, Point } from './buildPlans';
 import { emit } from './commands';
@@ -118,6 +118,16 @@ function fromBuilt(lotId: Id, householdId: Id, built: ExteriorBuilt): ExteriorCo
 /** Builds a fence design along a straight run between two grid vertices (identical fences already there are kept and free). */
 export function placeFenceRun(lotId: Id, householdId: Id, level: number, from: Point, to: Point, defId: string, variant = 0): ExteriorCommand {
   return fromBuilt(lotId, householdId, fenceRunRequest(level, from, to, defId, variant));
+}
+
+/** Builds a fence along a drag: one straight run, or both legs of an L (one command, one transaction, one undo step). */
+export function placeFencePath(lotId: Id, householdId: Id, level: number, from: Point, to: Point, defId: string, variant = 0): ExteriorCommand {
+  return fromBuilt(lotId, householdId, fencePathRequest(level, from, to, defId, variant));
+}
+
+/** Builds the four sides of a rectangle as one closed fence loop (one command, one transaction, one undo step). */
+export function placeFenceLoop(lotId: Id, householdId: Id, level: number, a: Point, b: Point, defId: string, variant = 0): ExteriorCommand {
+  return fromBuilt(lotId, householdId, fenceRectRequest(level, a, b, defId, variant));
 }
 
 /** Puts a gate on one edge, replacing a fence there. */

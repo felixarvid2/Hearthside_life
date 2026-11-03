@@ -7,7 +7,9 @@
 import { buildCommand, type BuildCommand } from '../../building/buildCommands';
 import { buyObject, sellObject } from '../../building/commands';
 import { exteriorCommand, type ExteriorCommand } from '../../building/exteriorCommands';
-import { fenceRunRequest, gateRequest, nearestFenceEdge, planExterior, roofRectRequest, type ExteriorPlan, type ExteriorRequest } from '../../building/exteriorPlans';
+import {
+  fencePathRequest, fenceRectRequest, gateRequest, nearestFenceEdge, planExterior, roofRectRequest, type ExteriorPlan, type ExteriorRequest,
+} from '../../building/exteriorPlans';
 import { exteriorOf } from '../../content/exterior';
 import { planBuy, planSell, type BuyRequest } from '../../building/plans';
 import { rotatedSize } from '../../core/geometry';
@@ -203,7 +205,9 @@ export function resolveBuild(content: ContentDB, lot: Lot, tool: BuildTool, targ
         return e ? { ok: true, exterior: gateRequest(level, e, def.id, tool.variant ?? 0) } : bad('Point at the lot.');
       }
       const a = snapVertex(lot, from);
-      const run = fenceRunRequest(level, a, straightenRun(a, snapVertex(lot, to ?? from)), def.id, tool.variant ?? 0);
+      const b = snapVertex(lot, to ?? from);
+      const rect = tool.shape === 'rect' || target.rect === true;
+      const run = rect ? fenceRectRequest(level, a, b, def.id, tool.variant ?? 0) : fencePathRequest(level, a, b, def.id, tool.variant ?? 0);
       return run.ok ? { ok: true, exterior: run.request } : bad(run.reason);
     }
     case 'eraseFence': {

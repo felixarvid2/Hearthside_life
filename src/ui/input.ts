@@ -42,6 +42,8 @@ export function pickKey(p: PickResult): string {
 export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () => boolean): WorldInput {
   const { api } = sh;
   const machine = new InputMachine();
+  /** Desktop Shift: draw a fence drag as a rectangle loop while it is held. */
+  let shiftHeld = false;
   const listeners: Array<() => void> = [];
   const on = <K extends keyof HTMLElementEventMap>(t: HTMLElement, type: K, fn: (e: HTMLElementEventMap[K]) => void, opts?: AddEventListenerOptions) => {
     t.addEventListener(type, fn as EventListener, opts);
@@ -239,9 +241,9 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
         case 'rotate': api.view.rotate(e.dir); sh.sound('click'); break;
         case 'panStart': sh.closeContextMenu(); canvas.classList.add('is-dragging'); touchPreviewKey = null; break;
         case 'panEnd': canvas.classList.remove('is-dragging'); break;
-        case 'drawStart': sh.closeContextMenu(); sh.build.drawStart(e.x, e.y); break;
-        case 'draw': sh.build.draw(e.x, e.y); break;
-        case 'drawEnd': sh.build.drawEnd(e.x, e.y, e.interrupted, e.kind === 'mouse'); break;
+        case 'drawStart': sh.closeContextMenu(); sh.build.drawStart(e.x, e.y, shiftHeld); break;
+        case 'draw': sh.build.draw(e.x, e.y, shiftHeld); break;
+        case 'drawEnd': sh.build.drawEnd(e.x, e.y, e.interrupted, e.kind === 'mouse', shiftHeld); break;
         default: break;
       }
     }
@@ -251,6 +253,7 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   on(canvas, 'pointerdown', (e) => {
     if (!active()) return;
     const p = local(e);
+    shiftHeld = e.shiftKey;
     if (e.pointerType === 'mouse' && e.button > 2) return;
     try { canvas.setPointerCapture(e.pointerId); } catch { /* pointer may already be gone */ }
     canvas.focus({ preventScroll: true });
@@ -259,10 +262,12 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   on(canvas, 'pointermove', (e) => {
     if (!active()) return;
     const p = local(e);
+    shiftHeld = e.shiftKey;
     run(machine.move({ id: e.pointerId, x: p.x, y: p.y, t: e.timeStamp, kind: kindOf(e) }));
   });
   on(canvas, 'pointerup', (e) => {
     const p = local(e);
+    shiftHeld = e.shiftKey;
     const fx = machine.up({ id: e.pointerId, x: p.x, y: p.y, t: e.timeStamp, kind: kindOf(e), button: e.button });
     if (active()) run(fx); else canvas.classList.remove('is-dragging');
   });

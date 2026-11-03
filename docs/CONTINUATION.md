@@ -70,15 +70,14 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 ## Known issues
 
 - M8 family and life stages:
-  - Teens have no part-time jobs. Town (NPC) households have no children.
+  - Town children are only generated for new worlds; older saves keep their childless town households.
   - The sitter only serves the household you play.
   - The move-out dialog scrolls in phone landscape.
-  - Kid clothes are bulky, and dresses flare on toddlers. Babies have no curled pose. Elders have no wrinkles.
+  - Babies have no curled pose. Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry).
   - Feet slide a little when walking.
   - The sim does not mark carrying explicitly (`peopleView` uses a heuristic).
 - M9 floors and exteriors:
   - Only straight stairs are tested in acceptance. The spiral and length-4 stairs are in the catalogue but less tested.
-  - The fence tool applies one run per drag.
   - The camera bar now has 7 buttons and was not measured on phones narrower than 390 px.
   - Roofs only draw at or below the active level, and only with the Roof toggle on.
 - Flakes in acceptance:

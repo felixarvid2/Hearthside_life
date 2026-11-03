@@ -2,6 +2,10 @@
 // them, created exactly once per world. A new world generates it inside createNewWorld; an older save gets one when it
 // is loaded (ensureNeighbourhood), with the player's household, home lot and next-door neighbours left untouched.
 //
+// Some homes are families (Milestone 8): the couple and, now and then, the single household have one to three children
+// of mixed life stages. Their surnames match the parents, their stage clock starts part-way through the stage, and
+// parent ties record who their parents are. School records come from createPerson/ensureSchool as for anyone else.
+//
 // Everything is drawn from a generator seeded by the world seed (never the simulation's rng, except the 70-90 starting
 // needs that createPerson takes, which ensureNeighbourhood puts back), so the same world always gets the same
 // neighbourhood. Nothing here runs again when a lot is loaded or a household is switched: people keep their jobs,
@@ -11,24 +15,42 @@ import { SURNAMES, randomPersonDraft } from '../characters/names';
 import type { ContentDB } from '../content/types';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { pairKey } from '../core/ids';
+import { NORMAL_STAGE_DAYS } from '../core/lifeStages';
 import { dollars } from '../core/money';
 import { Rng, seedRng } from '../core/rng';
 import { addHousehold, transact } from '../core/state';
 import type { FamilyTie } from '../core/types';
-import type { BondStatus, Cents, Id, Lot, NeighbourhoodState, WorldState } from '../core/types';
+import type { BondStatus, Cents, Id, LifeStage, Lot, NeighbourhoodState, WorldState } from '../core/types';
 import { applyHouseholdTies, createPerson } from '../sim/people';
 import { ensureRel, refreshLabel } from '../sim/relationships';
 import { HOME_MAP, LOT_SPECS, NEIGHBOUR_MAP, createNeighbourhoodLots } from '../world/neighbourhood';
 
 /** Who lives in each generated home (LotSpec.home index): size, ties between members and how they are named. */
-interface HomePlan { size: number; tie: FamilyTie | null; sharedName: boolean }
+interface HomePlan {
+  size: number;
+  tie: FamilyTie | null;
+  sharedName: boolean;
+  /** Children in the home: a couple has two or three, a single parent may have one, other plans none. */
+  children: 'twoOrThree' | 'maybeOne' | null;
+}
 
 const HOME_PLANS: readonly HomePlan[] = [
-  { size: 2, tie: 'partner', sharedName: true },
-  { size: 1, tie: null, sharedName: true },
-  { size: 2, tie: 'roommate', sharedName: false },
-  { size: 2, tie: 'sibling', sharedName: true },
+  { size: 2, tie: 'partner', sharedName: true, children: 'twoOrThree' },
+  { size: 1, tie: null, sharedName: true, children: 'maybeOne' },
+  { size: 2, tie: 'roommate', sharedName: false, children: null },
+  { size: 2, tie: 'sibling', sharedName: true, children: null },
 ];
+
+/** The life stages a generated town child can have. */
+const CHILD_STAGES: readonly LifeStage[] = ['baby', 'toddler', 'child', 'teen'];
+
+/** The stages of the children a home gets; a family with two or more children always covers different stages. */
+function childStages(rng: Rng, plan: HomePlan['children']): LifeStage[] {
+  const count = plan === 'twoOrThree' ? rng.int(2, 3) : plan === 'maybeOne' && rng.chance(0.5) ? 1 : 0;
+  if (count === 0) return [];
+  if (count === 1) return [rng.pick(CHILD_STAGES)];
+  return rng.shuffle([...CHILD_STAGES]).slice(0, count);
+}
 
 /** Relationships between the households, by (household index, member index); -1 is the next-door neighbours. */
 const LINKS: ReadonlyArray<{ a: [number, number]; b: [number, number]; status: BondStatus; familiarity: number; friendship: number; trust: number }> = [
@@ -94,7 +116,9 @@ function generate(state: WorldState, content: ContentDB): NeighbourhoodState {
 
   const taken = new Set<string>(Object.values(state.people).map((p) => p.firstName));
   const takenSurnames = new Set<string>(Object.values(state.people).map((p) => p.lastName));
-  const careerIds = Object.values(content.careers).filter((c) => c.status === 'ready' && c.levels.length > 0).map((c) => c.id).sort();
+  const careerIds = Object.values(content.careers)
+    .filter((c) => c.status === 'ready' && c.levels.length > 0 && !c.partTime) // part-time jobs are for teenagers
+    .map((c) => c.id).sort();
   const households: Array<{ id: Id; memberIds: Id[] }> = [];
   const npcHouseholdIds: Id[] = [];
 
@@ -117,12 +141,29 @@ function generate(state: WorldState, content: ContentDB): NeighbourhoodState {
       taken.add(draft.firstName);
       members.push(draft);
     }
+    // Children come after the adults so the LINKS member indices keep pointing at the adults. They take the family
+    // surname and, with two or more, always cover different stages.
+    const firstChild = members.length;
+    const familyName = shared ?? members[0]?.lastName ?? surname();
+    for (const stage of childStages(rng, plan.children)) {
+      const draft = randomPersonDraft(rng, content, {
+        lifeStage: stage, lastName: familyName, avoidFirstNames: [...taken], careerChance: 0,
+      });
+      // Little ones have fewer traits, as adopted children do.
+      draft.traits = draft.traits.slice(0, stage === 'baby' ? 1 : stage === 'teen' ? 3 : 2);
+      taken.add(draft.firstName);
+      members.push(draft);
+    }
     // Every household has at least one job.
     if (careerIds.length > 0 && members.every((m) => m.careerId === null)) members[0]!.careerId = rng.pick(careerIds);
     const name = shared ?? members.map((m) => m.lastName).join(' & ');
-    const draftHousehold: HouseholdDraft = {
-      name, members, ties: plan.tie && members.length > 1 ? [{ a: 0, b: 1, tie: plan.tie }] : [],
-    };
+    const ties: HouseholdDraft['ties'] = plan.tie && members.length > 1 ? [{ a: 0, b: 1, tie: plan.tie }] : [];
+    // Each child's parents are the adults of the home (at most the two a person can have), and the children are siblings.
+    for (let i = firstChild; i < members.length; i++) {
+      for (let a = 0; a < Math.min(2, plan.size); a++) ties.push({ a, b: i, tie: 'child' });
+      for (let j = i + 1; j < members.length; j++) ties.push({ a: i, b: j, tie: 'sibling' });
+    }
+    const draftHousehold: HouseholdDraft = { name, members, ties };
     const funds: Cents = dollars(rng.int(30, 90) * 100);
     const hh = addHousehold(state, draftHousehold.name, 0, lot.id, false);
     transact(state, null, hh.id, funds, 'start', 'Starting funds', { occurrence: `start:${hh.id}` });
@@ -132,6 +173,11 @@ function generate(state: WorldState, content: ContentDB): NeighbourhoodState {
       kind: 'offlot', place: 'home', lotId: lot.id, since: now, until: null,
     }).id);
     applyHouseholdTies(state, ids, draftHousehold.ties);
+    // A child starts part-way through their stage, so birthdays do not all fall on the first day of the world.
+    for (let i = firstChild; i < ids.length; i++) {
+      const person = state.people[ids[i]!];
+      if (person) person.stageDays = rng.int(0, Math.max(0, NORMAL_STAGE_DAYS[person.lifeStage] - 1));
+    }
     households.push({ id: hh.id, memberIds: ids });
     npcHouseholdIds.push(hh.id);
   }

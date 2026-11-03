@@ -10,7 +10,8 @@
 //   cap) and is not used.
 // - `perks` are short player-facing advantages shown on the career panel; they describe the flavour of the
 //   level (the wage and schedule are the mechanical reward).
-// Only careers with all ten levels are added here (brief section 11).
+// Only careers with all ten levels are added here (brief section 11). Teenagers work the part-time jobs at the end
+// of the list: three levels, lower pay, and shifts that start after school ends or fall on a weekend.
 
 import type { CareerDef, CareerLevelDef } from './types';
 import { dollars } from '../core/money';
@@ -171,6 +172,68 @@ export const CAREERS: CareerDef[] = [
       level(8, 'Contracts Manager', 63, WEEKDAYS, h(8), h(17), 75, { gardening: 8, fitness: 6 }),
       level(9, 'Director of Grounds', 75, MON_THU, h(8), h(16), 80, { gardening: 9, fitness: 7 }, ['Company truck']),
       level(10, 'Botanical Garden Curator', 88, [0, 1, 2], h(9), h(15), 100, {}, ['A garden named after you']),
+    ],
+    status: 'ready',
+  },
+
+  // ---------------------------------------------------------------------------------------------
+  // Part-time jobs for teenagers (Milestone 8 gap). Three levels each, teen-only, paid less than
+  // any adult entry job. Weekday shifts begin at 16:00 or later (high school ends at 15:00); the
+  // lifeguard works weekend mornings, when there is no school.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'cafeHelper',
+    name: 'Kettle & Crumb Cafe',
+    description: 'Clear tables, take orders and learn the coffee machine after school. Weekday evenings, with shifts from 4:00 to 7:30 PM.',
+    icon: 'hunger',
+    skills: ['cooking', 'charisma'],
+    partTime: true,
+    levels: [
+      level(1, 'Trainee Barista', 7, WEEKDAYS, h(16), h(19, 30), 40, {}, ['A free hot drink each shift']),
+      level(2, 'Cafe Helper', 9, WEEKDAYS, h(16), h(19, 30), 50, { cooking: 2 }),
+      level(3, 'Shift Barista', 11, WEEKDAYS, h(16), h(19, 30), 55, {}, ['You lock up on a Friday']),
+    ],
+    status: 'ready',
+  },
+  {
+    id: 'shelfStocker',
+    name: 'Greengage Market',
+    description: 'Fill the shelves and help customers after school on weekday evenings, from 4:30 to 8:00 PM.',
+    icon: 'money',
+    skills: ['logic', 'handiness'],
+    partTime: true,
+    levels: [
+      level(1, 'Stockroom Assistant', 7, WEEKDAYS, h(16, 30), h(20), 40, {}, ['A staff discount at the market']),
+      level(2, 'Shelf Stocker', 8, WEEKDAYS, h(16, 30), h(20), 50, { logic: 2 }),
+      level(3, 'Floor Supervisor', 10, WEEKDAYS, h(16, 30), h(20), 55, {}, ['You arrange the window display']),
+    ],
+    status: 'ready',
+  },
+  {
+    id: 'lifeguard',
+    name: 'Lakeside Pool',
+    description: 'Watch the water and keep the pool tidy on weekend mornings, from 9:00 AM to 1:00 PM. Fitness helps.',
+    icon: 'energy',
+    skills: ['fitness', 'logic'],
+    partTime: true,
+    levels: [
+      level(1, 'Pool Attendant', 8, [5, 6], h(9), h(13), 40, {}, ['Free entry to the pool']),
+      level(2, 'Junior Lifeguard', 10, [5, 6], h(9), h(13), 50, { fitness: 3 }),
+      level(3, 'Senior Lifeguard', 12, [5, 6], h(9), h(13), 55, {}, ['You brief the other lifeguards']),
+    ],
+    status: 'ready',
+  },
+  {
+    id: 'dogWalker',
+    name: 'Happy Tails Dog Walking',
+    description: 'Walk the neighbourhood dogs on Monday, Wednesday and Friday afternoons, from 4:00 to 7:00 PM.',
+    icon: 'people',
+    skills: ['charisma', 'fitness'],
+    partTime: true,
+    levels: [
+      level(1, 'Dog Walker', 7, [0, 2, 4], h(16), h(19), 40, {}, ['The dogs know you by name']),
+      level(2, 'Reliable Dog Walker', 9, [0, 2, 4], h(16), h(19), 50, { charisma: 2 }),
+      level(3, 'Dog Walking Pro', 11, [0, 2, 4], h(16), h(19), 55, {}, ['Clients ask for you by name']),
     ],
     status: 'ready',
   },

@@ -310,17 +310,19 @@ interface TorsoOpts {
 function torsoPiece(m: MeshData, t: BodyTemplate, o: TorsoOpts): void {
   const lm = t.lm;
   const yc = lm.crotchY;
+  // absolute offsets of the garment recipes are authored for an adult body; on a smaller body they shrink with it
+  const k = bodyScale(t);
   const ss = stations(o.yTop, Math.max(o.yBottom, yc), o.step ?? 0.024); // descending, for the drape envelope
   const hullFrom = o.hullFrom ?? yc + t.junctionSpan;
   const slope = lerp(0.7, 0.04, clamp(o.drape, 0, 1));
-  const tuckOut = o.overBottoms ? (s: number) => 0.012 + 0.012 * smoothstep(lm.waistY, lm.crotchY + 0.03, s) : undefined;
+  const tuckOut = o.overBottoms ? (s: number) => (0.012 + 0.012 * smoothstep(lm.waistY, lm.crotchY + 0.03, s)) * k : undefined;
   const rings = shellRings(t, t.torso, 'torso', ss, {
     thickness: o.thickness, uScale: 0.15, ease: tuckOut ? (s) => (s < lm.waistY + 0.02 ? tuckOut(s) * smoothstep(lm.waistY + 0.02, lm.waistY - 0.04, s) : 0) : undefined,
     hull: (s) => smoothstep(hullFrom, hullFrom + 0.04, s) * 0.95,
     drapeFrom: lm.chestY - 0.02, slope,
     // loose cloth hangs in soft vertical folds below the chest; tight garments (drape 0) stay smooth
-    fold: o.drape > 0.3 && !o.puff ? (s) => 0.0045 * o.drape * (1 - smoothstep(lm.waistY, lm.chestY - 0.02, s)) : undefined,
-    wave: o.puff ? (s) => o.puff! * Math.abs(Math.sin((Math.PI * s) / (o.period ?? 0.078))) * smoothstep(lm.crotchY + 0.02, lm.crotchY + 0.08, s) : undefined,
+    fold: o.drape > 0.3 && !o.puff ? (s) => 0.0045 * o.drape * k * (1 - smoothstep(lm.waistY, lm.chestY - 0.02, s)) : undefined,
+    wave: o.puff ? (s) => o.puff! * k * Math.abs(Math.sin((Math.PI * s) / (o.period ?? 0.078))) * smoothstep(lm.crotchY + 0.02, lm.crotchY + 0.08, s) : undefined,
   });
   rings.reverse();
   emitRings(m, t, o.rim ? withRim(rings, 'first', [0, -1, 0], o.rim) : rings, o.panel ?? PANEL.torso, false);
@@ -329,13 +331,15 @@ function torsoPiece(m: MeshData, t: BodyTemplate, o: TorsoOpts): void {
 /** Left leg shell from the crotch junction down to yHem (or a short gusset), mirrored for the right leg. */
 function legPieces(m: MeshData, t: BodyTemplate, yHem: number, thickness: number, loose: number, cuff: boolean, panel: number = PANEL.leg, rim = 0, flare = 0): void {
   const lm = t.lm;
+  const bs = bodyScale(t);
   const ss = stations(lm.crotchY, yHem, 0.034);
   const kneeY = lm.kneeY;
   const rings = shellRings(t, t.legL, 'leg', ss, {
     thickness, uScale: 0.08,
-    // wide legs fall away from the knee: the extra radius grows toward the hem
-    ease: (s) => loose * 0.012 * smoothstep(lm.crotchY - 0.02, lm.crotchY - 0.1, s) * (cuff ? 1 - smoothstep(yHem + 0.09, yHem + 0.02, s) : 1)
-      + flare * bodyScale(t) * smoothstep(kneeY + 0.18, Math.min(yHem, kneeY - 0.1), s),
+    // wide legs fall away from the knee: the extra radius grows toward the hem (a smaller body gets a smaller flare, so the
+    // silhouette keeps the adult angle: the hem sits closer to the knee as well as being narrower)
+    ease: (s) => loose * 0.012 * bs * smoothstep(lm.crotchY - 0.02, lm.crotchY - 0.1, s) * (cuff ? 1 - smoothstep(yHem + 0.09, yHem + 0.02, s) : 1)
+      + flare * bs * bs * smoothstep(kneeY + 0.18, Math.min(yHem, kneeY - 0.1), s),
     drapeFrom: lerp(lm.crotchY - 0.05, kneeY + 0.1, 0.5),
     slope: lerp(0.45, 0.02, clamp(loose, 0, 1)),
   });
@@ -348,7 +352,7 @@ function legPieces(m: MeshData, t: BodyTemplate, yHem: number, thickness: number
       const smp = sampleRing(t.legL, s, 'y');
       const ring = rings[k] as Ring;
       ring.forEach((q, i) => {
-        const snug = radius('leg', v3.madd(smp.pos[i] as Vec3, smp.nrm[i] as Vec3, thickness + 0.004), c);
+        const snug = radius('leg', v3.madd(smp.pos[i] as Vec3, smp.nrm[i] as Vec3, thickness + 0.004 * bs), c);
         const f = (k - (n - 3)) / 2;
         q.p = withRadius('leg', q.p, c, lerp(radius('leg', q.p, c), snug, f));
       });
@@ -364,19 +368,20 @@ function legPieces(m: MeshData, t: BodyTemplate, yHem: number, thickness: number
 function sleevePieces(m: MeshData, t: BodyTemplate, xEnd: number, thickness: number, loose: number, cuffs: boolean, panel: number = PANEL.sleeve, rim = 0,
   shape: { balloon?: number; bell?: number; puff?: number } = {}): void {
   const lm = t.lm;
+  const k = bodyScale(t);
   // starts inside the shoulder, overlapping the torso shell, so no scanned acromion shows between sleeve and body
   const x0 = lm.armStartX - 0.012;
   const ss = stations(x0, xEnd, 0.024);
   const ramp = (s: number) => 0.3 + 0.7 * smoothstep(x0, x0 + 0.1, s);
   const rings = shellRings(t, t.armL, 'arm', ss, {
     thickness: thickness * 0.7, uScale: 0.05,
-    ease: (s) => ramp(s) * (thickness * 0.3 + 0.002 + loose * 0.008 * (1 - smoothstep(xEnd - 0.06, xEnd, s) * (cuffs ? 1 : 0)))
+    ease: (s) => ramp(s) * (thickness * 0.3 + (0.002 + loose * 0.008 * (1 - smoothstep(xEnd - 0.06, xEnd, s) * (cuffs ? 1 : 0))) * k)
       // gathered balloon sleeve (full at the middle, pulled in at the cuff) and bell sleeve (opens toward the end)
-      + (shape.balloon ?? 0) * smoothstep(x0 + 0.04, x0 + 0.18, s) * (1 - smoothstep(xEnd - 0.1, xEnd - 0.01, s))
-      + (shape.bell ?? 0) * smoothstep(x0 + 0.15, xEnd, s),
+      + (shape.balloon ?? 0) * k * smoothstep(x0 + 0.04, x0 + 0.18, s) * (1 - smoothstep(xEnd - 0.1, xEnd - 0.01, s))
+      + (shape.bell ?? 0) * k * smoothstep(x0 + 0.15, xEnd, s),
     drapeFrom: x0 + 0.1,
     slope: lerp(0.5, 0.0, clamp(loose, 0, 1)),
-    wave: shape.puff ? (s) => shape.puff! * Math.abs(Math.sin((Math.PI * Math.abs(s)) / 0.078)) * smoothstep(x0 + 0.02, x0 + 0.08, s) : undefined,
+    wave: shape.puff ? (s) => shape.puff! * k * Math.abs(Math.sin((Math.PI * Math.abs(s)) / 0.078)) * smoothstep(x0 + 0.02, x0 + 0.08, s) : undefined,
   });
   const left = newMesh(t);
   emitRings(left, t, withRim(rings, 'last', [1, 0, 0], rim), panel, false);
@@ -431,10 +436,12 @@ function skirtPiece(m: MeshData, t: BodyTemplate, yTop: number, yHem: number, fl
     for (let i = 0; i < cols; i++) {
       const a = angleOf(i);
       const body = y >= hipTop ? surfaceR(y, a) : hipRs[i] as number;
-      let r = Math.max(body, lerp(surfaceR(Math.min(y, yTop), a), hipRs[i] as number, smoothstep(yTop, hipTop, y))) + thickness + 0.004;
-      // bell flare: eases out of the hips instead of a straight cone, a little fuller at the sides than front and back
+      let r = Math.max(body, lerp(surfaceR(Math.min(y, yTop), a), hipRs[i] as number, smoothstep(yTop, hipTop, y))) + thickness + 0.004 * bs;
+      // bell flare: eases out of the hips instead of a straight cone, a little fuller at the sides than front and back. It scales
+      // with the square of the body size: the hem offset and the (shorter on a child) drop both shrink, so the cone angle matches
+      // the adult one instead of opening like a tent around little legs.
       const bell = 0.5 * smoothstep(0, 1, below) + 0.5 * Math.pow(below, 1.5);
-      r += flare * 0.17 * bs * bell * (0.85 + 0.15 * Math.abs(Math.sin(a)));
+      r += flare * 0.17 * bs * bs * bell * (0.85 + 0.15 * Math.abs(Math.sin(a)));
       // soft godet folds that widen toward the hem and twist slightly with height; the hem hangs lower on the ridges
       const foldAmp = pleats > 0 ? 0 : (0.02 + 0.09 * flare) * smoothstep(0.25, 0.85, below);
       const fold = pleats > 0 ? 0 : 0.7 * Math.sin(a * 6 + y * 5 + 0.6) + 0.3 * Math.sin(a * 13 - y * 3 + 1.9);
@@ -443,12 +450,12 @@ function skirtPiece(m: MeshData, t: BodyTemplate, yTop: number, yHem: number, fl
         // knife pleats: a triangle wave of sharp folds that opens from the hip yoke to the hem
         const ph = (a * pleats) / (Math.PI * 2);
         const tri = Math.abs(ph - Math.floor(ph) - 0.5) * 2; // 0 at a fold crest .. 1 at the valley
-        r += (0.012 + 0.03 * flare) * smoothstep(0.05, 0.4, below) * (tri - 0.5) * 1.6 + 0.014 * smoothstep(0.05, 0.4, below);
+        r += ((0.012 + 0.03 * flare) * (tri - 0.5) * 1.6 + 0.014) * bs * smoothstep(0.05, 0.4, below);
       }
       // a pencil skirt narrows toward the knees (the legs below still keep it off the thighs)
       if (taper > 0) r = lerp(r, (hipRs[i] as number) * 0.86 + thickness, taper * smoothstep(0.1, 0.9, below));
-      r = Math.max(r, legClear(y, a, c) + 0.025);
-      const yy = y - 0.03 * flare * fold * smoothstep(0.5, 1, below);
+      r = Math.max(r, legClear(y, a, c) + 0.025 * bs);
+      const yy = y - 0.03 * bs * flare * fold * smoothstep(0.5, 1, below);
       const p: Vec3 = [c[0] + Math.sin(a) * r, yy, c[1] + Math.cos(a) * r];
       // skin: torso near the top, blending into the thighs toward the hem by side
       const top = t.transfer.skinAt([c[0] + Math.sin(a) * surfaceR(Math.min(y, yTop), a) * 0.98, Math.max(y, lm.crotchY + 0.06), c[1] + Math.cos(a) * surfaceR(Math.min(y, yTop), a) * 0.98]);
@@ -490,6 +497,8 @@ const COLLAR_PROFILES: Record<CollarKind, number[][]> = {
  */
 function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: number, neckY: number, frontDepth: number, halfW = 0.09, panel: number = PANEL.collar): void {
   const K = kind === 'hood' ? 36 : 32;
+  // collar height, roll and sag are authored for an adult neck; shrink them with the body so a child's collar is not a scarf
+  const fitK = bodyScale(t);
   const closed = kind === 'roll';
   const gap = closed ? 0 : kind === 'shirt' ? 0.18 : kind === 'hood' ? 0.8 : kind === 'shawl' || kind === 'lapel' ? 0.04 : 0.06;
   const profile = COLLAR_PROFILES[kind];
@@ -499,7 +508,7 @@ function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: 
     const a = gap + ((Math.PI * 2 - 2 * gap) * k) / K; // from front-left around the back to front-right
     const th = a; // torso angle convention: 0 = front, increasing toward +x
     const frontness = Math.max(0, Math.cos(th));
-    let y = neckY - (kind === 'hood' ? 0.03 : 0) - (closed ? 0 : frontDepth * Math.pow(frontness, 1.6));
+    let y = neckY - (kind === 'hood' ? 0.03 * fitK : 0) - (closed ? 0 : frontDepth * Math.pow(frontness, 1.6));
     let smp = sampleRing(t.torso, y, 'y');
     let best = 0;
     const nearest = () => {
@@ -525,15 +534,17 @@ function collarPiece(m: MeshData, t: BodyTemplate, kind: CollarKind, thickness: 
     const back = Math.max(0, -Math.cos(th));
     const pouch = kind === 'hood' ? Math.pow(back, 1.4) : 0;
     profile.forEach(([up, outward, tip], r) => {
-      const sag = pouch * (r === 0 ? 0 : 0.035 * (0.4 + 0.6 * Math.min(1, r / 3)));
-      let p: Vec3 = [base[0] + out[0] * (outward as number), base[1] + (up as number) - sag, base[2] + out[2] * (outward as number)];
-      if (pouch > 0) p = [p[0] + out[0] * pouch * 0.005 * r, p[1], p[2] + out[2] * pouch * 0.005 * r];
+      const upK = (up as number) * fitK;
+      const outK = (outward as number) * fitK;
+      const sag = pouch * (r === 0 ? 0 : 0.035 * fitK * (0.4 + 0.6 * Math.min(1, r / 3)));
+      let p: Vec3 = [base[0] + out[0] * outK, base[1] + upK - sag, base[2] + out[2] * outK];
+      if (pouch > 0) p = [p[0] + out[0] * pouch * 0.005 * fitK * r, p[1], p[2] + out[2] * pouch * 0.005 * fitK * r];
       if (kind === 'shirt' && (tip as number) > 0) {
         // collar points: longer toward the front
-        const extra = 0.016 * Math.pow(frontness, 3);
+        const extra = 0.016 * fitK * Math.pow(frontness, 3);
         p = [p[0] + out[0] * extra * 0.4, p[1] - extra, p[2] + out[2] * extra * 0.4];
       }
-      (rows[r] as Ring).push({ p, n: out, skin, u: th * 0.15, v: base[1] + (up as number) });
+      (rows[r] as Ring).push({ p, n: out, skin, u: th * 0.15, v: base[1] + upK });
     });
   }
   emitRings(m, t, rows, panel, true, false);
@@ -673,19 +684,23 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
   const lm = t.lm;
   const m = newMesh(t);
   const shape = str(b, 'shape', 'shirt');
+  // every absolute fit offset below is authored for the adult bodies. bodyScale is 1 for an adult and shrinks with the head height
+  // (about 0.93 for a teen, 0.7 for a child, 0.5 for a toddler), so scaling the offsets keeps the same look at every age instead of
+  // wrapping a small body in a garment sized for a grown one.
+  const k = bodyScale(t);
   const layerT = def.layer === 'outer' ? 0.019 : def.layer === 'top' ? 0.011 : def.layer === 'full' ? 0.0095 : 0.0075;
-  const thickness = num(b, 'thickness', layerT);
+  const thickness = num(b, 'thickness', layerT) * k;
   const cuts: CutParams = { neck: [0, 0, 0, 4], arm: [0, 0, 0, 0], misc: [0, 0, 0, 0], hem: [0, 0, 0, 0], inner: [0, 0, 0, 0] };
   const cover: Coverage = { ...NO_COVER };
   const armLen = lm.wristX + 0.01 - lm.armStartX;
   const yWaist = (w: number) => lm.crotchY + w * (lm.waistY - lm.crotchY);
   const yLeg = (l: number) => lm.crotchY + l * (lm.ankleY - 0.035 - lm.crotchY);
 
-  const hemRim = Math.min(0.0048, thickness * 0.55);
+  const hemRim = Math.min(0.0048 * k, thickness * 0.55);
   const shirtTop = (yHem: number, panelSleeve = true, noHem = false, bodyT = thickness) => {
     const neckName = str(b, 'neck', 'crew');
     const neck = neckline(t, neckName);
-    const yTop = Math.min(Math.max(neck.backY, heightAtHalfWidth(t, 0.095)) + 0.03, (t.torso.s[t.torso.rows - 1] as number) - 0.01);
+    const yTop = Math.min(Math.max(neck.backY, heightAtHalfWidth(t, 0.095 * k)) + 0.03 * k, (t.torso.s[t.torso.rows - 1] as number) - 0.01);
     const puff = num(b, 'puff', 0);
     // On a body with a deep waist (MPFB) a loose layer underneath hangs straight from the chest: an outer layer must hang at least as
     // loosely, or what is under it shows through at the waist.
@@ -698,7 +713,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
       xEnd = lm.armStartX + 0.04 + sleeve * (armLen - 0.045);
       sleevePieces(m, t, xEnd, bodyT, num(b, 'sleeveLoose', 0.3), bool(b, 'cuffs'), PANEL.sleeve, hemRim, { balloon: num(b, 'balloon', 0), bell: num(b, 'bell', 0), puff });
     } else if (neckName === 'tank' || num(b, 'strap', 0) > 0 || sleeve === 0) {
-      const z = strapZone(t, num(b, 'strap', 0.04));
+      const z = strapZone(t, num(b, 'strap', 0.04) * k);
       cuts.arm = [lm.chestY + 0.03, z.inner, z.outer, 1];
     }
     const collar = str(b, 'collar', neckName === 'collar' ? 'shirt' : neckName === 'high' ? 'stand' : neckName === 'turtle' ? 'roll' : neckName === 'shawl' ? 'shawl' : '');
@@ -735,7 +750,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     const yW = yWaist(num(b, 'waist', 1));
     const yHem = yLeg(num(b, 'length', 0.55));
     shirtTop(yW - 0.03, true, true);
-    skirtPiece(m, t, yW, yHem, num(b, 'flare', 0.6), thickness + (def.layer === 'outer' ? 0.028 : 0.002), PANEL.skirt, hemRim, { pleats: num(b, 'pleats', 0), taper: num(b, 'taper', 0) });
+    skirtPiece(m, t, yW, yHem, num(b, 'flare', 0.6), thickness + (def.layer === 'outer' ? 0.028 : 0.002) * k, PANEL.skirt, hemRim, { pleats: num(b, 'pleats', 0), taper: num(b, 'taper', 0) });
     cuts.hem[0] = 0;
     cuts.hem[2] = yHem;
     cuts.hem[3] = yW;
@@ -775,7 +790,7 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     const sleeveEnd = lm.armStartX + 0.04 + num(b, 'sleeve', 0.3) * (armLen - 0.045);
     const crew = neckline(t, 'crew');
     const yTopO = Math.min(crew.backY + 0.03, (t.torso.s[t.torso.rows - 1] as number) - 0.01);
-    const zO = strapZone(t, 0.034);
+    const zO = strapZone(t, 0.034 * k);
     torsoPiece(m, t, { yBottom: yWaist(0.7), yTop: yTopO, thickness: thickness * 0.8, drape: 0.3, panel: PANEL.inner, rim: hemRim * 0.8 });
     sleevePieces(m, t, sleeveEnd, thickness * 0.8, 0.5, false, PANEL.innerSleeve, hemRim * 0.8);
     // denim: pants plus bib/strap shell (masked in the shader)
@@ -793,16 +808,16 @@ export function buildGarment(t: BodyTemplate, def: GarmentDef): GarmentBuild {
     const neck = neckline(t, str(b, 'neck', 'scoop'));
     const sleeve = num(b, 'sleeve', 0);
     const leg = num(b, 'leg', 0);
-    torsoPiece(m, t, { yBottom: lm.crotchY, yTop: Math.min(neckline(t, 'crew').backY + 0.02, (t.torso.s[t.torso.rows - 1] as number) - 0.01), thickness: 0.004, drape: 0, step: 0.013 });
+    torsoPiece(m, t, { yBottom: lm.crotchY, yTop: Math.min(neckline(t, 'crew').backY + 0.02, (t.torso.s[t.torso.rows - 1] as number) - 0.01), thickness: 0.004 * k, drape: 0, step: 0.013 });
     const yHem = leg > 0 ? yLeg(leg) : lm.crotchY - 0.03;
-    legPieces(m, t, yHem, 0.004, 0, false, PANEL.leg, 0);
+    legPieces(m, t, yHem, 0.004 * k, 0, false, PANEL.leg, 0);
     cuts.neck = [neck.backY, neck.depth, neck.halfW, neck.shape];
     let xEnd = 0;
     if (sleeve > 0) {
       xEnd = lm.armStartX + 0.04 + sleeve * (armLen - 0.045);
-      sleevePieces(m, t, xEnd, 0.004, 0, false, PANEL.sleeve, 0);
+      sleevePieces(m, t, xEnd, 0.004 * k, 0, false, PANEL.sleeve, 0);
     } else {
-      const z = strapZone(t, num(b, 'strap', 0.04));
+      const z = strapZone(t, num(b, 'strap', 0.04) * k);
       cuts.arm = [lm.chestY + 0.03, z.inner, z.outer, 1];
     }
     cuts.misc = [num(b, 'legCut', leg > 0 ? 0 : 0.085), 0, 0, 0];

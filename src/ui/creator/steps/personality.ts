@@ -141,7 +141,7 @@ export const personalityStep: StepDef = {
     });
 
     // ---- job
-    const careers = Object.values(content.careers ?? {}).filter((c) => c.status === 'ready');
+    const careers = Object.values(content.careers ?? {}).filter((c) => c.status === 'ready' && !c.partTime);
     const jobGrid = h('div', { class: 'cr-card-grid', role: 'radiogroup', ariaLabel: 'Starting job' });
     const noJob = card({ title: 'No job', desc: 'Free to look for work later, or not at all.', icon: 'home', onClick: () => ctx.report(s().setCareer(null)) });
     jobGrid.appendChild(noJob.el);

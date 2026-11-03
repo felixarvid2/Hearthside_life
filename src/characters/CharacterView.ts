@@ -22,7 +22,7 @@ import { STRAND_IDS, buildHair } from './hair';
 import { buildAccessory } from './accessories';
 import { HAT_FIT, addHatFit } from './hatFit';
 import type { ClothUniforms, HairUniforms, MeshySkinUniforms, MpfbEyeUniforms, MpfbSkinUniforms, MpfbUnderwearUniforms, SkinUniforms } from './materials';
-import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createMpfbEyeMaterial, createMpfbHairlineMaterial, createMpfbIrisMaterial, createMpfbSkinMaterial, createMpfbUnderwearMaterial, createSkinMaterial } from './materials';
+import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createMpfbEyeMaterial, createMpfbHairlineMaterial, createMpfbIrisMaterial, createMpfbSkinMaterial, createMpfbUnderwearMaterial, createSkinMaterial, wrinkleMapForStage } from './materials';
 import { mpfbFaceInfluences, mpfbInfluences } from './mpfbBody';
 import type { BindBone } from './stagePose';
 import { CRADLE, CRADLE_PAIRS, STOOP_BONES, applyCradle, applyStoop, bindBones, stageLook } from './stagePose';
@@ -353,7 +353,9 @@ export class CharacterView {
     this.root.add(root);
     const meshy = this.frame.meshy;
     const mpfb = this.frame.mpfb;
-    const { material, uniforms } = mpfb ? createMpfbSkinMaterial() : meshy ? createMeshySkinMaterial() : createSkinMaterial();
+    const { material, uniforms } = mpfb
+      ? createMpfbSkinMaterial(wrinkleMapForStage(this.stage, this.frame.skinGeometry))
+      : meshy ? createMeshySkinMaterial() : createSkinMaterial();
     if (mpfb) {
       const mu = uniforms as MpfbSkinUniforms;
       mu.uAlbedo.value = mpfb.skinMap;

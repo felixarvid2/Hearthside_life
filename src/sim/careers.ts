@@ -6,12 +6,16 @@
 // punctuality and completion; promotions and demotions emit events.
 //
 // CareerLevelDef.promotion holds the requirements to advance FROM that level to the next one.
+//
+// Teenagers can hold one part-time job (CareerDef.partTime, three levels) besides school; everything else (shifts,
+// pay, promotion, quitting) follows the same path. A part-time job ends when the teenager becomes a young adult.
 
 import type { CareerDef, CareerLevelDef, ContentDB } from '../content/types';
 import { TICK_MINUTES, atDayMinute, dayIndex, formatClock, weekday, DAY_NAMES } from '../core/clock';
+import { isGrownStage } from '../core/lifeStages';
 import { facingTo } from '../core/geometry';
 import { addFeed, isProcessed, markProcessed, transact } from '../core/state';
-import type { CareerEventState, GameMinutes, Lot, Person, WorldState, WorkEffort } from '../core/types';
+import type { CareerEventState, GameMinutes, LifeStage, Lot, Person, WorldState, WorkEffort } from '../core/types';
 import { abortQueue, requestCancel } from './actions';
 import { checkAspiration } from './aspirations';
 import type { SimCtx } from './context';
@@ -41,6 +45,18 @@ export interface ShiftWindow {
 export function careerLevelDef(content: ContentDB, careerId: string, level: number): CareerLevelDef | undefined {
   const career = content.careers[careerId];
   return career?.levels.find((l) => l.level === level) ?? career?.levels[level - 1];
+}
+
+/**
+ * The jobs a person of a stage may take, in name order: part-time jobs for teenagers, full careers for grown-ups,
+ * nothing for children (and younger). One source of truth for the job panel and the command checks.
+ */
+export function careersForStage(content: Pick<ContentDB, 'careers'>, stage: LifeStage): CareerDef[] {
+  const partTime = stage === 'teen';
+  if (!partTime && !isGrownStage(stage)) return [];
+  return Object.values(content.careers)
+    .filter((c) => c.status === 'ready' && c.levels.length > 0 && !!c.partTime === partTime)
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** The person's shift on a given day (null on days off or without a career). */
@@ -343,6 +359,11 @@ export function joinCareer(ctx: SimCtx, p: Person, careerId: string): CareerComm
   if (p.career) return { ok: false, reason: `${p.firstName} already has a job. Quit it first.` };
   const def = ctx.content.careers[careerId];
   if (!def || def.status !== 'ready' || def.levels.length === 0) return { ok: false, reason: 'That career is not available.' };
+  if (def.partTime) {
+    if (p.lifeStage !== 'teen') return { ok: false, reason: 'Part-time jobs are for teenagers.' };
+  } else if (!isGrownStage(p.lifeStage)) {
+    return { ok: false, reason: p.lifeStage === 'teen' ? 'Only part-time jobs fit around school.' : `${p.firstName} is too young for a job.` };
+  }
   p.career = {
     careerId, level: 1, performance: 0, joinedAt: ctx.now, daysWorked: 0, shift: null, effort: 'normal', pendingEvent: null,
   };

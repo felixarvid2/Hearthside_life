@@ -410,6 +410,8 @@ export interface CareerDef {
   icon: string;
   skills: string[];
   levels: CareerLevelDef[];
+  /** Milestone 8 gap: a part-time job for teenagers (three levels, evenings and weekends around school). */
+  partTime?: boolean;
   status: ContentStatus;
 }
 
