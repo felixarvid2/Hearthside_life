@@ -196,9 +196,10 @@ export type BuildTool =
   // turns (a rise toward the back of the object); `eraseStairs` sells the staircase under the pointer (from either floor it joins).
   | { kind: 'stairs'; defId: string; rot?: number }
   | { kind: 'eraseStairs' }
-  // Milestone 9 exterior (building/exteriorPlans.ts). `fence` is a drag along a straight run; a gate design is placed on the tapped edge.
+  // Milestone 9 exterior (building/exteriorPlans.ts). `fence` is a drag: one run, an L, or (shape 'rect', or Shift while dragging)
+  // the four sides of a rectangle as a loop; a gate design is placed on the tapped edge.
   // `roof` is a dragged rectangle ('rect') or the whole house at once ('auto'); `terrain` paints one tile or a dragged rectangle.
-  | { kind: 'fence'; defId: string; variant?: number }
+  | { kind: 'fence'; defId: string; variant?: number; shape?: 'run' | 'rect' }
   | { kind: 'eraseFence' }
   | { kind: 'roof'; shape: 'rect' | 'auto'; spec: RoofToolSpec }
   | { kind: 'eraseRoof' }
@@ -215,6 +216,8 @@ export interface BuildTarget {
   wallId?: string;
   /** Floor level (default 0). */
   level?: number;
+  /** Drag a fence as a rectangle loop instead of a run or an L (Shift on desktop; the panel's Rectangle toggle sets the tool shape). */
+  rect?: boolean;
 }
 
 /**

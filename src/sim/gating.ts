@@ -5,7 +5,8 @@
 //   baby     nothing on their own (they are looked after: sim/care.ts)
 //   toddler  only interactions that list 'toddler' in InteractionDef.ages (toys, naps, high chair meals, the potty...)
 //   child    eat, sleep, bathroom, fun, computer, homework and social - no cooking, chores, jobs, bills or event planning
-//   teen     everything except adult romance, careers and bills (cooking and its hazards are allowed)
+//   teen     everything except adult romance, adult careers, event planning, dating and bills. Part-time jobs are
+//            open to teenagers (the job panel only offers those, and the simulation allows one part-time job)
 //   adults   everything
 //
 // An InteractionDef with `ages` is allowed for exactly those stages; without it the default for its behaviour applies.
@@ -21,8 +22,12 @@ const CHILD_BEHAVIORS: ReadonlySet<string> = new Set([
   'editOutfits', 'goHere', 'goToSchool', 'leaveLot', 'travelTo', 'inviteHome', 'phoneChat', 'ageUp', 'social',
 ]);
 
-/** Behaviours teens may not use by default: jobs, bills, event planning and dating. */
-const TEEN_BLOCKED_BEHAVIORS: ReadonlySet<string> = new Set(['openBills', 'openCareers', 'goToWork', 'planEvent', 'phoneDate']);
+/**
+ * Behaviours teens may not use by default: bills, event planning and dating. Job search (openCareers) and going to
+ * work are allowed for teens - joinCareer only accepts part-time jobs for them, and options.ts only offers goToWork
+ * to somebody who has a job.
+ */
+const TEEN_BLOCKED_BEHAVIORS: ReadonlySet<string> = new Set(['openBills', 'planEvent', 'phoneDate']);
 
 /** Behaviours only for people who can look after dependents (teen and up). */
 const CAREGIVER_BEHAVIORS: ReadonlySet<string> = new Set(['care']);

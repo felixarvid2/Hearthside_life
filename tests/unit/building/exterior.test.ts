@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-  paintTerrain, placeAutoRoof, placeFenceRun, placeGate, placeRoof, removeFences, removeRoof,
+  paintTerrain, placeAutoRoof, placeFenceLoop, placeFencePath, placeFenceRun, placeGate, placeRoof, removeFences, removeRoof,
 } from '../../../src/building/exteriorCommands';
 import { defaultRoofSpec, planExterior, roofPrice } from '../../../src/building/exteriorPlans';
 import { CROPS, EXTERIOR, FENCES, GATES, ROOF_FINISHES, ROOF_STYLES, TERRAIN_PAINTS } from '../../../src/content/exterior';
@@ -105,6 +105,60 @@ describe('fences and navigation', () => {
     expect(fenceEdgeState(lot, 0, 'h', 2, 10)).toBe('wall');
     expect(Object.keys(lot.fences!)).toHaveLength(4);
     expect(state.households[hh.id]!.funds).toBeLessThan(2000000);
+  });
+
+  it('an L drag builds both runs as one command with one transaction; undo restores the money and removes every piece', () => {
+    const { lot, hh, run, stack, ctx, state } = setup();
+    const funds = state.households[hh.id]!.funds;
+    const entries = state.households[hh.id]!.ledger.length;
+    const cmd = placeFencePath(lot.id, hh.id, 0, { x: 2, z: 12 }, { x: 6, z: 14 }, 'picket-white');
+    expect(run(cmd).ok).toBe(true);
+    expect(Object.keys(lot.fences!).sort()).toEqual(['0:h:2:12', '0:h:3:12', '0:h:4:12', '0:h:5:12', '0:v:6:12', '0:v:6:13']);
+    expect(cmd.plan!.cost).toBe(6 * EXTERIOR.fences['picket-white']!.price);
+    expect(state.households[hh.id]!.ledger.length).toBe(entries + 1); // one transact for both legs
+    expect(state.households[hh.id]!.funds).toBe(funds - cmd.plan!.cost);
+    stack.undo(ctx);
+    expect(lot.fences).toBeUndefined();
+    expect(state.households[hh.id]!.funds).toBe(funds);
+    expect(stack.redo(ctx)?.ok).toBe(true);
+    expect(Object.keys(lot.fences!)).toHaveLength(6);
+  });
+
+  it('a rectangle drag builds a closed loop as one step; undo/redo; a gate still fits afterwards', () => {
+    const { lot, hh, run, stack, ctx, state } = setup();
+    const funds = state.households[hh.id]!.funds;
+    const entries = state.households[hh.id]!.ledger.length;
+    const cmd = placeFenceLoop(lot.id, hh.id, 0, { x: 2, z: 12 }, { x: 6, z: 15 }, 'picket-white');
+    expect(run(cmd).ok).toBe(true);
+    const keys = Object.keys(lot.fences!);
+    expect(keys).toHaveLength(14); // 4 + 3 + 4 + 3 sides of the 4 x 3 rectangle
+    for (const k of ['0:h:2:12', '0:h:5:12', '0:v:6:12', '0:v:6:14', '0:h:2:15', '0:h:5:15', '0:v:2:12', '0:v:2:14']) expect(lot.fences![k]).toBeDefined();
+    expect(state.households[hh.id]!.ledger.length).toBe(entries + 1);
+    expect(state.households[hh.id]!.funds).toBe(funds - cmd.plan!.cost);
+    stack.undo(ctx);
+    expect(lot.fences).toBeUndefined();
+    expect(state.households[hh.id]!.funds).toBe(funds);
+    expect(stack.redo(ctx)?.ok).toBe(true);
+    expect(Object.keys(lot.fences!)).toHaveLength(14);
+    // a gate placed afterwards replaces the fence on its edge and leaves the loop closed
+    expect(run(placeGate(lot.id, hh.id, 0, { dir: 'h', x: 3, z: 12 }, 'gate-picket')).ok).toBe(true);
+    expect(lot.fences!['0:h:3:12']!.defId).toBe('gate-picket');
+    expect(Object.keys(lot.fences!)).toHaveLength(14);
+  });
+
+  it('a rectangle loop that would shut a person in is refused by name, and a gate lets it through', () => {
+    const { lot, hh, run, person, state } = setup();
+    person('p1', 'Ada', 14.5, 14.5);
+    const funds = state.households[hh.id]!.funds;
+    const loop = () => placeFenceLoop(lot.id, hh.id, 0, { x: 13, z: 13 }, { x: 17, z: 17 }, 'picket-white');
+    const refused = run(loop());
+    expect(refused.ok).toBe(false);
+    expect(!refused.ok && refused.reason).toMatch(/Ada/);
+    expect(Object.keys(lot.fences ?? {})).toHaveLength(0);
+    expect(state.households[hh.id]!.funds).toBe(funds);
+    expect(run(placeGate(lot.id, hh.id, 0, { dir: 'h', x: 15, z: 13 }, 'gate-picket')).ok).toBe(true);
+    expect(run(loop()).ok).toBe(true);
+    expect(Object.keys(lot.fences!)).toHaveLength(16); // 16 sides, the gate kept as the doorway
   });
 
   it('a fence line blocks the route, a gate lets people through', () => {

@@ -50,6 +50,7 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
     finish: 'asphalt-shingle',
     palette: {} as Record<string, string>,
     fenceMode: 'run' as FenceMode,
+    fenceShape: 'run' as 'run' | 'rect',
     fence: 'picket-white',
     gate: 'gate-picket',
     variant: {} as Record<string, number>,
@@ -79,7 +80,10 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
         if (st.fenceMode === 'remove') return { kind: 'eraseFence' };
         {
           const defId = st.fenceMode === 'gate' ? st.gate : st.fence;
-          return ex().fences[defId] ? { kind: 'fence', defId, variant: st.variant[defId] ?? 0 } : null;
+          if (!ex().fences[defId]) return null;
+          return st.fenceMode === 'run'
+            ? { kind: 'fence', defId, variant: st.variant[defId] ?? 0, shape: st.fenceShape }
+            : { kind: 'fence', defId, variant: st.variant[defId] ?? 0 };
         }
       case 'garden':
         if (st.gardenMode === 'remove') return { kind: 'terrain', paintId: 'grass', shape: 'tile' };
@@ -202,21 +206,31 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
     onChange: (v) => { st.fenceMode = v; api.sound('tap'); choose(); },
   });
   fenceMode.el.classList.add('bb-seg-tight');
+  const fenceShape = segmented<'run' | 'rect'>({
+    label: 'Fence shape',
+    value: st.fenceShape,
+    options: [{ id: 'run', label: 'Run or L', icon: 'fence' }, { id: 'rect', label: 'Rectangle', icon: 'move' }],
+    onChange: (v) => { st.fenceShape = v; api.sound('tap'); choose(); },
+  });
+  fenceShape.el.classList.add('bb-seg-tight');
   const fenceHost = h('div', { class: 'bb-ext-host bb-ext-fences' });
   const variants = h('div', { class: 'bb-palettes', role: 'radiogroup', ariaLabel: 'Fence colour' });
   const varName = h('span', { class: 'bb-swatch-name' });
   const varField = h('div', { class: 'field bb-pal-field' }, h('div', { class: 'field-label' }, 'Colour ', varName), variants);
   const fenceNote = h('p', { class: 'bb-note bb-muted' });
-  const fenceSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Fences and gates', dataset: { section: 'fence' } }, fenceMode.el, fenceHost, varField, fenceNote);
+  const fenceSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Fences and gates', dataset: { section: 'fence' } }, fenceMode.el, fenceShape.el, fenceHost, varField, fenceNote);
   const fenceGrids = {} as Record<'fence' | 'gate', CardGrid<FenceDef> | null>;
   fenceGrids.fence = null; fenceGrids.gate = null;
 
   function renderFence(): void {
     const remove = st.fenceMode === 'remove';
     fenceMode.set(st.fenceMode);
+    fenceShape.el.hidden = remove;
     fenceHost.hidden = remove; varField.hidden = remove;
     if (remove) { setText(fenceNote, touch() ? 'Tap a fence or gate, then confirm to take it down. Refunded like walls.' : 'Click a fence or gate to take it down. Refunded like walls.'); return; }
     const kind = st.fenceMode === 'gate' ? 'gate' : 'fence';
+    fenceShape.el.hidden = kind === 'gate';
+    fenceShape.set(st.fenceShape);
     const cur = ex().fences[kind === 'gate' ? st.gate : st.fence] ?? fenceDefs(kind)[0]!;
     if (!fenceGrids[kind]) {
       fenceGrids[kind] = cardGrid<FenceDef>({
@@ -245,7 +259,8 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
       return b;
     }));
     setText(varName, `- ${sel.name}`);
-    setText(fenceNote, `${cur.name}: ${formatMoney(cur.price)}${kind === 'gate' ? ' per gate. A gate replaces the fence on the tapped edge and people can walk through it.' : ' per metre. Fences block the way, gates do not. Upstairs they work as balcony railings.'}`);
+    const loopTip = touch() ? ' Rectangle draws a loop.' : ' Shift draws a loop.';
+    setText(fenceNote, `${cur.name}: ${formatMoney(cur.price)}${kind === 'gate' ? ' per gate. A gate replaces the fence on the tapped edge and people can walk through it.' : ` per metre. Drag a run or an L.${loopTip} Fences block the way, gates do not. Upstairs they work as balcony railings.`}`);
   }
 
   // ---- Garden ----

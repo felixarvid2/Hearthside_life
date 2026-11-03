@@ -50,5 +50,8 @@ await stack(['faces_b', 'faces_a'], { left: 0, top: 0, width: 1500, height: 360 
 await stack(['sit_b', 'sit_b_side', 'sit_a', 'sit_a_side'], LINE, 1000, 'stages_sitting.jpg');
 await stack(['walk_b', 'walk_b_side', 'walk_a', 'walk_a_side'], LINE, 1000, 'stages_walking.jpg');
 await grid(['held_f_front', 'held_f_side', 'held_m_walk', 'held_teen_front', 'crib_baby', 'crib_baby_dressed', 'bed_child', 'bed_elder'], 4, { left: 0, top: 0, width: 640, height: 700 }, 300, 'stages_held_crib.jpg', 76);
+// close-ups of the M8 polish work (dev/mpfb/shootStages.mjs --plan=closeups): elder skin and the fit of children's clothes
+await grid(['elder_f_face', 'elder_m_face', 'elder_f_face_side'], 3, { left: 30, top: 30, width: 640, height: 640 }, 400, 'elder_wrinkles.jpg', 84);
+await grid(['fit_a_toddler', 'fit_a_child', 'fit_a_teen', 'fit_b_toddler', 'fit_b_child', 'fit_b_teen'], 3, { left: 30, top: 25, width: 440, height: 710 }, 220, 'kids_clothes.jpg', 82);
 // in the real game (dev/mpfb/shootGame.mjs): a household with a child, a baby held by an adult, and the classic style's scaled adult rig
 await grid(['game_family', 'game_held', 'game_classic_family'], 3, { left: 260, top: 80, width: 600, height: 520 }, 400, 'stages_ingame.jpg', 78);

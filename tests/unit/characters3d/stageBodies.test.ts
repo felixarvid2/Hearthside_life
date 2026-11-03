@@ -254,6 +254,100 @@ describe.skipIf(!have).each(FILES)('generators on $file', ({ file, sex, stage })
 // Clips
 // ---------------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------------
+// Garment fit across the life stages, and elder wrinkles
+// ---------------------------------------------------------------------------------------------
+
+describe.skipIf(!have)('garment fit by stage', () => {
+  const stages = ['toddler', 'child', 'teen', 'adult'] as const;
+  const fit: Record<string, { bs: number; standoff: number; flare: number }> = {};
+
+  beforeAll(async () => {
+    const { bodyScale } = await import('../../../src/characters/clothing');
+    for (const stage of stages) {
+      const file = stage === 'adult' ? 'mpfb_f' : `mpfb_${stage}_f`;
+      const loaded = await loadMpfbBody('f', file);
+      const { template: t } = assembleMpfb(loaded.raw, loaded.prims, loaded.extras);
+      const lm = t.lm;
+      // mean distance from the tee to the nearest skin vertex, around the torso: the garment's stand-off from the body
+      const tee = buildGarment(t, GARMENTS.find((x) => x.id === 'tee-crew')!).mesh.positions;
+      const body = loaded.prims.skin!.positions;
+      let sumD = 0, n = 0;
+      for (let i = 0; i < tee.length; i += 3 * 7) {
+        const y = tee[i + 1]!;
+        if (y < lm.crotchY + 0.02 || y > lm.chestY) continue;
+        let best = 1e9;
+        for (let j = 0; j < body.length; j += 3) {
+          const dx = body[j]! - tee[i]!, dy = body[j + 1]! - y, dz = body[j + 2]! - tee[i + 2]!;
+          const d = dx * dx + dy * dy + dz * dz;
+          if (d < best) best = d;
+        }
+        sumD += Math.sqrt(best); n++;
+      }
+      // hem flare of the A-line skirt: the hem radius beyond the radius at the waist
+      const skirt = buildGarment(t, GARMENTS.find((x) => x.id === 'skirt-aline')!).mesh.positions;
+      const yW = lm.crotchY + 0.95 * (lm.waistY - lm.crotchY);
+      const yH = lm.crotchY + 0.52 * (lm.ankleY - 0.035 - lm.crotchY);
+      const rAt = (y0: number, dy: number) => {
+        let r = 0;
+        for (let i = 0; i < skirt.length; i += 3) {
+          const y = skirt[i + 1]!;
+          if (Math.abs(y - y0) <= dy) r = Math.max(r, Math.hypot(skirt[i]!, skirt[i + 2]!));
+        }
+        return r;
+      };
+      fit[stage] = { bs: bodyScale(t), standoff: sumD / n, flare: rAt(yH, 0.03) - rAt(yW, 0.03) };
+    }
+  }, 300_000);
+
+  it('scales garment offsets down with the body', () => {
+    const toddler = fit.toddler!, child = fit.child!, teen = fit.teen!, adult = fit.adult!;
+    expect(toddler.bs).toBeLessThan(child.bs);
+    expect(child.bs).toBeLessThan(teen.bs);
+    expect(teen.bs).toBeLessThan(adult.bs);
+    expect(toddler.standoff).toBeLessThan(adult.standoff * 0.6);
+    expect(child.standoff).toBeLessThan(adult.standoff);
+    // the fit as a fraction of the body is the same at every age, rather than growing on small bodies
+    expect(toddler.standoff / toddler.bs).toBeLessThan(adult.standoff * 1.15);
+    expect(child.standoff / child.bs).toBeLessThan(adult.standoff * 1.15);
+  });
+
+  it('reduces skirt flare for toddlers and children', () => {
+    expect(fit.toddler!.flare).toBeLessThan(fit.adult!.flare * 0.6);
+    expect(fit.child!.flare).toBeLessThan(fit.adult!.flare * 0.8);
+  });
+});
+
+describe.skipIf(!have)('elder wrinkles', () => {
+  it('darkens the forehead and not the back of the head', async () => {
+    const { wrinkleIntensity } = await import('../../../src/characters/materials');
+    expect(wrinkleIntensity([0, 0.152, 0.07])).toBeGreaterThan(0.3);
+    expect(wrinkleIntensity([0, 0.169, 0.07])).toBeGreaterThan(0.2);
+    expect(wrinkleIntensity([0.05, 0.0985, 0.06])).toBeGreaterThan(0.3); // crow's feet
+    expect(wrinkleIntensity([0, 0.152, -0.07])).toBe(0);
+    expect(wrinkleIntensity([0, 0.0, 0.07])).toBe(0); // chin
+  });
+
+  it('gives only the elder a shared wrinkle map', async () => {
+    const { toGeometry } = await import('../../../src/characters/geometry');
+    const { createMpfbSkinMaterial, wrinkleMapForStage } = await import('../../../src/characters/materials');
+    const elder = await loadMpfbBody('f', 'mpfb_elder_f');
+    const adult = await loadMpfbBody('f', 'mpfb_f');
+    const elderGeo = toGeometry(assembleMpfb(elder.raw, elder.prims, elder.extras).meshes.skin!, 'skin');
+    const adultGeo = toGeometry(assembleMpfb(adult.raw, adult.prims, adult.extras).meshes.skin!, 'skin');
+    const map = wrinkleMapForStage('elder', elderGeo);
+    expect(map).not.toBeNull();
+    expect(map!.image.width).toBe(512);
+    const data = map!.image.data as Uint8Array;
+    expect(data.some((v) => v > 40)).toBe(true);
+    expect(wrinkleMapForStage('elder', elderGeo)).toBe(map); // one texture, built once
+    expect(wrinkleMapForStage('adult', adultGeo)).toBeNull();
+    expect(wrinkleMapForStage('teen', elderGeo)).toBeNull();
+    expect(createMpfbSkinMaterial(map).uniforms.uWrinkleMap.value).toBe(map);
+    expect(createMpfbSkinMaterial().uniforms.uWrinkleMap.value).toBeNull();
+  }, 120_000);
+});
+
 describe('retargetClips', () => {
   const bone = (name: string, y: number, z: number, parent?: THREE.Bone) => {
     const b = new THREE.Bone();

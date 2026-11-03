@@ -416,7 +416,9 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     const w = `career '${c.id}'`;
     if (blank(c.name) || blank(c.description)) err(`${w}: missing name or description`);
     for (const s of c.skills) if (!db.skills[s]) err(`${w}: unknown skill '${s}'`);
-    if (c.status === 'ready' && c.levels.length !== 10) err(`${w}: ready careers need 10 levels`);
+    if (c.status === 'ready' && c.levels.length !== (c.partTime ? 3 : 10)) {
+      err(`${w}: ready ${c.partTime ? 'part-time jobs need 3 levels' : 'careers need 10 levels'}`);
+    }
     c.levels.forEach((l, i) => {
       const lw = `${w} level ${l.level}`;
       if (l.level !== i + 1) err(`${lw}: levels must be numbered 1..n in order`);

@@ -108,7 +108,7 @@ function affordReason(api: GameAPI, cost: number): string | null {
 const keyOf = (t: BuildTarget | null): string => {
   if (!t) return '';
   const r = (p: BuildPoint | null | undefined) => (p ? `${Math.round(p.x * 4) / 4},${Math.round(p.z * 4) / 4}` : '-');
-  return `${r(t.from)}|${r(t.to)}|${t.wallId ?? ''}|${t.level ?? 0}`;
+  return `${r(t.from)}|${r(t.to)}|${t.wallId ?? ''}|${t.level ?? 0}|${t.rect ? 'r' : ''}`;
 };
 
 export class BuildSession {
@@ -451,7 +451,7 @@ export class BuildSession {
     this.emit();
   }
 
-  drawStart(x: number, y: number): void {
+  drawStart(x: number, y: number, rect = false): void {
     const tool = this.tool();
     if (!tool || toolMode(tool) !== 'drag') return;
     const g = this.ground(x, y);
@@ -459,23 +459,28 @@ export class BuildSession {
     this.dragging = true;
     this.aborted = false;
     this.pending = false;
-    this.target = { from: g, to: g, level: this.level() };
+    this.target = { from: g, to: g, level: this.level(), ...(rect && tool.kind === 'fence' ? { rect: true as const } : {}) };
     this.lastKey = '';
     this.runPreview();
   }
 
-  draw(x: number, y: number): void {
+  /** `rect` (desktop Shift) switches a fence drag to the rectangle loop, or back when released. */
+  draw(x: number, y: number, rect?: boolean): void {
     if (!this.dragging || !this.target) return;
     const g = this.ground(x, y);
     if (!g) return;
-    this.target = { ...this.target, to: g };
+    const next: BuildTarget = { ...this.target, to: g };
+    if (rect !== undefined && next.wallId === undefined && this.tool()?.kind === 'fence') {
+      if (rect) next.rect = true; else delete next.rect;
+    }
+    this.target = next;
     this.runPreview();
   }
 
   /** The drag ended: `interrupted` is a second finger or a cancelled pointer (the preview stays on touch). */
-  drawEnd(x: number, y: number, interrupted: boolean, mouse: boolean): void {
+  drawEnd(x: number, y: number, interrupted: boolean, mouse: boolean, rect?: boolean): void {
     if (!this.dragging) return;
-    if (!interrupted) this.draw(x, y);
+    if (!interrupted) this.draw(x, y, rect);
     this.dragging = false;
     if (this.aborted) { this.cancel(); return; }
     if (mouse) {
@@ -517,6 +522,10 @@ export class BuildSession {
     if (tool.kind === 'room' || tool.kind === 'roof' || (tool.kind === 'eraseWall' && tool.shape === 'rect')) {
       const x0 = Math.min(va.x, vb.x), x1 = Math.max(va.x, vb.x), z0 = Math.min(va.z, vb.z), z1 = Math.max(va.z, vb.z);
       return [{ id: 'c0', x: x0, z: z0 }, { id: 'c1', x: x1, z: z0 }, { id: 'c2', x: x1, z: z1 }, { id: 'c3', x: x0, z: z1 }];
+    }
+    // a fence L or loop keeps both corners: dragging either handle reshapes the whole path
+    if (tool.kind === 'fence' && (t.rect || (va.x !== vb.x && va.z !== vb.z))) {
+      return [{ id: 'a', x: va.x, z: va.z }, { id: 'b', x: vb.x, z: vb.z }];
     }
     // run: the far end is straightened onto the dominant axis
     const end = Math.abs(vb.x - va.x) >= Math.abs(vb.z - va.z) ? { x: vb.x, z: va.z } : { x: va.x, z: vb.z };

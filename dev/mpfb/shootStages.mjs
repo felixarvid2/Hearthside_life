@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Screenshots of the life-stage bodies in the character lab (dev/characters.html?style=mpfb, window.lab.scene) -> raw PNGs in
 // dev/mpfb/shots/raw (gitignored); node dev/mpfb/composeStages.mjs turns them into the small JPGs that are kept in dev/mpfb/shots.
-//   node dev/mpfb/shootStages.mjs [--plan=lineup|faces|sit|walk|held|measure|all] [--out=DIR]
+//   node dev/mpfb/shootStages.mjs [--plan=lineup|faces|sit|walk|held|single|closeups|measure|all] [--out=DIR]
 // Starts a vite dev server on port 5394 and runs Chromium (SwiftShader) under `flock /tmp/hearthside-browser.lock`
 // (one browser at a time on this machine). Do not wrap this script in another flock.
 
@@ -105,6 +105,17 @@ if (ALL || PLAN === 'single') {
     const h = stage === 'baby' ? 0.5 : HEIGHT[stage];
     const spec = { stage, frame, x: 0, outfit: dressed ? CLOTHES[frame][stage] : [], look: STAGES.indexOf(stage) + (frame === 'b' ? 7 : 0), skin: SKINS[(STAGES.indexOf(stage) + (frame === 'b' ? 2 : 0)) % 5], upright: stage === 'baby' };
     shot(`single_${frame}_${stage}_${dressed ? 'dressed' : 'undressed'}`, [360, 520], [spec], [0.5, 0.05, h * 2.5, h * 0.5, 30, 0]);
+  }
+}
+if (PLAN === 'closeups') {
+  // elder faces for the wrinkle check, and the children's clothes at close range (the fit is judged on these)
+  const look = (stage, frame) => STAGES.indexOf(stage) + (frame === 'b' ? 7 : 0);
+  shot('elder_f_face', [700, 700], [{ stage: 'elder', frame: 'b', x: 0, outfit: [], look: look('elder', 'b'), skin: '#c68f60', yaw: 0.0 }], [0, 0, 0.95, 1.50, 24, 0]);
+  shot('elder_m_face', [700, 700], [{ stage: 'elder', frame: 'a', x: 0, outfit: [], look: look('elder', 'a'), skin: '#95603b', yaw: 0.0 }], [0, 0, 0.95, 1.50, 24, 0]);
+  shot('elder_f_face_side', [700, 700], [{ stage: 'elder', frame: 'b', x: 0, outfit: [], look: look('elder', 'b'), skin: '#c68f60', yaw: 0.85 }], [0, 0, 0.95, 1.50, 24, 0]);
+  for (const frame of ['a', 'b']) for (const stage of ['toddler', 'child', 'teen']) {
+    const h = HEIGHT[stage];
+    shot(`fit_${frame}_${stage}`, [500, 760], [{ stage, frame, x: 0, outfit: CLOTHES[frame][stage], look: look(stage, frame), skin: SKINS[frame === 'b' ? 2 : 1], yaw: 0.3 }], [0.25, 0.03, h * 1.9, h * 0.5, 30, 0]);
   }
 }
 if (PLAN === 'measure') {

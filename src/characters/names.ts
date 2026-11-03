@@ -384,7 +384,7 @@ export function randomizePersonality(rng: Rng, content: ContentDB, p: PersonDraf
   p.traits = pickTraits(rng, content, [], TRAITS_PER_ADULT);
   const aspirations = readyDefs(content.aspirations);
   p.aspirationId = aspirations.length > 0 ? rng.pick(aspirations).id : null;
-  const careers = readyDefs(content.careers);
+  const careers = readyDefs(content.careers).filter((c) => !c.partTime); // part-time jobs are for teenagers
   p.careerId = adult && careers.length > 0 && rng.chance(opts.careerChance ?? 0.5) ? rng.pick(careers).id : null;
   const prefs = rng.shuffle([...(content.preferences ?? [])]);
   const nl = Math.min(prefs.length, rng.int(2, 3));

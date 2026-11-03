@@ -47,9 +47,11 @@ describe('the generated neighbourhood', () => {
       for (const id of hh.memberIds) {
         const p = s.people[id]!;
         expect(p.isNpc).toBe(true);
-        expect(p.traits).toHaveLength(3);
+        // Children have fewer traits than the full three of a grown-up (as adopted children do).
+        expect(p.traits).toHaveLength(p.lifeStage === 'baby' ? 1 : p.lifeStage === 'child' || p.lifeStage === 'toddler' ? 2 : 3);
         expect(p.location).toMatchObject({ kind: 'offlot', place: 'home', lotId: hh.homeLotId });
-        expect(p.lifeStage).toBe('adult');
+        // Adults, or the children of a family household (Milestone 8 gap).
+        expect(['baby', 'toddler', 'child', 'teen', 'adult']).toContain(p.lifeStage);
       }
     }
     expect(homes.size).toBe(4);

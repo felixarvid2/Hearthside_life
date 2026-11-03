@@ -97,7 +97,8 @@ async function main(): Promise<void> {
 
   // Gameplay content.
   const socials = Object.values(db.socials);
-  const careers = Object.values(db.careers);
+  const careers = Object.values(db.careers).filter((c) => !c.partTime);
+  const partTimeJobs = Object.values(db.careers).filter((c) => c.partTime);
   sections.push({
     title: 'Gameplay content',
     rows: [
@@ -107,6 +108,7 @@ async function main(): Promise<void> {
       { label: 'aspirations', ...count(Object.values(db.aspirations)), variants: `${Object.values(db.aspirations).reduce((n, a) => n + a.stages.length, 0)} stages`, m6: 6, target: 12 },
       { label: 'skills', ...count(Object.values(db.skills)), variants: '-', m6: 10, target: 16 },
       { label: 'careers (10 levels)', ...count(careers), variants: `${careers.reduce((n, c) => n + c.levels.length, 0)} levels`, m1: 1, m6: 6, target: 12 },
+      { label: 'part-time jobs (3 levels)', ...count(partTimeJobs), variants: `${partTimeJobs.reduce((n, c) => n + c.levels.length, 0)} levels`, target: 4 },
       { label: 'recipes', ...count(Object.values(db.recipes)), variants: '-' },
       { label: 'moodlets', ready: Object.keys(db.moodlets).length, dev: 0 },
       { label: 'packs', ready: Object.keys(db.packs).length, dev: 0, target: 12 },

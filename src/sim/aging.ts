@@ -14,6 +14,7 @@ import { newId } from '../core/ids';
 import { addFeed, isProcessed, markProcessed } from '../core/state';
 import type { LifeStage, Outfit, OutfitCategory, Person } from '../core/types';
 import { abortQueue } from './actions';
+import { returnHome } from './careers';
 import type { SimCtx } from './context';
 import { householdOf, lotLoc, setAnim } from './context';
 import { relativesOf } from './family';
@@ -78,12 +79,21 @@ export function migrateStage(ctx: SimCtx, p: Person, from: LifeStage, to: LifeSt
   } else if (isSchoolStage(from) && p.householdId) {
     addMemory(ctx.state, p, { kind: 'other', importance: 2, text: 'Finished school' });
   }
-  // A job: children and teens have none (no part-time jobs exist yet); an unfinished shift counts as processed.
-  if (p.career && !isGrownStage(to)) {
-    const sh = p.career.shift;
-    if (sh && sh.status !== 'done' && sh.status !== 'missed') markProcessed(ctx.state, sh.occurrence);
-    for (const a of [...p.queue]) if (a.interactionId === 'goToWork') a.cancelRequested = true;
-    p.career = null;
+  // A job: children have none, and a teenager's part-time job ends on the way to young adulthood so they can pick a
+  // real career. An unfinished shift counts as processed (no pay).
+  if (p.career) {
+    const def = ctx.content.careers[p.career.careerId];
+    const endsPartTime = def?.partTime === true && to !== 'teen';
+    if (!isGrownStage(to) || endsPartTime) {
+      const sh = p.career.shift;
+      if (sh && sh.status !== 'done' && sh.status !== 'missed') markProcessed(ctx.state, sh.occurrence);
+      for (const a of [...p.queue]) if (a.interactionId === 'goToWork') a.cancelRequested = true;
+      p.career = null;
+      if (endsPartTime && def) {
+        addFeed(ctx.state, ctx.events, 'career', `${p.firstName} left the part-time job at ${def.name}.`, p.id);
+        if (p.location.kind === 'offlot' && p.location.place === 'work') returnHome(ctx, p);
+      }
+    }
   }
   // Outfits: every category the wardrobe lists exists, and everyday plus sleepwear are never empty.
   ensureOutfits(ctx, p);

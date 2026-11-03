@@ -246,7 +246,7 @@ const HOBBY: InteractionDef[] = [
     autonomy: { enabled: false, ads: {}, tags: ['freelance', 'music', 'creative', 'skill'] },
   }),
   def({
-    id: 'jobSearch', name: 'Job Search', description: 'Browse job listings at the computer and open the career panel to apply, quit or change effort.',
+    id: 'jobSearch', name: 'Job Search', description: 'Browse job listings at the computer (part-time jobs for teens, careers for grown-ups) and open the career panel to apply, quit or change effort.',
     icon: 'briefcase', kind: 'object', slotKinds: ['use'], behavior: 'openCareers', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 10 },
@@ -472,7 +472,7 @@ const SELF: InteractionDef[] = [
     autonomy: { enabled: false, ads: {}, tags: ['money', 'home'] },
   }),
   def({
-    id: 'phoneJobs', name: 'Find a Job or Quit', description: 'Open the career panel on the phone: apply for a job, quit the current one or change how hard to work.',
+    id: 'phoneJobs', name: 'Find a Job or Quit', description: 'Open the career panel on the phone: apply for a job (teens see part-time work), quit the current one or change how hard to work.',
     icon: 'briefcase', kind: 'self', behavior: 'openCareers', posture: 'standing',
     anims: { perform: 'phone' },
     duration: { kind: 'fixed', minutes: 3 },

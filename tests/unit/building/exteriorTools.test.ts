@@ -36,15 +36,53 @@ function setup() {
 const json = (v: unknown) => JSON.stringify(v);
 
 describe('exterior tool resolution', () => {
-  it('a fence run straightens to the dominant axis, a gate takes the nearest edge, erase finds the fence under the pointer', () => {
+  it('a straight drag makes one run, an off-row drag makes an L, a gate takes the nearest edge, erase finds the fence under the pointer', () => {
     const { lot, content } = setup();
-    const fence = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white', variant: 2 }, { from: { x: 2.1, z: 12.2 }, to: { x: 6.2, z: 13.4 } });
+    const fence = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white', variant: 2 }, { from: { x: 2.1, z: 12.2 }, to: { x: 6.2, z: 14.4 } });
     expect(fence).toMatchObject({ ok: true, exterior: { kind: 'fence', defId: 'picket-white', variant: 2 } });
-    expect(fence.ok && 'exterior' in fence && fence.exterior.kind === 'fence' && fence.exterior.edges).toHaveLength(4);
+    // snapped to (2,12) -> (6,14): four metres along x first, then two along z
+    expect(fence.ok && 'exterior' in fence && fence.exterior.kind === 'fence' && fence.exterior.edges).toHaveLength(6);
+    // a drag that wobbles one metre off its row stays a straight run (no 1 m stub)
+    const wobble = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white' }, { from: { x: 2.1, z: 12.2 }, to: { x: 6.2, z: 13.4 } });
+    const wobbleEdges = wobble.ok && 'exterior' in wobble && wobble.exterior.kind === 'fence' ? wobble.exterior.edges.map((e) => `${e.dir}:${e.x},${e.z}`) : [];
+    expect(wobbleEdges).toEqual(['h:2,12', 'h:3,12', 'h:4,12', 'h:5,12']);
+    const straight = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white' }, { from: { x: 2, z: 12 }, to: { x: 8, z: 12 } });
+    expect(straight.ok && 'exterior' in straight && straight.exterior.kind === 'fence' && straight.exterior.edges).toHaveLength(6);
     const gate = resolveBuild(content, lot, { kind: 'fence', defId: 'gate-picket' }, { from: { x: 3.5, z: 12.1 } });
     expect(gate).toMatchObject({ ok: true, exterior: { kind: 'fence', defId: 'gate-picket', edges: [{ dir: 'h', x: 3, z: 12 }] } });
     expect(resolveBuild(content, lot, { kind: 'fence', defId: 'nope' }, { from: { x: 1, z: 1 }, to: { x: 4, z: 1 } })).toMatchObject({ ok: false });
     expect(resolveBuild(content, lot, { kind: 'eraseFence' }, { from: { x: 3.5, z: 12.1 } })).toMatchObject({ ok: false }); // nothing built yet
+  });
+
+  it('an L drag follows the dominant direction: x leg first, then the z leg', () => {
+    const { lot, content } = setup();
+    const l = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white' }, { from: { x: 2, z: 12 }, to: { x: 5, z: 14 } });
+    expect(l.ok).toBe(true);
+    const edges = l.ok && 'exterior' in l && l.exterior.kind === 'fence' ? l.exterior.edges.map((e) => `${e.dir}:${e.x},${e.z}`) : [];
+    expect(edges).toEqual(['h:2,12', 'h:3,12', 'h:4,12', 'v:5,12', 'v:5,13']);
+    // a taller drag puts the z leg first
+    const tall = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white' }, { from: { x: 2, z: 12 }, to: { x: 4, z: 16 } });
+    const tallEdges = tall.ok && 'exterior' in tall && tall.exterior.kind === 'fence' ? tall.exterior.edges.map((e) => `${e.dir}:${e.x},${e.z}`) : [];
+    expect(tallEdges).toEqual(['v:2,12', 'v:2,13', 'v:2,14', 'v:2,15', 'h:2,16', 'h:3,16']);
+  });
+
+  it('Rectangle mode (tool shape or Shift) draws the four sides as one closed loop', () => {
+    const { lot, content } = setup();
+    const rect = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white', shape: 'rect' }, { from: { x: 2.2, z: 2.4 }, to: { x: 6.1, z: 5.2 } });
+    expect(rect.ok).toBe(true);
+    const edges = rect.ok && 'exterior' in rect && rect.exterior.kind === 'fence' ? rect.exterior.edges : [];
+    // 4 + 3 + 4 + 3 edges, and the last side closes back to the first corner
+    expect(edges).toHaveLength(14);
+    expect(edges.filter((e) => e.dir === 'h' && e.z === 2)).toHaveLength(4);
+    expect(edges.filter((e) => e.dir === 'v' && e.x === 6)).toHaveLength(3);
+    expect(edges.filter((e) => e.dir === 'h' && e.z === 5)).toHaveLength(4);
+    expect(edges.filter((e) => e.dir === 'v' && e.x === 2)).toHaveLength(3);
+    // Shift while dragging sets target.rect
+    const shifted = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white' }, { from: { x: 2, z: 2 }, to: { x: 6, z: 5 }, rect: true });
+    expect(shifted.ok && 'exterior' in shifted && shifted.exterior.kind === 'fence' && shifted.exterior.edges).toHaveLength(14);
+    // a flat rectangle drag is still a straight run
+    const flat = resolveBuild(content, lot, { kind: 'fence', defId: 'picket-white', shape: 'rect' }, { from: { x: 2, z: 2 }, to: { x: 7, z: 2 } });
+    expect(flat.ok && 'exterior' in flat && flat.exterior.kind === 'fence' && flat.exterior.edges).toHaveLength(5);
   });
 
   it('roofs and paint resolve their rectangles and tiles', () => {
@@ -79,6 +117,26 @@ describe('exterior tools through BuildTools', () => {
     expect(Object.keys(lot.fences!)).toHaveLength(6);
     expect(state.households[hh.id]!.funds).toBe(funds - pv.cost);
     expect([...seen].reverse().find((e) => e.type === 'lot.changed')).toMatchObject({ what: 'fences' });
+    stack.undo({ state, content, events });
+    expect(lot.fences).toBeUndefined();
+    expect(state.households[hh.id]!.funds).toBe(funds);
+  });
+
+  it('a fence L previews both legs as one total length and cost, and applies as one undo step', () => {
+    const { state, lot, hh, tools, stack, events, content } = setup();
+    const funds = state.households[hh.id]!.funds;
+    const entries = state.households[hh.id]!.ledger.length;
+    tools.setTool({ kind: 'fence', defId: 'picket-white', variant: 1 });
+    const target = { from: { x: 2, z: 12 }, to: { x: 6, z: 14 } };
+    const pv = tools.preview(target)!;
+    expect(pv.ok).toBe(true);
+    expect(pv.measure.text).toMatch(/6 m/);
+    expect(pv.label).toMatch(/6 m/);
+    expect(pv.cost).toBe(6 * EXTERIOR.fences['picket-white']!.price);
+    expect(tools.apply(target).ok).toBe(true);
+    expect(Object.keys(lot.fences!)).toHaveLength(6);
+    expect(state.households[hh.id]!.ledger.length).toBe(entries + 1); // one transact for the whole L
+    expect(state.households[hh.id]!.funds).toBe(funds - pv.cost);
     stack.undo({ state, content, events });
     expect(lot.fences).toBeUndefined();
     expect(state.households[hh.id]!.funds).toBe(funds);

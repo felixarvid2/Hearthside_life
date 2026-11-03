@@ -43,11 +43,13 @@ describe('age gating of interactions', () => {
     }
   });
 
-  it('teens may do almost everything (cooking and its hazards included) except careers, bills, event planning and dating', () => {
-    for (const id of ['cookMeal', 'grillFood', 'cleanObject', 'repairObject', 'writeArticle', 'phoneChat', 'doHomework']) {
+  it('teens may do almost everything (part-time job search included) except bills, event planning and dating', () => {
+    for (const id of ['cookMeal', 'grillFood', 'cleanObject', 'repairObject', 'writeArticle', 'phoneChat', 'doHomework', 'phoneJobs']) {
       expect(stageAllows(get(id), 'teen'), id).toBe(true);
     }
-    for (const id of ['phoneBills', 'phoneJobs', 'planEvent', 'phoneDate', 'phoneAdopt']) expect(stageAllows(get(id), 'teen'), id).toBe(false);
+    // The built-in goToWork is open to teens too; options.ts only offers it when they hold a job.
+    expect(stageAllows({ behavior: 'goToWork', autonomy: { enabled: false, ads: {}, tags: [] }, kind: 'self' }, 'teen')).toBe(true);
+    for (const id of ['phoneBills', 'planEvent', 'phoneDate', 'phoneAdopt']) expect(stageAllows(get(id), 'teen'), id).toBe(false);
     expect(stagesOf('careFeed')).toEqual(['teen', 'youngAdult', 'adult', 'elder']);
   });
 
