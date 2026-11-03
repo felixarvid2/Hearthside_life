@@ -2,7 +2,7 @@
 
 Generated with `npm run content:check -- --markdown` (tools/content-report.ts). Counts are **distinct designs**; palettes, swatches and colours are variants and never counted as designs. Entries with status `dev` are not selectable in the game and are not counted toward targets.
 
-Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met, as are the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows), the Milestone 3 character minimums (24 hairstyles, 48 garments, 12 accessories, 20 traits), the Milestone 4 furniture minimum (100 distinct furniture designs), the Milestone 5 social minimum (24 social interactions) and the Milestone 6 career minimum (6 careers with 10 levels each, 10 ready skills and 6 aspirations). TODO: the tables below are not regenerated for Milestones 8 and 9 (family furniture, 12 staircases in the catalogue as 9 straight and 4 spiral, 24 fence designs, 12 gates, 12 roof styles, 12 terrain paints, 16 garden objects, 10 crops). Run `npm run content:check -- --markdown` and replace the generated tables with its output.
+Milestone 1 minimums (12 wall finishes, 8 floors, 15 furniture designs, 8 hairstyles, 12 garments) are met, as are the Milestone 2 content minimums (48 wall finishes, 32 floors, 60 furniture designs, plus at least 6 doors and 8 windows), the Milestone 3 character minimums (24 hairstyles, 48 garments, 12 accessories, 20 traits), the Milestone 4 furniture minimum (100 distinct furniture designs), the Milestone 5 social minimum (24 social interactions) and the Milestone 6 career minimum (6 careers with 10 levels each, 10 ready skills and 6 aspirations). Milestone 8 adds six family furniture models (bassinet, changing table, high chair, potty chair, toddler bed, birthday cake); Milestone 9 adds 13 staircases (9 straight, 4 spiral), 12 roof styles with 11 finishes, 24 fence designs, 12 gates, 12 terrain paints, 16 garden objects and 10 crops (see "Milestone 9 exterior").
 
 Milestone 7 adds ten venue furnishings (park tree, shrub, fountain, playground slide and swing set, service counter, produce stall, vending machine, study set, locker bank) and fourteen venue activities; the neighbourhood lots they furnish are listed in docs/ARCHITECTURE.md. Full-project targets are delivered in Milestone 10.
 
@@ -11,7 +11,7 @@ Milestone 7 adds ten venue furnishings (park tree, shrub, fountain, playground s
 | | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | seating | 19 | 0 | 288 | - | - | - | - | - | 64 |
-| beds | 5 | 0 | 70 | - | - | - | - | - | 40 |
+| beds | 6 | 0 | 86 | - | - | - | - | - | 40 |
 | tables | 11 | 0 | 110 | - | - | - | - | - | 48 |
 | storage | 10 | 0 | 107 | - | - | - | - | - | 48 |
 | kitchen | 21 | 0 | 186 | - | - | - | - | - | 56 |
@@ -19,12 +19,13 @@ Milestone 7 adds ten venue furnishings (park tree, shrub, fountain, playground s
 | lighting | 7 | 0 | 44 | - | - | - | - | - | 64 |
 | electronics | 7 | 0 | 45 | - | - | - | - | - | 28 |
 | hobby | 6 | 0 | 55 | - | - | - | - | - | 36 |
-| decor | 10 | 0 | 72 | - | - | - | - | - | 64 |
-| outdoor | 11 | 0 | 115 | - | - | - | - | - | 40 |
-| kids | 5 | 0 | 74 | - | - | - | - | - | 36 |
-| TOTAL furniture | 121 | 0 | 1182 | 15 | 60 | - | 100 | - | 560 |
+| decor | 11 | 0 | 81 | - | - | - | - | - | 64 |
+| outdoor | 27 | 0 | 270 | - | - | - | - | - | 40 |
+| kids | 9 | 0 | 134 | - | - | - | - | - | 36 |
+| stairs | 13 | 0 | 202 | - | - | - | - | - | 12 |
+| TOTAL furniture | 156 | 0 | 1624 | 15 | 60 | - | 100 | - | 560 |
 
-variants = finish swatches summed over all regions of ready objects; 23 ready designs are decorative, 112 offer at least 6 swatches in a region; distinct models used: 121.
+variants = finish swatches summed over all regions of ready objects; 43 ready designs are decorative, 146 offer at least 6 swatches in a region; distinct models used: 156.
 
 ### Construction surfaces
 
@@ -59,18 +60,34 @@ garment variants = solid plus allowed patterns per ready garment (colours are fr
 
 | | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| activities | 65 | 0 | - | - | - | - | - | - | 40 |
-| social interactions | 35 | 0 | 0 also activities | - | - | - | - | - | 40 |
+| activities | 82 | 0 | - | - | - | - | - | - | 40 |
+| social interactions | 45 | 0 | 0 also activities | - | - | - | - | - | 40 |
 | traits | 20 | 0 | - | - | - | 20 | - | - | 40 |
 | aspirations | 8 | 0 | 24 stages | - | - | - | - | 6 | 12 |
-| skills | 10 | 6 | - | - | - | - | - | 10 | 16 |
+| skills | 13 | 6 | - | - | - | - | - | 10 | 16 |
 | careers (10 levels) | 7 | 0 | 70 levels | 1 | - | - | - | 6 | 12 |
 | recipes | 6 | 0 | - | - | - | - | - | - | - |
-| moodlets | 93 | 0 | - | - | - | - | - | - | - |
+| moodlets | 107 | 0 | - | - | - | - | - | - | - |
 | packs | 12 | 0 | - | - | - | - | - | - | 12 |
 | preferences | 34 | 0 | 5 groups | - | - | - | - | - | - |
 
 activities exclude moves and menus (behaviors goHere, goToWork, leaveLot, editOutfits); no social is also counted as an activity.
+
+### Milestone 9 exterior
+
+| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| roof styles | 12 | 0 | - | - | - | - | - | - | 12 |
+| roof finishes | 11 | 0 | 34 | - | - | - | - | - | 8 |
+| fence designs | 24 | 0 | 123 | - | - | - | - | - | 24 |
+| gate designs | 12 | 0 | 64 | - | - | - | - | - | 12 |
+| terrain paints | 12 | 0 | - | - | - | - | - | - | 8 |
+| garden objects | 16 | 0 | 155 | - | - | - | - | - | 12 |
+| garden crops | 10 | 0 | 3 kinds | - | - | - | - | - | - |
+| staircases (straight) | 9 | 0 | - | - | - | - | - | - | 8 |
+| staircases (spiral) | 4 | 0 | - | - | - | - | - | - | 4 |
+
+variants = colour palettes (roof finishes), colour variants (fences and gates), finish swatches (garden objects); garden objects are the outdoor objects with a 'garden-' id; the staircase rows count objects with the `stair` field.
 
 Validation: 0 errors, 0 warnings
 
