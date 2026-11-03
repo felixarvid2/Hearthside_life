@@ -1,9 +1,9 @@
 # Continuation note
 
-State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PR #1 (Milestones 1-5), PR #2 (Milestones 6-7) and PR #3 (MPFB
-bodies) are merged. Milestones 8 and 9 are on PR #4 and Milestone 11 is on its own PR (both draft, not merged; merge only after the
-user approves). **Milestones 1-11 are complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete
-catalogs) or 12 (environment and venues).
+State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
+gaps) are merged. Milestone 11 is on PR #6 (draft, not merged; merge only after the user approves). **Milestones 1-9 and 11 are
+complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete catalogs) or 12 (environment and
+venues).
 
 ## Milestone status
 
@@ -57,7 +57,9 @@ Checks on the M11 state (own PR):
 | `npm test` | 129 files, 1746 tests |
 | `npm run content:check` | 0 errors, 0 warnings; 13 careers / 130 levels, 19 ready skills, 40 traits, 13 aspirations (39 stages), 45 socials |
 | `npm run build` | passes (main chunk about 2.27 MB, warning only) |
+| `npm run e2e` | OK |
 | `npm run e2e:creator` | 288/288 in portrait, landscape and desktop |
+| `npm run e2e:acceptance` | 315/315 portrait, 313/313 landscape, 302/302 desktop |
 | `npm run visual:m11:careers` | 25/25 |
 | `npm run visual:m11:skills` | 45/45 (baking, wellness, creativity; yoga mat, bread oven, sketchbook) |
 | `npm run visual:m11:skills-c` | 39/39 (photography, fishing, research; camera, pond, telescope) |
@@ -74,8 +76,7 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Next steps, in order
 
-1. Merge PR #4 (M8 and M9) and the Milestone 11 PR after the user approves. Then run the final acceptance reruns and update the
-   marked numbers above.
+1. Merge PR #6 (Milestone 11) after the user approves.
 2. Milestone 10, complete catalogs: 360 walls, 200 floors, 560 furnishings, full creator catalog (ROADMAP). Current counts are in
    `docs/CONTENT_STATUS.md`. Milestone 12 (seasons, weather, pools, venue variety) is the other next choice.
 3. Polish of the M8, M9 and M11 gaps (listed under "Known issues").

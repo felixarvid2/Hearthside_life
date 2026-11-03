@@ -6,8 +6,8 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-11 complete** (M1-7 verified 2026-11-02; M8 and M9 on PR #4, see CONTINUATION.md; M11 complete on its
-own PR). Next: **Milestone 10 - Complete catalogs** or **Milestone 12 - Environment and venues**.
+**Milestones 1-9 and 11 complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see CONTINUATION.md; M11 on
+PR #6). Next: **Milestone 10 - Complete catalogs** or **Milestone 12 - Environment and venues**.
 
 ## Completed-project targets (brief section 2)
 
@@ -64,7 +64,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 - One neighbour household visits; the neighbourhood view and lot travel are M7.
 - Multi-floor data exists (`level` everywhere) but only the ground floor is built and navigated (M9).
 
-## Milestone 8 and 9 (complete, on PR #4)
+## Milestone 8 and 9 (complete, merged in PR #4)
 
 - **Milestone 8, family and life stages.** Seven life stages (baby, toddler, child, teen, young adult, adult, elder), each with its
   own MPFB body (lazy-loaded, UAL skeleton scaled per stage, elders stoop, babies lie in a crib or are carried). Aging is off, long,
