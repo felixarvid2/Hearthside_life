@@ -347,10 +347,11 @@ and floor designs `oak-planks`, `checker-tile`, `carpet-plush`, `hex-mosaic`, `s
 (with `palettes[0]` as the default). Openings `door-panel` (door), `door-glazed` (door), `window-sash`,
 `window-wide` (windows), all 1 tile wide.
 
-**Careers**: seven 10-level tracks - `culinary`, `journalism`, `software`, `medicine`, `music`, `business` and
-`landscaping` - each with its own schedule, wage curve and promotion requirements (see below). **Skills**: 16
-defined, 10 of them `ready` (cooking, logic, programming, handiness, gardening, painting, music, writing,
-charisma, fitness); activities, work and freelance jobs train them.
+**Careers**: thirteen 10-level tracks - culinary, journalism, software, medicine, music, business, landscaping,
+education, visual arts, science, athletics, design and architecture, and hospitality - each with its own schedule,
+wage curve and promotion requirements (see below). **Skills**: 19 defined and all `ready`; activities, work and
+freelance jobs train them. Milestone 11 adds baking, wellness, creativity, photography, fishing and research
+(see "Progression and social scope").
 
 ## Simulation flow per tick
 
@@ -473,14 +474,15 @@ Pure code (no three, no DOM), tested in `tests/unit/sim/{careers,freelance,econo
 `tests/unit/persistence/economy.test.ts` and the headless playtest `tests/unit/integration/economy.test.ts`.
 The acceptance run drives the career tab, a bill payment and a freelance sale through the real UI (step 8).
 
-**Content**: seven 10-level careers - culinary, journalism, software, medicine, music, business and landscaping -
-each with a title, hourly wage, weekly work days, start/end time, promotion requirements (performance, skill
-levels, days worked, sometimes a friendly colleague outside the household) and perks. Ten ready skills cover
-them; every career's skills are trained by at least one in-game activity or freelance job. Eight aspirations
-include `successful-career` (reach a career level) and `fortune-builder` (household funds), plus the M6 objective
-kinds `careerLevel`, `ownObjects` with `bought: true` and `homeValue`. Five `CareerEventDef`s
-(`src/content/careerEvents.ts`) are small on-the-job decisions with a performance change, optional pay (positive
-or negative) and an optional skill or moodlet effect.
+**Content**: thirteen 10-level careers - culinary, journalism, software, medicine, music, business, landscaping,
+education, visual arts, science, athletics, design and architecture, and hospitality - each with a title, hourly
+wage, weekly work days, start/end time, promotion requirements (performance, skill levels, days worked, sometimes
+a friendly colleague outside the household) and perks. Nineteen ready skills cover them; every career's skills are
+trained by at least one in-game activity or freelance job. Thirteen aspirations include `successful-career`
+(reach a career level) and `fortune-builder` (household funds), plus the M6 objective kinds `careerLevel`,
+`ownObjects` with `bought: true` and `homeValue`. Seventeen `CareerEventDef`s (`src/content/careerEvents.ts`) are
+small on-the-job decisions with a performance change, optional pay (positive or negative) and an optional skill
+or moodlet effect.
 
 **Careers** (`src/sim/careers.ts`, state in `Person.career: CareerState`)
 - `CareerState { careerId, level, performance -100..100, joinedAt, daysWorked, shift, effort, pendingEvent }`.
@@ -539,6 +541,98 @@ starter bookcases.
 `Household.powerOff`, `settings.autoPayBills`, `CareerState.effort`/`pendingEvent`. `fillEconomyDefaults` in
 `persistence/schema.ts` drops malformed bills, unknown efforts, bad pending decisions and non-boolean flags;
 old saves load unchanged.
+
+## Progression and social scope (Milestone 11)
+
+Pure code (no three, no DOM), tested in `tests/unit/sim/{careers-m11,m11-skills-b,skillsC-m11,m11-aspirations}.test.ts`,
+`tests/unit/content/m11-traits.test.ts` and the headless runs in `tests/unit/integration/{careersM11,m11-skills,skillsC-m11,m11-progression}.test.ts`.
+The visual checks drive the real UI (`dev/ds-tasks/m11/shots-*.mjs`). Content minimums for M11: 12 careers,
+16 skills, 40 traits, 12 aspirations and 40 social interactions; the tree has 13 careers (130 levels), 19 ready
+skills, 40 traits, 13 aspirations (39 stages) and 45 socials.
+
+**Careers**. Six more 10-level tracks use the same `level()` helper and data-driven `careersForStage()` as the M6
+seven, so the career panel, job search, creator starting jobs and NPC assignment pick them up without UI changes:
+`education` (Playground Assistant -> Superintendent of Schools, weekdays, school holidays off), `visualArts`
+(Studio Assistant -> Renowned Artist, Tuesday-Saturday at first), `science` (Lab Assistant -> Nobel Laureate,
+weekdays), `athletics` (Gym Attendant -> Olympic Champion, early 06:00 starts), `design` (Drafting Assistant ->
+Celebrated Architect, studio weekdays then site days) and `hospitality` (Front Desk Assistant -> Hospitality
+Magnate, evenings and weekends). Each trains two or three skills, requires a friendship (25-30) mid-ladder and
+asks for the newer skills from level 4-5, so the first rungs stay reachable with practised skills. `careerEvents`
+grew from 5 to 17 (two per new track); every option changes performance and some pay, add a moodlet or train a
+skill. Shift pay remains `pay:<personId>:<day>` through `transact`; career decisions stay
+`careerevent:<personId>:<day>` / `careereventpay:<personId>:<day>`.
+
+**Baking** (`src/sim/baking.ts`, recipes in `src/content/recipes.ts`)
+- Activities: `bakeTreat` (Bake a Treat, 30 min, 55 xp/h) at any stove or the new `bread-oven`; `sellBakes`
+  (Sell a Box of Bakes, 45 min) is freelance work gated at Baking 5. Five recipes unlock at levels 1/2/3/5/7
+  (rustic loaf, berry muffins, buttermilk scones, celebration cake, apple pie) and are served as portions on a
+  free counter or table like a cooked meal. A batch also trains Creativity at 35% (`secondarySkill`).
+- Object: `bread-oven` ($620, kitchen, 1x1, quality 4, baking stat 2), modelled in `tools/furniture-extra`.
+- Effects (`content/skillEffects.ts`): bake quality `0.4 + 0.05 x level`, mishap chance
+  `max(0, 0.2 - 0.025 x level)`, bake time `1 - 0.025 x level` (floor 0.78). A dirty oven bakes worse and burns
+  more often; the Baking level and the oven's baking stat both raise quality.
+- Payouts: ingredients are charged once at `bake:<actionId>`; the sale pays once through
+  `transact` with `freelance:<personId>:<actionId>` (base 2600 cents, times the Baking and Creativity curves).
+
+**Wellness**
+- Activities: `meditate` (self, any home lot, 30 min, 45 xp/h, Calm moodlet), `doYoga` (mat, 40 min, 60 xp/h) and
+  `stretch` (mat, 15 min, 40 xp/h).
+- Object: `yoga-mat` ($60, rug layer, 1x2; people walk over it when it is not in use).
+- Effects: energy and fun decay `1%` slower per level (`wellnessDecay`), and bad moodlets weigh `3%` less per
+  level (`wellnessStress`), capped at level 10. No payout.
+
+**Creativity**
+- Activity: `sketchIdeas` in the `sketchbook` (45 min, 55 xp/h; Inspired moodlet). Painting, music, writing,
+  busking and baking train Creativity at 35% through the existing `secondarySkill` path.
+- Object: `sketchbook` ($70, surface layer, placed on a desk or table).
+- Effects: creative activities give `3%` more fun per level (`creativityFun`), creative freelance work pays `4%`
+  more per level (`creativityPay`). Creative sales include `paintToSell`, `writeArticle`, `writeBook`, `busk` and
+  `sellBakes`; all pay once with `freelance:<personId>:<actionId>`.
+
+**Photography**
+- Activities: `takePhotos` at the `camera-tripod` (60 min, 55 xp/h), `photoWalk` at the park, market, arts centre
+  or cafe from level 3 (50 min, 55 xp/h), and `sellPhotos` (75 min, freelance) from level 2.
+- Object: `camera-tripod` ($320, hobby, 1x1, interaction anchor `shoot`).
+- Effects: `photoSaleMult` is x1.25 from level 5 (gallery-grade prints) and x1.5 from level 8.
+- Payout: `freelance:<personId>:<actionId>` (base 2400 cents; better Photography and Creativity pay more).
+
+**Fishing** (`src/content/fishing.ts`)
+- Activities: `fishPond` (45 min, 55 xp/h) at the `garden-pond-fishing`; `fishVenue` at Lakeside Park from level 2
+  (60 min, 60 xp/h); `sellCatch` on a fish item (10 min).
+- Object: `garden-pond-fishing` ($650, outdoor, 2x2, front `fish` anchor), modelled as an irregular stone-rimmed
+  pond with reeds, lily pads and a flower in `tools/furniture-extra`.
+- Effects: six species (roach, perch, bream, brown trout, northern pike, golden carp) unlock at levels 1/1/2/3/5/8;
+  a trip lands one fish at levels 1-2, up to two at 3, usually two or three at 5 and three at 9, with a rare fish
+  costing one portion. Empty-trip chance falls from 20% to 8% at level 5 and 0 at level 8; the species roll leans
+  rarer with level. Portion value gains 5% per level and a further 15% at level 8 (`fishPortionValue`). The catch
+  is deterministic from `hashString('fish:<person>:<action>')`, and a fish item can be eaten like a meal portion.
+- Payout: `fishsell:<itemId>` pays each caught item once at its value.
+
+**Research**
+- Activities: `researchOnline` at a computer (60 min, 55 xp/h), `researchSky` at the `telescope` (60 min, 60 xp/h,
+  Inspired moodlet) and `writePaper` at a computer from level 5 (120 min, freelance).
+- Object: `telescope` ($480, hobby, 1x1, interaction anchor `observe`).
+- Effects: Logic and Programming study gains `2%` per level (`researchStudy`), Science career performance gains
+  `0.4` per level (`researchScience`), and published papers (level 8) pay x1.2 (`researchPaperMult`).
+- Payout: `freelance:<personId>:<actionId>` (base 4200 cents).
+
+**Traits** (`src/content/traits.ts`). 40 traits in six categories (social 10, tidiness 5, energy 6, creativity 7,
+leisure 5, lifestyle 7). Every trait uses at least one existing effect kind (`needDecay`, `autonomyBias`,
+`skillRate`, `socialReceive`, `workPerformance`, `enjoys`); `effectText` is generated from the data, so the picker
+cannot advertise an effect the simulation does not apply. Conflicts are symmetric (`traitsConflict()` is the one
+check used by the picker, `setTraits` and random drafts); the picker shows the category, the count and the first
+effect line, and explains a disabled opposite. Random drafts cover all 40.
+
+**Aspirations** (`src/content/aspirations.ts`). 13 aspirations with three stages each (39 stages): the M6 eight
+plus `family-ties`, `hopeless-romantic`, `true-artist`, `music-star` and `tech-pioneer`. All objectives reuse
+existing types (`skill`, `interactionCount`, `friends`, `ownObjects`, `homeValue`, `bond`) and rewards use the
+`milestoneReached` / `dreamFulfilled` moodlets. Stage pay is once-only via
+`aspiration:<personId>:<aspirationId>:<stage>`. Aspirations are adult-only and enforced at every entry point
+(creator `setAspiration`/`memberIssues`, `setLifeStage`, random drafts in `characters/names.ts` and
+`sim/people.ts`, which strips one from an imported child draft).
+
+**Saves**: M11 adds no save fields. Fish use the existing item path (`WorldItemKind` gains `'fish'`, schema default
+only), baked batches reuse meal portions, and every payment uses a ledger occurrence id; `SCHEMA_VERSION` stays 1.
 
 ## Neighbourhood (Milestone 7)
 

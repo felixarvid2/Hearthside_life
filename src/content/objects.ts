@@ -180,7 +180,7 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   // Milestone 11 task C: photography, fishing and research (original models built by tools/furniture-extra)
   cameraTripod: [[0.0828, -0.0038, 0.145], [0.4172, 0.97, 0.4409]],
   telescope: [[0.092, -0.0049, 0.0595], [0.408, 0.8959, 0.6896]],
-  fishingPond: [[0.015, 0, 0.015], [0.985, 0.298, 0.985]],
+  fishingPond: [[0.0339, 0, 0.0347], [0.9673, 0.407, 0.9735]],
   // Milestone 11 task B: baking, wellness and creativity (original models built by tools/furniture-extra)
   yogaMat: [[0.085, -0.001, 0.0065], [0.415, 0.0825, 0.965]],
   sketchbook: [[0.14, 0, 0.14], [0.36, 0.0245, 0.36]],

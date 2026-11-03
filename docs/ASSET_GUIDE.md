@@ -173,10 +173,12 @@ hat; hair below the band (side locks, hanging lengths) is left alone. Hats stand
 
 - **Source**: Kenney Furniture Kit 2.0 (CC0) GLB models, about half scale; each `ObjectDef.model` sets
   `scale` (usually 2.0, beds ~1.75), `offset` and `yaw` so the model fills its footprint and faces +z.
-- **Original models**: designs the kit lacks (dishwasher, easel, upright piano, treadmill, weight bench, chess table, crib, toy chest,
-  barbecue, patio table with parasol, raised garden bed, garden bench and chair) are built by code in `tools/furniture-extra/`
-  (`kit.mjs` boxes, rods and lathe shapes; `models.mjs` the designs; `thumb.mjs` the software-rendered isometric thumbnail). They use
-  the kit's material names and colours (so finishes recolour them), face +z, and are written at half scale like the kit.
+- **Original models**: designs the kit lacks are built by code in `tools/furniture-extra/`
+  (`kit.mjs` boxes, rods and lathe shapes; `models.mjs` the designs; `thumb.mjs` the software-rendered isometric thumbnail).
+  They include the dishwasher, easel, upright piano, treadmill, weight bench, chess table, crib, toy chest, barbecue, patio
+  table with parasol, raised garden bed, garden bench and chair, and from Milestone 11 the bread oven, yoga mat, sketchbook,
+  camera tripod, telescope and stocked garden pond (a stone-rimmed pond with reeds, lily pads and a flower). They use the
+  kit's material names and colours (so finishes recolour them), face +z, and are written at half scale like the kit.
   `node tools/build-extra-furniture.mjs` rebuilds them without the Kenney library; `tools/build-assets.mjs` runs the same step.
 - **Materials**: the kit's unlit materials are converted to lit materials at load time. Finish regions map kit
   material names (wood, carpet, metal, ...) to curated swatches.

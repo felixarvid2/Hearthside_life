@@ -588,24 +588,109 @@ function telescope() {
   return m;
 }
 
-/** Stocked fishing pond (2 x 2 tiles): a stone rim, shallow water, rocks and reeds. Fish from the front (+z) edge. */
+/** Stocked fishing pond (2 x 2 tiles): an irregular bank of rounded stones, sunken blue-green water, lily pads and
+ *  a clump of reeds. Fish from the front (+z) edge. The outline is deterministic but deliberately not a circle. */
 function fishingPond() {
   const m = new Model('fishing-pond');
   const c = 1;
-  m.lathe('metal', c, c, [[0.94, 0], [0.97, 0.22], [0.86, 0.26]], 16); // stone rim
-  m.lathe('metal', c, c, [[0.86, 0.26], [0.78, 0.22]], 16, { caps: false }); // inner lip
-  m.cylY('glass', c, c, 0.02, 0.15, 0.79, 0.79, 16); // water
-  m.lathe('plant', 0.42, 0.44, [[0.0, 0.12], [0.15, 0.14], [0.22, 0.3], [0.18, 0.5], [0.0, 0.58]], 7); // lily pad clump
-  m.cylY('carpet', 0.48, 0.46, 0.14, 0.18, 0.05, 0.04, 8); // lily flower
-  // rocks around the rim
-  for (const [x, z, r] of [[0.22, 0.75, 0.12], [0.75, 0.2, 0.11], [1.55, 0.35, 0.14], [1.8, 1.15, 0.1], [1.35, 1.8, 0.13], [0.5, 1.62, 0.1]]) {
-    m.lathe('metalMedium', x, z, [[0.0, 0.02], [r, 0.08], [r * 0.8, 0.18], [0.0, 0.23]], 6);
+  const N = 24;
+  // Deterministic pseudo-noise in 0..1, so every build produces the same stones and pads.
+  const noise = (i, k) => { const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return v - Math.floor(v); };
+  // Irregular basin outline: 24 points of varied radius (0.73..0.82 m from the centre).
+  const edge = range(N).map((i) => {
+    const a = (i / N) * Math.PI * 2 + 0.13;
+    const r = 0.73 + 0.09 * noise(i, 1);
+    return { a, r, x: c + r * Math.cos(a), z: c + r * Math.sin(a), cos: Math.cos(a), sin: Math.sin(a) };
+  });
+  const ringPoint = (p, r, y) => [c + r * p.cos, y, c + r * p.sin];
+  // Triangle-fan surface at a radius scale, wound up. Used for the two water depths.
+  const waterSurface = (scale, y, mat) => {
+    for (let i = 0; i < N; i++) {
+      const p0 = edge[i], p1 = edge[(i + 1) % N];
+      const q0 = [c + (p0.x - c) * scale, y, c + (p0.z - c) * scale];
+      const q1 = [c + (p1.x - c) * scale, y, c + (p1.z - c) * scale];
+      m.addTri(mat, [c, y, c], q0, q1, [0, 1, 0], [0, 1, 0], [0, 1, 0]);
+    }
+  };
+  const waterY = 0.074;
+  // Shallow water near the bank, deeper blue-green in the middle. Both are opaque kit colours, so the catalog
+  // thumbnail shows the real depth rather than a flat pale disc.
+  waterSurface(1, waterY, 'metalMedium');
+  waterSurface(0.64, waterY + 0.004, 'metalDark');
+  // Bank: an earth apron that rises from the ground to a lip just above the water, with a sloped inner face.
+  const bankTop = 0.112, lipY = 0.088;
+  for (let i = 0; i < N; i++) {
+    const p = edge[i], q = edge[(i + 1) % N];
+    const ao = ringPoint(p, p.r + 0.10, bankTop), bo = ringPoint(q, q.r + 0.10, bankTop); // outer lip
+    const ai = ringPoint(p, p.r + 0.014, lipY), bi = ringPoint(q, q.r + 0.014, lipY); // inner lip
+    const a0 = ringPoint(p, p.r + 0.10, 0), b0 = ringPoint(q, q.r + 0.10, 0); // ground
+    // sloped earth apron (top), dark soil down to the water, and the outer wall down to the floor
+    m.addTri('fur', ao, bo, bi, [0, 1, 0], [0, 1, 0], [0, 1, 0]);
+    m.addTri('fur', ao, bi, ai, [0, 1, 0], [0, 1, 0], [0, 1, 0]);
+    const nOut = [p.cos, 0, p.sin];
+    m.addTri('woodDark', a0, b0, bo, nOut, nOut, nOut);
+    m.addTri('woodDark', a0, bo, ao, nOut, nOut, nOut);
+    m.addTri('metalDark', ai, bi, ringPoint(q, q.r, waterY), [0, 1, 0], [0, 1, 0], [0, 1, 0]); // shadowed water edge
+    m.addTri('metalDark', ai, ringPoint(q, q.r, waterY), ringPoint(p, p.r, waterY), [0, 1, 0], [0, 1, 0], [0, 1, 0]);
   }
-  // reeds at the back corners
-  for (const [x, z] of [[0.18, 0.18], [0.25, 0.14], [1.82, 0.2]]) {
-    m.cylY('plant', x, z, 0, 0.5 + 0.12 * ((x * 7 + z * 3) % 1), 0.02, 0.015, 5);
+  // Rounded stones of varied size and grey/brown tone all the way round. They sit a little proud of the bank so
+  // the silhouette is visibly bumpy and irregular.
+  // Avoid the water's own blues here, or those stones disappear against it: warm greys and browns only.
+  const stoneMats = ['metal', 'fur', 'metal', 'woodDark', 'carpetDarker', 'metal', 'fur', 'woodDark'];
+  for (let i = 0; i < N; i++) {
+    const p = edge[i];
+    const sr = 0.065 + 0.075 * noise(i, 2);       // 0.065..0.140 m radius: small pebbles and big blocks
+    const sh = 0.08 + 0.14 * noise(i, 3);         // 0.08..0.22 m tall
+    const rr = p.r + 0.010 + 0.025 * noise(i, 4); // sit on the lip, varied outward
+    const cx = c + rr * p.cos, cz = c + rr * p.sin;
+    const y0 = 0.068 + 0.02 * noise(i, 5);
+    m.lathe(stoneMats[i % stoneMats.length], cx, cz,
+      [[0, y0], [sr * 0.72, y0 + 0.018], [sr, y0 + sh * 0.34], [sr * 0.78, y0 + sh * 0.84], [0, y0 + sh]], 7, { phase: noise(i, 6) });
   }
-  for (const x of [0.88, 1.12, 1.06, 0.94]) m.rod('metal', [x, 0.24, 0.84], [x, 0.008, 1.16], 0.012); // stepping stones
+  // Two or three lily pads floating on the surface; one carries a small pale flower. Each pad is a thin fan with a
+  // notch (like a real lily pad), so the upward-facing surface catches the light and reads green at thumbnail size.
+  const padY = waterY + 0.012;
+  const lilyPad = (dx, dz, r) => {
+    const cx = c + dx, cz = c + dz, notch = 0.62, seg = 14;
+    const rim = [];
+    for (let k = 0; k <= seg; k++) {
+      const a = 0.7 + notch / 2 + (k / seg) * (Math.PI * 2 - notch);
+      rim.push([cx + r * Math.cos(a), padY, cz + r * Math.sin(a)]);
+    }
+    const centre = [cx, padY + 0.006, cz];
+    for (let k = 0; k < seg; k++) m.addTri('plant', centre, rim[k], rim[k + 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]);
+  };
+  lilyPad(-0.27, -0.22, 0.155);
+  lilyPad(0.31, -0.01, 0.135);
+  lilyPad(-0.03, 0.34, 0.145);
+  const fx = c + 0.31, fz = c - 0.01;
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2;
+    m.lathe('carpetWhite', fx + 0.045 * Math.cos(a), fz + 0.045 * Math.sin(a),
+      [[0, padY + 0.006], [0.032, padY + 0.014], [0, padY + 0.022]], 6);
+  }
+  m.cylY('carpet', fx, fz, padY + 0.006, padY + 0.024, 0.022, 0.018, 7);
+
+  // A clump of reeds and cattails at the front-right edge, where the catalog camera sees it over the stones.
+  const reedBase = { x: c + 0.6, z: c + 0.48 };
+  const reeds = [
+    [-0.03, 0.03, 0.56, true], [0.05, -0.02, 0.74, true], [-0.08, -0.05, 0.48, false],
+    [0.10, 0.05, 0.62, true], [0.02, 0.10, 0.44, false], [-0.11, 0.04, 0.54, false],
+    [0.13, -0.08, 0.68, true], [-0.14, -0.01, 0.50, false],
+  ];
+  for (const [dx, dz, h, cattail] of reeds) {
+    const x = reedBase.x + dx, z = reedBase.z + dz, top = waterY + h;
+    m.cylY('plant', x, z, waterY - 0.01, top, 0.045, 0.028, 5); // stem
+    if (cattail) m.cylY('fur', x, z, top - 0.16, top, 0.065, 0.052, 7); // brown cattail head
+  }
+  // Broad arching blades, so the clump still reads as reeds in the small catalog thumbnail.
+  for (const [dx, dz, ex, ez, h] of [[-0.02, 0.03, -0.22, 0.2, 0.46], [0.06, -0.02, 0.24, -0.18, 0.56], [-0.09, -0.04, -0.28, 0.02, 0.38], [0.03, 0.08, 0.18, 0.28, 0.44]]) {
+    const bx = reedBase.x + dx, bz = reedBase.z + dz;
+    const tx = reedBase.x + ex, tz = reedBase.z + ez;
+    const len = Math.hypot(tx - bx, tz - bz) || 1;
+    const ux = ((tx - bx) / len) * 0.09, uz = ((tz - bz) / len) * 0.09;
+    m.slab('plant', [bx - ux / 2, waterY + 0.01, bz - uz / 2], [ux, 0, uz], [0, h, 0], [((tz - bz) / len) * 0.014, 0, -((tx - bx) / len) * 0.014]);
+  }
   return m;
 }
 

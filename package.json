@@ -26,6 +26,7 @@
     "visual:m11:skills-c": "node dev/ds-tasks/m11/shoot-skills-c.mjs",
     "visual:m11:skills": "node dev/ds-tasks/m11/shots-skills-b.mjs",
     "visual:m11:traits": "node dev/ds-tasks/m11/shoot-d.mjs",
+    "visual:m11:pond": "node dev/ds-tasks/m11/render-pond.mjs",
     "visual:stages": "node dev/mpfb/shootStages.mjs",
     "visual:stages:compose": "node dev/mpfb/composeStages.mjs",
     "debug:creator": "node dev/ds-tasks/debug-creator.mjs",

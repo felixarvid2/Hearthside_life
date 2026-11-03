@@ -112,22 +112,50 @@ function setupWorld() {
     for (let z = 2; z < lot.depth - d; z++) for (let x = 2; x < lot.width - w; x++) if (freeRect(x, z, w, d)) return { x, z };
     throw new Error('no free spot');
   };
-  const place = (defId, w, d, support, near) => {
+  const place = (defId, w, d, support, near, spot, rot = 0) => {
     if (support) {
       const o = { id: `shot_${defId}`, defId, level: support.level, x: support.x, z: support.z, rot: support.rot, finishes: {}, purchasePrice: 0, boughtAt: st.clock.minutes, ownerHouseholdId: lot.ownerHouseholdId, supportId: support.id, condition: { dirt: 0, broken: false } };
       lot.objects[o.id] = o;
       return o;
     }
-    const { x, z } = findSpot(w, d, near);
+    const { x, z } = spot ?? findSpot(w, d, near);
     mark(x, z, w, d);
-    const o = { id: `shot_${defId}`, defId, level: 0, x, z, rot: 0, finishes: {}, purchasePrice: 0, boughtAt: st.clock.minutes, ownerHouseholdId: lot.ownerHouseholdId, condition: { dirt: 0, broken: false } };
+    const o = { id: `shot_${defId}`, defId, level: 0, x, z, rot, finishes: {}, purchasePrice: 0, boughtAt: st.clock.minutes, ownerHouseholdId: lot.ownerHouseholdId, condition: { dirt: 0, broken: false } };
     lot.objects[o.id] = o;
     return o;
   };
 
+  // The mat needs open floor inside the house, with no wall corner in front of the camera: scan the floored
+  // interior for a free patch at least two tiles from every wall. Prefer a 2x1 mat turned across the view,
+  // which reads as a mat lying on the floor rather than a strip running away from the camera.
+  const interior = (x, z) => !!lot.floors[`0:${x}:${z}`];
+  const nearWall = (x, z) => {
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      if (lot.walls[`0:h:${x + dx}:${z + dz}`] || lot.walls[`0:v:${x + dx}:${z + dz}`]) return true;
+    }
+    return false;
+  };
+  let matSpot = null;
+  for (const [w, d] of [[2, 1], [1, 2]]) {
+    for (let z = 2; z < lot.depth - 3 && !matSpot; z++) {
+      for (let x = 2; x < lot.width - 3; x++) {
+        let inside = true;
+        for (let dz = 0; dz < d && inside; dz++) for (let dx = 0; dx < w; dx++) inside = inside && interior(x + dx, z + dz);
+        if (!inside || !freeRect(x, z, w, d)) continue;
+        let clear = true;
+        for (let dz = 0; dz < d && clear; dz++) for (let dx = 0; dx < w; dx++) clear = clear && !nearWall(x + dx, z + dz);
+        if (!clear) continue;
+        matSpot = { x, z, w, d, rot: w === 2 ? 1 : 0 };
+        break;
+      }
+    }
+    if (matSpot) break;
+  }
+  if (!matSpot) matSpot = { x: 8, z: 14, w: 1, d: 2, rot: 0 };
+
   // The oven goes beside the range so the shot shows the new appliance rather than the old one, with its
-  // front tile kept free for the person; the mat goes well away from it.
-  const mat = place('yoga-mat', 1, 2);
+  // front tile kept free for the person; the mat sits in the open floor found above.
+  const mat = place('yoga-mat', matSpot.w, matSpot.d, null, null, matSpot, matSpot.rot);
   mark(mat.x, mat.z, 1, 2);
   const oven = place('bread-oven', 1, 1, null, stove);
   const table = Object.values(lot.objects).find((o) => o.defId === 'table-coffee') ?? Object.values(lot.objects).find((o) => o.defId === 'table-dining-oak');
@@ -142,6 +170,7 @@ function setupWorld() {
     person: { id: person.id, name: person.firstName },
     matId: mat.id, ovenId: oven.id, bookId: book.id,
     positions: { mat: [mat.x, mat.z], oven: [oven.x, oven.z], book: [book.x, book.z] },
+    matCenter: [mat.x + matSpot.w / 2, mat.z + matSpot.d / 2],
   };
 }
 
@@ -162,6 +191,19 @@ async function framePerson(page, personId) {
   }
   await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), personId);
   await page.waitForTimeout(900);
+  await settle(page);
+}
+
+/** Centres the camera on the mat itself (not just the person), so the whole mat is in frame with the walls down. */
+async function frameMat(page, matId, x, z) {
+  await page.evaluate(() => window.hearthside.game.view.setCutaway('down'));
+  await page.evaluate(({ x, z }) => window.hearthside.view.focusOn(x, z, true), { x, z });
+  await page.waitForTimeout(1100);
+  const anchor = await page.evaluate((id) => window.hearthside.game.view.anchorOf({ kind: 'object', objectId: id }), matId);
+  if (anchor) await page.evaluate(({ f, x, y }) => window.hearthside.game.view.zoomAt(f, x, y), { f: 1.5, x: anchor.x, y: anchor.y });
+  await page.waitForTimeout(400);
+  await page.evaluate(({ x, z }) => window.hearthside.view.focusOn(x, z, true), { x, z });
+  await page.waitForTimeout(1100);
   await settle(page);
 }
 
@@ -251,7 +293,11 @@ async function main() {
       await page.waitForTimeout(500);
 
       const setup = await page.evaluate(setupWorld);
+      // setupWorld writes straight into the lot, so tell the renderer to pick the new objects up.
+      await page.evaluate(() => { window.hearthside.view.lotChanged('objects'); window.hearthside.view.lotChanged('floors'); });
       await page.evaluate((id) => window.hearthside.game.select(id), setup.person.id);
+      // Cutaway walls, so an interior practice is never shot through a wall corner.
+      await page.evaluate(() => window.hearthside.game.view.setCutaway('down'));
       await page.waitForTimeout(300);
 
       const practices = [
@@ -282,7 +328,22 @@ async function main() {
         const performing = await stepUntilPerforming(page, setup.person.id, practice.id);
         check(`${vp.name}: ${practice.id} reaches the performing phase`, !!performing, performing ? `at ${performing.elapsed} min` : 'never performed');
         if (performing) {
-          await framePerson(page, setup.person.id);
+          if (practice.shot === 'yoga-mat') {
+            // Centre on the mat in the open floor, with the person standing on it.
+            await frameMat(page, setup.matId, setup.matCenter[0], setup.matCenter[1]);
+            const anchors = await page.evaluate(({ personId, matId }) => ({
+              person: window.hearthside.game.view.anchorOf({ kind: 'person', personId }),
+              mat: window.hearthside.game.view.anchorOf({ kind: 'object', objectId: matId }),
+            }), { personId: setup.person.id, matId: setup.matId });
+            const onScreen = (a) => !!a && a.visible && a.x > 0 && a.x < vp.width && a.y > 0 && a.y < vp.height;
+            check(`${vp.name}: the person stands on the visible mat`, onScreen(anchors.person) && onScreen(anchors.mat),
+              `person ${JSON.stringify(anchors.person)}, mat ${JSON.stringify(anchors.mat)}`);
+            const centred = !!anchors.mat && Math.abs(anchors.mat.x - vp.width / 2) < vp.width * 0.3 && Math.abs(anchors.mat.y - vp.height / 2) < vp.height * 0.4;
+            check(`${vp.name}: the camera is centred on the mat`, centred, JSON.stringify(anchors.mat));
+            (log.diagnostics ??= []).push({ viewport: vp.name, shot: practice.shot, anchors });
+          } else {
+            await framePerson(page, setup.person.id);
+          }
           await forceRepaint(page, vp.width, vp.height);
           await page.screenshot({ path: join(SHOTS, `${vp.name}-${practice.shot}.png`) });
           log.shots.push(`${vp.name}-${practice.shot}.png`);

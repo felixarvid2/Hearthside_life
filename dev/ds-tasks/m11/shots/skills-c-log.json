@@ -8,7 +8,7 @@
     {
       "name": "portrait: camera shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":207.12489868671142,\"y\":328.88001479426515,\"visible\":true}"
+      "evidence": "{\"x\":206.81007221298628,\"y\":328.6613512713522,\"visible\":true}"
     },
     {
       "name": "portrait: fishPond plays through the real menu",
@@ -18,7 +18,7 @@
     {
       "name": "portrait: pond shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":207.5388995918228,\"y\":316.62852051249064,\"visible\":true}"
+      "evidence": "{\"x\":207.26879147799434,\"y\":316.6363705142987,\"visible\":true}"
     },
     {
       "name": "portrait: researchSky plays through the real menu",
@@ -28,27 +28,27 @@
     {
       "name": "portrait: telescope shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":207.3118997877593,\"y\":317.2899352851625,\"visible\":true}"
+      "evidence": "{\"x\":208.32074285286387,\"y\":316.675925522349,\"visible\":true}"
     },
     {
       "name": "portrait: Skills panel lists Photography",
       "ok": true,
-      "evidence": "Research, Photography, Fishing, Handiness"
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
     },
     {
       "name": "portrait: Skills panel lists Fishing",
       "ok": true,
-      "evidence": "Research, Photography, Fishing, Handiness"
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
     },
     {
       "name": "portrait: Skills panel lists Research",
       "ok": true,
-      "evidence": "Research, Photography, Fishing, Handiness"
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
     },
     {
       "name": "portrait: every listed skill shows a level",
       "ok": true,
-      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Handiness Level 1 of 10"
+      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Cooking Level 1 of 10; Handiness Level 1 of 10"
     },
     {
       "name": "portrait: the Skills panel fits without horizontal overflow",
@@ -58,7 +58,7 @@
     {
       "name": "portrait: skills shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":207.121763851158,\"y\":117.05086718503065,\"visible\":true}"
+      "evidence": "{\"x\":204.4701546586713,\"y\":118.15331531386899,\"visible\":true}"
     },
     {
       "name": "portrait: no page errors",
@@ -73,7 +73,7 @@
     {
       "name": "landscape: camera shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":432.4963889134634,\"y\":51.724057342840524,\"visible\":true}"
+      "evidence": "{\"x\":434.124841096661,\"y\":51.88017014808848,\"visible\":true}"
     },
     {
       "name": "landscape: fishPond plays through the real menu",
@@ -83,7 +83,7 @@
     {
       "name": "landscape: pond shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":431.2067762392917,\"y\":40.32442376324448,\"visible\":true}"
+      "evidence": "{\"x\":433.46895641768333,\"y\":39.69936335537648,\"visible\":true}"
     },
     {
       "name": "landscape: researchSky plays through the real menu",
@@ -93,7 +93,7 @@
     {
       "name": "landscape: telescope shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":432.4422051943513,\"y\":39.941820016995905,\"visible\":true}"
+      "evidence": "{\"x\":434.2696769572719,\"y\":39.63632118928398,\"visible\":true}"
     },
     {
       "name": "landscape: Skills panel lists Photography",
@@ -123,7 +123,7 @@
     {
       "name": "landscape: skills shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":252.7790774667076,\"y\":35.98748125793919,\"visible\":true}"
+      "evidence": "{\"x\":250.82777315302104,\"y\":72.58997855710169,\"visible\":true}"
     },
     {
       "name": "landscape: no page errors",
@@ -138,7 +138,7 @@
     {
       "name": "desktop: camera shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":648.289576771683,\"y\":217.11127360586957,\"visible\":true}"
+      "evidence": "{\"x\":647.9897467324406,\"y\":217.17748005447208,\"visible\":true}"
     },
     {
       "name": "desktop: fishPond plays through the real menu",
@@ -148,7 +148,7 @@
     {
       "name": "desktop: pond shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":648.5779440573019,\"y\":205.22570953737687,\"visible\":true}"
+      "evidence": "{\"x\":649.5791013977189,\"y\":205.00043579805447,\"visible\":true}"
     },
     {
       "name": "desktop: researchSky plays through the real menu",
@@ -158,27 +158,27 @@
     {
       "name": "desktop: telescope shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":651.4164867884308,\"y\":204.52538935516753,\"visible\":true}"
+      "evidence": "{\"x\":648.6976999205644,\"y\":205.2017228034956,\"visible\":true}"
     },
     {
       "name": "desktop: Skills panel lists Photography",
       "ok": true,
-      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+      "evidence": "Research, Photography, Fishing, Handiness"
     },
     {
       "name": "desktop: Skills panel lists Fishing",
       "ok": true,
-      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+      "evidence": "Research, Photography, Fishing, Handiness"
     },
     {
       "name": "desktop: Skills panel lists Research",
       "ok": true,
-      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+      "evidence": "Research, Photography, Fishing, Handiness"
     },
     {
       "name": "desktop: every listed skill shows a level",
       "ok": true,
-      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Cooking Level 1 of 10; Handiness Level 1 of 10"
+      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Handiness Level 1 of 10"
     },
     {
       "name": "desktop: the Skills panel fits without horizontal overflow",
@@ -188,7 +188,7 @@
     {
       "name": "desktop: skills shows the resident on screen",
       "ok": true,
-      "evidence": "{\"x\":455.5554861874032,\"y\":202.03381811263313,\"visible\":true}"
+      "evidence": "{\"x\":456.34428208549565,\"y\":200.6620283935763,\"visible\":true}"
     },
     {
       "name": "desktop: no page errors",
@@ -229,6 +229,10 @@
           },
           {
             "name": "Fishing",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Cooking",
             "level": "Level 1 of 10"
           },
           {
@@ -294,10 +298,6 @@
             "level": "Level 1 of 10"
           },
           {
-            "name": "Cooking",
-            "level": "Level 1 of 10"
-          },
-          {
             "name": "Handiness",
             "level": "Level 1 of 10"
           }
@@ -324,8 +324,8 @@
       "interactionId": "takePhotos",
       "level": 0,
       "anchor": {
-        "x": 207.12489868671142,
-        "y": 328.88001479426515,
+        "x": 206.81007221298628,
+        "y": 328.6613512713522,
         "visible": true
       }
     },
@@ -345,8 +345,8 @@
       "interactionId": "fishPond",
       "level": 0,
       "anchor": {
-        "x": 207.5388995918228,
-        "y": 316.62852051249064,
+        "x": 207.26879147799434,
+        "y": 316.6363705142987,
         "visible": true
       }
     },
@@ -366,8 +366,8 @@
       "interactionId": "researchSky",
       "level": 0,
       "anchor": {
-        "x": 207.3118997877593,
-        "y": 317.2899352851625,
+        "x": 208.32074285286387,
+        "y": 316.675925522349,
         "visible": true
       }
     },
@@ -378,8 +378,8 @@
         "kind": "lot",
         "lotId": "lot_1",
         "level": 0,
-        "x": 16.5,
-        "z": 11.5,
+        "x": 12.5,
+        "z": 6.5,
         "facing": 3.141592653589793,
         "posture": "standing"
       },
@@ -387,8 +387,8 @@
       "interactionId": null,
       "level": 0,
       "anchor": {
-        "x": 207.121763851158,
-        "y": 117.05086718503065,
+        "x": 204.4701546586713,
+        "y": 118.15331531386899,
         "visible": true
       }
     },
@@ -408,8 +408,8 @@
       "interactionId": "takePhotos",
       "level": 0,
       "anchor": {
-        "x": 432.4963889134634,
-        "y": 51.724057342840524,
+        "x": 434.124841096661,
+        "y": 51.88017014808848,
         "visible": true
       }
     },
@@ -429,8 +429,8 @@
       "interactionId": "fishPond",
       "level": 0,
       "anchor": {
-        "x": 431.2067762392917,
-        "y": 40.32442376324448,
+        "x": 433.46895641768333,
+        "y": 39.69936335537648,
         "visible": true
       }
     },
@@ -450,8 +450,8 @@
       "interactionId": "researchSky",
       "level": 0,
       "anchor": {
-        "x": 432.4422051943513,
-        "y": 39.941820016995905,
+        "x": 434.2696769572719,
+        "y": 39.63632118928398,
         "visible": true
       }
     },
@@ -462,17 +462,17 @@
         "kind": "lot",
         "lotId": "lot_1",
         "level": 0,
-        "x": 12.5,
-        "z": 6.5,
-        "facing": 3.141592653589793,
-        "posture": "standing"
+        "x": 14.5,
+        "z": 13.54,
+        "facing": 0,
+        "posture": "seated"
       },
-      "phase": null,
-      "interactionId": null,
+      "phase": "perform",
+      "interactionId": "eatMeal",
       "level": 0,
       "anchor": {
-        "x": 252.7790774667076,
-        "y": 35.98748125793919,
+        "x": 250.82777315302104,
+        "y": 72.58997855710169,
         "visible": true
       }
     },
@@ -492,8 +492,8 @@
       "interactionId": "takePhotos",
       "level": 0,
       "anchor": {
-        "x": 648.289576771683,
-        "y": 217.11127360586957,
+        "x": 647.9897467324406,
+        "y": 217.17748005447208,
         "visible": true
       }
     },
@@ -513,8 +513,8 @@
       "interactionId": "fishPond",
       "level": 0,
       "anchor": {
-        "x": 648.5779440573019,
-        "y": 205.22570953737687,
+        "x": 649.5791013977189,
+        "y": 205.00043579805447,
         "visible": true
       }
     },
@@ -534,8 +534,8 @@
       "interactionId": "researchSky",
       "level": 0,
       "anchor": {
-        "x": 651.4164867884308,
-        "y": 204.52538935516753,
+        "x": 648.6976999205644,
+        "y": 205.2017228034956,
         "visible": true
       }
     },
@@ -555,8 +555,8 @@
       "interactionId": null,
       "level": 0,
       "anchor": {
-        "x": 455.5554861874032,
-        "y": 202.03381811263313,
+        "x": 456.34428208549565,
+        "y": 200.6620283935763,
         "visible": true
       }
     }

@@ -5998,16 +5998,48 @@
    "file": "furniture/fishingPond.glb",
    "thumb": "furniture/thumbs/fishingPond.png",
    "min": [
-    0.015,
+    0.0339,
     0,
-    0.015
+    0.0347
    ],
    "max": [
-    0.985,
-    0.298,
-    0.985
+    0.9673,
+    0.407,
+    0.9735
    ],
    "materials": [
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "fur",
+     "color": [
+      0.647,
+      0.459,
+      0.298
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
     {
      "name": "metal",
      "color": [
@@ -6017,11 +6049,11 @@
      ]
     },
     {
-     "name": "glass",
+     "name": "carpetDarker",
      "color": [
-      0.698,
-      0.827,
-      0.769
+      0.608,
+      0.298,
+      0.285
      ]
     },
     {
@@ -6033,19 +6065,19 @@
      ]
     },
     {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
      "name": "carpet",
      "color": [
       0.943,
       0.367,
       0.343
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
      ]
     }
    ],

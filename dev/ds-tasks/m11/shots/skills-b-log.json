@@ -23,7 +23,17 @@
     {
       "name": "portrait: doYoga reaches the performing phase",
       "ok": true,
-      "evidence": "at 0.5 min"
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "portrait: the person stands on the visible mat",
+      "ok": true,
+      "evidence": "person {\"x\":217.6607226374706,\"y\":370.56884093552185,\"visible\":true}, mat {\"x\":195.0000013049613,\"y\":500.6415980271559,\"visible\":true}"
+    },
+    {
+      "name": "portrait: the camera is centred on the mat",
+      "ok": true,
+      "evidence": "{\"x\":195.0000013049613,\"y\":500.6415980271559,\"visible\":true}"
     },
     {
       "name": "portrait: bakeTreat is queued from the menu",
@@ -88,7 +98,17 @@
     {
       "name": "landscape: doYoga reaches the performing phase",
       "ok": true,
-      "evidence": "at 0.5 min"
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "landscape: the person stands on the visible mat",
+      "ok": true,
+      "evidence": "person {\"x\":444.34170526467295,\"y\":94.36766441856733,\"visible\":true}, mat {\"x\":422.00000130496136,\"y\":223.641598027156,\"visible\":true}"
+    },
+    {
+      "name": "landscape: the camera is centred on the mat",
+      "ok": true,
+      "evidence": "{\"x\":422.00000130496136,\"y\":223.641598027156,\"visible\":true}"
     },
     {
       "name": "landscape: bakeTreat is queued from the menu",
@@ -108,7 +128,7 @@
     {
       "name": "landscape: sketchIdeas reaches the performing phase",
       "ok": true,
-      "evidence": "at 0.5 min"
+      "evidence": "at 1 min"
     },
     {
       "name": "landscape: the skills panel lists Baking, Wellness and Creativity",
@@ -153,7 +173,17 @@
     {
       "name": "desktop: doYoga reaches the performing phase",
       "ok": true,
-      "evidence": "at 0.5 min"
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "desktop: the person stands on the visible mat",
+      "ok": true,
+      "evidence": "person {\"x\":660.5927716592231,\"y\":256.29654933654535,\"visible\":true}, mat {\"x\":640.0000013049613,\"y\":388.6415980271559,\"visible\":true}"
+    },
+    {
+      "name": "desktop: the camera is centred on the mat",
+      "ok": true,
+      "evidence": "{\"x\":640.0000013049613,\"y\":388.6415980271559,\"visible\":true}"
     },
     {
       "name": "desktop: bakeTreat is queued from the menu",
@@ -173,7 +203,7 @@
     {
       "name": "desktop: sketchIdeas reaches the performing phase",
       "ok": true,
-      "evidence": "at 0.5 min"
+      "evidence": "at 0.75 min"
     },
     {
       "name": "desktop: the skills panel lists Baking, Wellness and Creativity",
@@ -226,8 +256,8 @@
         "bookId": "shot_sketchbook",
         "positions": {
           "mat": [
-            2,
-            2
+            8,
+            13
           ],
           "oven": [
             14,
@@ -237,7 +267,11 @@
             7,
             13
           ]
-        }
+        },
+        "matCenter": [
+          8.5,
+          14
+        ]
       },
       "skills": {
         "rows": [
@@ -278,8 +312,8 @@
         "bookId": "shot_sketchbook",
         "positions": {
           "mat": [
-            2,
-            2
+            8,
+            13
           ],
           "oven": [
             14,
@@ -289,7 +323,11 @@
             7,
             13
           ]
-        }
+        },
+        "matCenter": [
+          8.5,
+          14
+        ]
       },
       "skills": {
         "rows": [
@@ -330,8 +368,8 @@
         "bookId": "shot_sketchbook",
         "positions": {
           "mat": [
-            2,
-            2
+            8,
+            13
           ],
           "oven": [
             14,
@@ -341,7 +379,11 @@
             7,
             13
           ]
-        }
+        },
+        "matCenter": [
+          8.5,
+          14
+        ]
       },
       "skills": {
         "rows": [
@@ -365,6 +407,56 @@
         ],
         "selected": "true",
         "inContent": true
+      }
+    }
+  ],
+  "diagnostics": [
+    {
+      "viewport": "portrait",
+      "shot": "yoga-mat",
+      "anchors": {
+        "person": {
+          "x": 217.6607226374706,
+          "y": 370.56884093552185,
+          "visible": true
+        },
+        "mat": {
+          "x": 195.0000013049613,
+          "y": 500.6415980271559,
+          "visible": true
+        }
+      }
+    },
+    {
+      "viewport": "landscape",
+      "shot": "yoga-mat",
+      "anchors": {
+        "person": {
+          "x": 444.34170526467295,
+          "y": 94.36766441856733,
+          "visible": true
+        },
+        "mat": {
+          "x": 422.00000130496136,
+          "y": 223.641598027156,
+          "visible": true
+        }
+      }
+    },
+    {
+      "viewport": "desktop",
+      "shot": "yoga-mat",
+      "anchors": {
+        "person": {
+          "x": 660.5927716592231,
+          "y": 256.29654933654535,
+          "visible": true
+        },
+        "mat": {
+          "x": 640.0000013049613,
+          "y": 388.6415980271559,
+          "visible": true
+        }
       }
     }
   ]
