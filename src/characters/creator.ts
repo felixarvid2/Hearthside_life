@@ -183,6 +183,7 @@ export function memberIssues(p: PersonDraft, index: number, content: ContentDB, 
   });
   if (adult && readyDefs(content.aspirations).length > 0 && !p.aspirationId) personality('Choose an aspiration.');
   if (p.aspirationId && !inRegistry(content.aspirations, p.aspirationId)) personality('The aspiration is not available.');
+  if (p.aspirationId && !adult) personality('Only adults can have an aspiration.');
   if (p.careerId && !inRegistry(content.careers, p.careerId)) personality('The job is not available.');
   if (p.careerId && !adult) personality('Only adults can have a job.');
   const prefs = content.preferences ?? [];
@@ -619,7 +620,7 @@ export class CreatorSession {
     if (!availableLifeStages().includes(stage)) return fail('That life stage is not available yet.');
     return this.mutateMember('Life stage', (p) => {
       p.lifeStage = stage;
-      if (!ADULT_STAGES.includes(stage)) p.careerId = null;
+      if (!ADULT_STAGES.includes(stage)) { p.careerId = null; p.aspirationId = null; }
     });
   }
   setBio(v: string): CreatorResult { return this.mutateMember('Bio', (p) => { p.bio = cleanText(v, BIO_MAX_LENGTH); }, 'bio'); }
@@ -833,7 +834,10 @@ export class CreatorSession {
   }
   setAspiration(id: string | null): CreatorResult {
     if (id !== null && this.content.aspirations[id]?.status !== 'ready') return fail('That aspiration is not available.');
-    return this.mutateMember('Aspiration', (p) => { p.aspirationId = id; });
+    return this.mutateMember('Aspiration', (p) => {
+      if (id !== null && !ADULT_STAGES.includes(p.lifeStage)) return 'Only adults can have an aspiration.';
+      p.aspirationId = id;
+    });
   }
   /** Starting job (null = none). */
   setCareer(id: string | null): CreatorResult {

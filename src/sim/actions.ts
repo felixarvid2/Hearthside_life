@@ -216,7 +216,13 @@ function performTick(ctx: SimCtx, p: Person, a: ActionInstance, beh: Behavior, s
 
 function grantXp(ctx: SimCtx, p: Person, a: ActionInstance): void {
   const xp = a.data.xp, skillId = a.data.skillId;
-  if (typeof xp === 'number' && typeof skillId === 'string' && xp > 0) addSkillXp(ctx, p, skillId, xp);
+  if (typeof xp === 'number' && typeof skillId === 'string' && xp > 0) {
+    addSkillXp(ctx, p, skillId, xp);
+    // Milestone 11: practice can also train a second skill at a fraction of the rate (Creativity from painting,
+    // music, writing and baking). It uses the same xp path, so there is only one progress bar per skill.
+    const second = interactionDef(ctx, a.interactionId)?.secondarySkill;
+    if (second && second.id !== skillId && second.fraction > 0) addSkillXp(ctx, p, second.id, xp * second.fraction);
+  }
   delete a.data.xp;
 }
 

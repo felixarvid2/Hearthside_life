@@ -108,6 +108,9 @@ describe.each(TYPES)('activities at the %s', (type) => {
       s.state.households[s.hhId]!.funds = 100_000;
       setNeeds(p, 40);
       p.moodlets = [];
+      // Milestone 11 hobby unlocks: a fresh patron first needs the skill level for these.
+      if (id === 'writePaper') p.skills.research = { level: 5, xp: 0 };
+      if (id === 'sellPhotos') p.skills.photography = { level: 2, xp: 0 };
       const before = { funds: funds(s), needs: { ...p.needs }, skill: def.skill ? { ...(p.skills[def.skill.id] ?? { level: 1, xp: 0 }) } : null, ledger: s.state.households[s.hhId]!.ledger.length };
       const data = id === 'readSkillBook' ? { skillId: 'cooking' } : undefined;
       const q = s.sim.queue(p.id, { interactionId: id, target: onObject(obj.id), ...(data ? { data } : {}) });

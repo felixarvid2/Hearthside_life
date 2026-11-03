@@ -11,6 +11,7 @@
 // pay, promotion, quitting) follows the same path. A part-time job ends when the teenager becomes a young adult.
 
 import type { CareerDef, CareerLevelDef, ContentDB } from '../content/types';
+import { researchScience } from '../content/skillEffects';
 import { TICK_MINUTES, atDayMinute, dayIndex, formatClock, weekday, DAY_NAMES } from '../core/clock';
 import { isGrownStage } from '../core/lifeStages';
 import { facingTo } from '../core/geometry';
@@ -219,7 +220,9 @@ export function startShift(ctx: SimCtx, p: Person, keepActionId: string): void {
     skillBonus = (total / careerSkills.length / 10) * 3;
   }
   const needPenalty = (p.needs.energy < 30 ? -2 : 0) + (p.needs.fun < 25 ? -1 : 0);
-  cs.performance = clamp(cs.performance + (mood / 100) * 6 + traitBonus + effortBonus + skillBonus + needPenalty, -100, 100);
+  // Research sharpens Science work (Milestone 11, task C): +0.4 performance per Research level above 1.
+  const researchBonus = w.career.id === 'science' ? researchScience(p.skills.research?.level ?? 1) : 0;
+  cs.performance = clamp(cs.performance + (mood / 100) * 6 + traitBonus + effortBonus + skillBonus + needPenalty + researchBonus, -100, 100);
   // Sometimes a small decision comes up during the shift; the player may answer it in the Career tab.
   const eventIds = Object.keys(ctx.content.careerEvents ?? {});
   if (eventIds.length > 0 && cs.pendingEvent == null && ctx.rng.chance(CAREER_EVENT_CHANCE)) {

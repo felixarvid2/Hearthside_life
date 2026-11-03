@@ -39,6 +39,9 @@ const ACTIVITY: MoodletDef[] = [
   m('stockedPantry', 'Stocked Pantry', 3, 4320, 'home', 'A full pantry makes every home-cooked meal cheaper.'),
   m('studious', 'Studious', 5, 180, 'book', 'Got a good stretch of studying done in a quiet room.'),
   m('clearHead', 'Clear Head', 5, 180, 'book', 'Wrote it all down and feels lighter.'),
+  // Milestone 11, task B: baking and wellness
+  m('proudBake', 'Proud Baker', 8, 180, 'star', 'Baked something the whole household can share.'),
+  m('calm', 'Calm', 10, 180, 'heart', 'A quiet mind and a steady breath.'),
 ];
 
 /** Moodlets from the state of the home, refreshed by the simulation while the condition holds and dropped once it does not. */

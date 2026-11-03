@@ -14,7 +14,11 @@ import { fixtureContent } from './fixtures';
 const content = fixtureContent();
 const person = (seed: number, patch: Partial<PersonDraft> = {}): PersonDraft => ({ ...randomPersonDraft(new Rng(seedRng(seed)), content), ...patch });
 const family = (stages: LifeStage[], ties: HouseholdDraft['ties'] = []): HouseholdDraft => ({
-  name: 'Fam', members: stages.map((s, i) => person(200 + i, { firstName: `P${i}`, lastName: 'Fam', lifeStage: s, traits: s === 'adult' || s === 'youngAdult' || s === 'elder' ? person(200 + i).traits : [] })), ties,
+  name: 'Fam', members: stages.map((s, i) => {
+    const adult = s === 'youngAdult' || s === 'adult' || s === 'elder';
+    // Random drafts are adults, so patch the stage and drop what only adults may keep.
+    return person(200 + i, { firstName: `P${i}`, lastName: 'Fam', lifeStage: s, traits: adult ? person(200 + i).traits : [], aspirationId: adult ? person(200 + i).aspirationId : null });
+  }), ties,
 });
 const ALL_OPEN = () => true;
 

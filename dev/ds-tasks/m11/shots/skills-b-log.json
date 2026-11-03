@@ -1,0 +1,371 @@
+{
+  "checks": [
+    {
+      "name": "portrait: the menu offers doYoga",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "portrait: the menu offers bakeTreat",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "portrait: the menu offers sketchIdeas",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "portrait: doYoga is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: doYoga reaches the performing phase",
+      "ok": true,
+      "evidence": "at 0.5 min"
+    },
+    {
+      "name": "portrait: bakeTreat is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: bakeTreat reaches the performing phase",
+      "ok": true,
+      "evidence": "at 1.25 min"
+    },
+    {
+      "name": "portrait: sketchIdeas is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: sketchIdeas reaches the performing phase",
+      "ok": true,
+      "evidence": "at 0.5 min"
+    },
+    {
+      "name": "portrait: the skills panel lists Baking, Wellness and Creativity",
+      "ok": true,
+      "evidence": "Baking, Creativity, Wellness"
+    },
+    {
+      "name": "portrait: the Skills tab is the selected tab with the skill list shown",
+      "ok": true,
+      "evidence": "aria-selected true, list in content true"
+    },
+    {
+      "name": "portrait: the panel still shows the skill list after the repaint",
+      "ok": true,
+      "evidence": "aria-selected true, list in content true"
+    },
+    {
+      "name": "portrait: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: the menu offers doYoga",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "landscape: the menu offers bakeTreat",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "landscape: the menu offers sketchIdeas",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "landscape: doYoga is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: doYoga reaches the performing phase",
+      "ok": true,
+      "evidence": "at 0.5 min"
+    },
+    {
+      "name": "landscape: bakeTreat is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: bakeTreat reaches the performing phase",
+      "ok": true,
+      "evidence": "at 1.25 min"
+    },
+    {
+      "name": "landscape: sketchIdeas is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: sketchIdeas reaches the performing phase",
+      "ok": true,
+      "evidence": "at 0.5 min"
+    },
+    {
+      "name": "landscape: the skills panel lists Baking, Wellness and Creativity",
+      "ok": true,
+      "evidence": "Baking, Creativity, Wellness"
+    },
+    {
+      "name": "landscape: the Skills tab is the selected tab with the skill list shown",
+      "ok": true,
+      "evidence": "aria-selected true, list in content true"
+    },
+    {
+      "name": "landscape: the panel still shows the skill list after the repaint",
+      "ok": true,
+      "evidence": "aria-selected true, list in content true"
+    },
+    {
+      "name": "landscape: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: the menu offers doYoga",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "desktop: the menu offers bakeTreat",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "desktop: the menu offers sketchIdeas",
+      "ok": true,
+      "evidence": "enabled"
+    },
+    {
+      "name": "desktop: doYoga is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: doYoga reaches the performing phase",
+      "ok": true,
+      "evidence": "at 0.5 min"
+    },
+    {
+      "name": "desktop: bakeTreat is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: bakeTreat reaches the performing phase",
+      "ok": true,
+      "evidence": "at 1.25 min"
+    },
+    {
+      "name": "desktop: sketchIdeas is queued from the menu",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: sketchIdeas reaches the performing phase",
+      "ok": true,
+      "evidence": "at 0.5 min"
+    },
+    {
+      "name": "desktop: the skills panel lists Baking, Wellness and Creativity",
+      "ok": true,
+      "evidence": "Baking, Creativity, Wellness"
+    },
+    {
+      "name": "desktop: the Skills tab is the selected tab with the skill list shown",
+      "ok": true,
+      "evidence": "aria-selected true, list in content true"
+    },
+    {
+      "name": "desktop: the panel still shows the skill list after the repaint",
+      "ok": true,
+      "evidence": "aria-selected true, list in content true"
+    },
+    {
+      "name": "desktop: no page errors",
+      "ok": true,
+      "evidence": ""
+    }
+  ],
+  "shots": [
+    "portrait-yoga-mat.png",
+    "portrait-bread-oven.png",
+    "portrait-sketchbook.png",
+    "portrait-skills-panel.png",
+    "landscape-yoga-mat.png",
+    "landscape-bread-oven.png",
+    "landscape-sketchbook.png",
+    "landscape-skills-panel.png",
+    "desktop-yoga-mat.png",
+    "desktop-bread-oven.png",
+    "desktop-sketchbook.png",
+    "desktop-skills-panel.png"
+  ],
+  "viewports": [
+    {
+      "name": "portrait",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "setup": {
+        "person": {
+          "id": "per_2w",
+          "name": "Maren"
+        },
+        "matId": "shot_yoga-mat",
+        "ovenId": "shot_bread-oven",
+        "bookId": "shot_sketchbook",
+        "positions": {
+          "mat": [
+            2,
+            2
+          ],
+          "oven": [
+            14,
+            11
+          ],
+          "book": [
+            7,
+            13
+          ]
+        }
+      },
+      "skills": {
+        "rows": [
+          {
+            "name": "Baking",
+            "level": "Level 6 of 10"
+          },
+          {
+            "name": "Creativity",
+            "level": "Level 5 of 10"
+          },
+          {
+            "name": "Wellness",
+            "level": "Level 4 of 10"
+          }
+        ],
+        "names": [
+          "Baking",
+          "Creativity",
+          "Wellness"
+        ],
+        "selected": "true",
+        "inContent": true
+      }
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "isMobile": true,
+      "setup": {
+        "person": {
+          "id": "per_2w",
+          "name": "Maren"
+        },
+        "matId": "shot_yoga-mat",
+        "ovenId": "shot_bread-oven",
+        "bookId": "shot_sketchbook",
+        "positions": {
+          "mat": [
+            2,
+            2
+          ],
+          "oven": [
+            14,
+            11
+          ],
+          "book": [
+            7,
+            13
+          ]
+        }
+      },
+      "skills": {
+        "rows": [
+          {
+            "name": "Baking",
+            "level": "Level 6 of 10"
+          },
+          {
+            "name": "Creativity",
+            "level": "Level 5 of 10"
+          },
+          {
+            "name": "Wellness",
+            "level": "Level 4 of 10"
+          }
+        ],
+        "names": [
+          "Baking",
+          "Creativity",
+          "Wellness"
+        ],
+        "selected": "true",
+        "inContent": true
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 720,
+      "isMobile": false,
+      "setup": {
+        "person": {
+          "id": "per_2w",
+          "name": "Maren"
+        },
+        "matId": "shot_yoga-mat",
+        "ovenId": "shot_bread-oven",
+        "bookId": "shot_sketchbook",
+        "positions": {
+          "mat": [
+            2,
+            2
+          ],
+          "oven": [
+            14,
+            11
+          ],
+          "book": [
+            7,
+            13
+          ]
+        }
+      },
+      "skills": {
+        "rows": [
+          {
+            "name": "Baking",
+            "level": "Level 6 of 10"
+          },
+          {
+            "name": "Creativity",
+            "level": "Level 5 of 10"
+          },
+          {
+            "name": "Wellness",
+            "level": "Level 4 of 10"
+          }
+        ],
+        "names": [
+          "Baking",
+          "Creativity",
+          "Wellness"
+        ],
+        "selected": "true",
+        "inContent": true
+      }
+    }
+  ]
+}

@@ -319,14 +319,15 @@ export interface GardenState {
   harvests: number;
 }
 
-/** What a WorldItem is: a served meal, dirty dishes left after eating, or a floor mess (puddle, crumbs, spill). */
-export type WorldItemKind = 'meal' | 'dishes' | 'mess';
+/** What a WorldItem is: a served meal, a caught fish, dirty dishes left after eating, or a floor mess (puddle, crumbs, spill). */
+export type WorldItemKind = 'meal' | 'fish' | 'dishes' | 'mess';
 
 /**
- * Transient items created by actions (e.g. a served meal). Saved, but never sold.
+ * Transient items created by actions (e.g. a served meal or a landed fish). Saved, but never sold by the household.
+ * `fish`: `recipeId` = the species id (content/fishing.ts), `portions` = number of fish, `quality` unused (1).
  * `dishes`: `portions` = number of dirty plates, `recipeId` = the dish they held, `quality` unused (1).
  * `mess`: `recipeId` = the variant ('puddle' | 'crumbs' | 'spill'), `quality` = severity 0..1, `portions` = 1.
- * Only meals spoil; dishes and messes stay until somebody cleans them.
+ * Only meals and fish spoil; dishes and messes stay until somebody cleans them.
  */
 export interface WorldItem {
   id: Id;

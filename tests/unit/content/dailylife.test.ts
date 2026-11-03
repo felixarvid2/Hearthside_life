@@ -29,7 +29,7 @@ describe('tag capabilities', () => {
       expect(db.interactions[id]?.kind, id).toBe('object');
     }
     for (const id of ['washDishes', 'mopFloor']) expect(db.interactions[id]!.kind).toBe('item');
-    expect(db.interactions.eatMeal!.itemKinds).toEqual(['meal']);
+    expect(db.interactions.eatMeal!.itemKinds).toEqual(['meal', 'fish']); // fish portions are eaten like meals (M11)
     expect(db.interactions.washDishes!.itemKinds).toEqual(['dishes']);
     expect(db.interactions.mopFloor!.itemKinds).toEqual(['mess']);
   });

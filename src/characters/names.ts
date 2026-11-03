@@ -383,7 +383,8 @@ export function randomizePersonality(rng: Rng, content: ContentDB, p: PersonDraf
   const adult = ADULT_STAGES.includes(p.lifeStage);
   p.traits = pickTraits(rng, content, [], TRAITS_PER_ADULT);
   const aspirations = readyDefs(content.aspirations);
-  p.aspirationId = aspirations.length > 0 ? rng.pick(aspirations).id : null;
+  // Aspirations are for adults only (children and teens choose one when they grow up).
+  p.aspirationId = adult && aspirations.length > 0 ? rng.pick(aspirations).id : null;
   const careers = readyDefs(content.careers).filter((c) => !c.partTime); // part-time jobs are for teenagers
   p.careerId = adult && careers.length > 0 && rng.chance(opts.careerChance ?? 0.5) ? rng.pick(careers).id : null;
   const prefs = rng.shuffle([...(content.preferences ?? [])]);
@@ -621,7 +622,8 @@ function premadePerson(content: ContentDB, m: PremadePersonSpec): PersonDraft {
   a.face.browColor = browFor(a.hair.color);
   p.traits = pickTraits(rng, content, resolveIds(readyDefs(content.traits), m.traits), TRAITS_PER_ADULT);
   const aspirations = readyDefs(content.aspirations);
-  p.aspirationId = resolveIds(aspirations, m.aspiration)[0] ?? (aspirations.length > 0 ? rng.pick(aspirations).id : null);
+  const adult = ADULT_STAGES.includes(p.lifeStage);
+  p.aspirationId = adult ? (resolveIds(aspirations, m.aspiration)[0] ?? (aspirations.length > 0 ? rng.pick(aspirations).id : null)) : null;
   p.careerId = m.career ? resolveIds(readyDefs(content.careers), [m.career])[0] ?? null : null;
   const prefs = content.preferences ?? [];
   const likes = resolveIds(prefs, m.likes), dislikes = resolveIds(prefs, m.dislikes).filter((id) => !likes.includes(id));

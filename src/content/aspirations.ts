@@ -179,4 +179,104 @@ export const ASPIRATIONS: AspirationDef[] = [
       ], 2500, true),
     ],
   },
+  {
+    id: 'family-ties', name: 'Family Ties', icon: 'family', category: 'family', status: 'ready',
+    description: 'Build a household where everyone is fed, welcomed and glad to come home.',
+    stages: [
+      stage('Open House', [
+        { id: 'gifts-2', text: 'Give 2 gifts', type: 'interactionCount', match: 'giveGift', count: 2 },
+        { id: 'friends-1', text: 'Have 1 friend (friendship 30+)', type: 'friends', count: 1, minFriendship: 30 },
+      ], 200),
+      stage('Family Table', [
+        { id: 'meals-10', text: 'Cook 10 meals', type: 'interactionCount', match: 'cookMeal', count: 10 },
+        { id: 'talks-5', text: 'Have 5 deep conversations', type: 'interactionCount', match: 'deepConversation', count: 5 },
+        { id: 'movein-1', text: 'Ask a friend to move in', type: 'interactionCount', match: 'askToMoveIn', count: 1 },
+      ], 500),
+      stage('Family Legacy', [
+        { id: 'friends-3', text: 'Have 3 friends (friendship 50+)', type: 'friends', count: 3, minFriendship: 50 },
+        { id: 'meals-30', text: 'Cook 30 meals', type: 'interactionCount', match: 'cookMeal', count: 30 },
+        { id: 'value-100k', text: 'Raise your home value to $100,000', type: 'homeValue', amount: dollars(100000) },
+      ], 1500, true),
+    ],
+  },
+  {
+    id: 'hopeless-romantic', name: 'Hopeless Romantic', icon: 'heart', category: 'romance', status: 'ready',
+    description: 'Find someone to share the little moments with, and build something that lasts.',
+    stages: [
+      stage('Butterflies', [
+        { id: 'romantic-5', text: 'Share 5 romantic moments', type: 'interactionCount', match: 'category:romantic', count: 5 },
+        { id: 'friend-1', text: 'Have 1 friend (friendship 30+)', type: 'friends', count: 1, minFriendship: 30 },
+      ], 200),
+      stage('Going Steady', [
+        { id: 'partner-1', text: 'Become partners with someone', type: 'bond', status: 'partner' },
+        { id: 'romantic-15', text: 'Share 15 romantic moments', type: 'interactionCount', match: 'category:romantic', count: 15 },
+        { id: 'charisma-3', text: 'Reach Charisma level 3', type: 'skill', skillId: 'charisma', level: 3 },
+      ], 500),
+      stage('True Love', [
+        { id: 'spouse-1', text: 'Get married', type: 'bond', status: 'spouse' },
+        { id: 'romantic-30', text: 'Share 30 romantic moments', type: 'interactionCount', match: 'category:romantic', count: 30 },
+        { id: 'charisma-6', text: 'Reach Charisma level 6', type: 'skill', skillId: 'charisma', level: 6 },
+      ], 1500, true),
+    ],
+  },
+  {
+    id: 'true-artist', name: 'True Artist', icon: 'star', category: 'art', status: 'ready',
+    description: 'Fill the house with your work, then convince the rest of the town to pay for it.',
+    stages: [
+      stage('First Strokes', [
+        { id: 'painting-2', text: 'Reach Painting level 2', type: 'skill', skillId: 'painting', level: 2 },
+        { id: 'creative-5', text: 'Complete 5 creative sessions', type: 'interactionCount', match: 'tag:creative', count: 5 },
+      ], 200),
+      stage('Gallery Wall', [
+        { id: 'painting-5', text: 'Reach Painting level 5', type: 'skill', skillId: 'painting', level: 5 },
+        { id: 'creative-20', text: 'Complete 20 creative sessions', type: 'interactionCount', match: 'tag:creative', count: 20 },
+        { id: 'decor-4', text: 'Buy 4 decorative pieces', type: 'ownObjects', tag: 'decor', count: 4, bought: true },
+      ], 500),
+      stage('Master Artist', [
+        { id: 'painting-8', text: 'Reach Painting level 8', type: 'skill', skillId: 'painting', level: 8 },
+        { id: 'creative-40', text: 'Complete 40 creative sessions', type: 'interactionCount', match: 'tag:creative', count: 40 },
+        { id: 'sell-paintings-5', text: 'Sell 5 paintings', type: 'interactionCount', match: 'paintToSell', count: 5 },
+      ], 1500, true),
+    ],
+  },
+  {
+    id: 'music-star', name: 'Music Star', icon: 'sound', category: 'music', status: 'ready',
+    description: 'Practice until the neighbours sing along, then take your sound to the street.',
+    stages: [
+      stage('Humming Along', [
+        { id: 'music-2', text: 'Reach Music level 2', type: 'skill', skillId: 'music', level: 2 },
+        { id: 'sessions-5', text: 'Complete 5 music sessions', type: 'interactionCount', match: 'tag:music', count: 5 },
+      ], 200),
+      stage('Local Performer', [
+        { id: 'music-5', text: 'Reach Music level 5', type: 'skill', skillId: 'music', level: 5 },
+        { id: 'sessions-20', text: 'Complete 20 music sessions', type: 'interactionCount', match: 'tag:music', count: 20 },
+        { id: 'busk-3', text: 'Busk 3 times', type: 'interactionCount', match: 'busk', count: 3 },
+      ], 500),
+      stage('Stage Presence', [
+        { id: 'music-8', text: 'Reach Music level 8', type: 'skill', skillId: 'music', level: 8 },
+        { id: 'sessions-40', text: 'Complete 40 music sessions', type: 'interactionCount', match: 'tag:music', count: 40 },
+        { id: 'busk-10', text: 'Busk 10 times', type: 'interactionCount', match: 'busk', count: 10 },
+      ], 1500, true),
+    ],
+  },
+  {
+    id: 'tech-pioneer', name: 'Tech Pioneer', icon: 'chart', category: 'technology', status: 'ready',
+    description: 'Learn to build software, then turn that skill into a reputation and an income.',
+    stages: [
+      stage('Plugged In', [
+        { id: 'programming-2', text: 'Reach Programming level 2', type: 'skill', skillId: 'programming', level: 2 },
+        { id: 'games-5', text: 'Play computer games 5 times', type: 'interactionCount', match: 'playComputerGames', count: 5 },
+      ], 200),
+      stage('Digital Maker', [
+        { id: 'programming-5', text: 'Reach Programming level 5', type: 'skill', skillId: 'programming', level: 5 },
+        { id: 'coding-15', text: 'Complete 15 programming sessions', type: 'interactionCount', match: 'tag:programming', count: 15 },
+        { id: 'gigs-3', text: 'Complete 3 freelance programming gigs', type: 'interactionCount', match: 'programGig', count: 3 },
+      ], 500),
+      stage('Tech Pioneer', [
+        { id: 'programming-8', text: 'Reach Programming level 8', type: 'skill', skillId: 'programming', level: 8 },
+        { id: 'coding-40', text: 'Complete 40 programming sessions', type: 'interactionCount', match: 'tag:programming', count: 40 },
+        { id: 'gigs-10', text: 'Complete 10 freelance programming gigs', type: 'interactionCount', match: 'programGig', count: 10 },
+      ], 1500, true),
+    ],
+  },
 ];

@@ -3,9 +3,11 @@
 // cooking.ts, travel.ts and social.ts.
 
 import { offeredInteractionIds } from '../content/capabilities';
-import { BOOK_MAX_LEVEL } from '../content/skillEffects';
+import { BOOK_MAX_LEVEL, creativityPay, photoSaleMult, researchPaperMult } from '../content/skillEffects';
+import { fishPortionValue, fishSpecies, resolveCatch } from '../content/fishing';
 import type { InteractionDef } from '../content/types';
 import { facingDir } from '../core/geometry';
+import { newId } from '../core/ids';
 import { addFeed, transact } from '../core/state';
 import type { ActionInstance, OutfitCategory, Person, Posture } from '../core/types';
 import { OUTFIT_CATEGORIES } from '../core/types';
@@ -13,6 +15,7 @@ import type { ObjRef, SimCtx } from './context';
 import {
   behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
+import { bakeBehavior } from './baking';
 import { cookBehavior, eatMealBehavior } from './cooking';
 import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
@@ -29,7 +32,7 @@ import {
   travelToBehavior,
 } from './travel';
 import {
-  READ_SEAT_RADIUS, SLEEP_NIGHT_BEDTIME, SLEEP_NIGHT_END, SLEEP_WAKE_BEFORE_SHIFT, SLEEP_WAKE_MINUTE, SLEEP_WAKE_SPREAD,
+  MEAL_SPOIL_MINUTES, READ_SEAT_RADIUS, SLEEP_NIGHT_BEDTIME, SLEEP_NIGHT_END, SLEEP_WAKE_BEFORE_SHIFT, SLEEP_WAKE_MINUTE, SLEEP_WAKE_SPREAD,
   TV_SEAT_RADIUS,
 } from './tuning';
 import { atDayMinute, dayIndex, hourOfDay } from '../core/clock';
@@ -77,6 +80,11 @@ export function interactionCheck(ctx: SimCtx, p: Person, a: ActionInstance, igno
   if (isVisitor(ctx, p) && !def.allowVisitors) return 'Only residents can do that.';
   const restricted = venueRestriction(ctx, p, def);
   if (restricted) return restricted;
+  if (def.requiresSkill) {
+    const { id, level } = def.requiresSkill;
+    const have = p.skills[id]?.level ?? 1;
+    if (have < level) return `Needs ${ctx.content.skills[id]?.name ?? 'skill'} level ${level}.`;
+  }
   if (def.kind === 'object') {
     if (a.target.kind !== 'object') return 'Pick an object.';
     const ref = targetObject(ctx, p, a);
@@ -354,16 +362,38 @@ const computerBehavior: Behavior = {
  * transact with occurrence `freelance:<personId>:<actionId>`, so a completed sale can never pay twice.
  */
 const FREELANCE_BASE: Record<string, number> = {
-  writeArticle: 1800, writeBook: 9000, programGig: 3200, paintToSell: 2400, busk: 600,
+  writeArticle: 1800, writeBook: 9000, programGig: 3200, paintToSell: 2400, busk: 600, sellPhotos: 2400, writePaper: 4200,
+  sellBakes: 2600,
 };
 
-export function freelanceFee(interactionId: string, skillLevel: number): number {
+/** Freelance work whose fee also grows with the Creativity skill (paintings, writing, music and baking). */
+const CREATIVE_FREELANCE = new Set(['writeArticle', 'writeBook', 'paintToSell', 'busk', 'sellBakes']);
+
+/** The skill level needed for a freelance action that is gated (photography sales at 2, research papers at 5). */
+const FREELANCE_LEVEL: Record<string, number> = { sellPhotos: 2, writePaper: 5 };
+
+export function freelanceFee(interactionId: string, skillLevel: number, creativityLevel = 1): number {
   const base = FREELANCE_BASE[interactionId] ?? 1000;
-  return Math.max(100, Math.round(base * (0.55 + Math.max(1, Math.min(10, skillLevel)) * 0.12)));
+  const raw = base * (0.55 + Math.max(1, Math.min(10, skillLevel)) * 0.12);
+  const mult = interactionId === 'sellPhotos' ? photoSaleMult(skillLevel)
+    : interactionId === 'writePaper' ? researchPaperMult(skillLevel) : 1;
+  const creative = CREATIVE_FREELANCE.has(interactionId) ? creativityPay(creativityLevel) : 1;
+  return Math.max(100, Math.round(raw * mult * creative));
 }
 
 const freelanceBehavior: Behavior = {
-  check: interactionCheck,
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    if (r) return r;
+    const def = defOf(ctx, a);
+    const need = FREELANCE_LEVEL[def.id];
+    if (need !== undefined) {
+      const skillId = def.skill?.id;
+      const level = skillId ? p.skills[skillId]?.level ?? 1 : 1;
+      if (level < need) return `Needs ${ctx.content.skills[skillId ?? '']?.name ?? 'skill'} level ${need}.`;
+    }
+    return null;
+  },
   reserve(ctx, p, a) {
     const target = targetObject(ctx, p, a);
     if (target?.def.tags.includes('computer')) {
@@ -384,14 +414,121 @@ const freelanceBehavior: Behavior = {
     const def = defOf(ctx, a);
     const skillId = def.skill?.id;
     const level = skillId ? p.skills[skillId]?.level ?? 1 : 1;
-    const fee = freelanceFee(def.id, level);
+    const fee = freelanceFee(def.id, level, p.skills.creativity?.level ?? 1);
     const r = transact(ctx.state, ctx.events, p.householdId, fee, 'sale', `${def.name} (${p.firstName})`, { occurrence: `freelance:${p.id}:${a.id}` });
     if (r.ok) {
       const quality = level >= 7 ? 'a strong piece' : level >= 4 ? 'a solid piece' : 'a modest piece';
-      addFeed(ctx.state, ctx.events, 'money', `${p.firstName} sold ${quality} for $${(fee / 100).toFixed(2)}.`, p.id);
+      const what = def.id === 'sellPhotos' ? 'a set of photo prints' : def.id === 'writePaper' ? 'a research paper' : quality;
+      addFeed(ctx.state, ctx.events, 'money', `${p.firstName} sold ${what} for $${(fee / 100).toFixed(2)}.`, p.id);
     }
   },
   interruptible: true,
+};
+
+/**
+ * Photography practice (Milestone 11, task C): take photos at a camera tripod (or on a photo walk at an outdoor
+ * venue, Photography 3+). The action trains Photography; the pictures themselves are only described in the feed.
+ * Selling prints is freelance work (sellPhotos) and pays once with a once-only occurrence id.
+ */
+const photoBehavior: Behavior = {
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    if (r) return r;
+    if (defOf(ctx, a).id === 'photoWalk' && (p.skills.photography?.level ?? 1) < 3) return 'Needs Photography level 3.';
+    return null;
+  },
+  reserve: (ctx, p, a) => (defOf(ctx, a).kind === 'object' ? reservePrimary(ctx, p, a) : null),
+  step: primaryStep,
+  begin: chargeCost,
+  apply(ctx, p) {
+    addFeed(ctx.state, ctx.events, 'info', `${p.firstName} spent a while behind the camera.`, p.id);
+  },
+  interruptible: true,
+};
+
+/**
+ * Fishing (Milestone 11, task C): fish the garden pond at home, or the lake at the park (Fishing 2+). The catch is
+ * resolved once on completion from stable hashes of the person and the action, so saving and loading cannot reroll
+ * it. Higher levels unlock better species, more fish per trip and, from level 8, never an empty line. The fish are
+ * placed on the floor at the angler's feet as a 'fish' world item: eat them like a meal portion or sell them.
+ */
+const fishBehavior: Behavior = {
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    if (r) return r;
+    if (defOf(ctx, a).id === 'fishVenue' && (p.skills.fishing?.level ?? 1) < 2) return 'Needs Fishing level 2.';
+    return null;
+  },
+  reserve: (ctx, p, a) => (defOf(ctx, a).kind === 'object' ? reservePrimary(ctx, p, a) : null),
+  step: primaryStep,
+  begin: chargeCost,
+  apply(ctx, p, a) {
+    const loc = lotLoc(p);
+    if (!loc) return;
+    const level = p.skills.fishing?.level ?? 1;
+    const h = hashString(`fish:${p.id}:${a.id}`);
+    const caught = resolveCatch(level, (h % 1000) / 1000, (Math.floor(h / 1000) % 1000) / 1000);
+    if (!caught.species || caught.portions <= 0) {
+      addFeed(ctx.state, ctx.events, 'info', `${p.firstName} fished for a while, but nothing was biting.`, p.id);
+      return;
+    }
+    const item = {
+      id: newId(ctx.state, 'itm'),
+      kind: 'fish' as const,
+      lotId: loc.lotId,
+      position: { x: loc.x + 0.5, z: loc.z + 0.5, level: loc.level },
+      recipeId: caught.species.id,
+      portions: caught.portions,
+      quality: 1,
+      createdAt: ctx.now,
+      spoilsAt: ctx.now + MEAL_SPOIL_MINUTES,
+      ownerHouseholdId: p.householdId,
+    };
+    ctx.state.items[item.id] = item;
+    ctx.events.emit({ type: 'item.changed', itemId: item.id, lotId: item.lotId });
+    const many = caught.portions > 1 ? ` ${caught.portions} of them` : '';
+    addFeed(ctx.state, ctx.events, 'info', `${p.firstName} caught a ${caught.species.name}${many}.`, p.id);
+  },
+  interruptible: true,
+};
+
+/** Sell a caught fish (item interaction): paid once per item with occurrence `fishsell:<itemId>`. */
+const sellCatchBehavior: Behavior = {
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    if (r) return r;
+    const item = a.target.kind === 'item' ? ctx.state.items[a.target.itemId] : undefined;
+    if (!item || item.kind !== 'fish') return 'The fish is gone.';
+    if (item.ownerHouseholdId && item.ownerHouseholdId !== p.householdId) return "That's someone else's catch.";
+    return null;
+  },
+  reserve: () => null,
+  step(ctx, _p, a): Step | string {
+    const item = a.target.kind === 'item' ? ctx.state.items[a.target.itemId] : undefined;
+    if (!item) return 'The fish is gone.';
+    return {
+      goal: {
+        kind: 'tile',
+        tile: { x: Math.floor(item.position.x), z: Math.floor(item.position.z), level: item.position.level },
+        face: { x: item.position.x, z: item.position.z },
+        label: 'the fish',
+      },
+      posture: 'standing', performAnim: 'interact', duration: { kind: 'fixed', minutes: 10 }, rates: {},
+    };
+  },
+  apply(ctx, p, a) {
+    const item = a.target.kind === 'item' ? ctx.state.items[a.target.itemId] : undefined;
+    if (!item || item.kind !== 'fish') return;
+    const species = fishSpecies(item.recipeId);
+    const level = p.skills.fishing?.level ?? 1;
+    const value = species ? fishPortionValue(species, level) * item.portions : 200;
+    const r = transact(ctx.state, ctx.events, p.householdId, value, 'sale', `Fish (${p.firstName})`, { occurrence: `fishsell:${item.id}` });
+    if (!r.ok) return;
+    delete ctx.state.items[item.id];
+    ctx.events.emit({ type: 'item.changed', itemId: item.id, lotId: item.lotId });
+    addFeed(ctx.state, ctx.events, 'money', `${p.firstName} sold ${species?.name ?? 'a fish'} for $${(value / 100).toFixed(2)}.`, p.id);
+  },
+  interruptible: false,
 };
 
 /** Phone or mailbox shortcuts that open the household bills panel. */
@@ -573,6 +710,7 @@ function buildRegistry(): Record<string, Behavior> {
     changeOutfit: changeOutfitBehavior,
     editOutfits: editOutfitsBehavior,
     cook: cookBehavior,
+    bake: bakeBehavior,
     eatMeal: eatMealBehavior,
     clean: cleanBehavior,
     washDishes: washDishesBehavior,
@@ -596,6 +734,9 @@ function buildRegistry(): Record<string, Behavior> {
     phoneDate: phoneDateBehavior,
     planEvent: planEventBehavior,
     freelance: freelanceBehavior,
+    photo: photoBehavior,
+    fish: fishBehavior,
+    sellCatch: sellCatchBehavior,
     openBills: openBillsBehavior,
     openCareers: openCareersBehavior,
     social: socialBehavior,

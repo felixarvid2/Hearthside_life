@@ -548,10 +548,119 @@ function birthdayCake() {
   return m;
 }
 
+// --- Milestone 11, task C: photography, fishing and research (camera tripod, telescope, garden pond) ---------------
+
+/** Camera on a three-legged tripod (1 x 1 tile); the lens points toward +z. Height ~1.8 m. */
+function cameraTripod() {
+  const m = new Model('camera-tripod');
+  const top = 1.42;
+  // three legs splayed around the centre (front leg toward +z, the other two behind)
+  for (const a of [Math.PI / 2, Math.PI / 2 + (Math.PI * 2) / 3, Math.PI / 2 + (Math.PI * 4) / 3]) {
+    m.rod('metalDark', [0.5, top, 0.5], [0.5 + 0.36 * Math.cos(a), 0, 0.5 + 0.36 * Math.sin(a)], 0.045);
+    m.box('metal', [0.5 + 0.34 * Math.cos(a) - 0.04, 0, 0.5 + 0.34 * Math.sin(a) - 0.04], [0.5 + 0.34 * Math.cos(a) + 0.04, 0.03, 0.5 + 0.34 * Math.sin(a) + 0.04]);
+  }
+  m.rod('metal', [0.5, top - 0.12, 0.5], [0.5, top + 0.18, 0.5], 0.05); // centre column
+  m.box('metalDark', [0.44, top + 0.16, 0.44], [0.56, top + 0.22, 0.56]); // head
+  m.box('metalDark', [0.36, top + 0.22, 0.4], [0.64, top + 0.42, 0.62]); // camera body
+  m.box('metal', [0.38, top + 0.4, 0.44], [0.62, top + 0.45, 0.58]); // top plate
+  m.box('metalLight', [0.55, top + 0.45, 0.46], [0.61, top + 0.5, 0.52]); // shutter button
+  m.cyl('metalDark', [0.5, top + 0.32, 0.62], [0.5, top + 0.32, 0.76], 0.075, 12); // lens barrel
+  m.cyl('glass', [0.5, top + 0.32, 0.76], [0.5, top + 0.32, 0.775], 0.06, 12); // front element
+  m.box('metal', [0.4, top + 0.42, 0.3], [0.6, top + 0.52, 0.4]); // flash
+  return m;
+}
+
+/** Telescope on a tripod (1 x 1 tile); the tube points up and toward +z. Height ~1.7 m. */
+function telescope() {
+  const m = new Model('telescope');
+  const mountY = 1.02, c = 0.5;
+  for (const a of [Math.PI / 2, Math.PI / 2 + (Math.PI * 2) / 3, Math.PI / 2 + (Math.PI * 4) / 3]) {
+    m.rod('metalDark', [c, mountY, c], [c + 0.34 * Math.cos(a), 0, c + 0.34 * Math.sin(a)], 0.045);
+  }
+  m.rod('metal', [c, mountY - 0.06, c], [c, mountY + 0.14, c], 0.06); // mount post
+  m.box('metalDark', [c - 0.1, mountY + 0.12, c - 0.12], [c + 0.1, mountY + 0.3, c + 0.12]); // equatorial head
+  m.cyl('metalMedium', [c, mountY + 0.16, c - 0.28], [c, mountY + 0.62, c + 0.72], 0.115, 12); // main tube
+  m.cyl('metalDark', [c, mountY + 0.62, c + 0.72], [c, mountY + 0.66, c + 0.8], 0.125, 12); // front ring
+  m.cyl('glass', [c, mountY + 0.66, c + 0.8], [c, mountY + 0.665, c + 0.805], 0.105, 12); // objective lens
+  m.cyl('metalDark', [c, mountY + 0.16, c - 0.28], [c, mountY + 0.13, c - 0.36], 0.06, 12); // eyepiece
+  m.box('metal', [c - 0.07, mountY + 0.43, c + 0.08], [c + 0.07, mountY + 0.5, c + 0.22]); // finder scope
+  m.rod('metal', [c, mountY + 0.34, c + 0.38], [c, mountY + 0.42, c + 0.42], 0.02);
+  return m;
+}
+
+/** Stocked fishing pond (2 x 2 tiles): a stone rim, shallow water, rocks and reeds. Fish from the front (+z) edge. */
+function fishingPond() {
+  const m = new Model('fishing-pond');
+  const c = 1;
+  m.lathe('metal', c, c, [[0.94, 0], [0.97, 0.22], [0.86, 0.26]], 16); // stone rim
+  m.lathe('metal', c, c, [[0.86, 0.26], [0.78, 0.22]], 16, { caps: false }); // inner lip
+  m.cylY('glass', c, c, 0.02, 0.15, 0.79, 0.79, 16); // water
+  m.lathe('plant', 0.42, 0.44, [[0.0, 0.12], [0.15, 0.14], [0.22, 0.3], [0.18, 0.5], [0.0, 0.58]], 7); // lily pad clump
+  m.cylY('carpet', 0.48, 0.46, 0.14, 0.18, 0.05, 0.04, 8); // lily flower
+  // rocks around the rim
+  for (const [x, z, r] of [[0.22, 0.75, 0.12], [0.75, 0.2, 0.11], [1.55, 0.35, 0.14], [1.8, 1.15, 0.1], [1.35, 1.8, 0.13], [0.5, 1.62, 0.1]]) {
+    m.lathe('metalMedium', x, z, [[0.0, 0.02], [r, 0.08], [r * 0.8, 0.18], [0.0, 0.23]], 6);
+  }
+  // reeds at the back corners
+  for (const [x, z] of [[0.18, 0.18], [0.25, 0.14], [1.82, 0.2]]) {
+    m.cylY('plant', x, z, 0, 0.5 + 0.12 * ((x * 7 + z * 3) % 1), 0.02, 0.015, 5);
+  }
+  for (const x of [0.88, 1.12, 1.06, 0.94]) m.rod('metal', [x, 0.24, 0.84], [x, 0.008, 1.16], 0.012); // stepping stones
+  return m;
+}
+
+// --- Milestone 11, task B: baking, wellness and creativity -------------------------------------------------------
+
+/** Rolled yoga mat (1 x 2 tiles): the mat lies flat with a rolled end and a strap. */
+function yogaMat() {
+  const m = new Model('yoga-mat');
+  m.box('carpetBlue', [0.17, 0, 0.2], [0.83, 0.022, 1.93]); // mat
+  m.box('carpetWhite', [0.17, 0.022, 0.2], [0.83, 0.026, 0.32]); // trim at the near end
+  m.box('carpetWhite', [0.17, 0.022, 1.82], [0.83, 0.026, 1.93]); // trim at the far end
+  m.cyl('carpetBlue', [0.2, 0.075, 0.09], [0.8, 0.075, 0.09], 0.075, 12); // rolled end
+  m.cyl('carpetWhite', [0.42, 0.075, 0.09], [0.58, 0.075, 0.09], 0.077, 12);
+  m.box('carpet', [0.44, 0.15, 0.03], [0.56, 0.165, 0.15]); // strap
+  return m;
+}
+
+/** Open sketchbook with a pencil and a few coloured sketches (stands on a desk or table). */
+function sketchbook() {
+  const m = new Model('sketchbook');
+  m.slab('carpetBlue', [0.28, 0, 0.28], [0.44, 0, 0], [0, 0.02, 0], [0, 0, 0.44]); // cover
+  m.slab('carpetWhite', [0.3, 0.02, 0.31], [0.19, 0, 0], [0, 0.014, 0], [0, 0, 0.38]); // left page
+  m.slab('carpetWhite', [0.51, 0.02, 0.31], [0.19, 0, 0], [0, 0.014, 0], [0, 0, 0.38]); // right page
+  m.box('metalDark', [0.48, 0.02, 0.3], [0.52, 0.038, 0.7]); // spine
+  m.box('carpet', [0.34, 0.036, 0.36], [0.46, 0.038, 0.5]); // thumbnail sketches
+  m.box('plant', [0.34, 0.038, 0.54], [0.45, 0.04, 0.66]);
+  m.box('carpetBlue', [0.55, 0.036, 0.4], [0.66, 0.038, 0.58]);
+  m.rod('carpet', [0.56, 0.04, 0.66], [0.68, 0.04, 0.44], 0.018); // pencil
+  m.rod('metal', [0.68, 0.04, 0.44], [0.71, 0.04, 0.39], 0.016); // pencil tip
+  return m;
+}
+
+/** Freestanding bread oven (1 x 1 tile): a steel body with a glass door, a hotplate and a chimney. */
+function breadOven() {
+  const m = new Model('bread-oven');
+  m.box('metalDark', [0.06, 0.06, 0.08], [0.94, 0.9, 0.92]); // body
+  m.box('metalDark', [0.08, 0, 0.1], [0.92, 0.06, 0.9]); // plinth
+  m.box('metal', [0.02, 0.9, 0.04], [0.98, 0.95, 0.96]); // top plate
+  m.box('glass', [0.18, 0.26, 0.92], [0.82, 0.68, 0.94]); // door glass
+  m.box('metalDark', [0.14, 0.22, 0.92], [0.86, 0.26, 0.95]); // door frame
+  m.box('metalDark', [0.14, 0.68, 0.92], [0.86, 0.72, 0.95]);
+  m.rod('metal', [0.18, 0.76, 0.98], [0.82, 0.76, 0.98], 0.035); // handle
+  for (const x of [0.18, 0.82]) m.rod('metal', [x, 0.72, 0.92], [x, 0.76, 0.98], 0.03);
+  for (const x of [0.24, 0.4, 0.56, 0.72]) m.cylY('metalDark', x, 0.96, 0.95, 0.99, 0.035, 0.035, 8); // knobs
+  m.box('metalDark', [0.66, 0.9, 0.12], [0.84, 1.34, 0.3]); // chimney
+  m.box('metal', [0.64, 1.34, 0.1], [0.86, 1.38, 0.32]);
+  m.box('metalDark', [0.1, 0.82, 0.06], [0.5, 0.9, 0.1]); // vent grille
+  return m;
+}
+
 export const EXTRA_MODELS = {
   dishwasher, easel, piano, treadmill, weightBench, chessTable, crib, toyChest, grill, patioSet, gardenBed, gardenBench, gardenChair,
   tree, shrub, fountain, playgroundSlide, swingSet, serviceCounter, produceStand, vendingMachine, studyNotes, lockerBank,
-  bassinet, highChair, toddlerBed, pottyChair, changingTable, birthdayCake,
+  bassinet, highChair, toddlerBed, pottyChair, changingTable, birthdayCake, cameraTripod, telescope, fishingPond,
+  yogaMat, sketchbook, breadOven,
 };
 
 /** Builds every model keyed by its asset name (the GLB file name). */

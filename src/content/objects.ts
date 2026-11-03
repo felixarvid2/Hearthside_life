@@ -177,6 +177,14 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   pottyChair: [[0.125, 0, 0.12], [0.375, 0.325, 0.41]],
   changingTable: [[0.02, 0, 0.04], [0.48, 0.54, 0.465]],
   birthdayCake: [[0.05, 0, 0.05], [0.45, 0.235, 0.45]],
+  // Milestone 11 task C: photography, fishing and research (original models built by tools/furniture-extra)
+  cameraTripod: [[0.0828, -0.0038, 0.145], [0.4172, 0.97, 0.4409]],
+  telescope: [[0.092, -0.0049, 0.0595], [0.408, 0.8959, 0.6896]],
+  fishingPond: [[0.015, 0, 0.015], [0.985, 0.298, 0.985]],
+  // Milestone 11 task B: baking, wellness and creativity (original models built by tools/furniture-extra)
+  yogaMat: [[0.085, -0.001, 0.0065], [0.415, 0.0825, 0.965]],
+  sketchbook: [[0.14, 0, 0.14], [0.36, 0.0245, 0.36]],
+  breadOven: [[0.01, 0, 0.02], [0.49, 0.69, 0.4988]],
 };
 
 /** Axis-aligned bounds in rot-0 local space. */
@@ -391,9 +399,9 @@ const KITCHEN: ObjectDef[] = [
   obj(stove, {
     id: 'stove-basic', name: 'Basic Gas Range', category: 'kitchen', subcategory: 'stove', rooms: ['kitchen'], style: 'classic',
     description: 'Four burners and an oven. Cooks use it when they make a meal from the fridge.',
-    tags: ['stove', 'appliance', 'cooking', 'cleanable'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
+    tags: ['stove', 'appliance', 'cooking', 'baking', 'cleanable'], tier: 'budget', price: dollars(420), quality: 2, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, stove, 1)],
-    interactions: [], stats: { cooking: 0 }, finishes: [woodR(['wood'])],
+    interactions: ['bakeTreat', 'sellBakes'], stats: { cooking: 0, baking: 0 }, finishes: [woodR(['wood'])],
   }),
   obj(counter, {
     id: 'counter-basic', name: 'Base Cabinet Counter', category: 'kitchen', subcategory: 'counter', rooms: ['kitchen'], style: 'classic',
@@ -549,7 +557,7 @@ const ELECTRONICS: ObjectDef[] = [
     description: 'A widescreen desktop computer for games and programming practice. Sits on a desk; users take the chair in front.',
     tags: ['computer', 'electronics'], tier: 'standard', price: dollars(900), quality: 3, functional: true,
     footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
-    interactions: ['playComputerGames', 'practiceProgramming', 'writeArticle', 'writeBook', 'programGig', 'jobSearch', 'adoptOnline'], stats: { fun: 1, skill: 1 }, finishes: [],
+    interactions: ['playComputerGames', 'practiceProgramming', 'writeArticle', 'writeBook', 'programGig', 'jobSearch', 'adoptOnline', 'researchOnline', 'writePaper'], stats: { fun: 1, skill: 1 }, finishes: [],
   }),
   obj(radio, {
     id: 'radio-retro', name: 'Retro Radio', category: 'electronics', subcategory: 'audio', rooms: ['living', 'kitchen', 'bedroom'], style: 'retro',
@@ -865,9 +873,9 @@ const KITCHEN_2: ObjectDef[] = [
   obj(stoveElectric, {
     id: 'stove-electric', name: 'Electric Hob Range', category: 'kitchen', subcategory: 'stove', rooms: ['kitchen'], style: 'modern',
     description: 'Four ceramic hotplates over a fan oven. Cooks use it when they make a meal from the fridge, and a good range lifts the result a little.',
-    tags: ['stove', 'appliance', 'cooking', 'cleanable'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(780), quality: 4, functional: true,
+    tags: ['stove', 'appliance', 'cooking', 'baking', 'cleanable'], packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(780), quality: 4, functional: true,
     footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, stoveElectric, 1)],
-    interactions: [], stats: { cooking: 1 }, finishes: [woodR(['wood'])],
+    interactions: ['bakeTreat', 'sellBakes'], stats: { cooking: 1, baking: 1 }, finishes: [woodR(['wood'])],
   }),
   obj(fridgeCompact, {
     id: 'fridge-compact', name: 'Compact Fridge', category: 'kitchen', subcategory: 'fridge', rooms: ['kitchen', 'bedroom', 'study'], style: 'modern',
@@ -1199,7 +1207,7 @@ const ELECTRONICS_3: ObjectDef[] = [
     description: 'A slim laptop for games and programming practice that works on any table, desk or counter. Users take a chair in front of it.',
     tags: ['computer', 'electronics', 'laptop'], packs: ['modern-minimal', 'creative-studio'], tier: 'standard', price: dollars(750), quality: 3, functional: true,
     footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
-    interactions: ['playComputerGames', 'practiceProgramming', 'adoptOnline'], stats: { fun: 0.9, skill: 0.9 }, finishes: [darkMetalR('Case')],
+    interactions: ['playComputerGames', 'practiceProgramming', 'adoptOnline', 'researchOnline', 'writePaper'], stats: { fun: 0.9, skill: 0.9 }, finishes: [darkMetalR('Case')],
   }),
   obj(shelfSpeaker, {
     id: 'speaker-shelf', name: 'Bookshelf Speaker', category: 'electronics', subcategory: 'audio', rooms: ['living', 'study', 'bedroom'], style: 'classic',
@@ -1451,10 +1459,68 @@ const FAMILY_OBJECTS: ObjectDef[] = [
   }),
 ];
 
+// --- Milestone 11, task C: photography, fishing and research -----------------------------------
+const cameraFit = fit('cameraTripod', FP11, 2);
+const telescopeFit = fit('telescope', FP11, 1.5);
+const pondFit = fit('fishingPond', FP22, 2);
+const M11_OBJECTS: ObjectDef[] = [
+  obj(cameraFit, {
+    id: 'camera-tripod', name: 'Camera Tripod', category: 'hobby', subcategory: 'photography', rooms: ['living', 'study', 'bedroom'], style: 'modern',
+    description: 'A camera on a sturdy tripod. Take photos at home to build Photography, or finish a set of prints to sell.',
+    tags: ['camera', 'photography', 'hobby'], tier: 'standard', price: dollars(320), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('shoot', 0.5, cameraFit, 1)],
+    interactions: ['takePhotos', 'sellPhotos'], stats: { fun: 1, skill: 1 }, finishes: [darkMetalR('Tripod and body')],
+  }),
+  obj(telescopeFit, {
+    id: 'telescope', name: 'Telescope', category: 'hobby', subcategory: 'science', rooms: ['study', 'bedroom', 'living', 'outdoor'], style: 'classic',
+    description: 'A refracting telescope on a tripod. Study the night sky to build Research: relaxing, and sharper than reading alone.',
+    tags: ['telescope', 'research', 'science', 'hobby'], tier: 'premium', price: dollars(480), quality: 4, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('observe', 0.5, telescopeFit, 1)],
+    interactions: ['researchSky'], stats: { fun: 1.1, skill: 1.1 }, finishes: [darkMetalR('Tube and mount')],
+  }),
+  obj(pondFit, {
+    id: 'garden-pond-fishing', name: 'Stocked Garden Pond', category: 'outdoor', subcategory: 'pond', rooms: ['outdoor'], style: 'cottage',
+    description: 'A stone-edged garden pond with lily pads and reeds, stocked with fish. Fish from the front edge; catches can be eaten or sold.',
+    tags: ['pond', 'water', 'fishing', 'outdoor'], tier: 'standard', price: dollars(650), quality: 3, functional: true,
+    footprint: FP22, layer: 'floor', blocksMovement: true, slots: [useFront('fish', 1, pondFit, 2)],
+    interactions: ['fishPond'], stats: { fun: 1, environment: 3 }, finishes: [],
+  }),
+];
+
+// --- Milestone 11, task B: baking, wellness and creativity ------------------------------------
+const breadOvenFit = fit('breadOven', FP11, 2);
+const yogaMatFit = fit('yogaMat', FP12, 2);
+const sketchbookFit = fit('sketchbook', FP11, 2);
+const M11_SKILLS_OBJECTS: ObjectDef[] = [
+  obj(breadOvenFit, {
+    id: 'bread-oven', name: 'Bread Oven', category: 'kitchen', subcategory: 'stove', rooms: ['kitchen'], style: 'cottage',
+    description: 'A countertop bread oven with a stone deck and a glass door. Bake bread, cakes and pies without tying up the stove, and a little better than a plain range.',
+    tags: ['stove', 'appliance', 'cooking', 'baking', 'cleanable'], tier: 'premium', price: dollars(620), quality: 4, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, slots: [useFront('use', 0.5, breadOvenFit, 1)],
+    interactions: ['bakeTreat', 'sellBakes'], stats: { cooking: 0.2, baking: 2, environment: 1 }, finishes: [applianceR(['metal']), darkMetalR('Door and vents')],
+  }),
+  obj(yogaMatFit, {
+    id: 'yoga-mat', name: 'Yoga Mat', category: 'hobby', subcategory: 'wellness', rooms: ['living', 'bedroom', 'study'], style: 'modern',
+    description: 'A padded nonslip mat, always ready to unroll. Do yoga or a quick stretch to build Wellness; people walk over it when it is not in use.',
+    tags: ['yoga', 'mat', 'wellness', 'exercise', 'rug'], tier: 'budget', price: dollars(60), quality: 2, functional: true,
+    footprint: FP12, layer: 'rug', blocksMovement: false,
+    slots: [{ id: 'use', kind: 'use', pos: [0.5, 1], height: 0, facing: Math.PI, approach: [0, 0], posture: 'standing' }],
+    interactions: ['doYoga', 'stretch'], stats: { fun: 0.5, skill: 1.1, environment: 1 }, finishes: [region('mat', 'Mat', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+  obj(sketchbookFit, {
+    id: 'sketchbook', name: 'Sketchbook', category: 'hobby', subcategory: 'art', rooms: ['study', 'bedroom', 'living'], style: 'classic',
+    description: 'An open sketchbook with a pencil case, ready on a desk or table. Sketch ideas to build Creativity; painting, music, writing and baking feed it too.',
+    tags: ['sketchbook', 'art', 'creative', 'stationery'], tier: 'budget', price: dollars(70), quality: 3, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['sketchIdeas'], stats: { skill: 1, fun: 1, environment: 1 }, finishes: [region('cover', 'Cover', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+];
+
 /** Every buy-mode object definition (ready and in development). */
 export const OBJECTS: ObjectDef[] = [
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
   ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS, ...STAIR_OBJECTS, ...FAMILY_OBJECTS,
+  ...M11_OBJECTS, ...M11_SKILLS_OBJECTS,
 ];
 

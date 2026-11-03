@@ -104,6 +104,7 @@ export interface ObjectStats {
   hygiene?: number; // multiplier
   skill?: number; // skill gain multiplier
   cooking?: number; // meal quality bonus
+  baking?: number; // baked-goods quality bonus (Milestone 11)
   environment?: number; // decor score contribution, -5..10
 }
 
@@ -183,6 +184,13 @@ export interface InteractionDef {
   /** Need change applied once at completion. */
   needsOnComplete: Partial<Record<NeedId, number>>;
   skill?: { id: string; xpPerHour: number };
+  /**
+   * Milestone 11: another skill trained by the same practice, at this fraction of the primary xp (Creativity from
+   * painting, music, writing and baking). It uses the normal xp path, so there is only one progress bar per skill.
+   */
+  secondarySkill?: { id: string; fraction: number };
+  /** Milestone 11: a minimum skill level needed to start the interaction (selling baked goods at Baking 5). */
+  requiresSkill?: { id: string; level: number };
   /** Charged once when perform begins (e.g. groceries). Refunded if cancelled before perform. */
   cost?: Cents;
   moodletOnComplete?: string;
@@ -440,6 +448,8 @@ export interface RecipeDef {
   servings: number;
   /** Hunger restored by one portion at quality 1. */
   hunger: number;
+  /** Skill that gates the recipe and sets its quality (absent = cooking). Milestone 11: baking recipes. */
+  skill?: string;
   minCookingLevel: number;
   status: ContentStatus;
 }
