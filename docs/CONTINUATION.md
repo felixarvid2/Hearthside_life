@@ -38,14 +38,14 @@ Checks on the M8 and M9 state (PR #4):
 | Check | Result |
 |---|---|
 | `npm run typecheck` | clean |
-| `npm test` | 117 files, 1655 tests <!-- final-check-numbers --> |
-| `npm run content:check` | 0 errors, 0 warnings <!-- final-check-numbers --> |
-| `npm run build` | ok <!-- final-check-numbers --> |
-| `npm run e2e` | OK <!-- final-check-numbers --> |
-| `npm run e2e:creator` | 288/288 <!-- final-check-numbers --> |
-| `npm run e2e:acceptance`, portrait 390x844 | 315/0 <!-- final-check-numbers --> |
-| `npm run e2e:acceptance`, landscape 844x390 | 313/0 <!-- final-check-numbers --> |
-| `npm run e2e:acceptance`, desktop 1280x720 | 302/0 <!-- final-check-numbers --> |
+| `npm test` | 117 files, 1655 tests |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | ok |
+| `npm run e2e` | OK |
+| `npm run e2e:creator` | 288/288 |
+| `npm run e2e:acceptance`, portrait 390x844 | 315/0 |
+| `npm run e2e:acceptance`, landscape 844x390 | 313/0 |
+| `npm run e2e:acceptance`, desktop 1280x720 | 302/0 |
 
 The final reruns are in progress; the numbers above are to be updated when they finish.
 Acceptance step 10 is `stepFamily` (M8); step 11 is `stepFloors`, then `stepExterior` (M9). `--steps=12` runs the exterior part alone.
@@ -84,7 +84,7 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 - Flakes in acceptance:
   - Step 2 "neighbour visible to tap".
   - Step 7 wall-paint side checks, seen in portrait.
-  - Step 8 "computer: tap point picks the intended thing" can hit a wall in landscape (seen once; it passed on rerun).
+  - Step 8 "computer: tap point picks the intended thing" hit wall `0:h:13:4` once in landscape and once in desktop; `tapAndOpenMenu` now turns the camera and looks again when a wall hides an object (desktop passed 302/0 after that).
   - Desktop acceptance takes about 35-40 minutes.
 - Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.
