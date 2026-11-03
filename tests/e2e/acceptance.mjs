@@ -3208,7 +3208,6 @@ async function stepExterior(T) {
     return { z: -1, x: -1 };
   });
   const row = pick.z, GX = pick.x;
-  if (process.env.EXT_DEBUG) { const dump = await page.evaluate(() => { const st = window.hearthside.debug.state(); const l = st.lots[st.activeLotId]; return { entry: l.entry, w: l.width, d: l.depth, levels: l.levels, walls: Object.keys(l.walls), floors: Object.keys(l.floors), objs: Object.values(l.objects).map((o) => [o.defId, o.x, o.z, o.rot, o.level]) }; }); (await import('node:fs')).writeFileSync(`/tmp/ext-debug-${T.vpInfo.w}.json`, JSON.stringify({ pick, ...dump })); }
   T.check(S, 'there is a clear yard row and gate column for a fence line', row > 0 && GX >= 0, JSON.stringify(pick));
   const Z0 = row;
   const f0 = await snap();
