@@ -3,6 +3,8 @@
 
 import * as THREE from 'three';
 import type { Lot } from '../core/types';
+import { EXTERIOR } from '../content/exterior';
+import { groundTexture } from './exteriorTextures';
 import { GeoBuilder, hash01 } from './geo';
 
 /** Height of the grass (floors are at 0, so their slab edge shows a little). */
@@ -48,11 +50,13 @@ export class EnvironmentView {
   private readonly paving = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 });
   private readonly foliage = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true });
   private key = '';
+  /** Base ground of the lot when it is not grass (Lot.ground, Milestone 9): its own tiled texture. */
+  private groundMat: { key: string; mat: THREE.MeshStandardMaterial; tex: THREE.Texture | null } | null = null;
 
   constructor() { this.group.name = 'environment'; }
 
-  build(lot: Pick<Lot, 'width' | 'depth' | 'entry' | 'id'>): void {
-    const key = `${lot.id}:${lot.width}:${lot.depth}:${lot.entry.x}:${lot.entry.z}`;
+  build(lot: Pick<Lot, 'width' | 'depth' | 'entry' | 'id'> & { ground?: Lot['ground'] }): void {
+    const key = `${lot.id}:${lot.width}:${lot.depth}:${lot.entry.x}:${lot.entry.z}:${lot.ground ?? 'grass'}`;
     if (key === this.key) return;
     this.key = key;
     this.clear();
@@ -75,7 +79,7 @@ export class EnvironmentView {
     lotGeo.rotateX(-Math.PI / 2);
     const luv = lotGeo.getAttribute('uv') as THREE.BufferAttribute;
     for (let i = 0; i < luv.count; i++) luv.setXY(i, luv.getX(i) * W / 3 + 0.37, luv.getY(i) * D / 3 + 0.21);
-    const lotMesh = new THREE.Mesh(lotGeo, this.lotGrass);
+    const lotMesh = new THREE.Mesh(lotGeo, this.lotMaterial(lot.ground ?? 'grass'));
     lotMesh.position.set(cx, GROUND_Y, cz);
     lotMesh.receiveShadow = true;
     lotMesh.userData.ownGeometry = true;
@@ -140,6 +144,22 @@ export class EnvironmentView {
     this.group.add(holder);
   }
 
+  /** The lot's ground material: the shared grass, or a tiled texture of its dirt or paving paint (world/terrain.ts uses the same ids). */
+  private lotMaterial(ground: Lot['ground']): THREE.MeshStandardMaterial {
+    const def = EXTERIOR.terrain[ground];
+    if (ground === 'grass' || !def) return this.lotGrass;
+    if (this.groundMat?.key === ground) return this.groundMat.mat;
+    this.groundMat?.tex?.dispose();
+    this.groundMat?.mat.dispose();
+    const tex = groundTexture(def, 128);
+    if (tex) tex.repeat.set(1, 1);
+    const mat = new THREE.MeshStandardMaterial({
+      roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1, ...(tex ? { map: tex } : { color: def.color }),
+    });
+    this.groundMat = { key: ground, mat, tex };
+    return mat;
+  }
+
   private clear(): void {
     this.group.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh && m.userData.ownGeometry) m.geometry.dispose(); });
     for (const c of [...this.group.children]) c.removeFromParent();
@@ -149,6 +169,8 @@ export class EnvironmentView {
     this.clear();
     this.grassTex.dispose();
     for (const m of [this.grass, this.lotGrass, this.paving, this.foliage]) m.dispose();
+    this.groundMat?.tex?.dispose();
+    this.groundMat?.mat.dispose();
   }
 }
 

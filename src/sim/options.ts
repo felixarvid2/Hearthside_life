@@ -5,6 +5,7 @@ import { isRepairable, offeredInteractionIds, socialSection } from '../content/c
 import type { SocialDef } from '../content/types';
 import { isAdult, romanceInterest } from '../core/relations';
 import { OUTFIT_CATEGORIES } from '../core/types';
+import { dayIndex } from '../core/clock';
 import type { ActionInstance, OutfitCategory, Person } from '../core/types';
 import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
 import { dirtOf, isBroken, wearOf } from './housekeeping';
@@ -12,6 +13,10 @@ import { repairFee } from './housework';
 import type { SimCtx } from './context';
 import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef, venueRestriction } from './context';
 import { NEED_LABELS } from './needs';
+import { CARE_IDS, careProblem } from './care';
+import { interactionStageReason, socialStageReason, stageAllows } from './gating';
+import { isDependentStage } from '../core/lifeStages';
+import { schoolDayOn } from './school';
 import { socialFit } from './autonomy';
 import { hasRecentMemory, knownPeople, peekRel } from './relationships';
 import { socialAcceptance } from './social';
@@ -45,6 +50,10 @@ export function requestReason(ctx: SimCtx, p: Person, req: ActionRequest, transi
   const a = previewAction(ctx, p, req);
   const beh = behaviorFor(ctx, a);
   if (!beh) return 'That interaction is not available.';
+  // Life stages (Milestone 8): babies, toddlers and children only do what their stage allows (sim/gating.ts).
+  const gateDef = interactionDef(ctx, req.interactionId);
+  const gate = gateDef ? interactionStageReason(gateDef, p) : null;
+  if (gate) return gate;
   const r = beh.check(ctx, p, a);
   if (r || !transient) return r;
   const def = interactionDef(ctx, req.interactionId);
@@ -76,6 +85,7 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
       for (const iid of offeredInteractionIds(ref.def)) {
         const def = interactionDef(ctx, iid);
         if (!def || def.status !== 'ready') continue;
+        if (!stageAllows(def, p.lifeStage)) continue; // nothing a baby or toddler cannot do, nothing a child may not do
         if (venueRestriction(ctx, p, def)) continue; // a picnic at the park's tables, not at the cafe's
         // Chores only show when there is something to do: dirt to clean, a break to fix, wear to service.
         if (def.behavior === 'clean' && dirtOf(ref.obj) < 0.05) continue;
@@ -117,9 +127,13 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
       const def = interactionDef(ctx, 'goHere')!;
       return [option(ctx, p, def.id, def.name, def.icon, 'move', target)];
     }
-    case 'person':
+    case 'person': {
       if (target.personId === p.id) return selfOptions(ctx, p);
+      const other = ctx.state.people[target.personId];
+      // Little ones are looked after (Milestone 8): care entries, plus the socials made for toddlers.
+      if (other && isDependentStage(other.lifeStage)) return [...careOptions(ctx, p, other), ...(other.lifeStage === 'toddler' ? socialOptions(ctx, p, other.id) : [])];
       return socialOptions(ctx, p, target.personId);
+    }
     case 'self':
       return selfOptions(ctx, p);
   }
@@ -150,6 +164,7 @@ function socialOptions(ctx: SimCtx, p: Person, otherId: string): InteractionOpti
   const t: ActionInstance['target'] = { kind: 'person', personId: otherId };
   const rows = Object.values(ctx.content.socials)
     .filter((d) => d.status === 'ready')
+    .filter((d) => d.category === 'romantic' || d.requires.romantic === true || socialStageReason(d, p, other) === null)
     .map((d) => {
       const o = option(ctx, p, d.id, d.name, d.icon, 'social', t);
       const section = socialSection(d);
@@ -175,8 +190,12 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
   const self: ActionInstance['target'] = { kind: 'self' };
   const defs = Object.values(ctx.content.interactions).filter((d) => d.kind === 'self' && d.status === 'ready');
   if (p.career && !defs.some((d) => d.behavior === 'goToWork')) defs.push(BUILTIN_INTERACTIONS.goToWork!);
+  if (p.school && schoolDayOn(ctx.content, p, dayIndex(ctx.now)) && !defs.some((d) => d.behavior === 'goToSchool')) defs.push(BUILTIN_INTERACTIONS.goToSchool!);
   for (const def of defs) {
     const beh = def.behavior ?? 'generic';
+    if (beh === 'care' || !stageAllows(def, p.lifeStage)) continue;
+    if (beh === 'goToSchool' && !p.school) continue;
+    if (beh === 'openAdopt') { out.push({ ...option(ctx, p, def.id, def.name, def.icon, 'self', self), section: 'phone' }); continue; }
     if (beh === 'leaveLot' || def.id === 'leaveLot') continue;
     if (venueRestriction(ctx, p, def)) continue; // a jog is offered in the park only
     if (beh === 'goToWork' && !p.career) continue;
@@ -186,6 +205,7 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
       const strangers = new Set(ctx.state.neighbourhood?.npcHouseholdIds ?? []);
       for (const other of Object.values(ctx.state.people)) {
         if (other.householdId === p.householdId || !ctx.state.households[other.householdId] || ctx.state.households[other.householdId]!.isPlayable) continue;
+        if (other.lifeStage === 'baby' || other.lifeStage === 'toddler' || other.lifeStage === 'child') continue; // little ones do not come alone
         if (strangers.has(other.householdId) && peekRel(ctx.state, p.id, other.id).familiarity <= 0 && peekRel(ctx.state, other.id, p.id).familiarity <= 0) continue;
         out.push({ ...option(ctx, p, def.id, `Invite ${other.firstName} Over`, def.icon, 'self', self, { personId: other.id }), section: 'phone' });
       }
@@ -232,6 +252,23 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
       if (!isRepairable(ref.def) || !isBroken(ref.obj)) continue;
       out.push(option(ctx, p, call.id, `Call a Repairperson: ${ref.def.name} ($${(repairFee(p) / 100).toFixed(0)})`, call.icon, 'self', { kind: 'object', objectId: ref.obj.id, slotId: null }));
     }
+  }
+  return out;
+}
+
+/** Care entries for a baby or toddler (Milestone 8): feed, change, put to bed, cuddle, play and the birthday. */
+function careOptions(ctx: SimCtx, p: Person, dependent: Person): InteractionOption[] {
+  const t: ActionInstance['target'] = { kind: 'person', personId: dependent.id };
+  const out: InteractionOption[] = [];
+  for (const id of CARE_IDS) {
+    const def = interactionDef(ctx, id);
+    if (!def || def.status !== 'ready') continue;
+    const o = option(ctx, p, id, def.name, def.icon, 'social', t);
+    if (o.enabled) {
+      const problem = careProblem(ctx, p, dependent, id);
+      if (problem) { o.enabled = false; o.reason = problem; }
+    }
+    out.push({ ...o, section: 'care' });
   }
   return out;
 }

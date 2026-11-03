@@ -1,0 +1,10 @@
+/* Milestone 9 exterior build tools (Roof, Fence, Garden): card grids with pictures, the pitch slider, the Buy shortcut. */
+.bb-ext-host .card-grid { grid-template-columns: repeat(auto-fill, minmax(6.3rem, 1fr)); }
+.bb-ext-host .card .thumb { object-fit: contain; background: var(--paper-2); aspect-ratio: 1 / 1; }
+.bb-ext-finishes .card .thumb, .bb-ext-paints .card .thumb { object-fit: cover; image-rendering: auto; }
+.bb-ext-host[hidden] { display: none; }
+.bb-range-field[hidden], .bb-pal-field[hidden] { display: none; }
+.bb-range { width: 100%; min-height: var(--tap); accent-color: var(--accent-2); touch-action: pan-y; }
+.bb-range-value { font-weight: 800; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.bb-ext-buy { align-self: flex-start; }
+.bb-ext-buy[hidden] { display: none; }

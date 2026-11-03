@@ -35,6 +35,8 @@ from mpfb_common import enable_mpfb, mp, script_args  # noqa: E402
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--sex", choices=["f", "m"], required=True)
+ap.add_argument("--stage", choices=["baby", "toddler", "child", "teen", "adult", "elder"], default="adult",
+                help="life stage: MakeHuman age macro, proportions fitted onto a scaled UAL skeleton (adult = the original bodies)")
 ap.add_argument("--ual", required=True, help="JSON of the UAL joints (tools/mpfb/dump-skeleton.mjs)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--no-morphs", action="store_true")
@@ -45,6 +47,9 @@ ap.add_argument("--smooth", type=int, default=5, help="passes of skin weight smo
 ap.add_argument("--stylise", type=float, default=1.0, help="strength of the small cosy-sim face tweaks (0 = plain MakeHuman)")
 args = ap.parse_args(script_args())
 SEX = args.sex
+STAGE = args.stage
+# file name stem: mpfb_f / mpfb_m for adults, mpfb_<stage>_<sex> for the others (the baby is one unisex body: sex f, no suffix)
+STEM = "mpfb_" + SEX if STAGE == "adult" else ("mpfb_baby" if STAGE == "baby" else "mpfb_%s_%s" % (STAGE, SEX))
 SMOOTH_PASSES = args.smooth
 os.makedirs(args.out, exist_ok=True)
 
@@ -62,13 +67,38 @@ SKIN = "bobby_03_young_female_hairless"  # neutral, no hair cap and no body hair
 EYES = ("eyes", "low-poly.mhclo", "Eyes", "brownlight")
 BROWS = ("eyebrows", "eyebrow001.mhclo", "Eyebrows")
 LASHES = ("eyelashes", "eyelashes01.mhclo", "Eyelashes")
-# female: two CC0 MakeHuman assets; male: trunks generated from the skin mesh (make_trunks below, no third-party asset)
-UNDERWEAR = [("clothes", "wolgade_female_panties_01.mhclo"), ("clothes", "wolgade_female_top_01.mhclo")] if SEX == "f" else []
+# Life stages (STAGE): MakeHuman's age macro (0 = 1 year, 0.1875 = 11, 0.5 = 25, 1 = 90 years), the height the body is scaled to (metres,
+# the game's STAGE_HEIGHTS), the head scale (the adults' stylised big heads; children keep MakeHuman's own proportions), the factor for the
+# detail targets (they are authored for an adult body) and the kind of underwear (a generated piece cut out of the skin, see make_trunks).
+STAGES = {
+    "adult": dict(age=None, height=1.80, head=None, detail=1.0, underwear="trunks" if SEX == "m" else None),
+    "baby": dict(age=0.0, height=0.68, head=1.1, detail=0.55, weight=0.78, underwear="diaper"),
+    "toddler": dict(age=0.0375, height=0.93, head=1.15, detail=0.65, weight=0.7, underwear="briefs"),
+    "child": dict(age=0.13, height=1.28, head=1.15, detail=0.8, weight=0.6, underwear="briefs"),
+    "teen": dict(age=0.28, height=1.66 if SEX == "m" else 1.60, head=1.15, detail=0.95, weight=0.5 if SEX == "f" else 0.55, underwear="trunks" if SEX == "m" else None),
+    "elder": dict(age=0.92, height=1.76 if SEX == "m" else 1.66, head=1.15, detail=1.0, weight=0.55 if SEX == "f" else 0.62, underwear="trunks" if SEX == "m" else None),
+}
+CFG = STAGES[STAGE]
+UW_MODE = CFG["underwear"]  # trunks / briefs / diaper (generated), or None: the two CC0 MakeHuman assets (women, from the teens)
+# women's (and teen girls') underwear: two CC0 MakeHuman assets; the others are generated from the skin mesh (make_trunks below, no third-party asset)
+UNDERWEAR = [("clothes", "wolgade_female_panties_01.mhclo"), ("clothes", "wolgade_female_top_01.mhclo")] if UW_MODE is None else []
 
 # neutral figure: adult, average everything; MakeHuman's default race mix. gender 0 = female, 1 = male
 # (MakeHuman age 0.5 = 25 years, 0.56 = about 32)
 MACRO = {"gender": 0.0 if SEX == "f" else 1.0, "age": 0.52 if SEX == "f" else 0.56, "muscle": 0.5 if SEX == "f" else 0.76,
          "weight": 0.5 if SEX == "f" else 0.66, "proportions": 0.5, "height": 0.5, "cupsize": 0.5, "firmness": 0.5}
+ADULT_MACRO = dict(MACRO)
+if STAGE != "adult":
+    MACRO["age"] = CFG["age"]
+    if STAGE == "baby":
+        MACRO["gender"] = 0.5
+    MACRO["weight"] = CFG["weight"]
+    if STAGE in ("baby", "toddler", "child"):
+        MACRO["muscle"] = 0.5
+    elif STAGE == "teen":
+        MACRO["muscle"] = 0.5 if SEX == "f" else 0.6
+    elif STAGE == "elder":
+        MACRO["muscle"] = 0.45 if SEX == "f" else 0.6
 
 # (morph name, kind, target, value). Macro sliders go from their neutral value to `value`; detail targets are added at `value`.
 MORPHS = [
@@ -80,6 +110,8 @@ MORPHS = [
     ("shoulders_wide", "detail", "measure-shoulder-dist-incr", 1.0),
     ("belly_round", "detail", "stomach-pregnant-incr", 1.0),
 ]
+if STAGE in ("baby", "toddler", "child"):  # no bust, waist, hip or shoulder sliders on children (their targets are adult shapes)
+    MORPHS = [m for m in MORPHS if m[0].split("_")[0] in ("weight", "muscle", "belly")]
 # the slider gain the viewer / game applies to the macro morphs (MakeHuman's weight and muscle ranges are subtle); the underwear clearance holds at it
 GAIN = {"weight_up": 3, "weight_down": 3, "muscle_up": 2, "muscle_down": 2}
 
@@ -145,6 +177,24 @@ def ref_child(bone):
 for o in list(bpy.data.objects):
     bpy.data.objects.remove(o, do_unlink=True)
 
+REF_BONES = None  # stages: the rig bones (head, tail) and the height of the plain adult of the same sex, to take the proportions from
+REF_HEIGHT = None
+if STAGE != "adult":
+    ref_macro = TargetService.get_default_macro_info_dict()
+    for k, v in ADULT_MACRO.items():
+        ref_macro[k] = v
+    ref_human = HumanService.create_human(mask_helpers=False, macro_detail_dict=ref_macro)
+    ref_rig = HumanService.add_builtin_rig(ref_human, "game_engine")
+    REF_BONES = {b.name: (np.array(b.head_local), np.array(b.tail_local)) for b in ref_rig.data.bones}
+    bpy.context.view_layer.update()
+    _eo = ref_human.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    _me = _eo.to_mesh()
+    REF_HEIGHT = float(max(v.co[2] for v in _me.vertices))  # the macro targets are shape keys: read the evaluated mesh
+    _eo.to_mesh_clear()
+    for o in list(bpy.data.objects):
+        bpy.data.objects.remove(o, do_unlink=True)
+    print("REF adult height %.3f" % REF_HEIGHT)
+
 macro = TargetService.get_default_macro_info_dict()
 for k, v in MACRO.items():
     macro[k] = v
@@ -188,6 +238,12 @@ STYLE = {
           ("*-upperarm-shoulder-muscle-incr", 0.9), ("*-upperarm-muscle-incr", 1.0), ("*-lowerarm-muscle-incr", 0.7),
           ("*-upperleg-muscle-incr", 0.4), ("*-lowerleg-muscle-incr", 0.4)],
 }[SEX]
+if STAGE in ("baby", "toddler", "child"):  # children: a friendly face only (the men's build targets are adult shapes)
+    STYLE = [("*-eye-scale-incr", 0.3), ("*-cheek-volume-incr", 0.2), ("mouth-angles-up", 0.8)]
+elif STAGE == "teen" and SEX == "m":
+    STYLE = [(t, w * (1.0 if t.startswith(("*-eye", "mouth", "*-cheek", "nose", "forehead-scale")) else 0.15)) for t, w in STYLE]
+elif STAGE == "elder":
+    STYLE = [(t, w * 0.8) for t, w in STYLE]
 STYLE_USED = []
 if args.stylise > 0:
     for tname, w in STYLE:
@@ -273,8 +329,16 @@ def body_mask():
 # male underwear: boxer-style trunks cut out of the skin mesh (own geometry, no third-party asset: CC0 like the base mesh)
 # ---------------------------------------------------------------------------------------------------------------------
 TRUNK_SRC = None   # per trunk vertex: the two body vertices it is interpolated from, and the weights
-TRUNK_HEM = 0.095   # hem this far below the crotch
-TRUNK_RISE = (0.215, 0.185)  # waistband height above the crotch: back, front (a little lower at the front)
+# Underwear pieces by mode, lengths for an adult (scaled by the body's height ratio S): hem this far below the crotch, waistband height above
+# the crotch (back, front: a little lower at the front), how steeply the hem rises from the middle toward the hips (0: straight trunk legs;
+# briefs and diaper get slanted leg openings) and how far the piece stands off the skin.
+UW_PARAMS = {
+    "trunks": dict(hem=0.095, rise=(0.215, 0.185), slope=0.0, lift=0.0045),
+    "briefs": dict(hem=0.04, rise=(0.19, 0.16), slope=0.85, lift=0.0035),
+    "diaper": dict(hem=0.03, rise=(0.26, 0.23), slope=1.1, lift=0.007),
+}
+UW = UW_PARAMS.get(UW_MODE or "", UW_PARAMS["trunks"])
+TRUNK_HEM, TRUNK_RISE = UW["hem"], UW["rise"]
 
 
 def make_trunks():
@@ -285,24 +349,28 @@ def make_trunks():
     me_h = human.data
     pos = base["body"]
     flag = body_mask()
-    mid = flag & (np.abs(pos[:, 0]) < 0.012) & (pos[:, 2] > 0.6) & (pos[:, 2] < 1.15)
+    height = float(pos[flag, 2].max())
+    sc = 1.0 if STAGE == "adult" else height / 1.75  # the lengths below are for an adult of about 1.75 m (MakeHuman space)
+    mid = flag & (np.abs(pos[:, 0]) < 0.012 * sc) & (pos[:, 2] > 0.35 * height) & (pos[:, 2] < 0.66 * height)
     crotch = float(pos[mid, 2].min())
 
     def top_z(y):  # waistband plane: lower at the front (the human looks to -y)
-        t = np.clip((0.02 - y) / 0.14, 0.0, 1.0)
-        return crotch + TRUNK_RISE[0] + (TRUNK_RISE[1] - TRUNK_RISE[0]) * t
+        t = np.clip((0.02 * sc - y) / (0.14 * sc), 0.0, 1.0)
+        return crotch + sc * (TRUNK_RISE[0] + (TRUNK_RISE[1] - TRUNK_RISE[0]) * t)
 
-    hem = crotch - TRUNK_HEM
+    def hem_z(x):  # hem plane: horizontal for trunks, rising from the middle toward the hips for briefs and diapers (leg openings)
+        return crotch - sc * TRUNK_HEM + UW["slope"] * np.maximum(np.abs(x) - 0.012 * sc, 0.0)
+
     f_top = top_z(pos[:, 1]) - pos[:, 2]   # >= 0 below the waistband
-    f_hem = pos[:, 2] - hem                # >= 0 above the hem
-    inside = flag & (f_top >= 0) & (f_hem >= 0) & (np.abs(pos[:, 0]) < 0.3)
+    f_hem = pos[:, 2] - hem_z(pos[:, 0])   # >= 0 above the hem
+    inside = flag & (f_top >= 0) & (f_hem >= 0) & (np.abs(pos[:, 0]) < 0.3 * sc)
     nbr = {}
     for e in me_h.edges:
         a, b = e.vertices
         nbr.setdefault(a, []).append(b)
         nbr.setdefault(b, []).append(a)
     uvl = me_h.uv_layers.active.data
-    polys = [p for p in me_h.polygons if flag[list(p.vertices)].all() and inside[list(p.vertices)].any() and abs(pos[list(p.vertices), 0].mean()) < 0.3]
+    polys = [p for p in me_h.polygons if flag[list(p.vertices)].all() and inside[list(p.vertices)].any() and abs(pos[list(p.vertices), 0].mean()) < 0.3 * sc]
     parent = {}  # outside vertex -> (inside neighbour, t)
     keep = []
     for p in polys:
@@ -343,11 +411,12 @@ def make_trunks():
     bpy.context.scene.collection.objects.link(obj)
     parts["underwear0"] = obj
     base["underwear0"] = co.copy()
-    TRUNK_SRC = {"idx": idx, "wgt": wgt, "v": np.clip((co[:, 2] - hem) / (top_z(co[:, 1]) - hem), 0.0, 1.0)}
-    print("TRUNKS crotch z %.3f, hem %.3f, %d polys (%d dropped), %d verts (%d slid to a plane)" % (crotch, hem, len(keep), len(polys) - len(keep), len(verts), len(parent)))
+    hem_v = hem_z(co[:, 0])
+    TRUNK_SRC = {"idx": idx, "wgt": wgt, "v": np.clip((co[:, 2] - hem_v) / np.maximum(top_z(co[:, 1]) - hem_v, 1e-6), 0.0, 1.0)}
+    print("TRUNKS %s crotch z %.3f, hem %.3f, %d polys (%d dropped), %d verts (%d slid to a plane)" % (UW_MODE, crotch, crotch - sc * TRUNK_HEM, len(keep), len(polys) - len(keep), len(verts), len(parent)))
 
 
-if SEX == "m":
+if UW_MODE:
     make_trunks()
 
 
@@ -366,8 +435,49 @@ def lift_off_skin(key, dist):
 
 
 for k in [k for k in parts if k.startswith("underwear")]:
-    lift_off_skin(k, CLEARANCE)
+    lift_off_skin(k, UW["lift"] * (1.0 if STAGE == "adult" else max(0.6, base["body"][:, 2].max() / 1.75)) if k == "underwear0" and TRUNK_SRC is not None else CLEARANCE)
 bones = {b.name: (np.array(b.head_local), np.array(b.tail_local)) for b in rig.data.bones}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# life stages: the skeleton the body is fitted to. The UAL joints of the adult skeleton with every bone's length scaled by the ratio of
+# that bone in this stage's MakeHuman rig to the same bone of the adult (so a child has a bigger head, a shorter leg, a shorter torso),
+# times one factor that brings the body to the stage's height. Directions stay, so the clips (rotations) play unchanged; the node
+# step writes the same factors into the skeleton of the GLB (manifest "joint_scale"), the game scales the root and pelvis tracks.
+# ---------------------------------------------------------------------------------------------------------------------
+JOINT_K = {n: 1.0 for n in UAL_NAMES}
+GLOBAL_K = 1.0
+if STAGE != "adult":
+    height_mh = float(base["body"][:, 2].max())
+    GLOBAL_K = CFG["height"] / (1.80 * height_mh / REF_HEIGHT)
+    UAL_PARENT = {j["name"]: j["parent"] for j in UAL}
+    mh_name = lambda u: {"root": "Root", "Head": "head"}.get(u, u)
+
+    def mh_len(table, a, b):  # distance between the heads of two rig bones
+        return float(np.linalg.norm(table[mh_name(b)][0] - table[mh_name(a)][0]))
+
+    torso_ratio = mh_len(bones, "pelvis", "neck_01") / mh_len(REF_BONES, "pelvis", "neck_01")
+    for j in UAL_NAMES:
+        par = UAL_PARENT.get(j)
+        if par is None:
+            continue
+        if re.match(r"^(spine_0[123]|neck_01)$", j):
+            ratio = torso_ratio
+        elif mh_name(j) in bones and mh_name(par) in bones:
+            ratio = mh_len(bones, par, j) / max(mh_len(REF_BONES, par, j), 1e-6)
+        else:  # leaf joints of the fingers and toes
+            ratio = JOINT_K[par] / GLOBAL_K
+        JOINT_K[j] = ratio * GLOBAL_K
+    # the left and right side share one factor
+    for j in UAL_NAMES:
+        if j.endswith("_l") and j[:-2] + "_r" in JOINT_K:
+            JOINT_K[j] = JOINT_K[j[:-2] + "_r"] = 0.5 * (JOINT_K[j] + JOINT_K[j[:-2] + "_r"])
+    scaled = {}
+    for j in UAL:
+        n = j["name"]
+        scaled[n] = np.zeros(3) if j["parent"] is None else scaled[j["parent"]] + JOINT_K[n] * (UAL_POS[n] - UAL_POS[j["parent"]])
+    UAL_POS = scaled
+    print("STAGE %s: mesh height %.3f (adult %.3f), global factor %.3f" % (STAGE, height_mh, REF_HEIGHT, GLOBAL_K))
+    print("JOINT_K", {n: round(JOINT_K[n], 2) for n in ("pelvis", "spine_01", "neck_01", "Head", "clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", "thigh_l", "calf_l", "foot_l", "ball_l")})
 
 
 def nearest_body_map(key, n=3):
@@ -472,7 +582,7 @@ if not args.no_morphs:
         if kind == "macro":
             set_macro(target, value)
         else:
-            sk = detail_shapekeys(target, value)
+            sk = detail_shapekeys(target, value * CFG["detail"])
         record(name)
         if kind == "macro":
             set_macro(target, MACRO[target])
@@ -491,7 +601,7 @@ if not args.no_morphs:
                 for tname, opposite, w in entries:
                     t = opposite if want_opposite else tname
                     if t is not None:
-                        sk += detail_shapekeys(t, w * args.face_amp)
+                        sk += detail_shapekeys(t, w * args.face_amp * CFG["detail"])
                 record(name, body_only_underwear=True)
                 ends.append(morph_pos.pop(name))
                 for k in sk:
@@ -544,6 +654,8 @@ def signed_angle(a, b, axis):
 #    at the jaw, MakeHuman's at the skull base.
 HEAD = 1.2 if SEX == "f" else 1.15
 HEIGHT = 1.80
+if STAGE != "adult":
+    HEAD, HEIGHT = CFG["head"] * GLOBAL_K, CFG["height"]
 SHIFT = {}
 # the UAL shoulder joint also sits ~5 cm higher over the neck base than MakeHuman's: keep MakeHuman's trapezius slope
 _s_torso = np.linalg.norm(UAL_POS["neck_01"] - UAL_POS["pelvis"]) / np.linalg.norm(bones["neck_01"][0] - bones["pelvis"][0])
@@ -837,7 +949,7 @@ trunk_flag = np.zeros(len(human.data.vertices))
 if TRUNK_SRC is not None:
     trunk_flag[TRUNK_SRC["idx"].reshape(-1)] = 1.0
 print("LIPS vertices", int((lips_weight > 0).sum()))
-manifest = {"sex": SEX, "ual": UAL_NAMES, "primitives": [], "morphs": list(morph_pos), "bone_scale": {b: round(float(s), 3) for b, s in scales.items()}}
+manifest = {"sex": SEX, "stage": STAGE, "stem": STEM, "height": HEIGHT, "underwear_mode": UW_MODE, "joint_scale": {n: round(float(k), 5) for n, k in JOINT_K.items()}, "ual": UAL_NAMES, "primitives": [], "morphs": list(morph_pos), "bone_scale": {b: round(float(s), 3) for b, s in scales.items()}}
 ual_of_bone = np.array([UAL_INDEX[ual_name(b)] for b in BONE_ORDER], dtype=np.uint16)
 
 all_pos = []
@@ -940,7 +1052,7 @@ def uv_masks():
 
 
 _cover, _scalp, _lips = uv_masks()
-with open(os.path.join(args.out, "mpfb_%s.uvmask.bin" % SEX), "wb") as f:  # three MASK_PX^2 masks, in this order
+with open(os.path.join(args.out, STEM + ".uvmask.bin"), "wb") as f:  # three MASK_PX^2 masks, in this order
     f.write(_cover.tobytes())
     f.write(_scalp.tobytes())
     f.write(_lips.tobytes())
@@ -984,7 +1096,7 @@ def lic(name):
 
 used = [os.path.basename(p)[:-6] for p in ASSET_FILES.values()] + [SKIN, EYES[3]]
 manifest["licenses"] = {n: lic(n) for n in used}
-if SEX == "m":
+if TRUNK_SRC is not None:
     manifest["licenses"]["trunks (generated from the base mesh by tools/mpfb/build_body.py)"] = {
         "license": "CC0", "author": "Hearthside Life, derived from the MakeHuman base mesh (CC0)", "source": "tools/mpfb/build_body.py"}
 manifest["licenses"]["MakeHuman base mesh, targets, game_engine rig and weights (bundled in MPFB 2.0.18)"] = {
@@ -994,9 +1106,9 @@ manifest["face_morphs"] = [n for n, _ in FACE_MORPHS if n in morph_pos]
 manifest["iris"] = {"crop_px": 260, "centres_px": [[724, 305], [301, 719]], "texture": manifest["textures"]["eyes"]}
 print("LICENSES", json.dumps({k: v["license"] for k, v in manifest["licenses"].items()}))
 
-with open(os.path.join(args.out, "mpfb_%s.bin" % SEX), "wb") as f:
+with open(os.path.join(args.out, STEM + ".bin"), "wb") as f:
     for c in bin_chunks:
         f.write(c)
-with open(os.path.join(args.out, "mpfb_%s.json" % SEX), "w") as f:
+with open(os.path.join(args.out, STEM + ".json"), "w") as f:
     json.dump(manifest, f)
 print("DONE", SEX, "bin %.1f kB" % (bin_len / 1024))

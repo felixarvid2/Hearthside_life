@@ -13,12 +13,12 @@ import {
 } from './editorCommon';
 
 export const CATEGORY_ORDER: CatalogCategory[] = [
-  'seating', 'beds', 'tables', 'storage', 'kitchen', 'bathroom', 'lighting', 'electronics', 'hobby', 'decor', 'outdoor', 'kids',
+  'seating', 'beds', 'tables', 'storage', 'kitchen', 'bathroom', 'lighting', 'electronics', 'hobby', 'decor', 'outdoor', 'kids', 'stairs',
 ];
 
 export const CATEGORY_LABELS: Record<CatalogCategory, string> = {
   seating: 'Seating', beds: 'Beds', tables: 'Tables & desks', storage: 'Storage', kitchen: 'Kitchen', bathroom: 'Bathroom',
-  lighting: 'Lighting', electronics: 'Electronics', hobby: 'Hobby & skills', decor: 'Decor', outdoor: 'Outdoor', kids: 'Kids',
+  lighting: 'Lighting', electronics: 'Electronics', hobby: 'Hobby & skills', decor: 'Decor', outdoor: 'Outdoor', kids: 'Kids', stairs: 'Stairs',
 };
 
 const TIER_ORDER: PriceTier[] = ['budget', 'standard', 'premium', 'luxury'];

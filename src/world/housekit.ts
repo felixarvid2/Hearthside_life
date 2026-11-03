@@ -8,6 +8,7 @@ import { MINUTES_PER_DAY } from '../core/clock';
 import { edgeKey, tileKey } from '../core/ids';
 import type { Tile } from '../core/nav';
 import type { EdgeDir, FinishRef, Lot, PlacedObject, Rot, WorldState } from '../core/types';
+import { stairHoles, syncLevels } from './levels';
 import { inLot } from './lots';
 import { buildNavGrid, edgePassable, isFree } from './navgrid';
 import { makePlacedObject } from './objects';
@@ -34,6 +35,18 @@ export interface HousePlan {
   path: { to: Tile; finish: SurfaceChoice };
   /** Placed in order: supports before the items on them. */
   furniture: Array<{ defId: string; x: number; z: number; rot: Rot }>;
+  /**
+   * Milestone 9: a second storey (level 1). Built after the ground floor's furniture, so a staircase placed there has already
+   * opened its stairwell (rooms are floored around it). Every enclosed room must be listed, as on the ground floor.
+   */
+  upper?: {
+    walls: Array<[Tile, Tile]>;
+    openings: Array<{ dir: EdgeDir; x: number; z: number; defId: string; flip?: boolean }>;
+    rooms: Array<{ name: string; probe: Tile; wall: SurfaceChoice; floor: SurfaceChoice }>;
+    /** Wall sides facing outside. */
+    exterior: SurfaceChoice;
+    furniture: Array<{ defId: string; x: number; z: number; rot: Rot }>;
+  };
 }
 
 /** Finish reference for a design and palette index from the content; throws when the design is missing. */
@@ -99,6 +112,41 @@ export function buildHouse(state: WorldState, content: ContentDB, lot: Lot, plan
 
   const placed: PlacedObject[] = [];
   for (const f of plan.furniture) placed.push(placeChecked(state, content, lot, f, label));
+  if (plan.upper) placed.push(...buildUpper(state, content, lot, plan.upper, label));
+  syncLevels(lot);
+  return placed;
+}
+
+/** The second storey of a plan (see HousePlan.upper). Stairwell tiles stay open. */
+function buildUpper(state: WorldState, content: ContentDB, lot: Lot, up: NonNullable<HousePlan['upper']>, label: string): PlacedObject[] {
+  const exterior = finishFor(content, 'wall', up.exterior);
+  for (const [from, to] of up.walls) addWallRun(lot, 1, from, to, { a: exterior, b: exterior });
+  for (const o of up.openings) {
+    const def = content.openings[o.defId];
+    if (!def) throw new Error(`${label}: unknown opening "${o.defId}"`);
+    addOpening(state, lot, def, edgeKey(1, o.dir, o.x, o.z), o.flip ?? false);
+  }
+  const holes = stairHoles(lot, content, 1);
+  const rooms = computeRooms(lot, 1);
+  const assigned = new Set<number>();
+  for (const spec of up.rooms) {
+    const room = roomAt(rooms, spec.probe.x, spec.probe.z);
+    if (!room || room.outdoor) throw new Error(`${label}: upstairs room "${spec.name}" at (${spec.probe.x}, ${spec.probe.z}) is not enclosed`);
+    if (assigned.has(room.id)) throw new Error(`${label}: upstairs room "${spec.name}" is listed twice`);
+    assigned.add(room.id);
+    const wall = finishFor(content, 'wall', spec.wall);
+    const floor = finishFor(content, 'floor', spec.floor);
+    for (const s of room.sides) {
+      const w = lot.walls[s.wallId];
+      if (w) setWallSideFinish(w, s.side, wall);
+    }
+    for (const t of room.tiles) if (!holes.has(`${t.x},${t.z}`)) lot.floors[tileKey(1, t.x, t.z)] = { ...floor };
+  }
+  for (const room of rooms) {
+    if (!room.outdoor && !assigned.has(room.id)) throw new Error(`${label}: upstairs room at (${room.tiles[0]?.x}, ${room.tiles[0]?.z}) has no finishes`);
+  }
+  const placed: PlacedObject[] = [];
+  for (const f of up.furniture) placed.push(placeChecked(state, content, lot, { ...f, level: 1 }, label));
   return placed;
 }
 
@@ -106,12 +154,13 @@ export function buildHouse(state: WorldState, content: ContentDB, lot: Lot, plan
  * Places one furnishing after validatePlacement; throws with the reasons when invalid. Furnishings count as
  * pre-owned (bought the day before) so selling them gives the depreciated value, not a same-day refund.
  */
-export function placeChecked(state: WorldState, content: ContentDB, lot: Lot, f: { defId: string; x: number; z: number; rot: Rot }, label: string): PlacedObject {
+export function placeChecked(state: WorldState, content: ContentDB, lot: Lot, f: { defId: string; x: number; z: number; rot: Rot; level?: number }, label: string): PlacedObject {
   const def = content.objects[f.defId];
   if (!def) throw new Error(`${label}: unknown object "${f.defId}"`);
-  const v = validatePlacement(state, content, lot.id, { defId: f.defId, x: f.x, z: f.z, rot: f.rot, level: 0 });
+  const level = f.level ?? 0;
+  const v = validatePlacement(state, content, lot.id, { defId: f.defId, x: f.x, z: f.z, rot: f.rot, level });
   if (!v.ok) throw new Error(`${label}: cannot place ${f.defId} at (${f.x}, ${f.z}) rot ${f.rot}: ${v.reasons.join(' ')}`);
-  const obj = makePlacedObject(state, def, { x: f.x, z: f.z, rot: f.rot, level: 0, ...(v.supportId ? { supportId: v.supportId } : {}) }, {
+  const obj = makePlacedObject(state, def, { x: f.x, z: f.z, rot: f.rot, level, ...(v.supportId ? { supportId: v.supportId } : {}) }, {
     ownerHouseholdId: lot.ownerHouseholdId,
     boughtAt: state.clock.minutes - MINUTES_PER_DAY,
   });

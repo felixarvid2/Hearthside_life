@@ -36,6 +36,7 @@
 
 import type { FinishRegion, ObjectDef, ObjectSlot, ObjectStats, Swatch } from './types';
 import { dollars } from '../core/money';
+import { STAIR_OBJECTS } from './stairBasic';
 
 type Vec3 = [number, number, number];
 
@@ -169,6 +170,13 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   vendingMachine: [[0.05, 0, 0.05], [0.45, 0.925, 0.43]],
   studyNotes: [[0.06, 0, 0.1024], [0.48, 0.25, 0.46]],
   lockerBank: [[0.01, 0, 0.02], [0.49, 0.975, 0.33]],
+  // Milestone 8 family furniture (original models built by tools/furniture-extra)
+  bassinet: [[0.06, 0, 0.06], [0.44, 0.425, 0.43]],
+  highChair: [[0.0875, 0, 0.11], [0.4125, 0.575, 0.49]],
+  toddlerBed: [[0.03, 0, 0.055], [0.47, 0.3, 0.945]],
+  pottyChair: [[0.125, 0, 0.12], [0.375, 0.325, 0.41]],
+  changingTable: [[0.02, 0, 0.04], [0.48, 0.54, 0.465]],
+  birthdayCake: [[0.05, 0, 0.05], [0.45, 0.235, 0.45]],
 };
 
 /** Axis-aligned bounds in rot-0 local space. */
@@ -541,7 +549,7 @@ const ELECTRONICS: ObjectDef[] = [
     description: 'A widescreen desktop computer for games and programming practice. Sits on a desk; users take the chair in front.',
     tags: ['computer', 'electronics'], tier: 'standard', price: dollars(900), quality: 3, functional: true,
     footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
-    interactions: ['playComputerGames', 'practiceProgramming', 'writeArticle', 'writeBook', 'programGig', 'jobSearch'], stats: { fun: 1, skill: 1 }, finishes: [],
+    interactions: ['playComputerGames', 'practiceProgramming', 'writeArticle', 'writeBook', 'programGig', 'jobSearch', 'adoptOnline'], stats: { fun: 1, skill: 1 }, finishes: [],
   }),
   obj(radio, {
     id: 'radio-retro', name: 'Retro Radio', category: 'electronics', subcategory: 'audio', rooms: ['living', 'kitchen', 'bedroom'], style: 'retro',
@@ -1191,7 +1199,7 @@ const ELECTRONICS_3: ObjectDef[] = [
     description: 'A slim laptop for games and programming practice that works on any table, desk or counter. Users take a chair in front of it.',
     tags: ['computer', 'electronics', 'laptop'], packs: ['modern-minimal', 'creative-studio'], tier: 'standard', price: dollars(750), quality: 3, functional: true,
     footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
-    interactions: ['playComputerGames', 'practiceProgramming'], stats: { fun: 0.9, skill: 0.9 }, finishes: [darkMetalR('Case')],
+    interactions: ['playComputerGames', 'practiceProgramming', 'adoptOnline'], stats: { fun: 0.9, skill: 0.9 }, finishes: [darkMetalR('Case')],
   }),
   obj(shelfSpeaker, {
     id: 'speaker-shelf', name: 'Bookshelf Speaker', category: 'electronics', subcategory: 'audio', rooms: ['living', 'study', 'bedroom'], style: 'classic',
@@ -1381,10 +1389,72 @@ const VENUE_OBJECTS: ObjectDef[] = [
   }),
 ];
 
+// =============================================================================================
+// Milestone 8: family furniture. A bassinet for babies, a high chair, a toddler bed, a potty chair, a changing table and a
+// birthday cake (original models built by tools/furniture-extra). The crib, toy chest and kids' beds above complete the
+// nursery; sim/care.ts settles babies in a crib or bassinet (tags 'crib' and 'bassinet').
+// =============================================================================================
+
+const bassinetFit = fit('bassinet', FP11, 2);
+const highChairFit = fit('highChair', FP11, 2);
+const toddlerBedFit = fit('toddlerBed', FP12, 2);
+const pottyFit = fit('pottyChair', FP11, 2, { back: WALL_GAP });
+const changingFit = fit('changingTable', FP11, 2, { back: WALL_GAP });
+const cakeFit = fit('birthdayCake', FP11, 2);
+
+const FAMILY_OBJECTS: ObjectDef[] = [
+  obj(bassinetFit, {
+    id: 'bassinet-wicker', name: 'Wicker Bassinet', category: 'kids', subcategory: 'crib', rooms: ['kids', 'bedroom'], style: 'cottage',
+    description: 'A hooded wicker bassinet on a wooden stand: a snug first bed for a newborn, small enough to sit beside the bed.',
+    tags: ['bed', 'bassinet', 'sleep', 'cleanable'], packs: ['kids-storybook', 'cozy-cottage'], tier: 'budget', price: dollars(180), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true,
+    slots: [sleep('sleep', bassinetFit.at(0.5, 0.5), 0.63, [0, 1])],
+    interactions: ['sleep', 'nap'], stats: { energy: 0.6, comfort: 3, environment: 1 }, finishes: [woodR(['wood', 'woodDark']), fabricR(['carpetBlue'], 'Blanket')],
+  }),
+  obj(highChairFit, {
+    id: 'high-chair', name: 'Wooden High Chair', category: 'kids', subcategory: 'chair', rooms: ['kids', 'dining', 'kitchen'], style: 'cottage',
+    description: 'A sturdy high chair with a feeding tray. A toddler sits up at the table and is served a meal by an older person.',
+    tags: ['chair', 'seat', 'high-chair', 'kids'], packs: ['kids-storybook', 'cozy-cottage'], tier: 'budget', price: dollars(120), quality: 2, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true,
+    slots: [sit('seat', highChairFit.at(0.5, 0.55), 0.68, [0, 1])],
+    interactions: ['sit'], stats: { comfort: 3, environment: 1 }, finishes: [woodR(['wood', 'woodDark']), fabricR(['carpetBlue'], 'Cushion')],
+  }),
+  obj(toddlerBedFit, {
+    id: 'bed-toddler', name: 'Toddler Bed', category: 'beds', subcategory: 'toddler', rooms: ['kids', 'bedroom'], style: 'playful',
+    description: 'A low toddler bed with side rails and a gap to climb in by. For the little ones who have outgrown the crib.',
+    tags: ['bed', 'toddler', 'sleep', 'cleanable'], packs: ['kids-storybook'], tier: 'budget', price: dollars(240), quality: 2, functional: true,
+    footprint: FP12, layer: 'floor', blocksMovement: true,
+    slots: [sleep('sleep', toddlerBedFit.at(0.5, 0.5), 0.3, [1, 1])],
+    interactions: ['sleep', 'nap'], stats: { energy: 0.75, comfort: 3, environment: 1 }, finishes: [woodR(['wood', 'woodDark']), fabricR(['carpet'], 'Bedding')],
+  }),
+  obj(pottyFit, {
+    id: 'potty-chair', name: 'Potty Chair', category: 'kids', subcategory: 'potty', rooms: ['kids', 'bathroom'], style: 'playful',
+    description: 'A little potty chair with a backrest. A toddler learns to use it, with some help, and practises Potty Training.',
+    tags: ['potty', 'kids', 'cleanable'], packs: ['kids-storybook'], tier: 'budget', price: dollars(35), quality: 1, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true,
+    slots: [sit('sit', pottyFit.at(0.5, 0.55), 0.34, [0, 1])],
+    interactions: ['usePotty'], stats: { environment: 0 }, finishes: [region('seat', 'Seat', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+  obj(changingFit, {
+    id: 'changing-table', name: 'Changing Table', category: 'kids', subcategory: 'changing', rooms: ['kids', 'bathroom', 'bedroom'], style: 'cottage',
+    description: 'A padded changing table with two open shelves of nappies and wipes. Changing a baby here leaves them a little fresher.',
+    tags: ['changing-table', 'kids', 'storage'], packs: ['kids-storybook', 'cozy-cottage'], tier: 'standard', price: dollars(210), quality: 3, functional: true,
+    footprint: FP11, layer: 'floor', blocksMovement: true, surfaceHeight: 1, stats: { environment: 1 },
+    finishes: [woodR(['wood', 'woodDark']), region('pad', 'Pad and baskets', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+  obj(cakeFit, {
+    id: 'birthday-cake', name: 'Birthday Cake', category: 'decor', subcategory: 'party', rooms: ['dining', 'kitchen', 'living'], style: 'playful',
+    description: 'A jam sponge with three candles. Set it on a table or counter, gather round and use "Age up now" to celebrate a birthday early.',
+    tags: ['cake', 'food', 'party', 'decor'], packs: ['everyday-essentials', 'kids-storybook'], tier: 'budget', price: dollars(25), quality: 2, functional: true,
+    footprint: FP11, layer: 'surface', blocksMovement: false, slots: [useFront('use', 0.5, null, 1)],
+    interactions: ['ageUpNow'], stats: { environment: 1 }, finishes: [region('icing', 'Candles', ['carpetBlue'], FABRIC_BLUE)],
+  }),
+];
+
 /** Every buy-mode object definition (ready and in development). */
 export const OBJECTS: ObjectDef[] = [
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
-  ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS,
+  ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS, ...STAIR_OBJECTS, ...FAMILY_OBJECTS,
 ];
 

@@ -36,6 +36,8 @@ export class CameraRig {
   insets: Insets = { left: 0, right: 0, top: 0, bottom: 0 };
   bounds = { x0: -2, z0: -2, x1: 26, z1: 26 };
   reducedMotion = false;
+  /** Milestone 9: height of the floor the camera works on (the ground plane for panning, picking and glides). */
+  levelHeight = 0;
   private turn: { from: number; to: number; t: number; dur: number } | null = null;
   private glide: { from: THREE.Vector3; to: THREE.Vector3; ppmFrom: number; ppmTo: number; t: number; dur: number } | null = null;
   private dirty = true;
@@ -132,9 +134,19 @@ export class CameraRig {
     this.dirty = true;
   }
 
-  /** Eases target (and optionally zoom) to a point. */
+  /** Milestone 9: moves the camera to another floor (a short glide, or at once with reduced motion). */
+  setLevelHeight(y: number): void {
+    if (y === this.levelHeight && this.target.y === y) return;
+    this.levelHeight = y;
+    if (this.reducedMotion) { this.target.y = y; this.glide = null; this.dirty = true; return; }
+    const to = this.glide ? this.glide.to.clone() : this.target.clone();
+    to.y = y;
+    this.glide = { from: this.target.clone(), to, ppmFrom: this.ppm, ppmTo: this.glide ? this.glide.ppmTo : this.ppm, t: 0, dur: 0.45 };
+  }
+
+  /** Eases target (and optionally zoom) to a point. `y` is the height above the current floor to aim at. */
   glideTo(x: number, z: number, ppm?: number, dur = 0.6, y = 0): void {
-    const to = new THREE.Vector3(x, y, z);
+    const to = new THREE.Vector3(x, this.levelHeight + y, z);
     to.x = Math.max(this.bounds.x0, Math.min(this.bounds.x1, to.x));
     to.z = Math.max(this.bounds.z0, Math.min(this.bounds.z1, to.z));
     const ppmTo = ppm === undefined ? this.ppm : Math.max(MIN_PPM, Math.min(MAX_PPM, ppm));
@@ -170,7 +182,7 @@ export class CameraRig {
     if (inView && !small) return false;
     const fit = this.fitPpm(sizeX, sizeZ, sizeY, 1.5);
     const ppmTo = Math.min(Math.max(this.ppm, small ? REVEAL_PPM : 0), Math.max(fit, MIN_PPM));
-    this.glideTo((min.x + max.x) / 2, (min.z + max.z) / 2, ppmTo, dur, Math.min(1, Math.max(0, (min.y + max.y) / 2)));
+    this.glideTo((min.x + max.x) / 2, (min.z + max.z) / 2, ppmTo, dur, Math.min(1, Math.max(0, (min.y + max.y) / 2 - this.levelHeight)));
     return true;
   }
 

@@ -425,7 +425,7 @@ function returnLot(ctx: SimCtx, p: Person): Lot | undefined {
 }
 
 /** Puts a returning person at the entry of the lot they come back to and lets them walk in. */
-function returnHome(ctx: SimCtx, p: Person): void {
+export function returnHome(ctx: SimCtx, p: Person): void {
   const lot = returnLot(ctx, p);
   if (!lot) {
     p.location = { kind: 'offlot', place: 'home', since: ctx.now, until: null };

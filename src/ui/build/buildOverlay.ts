@@ -71,13 +71,16 @@ export function mountBuildOverlay(opts: {
       ev.stopPropagation();
       const cur = session.handles().find((x) => x.id === hd.id);
       if (!cur) return;
-      const s = api.view.worldToScreen(cur.x + d[0]!, 0, cur.z + d[1]!);
+      const s = api.view.worldToScreen(cur.x + d[0]!, floorY(), cur.z + d[1]!);
       session.moveHandle(hd.id, s.x, s.y);
     });
     els.set(hd.id, e);
     host.appendChild(e);
     return e;
   };
+
+  /** Height of the floor being built on (Milestone 9). */
+  const floorY = (): number => (api.view.level?.() ?? 0) * 3;
 
   const place = (el: HTMLElement, x: number, y: number, z: number, keepOnScreen = false): boolean => {
     const s = api.view.worldToScreen(x, y, z);
@@ -104,7 +107,7 @@ export function mountBuildOverlay(opts: {
     for (const hd of handles) {
       keep.add(hd.id);
       const el = handleEl(hd);
-      el.hidden = !place(el, hd.x, 0, hd.z);
+      el.hidden = !place(el, hd.x, floorY(), hd.z);
     }
     for (const [id, el] of els) if (!keep.has(id)) { el.remove(); els.delete(id); }
 
@@ -115,7 +118,7 @@ export function mountBuildOverlay(opts: {
       const end = st.mode === 'drag' ? (t.to ?? t.from) : t.from;
       const mid = st.mode === 'drag' && handles.length ? handles[handles.length > 2 ? 2 : 1]! : null;
       const x = mid ? mid.x : end.x, z = mid ? mid.z : end.z;
-      const shown = place(tip, x, st.mode === 'click' && t.wallId ? 1.4 : 0, z, true);
+      const shown = place(tip, x, floorY() + (st.mode === 'click' && t.wallId ? 1.4 : 0), z, true);
       tip.hidden = !shown;
       setText(tip, tipText(pv));
       tip.dataset.ok = pv.unchanged ? 'neutral' : String(pv.ok);

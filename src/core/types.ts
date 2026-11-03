@@ -128,7 +128,9 @@ export interface Household {
 
 export type LedgerKind =
   | 'wage' | 'purchase' | 'refund' | 'sale' | 'groceries' | 'bill' | 'reward' | 'build' | 'gift' | 'start' | 'repair'
-  | 'career';
+  | 'career'
+  // Milestone 8: adoption fees, the emergency sitter and shares of money moved between households
+  | 'family';
 
 export interface LedgerEntry {
   id: Id;
@@ -213,6 +215,8 @@ export interface Fence {
   /** Colour/finish variant index of the FenceDef. */
   variant?: number;
   purchasePrice?: Cents;
+  /** Game minute it was built; with purchasePrice it decides the refund when removed (building/exteriorPlans.ts). */
+  boughtAt?: GameMinutes;
 }
 
 /** Milestone 9: a roof over a tile rectangle [x0,x1) x [z0,z1), resting on top of `level` (its walls' top). */
@@ -232,6 +236,7 @@ export interface Roof {
   /** Roof material/colour finish. */
   finish: FinishRef;
   purchasePrice?: Cents;
+  boughtAt?: GameMinutes;
 }
 
 export interface TilePos { x: number; z: number; level: number }
@@ -295,6 +300,23 @@ export interface PlacedObject {
   condition: { dirt: number; broken: boolean; wear?: number; brokenAt?: GameMinutes; fails?: number };
   /** For surface items: id of the object they rest on. */
   supportId?: Id;
+  /** Milestone 9: growth state of a crop bed (vegetable patch, orchard tree, herb planter), sim/garden.ts. Absent = nothing planted yet. */
+  garden?: GardenState;
+}
+
+/** Milestone 9: what grows in a garden bed. `growth` counts effective growing days up to `need`; see sim/garden.ts. */
+export interface GardenState {
+  /** CropDef id (content/exterior.ts) or null when the bed is empty. */
+  crop: string | null;
+  growth: number;
+  need: number;
+  /** 0 (dry) .. 1 (soaked) and 0 (clean) .. 1 (choked with weeds). */
+  water: number;
+  weeds: number;
+  /** Game day the state was last stepped to. */
+  day: number;
+  /** Completed harvests (rotates the next crop; part of the once-only occurrence id). */
+  harvests: number;
 }
 
 /** What a WorldItem is: a served meal, dirty dishes left after eating, or a floor mess (puddle, crumbs, spill). */
@@ -371,6 +393,8 @@ export interface Person {
   parentIds?: Id[];
   /** Milestone 8: school state for children and teens. */
   school?: SchoolState | null;
+  /** Milestone 8: game minute since which a baby's or toddler's need has been empty (the emergency sitter comes after 3 hours). */
+  careSince?: Partial<Record<NeedId, GameMinutes>>;
 }
 
 /** Milestone 8: school attendance and performance (children and teens). */
@@ -384,12 +408,19 @@ export interface SchoolState {
   /** Days attended / missed in the current term. */
   attended: number;
   missed: number;
+  /** Letter grade of the latest weekly report card, and the week (game day / 7) it was issued. */
+  lastGrade?: string;
+  reportWeek?: number;
 }
 
 export interface Pronouns { subject: string; object: string; possessive: string } // e.g. she/her/her
 
 export type PersonLocation =
-  | { kind: 'lot'; lotId: Id; level: number; x: number; z: number; facing: number; posture: Posture }
+  | {
+    kind: 'lot'; lotId: Id; level: number; x: number; z: number; facing: number; posture: Posture;
+    /** Milestone 9: metres above the floor of `level` while walking a staircase (`level` is then the lower one). Absent = 0. */
+    rise?: number;
+  }
   | {
     kind: 'offlot'; place: 'work' | 'school' | 'home' | 'errand' | 'visiting';
     /** home: the home lot; visiting: the lot visited (a venue or another home); work: the lot they left from; transit: the destination. */
@@ -497,7 +528,9 @@ export type MemoryKind =
   | 'fired' | 'aspiration' | 'movedIn' | 'gift' | 'joke' | 'insult' | 'comforted' | 'other'
   // Milestone 5: romance, trust, conflict and events
   | 'kiss' | 'rejected' | 'engaged' | 'married' | 'breakup' | 'betrayal' | 'secretShared' | 'reconciled'
-  | 'greatDate' | 'badDate' | 'party' | 'visit' | 'advice' | 'jealousy';
+  | 'greatDate' | 'badDate' | 'party' | 'visit' | 'advice' | 'jealousy'
+  // Milestone 8: life stages and family
+  | 'birthday' | 'adopted' | 'movedOut' | 'passedAway' | 'report';
 
 // ---------------------------------------------------------------------------------------------
 // Appearance (character creator)
@@ -578,7 +611,7 @@ export interface ActionInstance {
   /** Game minute the current phase started. */
   phaseSince: GameMinutes;
   /** Remaining route as tile centres; first = next waypoint. Serializable so routes survive save/load. */
-  route: Array<{ x: number; z: number }>;
+  route: Array<{ x: number; z: number; /** Milestone 9: level on arrival (absent = unchanged) */ level?: number; /** metres above that level's floor */ rise?: number }>;
   /** Perform-phase progress in game minutes and the planned duration (null = until need satisfied). */
   elapsed: number;
   duration: number | null;
@@ -652,7 +685,7 @@ export interface ScheduledEvent {
 export interface FeedEntry {
   id: Id;
   at: GameMinutes;
-  kind: 'info' | 'social' | 'money' | 'career' | 'need' | 'warning' | 'aspiration' | 'build';
+  kind: 'info' | 'social' | 'money' | 'career' | 'need' | 'warning' | 'aspiration' | 'build' | 'family';
   text: string;
   personId?: Id;
 }

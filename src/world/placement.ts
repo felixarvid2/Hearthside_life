@@ -16,7 +16,9 @@
 import type { ContentDB, ObjectDef } from '../content/types';
 import { blockingTiles, footprintTiles, rotateCell } from '../core/geometry';
 import type { Tile } from '../core/nav';
+import { tileKey } from '../core/ids';
 import type { Id, Lot, PlacedObject, Rot, WorldState } from '../core/types';
+import { levelSeeds, MAX_LEVELS, stairGeometry, stairHoles } from './levels';
 import { hasLevel, inLot } from './lots';
 import { blocksMovement, buildNavGrid, reachableMask, type NavGrid } from './navgrid';
 import { slotAccess, standTiles, type AccessContext } from './slots';
@@ -99,6 +101,12 @@ export function validatePlacement(state: WorldState, content: ContentDB, lotId: 
     if (reasons.length) break;
   }
 
+  // Milestone 9: above the ground floor furniture stands on floor, and the stairwell of a staircase below is open air
+  if (req.level >= 1 && (def.layer === 'floor' || def.layer === 'rug') && tiles.some((t) => lot.floors[tileKey(req.level, t.x, t.z)] === undefined)) {
+    reasons.push(tiles.some((t) => stairHoles(lot, content, req.level).has(keyOf(t))) ? 'The stairs open up there.' : 'It needs floor under it.');
+  }
+  if (def.stair) stairChecks(content, lot, req, def, reasons, warnings);
+
   const others = Object.values(lot.objects)
     .filter((o) => o.level === req.level && o.id !== req.ignoreObjectId)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -152,6 +160,49 @@ export function validatePlacement(state: WorldState, content: ContentDB, lotId: 
 
   if (reasons.length === 0) accessChecks(content, lot, req, def, supportId, reasons, warnings);
   return { ok: reasons.length === 0, reasons, tiles, ...(supportId ? { supportId } : {}), warnings };
+}
+
+/** Extra rules of a staircase (Milestone 9): room above, room for the foot and head, nothing standing in the stairwell. */
+function stairChecks(
+  content: ContentDB, lot: Lot, req: PlacementRequest, def: ObjectDef, reasons: string[], warnings: string[],
+): void {
+  if (req.level + 1 >= MAX_LEVELS) { reasons.push('There is no floor above for the stairs to reach.'); return; }
+  const obj = { id: PLACING_ID, defId: def.id, level: req.level, x: req.x, z: req.z, rot: req.rot } as PlacedObject;
+  const geo = stairGeometry(obj, def);
+  if (!geo) return;
+  for (const l of geo.links) {
+    if (!inLot(lot, l.foot.x, l.foot.z) || !inLot(lot, l.head.x, l.head.z)) { reasons.push('The stairs need a free tile at each end on the lot.'); return; }
+  }
+  const fp = new Set(geo.footprint.map(keyOf));
+  const up = req.level + 1;
+  // the stairwell: nothing standing in it on the floor above, no wall running through it
+  for (const o of Object.values(lot.objects)) {
+    if (o.level !== up || o.id === req.ignoreObjectId) continue;
+    const od = content.objects[o.defId];
+    if (!od || od.layer === 'wall') continue;
+    if (objectTiles(o, od).some((t) => fp.has(keyOf(t)))) { reasons.push(`Clear the ${od.name} on the floor above first.`); break; }
+  }
+  for (const t of geo.footprint) {
+    for (const n of [{ x: t.x + 1, z: t.z }, { x: t.x, z: t.z + 1 }]) {
+      if (!fp.has(keyOf(n))) continue;
+      const e = edgeBetween(up, t, n);
+      if (e && lot.walls[e.key]) { reasons.push('A wall on the floor above runs through the stairwell.'); return; }
+    }
+  }
+  // the foot: a free tile with no wall between it and the first step
+  for (const l of geo.links) {
+    const first = l.cells[0];
+    if (!first) continue;
+    const e = edgeBetween(req.level, l.foot, first);
+    if (e && lot.walls[e.key] && !openingOnWall(lot, e.key)) { reasons.push('A wall blocks the foot of the stairs.'); return; }
+  }
+  for (const l of geo.links) {
+    const last = l.cells[l.cells.length - 1];
+    if (!last) continue;
+    const e = edgeBetween(up, l.head, last);
+    if (e && lot.walls[e.key]) warnings.push('A wall on the floor above blocks the top of the stairs.');
+    if (lot.floors[tileKey(up, l.head.x, l.head.z)] === undefined) { warnings.push('The top of the stairs needs a floor above.'); break; }
+  }
 }
 
 /** Both tiles of every door on the level (kept clear of blocking furniture). */
@@ -216,8 +267,8 @@ function accessChecks(
   });
   const objAfter = (id: Id) => (id === PLACING_ID ? hypo : id === req.ignoreObjectId ? undefined : lot.objects[id]);
   const afterCtx: AccessContext = { grid: after, content, objectById: objAfter };
-  const entry = lot.entry.level === req.level && inLot(lot, lot.entry.x, lot.entry.z) ? lot.entry : null;
-  const maskAfter = entry ? reachableMask(after, entry) : null;
+  const entry = levelSeeds(lot, content, req.level).filter((t) => inLot(lot, t.x, t.z));
+  const maskAfter = entry.length > 0 ? reachableMask(after, entry) : null;
 
   const own = accessPoints(afterCtx, hypo, def);
   if (own) {
@@ -227,7 +278,7 @@ function accessChecks(
       if (def.slots.length > 0 && own.tiles.length < own.total) warnings.push('Some of its sides cannot be used.');
     }
   }
-  if (!blocking || !entry || !maskAfter) return;
+  if (!blocking || entry.length === 0 || !maskAfter) return;
 
   const before = buildNavGrid(lot, content, req.level);
   const beforeCtx: AccessContext = { grid: before, content, objectById: (id: Id) => lot.objects[id] };

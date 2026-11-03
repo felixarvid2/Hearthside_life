@@ -135,8 +135,8 @@ body.is-landscape .hud-bottom .member { min-height: 62px; }
   position: absolute; z-index: 11; right: calc(8px + var(--safe-r)); bottom: calc(var(--shell-bottom) + var(--sheet-h) + 8px); padding: 3px;
   transition: bottom 0.2s ease;
 }
-.camera-cluster .camera-bar { display: grid; grid-template-columns: repeat(2, minmax(58px, auto)); gap: 2px; }
-.camera-cluster .tool-btn { min-width: 58px; padding: 4px 2px; }
+.camera-cluster .camera-bar { display: grid; grid-template-columns: repeat(3, minmax(54px, auto)); gap: 2px; }
+.camera-cluster .tool-btn { min-width: 54px; padding: 4px 2px; }
 .camera-cluster.is-squeezed { visibility: hidden; pointer-events: none; }
 .hud[data-mode='buy'] .camera-cluster, .hud[data-mode='build'] .camera-cluster { right: calc(8px + var(--safe-r)); }
 
@@ -393,3 +393,13 @@ body.reduced-motion .camera-cluster { transition: none; }
   .career-choice { align-items: flex-start; flex-wrap: wrap; }
   .career-choice .btn { margin-left: 32px; }
 }
+
+/* ---------- Floor selector (Milestone 9) ---------- */
+.level-select { display: flex; align-items: center; gap: 2px; flex: none; }
+.level-select[hidden] { display: none; }
+.level-select .level-btn { min-width: 44px; min-height: 44px; padding: 4px 2px; display: grid; place-items: center; }
+.level-select .level-label { min-width: 62px; text-align: center; font-weight: 800; font-size: 0.8rem; white-space: nowrap; color: var(--ink); }
+.level-select.is-upper .level-label { color: var(--accent); }
+.camera-cluster .level-select { grid-column: 1 / -1; justify-content: center; }
+/* a squeezed camera cluster keeps its floor selector (the cluster keeps its size, so nothing flickers) */
+.camera-cluster.is-squeezed .level-select { visibility: visible; pointer-events: auto; background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); }

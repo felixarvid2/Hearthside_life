@@ -1,6 +1,8 @@
 // Identity step: names, pronouns (presets or custom), voice and pitch, walking style, romantic interest, bio.
 
-import { BIO_MAX_LENGTH, NAME_MAX_LENGTH, pronounPresetOf, WALK_STYLES, type PronounPreset } from '../../../characters/creator';
+import { availableLifeStages, BIO_MAX_LENGTH, NAME_MAX_LENGTH, pronounPresetOf, WALK_STYLES, type PronounPreset } from '../../../characters/creator';
+import { STAGE_LABELS } from '../../../core/lifeStages';
+import type { LifeStage } from '../../../core/types';
 import { PRONOUN_MAX_LENGTH } from '../../../characters/names';
 import { segmented } from '../../kit/components';
 import { toggleSwitch } from '../../kit/controls';
@@ -88,6 +90,16 @@ export const identityStep: StepDef = {
     const open = toggleSwitch({ label: 'Open to romance', hint: 'When off, they are not looking for romance right now.', value: p().romance.open, onChange: (on) => ctx.report(s().setRomanceOpen(on)) });
     b.fn(() => open.set(p().romance.open));
 
+    // ---- life stage (only the stages whose bodies exist are offered)
+    const stages = availableLifeStages();
+    const stageSeg = segmented<LifeStage>({
+      label: 'Life stage',
+      options: stages.map((st) => ({ id: st, label: STAGE_LABELS[st] })),
+      value: p().lifeStage,
+      onChange: (v) => ctx.report(s().setLifeStage(v)),
+    });
+    b.fn(() => stageSeg.set(p().lifeStage));
+
     // ---- bio
     const bio = b.add(textField({
       label: 'Short bio', max: BIO_MAX_LENGTH, multiline: true, counter: true, placeholder: 'A sentence or two about them (optional).',
@@ -97,7 +109,7 @@ export const identityStep: StepDef = {
     const el = h('div', { class: 'cr-step cr-step-identity' },
       section('Name', names),
       section('Pronouns', pronounSeg.el, custom, custom ? hint('Custom pronouns are used everywhere the game talks about them.') : null, example),
-      section('Life stage', h('p', { class: 'cr-static', text: 'Adult' }), hint('Other life stages arrive in a later update.')),
+      section('Life stage', stageSeg.el, hint(stages.length < 7 ? 'More life stages appear as their bodies are finished. Little ones need a parent or guardian in the household, and somebody young adult or older must run it.' : 'Little ones need a parent or guardian in the household, and somebody young adult or older must run it.')),
       section('Voice', voice, pitch),
       section('Walk', walk, hint('The style is saved now; matching walk animations arrive in a later update.')),
       section('Romance', interest.el, hint('Interest is based on body frame presentation only, never on pronouns.'), open.el),

@@ -294,6 +294,8 @@ function familyHouse(): HousePlan {
     F('plant-potted', 10, 17), F('plant-potted', 14, 17), F('rug-doormat', 12, 18), F('bench-garden', 16, 18), F('grill-kettle', 5, 19), F('table-patio', 6, 20), ...line('chair-slatted', 6, 19, 2, 1, 0),
     F('swing-set', 21, 8), F('playground-slide', 21, 12), F('planter-raised', 21, 16), F('tree-park', 21, 19), F('tree-park', 1, 8), F('shrub-round', 3, 18), F('shrub-round', 20, 18),
     F('lamp-floor-square', 10, 20),
+    // the stairs to the loft (foot at (9, 16), top at (9, 12) upstairs)
+    F('stair-straight-basic', 9, 13),
   ];
   return {
     walls: [
@@ -319,6 +321,29 @@ function familyHouse(): HousePlan {
     ],
     path: { to: { x: 12, z: 19 }, finish: P('stone-pavers', 1) },
     furniture,
+    upper: {
+      // a loft over the whole house: a study and sitting room in the west, a playroom in the east
+      walls: [...outline(4, 6, 20, 18), [{ x: 12, z: 6 }, { x: 12, z: 18 }]],
+      openings: [
+        inner('v', 12, 12),
+        ...openings('window-sash', 'h', 6, 6, 1), ...openings('window-sash', 'h', 9, 6, 1), ...openings('window-sash', 'h', 15, 6, 1), ...openings('window-sash', 'h', 18, 6, 1),
+        ...openings('window-sash', 'h', 6, 18, 2), ...openings('window-sash', 'h', 15, 18, 2),
+        ...openings('window-sash', 'v', 4, 9, 1), ...openings('window-sash', 'v', 4, 14, 1), ...openings('window-sash', 'v', 20, 9, 1), ...openings('window-sash', 'v', 20, 14, 1),
+      ],
+      rooms: [
+        { name: 'study loft', probe: { x: 6, z: 10 }, wall: P('plain-paint', 1), floor: P('oak-planks', 2) },
+        { name: 'playroom', probe: { x: 15, z: 10 }, wall: P('playful-clouds', 0), floor: P('carpet-plush', 5) },
+      ],
+      exterior: P('panel-shiplap', 1),
+      furniture: [
+        // study loft
+        F('desk-oak', 5, 8), F('chair-desk', 5, 7), F('computer-desktop', 5, 8), F('bookcase-tall', 4, 12, 1), F('bookcase-tall', 4, 13, 1),
+        F('sofa-modern', 6, 16, 0), F('table-coffee', 6, 14), F('rug-rectangle', 5, 14), F('lamp-floor-round', 11, 7), F('plant-potted', 11, 17),
+        // playroom
+        F('toy-chest', 13, 7, 2), F('play-box', 15, 7, 2), F('rug-round', 15, 12), F('table-coffee', 15, 15), F('armchair-lounge', 18, 15, 0), F('bookcase-tall', 19, 11, 3),
+        F('lamp-floor-round', 19, 7), F('plant-potted', 13, 17),
+      ].map((f) => f),
+    },
   };
 }
 

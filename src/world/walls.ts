@@ -104,7 +104,8 @@ export function setWall(
   finish: { a: FinishRef; b: FinishRef }, height = DEFAULT_WALL_HEIGHT,
 ): Wall {
   if (!edgeInLot(lot, dir, x, z)) throw new Error(`setWall: edge ${dir} (${x}, ${z}) is outside lot ${lot.id}`);
-  if (!Number.isInteger(level) || level < 0 || level >= lot.levels) throw new Error(`setWall: lot ${lot.id} has no level ${level}`);
+  if (!Number.isInteger(level) || level < 0 || level >= 3) throw new Error(`setWall: lot ${lot.id} has no level ${level}`);
+  if (level >= lot.levels) lot.levels = level + 1;
   const id = edgeKey(level, dir, x, z);
   const wall: Wall = {
     id, level, dir, x, z, height,

@@ -8,6 +8,7 @@ import { LOOPING_ANIMS } from '../core/anim';
 import type { EventBus } from '../core/events';
 import type { NavProvider, Tile, WorldSlot } from '../core/nav';
 import { rotatedSize } from '../core/geometry';
+import { connectedLevels } from '../world/levels';
 import type { Rng } from '../core/rng';
 import type {
   GameMinutes, Household, Id, Lot, Person, PersonLocation, PlacedObject, WorldState,
@@ -61,6 +62,8 @@ function builtin(id: string, name: string, icon: string, behavior: string, kind:
 export const BUILTIN_INTERACTIONS: Readonly<Record<string, InteractionDef>> = {
   goHere: builtin('goHere', 'Go Here', 'walk', 'goHere', 'tile'),
   goToWork: builtin('goToWork', 'Go to Work', 'work', 'goToWork', 'self'),
+  /** Milestone 8: walk to the lot entry and set off for school (children and teens). */
+  goToSchool: builtin('goToSchool', 'Go to School', 'book', 'goToSchool', 'self'),
   /** Internal: walk to the lot entry and leave the lot (visitors going home). Never offered in menus. */
   leaveLot: builtin('leaveLot', 'Go Home', 'home', 'leaveLot', 'self'),
   /** Internal (Milestone 7): walk to the lot entry and set off for another lot (data.lotId, data.arriveAt). Never offered in menus. */
@@ -106,17 +109,24 @@ export function objectRef(ctx: Pick<SimCtx, 'state' | 'content'>, lotId: Id, obj
   return def ? { obj, def } : null;
 }
 
-/** Objects on a lot level with their definitions, in placement order. */
+/**
+ * Objects on a lot level with their definitions, in placement order. Milestone 9: on a lot with a staircase the objects of
+ * every floor are included (people walk up and down to use them; slot goals carry their floor); other lots stay level-bound.
+ */
 export function lotObjects(ctx: Pick<SimCtx, 'state' | 'content'>, lotId: Id, level: number): ObjRef[] {
   const lot = ctx.state.lots[lotId];
   if (!lot) return [];
-  const out: ObjRef[] = [];
+  const all: ObjRef[] = [];
+  let stairs = false;
   for (const obj of Object.values(lot.objects)) {
-    if (obj.level !== level) continue;
     const def = ctx.content.objects[obj.defId];
-    if (def) out.push({ obj, def });
+    if (!def) continue;
+    if (def.stair) stairs = true;
+    all.push({ obj, def });
   }
-  return out;
+  if (!stairs) return all.filter((r) => r.obj.level === level);
+  const reach = connectedLevels(lot, ctx.content, level);
+  return all.filter((r) => reach.has(r.obj.level));
 }
 
 /** Centre of an object's rotated footprint in lot metres. */

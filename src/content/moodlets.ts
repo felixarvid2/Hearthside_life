@@ -129,5 +129,23 @@ const NEEDS: MoodletDef[] = [
   m('comfySeat', 'Comfy Seat', 4, 0, 'home', 'Sitting on something really comfortable (comfort 6 or more).'),
 ];
 
+/** Milestone 8: birthdays, school, caring for little ones and changes in the family. */
+const FAMILY: MoodletDef[] = [
+  m('birthday', 'Birthday', 20, 1440, 'star', 'Grew into a new stage of life today.'),
+  m('celebrating', 'Celebrating', 12, 480, 'sparkle', 'Shared a birthday cake with the family.'),
+  m('homeworkDone', 'Homework Done', 6, 360, 'check', 'Finished the homework and feels ready for tomorrow.'),
+  m('missedSchool', 'Skipped School', -8, 600, 'warning', 'Did not make it to school today.'),
+  m('goodReport', 'Good Report Card', 14, 1440, 'star', 'A report card to be proud of.'),
+  m('badReport', 'Poor Report Card', -12, 1440, 'warning', 'The report card was disappointing.'),
+  m('cuddled', 'Cuddled', 8, 240, 'heart', 'Held and cuddled by someone who cares.'),
+  m('playedWith', 'Played With', 8, 240, 'fun', 'Had a lovely time playing together.'),
+  m('proudParent', 'Proud Parent', 8, 360, 'heart', 'Helped a little one learn something new.'),
+  m('looked', 'Looked After', 6, 240, 'heart', 'Fed, changed and tucked in.'),
+  m('sitterCalled', 'Rescued by the Sitter', -6, 360, 'warning', 'Had to be looked after by an emergency sitter.'),
+  m('newFamily', 'New Family', 16, 2880, 'heart', 'Joined a new family.'),
+  m('movedOut', 'Own Place', 12, 1440, 'home', 'Moved into a place of their own.'),
+  m('missedThem', 'Missing Someone', -10, 2880, 'heart', 'Someone close has gone.'),
+];
+
 /** Every moodlet definition. */
-export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS];
+export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS, ...FAMILY];

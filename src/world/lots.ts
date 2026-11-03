@@ -2,6 +2,7 @@
 
 import { newId } from '../core/ids';
 import type { Cents, Id, Lot, LotKind, TilePos, WorldState } from '../core/types';
+import { validLevel } from './levels';
 
 /** Lot sizes the game supports in M1 (square lots, tiles per side). */
 export const LOT_SIZES: readonly number[] = [24, 32, 48];
@@ -63,7 +64,10 @@ export function inLot(lot: Pick<Lot, 'width' | 'depth'>, x: number, z: number): 
   return x >= 0 && z >= 0 && x < lot.width && z < lot.depth;
 }
 
-/** True when the level exists on the lot (0 = ground floor). */
-export function hasLevel(lot: Pick<Lot, 'levels'>, level: number): boolean {
-  return Number.isInteger(level) && level >= 0 && level < lot.levels;
+/**
+ * True when the level can be built on (0 = ground floor). Milestone 9: every lot offers levels 0-2; `lot.levels` only counts the
+ * floors in use (world/levels.ts syncLevels).
+ */
+export function hasLevel(_lot: Pick<Lot, 'levels'>, level: number): boolean {
+  return validLevel(level);
 }

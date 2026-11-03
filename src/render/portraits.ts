@@ -5,18 +5,19 @@
 import * as THREE from 'three';
 import { isMeshHair } from '../characters/aiHair';
 import type { CharacterAssets } from '../characters/assets';
-import { loadAiHair } from '../characters/assets';
+import { STAGE_HEIGHTS, loadAiHair } from '../characters/assets';
 import { CharacterView } from '../characters/CharacterView';
 import type { ContentDB } from '../content/types';
-import type { Appearance, BodyFrame, Outfit } from '../core/types';
+import type { Appearance, LifeStage, Outfit } from '../core/types';
 
 const SIZE = 128;
 const CACHE_LIMIT = 200;
 
-interface Job { key: string; appearance: Appearance; outfit: Outfit; resolve: (url: string) => void }
+interface Job { key: string; appearance: Appearance; outfit: Outfit; lifeStage: LifeStage; resolve: (url: string) => void }
 
-export function portraitKey(appearance: Appearance, outfit: Outfit): string {
-  const s = JSON.stringify([appearance, outfit.layers, outfit.accessories]);
+/** `lifeStage` is part of the key for the stages that have their own body (adults keep the keys they always had). */
+export function portraitKey(appearance: Appearance, outfit: Outfit, lifeStage: LifeStage = 'adult'): string {
+  const s = JSON.stringify([appearance, outfit.layers, outfit.accessories]) + (lifeStage === 'adult' ? '' : lifeStage);
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return `${(h >>> 0).toString(36)}:${s.length}`;
@@ -26,7 +27,7 @@ export class PortraitRenderer {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(24, 1, 0.1, 20);
   private readonly target: THREE.WebGLRenderTarget;
-  private readonly views = new Map<BodyFrame, CharacterView>();
+  private readonly views = new Map<string, CharacterView>();
   private readonly cache = new Map<string, string>();
   private readonly queue: Job[] = [];
   private readonly pixels = new Uint8Array(SIZE * SIZE * 4);
@@ -52,15 +53,15 @@ export class PortraitRenderer {
   cached(key: string): string | undefined { return this.cache.get(key); }
 
   /** Queues a portrait; resolves with the data URL (immediately when cached). */
-  request(appearance: Appearance, outfit: Outfit): Promise<string> {
-    const key = portraitKey(appearance, outfit);
+  request(appearance: Appearance, outfit: Outfit, lifeStage: LifeStage = 'adult'): Promise<string> {
+    const key = portraitKey(appearance, outfit, lifeStage);
     const hit = this.cache.get(key);
     if (hit) return Promise.resolve(hit);
     const existing = this.queue.find((j) => j.key === key);
     if (existing) {
       return new Promise((res) => { const prev = existing.resolve; existing.resolve = (u) => { prev(u); res(u); }; });
     }
-    const queued = () => new Promise<string>((resolve) => { this.queue.push({ key, appearance: structuredClone(appearance), outfit: structuredClone(outfit), resolve }); });
+    const queued = () => new Promise<string>((resolve) => { this.queue.push({ key, appearance: structuredClone(appearance), outfit: structuredClone(outfit), lifeStage, resolve }); });
     // a generated hairstyle is drawn as soon as its GLB is loaded: wait for it so the cached portrait never shows the stand-in
     const def = this.content.hair[appearance.hair.styleId];
     if (isMeshHair(def) && !this.assets.aiHair?.has(def.id)) return loadAiHair(this.assets, def.id, def.build.asset as string).then(queued);
@@ -75,7 +76,7 @@ export class PortraitRenderer {
     if (!job) return false;
     let url = '';
     try {
-      url = this.render(renderer, job.appearance, job.outfit);
+      url = this.render(renderer, job.appearance, job.outfit, job.lifeStage);
     } catch (e) {
       console.warn('[render] portrait failed', e);
     }
@@ -87,32 +88,38 @@ export class PortraitRenderer {
     return !!url;
   }
 
-  private viewFor(appearance: Appearance, outfit: Outfit): CharacterView {
-    let v = this.views.get(appearance.frame);
+  private viewFor(appearance: Appearance, outfit: Outfit, lifeStage: LifeStage): CharacterView {
+    // one reusable view per body frame and life stage (a stage body is another skeleton and mesh)
+    const id = `${appearance.frame}:${lifeStage}`;
+    let v = this.views.get(id);
     if (!v) {
-      v = new CharacterView(this.assets, this.content, appearance, outfit);
+      v = new CharacterView(this.assets, this.content, appearance, outfit, lifeStage);
+      v.setBabyUpright(true);
       v.root.traverse((o) => { o.frustumCulled = false; });
-      this.views.set(appearance.frame, v);
+      this.views.set(id, v);
       this.scene.add(v.root);
     } else {
-      v.setAppearance(appearance);
+      v.setAppearance(appearance, lifeStage);
       v.setOutfit(outfit);
     }
-    for (const [f, other] of this.views) other.root.visible = f === appearance.frame;
+    for (const [f, other] of this.views) other.root.visible = f === id;
     v.play('idle', { fade: 0, posture: 'standing' });
     v.update(0.6);
     return v;
   }
 
-  private render(renderer: THREE.WebGLRenderer, appearance: Appearance, outfit: Outfit): string {
-    const v = this.viewFor(appearance, outfit);
-    v.root.position.set(0, 0, 0);
+  private render(renderer: THREE.WebGLRenderer, appearance: Appearance, outfit: Outfit, lifeStage: LifeStage): string {
+    const v = this.viewFor(appearance, outfit, lifeStage);
+    v.root.position.set(0, -v.floorDrop, 0);
     v.root.rotation.y = 0.25;
     v.root.updateMatrixWorld(true);
     v.headTop(this.head);
-    const lookY = this.head.y - 0.2;
-    this.camera.position.set(0.18, lookY + 0.06, 1.55);
-    this.camera.lookAt(0, lookY - 0.02, 0);
+    // smaller people are framed closer, so a child's head fills the portrait about as much as an adult's
+    const rel = Math.max(0.45, (lifeStage === 'baby' ? 0.5 : STAGE_HEIGHTS[lifeStage]) / STAGE_HEIGHTS.adult);
+    const lookY = this.head.y - 0.2 * rel;
+    const dist = 1.55 * rel ** 0.8;
+    this.camera.position.set(0.18 * rel, lookY + 0.06 * rel, dist);
+    this.camera.lookAt(0, lookY - 0.02 * rel, 0);
     this.camera.updateProjectionMatrix();
     const prevTarget = renderer.getRenderTarget();
     const prevShadow = renderer.shadowMap.enabled;

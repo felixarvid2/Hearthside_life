@@ -12,8 +12,10 @@ import { h, setChildren, setText } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { layout } from '../kit/layout';
 import { summarize, type BuildSession } from './buildSession';
+import { exteriorHint } from './exteriorHints';
+import { createStairTools } from './stairTools';
 
-export type StructureId = 'wall' | 'room' | 'door' | 'window' | 'erase';
+export type StructureId = 'wall' | 'room' | 'door' | 'window' | 'erase' | 'stairs';
 type Side = RoomDoorSpec['side'];
 type OpeningMode = 'place' | 'move' | 'flip' | 'remove';
 type EraseWhat = 'wall-one' | 'wall-run' | 'wall-area' | 'opening' | 'floor-tile' | 'floor-area' | 'floor-room' | 'room';
@@ -111,6 +113,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
         if (m === 'flip') return { kind: 'moveOpening', openingId: null, flip: true };
         return { kind: 'eraseOpening' };
       }
+      case 'stairs': return stairs.tool();
       case 'erase':
         switch (st.erase) {
           case 'wall-one': return { kind: 'eraseWall', shape: 'segment' };
@@ -267,6 +270,10 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     o.grid.setItems(list);
   }
 
+  // ---- Stairs section (Milestone 9) ----
+
+  const stairs = createStairTools({ api, onChoose: () => choose() });
+
   // ---- Erase section ----
 
   const eraseChips = h('div', { class: 'bb-chips', role: 'radiogroup', ariaLabel: 'What to erase' });
@@ -297,7 +304,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
   // ---- footer: live text, Turn around, Cancel, Confirm ----
 
   const status = h('div', { class: 'bb-status-line bb-build-status', role: 'status', attrs: { 'aria-live': 'polite' } });
-  const flip = button({ icon: 'rotateRight', label: 'Turn around', onClick: () => session.flip() });
+  const flip = button({ icon: 'rotateRight', label: 'Turn around', onClick: () => { session.flip(); const t = api.buildTool(); if (t?.kind === 'stairs') stairs.setRot(t.rot ?? 0); } });
   const cancel = button({ icon: 'close', label: 'Cancel', variant: 'secondary', onClick: () => { if (!session.cancel()) { session.setTool(null); leaveSelf(); } } });
   const confirm = button({ icon: 'check', label: 'Build', variant: 'primary', onClick: () => { session.confirm(); } });
   setLabel(flip, 'Turn', 'Turn');
@@ -327,6 +334,14 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       case 'eraseWall': return tool.shape === 'segment' ? (t ? 'Tap a wall piece, then confirm.' : 'Click a wall piece to demolish it.') : 'Drag to choose the walls to demolish.';
       case 'floor': case 'eraseFloor': return tool.shape === 'rect' ? 'Drag a rectangle over the floor tiles.' : (t ? 'Tap the floor, then confirm.' : 'Click the floor.');
       case 'deleteRoom': return t ? 'Tap a room, then confirm to demolish it.' : 'Click a room to demolish it.';
+      // Milestone 9 exterior tools (ui/build/exteriorTools.ts has their own tips; these are the footer's fallback)
+      case 'fence': return exteriorHint(tool, t);
+      case 'eraseFence': return t ? 'Tap a fence or gate, then confirm to take it down.' : 'Click a fence or gate to take it down.';
+      case 'roof': return exteriorHint(tool, t);
+      case 'eraseRoof': return t ? 'Tap a roof, then confirm to take it off.' : 'Click a roof to take it off.';
+      case 'terrain': return exteriorHint(tool, t);
+      case 'stairs': return t ? 'Tap where the stairs go, check the preview, then confirm. Turn changes which way they climb.' : 'Click where the stairs go. R turns them.';
+      case 'eraseStairs': return t ? 'Tap a staircase, then confirm to take it out.' : 'Click a staircase to take it out.';
     }
   }
 
@@ -354,7 +369,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       status.title = title;
       setChildren(status, icon(iconName, 20), h('span', { class: 'bb-build-text' }, h('strong', { text: title }), detail ? h('span', { class: 'bb-build-detail', text: detail }) : null));
     }
-    const erasing = s.tool?.kind === 'eraseWall' || s.tool?.kind === 'eraseOpening' || s.tool?.kind === 'eraseFloor' || s.tool?.kind === 'deleteRoom';
+    const erasing = s.tool?.kind === 'eraseWall' || s.tool?.kind === 'eraseOpening' || s.tool?.kind === 'eraseFloor' || s.tool?.kind === 'deleteRoom' || s.tool?.kind === 'eraseStairs' || s.tool?.kind === 'eraseFence' || s.tool?.kind === 'eraseRoof';
     const verb = erasing ? 'Demolish' : 'Build';
     const cost = pv && pv.ok && !pv.unchanged ? pv.cost : 0;
     const long = cost > 0 ? `${verb} for ${formatMoney(cost)}` : cost < 0 ? `${verb}, ${formatMoney(-cost)} back` : verb;
@@ -363,7 +378,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     const why = s.canConfirm ? long : s.blockedReason ?? 'Draw or tap something first.';
     confirm.title = why;
     confirm.setAttribute('aria-label', s.canConfirm ? long : `${verb} (unavailable: ${why})`);
-    const hasFlip = s.tool?.kind === 'opening' || (s.tool?.kind === 'moveOpening' && !!s.tool.openingId);
+    const hasFlip = s.tool?.kind === 'opening' || (s.tool?.kind === 'moveOpening' && !!s.tool.openingId) || s.tool?.kind === 'stairs';
     setHidden(flip, !hasFlip);
     const pendingNow = s.pending || s.dragging || !!s.target;
     setLabel(cancel, pendingNow ? 'Cancel' : 'Done', pendingNow ? 'Cancel' : 'Done');
@@ -401,12 +416,13 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
     renderRoomFields();
     for (const k of ['door', 'window'] as const) if (st.active === k) renderOpening(k);
     if (st.active === 'erase') renderErase();
+    if (st.active === 'stairs') stairs.render();
     wallShape.set(st.wallShape);
     renderFooter();
   }
 
   const tools: StructureTools = {
-    sections: { wall: wallSection, room: roomSection, door: openingSections.door.el, window: openingSections.window.el, erase: eraseSection },
+    sections: { wall: wallSection, room: roomSection, door: openingSections.door.el, window: openingSections.window.el, erase: eraseSection, stairs: stairs.el },
     footer,
     onDone: null,
     enter(id) {

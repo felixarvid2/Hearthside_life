@@ -10,10 +10,13 @@ import type { ContentDB, ObjectDef } from '../content/types';
 import { rotateLocal, rotatedSize, rotationOriginShift, rotYaw } from '../core/geometry';
 import { edgeKey } from '../core/ids';
 import type { Id, Lot, PlacedObject, WorldState } from '../core/types';
+import { levelY } from '../world/levels';
 import { disposePlaceholder, placeholderModel, type ObjectAssets } from './objectAssets';
 
 interface ObjEntry {
   id: Id;
+  /** Floor the object stands on (Milestone 9). */
+  level: number;
   sig: string;
   group: THREE.Group;
   model: THREE.Object3D | null;
@@ -29,7 +32,7 @@ interface ObjEntry {
   anim: Array<{ node: THREE.Object3D; kind: 'spark' | 'bob'; base: number; phase: number }>;
 }
 
-interface ItemEntry { id: Id; sig: string; group: THREE.Group; box: THREE.Box3 }
+interface ItemEntry { id: Id; level: number; sig: string; group: THREE.Group; box: THREE.Box3 }
 
 export class ObjectsView {
   readonly group = new THREE.Group();
@@ -38,6 +41,9 @@ export class ObjectsView {
   private lot: Lot | null = null;
   private loadToken = 0;
   private hiddenId: Id | null = null;
+  /** Milestone 9: objects above this level are hidden; picking is limited to it. */
+  private activeLevel = 0;
+  private isLowered: (wallId: string) => boolean = () => false;
   private readonly highlight: THREE.LineSegments;
   private readonly highlightFill: THREE.Mesh;
   private highlightId: Id | null = null;
@@ -98,14 +104,14 @@ export class ObjectsView {
   /** Syncs object groups with the lot (adds, removes, re-creates changed objects). */
   sync(lot: Lot): void {
     this.lot = lot;
-    const want = Object.values(lot.objects).filter((o) => o.level === 0);
+    const want = Object.values(lot.objects);
     const seen = new Set<Id>();
     const toLoad = new Set<string>();
     for (const o of want) {
       seen.add(o.id);
       const def = this.content.objects[o.defId];
       if (!def) continue;
-      const sig = `${o.defId}|${o.x}|${o.z}|${o.rot}|${o.supportId ?? ''}|${JSON.stringify(o.finishes)}`;
+      const sig = `${o.defId}|${o.level}|${o.x}|${o.z}|${o.rot}|${o.supportId ?? ''}|${JSON.stringify(o.finishes)}`;
       const cur = this.objects.get(o.id);
       if (cur && cur.sig === sig && !(cur.placeholder && this.assets.isLoaded(def.model.asset))) continue;
       if (cur) this.removeEntry(cur);
@@ -147,12 +153,12 @@ export class ObjectsView {
     if (def.layer === 'wall' || def.needsWall) {
       const p = rotateLocal(def.footprint.w / 2, 0, def.footprint, o.rot);
       const wx = o.x + p.x, wz = o.z + p.z;
-      if (Math.abs(wz - Math.round(wz)) < 1e-6) wallId = edgeKey(0, 'h', Math.floor(wx), Math.round(wz));
-      else if (Math.abs(wx - Math.round(wx)) < 1e-6) wallId = edgeKey(0, 'v', Math.round(wx), Math.floor(wz));
+      if (Math.abs(wz - Math.round(wz)) < 1e-6) wallId = edgeKey(o.level, 'h', Math.floor(wx), Math.round(wz));
+      else if (Math.abs(wx - Math.round(wx)) < 1e-6) wallId = edgeKey(o.level, 'v', Math.round(wx), Math.floor(wz));
     }
     const isLamp = def.subcategory?.includes('lamp') === true || def.tags.includes('lamp');
-    const e: ObjEntry = { id: o.id, sig, group: g, model, placeholder, def, box, wallId, isLamp, condSig: '', cond: null, anim: [] };
-    g.visible = o.id !== this.hiddenId;
+    const e: ObjEntry = { id: o.id, level: o.level, sig, group: g, model, placeholder, def, box, wallId, isLamp, condSig: '', cond: null, anim: [] };
+    g.visible = o.id !== this.hiddenId && o.level <= this.activeLevel && !(wallId && this.isLowered(wallId));
     this.objects.set(o.id, e);
     this.group.add(g);
     this.applyCondition(e, o);
@@ -315,14 +321,14 @@ export class ObjectsView {
     this.objects.delete(e.id);
   }
 
-  /** Ground height under a point (grass sits slightly below floors). */
-  groundAt: (x: number, z: number) => number = () => 0;
+  /** Ground height under a point of a level (grass sits slightly below floors; upper levels are at their floor height). */
+  groundAt: (x: number, z: number, level?: number) => number = () => 0;
 
   private baseHeight(o: PlacedObject): number {
-    if (!o.supportId || !this.lot) return this.groundAt(o.x + 0.5, o.z + 0.5);
+    if (!o.supportId || !this.lot) return this.groundAt(o.x + 0.5, o.z + 0.5, o.level);
     const sup = this.lot.objects[o.supportId];
     const sdef = sup ? this.content.objects[sup.defId] : undefined;
-    return sdef?.surfaceHeight ?? 0;
+    return levelY(o.level) + (sdef?.surfaceHeight ?? 0);
   }
 
   clear(): void {
@@ -344,12 +350,21 @@ export class ObjectsView {
     this.refreshHighlight();
   }
 
-  /** Hides wall-mounted objects whose wall is drawn lowered. */
+  /** Hides wall-mounted objects whose wall is drawn lowered, and (Milestone 9) everything above the active level. */
   applyWallVisibility(isLowered: (wallId: string) => boolean): void {
+    this.isLowered = isLowered;
     for (const e of this.objects.values()) {
-      if (!e.wallId) continue;
-      e.group.visible = e.id !== this.hiddenId && !isLowered(e.wallId);
+      e.group.visible = e.id !== this.hiddenId && e.level <= this.activeLevel && !(e.wallId && isLowered(e.wallId));
     }
+    for (const it of this.items.values()) it.group.visible = it.level <= this.activeLevel;
+    this.refreshHighlight();
+  }
+
+  /** Milestone 9: shows the objects of levels 0..level and picks only on `level`. */
+  setActiveLevel(level: number): void {
+    if (level === this.activeLevel) return;
+    this.activeLevel = level;
+    this.applyWallVisibility(this.isLowered);
   }
 
   // ---- selection highlight (buy mode) ----
@@ -377,17 +392,18 @@ export class ObjectsView {
   syncItems(state: WorldState, lotId: Id): void {
     const seen = new Set<Id>();
     for (const it of Object.values(state.items)) {
-      if (it.lotId !== lotId || it.position.level !== 0) continue;
+      if (it.lotId !== lotId) continue;
       seen.add(it.id);
-      const sig = `${it.kind}|${it.position.x}|${it.position.z}|${it.position.onObjectId ?? ''}|${it.recipeId}|${it.portions}|${it.quality}`;
+      const sig = `${it.kind}|${it.position.level}|${it.position.x}|${it.position.z}|${it.position.onObjectId ?? ''}|${it.recipeId}|${it.portions}|${it.quality}`;
       const cur = this.items.get(it.id);
       if (cur && cur.sig === sig) continue;
       if (cur) this.removeItem(cur);
       const g = new THREE.Group();
-      let y = 0;
+      let y = levelY(it.position.level);
       const sup = it.position.onObjectId ? state.lots[lotId]?.objects[it.position.onObjectId] : undefined;
-      if (sup) y = this.content.objects[sup.defId]?.surfaceHeight ?? 0;
+      if (sup) y += this.content.objects[sup.defId]?.surfaceHeight ?? 0;
       g.position.set(it.position.x, y, it.position.z);
+      g.visible = it.position.level <= this.activeLevel;
       let top = 0.16;
       if (it.kind === 'mess') {
         this.buildMess(g, it);
@@ -424,7 +440,7 @@ export class ObjectsView {
       }
       this.group.add(g);
       const box = new THREE.Box3(new THREE.Vector3(it.position.x - 0.2, y, it.position.z - 0.2), new THREE.Vector3(it.position.x + 0.2, y + top, it.position.z + 0.2));
-      this.items.set(it.id, { id: it.id, sig, group: g, box });
+      this.items.set(it.id, { id: it.id, level: it.position.level, sig, group: g, box });
     }
     for (const it of [...this.items.values()]) if (!seen.has(it.id)) this.removeItem(it);
   }
@@ -489,13 +505,15 @@ export class ObjectsView {
   pick(ray: THREE.Ray, rugs: boolean, out: THREE.Vector3): { kind: 'object' | 'item'; id: Id; distance: number } | null {
     let best: { kind: 'object' | 'item'; id: Id; distance: number } | null = null;
     for (const it of this.items.values()) {
+      if (it.level !== this.activeLevel) continue;
       const p = ray.intersectBox(it.box, out);
       if (!p) continue;
       const d = p.distanceTo(ray.origin);
       if (!best || d < best.distance) best = { kind: 'item', id: it.id, distance: d };
     }
     for (const e of this.objects.values()) {
-      if (!e.group.visible) continue;
+      // a staircase can also be picked from the floor it arrives on
+      if (!e.group.visible || (e.level !== this.activeLevel && !(e.def.stair && e.level + 1 === this.activeLevel))) continue;
       if (e.def.layer === 'rug' && !rugs) continue;
       const p = ray.intersectBox(e.box, out);
       if (!p) continue;

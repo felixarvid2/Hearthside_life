@@ -51,6 +51,15 @@ export function shiftPlan(plan: HousePlan, dx: number, dz: number): HousePlan {
     ...(plan.floorAreas ? { floorAreas: plan.floorAreas.map((a) => ({ ...a, x0: a.x0 + dx, x1: a.x1 + dx, z0: a.z0 + dz, z1: a.z1 + dz })) } : {}),
     path: { ...plan.path, to: t(plan.path.to) },
     furniture: plan.furniture.map((f) => ({ ...f, x: f.x + dx, z: f.z + dz })),
+    ...(plan.upper ? {
+      upper: {
+        ...plan.upper,
+        walls: plan.upper.walls.map(([a, b]) => [t(a), t(b)] as [Tile, Tile]),
+        openings: plan.upper.openings.map((o) => ({ ...o, x: o.x + dx, z: o.z + dz })),
+        rooms: plan.upper.rooms.map((r) => ({ ...r, probe: t(r.probe) })),
+        furniture: plan.upper.furniture.map((f) => ({ ...f, x: f.x + dx, z: f.z + dz })),
+      },
+    } : {}),
   };
 }
 

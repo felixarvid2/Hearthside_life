@@ -12,9 +12,11 @@ import type { ContentDB } from '../content/types';
 import type { WorldSlot } from '../core/nav';
 import type { Id, Lot, Person, Posture, WorldState } from '../core/types';
 import { iconSvg } from '../ui/kit/icons';
+import { levelY } from '../world/levels';
 import { resolveSlots } from '../world/slots';
 import type { CameraRig } from './cameraRig';
 import { lyingPlacement, seatedPlacement } from '../characters/posture';
+import { CRADLE } from '../characters/stagePose';
 
 const ANIMS = new Set<string>(ANIM_IDS);
 const TWO_PI = Math.PI * 2;
@@ -43,6 +45,13 @@ interface Entry {
   lastShown: string;
   layoutKey: string;
   width: number;
+  /** A baby is always lying (crib, mat or arms); other stages stand, walk, sit and lie. */
+  baby: boolean;
+}
+
+/** What the look of a person's body depends on: the appearance and the life stage. */
+function stageKey(p: Person): string {
+  return `${p.lifeStage}|${JSON.stringify(p.appearance)}`;
 }
 
 function shortestAngle(from: number, to: number): number {
@@ -97,8 +106,13 @@ export class PeopleView {
   private slotsLot: Lot | null = null;
   private selected: Id | null = null;
   hovered: Id | null = null;
+  /** Babies held in somebody's arms: baby id -> carrier id (`setHeld`). */
+  private readonly held = new Map<Id, Id>();
   /** Ground height under a point (grass is slightly below floors). */
   groundAt: (x: number, z: number) => number = () => 0;
+  /** Milestone 9: people on floors above this one are not drawn. */
+  private activeLevel = 0;
+  private readonly smoothY = new Map<Id, number>();
   private time = 0;
   private readonly tmp = new THREE.Vector3();
   private readonly scr = { x: 0, y: 0, visible: false };
@@ -119,12 +133,23 @@ export class PeopleView {
   /** Recomputes slot anchors after a construction change. */
   invalidateSlots(): void { this.slotsLot = null; }
 
+  setActiveLevel(level: number): void { this.activeLevel = level; }
+
+  /** Height of the floor under a person: the floor of their level plus their height on a staircase, eased between frames. */
+  private floorY(id: Id, loc: { level: number; rise?: number }, x: number, z: number, dt: number, reduced: boolean): number {
+    const target = (loc.level > 0 ? levelY(loc.level) : this.groundAt(x, z)) + (loc.rise ?? 0);
+    const cur = this.smoothY.get(id);
+    const y = cur === undefined || reduced || Math.abs(target - cur) > 3.5 ? target : cur + (target - cur) * (1 - Math.exp(-dt * 14));
+    this.smoothY.set(id, y);
+    return y;
+  }
+
   private slotList(lot: Lot): WorldSlot[] {
     if (this.slotsLot === lot) return this.slots;
     const out: WorldSlot[] = [];
     for (const o of Object.values(lot.objects)) {
       const def = this.content.objects[o.defId];
-      if (!def || def.slots.length === 0 || o.level !== 0) continue;
+      if (!def || def.slots.length === 0) continue;
       out.push(...resolveSlots(lot, o, def));
     }
     this.slots = out;
@@ -132,14 +157,23 @@ export class PeopleView {
     return out;
   }
 
-  private findSlot(lot: Lot, x: number, z: number, posture: Posture): WorldSlot | null {
+  private findSlot(lot: Lot, x: number, z: number, posture: Posture, level = 0): WorldSlot | null {
     let best: WorldSlot | null = null, bd = 0.08;
     for (const s of this.slotList(lot)) {
+      if ((s.level ?? 0) !== level) continue;
       if (posture === 'seated' && s.kind === 'sleep') continue;
       const d = Math.hypot(s.x - x, s.z - z);
       if (d < bd) { bd = d; best = s; }
     }
     return best;
+  }
+
+  /**
+   * Puts a baby in a carrier's arms (the carrier cradles, the baby lies across the forearms) or back down (null). Without a call, a
+   * baby that is not on a bed slot and stands within arm's reach of somebody playing the 'carry' animation is taken as held by them.
+   */
+  setHeld(babyId: Id, carrierId: Id | null): void {
+    if (carrierId) this.held.set(babyId, carrierId); else this.held.delete(babyId);
   }
 
   /** Rebuilds every person on the assets' current character style. */
@@ -161,7 +195,7 @@ export class PeopleView {
 
   private create(p: Person): Entry {
     const outfit = currentOutfit(p);
-    const view = new CharacterView(this.assets, this.content, p.appearance, outfit);
+    const view = new CharacterView(this.assets, this.content, p.appearance, outfit, p.lifeStage);
     view.root.traverse((o) => { o.frustumCulled = false; });
     this.group.add(view.root);
     const shadow = new THREE.Mesh(this.shadowGeo, this.shadowMat);
@@ -177,9 +211,9 @@ export class PeopleView {
     const loc = p.location.kind === 'lot' ? p.location : null;
     const e: Entry = {
       id: p.id, view, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
-      facing: loc?.facing ?? 0, animKey: '', appearanceKey: JSON.stringify(p.appearance), outfitKey: JSON.stringify(outfit),
+      facing: loc?.facing ?? 0, animKey: '', appearanceKey: stageKey(p), outfitKey: JSON.stringify(outfit),
       align: loc && (loc.posture === 'seated' || loc.posture === 'lying') ? 1 : 0, slot: null, posture: loc?.posture ?? 'standing',
-      shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0,
+      shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0, baby: p.lifeStage === 'baby',
     };
     this.entries.set(p.id, e);
     return e;
@@ -213,8 +247,8 @@ export class PeopleView {
     const e = this.entries.get(id);
     const p = state.people[id];
     if (!e || !p) return;
-    const ak = JSON.stringify(p.appearance);
-    if (ak !== e.appearanceKey) { e.appearanceKey = ak; e.view.setAppearance(p.appearance); }
+    const ak = stageKey(p);
+    if (ak !== e.appearanceKey) { e.appearanceKey = ak; e.baby = p.lifeStage === 'baby'; e.view.setAppearance(p.appearance, p.lifeStage); }
     const outfit = currentOutfit(p);
     const ok = JSON.stringify(outfit);
     if (ok !== e.outfitKey) { e.outfitKey = ok; e.view.setOutfit(outfit); }
@@ -242,7 +276,7 @@ export class PeopleView {
   sync(state: WorldState, lotId: Id): void {
     const seen = new Set<Id>();
     for (const p of Object.values(state.people)) {
-      if (p.location.kind !== 'lot' || p.location.lotId !== lotId || p.location.level !== 0) continue;
+      if (p.location.kind !== 'lot' || p.location.lotId !== lotId) continue;
       seen.add(p.id);
       if (!this.entries.has(p.id)) {
         try { this.create(p); } catch (err) { console.warn('[render] could not create person view', p.id, err); }
@@ -255,10 +289,12 @@ export class PeopleView {
   /** Per-frame update: interpolation, animation, posture alignment, ring, shadows. */
   update(state: WorldState, lot: Lot, dt: number, alpha: number, reducedMotion: boolean): void {
     this.time += dt;
+    const heldNow: Array<[Entry, Entry]> = [];
     for (const e of this.entries.values()) {
       const p = state.people[e.id];
       if (!p || p.location.kind !== 'lot') { e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
       const loc = p.location;
+      if (loc.level > this.activeLevel) { e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
       e.visible = true;
       e.view.root.visible = true;
       e.shadow.visible = true;
@@ -266,7 +302,7 @@ export class PeopleView {
       const z = e.prevZ + (e.curZ - e.prevZ) * alpha;
       // animation
       const animKey = `${p.anim.id}|${p.anim.since}`;
-      const posture: Posture = loc.posture === 'walking' ? 'standing' : loc.posture;
+      const posture: Posture = e.baby ? 'lying' : loc.posture === 'walking' ? 'standing' : loc.posture;
       if (animKey !== e.animKey || posture !== e.posture) {
         const id = (ANIMS.has(p.anim.id) ? p.anim.id : 'idle') as AnimId;
         const first = e.animKey === '';
@@ -275,56 +311,96 @@ export class PeopleView {
         e.view.play(id, { fade: first || reducedMotion ? 0 : 0.25, posture });
       }
       e.view.update(dt);
+      if (e.baby) {
+        const holder = this.holderOf(state, e);
+        if (holder) { heldNow.push([e, holder]); continue; }
+      }
       // facing
       const d = shortestAngle(e.facing, loc.facing);
       e.facing += Math.abs(d) < 0.01 || reducedMotion ? d : d * Math.min(1, dt * 10);
       // posture alignment with the slot under the person
       const lowered = posture === 'seated' || posture === 'lying';
-      const slot = lowered || loc.posture === 'standing' ? this.findSlot(lot, loc.x, loc.z, posture) : null;
+      const slot = lowered || loc.posture === 'standing' ? this.findSlot(lot, loc.x, loc.z, posture, loc.level) : null;
       if (slot) e.slot = slot;
       const target = lowered && e.slot ? 1 : 0;
       e.align += Math.sign(target - e.align) * Math.min(Math.abs(target - e.align), reducedMotion ? 1 : dt / 0.6);
       if (!lowered && !slot) e.slot = target === 0 && e.align === 0 ? null : e.slot;
-      const ground = this.groundAt(x, z);
+      const ground = this.floorY(e.id, loc, x, z, dt, reducedMotion);
       let rx = x, rz = z, ry = ground, rot = e.facing;
       const s = e.slot;
+      const sy = levelY(s?.level ?? 0); // slot heights are above the floor of their level
+      // the body of the person's life stage sits and lies lower (children) or on a mat (babies): see characters/posture.ts
+      const so = { stage: p.lifeStage, own: e.view.hasOwnBody };
+      const k = e.view.stageHeight / 1.8;
+      if (e.baby && !(s && e.align > 0)) {
+        // a baby without a bed slot lies on the floor where it is
+        const pl = lyingPlacement({ x, y: ground, z }, e.facing, so);
+        rx = pl.x; ry = pl.y; rz = pl.z; rot = pl.yaw;
+      }
       if (s && e.align > 0) {
         const k = e.align * e.align * (3 - 2 * e.align);
-        let ax = s.x, az = s.z, ay = s.height, ar = s.facing;
-        const anchor = { x: s.x, y: s.height, z: s.z };
+        let ax = s.x, az = s.z, ay = s.height + sy, ar = s.facing;
+        const anchor = { x: s.x, y: s.height + sy, z: s.z };
         if (posture === 'lying' || (e.posture === 'standing' && s.kind === 'sleep')) {
           // slot facing points from the pillow toward the foot of the bed
-          const pl = lyingPlacement(anchor, s.facing);
+          const pl = lyingPlacement(anchor, s.facing, so);
           ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
         } else if (s.kind === 'sit' || posture === 'seated') {
-          const pl = seatedPlacement(anchor, s.facing, p.appearance.frame, this.assets.style);
+          const pl = seatedPlacement(anchor, s.facing, p.appearance.frame, this.assets.style, so);
           ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
         }
-        rx = x + (ax - x) * k;
-        rz = z + (az - z) * k;
-        ry = ground + (ay - ground) * k;
-        rot = e.facing + shortestAngle(e.facing, ar) * k;
+        rx += (ax - rx) * k;
+        rz += (az - rz) * k;
+        ry += (ay - ry) * k;
+        rot += shortestAngle(rot, ar) * k;
       } else if (slot && posture === 'standing' && slot.height > 0.05 && slot.kind === 'use') {
-        ry = Math.max(ground, slot.height); // shower tray
+        ry = Math.max(ground, slot.height + levelY(slot.level ?? 0)); // shower tray
       }
       e.view.root.position.set(rx, ry, rz);
       e.view.root.rotation.y = rot;
       e.shadow.position.set(rx, ground + 0.012, rz);
       e.shadow.visible = e.align < 0.5;
-      e.box.min.set(rx - 0.3, ry, rz - 0.3);
-      e.box.max.set(rx + 0.3, ry + (posture === 'lying' ? 0.6 : posture === 'seated' ? 1.35 : 1.85), rz + 0.3);
+      const w = 0.3 * Math.max(k, 0.55);
+      e.box.min.set(rx - w, ry, rz - w);
+      e.box.max.set(rx + w, ry + (posture === 'lying' ? 0.6 : posture === 'seated' ? 1.35 : 1.85) * Math.max(k, 0.4), rz + w);
       if (posture === 'lying') {
         // lying body extends along the bed: widen the box around the slot anchor
-        const cx = s ? s.x : rx, cz = s ? s.z : rz;
-        e.box.min.set(cx - 0.6, ry, cz - 0.6);
-        e.box.max.set(cx + 0.6, ry + 0.9, cz + 0.6);
+        const cx = s ? s.x : rx, cz = s ? s.z : rz, wl = 0.6 * Math.max(k, 0.55);
+        e.box.min.set(cx - wl, ry, cz - wl);
+        e.box.max.set(cx + wl, ry + 0.9 * Math.max(k, 0.4), cz + wl);
       }
+      e.shadow.scale.setScalar(Math.max(k, 0.45));
       // the character's own selection ring sits at the root: hide it on seats and in bed
       if (e.id === this.selected) {
         const ring = e.view.root.getObjectByName('selection');
         if (ring) ring.visible = e.align < 0.5;
       }
     }
+    // babies in somebody's arms lie across the cradling forearms of the carrier (placed after the carrier moved this frame)
+    const carriers = new Set<Id>();
+    for (const [e, h] of heldNow) {
+      carriers.add(h.id);
+      h.view.cradlePoint(this.tmp);
+      const pl = lyingPlacement({ x: this.tmp.x, y: this.tmp.y, z: this.tmp.z }, h.view.root.rotation.y + CRADLE.yaw, { stage: 'baby', own: e.view.hasOwnBody });
+      e.view.root.position.set(pl.x, pl.y, pl.z);
+      e.view.root.rotation.y = pl.yaw;
+      e.shadow.visible = false;
+      e.box.min.set(pl.x - 0.4, pl.y - 0.1, pl.z - 0.4);
+      e.box.max.set(pl.x + 0.4, pl.y + 0.4, pl.z + 0.4);
+    }
+    for (const e of this.entries.values()) if (e.view.carrying !== carriers.has(e.id)) e.view.setCarrying(carriers.has(e.id));
+  }
+
+  /** Who holds this baby: the carrier set with `setHeld`, else somebody within reach who is playing the 'carry' animation. */
+  private holderOf(state: WorldState, baby: Entry): Entry | null {
+    const set = this.held.get(baby.id);
+    if (set) { const h = this.entries.get(set); if (h && state.people[h.id]?.location.kind === 'lot') return h; }
+    if (baby.slot) return null;
+    for (const o of this.entries.values()) {
+      if (o.baby || o === baby || state.people[o.id]?.anim.id !== 'carry') continue;
+      if (Math.hypot(o.curX - baby.curX, o.curZ - baby.curZ) < 0.9) return o;
+    }
+    return null;
   }
 
   /** Positions overlay elements (call after matrices are updated). */
@@ -407,16 +483,16 @@ export class PeopleView {
     return e.view.headTop(out);
   }
 
-  positionOf(id: Id): { x: number; z: number } | null {
+  positionOf(id: Id): { x: number; z: number; y: number } | null {
     const e = this.entries.get(id);
     if (!e || !e.visible) return null;
-    return { x: e.view.root.position.x, z: e.view.root.position.z };
+    return { x: e.view.root.position.x, z: e.view.root.position.z, y: e.view.root.position.y };
   }
 
   /** Positions of visible people (door animation). */
-  positions(): Array<{ x: number; z: number }> {
-    const out: Array<{ x: number; z: number }> = [];
-    for (const e of this.entries.values()) if (e.visible) out.push({ x: e.view.root.position.x, z: e.view.root.position.z });
+  positions(): Array<{ x: number; z: number; y: number }> {
+    const out: Array<{ x: number; z: number; y: number }> = [];
+    for (const e of this.entries.values()) if (e.visible) out.push({ x: e.view.root.position.x, z: e.view.root.position.z, y: e.view.root.position.y });
     return out;
   }
 

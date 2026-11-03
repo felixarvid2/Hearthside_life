@@ -15,6 +15,7 @@ import { button, cardGrid, panel, segmented, tabs, toast, type CardGrid, type Ta
 import { h, setChildren, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { BuildSession } from './buildSession';
+import { createExteriorTools, type ExteriorId } from './exteriorTools';
 import { createStructureTools, type StructureId } from './structureTools';
 import {
   affordReason, editorStatus, fundsInfo, formatMoney, humanize, matchesQuery, panelInsets, play, Refresher, reopenButton,
@@ -79,16 +80,23 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
   const designs: Record<Kind, SurfaceDesign[]> = { wall: [], floor: [] };
 
   // ---- sticky sub bar: tool tabs + undo/redo ----
-  type Section = 'paint' | StructureId;
+  type Section = 'paint' | StructureId | ExteriorId;
   let section: Section = 'paint';
   const SECTION_TABS: Array<{ id: string; section: Section; label: string; icon: string }> = [
     { id: 'tool-paint', section: 'paint', label: 'Paint', icon: 'roller' },
     { id: 'tool-wall', section: 'wall', label: 'Walls', icon: 'wall' },
     { id: 'tool-room', section: 'room', label: 'Room', icon: 'home' },
+    { id: 'tool-stairs', section: 'stairs', label: 'Stairs', icon: 'stairs' },
     { id: 'tool-door', section: 'door', label: 'Doors', icon: 'door' },
     { id: 'tool-window', section: 'window', label: 'Windows', icon: 'window' },
     { id: 'tool-erase', section: 'erase', label: 'Erase', icon: 'trash' },
+    // Milestone 9 exterior tools (exteriorTools.ts)
+    { id: 'tool-roof', section: 'roof', label: 'Roof', icon: 'roof' },
+    { id: 'tool-fence', section: 'fence', label: 'Fence', icon: 'fence' },
+    { id: 'tool-garden', section: 'garden', label: 'Garden', icon: 'leaf' },
   ];
+  const EXTERIOR_IDS: readonly ExteriorId[] = ['roof', 'fence', 'garden'];
+  const isExterior = (s: Section): s is ExteriorId => (EXTERIOR_IDS as readonly string[]).includes(s);
   const toolTabs = tabs({
     label: 'Build tools',
     value: 'tool-paint',
@@ -178,10 +186,13 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     selectedFinish: (k) => st[k].finish,
     designName: (k, ref) => design(k, ref.designId)?.name ?? humanize(ref.designId),
   });
+  const exterior = createExteriorTools({ api, session });
   const paintSection = h('div', { class: 'bb-paint-section', dataset: { section: 'paint' } }, kindBar, roomInfo, current, recentSec, browse);
-  p.body.append(subbar, paintSection, structure.sections.wall, structure.sections.room, structure.sections.door, structure.sections.window, structure.sections.erase, cutaway.el);
+  p.body.append(subbar, paintSection, structure.sections.wall, structure.sections.room, structure.sections.stairs, structure.sections.door, structure.sections.window, structure.sections.erase,
+    exterior.sections.roof, exterior.sections.fence, exterior.sections.garden, cutaway.el);
   p.el.append(structure.footer);
-  for (const k of ['wall', 'room', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = true;
+  for (const k of ['wall', 'room', 'stairs', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = true;
+  for (const k of EXTERIOR_IDS) exterior.sections[k].hidden = true;
 
   const reopen = reopenButton('Build tools', 'build', () => { userClosed = false; reopen.hidden = true; p.open(); });
   el.appendChild(reopen);
@@ -312,18 +323,24 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
 
   /** Switches between the Paint tab and the structure tools. */
   function setSection(next: Section): void {
-    if (next === section && (next === 'paint' || structure.active() === next)) return;
+    if (next === section && (next === 'paint' || structure.active() === next || exterior.active() === next)) return;
     section = next;
     toolTabs.select(SECTION_TABS.find((t) => t.section === next)?.id ?? 'tool-paint');
     preview = null;
     eyedropper = false;
     paintSection.hidden = next !== 'paint';
-    for (const k of ['wall', 'room', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = next !== k;
+    for (const k of ['wall', 'room', 'stairs', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = next !== k;
+    for (const k of EXTERIOR_IDS) exterior.sections[k].hidden = next !== k;
     if (next === 'paint') {
       structure.leave();
+      exterior.leave();
       session.setTool(null);
       applyTool();
+    } else if (isExterior(next)) {
+      structure.leave();
+      exterior.enter(next);
     } else {
+      exterior.leave();
       structure.enter(next);
     }
     p.body.scrollTo?.({ top: 0 });
@@ -630,6 +647,7 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     },
     hide() {
       visible = false;
+      exterior.leave();
       el.hidden = true;
       refresher.cancel();
     },

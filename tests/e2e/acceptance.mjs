@@ -14,7 +14,9 @@
 //     door and a window, paint both sides of a new wall and an area of floor, undo and redo, then walk a person in,
 //   8 Milestone 6 careers, bills and freelance income,
 //   9 Milestone 7 neighbourhood: open the map, travel to the park and wait for the arrival, one venue activity, the away card
-//     of the person left at home, go home, open the preview of switching to another household and cancel it.
+//     of the person left at home, go home, open the preview of switching to another household and cancel it,
+//   10 Milestone 8 family: aging in Settings, adopt a child from the Family tab, the School tab (schedule), a school day and
+//     homework, Age up now at a birthday cake, the family tree and relatives, and the preview of moving out or in.
 // Clicks and taps go through the real DOM (and the canvas at positions picked with view.worldToScreen/anchorOf);
 // window.hearthside.debug is only used to fast-forward time and to read state for assertions.
 // Fails on page errors, console errors and failed requests. Screenshots: tests/e2e/out/acceptance/<viewport>/.
@@ -231,6 +233,10 @@ async function runViewport(browser, vpName, vp) {
     ['7', 'Milestone 2 home editor: build a room, door, window, finishes, undo/redo, walk in', stepHomeEditor],
     ['8', 'Milestone 6: career panel, pay a bill, sell freelance work', stepEconomy],
     ['9', 'Milestone 7: neighbourhood map, travel, away card, go home, household switch preview', stepNeighbourhood],
+    ['10', 'Milestone 8: adopt a child, school, homework, Age up now, family tree, move-out preview', stepFamily],
+    ['11', 'Milestone 9: floors - a room, a staircase, Floor 2 with a room over it, a walk upstairs, undo', stepFloors],
+    // Milestone 9 exterior on its own (it also runs at the end of step 11): only with --steps=12 --fast-start
+    ['12', 'Milestone 9 exterior: roofs, fences, a gate, terrain paint, a garden bed (standalone)', stepExterior],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -239,6 +245,7 @@ async function runViewport(browser, vpName, vp) {
   await T.shot('main-menu');
   const only = opt('steps', '').split(',').filter(Boolean);
   for (const [id, title, fn] of steps) {
+    if (id === '12' && !only.includes('12')) continue;
     if (only.length && !only.includes(id) && id !== '1') continue;
     if (id === '1' && only.length && !only.includes('1') && !flag('fast-start')) continue;
     log(`--- [${vpName}] step ${id}: ${title}`);
@@ -532,6 +539,8 @@ function PAGE_HELPERS() {
       return finish(conv(h().game.view.worldToScreen((b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2)));
     },
     tile(x, z) { return finish(conv(h().game.view.worldToScreen(x + 0.5, 0, z + 0.5))); },
+    /** Milestone 9: any world point (x, height above level 0, z), e.g. a vertex or a tile centre of an upper floor. */
+    at(x, y, z) { return finish(conv(h().game.view.worldToScreen(x, y, z))); },
     /** A grid vertex (corner of tiles) on the ground. */
     vertex(x, z) { return finish(conv(h().game.view.worldToScreen(x, 0, z))); },
     /** A screen point on the wall (cutaway walls are low: tries several heights, keeps one that really picks this wall). */
@@ -1786,7 +1795,7 @@ async function stepHomeEditor(T) {
   await T.tap(page.locator('button[aria-label="Turn right"]').first());
   await T.tap(page.locator('button[aria-label="Turn right"]').first());
   await page.waitForTimeout(500);
-  T.check(S, 'Build opens with the tool tabs (Paint, Walls, Room, Doors, Windows, Erase)', (await page.locator('.bb-tool-tabs .tab').count()) === 6, `${await page.locator('.bb-tool-tabs .tab').count()} tabs`);
+  T.check(S, 'Build opens with the tool tabs (Paint, Walls, Room, Stairs, Doors, Windows, Erase, and the exterior tabs)', (await page.locator('.bb-tool-tabs .tab').count()) >= 7, `${await page.locator('.bb-tool-tabs .tab').count()} tabs`);
   T.check(S, 'the simulation stays paused in Build', (await page.evaluate(() => window.hearthside.game.speed())) === 0, '');
   await T.shot('m2-build-panel');
   await T.audit('build panel (tool tabs)');
@@ -2482,6 +2491,910 @@ async function stepNeighbourhood(T) {
   }
   await closeMap();
   await T.audit('after neighbourhood step');
+}
+
+// ===============================================================================================================
+// STEP 11 - Milestone 9: floors. Build a room on the ground floor, place a staircase, switch to Floor 2 and build a room with a
+// floor over it, walk a household member upstairs (level 1, height rising on the stairs), hide the floor with the selector, build
+// and undo on Floor 2. Real taps and drags; window.hearthside only reads state.
+// ===============================================================================================================
+
+/** Like framePair, for world points (x, height above level 0, z): both measured under one camera, free of UI and `minPx` apart. */
+async function framePairAt(T, a, b, minPx = 24) {
+  const cx = (a[0] + b[0]) / 2, cz = (a[2] + b[2]) / 2;
+  const measure = () => T.page.evaluate(([ax, ay, az, bx, by, bz]) => [window.__t.at(ax, ay, az), window.__t.at(bx, by, bz)], [...a, ...b]);
+  const { ppm: start, yaw } = await T.page.evaluate(() => ({ ppm: Math.round(window.hearthside.view.rig.ppm), yaw: window.hearthside.view.rig.yaw }));
+  const sin = Math.sin(yaw), cos = Math.cos(yaw), sinPitch = Math.sin((37 * Math.PI) / 180);
+  const place = async (ppm, ox, oy) => {
+    const mx = ox / ppm, my = oy / (ppm * sinPitch);
+    await T.page.evaluate(([x, z, p]) => window.hearthside.view.rig.glideTo(x, z, p, 0), [cx - cos * mx - sin * my, cz + sin * mx - cos * my, ppm]);
+    await T.frames(2);
+  };
+  const offsets = [[0, 0], [0, 30], [-70, 30], [-70, 0], [70, 0], [0, 60], [-70, 60], [0, -70], [-70, -70], [0, 100], [-70, 100]];
+  for (let ppm = start; ; ppm = Math.max(20, ppm - 6)) {
+    for (const [ox, oy] of offsets) {
+      await place(ppm, ox, oy);
+      const [pa, pb] = await measure();
+      if (pa?.free && pb?.free && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx) return { a: pa, b: pb, ppm };
+    }
+    if (ppm <= 20) { const [pa, pb] = await measure(); return { a: pa, b: pb, ppm }; }
+  }
+}
+
+/** Everything the floors step compares: lot structure and objects of every level, money. */
+const floorsSnap = (T) => T.page.evaluate(() => {
+  const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId]; const hh = st.households[st.activeHouseholdId];
+  return JSON.parse(JSON.stringify({ walls: lot.walls, openings: lot.openings, floors: lot.floors, objects: lot.objects, levels: lot.levels, funds: hh.funds }));
+});
+const onLevel = (map, level) => Object.keys(map).filter((k) => (map[k].level ?? Number(k.split(':')[0])) === level);
+
+async function stepFloors(T) {
+  const S = '11';
+  const { page, vpInfo } = T;
+  const touch = vpInfo.touch;
+  const STAIR = 'stair-straight-basic';
+  // the room (vertices, 8 x 4 m): the first empty stretch of the lot, with a free tile on its west side for the balcony (earlier steps
+  // have built on the lot in a full run, so the place is looked up, preferring the north strip)
+  const spot = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+    const busy = new Set();
+    for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) busy.add(`${x},${z}`); }
+    for (const w of Object.values(lot.walls)) if (w.level === 0) { for (const [x, z] of w.dir === 'h' ? [[w.x, w.z], [w.x, w.z - 1]] : [[w.x, w.z], [w.x - 1, w.z]]) busy.add(`${x},${z}`); }
+    for (const o of Object.values(lot.objects)) { const d = window.hearthside.game.content.objects[o.defId]; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) busy.add(`${o.x + i},${o.z + j}`); }
+    const free = (x0, z0, w, d) => { for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + w; x++) if (x < 0 || z < 0 || x >= lot.width || z >= lot.depth || busy.has(`${x},${z}`)) return false; return true; };
+    // the room plus a one tile margin all round (the west margin holds the balcony tile)
+    for (let z = 0; z + 5 <= lot.depth; z++) for (let x = 3; x + 9 <= lot.width; x++) {
+      const zz = Math.max(0, z - 1);
+      if (free(x - 1, zz, 10, z + 5 - zz)) return { x, z };
+    }
+    return null;
+  });
+  T.check(S, 'there is an empty stretch of the lot for the new rooms', !!spot, JSON.stringify(spot));
+  if (!spot) return;
+  const X0 = spot.x, Z0 = spot.z, X1 = X0 + 8, Z1 = Z0 + 4;
+  const northish = Z1 <= 7;
+  const farTile = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+    const hot = [];
+    for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) hot.push([x, z]); }
+    for (const w of Object.values(lot.walls)) if (w.level === 0) hot.push([w.x, w.z]);
+    for (const o of Object.values(lot.objects)) hot.push([o.x, o.z]);
+    let best = null, bestD = -1;
+    for (let z = 0; z < lot.depth; z++) for (let x = 0; x < lot.width; x++) {
+      const d = Math.min(...hot.map(([hx, hz]) => Math.max(Math.abs(hx - x), Math.abs(hz - z))));
+      if (d > bestD) { bestD = d; best = { x, z, d }; }
+    }
+    return best;
+  });
+  const view = () => page.evaluate(() => ({ level: window.hearthside.game.view.level?.(), levels: window.hearthside.game.view.levels?.(), mode: window.hearthside.game.mode(), y: window.hearthside.view.rig.target.y }));
+  const selector = () => page.evaluate(() => {
+    const e = document.querySelector('.level-select');
+    if (!e || e.hidden || e.closest('[hidden]')) return null;
+    const rect = (s) => { const b = e.querySelector(s)?.getBoundingClientRect(); return b ? { w: Math.round(b.width), h: Math.round(b.height) } : null; };
+    return { label: e.querySelector('.level-label')?.textContent ?? '', up: !e.querySelector('.level-up').disabled, down: !e.querySelector('.level-down').disabled, upBox: rect('.level-up'), downBox: rect('.level-down') };
+  });
+  const personVisible = (id) => page.evaluate((i) => !!window.hearthside.view.people?.positionOf(i), id);
+
+  await page.evaluate(() => { window.hearthside.game.setSpeed(0); document.querySelectorAll('.toast').forEach((t) => t.remove()); });
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'live') { await T.tap(page.locator('.mode-btn[data-mode="live"]')); await page.waitForTimeout(400); }
+  const s0 = await floorsSnap(T);
+  T.check(S, 'the home starts on one floor (lot.levels 1, nothing above the ground)', s0.levels === 1 && onLevel(s0.floors, 1).length === 0, `levels ${s0.levels}`);
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
+  await page.waitForTimeout(700);
+  await T.frames(30);
+  if (northish) {
+    await T.tap(page.locator('button[aria-label="Turn right"]').first());
+    await T.tap(page.locator('button[aria-label="Turn right"]').first());
+    await page.waitForTimeout(500);
+  }
+
+  // ---- the floor selector and the Stairs tab
+  const sel0 = await selector();
+  T.check(S, 'Build shows the floor selector on Floor 1, with up available and down not', !!sel0 && sel0.label === 'Floor 1' && sel0.up && !sel0.down, JSON.stringify(sel0));
+  T.check(S, 'the floor buttons are touch sized (>= 44 px)', !!sel0 && sel0.upBox.w >= 43.5 && sel0.upBox.h >= 43.5 && sel0.downBox.w >= 43.5 && sel0.downBox.h >= 43.5, JSON.stringify(sel0));
+  T.check(S, 'the Build tabs include Stairs', (await page.locator('.bb-tool-tabs .tab[data-id="tool-stairs"]').count()) === 1, '');
+  await T.audit('floors: build panel with the floor selector');
+
+  // ---- a ground-floor room with a floor (finish chosen under Paint -> Floors, then the Room tool)
+  await T.tap(page.locator('.bb-build-panel .tab[data-id="floor"]'));
+  await page.waitForTimeout(300);
+  const floorCards = page.locator('.bb-build-panel .bb-designs .bb-card');
+  await floorCards.first().scrollIntoViewIfNeeded().catch(() => undefined);
+  await T.tap(floorCards.first());
+  await page.waitForTimeout(300);
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-room"]'));
+  await page.waitForTimeout(500);
+  await T.frames(10);
+  const roomTool = await page.evaluate(() => window.hearthside.game.buildTool());
+  T.check(S, 'the Room tool is ready with a floor', roomTool?.kind === 'room' && !!roomTool.floor, JSON.stringify(roomTool));
+  await frameNorth(T, (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0 + Z1 - Z0);
+  const c0 = await framePair(T, 'vertex', [X0, Z0], [X1, Z1]);
+  T.check(S, 'both corners of the ground room are on screen, free of UI', !!c0.a?.free && !!c0.b?.free, JSON.stringify(c0));
+  await drag(T, c0.a, c0.b);
+  await T.frames(4);
+  if (touch) { await T.shot('m9-room-preview'); await tapFooter(T, '.bb-confirm'); }
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const s1 = await floorsSnap(T);
+  T.check(S, 'the ground room has its walls (2 x (8 + 4)) and 32 floor tiles on level 0', onLevel(s1.walls, 0).length - onLevel(s0.walls, 0).length === 24 && onLevel(s1.floors, 0).length - onLevel(s0.floors, 0).length === 32, `new: ${onLevel(s1.walls, 0).length - onLevel(s0.walls, 0).length} walls, ${onLevel(s1.floors, 0).length - onLevel(s0.floors, 0).length} floors; room at ${X0},${Z0}`);
+  T.check(S, 'the room cost money', s0.funds - s1.funds > 0, fmtMoney(s0.funds - s1.funds));
+  await T.shot('m9-ground-room');
+
+  // ---- the staircase (Stairs tab, turned a quarter so it runs along the room) placed on the ground floor
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-stairs"]'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const card = page.locator(`.bb-stair-host .bb-card[data-def-id="${STAIR}"]`);
+  const cards = await page.locator('.bb-stair-host .bb-card').count();
+  T.check(S, 'the Stairs tab lists the staircases with names and prices', cards >= 1 && /\$/.test(await page.locator('.bb-stair-host .bb-card').first().innerText()), `${cards} cards`);
+  if (await card.count()) { await card.scrollIntoViewIfNeeded().catch(() => undefined); await T.tap(card); }
+  else await page.evaluate((d) => window.hearthside.game.setBuildTool({ kind: 'stairs', defId: d, rot: 0 }), STAIR);
+  await page.waitForTimeout(300);
+  await T.tap(page.locator('.bb-build-footer .bb-flip'));
+  await page.waitForTimeout(250);
+  const stairTool = await page.evaluate(() => window.hearthside.game.buildTool());
+  T.check(S, 'the stairs tool is chosen and Turn rotated it a quarter', stairTool?.kind === 'stairs' && stairTool.defId === STAIR && stairTool.rot === 1, JSON.stringify(stairTool));
+  const stairDef = await page.evaluate((d) => { const o = window.hearthside.game.content.objects[d]; return { price: o.price, stair: o.stair, footprint: o.footprint }; }, STAIR);
+  await frameNorth(T, (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0 + Z1 - Z0);
+  const stairPt = await pointFor(T, 'tile', X0 + 2, Z0 + 2);
+  T.check(S, 'the tile for the stairs is on screen and free of UI', !!stairPt?.free, JSON.stringify(stairPt));
+  await T.tapAt(stairPt.x, stairPt.y);
+  await page.waitForTimeout(400);
+  await T.frames(4);
+  if (touch) {
+    const txt = await footerText(T);
+    T.check(S, 'a tap previews the staircase with its price (nothing built yet)', /Staircase/.test(txt) && /\$/.test(txt) && (await floorsSnap(T)).funds === s1.funds, txt.replace(/\s+/g, ' '));
+    await T.shot('m9-stairs-preview');
+    await tapFooter(T, '.bb-confirm');
+  }
+  await page.waitForTimeout(400);
+  await T.frames(6);
+  const s2 = await floorsSnap(T);
+  const stair = Object.values(s2.objects).find((o) => o.defId === STAIR);
+  T.check(S, 'the staircase stands in the room on level 0 (turned east, 3 tiles long) and cost its price', !!stair && stair.level === 0 && stair.rot === 1 && stair.z === Z0 + 2 && stair.x === X0 + 1 && s1.funds - s2.funds === stairDef.price, JSON.stringify(stair));
+  T.check(S, 'the stairs have a model (procedural mesh, no missing-model placeholder)', await page.evaluate((id) => { const b = window.hearthside.view.objects.boxOf(id); return !!b && b.max.y - b.min.y > 2.5; }, stair?.id), '');
+  await T.shot('m9-stairs-placed');
+
+  // ---- Floor 2: the selector, the camera and the room over the room
+  await T.tap(page.locator('.level-select .level-up'));
+  await page.waitForTimeout(700);
+  await T.frames(30);
+  const v1 = await view();
+  const sel1 = await selector();
+  T.check(S, 'the selector switches to Floor 2 (view level 1, camera plane at 3 m)', v1.level === 1 && sel1?.label === 'Floor 2' && Math.abs(v1.y - 3) < 0.05, JSON.stringify({ v1, sel1 }));
+  T.check(S, 'on Floor 2 the way up is closed at the top (floors in use 1, Floor 3 not offered)', sel1 && sel1.up === false && sel1.down === true, JSON.stringify(sel1));
+  await T.shot('m9-floor2-empty');
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-room"]'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const c1 = await framePairAt(T, [X0, 3, Z0], [X1, 3, Z1]);
+  T.check(S, 'both corners of the room on Floor 2 are on screen, free of UI', !!c1.a?.free && !!c1.b?.free, JSON.stringify(c1));
+  const upTool = await page.evaluate(() => window.hearthside.game.buildTool());
+  T.check(S, 'the Room tool is still chosen on Floor 2', upTool?.kind === 'room', JSON.stringify(upTool));
+  await drag(T, c1.a, c1.b);
+  await T.frames(4);
+  if (touch) {
+    const txt = await footerText(T);
+    T.check(S, 'the Floor 2 preview names the room and the cost', /8 x 4/.test(txt) && /\$/.test(txt), txt.replace(/\s+/g, ' '));
+    await T.shot('m9-floor2-preview');
+    await tapFooter(T, '.bb-confirm');
+  }
+  await page.waitForTimeout(500);
+  await T.frames(8);
+  const s3 = await floorsSnap(T);
+  const upWalls = onLevel(s3.walls, 1), upFloors = onLevel(s3.floors, 1);
+  T.check(S, 'Floor 2 has the room: walls 2 x (8 + 4) on level 1 and 29 floor tiles (32 minus the 3-tile stairwell)', upWalls.length === 24 && upFloors.length === 29, `${upWalls.length} walls, ${upFloors.length} floors`);
+  T.check(S, 'the stairwell has no floor above the stairs', [1, 2, 3].every((i) => !s3.floors[`1:${X0 + i}:${Z0 + 2}`]), '');
+  T.check(S, 'the lot counts two floors', s3.levels === 2, `levels ${s3.levels}`);
+  T.check(S, 'the upper room was paid for', s2.funds - s3.funds > 0, fmtMoney(s2.funds - s3.funds));
+  const rooms1 = await page.evaluate(() => window.hearthside.game.rooms(1).filter((r) => !r.outdoor).map((r) => r.area));
+  T.check(S, 'the upper walls enclose a room on level 1', rooms1.length === 1 && rooms1[0] === 29 + 3 || rooms1.some((a) => a >= 29), JSON.stringify(rooms1));
+  await T.shot('m9-floor2-room');
+  await T.audit('floors: Floor 2 built');
+
+  // ---- Live: a household member walks upstairs
+  await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+  await page.waitForTimeout(600);
+  await T.frames(10);
+  T.check(S, 'Live keeps the chosen floor and shows the selector (two floors in use)', (await view()).level === 1 && (await selector())?.label === 'Floor 2', JSON.stringify(await selector()));
+  let walker = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; });
+  if (!walker) { await runUntil(T, 2400, `Object.values(st.people).some(p => p.householdId === st.activeHouseholdId && p.location.kind === 'lot')`); walker = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; }); }
+  T.check(S, 'a household member is home to walk upstairs', !!walker, String(walker));
+  if (!walker) return;
+  await selectMember(T, walker);
+  const down0 = await page.evaluate((id) => window.hearthside.debug.state().people[id].location.level, walker);
+  const target = { x: X0 + 5, z: Z0 + 2 };
+  const tp = await framePairAt(T, [target.x + 0.5, 3, target.z + 0.5], [target.x + 0.5, 3, target.z + 0.5], 0);
+  const tpPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [tp.a.x, tp.a.y]);
+  T.check(S, 'a tile of the upper room can be tapped (floor pick on level 1)', !!tp.a?.free && tpPick.kind === 'floor' && tpPick.level === 1 && tpPick.tile.x === target.x && tpPick.tile.z === target.z, JSON.stringify({ tp: tp.a, tpPick }));
+  await T.tapAt(tp.a.x, tp.a.y);
+  await page.waitForTimeout(400);
+  const queued = await page.evaluate((id) => window.hearthside.debug.state().people[id].queue.map((a) => `${a.interactionId}@${a.target?.level}`), walker);
+  T.check(S, 'the walk is queued as Go here on level 1', queued.some((q) => q === 'goHere@1'), queued.join(','));
+  await page.evaluate(() => { globalThis.__maxRise = 0; globalThis.__levels = new Set(); });
+  const arrived = `(() => { const l = st.people['${walker}'].location; globalThis.__maxRise = Math.max(globalThis.__maxRise, l.rise || 0); if (l.kind === 'lot') globalThis.__levels.add(l.level); return l.kind === 'lot' && l.level === 1 && !l.rise && Math.floor(l.x) === ${target.x} && Math.floor(l.z) === ${target.z}; })()`;
+  const walk = await runUntil(T, 7200, arrived);
+  const loc = await page.evaluate((id) => { const l = window.hearthside.debug.state().people[id].location; return l.kind === 'lot' ? { level: l.level, rise: l.rise ?? 0, x: Math.round(l.x * 10) / 10, z: Math.round(l.z * 10) / 10 } : l; }, walker);
+  const climbed = await page.evaluate(() => ({ maxRise: globalThis.__maxRise, levels: [...globalThis.__levels] }));
+  T.check(S, 'the member walked upstairs: their level is 1 and they stand in the upper room', walk.done && loc.level === 1 && loc.rise === 0, `${walk.ticks} ticks, from level ${down0}, now ${JSON.stringify(loc)}`);
+  T.check(S, 'on the way they climbed the stairs (height rose above 2 m) through levels 0 and 1', climbed.maxRise > 2 && climbed.levels.includes(0) && climbed.levels.includes(1), JSON.stringify(climbed));
+  T.check(S, 'the walk never crossed a wall outside a doorway', walk.viol.length === 0, JSON.stringify(walk.viol.slice(0, 3)));
+  await page.evaluate(([x, z]) => window.hearthside.view.rig.glideTo(x, z, 70, 0.1), [(X0 + X1) / 2, (Z0 + Z1) / 2]);
+  await T.frames(24);
+  await settle(T);
+  T.check(S, 'on Floor 2 the member is drawn', await personVisible(walker), '');
+  await T.shot('m9-member-upstairs');
+
+  // ---- the floor selector hides what is above it, and people up there
+  await T.tap(page.locator('.level-select .level-down'));
+  await page.waitForTimeout(700);
+  await T.frames(30);
+  const v0 = await view();
+  const upMissing = await page.evaluate(() => { const b = window.hearthside.view.rig; return b.target.y; });
+  T.check(S, 'Floor 1 is shown again (camera plane back at 0)', v0.level === 0 && Math.abs(upMissing) < 0.05, JSON.stringify(v0));
+  T.check(S, 'a person upstairs is not drawn while Floor 1 is shown', !(await personVisible(walker)), '');
+  await T.shot('m9-floor1-view');
+  await T.tap(page.locator('.level-select .level-up'));
+  await page.waitForTimeout(500);
+  await T.frames(20);
+  T.check(S, 'and drawn again on Floor 2', await personVisible(walker), '');
+
+  // ---- Build on Floor 2: a balcony tile, a refused one, undo and redo
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
+  await page.waitForTimeout(700);
+  await T.frames(20);
+  const s4 = await floorsSnap(T);
+  T.check(S, 'Build opens on Floor 2 (the chosen floor is kept)', (await view()).level === 1 && (await selector())?.label === 'Floor 2', JSON.stringify(await selector()));
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-paint"]'));
+  await page.waitForTimeout(300);
+  await T.tap(page.locator('.bb-build-panel .tab[data-id="floor"]'));
+  await page.waitForTimeout(300);
+  const fc = page.locator('.bb-build-panel .bb-designs .bb-card');
+  await T.tap(fc.nth(1));
+  await page.waitForTimeout(300);
+  const paintTool = await page.evaluate(() => window.hearthside.game.paintTool());
+  T.check(S, 'a floor finish is chosen for the balcony', paintTool?.kind === 'floor', JSON.stringify(paintTool));
+  // out of reach first: a tile in the empty south-west yard has no room or wall below it and nothing within 2 tiles
+  const far = { x: farTile.x, z: farTile.z };
+  const fp = await framePairAt(T, [far.x + 0.5, 3, far.z + 0.5], [far.x + 0.5, 3, far.z + 0.5], 0);
+  const farPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [fp.a.x, fp.a.y]);
+  const farPv = await page.evaluate((pk) => window.hearthside.game.paintPreview(pk), farPick);
+  T.check(S, 'a floor tile with nothing under it is refused with a reason (no support, out of balcony reach)', !!farPv && farPv.ok === false && /balcony|wall or a floored room/i.test(farPv.reason ?? ''), JSON.stringify({ farPick, farPv }));
+  // a tile right beside the room's west wall (nothing below it, a wall on its edge): a balcony within reach
+  const bal = { x: X0 - 1, z: Z0 + 2 };
+  const bp = await framePairAt(T, [bal.x + 0.5, 3, bal.z + 0.5], [bal.x + 0.5, 3, bal.z + 0.5], 0);
+  const balPick = await page.evaluate(([x, y]) => window.__t.pick(x, y), [bp.a.x, bp.a.y]);
+  T.check(S, 'the balcony tile is under the tap point on level 1', !!bp.a?.free && balPick.kind === 'floor' && balPick.level === 1 && balPick.tile.x === bal.x && balPick.tile.z === bal.z, JSON.stringify({ bp: bp.a, balPick }));
+  await T.tapAt(bp.a.x, bp.a.y);
+  await page.waitForTimeout(400);
+  if (touch) { await T.tapAt(bp.a.x, bp.a.y); await page.waitForTimeout(400); }
+  await T.frames(6);
+  const s5 = await floorsSnap(T);
+  T.check(S, 'the balcony floor tile was laid on level 1 and paid for', !!s5.floors[`1:${bal.x}:${bal.z}`] && s4.funds - s5.funds > 0, `${JSON.stringify(s5.floors[`1:${bal.x}:${bal.z}`])} ${fmtMoney(s4.funds - s5.funds)}`);
+  await T.shot('m9-balcony');
+  const undoBtn = page.locator('.bb-build-panel .bb-undo button[aria-label="Undo"]');
+  const redoBtn = page.locator('.bb-build-panel .bb-undo button[aria-label="Redo"]');
+  await T.tap(undoBtn);
+  await page.waitForTimeout(400);
+  await T.frames(6);
+  const s6 = await floorsSnap(T);
+  T.check(S, 'undo takes the balcony tile away and returns the money exactly', !s6.floors[`1:${bal.x}:${bal.z}`] && s6.funds === s4.funds && JSON.stringify(s6.floors) === JSON.stringify(s4.floors), '');
+  await T.shot('m9-balcony-undone');
+  await T.tap(redoBtn);
+  await page.waitForTimeout(400);
+  const s7 = await floorsSnap(T);
+  T.check(S, 'redo brings it back at the same price', !!s7.floors[`1:${bal.x}:${bal.z}`] && s7.funds === s5.funds, '');
+  await T.tap(undoBtn);
+  await page.waitForTimeout(300);
+
+  // ---- the staircase can be taken out again only while nobody depends on it (the member is upstairs)
+  await T.tap(page.locator('.bb-tool-tabs .tab[data-id="tool-stairs"]'));
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.hearthside.game.setBuildTool({ kind: 'eraseStairs' }));
+  const rm = await page.evaluate(([x, z]) => window.hearthside.game.buildPreview({ from: { x, z }, level: 1 }), [X0 + 2.5, Z0 + 2.5]);
+  T.check(S, 'removing the staircase is refused while somebody is upstairs (reason shown)', !!rm && rm.ok === false && /stuck|stairs/i.test(rm.reason ?? ''), JSON.stringify(rm && { ok: rm.ok, reason: rm.reason }));
+  await page.evaluate(() => window.hearthside.game.setBuildTool(null));
+  const endSnap = await floorsSnap(T);
+  T.check(S, 'the finished structure is intact: 2 floors, the staircase, both rooms', endSnap.levels === 2 && Object.values(endSnap.objects).some((o) => o.defId === STAIR) && onLevel(endSnap.walls, 1).length === 24 && onLevel(endSnap.walls, 0).length >= 24, '');
+
+  await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+  await page.waitForTimeout(500);
+  await T.frames(10);
+  await T.shot('m9-end-live');
+  await T.audit('floors: end');
+
+  // ---- M9-ext extends this step below: roof, fence and railing on the structure built above ------------------
+  await stepExterior(T);
+  // ===== END OF M9-CORE FLOORS (stepFloors) =====
+}
+
+// ===============================================================================================================
+// STEP 10 - Milestone 8: family and life stages (adopt a child, school, homework, Age up now, family tree, moving out)
+// ===============================================================================================================
+
+async function stepFamily(T) {
+  const S = '10';
+  const { page } = T;
+  const read = (fn, arg) => page.evaluate(fn, arg);
+  await page.evaluate(() => window.hearthside.game.setSpeed(0));
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  const parent = (await read(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds[0]; }));
+  const openPanelTab = async (personId, tab) => {
+    await selectMember(T, personId);
+    const panelOpen = await page.evaluate(() => { const p = document.querySelector('.person-panel'); return !!p && !p.hidden && p.offsetParent !== null; });
+    const shownFor = await page.evaluate(() => document.querySelector('.person-panel .panel-title, .person-panel h2')?.textContent ?? '');
+    const first = await page.evaluate((id) => window.hearthside.debug.state().people[id].firstName, personId);
+    if (!panelOpen || !shownFor.includes(first)) {
+      await T.tap(page.locator(`.member[data-person-id="${personId}"]`));
+      await page.waitForSelector('.person-panel:not([hidden])', { timeout: 5000 }).catch(() => undefined);
+    }
+    // switch away and back so the tab is rebuilt from the latest state
+    const other = tab === 'needs' ? 'queue' : 'needs';
+    await T.tap(page.locator(`.person-panel .tab[data-id="${other}"]`));
+    await T.tap(page.locator(`.person-panel .tab[data-id="${tab}"]`));
+    await page.waitForTimeout(450);
+  };
+  // The panel is a half-height sheet on a phone: expand it for a screenshot of its whole content, then shrink it again.
+  const shotExpanded = async (label, focus = '.person-panel .school-facts, .person-panel .family-stage') => {
+    const up = page.locator('.person-panel button[aria-label="Expand panel"]');
+    if (await up.count() && await up.first().isVisible().catch(() => false)) { await T.tap(up.first()); await page.waitForTimeout(350); }
+    await page.evaluate((sel) => document.querySelector(sel)?.scrollIntoView({ block: 'center' }), focus);
+    await T.shot(label);
+    const down = page.locator('.person-panel button[aria-label="Shrink panel"]');
+    if (await down.count() && await down.first().isVisible().catch(() => false)) { await T.tap(down.first()); await page.waitForTimeout(300); }
+  };
+
+  // ---- 1. settings: aging, custom stage days, the elder end of life switch
+  await T.tap(page.locator('.menu-btn'));
+  await page.waitForSelector('.game-menu', { timeout: 5000 });
+  await T.tap(page.locator('.game-menu button', { hasText: 'Settings' }));
+  await page.waitForSelector('.settings-modal', { timeout: 5000 });
+  const agingSegs = await page.locator('.settings-modal .segmented[aria-label="Aging"] .seg').allInnerTexts();
+  T.check(S, 'Settings offer Aging: Off, Long, Normal and Custom', agingSegs.join('|') === 'Off|Long|Normal|Custom', agingSegs.join('|'));
+  await T.tap(page.locator('.settings-modal .segmented[aria-label="Aging"] .seg[data-id="custom"]'));
+  await page.waitForTimeout(250);
+  const custom = await page.evaluate(() => {
+    const box = document.querySelector('.settings-modal .aging-custom');
+    return { shown: !!box && !box.hidden && box.offsetParent !== null, sliders: box ? box.querySelectorAll('.slider').length : 0, aging: window.hearthside.debug.state().settings.aging, days: window.hearthside.debug.state().settings.agingDays };
+  });
+  T.check(S, 'Custom aging shows one days-per-stage control for each of the seven life stages and stores them', custom.shown && custom.sliders === 7 && custom.aging === 'custom' && custom.days?.baby === 3 && custom.days?.elder === 14, JSON.stringify(custom));
+  await T.shot('m8-settings-custom-aging');
+  await T.audit('aging settings');
+  const eol = page.locator('.settings-modal', { hasText: 'Elders pass away peacefully' });
+  T.check(S, 'Settings have the elder end-of-life switch', (await eol.count()) > 0, '');
+  await T.tap(page.locator('.settings-modal .segmented[aria-label="Aging"] .seg[data-id="normal"]'));
+  await page.waitForTimeout(200);
+  const aging = await read(() => window.hearthside.debug.state().settings.aging);
+  T.check(S, 'choosing Normal sets the world to normal aging', aging === 'normal', aging);
+  await T.tap(page.locator('.settings-modal .modal-header button[aria-label="Close"]').first());
+  await page.waitForSelector('.settings-modal', { state: 'detached', timeout: 4000 }).catch(() => undefined);
+
+  // ---- 2. adopt a child from the Family tab
+  const funds0 = await read(() => { const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId]; if (hh.funds < 400000) hh.funds = 400000; return hh.funds; });
+  const count0 = await read(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.length; });
+  await openPanelTab(parent, 'family');
+  const fam0 = await page.evaluate(() => ({
+    stage: document.querySelector('.person-panel .family-stage .stage-big')?.textContent ?? '',
+    birthday: document.querySelector('.person-panel .family-birthday')?.textContent ?? '',
+    tabs: [...document.querySelectorAll('.person-panel .tab')].map((t) => t.textContent.trim()),
+    head: document.querySelector('.person-panel .stage-chip')?.textContent ?? '',
+  }));
+  T.check(S, 'the person panel shows the life stage and the days to the next birthday (aging on)', /Adult|Young adult/.test(fam0.stage) && /Birthday (in \d+ days|tomorrow|today)/.test(fam0.birthday) && fam0.tabs.includes('Family'), JSON.stringify(fam0));
+  await shotExpanded('m8-family-tab');
+  await T.audit('family tab');
+  const adoptBtn = page.locator('.person-panel button', { hasText: 'Adopt a child' });
+  T.check(S, 'the Family tab offers "Adopt a child" to a grown household member', (await adoptBtn.count()) === 1 && !(await adoptBtn.first().isDisabled()), '');
+  await T.tap(adoptBtn.first());
+  await page.waitForSelector('.adopt-dialog', { timeout: 5000 });
+  await T.tap(page.locator('.adopt-dialog .segmented[aria-label="Life stage"] .seg[data-id="child"]'));
+  await T.tap(page.locator('.adopt-dialog .segmented[aria-label="Sex"] .seg[data-id="girl"]'));
+  await page.locator('.adopt-dialog .adopt-name').fill('Nora');
+  await page.waitForTimeout(250);
+  const dlg = await page.evaluate(() => {
+    const d = document.querySelector('.adopt-dialog'); const r = d.getBoundingClientRect();
+    return { fee: d.querySelector('.adopt-fee')?.textContent ?? '', note: d.querySelector('.adopt-note')?.textContent ?? '', adoptEnabled: !d.querySelector('.modal-footer .btn-primary')?.disabled, onScreen: r.left >= -1 && r.right <= innerWidth + 1 && r.top >= -1 && r.bottom <= innerHeight + 1, overflowX: d.scrollWidth > r.width + 1 };
+  });
+  T.check(S, 'the adoption dialog shows the fee and who the parents are, fits the screen and can be confirmed', /Fee: \$1,?500/.test(dlg.fee) && /Parents:/.test(dlg.fee) && dlg.adoptEnabled && dlg.onScreen && !dlg.overflowX, JSON.stringify(dlg));
+  await T.shot('m8-adopt-dialog');
+  await T.audit('adopt dialog');
+  await T.tap(page.locator('.adopt-dialog .modal-footer .btn-primary'));
+  await page.waitForSelector('.adopt-dialog', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+  await page.waitForTimeout(500);
+  const adopted = await read((a) => {
+    const st = window.hearthside.debug.state(); const hh = st.households[st.activeHouseholdId];
+    const kid = hh.memberIds.map((id) => st.people[id]).find((p) => p.firstName === 'Nora');
+    return { kid: kid?.id ?? null, stage: kid?.lifeStage ?? null, parents: kid?.parentIds ?? [], funds: hh.funds, members: hh.memberIds.length, school: kid?.school?.schoolId ?? null, fee: st.feed.filter((f) => /joined the family/.test(f.text)).length };
+  }, null);
+  T.check(S, 'adopting creates a child in the household with the adopter as parent, a school, and charges the fee', !!adopted.kid && adopted.stage === 'child' && adopted.parents[0] === parent && adopted.school === 'elementary' && adopted.members === count0 + 1 && adopted.funds === funds0 - 150000 && adopted.fee === 1, JSON.stringify(adopted));
+  const kid = adopted.kid;
+  if (!kid) return;
+  T.members = await read(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds; });
+  const stripHas = await page.locator(`.member[data-person-id="${kid}"]`).count();
+  T.check(S, 'the new family member appears in the household strip', stripHas === 1, String(stripHas));
+
+  // ---- 3. the school schedule in the School tab
+  await openPanelTab(kid, 'career');
+  const sch = await page.evaluate(() => ({
+    tab: document.querySelector('.person-panel .tab[data-id="career"]')?.textContent.trim() ?? '',
+    title: document.querySelector('.person-panel .career-head h3')?.textContent ?? '',
+    sub: document.querySelector('.person-panel .career-title')?.textContent ?? '',
+    facts: document.querySelector('.person-panel .school-facts')?.textContent ?? '',
+    stage: document.querySelector('.person-panel .stage-chip')?.textContent ?? '',
+  }));
+  T.check(S, 'a child\'s Career tab is the School tab with the school, the days and the hours', sch.tab === 'School' && sch.title === 'Willowbrook Elementary' && /Mon to Fri/.test(sch.sub) && /8:00 AM to 2:00 PM/.test(sch.sub) && /Today/.test(sch.facts) && /Homework/.test(sch.facts), JSON.stringify(sch));
+  T.check(S, 'the panel header names the child\'s life stage', /^Child/.test(sch.stage), sch.stage);
+  await shotExpanded('m8-school-tab');
+  await T.audit('school tab');
+
+  // ---- 4. a school day, then homework
+  const reached = await runUntil(T, 4 * 60 * 30, `(() => { const k = st.people['${kid}']; return !!k && k.school.attended >= 1 && g.family('${kid}')?.school?.homeworkDue === true; })()`);
+  const sd = await read((id) => { const k = window.hearthside.debug.state().people[id]; return { attended: k.school.attended, missed: k.school.missed, loc: k.location.kind, perf: k.school.performance }; }, kid);
+  T.check(S, 'the child goes to school and comes home with homework due', reached.done && sd.attended >= 1 && sd.loc === 'lot', `${JSON.stringify(sd)} after ${Math.round(reached.ticks / 4)} game minutes`);
+  await openPanelTab(kid, 'career');
+  const hwBtn = page.locator('.person-panel button', { hasText: 'Do homework' });
+  const hwEnabled = (await hwBtn.count()) === 1 && !(await hwBtn.first().isDisabled());
+  T.check(S, 'the School tab offers Do homework when it is due', hwEnabled, '');
+  await shotExpanded('m8-homework-due');
+  if (hwEnabled) {
+    const perf0 = sd.perf;
+    await T.tap(hwBtn.first());
+    await page.waitForTimeout(300);
+    const queued = await read((id) => window.hearthside.debug.state().people[id].queue.map((a) => a.interactionId), kid);
+    T.check(S, 'Do homework queues the homework for the child', queued.includes('doHomework'), JSON.stringify(queued));
+    const done = await runUntil(T, 4 * 60 * 6, `st.people['${kid}'].school.homeworkDay >= 0`);
+    const after = await read((id) => { const k = window.hearthside.debug.state().people[id]; return { hw: k.school.homeworkDay, perf: k.school.performance, mood: k.moodlets.some((m) => m.id === 'homeworkDone') }; }, kid);
+    T.check(S, 'the homework gets done once and raises school performance', done.done && after.perf > perf0 && after.mood, JSON.stringify({ perf0, ...after }));
+    await openPanelTab(kid, 'career');
+    const hwAfter = await page.locator('.person-panel button', { hasText: 'Do homework' }).first().isDisabled();
+    T.check(S, 'afterwards Do homework is greyed out until the next school day', hwAfter, String(hwAfter));
+  }
+
+  // ---- 5. Age up now at a birthday cake
+  const cake = await read(() => {
+    const g = window.hearthside.game; const st = window.hearthside.debug.state(); const lot = st.lots[st.activeLotId];
+    const r = document.getElementById('game-canvas').getBoundingClientRect();
+    const tables = Object.values(lot.objects).filter((o) => { const d = g.content.objects[o.defId]; return d && d.surfaceHeight !== undefined && d.layer === 'floor' && (d.category === 'tables' || d.tags.includes('table')) && d.footprint; });
+    g.setMode('buy');
+    for (const t of tables) {
+      const d = g.content.objects[t.defId];
+      if (!g.startPlacement('birthday-cake').ok) continue;
+      for (let dx = 0; dx < d.footprint.w; dx++) for (let dz = 0; dz < d.footprint.d; dz++) {
+        const p = window.__t.tile(t.x + dx, t.z + dz);
+        g.placementAt(p.x - r.left, p.y - r.top);
+        const pl = g.placement();
+        if (pl && pl.ok) { const c = g.confirmPlacement(); g.setMode('live'); return { ok: c.ok, on: t.defId, reason: c.ok ? null : c.reason }; }
+      }
+      g.cancelPlacement();
+    }
+    g.setMode('live');
+    return { ok: false, tables: tables.length, reason: 'no table tile accepted the cake' };
+  }, null);
+  T.check(S, 'a birthday cake can be bought and put on a table', cake.ok, JSON.stringify(cake));
+  await page.waitForTimeout(400);
+  await T.frames(3);
+  await openPanelTab(kid, 'family');
+  const ageBtn = page.locator('.person-panel button', { hasText: 'Age up now' });
+  const ageEnabled = (await ageBtn.count()) === 1 && !(await ageBtn.first().isDisabled());
+  T.check(S, 'with a cake on the lot, Age up now is available in the Family tab', ageEnabled, await page.locator('.person-panel .family-stage').innerText().catch(() => ''));
+  await shotExpanded('m8-age-up-ready');
+  if (ageEnabled) {
+    await T.tap(ageBtn.first());
+    await page.waitForTimeout(300);
+    const q = await read((id) => window.hearthside.debug.state().people[id].queue.map((a) => a.interactionId), kid);
+    T.check(S, 'Age up now sends the child to the cake', q.includes('ageUpNow'), JSON.stringify(q));
+    const grew = await runUntil(T, 4 * 150, `st.people['${kid}'].lifeStage !== 'child'`);
+    const bd = await read((id) => { const st = window.hearthside.debug.state(); const k = st.people[id]; return { stage: k.lifeStage, school: k.school?.schoolId ?? null, stageDays: k.stageDays, memory: k.memories.some((m) => m.kind === 'birthday'), mood: k.moodlets.some((m) => m.id === 'birthday'), feed: st.feed.some((f) => /Happy birthday, Nora/.test(f.text)) }; }, kid);
+    T.check(S, 'the birthday makes the child a teen with the high school, a memory, a moodlet and a notification', grew.done && bd.stage === 'teen' && bd.school === 'high' && bd.stageDays === 0 && bd.memory && bd.mood && bd.feed, JSON.stringify(bd));
+    await openPanelTab(kid, 'family');
+    const head = await page.evaluate(() => document.querySelector('.person-panel .stage-big')?.textContent ?? '');
+    T.check(S, 'the panel shows the new life stage', head === 'Teen', head);
+  }
+
+  // ---- 6. the family tree and the relatives
+  await openPanelTab(kid, 'family');
+  const tree = await page.evaluate(() => {
+    const svg = document.querySelector('.person-panel .pp-tree .cr-tree-svg');
+    return { svg: !!svg, boxes: svg ? svg.querySelectorAll('.cr-tree-box').length : 0, rows: document.querySelectorAll('.person-panel .relative-row').length, parentRow: [...document.querySelectorAll('.person-panel .relative-row')].some((r) => /Parent/.test(r.textContent)), label: svg?.getAttribute('aria-label') ?? '' };
+  });
+  T.check(S, 'the Family tab draws the family tree with the parent and the child and lists the relatives', tree.svg && tree.boxes >= 2 && tree.rows >= 1 && tree.parentRow && /parent/i.test(tree.label), JSON.stringify(tree));
+  await shotExpanded('m8-family-tree', '.person-panel .pp-tree');
+  await T.audit('family tree');
+
+  // ---- 7. move out or in: the preview (nothing is moved)
+  await openPanelTab(parent, 'family');
+  const splitBtn = page.locator('.person-panel button', { hasText: 'Move out or in' });
+  await T.tap(splitBtn.first());
+  await page.waitForSelector('.split-dialog', { timeout: 5000 });
+  const chips = await page.locator('.split-dialog .split-who .chip').count();
+  T.check(S, 'the move-out dialog lists every household member', chips === count0 + 1, String(chips));
+  // everybody leaving is refused with the reason
+  const allChips = page.locator('.split-dialog .split-who .chip');
+  for (let i = 0; i < chips; i++) { if (!(await allChips.nth(i).evaluate((e) => e.classList.contains('is-selected')))) await T.tap(allChips.nth(i)); }
+  await page.waitForTimeout(200);
+  const all = await page.evaluate(() => ({ note: document.querySelector('.split-dialog .adopt-note')?.textContent ?? '', go: document.querySelector('.split-dialog .modal-footer .btn-primary')?.disabled }));
+  T.check(S, 'nobody can leave the household empty: the dialog says why and Move is disabled', /Somebody has to stay/.test(all.note) && all.go === true, JSON.stringify(all));
+  // the teen moves in with a neighbouring household: a valid preview with the funds share
+  await T.tap(page.locator('.split-dialog .segmented[aria-label="Where to"] .seg[data-id="household"]').first());
+  await page.waitForTimeout(200);
+  for (let i = 0; i < chips - 1; i++) await T.tap(allChips.nth(i)); // deselect the adults, keep the teen (the last member)
+  await page.waitForTimeout(250);
+  const prev = await page.evaluate(() => {
+    const d = document.querySelector('.split-dialog'); const r = d.getBoundingClientRect(); const go = d.querySelector('.modal-footer .btn-primary');
+    return { lines: [...d.querySelectorAll('.split-lines li')].map((l) => l.textContent), note: d.querySelector('.adopt-note')?.textContent ?? '', go: go?.textContent.trim() ?? '', goEnabled: !!go && !go.disabled, onScreen: r.left >= -1 && r.right <= innerWidth + 1 && r.top >= -1 && r.bottom <= innerHeight + 1, overflowX: d.scrollWidth > r.width + 1 };
+  });
+  T.check(S, 'a valid move-in shows what happens and the share of the funds', prev.lines.length >= 2 && /share of the household funds/.test(prev.lines.join(' ')) && prev.goEnabled && /Move in/.test(prev.go) && prev.onScreen && !prev.overflowX, JSON.stringify(prev));
+  await T.shot('m8-split-preview');
+  await T.audit('split dialog');
+  await T.tap(page.locator('.split-dialog .modal-footer button', { hasText: 'Cancel' }));
+  await page.waitForSelector('.split-dialog', { state: 'detached', timeout: 4000 }).catch(() => undefined);
+  const still = await read(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.length; });
+  T.check(S, 'cancelling the preview moves nobody', still === count0 + 1, String(still));
+
+  // ---- leave the world as step 9 left it, apart from the new family member: aging off again
+  await read(() => { window.hearthside.game.setSimSettings({ aging: 'off' }); });
+  await closeAnyPanel(T);
+  await T.audit('after family step');
+}
+
+// ===============================================================================================================
+// Milestone 9 exterior (M9-ext): roofs, fences and a gate, a member walking through the gate, terrain paint, a garden bed that
+// grows and is harvested, undo and redo. Runs at the end of step 11 (stepFloors above) on the structure it built.
+// ===============================================================================================================
+
+async function stepExterior(T) {
+  const S = '11';
+  const { page, vpInfo } = T;
+  const touch = vpInfo.touch;
+  const snap = () => page.evaluate(() => {
+    const st = window.hearthside.debug.state();
+    const lot = st.lots[st.activeLotId];
+    return JSON.parse(JSON.stringify({ funds: st.households[st.activeHouseholdId].funds, roofs: lot.roofs ?? {}, fences: lot.fences ?? {}, terrain: lot.terrain ?? {}, levels: lot.levels }));
+  });
+  const undoBtn = page.locator('.bb-build-panel .bb-undo button[aria-label="Undo"]');
+  const redoBtn = page.locator('.bb-build-panel .bb-undo button[aria-label="Redo"]');
+  const tab = (id) => page.locator(`.bb-tool-tabs .tab[data-id="${id}"]`);
+  const seg = (section, id) => page.locator(`.bb-tool-section[data-section="${section}"] .seg[data-id="${id}"]`);
+  // textContent: the compact landscape footer hides the detail line (cost) with CSS, but the text is there (the tip next to the shape shows the money)
+  const status = () => page.locator('.bb-build-footer .bb-build-status').textContent().then((t) => t ?? '').catch(() => '');
+  const visibleRoofs = () => page.evaluate(() => window.hearthside.view.exterior.roofs.visibleRoofs().length);
+  const sum = (o, k) => Object.values(o).reduce((n, x) => n + (x[k] ?? 0), 0);
+  /** Taps a design card of a paged grid (`host` is its container class), paging back to the first page and forward until it is found. */
+  const pickCard = async (host, attr, id) => {
+    const loc = page.locator(`.${host} .bb-card[data-${attr}="${id}"]`);
+    if (await loc.count()) { await T.tap(loc.first()); return true; }
+    const prev = page.locator(`.${host} .pager button[aria-label="Previous page"]`), next = page.locator(`.${host} .pager button[aria-label="Next page"]`);
+    for (let i = 0; i < 4 && (await prev.count()) && !(await prev.first().isDisabled()); i++) { await T.tap(prev.first()); await page.waitForTimeout(150); }
+    for (let i = 0; i < 5; i++) {
+      if (await loc.count()) { await T.tap(loc.first()); return true; }
+      if (!(await next.count()) || (await next.first().isDisabled())) return false;
+      await T.tap(next.first());
+      await page.waitForTimeout(200);
+    }
+    return false;
+  };
+
+  // ---- into Build, level 0 (a dev top-up of the funds: the roofs of a whole house cost more than what the earlier steps left)
+  await page.evaluate(() => { const st = window.hearthside.debug.state(); st.households[st.activeHouseholdId].funds += 600000; document.querySelectorAll('.toast').forEach((t) => t.remove()); window.hearthside.game.view.setLevel?.(0); });
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'build') {
+    await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+    await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
+  }
+  await page.waitForTimeout(600);
+  await T.frames(10);
+  T.check(S, 'the Build tabs include Roof, Fence and Garden', (await tab('tool-roof').count()) === 1 && (await tab('tool-fence').count()) === 1 && (await tab('tool-garden').count()) === 1, '');
+  T.check(S, 'the camera bar has a Roof toggle (on)', (await page.locator('.roof-btn').count()) === 1 && (await page.evaluate(() => window.hearthside.game.view.roofsVisible?.())) === true, '');
+
+  // ---- roofs: style, pitch, finish and colour, then the auto roof
+  const r0 = await snap();
+  await T.tap(tab('tool-roof'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const nStyle = await page.locator('.bb-ext-styles .bb-card').count();
+  const nFinish = await page.locator('.bb-ext-finishes .bb-card').count();
+  const nPal = await page.locator('.bb-tool-section[data-section="roof"] .bb-pal').count();
+  T.check(S, 'the Roof tab lists styles and finishes with pictures and prices', nStyle >= 6 && nFinish >= 6 && nPal >= 2 && /\$/.test(await page.locator('.bb-ext-styles .bb-card').first().innerText()), `${nStyle} styles, ${nFinish} finishes, ${nPal} colours`);
+  T.check(S, 'the roof toggle is told a roof tool is open (roofs show whatever the wall mode)', (await visibleRoofs()) === 0 && (await page.evaluate(() => window.hearthside.view.exterior.roofs.visibleFor(0))) === true, '');
+  await pickCard('bb-ext-styles', 'style-id', 'hip');
+  await page.waitForTimeout(250);
+  await pickCard('bb-ext-finishes', 'finish-id', 'clay-tile');
+  await page.waitForTimeout(250);
+  await T.tap(page.locator('.bb-tool-section[data-section="roof"] .bb-pal').nth(1));
+  await page.waitForTimeout(250);
+  await page.evaluate(() => { const i = document.querySelector('.bb-tool-section[data-section="roof"] .bb-range'); if (i) { i.value = '34'; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); } });
+  await page.waitForTimeout(250);
+  await T.tap(seg('roof', 'auto'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const roofTool = await page.evaluate(() => window.hearthside.game.buildTool());
+  T.check(S, 'the roof tool carries the chosen style, pitch, finish and colour', roofTool?.kind === 'roof' && roofTool.shape === 'auto' && roofTool.spec.styleId === 'hip' && roofTool.spec.pitch === 34 && roofTool.spec.finish.designId === 'clay-tile' && roofTool.spec.finish.paletteId === 'brown', JSON.stringify(roofTool));
+  const roofLive = await status();
+  const confirm = page.locator('.bb-build-footer .bb-confirm');
+  T.check(S, 'the auto roof previews its price and Build is ready', /\$|free/i.test(roofLive) && !(await confirm.isDisabled()), roofLive.replace(/\s+/g, ' '));
+  await T.shot('m9ext-roof-preview');
+  await T.tap(confirm);
+  await page.waitForTimeout(600);
+  await T.frames(8);
+  const r1 = await snap();
+  const roofs1 = Object.values(r1.roofs);
+  T.check(S, 'the auto roof built a roof over every room without a floor above it', roofs1.length >= 1 && roofs1.every((r) => r.styleId === 'hip' && r.finish.designId === 'clay-tile' && r.pitch === 34) && roofs1.some((r) => r.level === 0) && (r1.levels < 2 || roofs1.some((r) => r.level === 1)), JSON.stringify(roofs1.map((r) => [r.level, r.x0, r.z0, r.x1, r.z1])));
+  T.check(S, 'it was paid for at the roof price (area x style + finish per m2)', r0.funds - r1.funds === sum(r1.roofs, 'purchasePrice') && r0.funds - r1.funds > 0, fmtMoney(r0.funds - r1.funds));
+  T.check(S, 'roofs show in the world while the Roof tab is open', (await visibleRoofs()) >= 1, `${await visibleRoofs()} drawn`);
+  await T.shot('m9ext-roof-built');
+  // undo and redo of the roof
+  await T.tap(undoBtn);
+  await page.waitForTimeout(400);
+  const r2 = await snap();
+  T.check(S, 'undo takes the roofs away and gives the money back exactly', Object.keys(r2.roofs).length === 0 && r2.funds === r0.funds, `${Object.keys(r2.roofs).length} roofs, ${fmtMoney(r2.funds - r0.funds)}`);
+  await T.tap(redoBtn);
+  await page.waitForTimeout(400);
+  const r3 = await snap();
+  T.check(S, 'redo brings them back at the same price', Object.keys(r3.roofs).length === roofs1.length && r3.funds === r1.funds, '');
+
+  // visibility: Paint tab (walls cut away) hides them, Live with the walls up shows them, the Roof toggle hides them
+  await T.tap(tab('tool-paint'));
+  await page.waitForTimeout(400);
+  T.check(S, 'leaving the Roof tab hides roofs again while the walls are cut away', (await visibleRoofs()) === 0, '');
+  // Live mode (the camera buttons are there): walls up shows the roofs, the floor in view and the Roof button decide which
+  await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+  await page.waitForTimeout(500);
+  await page.evaluate(() => { const g = window.hearthside.game; g.view.setCutaway('up'); g.view.setLevel?.(1); });
+  await T.frames(6);
+  T.check(S, 'with the walls up and the top floor in view every roof is drawn', (await visibleRoofs()) === roofs1.length, `${await visibleRoofs()} of ${roofs1.length}`);
+  await page.evaluate(() => window.hearthside.game.view.setLevel?.(0));
+  await T.frames(3);
+  T.check(S, 'looking at the ground floor hides the roofs of the floor above', (await visibleRoofs()) === roofs1.filter((r) => r.level === 0).length, `${await visibleRoofs()}`);
+  await page.evaluate(() => window.hearthside.game.view.setLevel?.(1));
+  await T.frames(3);
+  await T.shot('m9ext-roof-walls-up');
+  await T.tap(page.locator('.roof-btn').first());
+  await T.frames(3);
+  T.check(S, 'the Roof toggle hides the roofs', (await visibleRoofs()) === 0 && (await page.evaluate(() => window.hearthside.game.view.roofsVisible?.())) === false, '');
+  await T.tap(page.locator('.roof-btn').first());
+  await T.frames(3);
+  T.check(S, 'and shows them again', (await visibleRoofs()) === roofs1.length, '');
+  await page.evaluate(() => { const g = window.hearthside.game; g.view.setCutaway('cutaway'); g.view.setLevel?.(0); });
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  // ---- fences: a run, a gate, and the rest of the line (a fence line across the yard with the gate as the only way through)
+  const pick = await page.evaluate(() => {
+    const st = window.hearthside.debug.state();
+    const lot = st.lots[st.activeLotId];
+    const defs = window.hearthside.game.content.objects;
+    const blocked = new Set();
+    for (const o of Object.values(lot.objects)) {
+      const d = defs[o.defId];
+      if (!d || o.level !== 0) continue;
+      const w = o.rot % 2 ? d.footprint.d : d.footprint.w, h = o.rot % 2 ? d.footprint.w : d.footprint.d;
+      for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) blocked.add(`${o.x + i},${o.z + j}`);
+    }
+    // a row z where the line (the h edge row z, every x) crosses no wall, and a gate column x whose tiles two steps each way are free
+    const lineClear = (z) => { for (let x = 0; x < lot.width; x++) if (lot.walls[`0:h:${x}:${z}`]) return false; return true; };
+    const colFree = (x, z) => { for (let dz = -2; dz <= 2; dz++) if (blocked.has(`${x},${z + dz}`)) return false; for (let dz = -2; dz <= 1; dz++) if (lot.walls[`0:h:${x}:${z + dz}`]) return false; return true; };
+    for (const z of [19, 20, 21, 18, 17, 16]) {
+      if (z + 2 >= lot.depth || !lineClear(z)) continue;
+      for (const x of [12, 11, 13, 10, 14, 9, 15, 8, 16]) if (colFree(x, z)) return { z, x };
+    }
+    return { z: -1, x: -1 };
+  });
+  const row = pick.z, GX = pick.x;
+  T.check(S, 'there is a clear yard row and gate column for a fence line', row > 0 && GX >= 0, JSON.stringify(pick));
+  const Z0 = row;
+  const f0 = await snap();
+  await T.tap(tab('tool-fence'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const nFence = await page.locator('.bb-ext-fences .bb-card').count();
+  T.check(S, 'the Fence tab lists fence designs with pictures, prices and colours', nFence >= 6 && /\$/.test(await page.locator('.bb-ext-fences .bb-card').first().innerText()) && (await page.locator('.bb-tool-section[data-section="fence"] .bb-pal').count()) >= 3, `${nFence} cards`);
+  await pickCard('bb-ext-fences', 'def-id', 'picket-white');
+  await page.waitForTimeout(250);
+  await T.tap(page.locator('.bb-tool-section[data-section="fence"] .bb-pal').nth(2));
+  await page.waitForTimeout(250);
+  const fenceTool = await page.evaluate(() => window.hearthside.game.buildTool());
+  T.check(S, 'the fence tool carries the design and colour', fenceTool?.kind === 'fence' && fenceTool.defId === 'picket-white' && fenceTool.variant === 2, JSON.stringify(fenceTool));
+  const fp = await framePair(T, 'vertex', [4, Z0], [10, Z0]);
+  T.check(S, 'both ends of the fence run are on screen, free of UI', !!fp.a?.free && !!fp.b?.free, JSON.stringify({ a: fp.a, b: fp.b }));
+  await drag(T, fp.a, fp.b);
+  await T.frames(4);
+  if (touch) { T.check(S, 'a touch drag previews the length and price and waits for Confirm', /6 m/.test(await status()) && /\$/.test(await status()), (await status()).replace(/\s+/g, ' ')); await T.shot('m9ext-fence-preview'); await tapFooter(T, '.bb-confirm'); }
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const f1 = await snap();
+  const picket = await page.evaluate(() => window.hearthside.game.content.exterior.fences['picket-white'].price);
+  T.check(S, 'six metres of picket fence were built in the chosen colour', Object.keys(f1.fences).length === 6 && Object.values(f1.fences).every((f) => f.defId === 'picket-white' && f.variant === 2), JSON.stringify(Object.keys(f1.fences)));
+  T.check(S, 'they cost the design price per metre', f0.funds - f1.funds === 6 * picket, fmtMoney(f0.funds - f1.funds));
+  // a gate: the Gate tool, a gate design, tap the edge
+  await T.tap(seg('fence', 'gate'));
+  await page.waitForTimeout(400);
+  await pickCard('bb-ext-fences', 'def-id', 'gate-picket');
+  await page.waitForTimeout(250);
+  const gp = await framePairAt(T, [GX + 0.5, 0, Z0], [GX + 2.5, 0, Z0]);
+  await T.tapAt(gp.a.x, gp.a.y);
+  await page.waitForTimeout(350);
+  if (touch) { await T.shot('m9ext-gate-preview'); await tapFooter(T, '.bb-confirm'); }
+  await page.waitForTimeout(400);
+  await T.frames(6);
+  const f2 = await snap();
+  T.check(S, 'the gate stands on the tapped edge', f2.fences[`0:h:${GX}:${Z0}`]?.defId === 'gate-picket', JSON.stringify(f2.fences[`0:h:${GX}:${Z0}`]));
+  // the rest of the line (through the game API, as one run): the gate stays, so the line has exactly one way through
+  const line = await page.evaluate((z) => {
+    const g = window.hearthside.game;
+    g.setBuildTool({ kind: 'fence', defId: 'picket-white', variant: 2 });
+    const pv = g.buildPreview({ from: { x: 0, z }, to: { x: 24, z }, level: 0 });
+    const ap = g.buildApply({ from: { x: 0, z }, to: { x: 24, z }, level: 0 });
+    g.setBuildTool(null);
+    return { pv: pv && { ok: pv.ok, reason: pv.reason }, ok: ap.ok, reason: ap.ok ? '' : ap.reason };
+  }, Z0);
+  await T.frames(4);
+  const f3 = await snap();
+  T.check(S, 'a line across the whole lot is accepted with the gate in it, and keeps the gate', line.ok && Object.keys(f3.fences).length === 24 && f3.fences[`0:h:${GX}:${Z0}`].defId === 'gate-picket', JSON.stringify(line));
+  await T.shot('m9ext-fence-line');
+  // take a fence away (refund) and put it back by undo
+  await page.evaluate(() => window.hearthside.game.setBuildTool({ kind: 'eraseFence' }));
+  const erase = await page.evaluate((z) => { const g = window.hearthside.game; const pv = g.buildPreview({ from: { x: 3.5, z }, level: 0 }); return { ok: pv.ok, cost: pv.cost, label: pv.label }; }, Z0);
+  T.check(S, 'removing a fence previews a refund', erase.ok && erase.cost < 0, JSON.stringify(erase));
+  await page.evaluate(() => window.hearthside.game.setBuildTool(null));
+
+  // ---- a member walks through the gate (the line has no other way)
+  await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const walk = await page.evaluate(async ([z, gx]) => {
+    const h = window.hearthside, g = h.game;
+    const st = () => h.debug.state();
+    const hh = st().households[st().activeHouseholdId];
+    const id = hh.memberIds.find((m) => { const l = st().people[m].location; return l.kind === 'lot' && l.level === 0; }) ?? hh.memberIds[0];
+    const goUntil = (tx, tz, maxTicks, track) => {
+      const r = g.goTo(id, { x: tx, z: tz, level: 0 });
+      if (!r.ok) return { ok: false, reason: r.reason, crossings: [] };
+      const crossings = [];
+      let prev = null;
+      for (let i = 0; i < maxTicks; i++) {
+        h.debug.step(1);
+        const l = st().people[id].location;
+        if (l.kind !== 'lot') continue;
+        const t = { x: Math.floor(l.x), z: Math.floor(l.z) };
+        if (track && prev && prev.z !== t.z && Math.min(prev.z, t.z) === z - 1 + 0) crossings.push(t.x);
+        prev = t;
+        if (t.x === tx && t.z === tz) return { ok: true, crossings, ticks: i };
+      }
+      return { ok: false, reason: 'did not arrive', crossings, at: prev };
+    };
+    const north = goUntil(gx, z - 2, 4 * 400, false);
+    const south = north.ok ? goUntil(gx, z + 2, 4 * 400, true) : north;
+    return { id, north, south };
+  }, [Z0, GX]);
+  T.check(S, 'a member walks to the north side of the line', walk.north.ok, JSON.stringify(walk.north));
+  T.check(S, 'then through the gate (and only the gate) to the south side', walk.south.ok && walk.south.crossings.length >= 1 && walk.south.crossings.every((x) => x === GX), JSON.stringify(walk.south));
+  await T.shot('m9ext-through-the-gate');
+
+  // ---- terrain paint: one tile, then an area; undo and redo
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForTimeout(300);
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'build') { await page.evaluate(() => window.hearthside.game.setMode('build')); await page.waitForTimeout(500); }
+  await T.tap(tab('tool-garden'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const nPaint = await page.locator('.bb-ext-paints .bb-card').count();
+  T.check(S, 'the Garden tab lists ground paints with pictures and prices', nPaint >= 6 && /\$/.test(await page.locator('.bb-ext-paints .bb-card').first().innerText()), `${nPaint} paints`);
+  await pickCard('bb-ext-paints', 'paint-id', 'gravel');
+  await page.waitForTimeout(250);
+  const t0 = await snap();
+  const tp = await framePair(T, 'tile', [3, Z0 + 1], [5, Z0 + 2]);
+  await T.tapAt(tp.a.x, tp.a.y);
+  await page.waitForTimeout(350);
+  if (touch) await tapFooter(T, '.bb-confirm');
+  await page.waitForTimeout(300);
+  const t1 = await snap();
+  const gravel = await page.evaluate(() => window.hearthside.game.content.exterior.terrain.gravel.price);
+  T.check(S, 'one tile of gravel was painted and paid for', t1.terrain[`0:3:${Z0 + 1}`] === 'gravel' && Object.keys(t1.terrain).length === 1 && t0.funds - t1.funds === gravel, `${JSON.stringify(t1.terrain)} ${fmtMoney(t0.funds - t1.funds)}`);
+  await T.tap(seg('garden', 'area'));
+  await page.waitForTimeout(300);
+  await pickCard('bb-ext-paints', 'paint-id', 'mulch');
+  await page.waitForTimeout(250);
+  const tq = await framePair(T, 'tile', [3, Z0 + 1], [5, Z0 + 2]);
+  await drag(T, tq.a, tq.b);
+  await T.frames(4);
+  if (touch) { T.check(S, 'a touch drag previews the painted area', /6 m2|6 tiles|Paint 6/.test(await status()), (await status()).replace(/\s+/g, ' ')); await tapFooter(T, '.bb-confirm'); }
+  await page.waitForTimeout(400);
+  const t2 = await snap();
+  T.check(S, 'a drag painted a 3 x 2 area of mulch', Object.values(t2.terrain).filter((v) => v === 'mulch').length === 6, JSON.stringify(t2.terrain));
+  await T.shot('m9ext-terrain');
+  await T.tap(undoBtn);
+  await page.waitForTimeout(300);
+  const t3 = await snap();
+  T.check(S, 'undo takes the area away and restores the money exactly', Object.keys(t3.terrain).length === 1 && t3.funds === t1.funds, '');
+  await T.tap(redoBtn);
+  await page.waitForTimeout(300);
+  const t4 = await snap();
+  T.check(S, 'redo paints it again at the same price', Object.values(t4.terrain).filter((v) => v === 'mulch').length === 6 && t4.funds === t2.funds, '');
+
+  // ---- a garden bed: buy it, plant, water, skip days in the simulation, harvest
+  await page.evaluate(() => { const g = window.hearthside.game; g.setBuildTool(null); g.setMode('buy'); });
+  await page.waitForTimeout(400);
+  const bed = await page.evaluate(([z]) => {
+    const g = window.hearthside.game, st = window.hearthside.debug.state();
+    const r = document.getElementById('game-canvas').getBoundingClientRect();
+    if (!g.startPlacement('garden-vegpatch').ok) return { ok: false, reason: 'cannot start' };
+    for (const [x, zz] of [[8, z + 1], [14, z + 1], [17, z + 1], [1, z + 1]]) {
+      const p = window.__t.tile(x, zz);
+      g.placementAt(p.x - r.left, p.y - r.top);
+      const pl = g.placement();
+      if (pl && pl.ok) { const c = g.confirmPlacement(); if (c.ok) return { ok: true, x: pl.x, z: pl.z }; }
+    }
+    g.cancelPlacement();
+    return { ok: false, reason: 'no valid tile' };
+  }, [Z0]);
+  T.check(S, 'a vegetable patch can be bought and placed in the yard', bed.ok, JSON.stringify(bed));
+  await page.evaluate(() => window.hearthside.game.setMode('live'));
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const garden = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+    const o = Object.values(lot.objects).find((x) => x.defId === 'garden-vegpatch');
+    const hh = st.households[st.activeHouseholdId];
+    return o ? { id: o.id, member: hh.memberIds.find((m) => st.people[m].location.kind === 'lot') } : null;
+  });
+  if (bed.ok && garden) {
+    const act = async (interactionId) => {
+      const r = await page.evaluate(([m, o, i]) => {
+        const g = window.hearthside.game;
+        const opt = g.options(m, { kind: 'object', objectId: o }).find((x) => x.interactionId === i);
+        if (!opt) return { ok: false, reason: 'not offered' };
+        if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
+        return g.queue(m, opt);
+      }, [garden.member, garden.id, interactionId]);
+      if (!r.ok) return r;
+      const done = await runUntil(T, 4 * 600, `!st.people['${garden.member}'].queue.some((a) => a.interactionId === '${interactionId}')`);
+      return { ok: done.done, reason: done.done ? '' : 'timed out' };
+    };
+    const bedState = () => page.evaluate((id) => { const st = window.hearthside.debug.state(); const o = st.lots[st.activeLotId].objects[id]; const hh = st.households[st.activeHouseholdId]; return { garden: o.garden ? { ...o.garden } : null, funds: hh.funds, ledger: hh.ledger.map((l) => `${l.label}:${l.amount}`) }; }, garden.id);
+    const g0 = await bedState();
+    const plant = await act('gardenPlant');
+    const g1 = await bedState();
+    T.check(S, 'Plant Seeds puts a crop in the bed for the seed price ($3)', plant.ok && !!g1.garden?.crop && g1.ledger.includes('Plant Seeds:-300'), JSON.stringify({ plant, crop: g1.garden?.crop }));
+    const nope = await page.evaluate(([m, o]) => { const opt = window.hearthside.game.options(m, { kind: 'object', objectId: o }).find((x) => x.interactionId === 'gardenHarvest'); return opt ? { enabled: opt.enabled, reason: opt.reason } : null; }, [garden.member, garden.id]);
+    T.check(S, 'Harvest is greyed out with a reason while the crop grows', !!nope && nope.enabled === false && /ripe|planted/i.test(nope.reason ?? ''), JSON.stringify(nope));
+    const watered = await act('gardenWater');
+    T.check(S, 'Water the Bed fills the bed', watered.ok && (await bedState()).garden.water === 1, JSON.stringify(watered));
+    await page.evaluate((id) => window.hearthside.game.view.reveal({ kind: 'object', objectId: id }), garden.id);
+    await T.frames(30);
+    await T.shot('m9ext-garden-planted');
+    // skip game days in the simulation (watering by hand each day to keep the growth at full speed)
+    const skipped = await page.evaluate((id) => {
+      const h = window.hearthside;
+      let days = 0;
+      for (; days < 12; days++) {
+        const st = h.debug.state();
+        const o = st.lots[st.activeLotId].objects[id];
+        if (o.garden.growth >= o.garden.need) break;
+        st.clock.minutes = (Math.floor(st.clock.minutes / 1440) + 1) * 1440 - 0.25;
+        h.debug.step(2);
+        o.garden.water = 1;
+      }
+      const o = h.debug.state().lots[h.debug.state().activeLotId].objects[id];
+      return { days, growth: o.garden.growth, need: o.garden.need };
+    }, garden.id);
+    T.check(S, 'after some game days the crop is ripe', skipped.growth >= skipped.need && skipped.days >= 3 && skipped.days <= 9, JSON.stringify(skipped));
+    await T.frames(6);
+    await page.evaluate((id) => window.hearthside.game.view.reveal({ kind: 'object', objectId: id }), garden.id);
+    await T.frames(30);
+    await T.shot('m9ext-garden-ripe');
+    const before = await bedState();
+    const harvested = await act('gardenHarvest');
+    const after = await bedState();
+    T.check(S, 'Harvest picks the crop and pays once (sold at the market)', harvested.ok && after.garden.harvests === 1 && after.ledger.filter((l) => /from the garden/.test(l)).length === 1, JSON.stringify({ harvested, harvests: after.garden.harvests, ledger: after.ledger.filter((l) => /garden/.test(l)) }));
+    const feed = await page.evaluate(() => window.hearthside.debug.state().feed.some((f) => /picked/.test(f.text)));
+    T.check(S, 'the feed says what was picked', feed, '');
+  }
+
+  // ---- back to Live with everything built
+  await T.shot('m9ext-end-live');
+  await T.audit('exterior: end');
 }
 
 main().catch((e) => { console.error('[acceptance] error', e); process.exit(1); });

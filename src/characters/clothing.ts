@@ -335,7 +335,7 @@ function legPieces(m: MeshData, t: BodyTemplate, yHem: number, thickness: number
     thickness, uScale: 0.08,
     // wide legs fall away from the knee: the extra radius grows toward the hem
     ease: (s) => loose * 0.012 * smoothstep(lm.crotchY - 0.02, lm.crotchY - 0.1, s) * (cuff ? 1 - smoothstep(yHem + 0.09, yHem + 0.02, s) : 1)
-      + flare * smoothstep(kneeY + 0.18, Math.min(yHem, kneeY - 0.1), s),
+      + flare * bodyScale(t) * smoothstep(kneeY + 0.18, Math.min(yHem, kneeY - 0.1), s),
     drapeFrom: lerp(lm.crotchY - 0.05, kneeY + 0.1, 0.5),
     slope: lerp(0.45, 0.02, clamp(loose, 0, 1)),
   });
@@ -395,7 +395,8 @@ function skirtPiece(m: MeshData, t: BodyTemplate, yTop: number, yHem: number, fl
   const pelvis = boneIndex(raw, 'pelvis');
   const thighL = boneIndex(raw, 'thigh_l');
   const thighR = boneIndex(raw, 'thigh_r');
-  const hipTop = lm.crotchY + 0.11;
+  const bs = bodyScale(t);
+  const hipTop = lm.crotchY + 0.11 * bs;
   // reference ring at the hips: max radius per angle over the torso rows between hipTop and the waist
   const tor = t.profiles.torso;
   const centreAt = (y: number) => { const c = sampleProfile(tor, Math.max(y, lm.crotchY + 0.02), 0); return [c.ca, c.cb] as [number, number]; };
@@ -433,7 +434,7 @@ function skirtPiece(m: MeshData, t: BodyTemplate, yTop: number, yHem: number, fl
       let r = Math.max(body, lerp(surfaceR(Math.min(y, yTop), a), hipRs[i] as number, smoothstep(yTop, hipTop, y))) + thickness + 0.004;
       // bell flare: eases out of the hips instead of a straight cone, a little fuller at the sides than front and back
       const bell = 0.5 * smoothstep(0, 1, below) + 0.5 * Math.pow(below, 1.5);
-      r += flare * 0.17 * bell * (0.85 + 0.15 * Math.abs(Math.sin(a)));
+      r += flare * 0.17 * bs * bell * (0.85 + 0.15 * Math.abs(Math.sin(a)));
       // soft godet folds that widen toward the hem and twist slightly with height; the hem hangs lower on the ridges
       const foldAmp = pleats > 0 ? 0 : (0.02 + 0.09 * flare) * smoothstep(0.25, 0.85, below);
       const fold = pleats > 0 ? 0 : 0.7 * Math.sin(a * 6 + y * 5 + 0.6) + 0.3 * Math.sin(a * 13 - y * 3 + 1.9);
@@ -621,31 +622,38 @@ function shoePiece(m: MeshData, t: BodyTemplate, b: B): number {
 // Garment assembly
 // ---------------------------------------------------------------------------------------------
 
+/** How small the body is next to the adult the garment dimensions were authored for (1 for adults; children's necks, skirts and flares shrink with it). */
+export function bodyScale(t: BodyTemplate): number {
+  return Math.min(1, t.lm.headY / 1.55);
+}
+
 /**
  * Neckline description for a neck style. The back height is where the scanned torso narrows to the style's half width,
  * so the opening sits on the shoulder slope of whatever body the garment is fitted to (a fixed height cut across the
  * broad Meshy shoulders left the trapezius bare above a flat edge).
  */
 function neckline(t: BodyTemplate, neck: string): { backY: number; depth: number; halfW: number; shape: number } {
-  const at = (hw: number) => heightAtHalfWidth(t, hw);
+  // the openings are authored for an adult body: a child's (smaller) neck and shoulders scale them down
+  const k = bodyScale(t);
+  const at = (hw: number) => heightAtHalfWidth(t, hw * k);
   switch (neck) {
-    case 'crew': return { backY: at(0.095), depth: 0.04, halfW: 0.095, shape: 0 };
-    case 'collar': return { backY: at(0.088), depth: 0.03, halfW: 0.088, shape: 2 };
-    case 'high': return { backY: at(0.078), depth: 0.02, halfW: 0.078, shape: 0 };
-    case 'v': return { backY: at(0.105), depth: 0.12, halfW: 0.105, shape: 2 };
-    case 'scoop': return { backY: at(0.15), depth: 0.115, halfW: 0.11, shape: 1 };
-    case 'tank': return { backY: at(0.16), depth: 0.125, halfW: 0.1, shape: 1 };
-    case 'square': return { backY: t.lm.chestY + 0.02, depth: 0.03, halfW: 0.085, shape: 3 };
+    case 'crew': return { backY: at(0.095), depth: 0.04 * k, halfW: 0.095 * k, shape: 0 };
+    case 'collar': return { backY: at(0.088), depth: 0.03 * k, halfW: 0.088 * k, shape: 2 };
+    case 'high': return { backY: at(0.078), depth: 0.02 * k, halfW: 0.078 * k, shape: 0 };
+    case 'v': return { backY: at(0.105), depth: 0.12 * k, halfW: 0.105 * k, shape: 2 };
+    case 'scoop': return { backY: at(0.15), depth: 0.115 * k, halfW: 0.11 * k, shape: 1 };
+    case 'tank': return { backY: at(0.16), depth: 0.125 * k, halfW: 0.1 * k, shape: 1 };
+    case 'square': return { backY: t.lm.chestY + 0.02, depth: 0.03 * k, halfW: 0.085 * k, shape: 3 };
     // roll neck: the opening is a plain ring where the torso has narrowed to the neck; the roll collar stands on it
-    case 'turtle': return { backY: at(0.125), depth: 0, halfW: 0.125, shape: 0 };
+    case 'turtle': return { backY: at(0.125), depth: 0, halfW: 0.125 * k, shape: 0 };
     // deep V openings: the garment is open (or lapelled) down to the chest, whatever is worn beneath shows in the V
-    case 'cardigan': return { backY: at(0.125), depth: 0.3, halfW: 0.13, shape: 2 };
-    case 'lapel': return { backY: at(0.105), depth: 0.2, halfW: 0.12, shape: 2 };
-    case 'shawl': return { backY: at(0.11), depth: 0.26, halfW: 0.125, shape: 2 };
-    case 'wrap': return { backY: at(0.105), depth: 0.17, halfW: 0.11, shape: 2 };
-    case 'vest': return { backY: at(0.1), depth: 0.2, halfW: 0.095, shape: 2 };
-    case 'boat': return { backY: at(0.135), depth: 0.035, halfW: 0.125, shape: 1 };
-    default: return { backY: at(0.09), depth: 0.03, halfW: 0.09, shape: 4 };
+    case 'cardigan': return { backY: at(0.125), depth: 0.3 * k, halfW: 0.13 * k, shape: 2 };
+    case 'lapel': return { backY: at(0.105), depth: 0.2 * k, halfW: 0.12 * k, shape: 2 };
+    case 'shawl': return { backY: at(0.11), depth: 0.26 * k, halfW: 0.125 * k, shape: 2 };
+    case 'wrap': return { backY: at(0.105), depth: 0.17 * k, halfW: 0.11 * k, shape: 2 };
+    case 'vest': return { backY: at(0.1), depth: 0.2 * k, halfW: 0.095 * k, shape: 2 };
+    case 'boat': return { backY: at(0.135), depth: 0.035 * k, halfW: 0.125 * k, shape: 1 };
+    default: return { backY: at(0.09), depth: 0.03 * k, halfW: 0.09 * k, shape: 4 };
   }
 }
 

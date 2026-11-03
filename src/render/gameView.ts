@@ -14,11 +14,14 @@ import type { Id, Lot, WorldState } from '../core/types';
 import type { CutawayMode, GameMode, PickResult, PlacementState } from '../game/api';
 import type { PaintHighlight } from '../game/GameCore';
 import type { BuildHighlight } from '../building/buildPlans';
+import type { GameEvent } from '../core/events';
+import { levelsInUse, levelY } from '../world/levels';
 import { tileOnSide } from '../world/walls';
 import { BuildView, type BuildViewExtras, type RoomOutline } from './buildView';
 import { CameraRig, DEFAULT_PPM, type Insets } from './cameraRig';
 import { CreatorScene } from './creatorScene';
 import { EnvironmentView, GROUND_Y } from './environment';
+import { ExteriorView } from './exteriorView';
 import { Lighting } from './lighting';
 import { LotView } from './lotView';
 import { ObjectAssets } from './objectAssets';
@@ -45,6 +48,8 @@ export class GameView {
   private readonly lighting: Lighting;
   private readonly env = new EnvironmentView();
   private readonly lotView: LotView;
+  /** Milestone 9: fences, roofs, terrain paint and garden crops (render/exteriorView.ts). */
+  private readonly exterior: ExteriorView;
   private readonly objects: ObjectsView;
   private people: PeopleView | null = null;
   private readonly placement: PlacementPreview;
@@ -59,6 +64,8 @@ export class GameView {
   private world: WorldState | null = null;
   private lot: Lot | null = null;
   private cutaway: CutawayMode = 'cutaway';
+  /** Milestone 9: the floor being viewed and worked on (0-2). */
+  private activeLevel = 0;
   private opts: ViewOptions;
   private readonly fog: THREE.Fog;
   private readonly tmpV = new THREE.Vector3();
@@ -97,13 +104,15 @@ export class GameView {
     this.scene.fog = this.fog;
     this.scene.background = this.lighting.background;
     this.lotView = new LotView(content, opts.quality);
+    this.exterior = new ExteriorView(content);
+    this.exterior.gardens.groundAt = (x, z) => this.groundAt(x, z);
     this.objects = new ObjectsView(content, this.objectAssets, opts.quality === 'high' ? 4 : 2);
-    this.objects.groundAt = (x, z) => this.groundAt(x, z);
+    this.objects.groundAt = (x, z, level) => this.groundAt(x, z, level);
     this.objects.onModelsLoaded = () => { if (this.lot) this.objects.applyWallVisibility((id) => this.lotView.isLowered(id)); };
     this.placement = new PlacementPreview(content, this.objectAssets);
     this.buildView = new BuildView(content);
     this.openingThumbs = new OpeningThumbs(content);
-    this.scene.add(this.env.group, this.lotView.group, this.objects.group, this.placement.group, this.buildView.group);
+    this.scene.add(this.env.group, this.lotView.group, this.exterior.group, this.objects.group, this.placement.group, this.buildView.group);
     this.rig.reducedMotion = opts.reducedMotion;
     this.applyOptions(opts);
     canvas.addEventListener('pointermove', this.onPointerMove, { passive: true });
@@ -115,6 +124,7 @@ export class GameView {
     this.charAssets = assets;
     this.people = new PeopleView(assets, this.content, this.overlay);
     this.people.groundAt = (x, z) => this.groundAt(x, z);
+    this.people.setActiveLevel(this.activeLevel);
     this.scene.add(this.people.group);
     this.creator = new CreatorScene(assets, this.content);
     this.creator.reducedMotion = this.opts.reducedMotion;
@@ -160,9 +170,11 @@ export class GameView {
   setWorld(state: WorldState | null, force = false): void {
     const lot = state ? state.lots[state.activeLotId] ?? null : null;
     if (!force && state === this.world && lot === this.lot) return;
+    if (!lot || lot.id !== this.lot?.id) this.activeLevel = 0; // another lot starts on its ground floor
     this.world = state;
     this.lot = lot;
     this.lotView.clear();
+    this.exterior.setLot(null);
     this.objects.clear();
     this.people?.clear();
     this.placement.set(null, null, () => 0);
@@ -171,7 +183,14 @@ export class GameView {
     if (!state || !lot) return;
     this.env.build(lot);
     this.lotView.setCutaway(this.cutaway, this.rig.viewDir(this.tmpV));
+    this.lotView.setActiveLevel(this.activeLevel);
+    this.objects.setActiveLevel(this.activeLevel);
+    this.people?.setActiveLevel(this.activeLevel);
+    this.buildView.setLevel(this.activeLevel);
+    this.rig.setLevelHeight(levelY(this.activeLevel));
     this.lotView.build(lot);
+    this.exterior.setView({ walls: this.cutaway, level: this.activeLevel });
+    this.exterior.setLot(lot);
     this.objects.sync(lot);
     this.objects.syncItems(state, lot.id);
     this.people?.sync(state, lot.id);
@@ -183,9 +202,11 @@ export class GameView {
     this.objectAssets.purgeUnused();
   }
 
-  lotChanged(what: 'walls' | 'floors' | 'objects' | 'openings' | 'all'): void {
+  lotChanged(what: Extract<GameEvent, { type: 'lot.changed' }>['what']): void {
     const lot = this.lot;
     if (!lot) return;
+    this.exterior.lotChanged(what);
+    if (what === 'fences' || what === 'roofs' || what === 'terrain') return; // nothing for the lot view, the objects or the people to do
     this.lotView.update(lot, what);
     if (what === 'objects' || what === 'all') this.objects.sync(lot);
     this.people?.invalidateSlots();
@@ -195,7 +216,11 @@ export class GameView {
   itemsChanged(): void { if (this.world && this.lot) this.objects.syncItems(this.world, this.lot.id); }
 
   /** An object got dirtier or cleaner, broke or was repaired: refresh its overlays. */
-  objectConditionChanged(): void { if (this.lot) this.objects.syncCondition(this.lot); }
+  objectConditionChanged(): void {
+    if (!this.lot) return;
+    this.objects.syncCondition(this.lot);
+    this.exterior.gardensChanged();
+  }
 
   personChanged(id: Id): void { if (this.world) this.people?.personChanged(this.world, id); }
 
@@ -209,7 +234,7 @@ export class GameView {
 
   setPlacement(p: PlacementState | null): void {
     this.ghost = p;
-    this.placement.set(p, this.lot, (x, z) => this.groundAt(x, z));
+    this.placement.set(p, this.lot, (x, z) => this.groundAt(x, z, p?.level ?? 0));
     this.objects.setHidden(p?.source === 'move' ? p.objectId : null);
   }
 
@@ -235,7 +260,7 @@ export class GameView {
       add(e.x, e.z); add(e.dir === 'h' ? e.x + 1 : e.x, e.dir === 'h' ? e.z : e.z + 1);
     }
     for (const t of h.tiles) { add(t.x, t.z); add(t.x + 1, t.z + 1); }
-    if (!box.isEmpty()) { box.max.y = 1; this.buildBox = box; }
+    if (!box.isEmpty()) { box.min.y = levelY(h.level); box.max.y = levelY(h.level) + 1; this.buildBox = box; }
   }
 
   /** Outline of a hovered or selected room (null clears it). */
@@ -243,11 +268,37 @@ export class GameView {
     this.buildView.setRoom(room, style);
   }
 
-  /** Floor height at a point: floors at 0, grass slightly lower. */
-  groundAt(x: number, z: number): number {
+  /** Floor height at a point of a level: ground-floor floors at 0, grass slightly lower; upper floors at their level's height. */
+  groundAt(x: number, z: number, level = 0): number {
     const lot = this.lot;
     if (!lot) return 0;
+    if (level > 0) return levelY(level);
     return lot.floors[tileKey(0, Math.floor(x), Math.floor(z))] ? 0 : GROUND_Y;
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Levels (Milestone 9)
+  // ---------------------------------------------------------------------------------------------
+
+  getActiveLevel(): number { return this.activeLevel; }
+
+  /** Number of floors in use on the active lot (at least 1). */
+  levelCount(): number { return this.lot ? Math.max(1, levelsInUse(this.lot)) : 1; }
+
+  /** Shows floors 0..level, works on `level`: cutaway, picking and the camera plane follow. */
+  setActiveLevel(level: number): void {
+    const next = Math.max(0, Math.min(2, Math.trunc(level)));
+    if (next === this.activeLevel) return;
+    this.activeLevel = next;
+    this.lotView.setActiveLevel(next);
+    this.objects.setActiveLevel(next);
+    this.people?.setActiveLevel(next);
+    this.exterior.setView({ level: next });
+    this.buildView.setLevel(next);
+    this.rig.setLevelHeight(levelY(next));
+    this.lastCutawayKey = '';
+    this.updateCutaway(true);
+    this.setPlacement(this.ghost);
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -258,8 +309,15 @@ export class GameView {
 
   setCutaway(m: CutawayMode): void {
     this.cutaway = m;
+    this.exterior.setView({ walls: m });
     this.updateCutaway(true);
   }
+
+  /** Milestone 9: roofs on or off (the camera bar's Roof toggle). Roofs show only with the walls up, or while a roof tool is open. */
+  setRoofsVisible(on: boolean): void { this.exterior.setView({ enabled: on }); }
+  getRoofsVisible(): boolean { return this.exterior.roofsEnabled; }
+  /** A roof tool is open: roofs show whatever the wall mode is. */
+  setRoofEdit(on: boolean): void { this.exterior.setView({ editing: on }); }
 
   private updateCutaway(force = false): void {
     if (!this.lot) return;
@@ -276,7 +334,7 @@ export class GameView {
     const lot = this.lot;
     if (!lot) return;
     const b = houseBounds(lot);
-    const ppm = this.rig.fitPpm(b.x1 - b.x0, b.z1 - b.z0, 2.8, this.orbiting ? 1.3 : margin);
+    const ppm = this.rig.fitPpm(b.x1 - b.x0, b.z1 - b.z0, levelY(this.activeLevel) + 2.8, this.orbiting ? 1.3 : margin);
     this.rig.glideTo((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2, ppm, instant ? 0 : 0.6);
   }
 
@@ -295,13 +353,13 @@ export class GameView {
       const def = this.content.objects[t.defId];
       if (!def) return null;
       const s = rotatedSize(def.footprint, t.rot);
-      const y = this.groundAt(t.x, t.z);
+      const y = this.groundAt(t.x, t.z, t.level);
       return new THREE.Box3(new THREE.Vector3(t.x, y, t.z), new THREE.Vector3(t.x + s.w, y + Math.max(0.5, def.height), t.z + s.d));
     }
     switch (t.kind) {
       case 'person': {
         const p = this.people?.positionOf(t.personId);
-        return p ? new THREE.Box3(new THREE.Vector3(p.x - 0.3, 0, p.z - 0.3), new THREE.Vector3(p.x + 0.3, 1.8, p.z + 0.3)) : null;
+        return p ? new THREE.Box3(new THREE.Vector3(p.x - 0.3, p.y, p.z - 0.3), new THREE.Vector3(p.x + 0.3, p.y + 1.8, p.z + 0.3)) : null;
       }
       case 'object':
       case 'item': return this.objects.boxOf(t.kind === 'object' ? t.objectId : t.itemId)?.clone() ?? null;
@@ -327,6 +385,12 @@ export class GameView {
 
   focusOn(x: number, z: number, closeUp = false): void {
     this.rig.glideTo(x, z, closeUp ? Math.max(this.rig.ppm, DEFAULT_PPM) : undefined, 0.55, 0.8); // aim at the chest, not the feet
+  }
+
+  /** Floor level a person is on (null when they are not on the lot). */
+  personLevel(id: Id): number | null {
+    const loc = this.world?.people[id]?.location;
+    return loc && loc.kind === 'lot' ? loc.level : null;
   }
 
   personPosition(id: Id): { x: number; z: number } | null {
@@ -387,7 +451,7 @@ export class GameView {
     // doors open when someone is close
     const pos = people?.positions() ?? [];
     for (const d of this.lotView.doors) {
-      d.target = pos.some((p) => Math.abs(p.x - d.x) < 0.95 && Math.abs(p.z - d.z) < 0.95) ? 1 : 0;
+      d.target = pos.some((p) => Math.abs(p.x - d.x) < 0.95 && Math.abs(p.z - d.z) < 0.95 && Math.abs(p.y - levelY(d.level)) < 1.6) ? 1 : 0;
     }
     this.lotView.animateDoors(dt, this.opts.reducedMotion);
     // hover name tags (mouse)
@@ -452,12 +516,12 @@ export class GameView {
     const w = this.lotView.pickWall(ray);
     if (w) {
       const wall = lot.walls[w.wallId];
-      if (wall) consider(w.distance, { kind: 'wall', wallId: w.wallId, side: w.side, tile: tileOnSide(wall, w.side), level: 0 });
+      if (wall) consider(w.distance, { kind: 'wall', wallId: w.wallId, side: w.side, tile: tileOnSide(wall, w.side), level: this.activeLevel });
     }
-    const g = this.rig.groundAt(sx, sy, this.tmpV, 0);
+    const g = this.rig.groundAt(sx, sy, this.tmpV, levelY(this.activeLevel));
     if (g) {
       const tx = Math.floor(g.x), tz = Math.floor(g.z);
-      if (tx >= 0 && tz >= 0 && tx < lot.width && tz < lot.depth) consider(g.distanceTo(ray.origin) + 0.001, { kind: 'floor', tile: { x: tx, z: tz }, level: 0 });
+      if (tx >= 0 && tz >= 0 && tx < lot.width && tz < lot.depth) consider(g.distanceTo(ray.origin) + 0.001, { kind: 'floor', tile: { x: tx, z: tz }, level: this.activeLevel });
     }
     return best ? (best as { d: number; r: PickResult }).r : { kind: 'none' };
   }
@@ -477,14 +541,14 @@ export class GameView {
   /** Ground tile under a screen point (may be outside the lot). */
   tileAt(sx: number, sy: number): { x: number; z: number } | null {
     this.rig.update(0);
-    const g = this.rig.groundAt(sx, sy, this.tmpV, 0);
+    const g = this.rig.groundAt(sx, sy, this.tmpV, levelY(this.activeLevel));
     return g ? { x: Math.floor(g.x), z: Math.floor(g.z) } : null;
   }
 
   /** Ground-plane point under a screen point in lot tile units (not snapped; may be outside the lot). */
   groundPointAt(sx: number, sy: number): { x: number; z: number } | null {
     this.rig.update(0);
-    const g = this.rig.groundAt(sx, sy, this.tmpV, 0);
+    const g = this.rig.groundAt(sx, sy, this.tmpV, levelY(this.activeLevel));
     return g ? { x: g.x, z: g.z } : null;
   }
 
@@ -517,7 +581,7 @@ export class GameView {
         return { ...this.rig.project((b.min.x + b.max.x) / 2, b.max.y, (b.min.z + b.max.z) / 2, this.scr) };
       }
       case 'floor':
-        return { ...this.rig.project(pick.tile.x + 0.5, 0, pick.tile.z + 0.5, this.scr) };
+        return { ...this.rig.project(pick.tile.x + 0.5, levelY(pick.level), pick.tile.z + 0.5, this.scr) };
       case 'none':
         return null;
     }
@@ -557,16 +621,16 @@ export class GameView {
     this.placement.dispose();
     this.objects.dispose();
     this.lotView.dispose();
+    this.exterior.dispose();
     this.env.dispose();
     this.ctx.dispose();
   }
 }
 
-/** Bounding rectangle of the lot's walls (the whole lot when there are none). */
+/** Bounding rectangle of the lot's walls on every level (the whole lot when there are none). */
 export function houseBounds(lot: Lot): { x0: number; z0: number; x1: number; z1: number } {
   let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
   for (const w of Object.values(lot.walls)) {
-    if (w.level !== 0) continue;
     x0 = Math.min(x0, w.x); z0 = Math.min(z0, w.z);
     x1 = Math.max(x1, w.dir === 'h' ? w.x + 1 : w.x); z1 = Math.max(z1, w.dir === 'v' ? w.z + 1 : w.z);
   }

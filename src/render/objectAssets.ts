@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ObjectDef } from '../content/types';
+import { isProceduralAsset, proceduralModel, proceduralThumb } from './stairModel';
 
 export interface ManifestModel { file: string; thumb?: string; min: number[]; max: number[]; materials: Array<{ name: string; color: number[] }> }
 export interface Manifest { furniture: Record<string, ManifestModel> }
@@ -50,6 +51,7 @@ export class ObjectAssets {
   }
 
   thumbUrl(asset: string): string {
+    if (isProceduralAsset(asset)) return proceduralThumb(asset);
     const m = this.manifest?.furniture[asset];
     return `${this.baseUrl}${m?.thumb ?? `furniture/thumbs/${asset}.png`}`;
   }
@@ -66,6 +68,15 @@ export class ObjectAssets {
     let p = this.pending.get(asset);
     if (p) return p;
     p = (async () => {
+      // Milestone 9: staircases are meshes built at runtime
+      if (isProceduralAsset(asset)) {
+        const scene = proceduralModel(asset);
+        if (!scene) { this.failed.add(asset); this.pending.delete(asset); return null; }
+        const tpl = this.makeTemplate(scene);
+        this.templates.set(asset, tpl);
+        this.pending.delete(asset);
+        return tpl;
+      }
       const entry = this.manifest?.furniture[asset];
       if (!entry) { this.failed.add(asset); return null; }
       try {

@@ -1,12 +1,12 @@
 // Runtime event bus. Events describe what happened; they never carry Three.js objects or DOM nodes.
 // The feed (WorldState.feed) is the persisted, player-facing subset.
 
-import type { Cents, GameMinutes, Id, NeedId } from './types';
+import type { Cents, GameMinutes, Id, LifeStage, NeedId } from './types';
 
 export type GameEvent =
   | { type: 'tick'; minutes: GameMinutes }
   | { type: 'state.replaced' } // new game or load: everything must resync
-  | { type: 'lot.changed'; lotId: Id; what: 'walls' | 'floors' | 'objects' | 'openings' | 'all' }
+  | { type: 'lot.changed'; lotId: Id; what: 'walls' | 'floors' | 'objects' | 'openings' | 'fences' | 'roofs' | 'terrain' | 'all' }
   | { type: 'person.changed'; personId: Id; what: 'appearance' | 'outfit' | 'location' | 'queue' | 'needs' | 'all' }
   | { type: 'person.added'; personId: Id }
   | { type: 'person.removed'; personId: Id }
@@ -22,12 +22,12 @@ export type GameEvent =
   | { type: 'feed'; entryId: Id }
   | { type: 'notify'; text: string; kind: 'info' | 'warning' | 'error' }
   /** The simulation asks the UI to open a screen (e.g. the wardrobe editor after `editOutfits`). */
-  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent' | 'bills' | 'careers'; personId: Id }
+  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent' | 'bills' | 'careers' | 'adopt'; personId: Id }
   | { type: 'item.changed'; itemId: Id; lotId: Id }
   /** A home event was planned, started, progressed, ended or cancelled (the HUD tracker refreshes). */
   | { type: 'homeEvent'; eventId: Id; what: 'planned' | 'started' | 'goal' | 'ended' | 'cancelled' }
   /** An object became dirtier or cleaner (visible stages only), broke or was repaired. The renderer refreshes its overlays. */
-  | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' }
+  | { type: 'object.changed'; objectId: Id; lotId: Id; what: 'condition' | 'garden' }
   /** The detailed (active) lot changed: the renderer shows `lotId`, `fromLotId` is the lot that was left. */
   | { type: 'lot.activated'; lotId: Id; fromLotId: Id }
   /** Lot travel: people set out for a lot, arrived there (the lot is now active) or a trip could not finish. */
@@ -35,7 +35,14 @@ export type GameEvent =
   /** The player now runs another household (`toId`); `fromId` is simulated lightly from now on. */
   | { type: 'household.switched'; fromId: Id; toId: Id }
   /** A household moved to another home lot. */
-  | { type: 'household.moved'; householdId: Id; fromLotId: Id | null; toLotId: Id };
+  | { type: 'household.moved'; householdId: Id; fromLotId: Id | null; toLotId: Id }
+  /** Milestone 8: a person grew into `stage` (`via` 'cake' = the Age up now birthday) or passed away peacefully. */
+  | { type: 'birthday'; personId: Id; stage: LifeStage; via: 'time' | 'cake' }
+  | { type: 'school'; personId: Id; what: 'left' | 'returned' | 'missed' | 'homework' | 'report'; grade?: string }
+  /** A baby or toddler was looked after by an emergency sitter after being neglected. */
+  | { type: 'care'; personId: Id; what: 'sitter' }
+  /** Family changes: somebody was adopted, moved out, moved in or passed away; the household list changed. */
+  | { type: 'family'; what: 'adopted' | 'split' | 'moveIn' | 'passedAway'; personIds: Id[]; householdId?: Id };
 
 type Handler<E> = (e: E) => void;
 

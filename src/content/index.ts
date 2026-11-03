@@ -3,8 +3,11 @@
 
 import type { ContentDB } from './types';
 import { OBJECTS } from './objects';
+import { EXTERIOR, GARDEN_INTERACTIONS } from './exterior';
+import { EXTERIOR_OBJECTS } from './exteriorObjects';
 import { INTERACTIONS } from './interactions';
 import { SOCIALS } from './socials';
+import { FAMILY_INTERACTIONS, FAMILY_SOCIALS } from './family';
 import { EVENTS } from './events';
 import { TRAITS } from './traits';
 import { ASPIRATIONS } from './aspirations';
@@ -12,6 +15,7 @@ import { SKILLS } from './skills';
 import { CAREERS } from './careers';
 import { CAREER_EVENTS } from './careerEvents';
 import { MOODLETS } from './moodlets';
+import { SCHOOLS } from './school';
 import { RECIPES } from './recipes';
 import { PACKS } from './packs';
 import { PREFERENCES } from './preferences';
@@ -32,18 +36,19 @@ function byId<T extends { id: string }>(kind: string, list: readonly T[]): Recor
 
 export function buildContentDB(): ContentDB {
   return {
-    objects: byId('object', OBJECTS),
+    objects: byId('object', [...OBJECTS, ...EXTERIOR_OBJECTS]),
     openings: byId('opening', OPENINGS),
     wallDesigns: byId('wall design', WALL_DESIGNS),
     floorDesigns: byId('floor design', FLOOR_DESIGNS),
-    interactions: byId('interaction', INTERACTIONS),
-    socials: byId('social', SOCIALS),
+    interactions: byId('interaction', [...INTERACTIONS, ...FAMILY_INTERACTIONS, ...GARDEN_INTERACTIONS]),
+    socials: byId('social', [...SOCIALS, ...FAMILY_SOCIALS]),
     events: byId('event', EVENTS),
     traits: byId('trait', TRAITS),
     aspirations: byId('aspiration', ASPIRATIONS),
     skills: byId('skill', SKILLS),
     careers: byId('career', CAREERS),
     careerEvents: byId('career event', CAREER_EVENTS),
+    schools: byId('school', SCHOOLS),
     moodlets: byId('moodlet', MOODLETS),
     recipes: byId('recipe', RECIPES),
     packs: byId('pack', PACKS),
@@ -62,6 +67,7 @@ export function buildContentDB(): ContentDB {
     hairColors: HAIR_COLORS,
     eyeColors: EYE_COLORS,
     preferences: PREFERENCES,
+    exterior: EXTERIOR,
   };
 }
 

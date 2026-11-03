@@ -6,6 +6,7 @@
 //   plumbing    breakable water fixture (toilet, shower, bath, sink, dishwasher); "Repair", "Service", "Call a Repairperson".
 //   appliance   breakable appliance (fridge, stove, microwave, washer); same repair interactions.
 //   electronics breakable electronics (TV, computer, radio, speaker); same repair interactions.
+//   desk | dining | computer | homework  somewhere to do homework (offered "Do Homework" to children and teens; a chair does not count).
 //   sink | dishes  a dish-washing station: dirty dishes are carried here and washed (a 'dishes' object such as a
 //                  dishwasher washes them in half the time).
 //
@@ -19,6 +20,9 @@ export const REPAIR_TAGS: readonly string[] = ['plumbing', 'appliance', 'electro
 /** Tags of objects dirty dishes can be washed at. */
 export const DISH_STATION_TAGS: readonly string[] = ['sink', 'dishes'];
 
+/** Tags of objects homework can be done at (Milestone 8). */
+export const HOMEWORK_TAGS: readonly string[] = ['desk', 'dining', 'computer', 'homework'];
+export const HOMEWORK_INTERACTION = 'doHomework';
 export const CLEAN_INTERACTION = 'cleanObject';
 export const REPAIR_INTERACTION = 'repairObject';
 export const SERVICE_INTERACTION = 'serviceObject';
@@ -28,6 +32,7 @@ type Capable = { tags: readonly string[]; functional: boolean };
 
 export const isCleanable = (d: Capable): boolean => d.functional && d.tags.includes(CLEANABLE_TAG);
 export const isRepairable = (d: Capable): boolean => d.functional && d.tags.some((t) => REPAIR_TAGS.includes(t));
+export const isHomeworkSpot = (d: Capable): boolean => d.functional && d.tags.some((t) => HOMEWORK_TAGS.includes(t)) && !d.tags.includes('chair') && !d.tags.includes('seat');
 export const isDishStation = (d: Capable): boolean => d.functional && d.tags.some((t) => DISH_STATION_TAGS.includes(t));
 
 /** Interaction ids an object offers because of its tags (not listed in ObjectDef.interactions). */
@@ -35,6 +40,7 @@ export function capabilityInteractions(d: Capable): string[] {
   const out: string[] = [];
   if (isCleanable(d)) out.push(CLEAN_INTERACTION);
   if (isRepairable(d)) out.push(REPAIR_INTERACTION, SERVICE_INTERACTION, CALL_REPAIR_INTERACTION);
+  if (isHomeworkSpot(d)) out.push(HOMEWORK_INTERACTION);
   return out;
 }
 

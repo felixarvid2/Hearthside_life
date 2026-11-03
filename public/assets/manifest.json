@@ -4,7 +4,8 @@
   "characters": "Quaternius Universal Animation Library 1 and 2 (Standard), CC0 1.0, https://quaternius.com",
   "furniture": "Kenney Furniture Kit 2.0, CC0 1.0, https://kenney.nl",
   "detailedCharacters": "meshy_a / meshy_b: AI-generated with Meshy (https://www.meshy.ai), 2026-11-01; see dev/meshy/README.md",
-  "furnitureOriginal": "Original low-poly furniture models built by tools/furniture-extra (this project, CC0)"
+  "furnitureOriginal": "Original low-poly furniture models built by tools/furniture-extra (this project, CC0)",
+  "furnitureExterior": "Original low-poly garden and staircase models built by tools/exterior (this project, CC0)"
  },
  "characters": {
   "body_a": {
@@ -5593,6 +5594,1748 @@
     }
    ],
    "original": true
+  },
+  "bassinet": {
+   "file": "furniture/bassinet.glb",
+   "thumb": "furniture/thumbs/bassinet.png",
+   "min": [
+    0.06,
+    0,
+    0.06
+   ],
+   "max": [
+    0.44,
+    0.425,
+    0.43
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true
+  },
+  "highChair": {
+   "file": "furniture/highChair.glb",
+   "thumb": "furniture/thumbs/highChair.png",
+   "min": [
+    0.0875,
+    0,
+    0.11
+   ],
+   "max": [
+    0.4125,
+    0.575,
+    0.49
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true
+  },
+  "toddlerBed": {
+   "file": "furniture/toddlerBed.glb",
+   "thumb": "furniture/thumbs/toddlerBed.png",
+   "min": [
+    0.03,
+    0,
+    0.055
+   ],
+   "max": [
+    0.47,
+    0.3,
+    0.945
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true
+  },
+  "pottyChair": {
+   "file": "furniture/pottyChair.glb",
+   "thumb": "furniture/thumbs/pottyChair.png",
+   "min": [
+    0.125,
+    0,
+    0.12
+   ],
+   "max": [
+    0.375,
+    0.325,
+    0.41
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true
+  },
+  "changingTable": {
+   "file": "furniture/changingTable.glb",
+   "thumb": "furniture/thumbs/changingTable.png",
+   "min": [
+    0.02,
+    0,
+    0.04
+   ],
+   "max": [
+    0.48,
+    0.54,
+    0.465
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true
+  },
+  "birthdayCake": {
+   "file": "furniture/birthdayCake.glb",
+   "thumb": "furniture/thumbs/birthdayCake.png",
+   "min": [
+    0.05,
+    0,
+    0.05
+   ],
+   "max": [
+    0.45,
+    0.235,
+    0.45
+   ],
+   "materials": [
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true
+  },
+  "gardenFlowerbed": {
+   "file": "furniture/gardenFlowerbed.glb",
+   "thumb": "furniture/thumbs/gardenFlowerbed.png",
+   "min": [
+    0.02,
+    0,
+    0.05
+   ],
+   "max": [
+    0.98,
+    0.3336,
+    0.45
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "soil",
+     "color": [
+      0.33,
+      0.23,
+      0.16
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "blossomYellow",
+     "color": [
+      0.96,
+      0.8,
+      0.25
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "blossomPurple",
+     "color": [
+      0.6,
+      0.45,
+      0.82
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenFlowerbedRound": {
+   "file": "furniture/gardenFlowerbedRound.glb",
+   "thumb": "furniture/thumbs/gardenFlowerbedRound.png",
+   "min": [
+    0.02,
+    0,
+    0.02
+   ],
+   "max": [
+    0.48,
+    0.28,
+    0.48
+   ],
+   "materials": [
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    },
+    {
+     "name": "soil",
+     "color": [
+      0.33,
+      0.23,
+      0.16
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "blossomYellow",
+     "color": [
+      0.96,
+      0.8,
+      0.25
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "blossomPurple",
+     "color": [
+      0.6,
+      0.45,
+      0.82
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenHedge": {
+   "file": "furniture/gardenHedge.glb",
+   "thumb": "furniture/thumbs/gardenHedge.png",
+   "min": [
+    0,
+    0,
+    0.07
+   ],
+   "max": [
+    0.5,
+    0.44,
+    0.43
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenTopiary": {
+   "file": "furniture/gardenTopiary.glb",
+   "thumb": "furniture/thumbs/gardenTopiary.png",
+   "min": [
+    0.085,
+    0,
+    0.085
+   ],
+   "max": [
+    0.415,
+    0.81,
+    0.415
+   ],
+   "materials": [
+    {
+     "name": "terracotta",
+     "color": [
+      0.76,
+      0.4,
+      0.27
+     ]
+    },
+    {
+     "name": "soil",
+     "color": [
+      0.33,
+      0.23,
+      0.16
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenVegpatch": {
+   "file": "furniture/gardenVegpatch.glb",
+   "thumb": "furniture/thumbs/gardenVegpatch.png",
+   "min": [
+    0.04,
+    0,
+    0.0425
+   ],
+   "max": [
+    0.96,
+    0.35,
+    0.95
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "soil",
+     "color": [
+      0.33,
+      0.23,
+      0.16
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenFruitTree": {
+   "file": "furniture/gardenFruitTree.glb",
+   "thumb": "furniture/thumbs/gardenFruitTree.png",
+   "min": [
+    0.0401,
+    0,
+    0.0958
+   ],
+   "max": [
+    0.975,
+    1.4,
+    0.9466
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    },
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenHerbPlanter": {
+   "file": "furniture/gardenHerbPlanter.glb",
+   "thumb": "furniture/thumbs/gardenHerbPlanter.png",
+   "min": [
+    0.04,
+    0,
+    0.1
+   ],
+   "max": [
+    0.46,
+    0.26,
+    0.405
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "soil",
+     "color": [
+      0.33,
+      0.23,
+      0.16
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenPond": {
+   "file": "furniture/gardenPond.glb",
+   "thumb": "furniture/thumbs/gardenPond.png",
+   "min": [
+    0.015,
+    0,
+    0.025
+   ],
+   "max": [
+    0.985,
+    0.39,
+    0.975
+   ],
+   "materials": [
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    },
+    {
+     "name": "stoneDark",
+     "color": [
+      0.45,
+      0.44,
+      0.42
+     ]
+    },
+    {
+     "name": "water",
+     "color": [
+      0.45,
+      0.72,
+      0.85
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenBirdbath": {
+   "file": "furniture/gardenBirdbath.glb",
+   "thumb": "furniture/thumbs/gardenBirdbath.png",
+   "min": [
+    0.085,
+    0,
+    0.085
+   ],
+   "max": [
+    0.415,
+    0.4,
+    0.415
+   ],
+   "materials": [
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    },
+    {
+     "name": "water",
+     "color": [
+      0.45,
+      0.72,
+      0.85
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenTrellis": {
+   "file": "furniture/gardenTrellis.glb",
+   "thumb": "furniture/thumbs/gardenTrellis.png",
+   "min": [
+    0.0305,
+    0,
+    0.18
+   ],
+   "max": [
+    0.4675,
+    1,
+    0.32
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    },
+    {
+     "name": "terracotta",
+     "color": [
+      0.76,
+      0.4,
+      0.27
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenHangingBasket": {
+   "file": "furniture/gardenHangingBasket.glb",
+   "thumb": "furniture/thumbs/gardenHangingBasket.png",
+   "min": [
+    0.1438,
+    0.05,
+    -0.0075
+   ],
+   "max": [
+    0.3562,
+    0.2575,
+    0.325
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "terracotta",
+     "color": [
+      0.76,
+      0.4,
+      0.27
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "blossomYellow",
+     "color": [
+      0.96,
+      0.8,
+      0.25
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "blossomPurple",
+     "color": [
+      0.6,
+      0.45,
+      0.82
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenCompost": {
+   "file": "furniture/gardenCompost.glb",
+   "thumb": "furniture/thumbs/gardenCompost.png",
+   "min": [
+    0.0325,
+    0,
+    0.0325
+   ],
+   "max": [
+    0.4675,
+    0.4625,
+    0.4675
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "soil",
+     "color": [
+      0.33,
+      0.23,
+      0.16
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenScarecrow": {
+   "file": "furniture/gardenScarecrow.glb",
+   "thumb": "furniture/thumbs/gardenScarecrow.png",
+   "min": [
+    0.015,
+    0,
+    0.1038
+   ],
+   "max": [
+    0.485,
+    0.91,
+    0.3962
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "straw",
+     "color": [
+      0.87,
+      0.74,
+      0.36
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenLantern": {
+   "file": "furniture/gardenLantern.glb",
+   "thumb": "furniture/thumbs/gardenLantern.png",
+   "min": [
+    0.19,
+    0,
+    0.19
+   ],
+   "max": [
+    0.31,
+    0.67,
+    0.31
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "lamp",
+     "color": [
+      1,
+      0.9,
+      0.55
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenGnome": {
+   "file": "furniture/gardenGnome.glb",
+   "thumb": "furniture/thumbs/gardenGnome.png",
+   "min": [
+    0.13,
+    0,
+    0.1549
+   ],
+   "max": [
+    0.35,
+    0.4,
+    0.3873
+   ],
+   "materials": [
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenArbour": {
+   "file": "furniture/gardenArbour.glb",
+   "thumb": "furniture/thumbs/gardenArbour.png",
+   "min": [
+    0.025,
+    0,
+    0.075
+   ],
+   "max": [
+    0.975,
+    1.165,
+    0.425
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "leafDark",
+     "color": [
+      0.14,
+      0.5,
+      0.33
+     ]
+    },
+    {
+     "name": "blossomPink",
+     "color": [
+      0.93,
+      0.55,
+      0.68
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairOakOpen": {
+   "file": "furniture/stairOakOpen.glb",
+   "thumb": "furniture/thumbs/stairOakOpen.png",
+   "min": [
+    -0.005,
+    0,
+    0.01
+   ],
+   "max": [
+    0.505,
+    1.765,
+    1.5
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairOakClosed": {
+   "file": "furniture/stairOakClosed.glb",
+   "thumb": "furniture/thumbs/stairOakClosed.png",
+   "min": [
+    -0.005,
+    0,
+    0.01
+   ],
+   "max": [
+    0.505,
+    1.81,
+    2
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairWhitePainted": {
+   "file": "furniture/stairWhitePainted.glb",
+   "thumb": "furniture/thumbs/stairWhitePainted.png",
+   "min": [
+    0.005,
+    0,
+    0.01
+   ],
+   "max": [
+    0.505,
+    1.765,
+    1.5
+   ],
+   "materials": [
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairFloating": {
+   "file": "furniture/stairFloating.glb",
+   "thumb": "furniture/thumbs/stairFloating.png",
+   "min": [
+    0.05,
+    0,
+    0.01
+   ],
+   "max": [
+    0.4925,
+    1.7786,
+    2
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairIndustrial": {
+   "file": "furniture/stairIndustrial.glb",
+   "thumb": "furniture/thumbs/stairIndustrial.png",
+   "min": [
+    -0.005,
+    0,
+    0.01
+   ],
+   "max": [
+    0.505,
+    1.765,
+    1.5
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairStone": {
+   "file": "furniture/stairStone.glb",
+   "thumb": "furniture/thumbs/stairStone.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.5,
+    1.425,
+    1.5
+   ],
+   "materials": [
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    },
+    {
+     "name": "stoneDark",
+     "color": [
+      0.45,
+      0.44,
+      0.42
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairGrand": {
+   "file": "furniture/stairGrand.glb",
+   "thumb": "furniture/thumbs/stairGrand.png",
+   "min": [
+    -0.005,
+    0,
+    0.01
+   ],
+   "max": [
+    1.005,
+    1.81,
+    2
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairCabin": {
+   "file": "furniture/stairCabin.glb",
+   "thumb": "furniture/thumbs/stairCabin.png",
+   "min": [
+    0,
+    0,
+    0.05
+   ],
+   "max": [
+    0.5,
+    1.7375,
+    1.45
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "straw",
+     "color": [
+      0.87,
+      0.74,
+      0.36
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairSpiralIron": {
+   "file": "furniture/stairSpiralIron.glb",
+   "thumb": "furniture/thumbs/stairSpiralIron.png",
+   "min": [
+    0.015,
+    0,
+    0.015
+   ],
+   "max": [
+    0.985,
+    1.75,
+    0.985
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairSpiralWood": {
+   "file": "furniture/stairSpiralWood.glb",
+   "thumb": "furniture/thumbs/stairSpiralWood.png",
+   "min": [
+    0.015,
+    0,
+    0.015
+   ],
+   "max": [
+    0.985,
+    1.75,
+    0.985
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairSpiralGlass": {
+   "file": "furniture/stairSpiralGlass.glb",
+   "thumb": "furniture/thumbs/stairSpiralGlass.png",
+   "min": [
+    0.0033,
+    0,
+    0.0033
+   ],
+   "max": [
+    0.9967,
+    1.75,
+    0.9967
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "stairSpiralStone": {
+   "file": "furniture/stairSpiralStone.glb",
+   "thumb": "furniture/thumbs/stairSpiralStone.png",
+   "min": [
+    0.015,
+    0,
+    0.015
+   ],
+   "max": [
+    0.985,
+    1.75,
+    0.985
+   ],
+   "materials": [
+    {
+     "name": "stoneDark",
+     "color": [
+      0.45,
+      0.44,
+      0.42
+     ]
+    },
+    {
+     "name": "stone",
+     "color": [
+      0.66,
+      0.64,
+      0.6
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
   }
  }
 }

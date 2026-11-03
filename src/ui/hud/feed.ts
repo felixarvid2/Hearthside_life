@@ -12,13 +12,13 @@ import { coalesce, eventToToast, feedToToast, type NotifyContext, type ToastCand
 import type { Shell } from './shell';
 
 const FEED_ICONS: Record<FeedEntry['kind'], string> = {
-  info: 'info', social: 'social', money: 'money', career: 'briefcase', need: 'warning', warning: 'warning', aspiration: 'star', build: 'build',
+  info: 'info', social: 'social', money: 'money', career: 'briefcase', need: 'warning', warning: 'warning', aspiration: 'star', build: 'build', family: 'people',
 };
 const FEED_LABELS: Record<FeedEntry['kind'], string> = {
-  info: 'News', social: 'Social', money: 'Money', career: 'Career', need: 'Needs', warning: 'Warning', aspiration: 'Aspiration', build: 'Home',
+  info: 'News', social: 'Social', money: 'Money', career: 'Career', need: 'Needs', warning: 'Warning', aspiration: 'Aspiration', build: 'Home', family: 'Family',
 };
 const LEDGER_LABELS: Record<LedgerKind, string> = {
-  wage: 'Wage', purchase: 'Purchase', refund: 'Refund', sale: 'Sale', groceries: 'Groceries', bill: 'Bill', reward: 'Reward', build: 'Building', gift: 'Gift', start: 'Start', repair: 'Repair', career: 'Work',
+  wage: 'Wage', purchase: 'Purchase', refund: 'Refund', sale: 'Sale', groceries: 'Groceries', bill: 'Bill', reward: 'Reward', build: 'Building', gift: 'Gift', start: 'Start', repair: 'Repair', career: 'Work', family: 'Family',
 };
 
 export interface ListPanel { panel: Panel; open(): void; close(): void; refresh(): void }

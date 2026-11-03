@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import type { AnimId } from '../core/anim';
 import type { CharacterAssets } from '../characters/assets';
+import { STAGE_HEIGHTS } from '../characters/assets';
 import { CharacterView } from '../characters/CharacterView';
 import { outfitFor } from '../characters/outfits';
 import type { ContentDB } from '../content/types';
@@ -39,6 +40,8 @@ export class CreatorScene {
   private appearanceKey = '';
   private outfitKey = '';
   private anim: AnimId = 'idle';
+  /** Height of the shown person's life stage relative to an adult: the camera frames a child closer (a baby sits up in the preview). */
+  private stageK = 1;
   private yaw = 0;
   private targetYaw = 0;
   private zoomF = 1;
@@ -91,20 +94,24 @@ export class CreatorScene {
 
   show(person: PersonDraft, opts: CreatorPreviewOptions): void {
     const outfit = outfitFor(person, opts.category);
-    const ak = JSON.stringify(person.appearance);
+    const stage = person.lifeStage ?? 'adult';
+    const ak = `${stage}|${JSON.stringify(person.appearance)}`;
     const ok = JSON.stringify(outfit);
     if (!this.view) {
-      this.view = new CharacterView(this.assets, this.content, person.appearance, outfit);
+      this.view = new CharacterView(this.assets, this.content, person.appearance, outfit, stage);
+      this.view.setBabyUpright(true);
       this.view.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
       this.scene.add(this.view.root);
       this.appearanceKey = ak;
       this.outfitKey = ok;
       this.frameKey = person.appearance.frame;
     } else {
-      if (ak !== this.appearanceKey) { this.view.setAppearance(person.appearance); this.appearanceKey = ak; }
+      if (ak !== this.appearanceKey) { this.view.setAppearance(person.appearance, stage); this.view.setBabyUpright(true); this.appearanceKey = ak; }
       if (ok !== this.outfitKey) { this.view.setOutfit(outfit); this.outfitKey = ok; }
       if (person.appearance.frame !== this.frameKey) { this.frameKey = person.appearance.frame; this.view.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; }); }
     }
+    const k = (stage === 'baby' ? 0.5 : STAGE_HEIGHTS[stage]) / STAGE_HEIGHTS.adult;
+    if (k !== this.stageK) { this.stageK = k; this.setView(this.viewName); }
     if (opts.anim !== this.anim || !this.view) {
       this.anim = opts.anim;
       this.view.play(opts.anim, { fade: 0.25, posture: 'standing' });
@@ -133,8 +140,8 @@ export class CreatorScene {
     // keep turning the short way from the current yaw
     const k = Math.round((this.targetYaw - yaw) / (Math.PI * 2));
     this.targetYaw = yaw + k * Math.PI * 2;
-    this.cam.ty = v === 'face' ? 1.56 : 0.95;
-    this.cam.th = v === 'face' ? 0.8 : 1.95;
+    this.cam.ty = (v === 'face' ? 1.56 : 0.95) * this.stageK;
+    this.cam.th = (v === 'face' ? 0.8 : 1.95) * this.stageK;
     this.cam.t = this.reducedMotion ? 1 : 0;
     if (this.reducedMotion) { this.yaw = this.targetYaw; this.cam.y = this.cam.ty; this.cam.h = this.cam.th; }
     this.zoomF = 1;
@@ -157,7 +164,7 @@ export class CreatorScene {
     v.update(dt);
     this.yaw += (this.targetYaw - this.yaw) * Math.min(1, dt * 8);
     v.root.rotation.y = this.yaw;
-    v.root.position.set(0, 0.06, 0);
+    v.root.position.set(0, 0.06 - v.floorDrop, 0);
     if (this.cam.t < 1) {
       const t0 = this.cam.t;
       this.cam.t = Math.min(1, t0 + dt / 0.5);

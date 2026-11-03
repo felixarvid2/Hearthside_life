@@ -10,9 +10,11 @@ import { dayIndex } from '../core/clock';
 import { tileKey } from '../core/ids';
 import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, Household, Id, Lot, PlacedObject, Rot, WorldState } from '../core/types';
+import { newLevelProblems, stairHoles } from '../world/levels';
 import { hasLevel, inLot } from '../world/lots';
 import { itemsOnObject, resolveFinishes } from '../world/objects';
 import { objectTiles, validatePlacement } from '../world/placement';
+import { stairChangeReason } from '../world/structure';
 import { computeRooms, roomAt } from '../world/rooms';
 import { tileOnSide, wallSideFinish, type WallSide } from '../world/walls';
 
@@ -86,6 +88,8 @@ export interface BuyPlan extends Plan {
   price: Cents;
   finishes: Record<string, string>;
   supportId?: Id;
+  /** Non-blocking notes from the placement rules (Milestone 9: "the top of the stairs needs a floor above"). */
+  warnings?: string[];
 }
 
 export function planBuy(state: WorldState, content: ContentDB, lotId: Id, householdId: Id, req: BuyRequest): BuyPlan {
@@ -103,6 +107,7 @@ export function planBuy(state: WorldState, content: ContentDB, lotId: Id, househ
   return {
     ok: reasons.length === 0, reasons, cost, tiles: v.tiles, def, price: def.price, finishes: fin.finishes,
     ...(v.supportId ? { supportId: v.supportId } : {}),
+    ...(v.warnings.length > 0 ? { warnings: v.warnings } : {}),
   };
 }
 
@@ -114,7 +119,7 @@ export function planMove(state: WorldState, content: ContentDB, lotId: Id, objec
   const obj = lot.objects[objectId];
   if (!obj) return failPlan('That object is no longer here.');
   if (obj.x === to.x && obj.z === to.z && obj.rot === to.rot && obj.level === to.level) return failPlan('It is already there.');
-  const blocked = supportBlockReason(state, content, lot, objectId);
+  const blocked = supportBlockReason(state, content, lot, objectId) ?? stairChangeReason(state, content, lot, obj, to);
   if (blocked) return failPlan(blocked);
   const v = validatePlacement(state, content, lotId, { defId: obj.defId, x: to.x, z: to.z, rot: to.rot, level: to.level, ignoreObjectId: objectId });
   return { ok: v.ok, reasons: v.reasons, cost: 0, tiles: v.tiles, ...(v.supportId ? { supportId: v.supportId } : {}) };
@@ -142,7 +147,7 @@ function planRemoval(state: WorldState, content: ContentDB, lotId: Id, household
   const obj = access.lot.objects[objectId];
   if (!obj) return failPlan('That object is no longer here.');
   if (!ownsObject(access.lot, obj, householdId)) return failPlan('It does not belong to your household.');
-  const blocked = supportBlockReason(state, content, access.lot, objectId);
+  const blocked = supportBlockReason(state, content, access.lot, objectId) ?? stairChangeReason(state, content, access.lot, obj);
   if (blocked) return failPlan(blocked);
   return { ok: true, reasons: [], cost: 0, tiles: objectTiles(obj, content.objects[obj.defId]) };
 }
@@ -234,6 +239,13 @@ export function planFloorPaint(state: WorldState, content: ContentDB, lotId: Id,
     if (!room || room.outdoor) return { ...failPlan('Room fill only works inside a room.'), ...empty };
     tiles = room.tiles;
   }
+  // Milestone 9: the stairwell above a staircase stays open
+  if (target.level >= 1) {
+    const holes = stairHoles(lot, content, target.level);
+    const kept = tiles.filter((t) => !holes.has(`${t.x},${t.z}`));
+    if (kept.length === 0 && tiles.length > 0) return { ...failPlan('The stairs open up there.'), ...empty };
+    tiles = kept;
+  }
 
   const seen = new Set<string>();
   const changes: FloorChange[] = [];
@@ -245,6 +257,13 @@ export function planFloorPaint(state: WorldState, content: ContentDB, lotId: Id,
     if (!sameFinish(before, finish)) changes.push({ key, x: t.x, z: t.z, before: before ? { ...before } : null });
   }
   if (changes.length === 0) return { ...failPlan('It already has that floor.'), ...empty };
+  // Milestone 9: an upper floor needs support (walls or rooms below it, or a balcony within reach)
+  if (target.level >= 1) {
+    const virtual: Lot = { ...lot, floors: { ...lot.floors } };
+    for (const c of changes) virtual.floors[c.key] = { designId: finish.designId, paletteId: finish.paletteId };
+    const problem = newLevelProblems(lot, virtual, content)[0];
+    if (problem) return { ...failPlan(problem.text), ...empty };
+  }
   const price = design.price * changes.length;
   const cost = chargeFor(state, price);
   const reasons = cost > access.hh.funds ? [NOT_ENOUGH] : [];

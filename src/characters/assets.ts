@@ -4,7 +4,9 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import type { BodyFrame } from '../core/types';
+import type { BodyFrame, LifeStage } from '../core/types';
+import type { StageBody } from './stages';
+import { stageBodyFile, stageBodyOf, stageFallbackScale } from './stages';
 import type { AiHairData } from './aiHair';
 import { HeadMap } from './headMap';
 import { buildMeshyMesh } from './meshyBody';
@@ -21,6 +23,16 @@ import { toGeometry } from './geometry';
  * scanned Meshy bodies (meshy_*.glb); 'classic': the procedural bodies.
  */
 export type CharacterStyle = 'mpfb' | 'detailed' | 'classic';
+
+// Life stages (heights, which stages have a body of their own, file names): the pure part is in stages.ts
+export { ADULT_HEIGHT, STAGE_BODIES, STAGE_HEIGHTS, stageBodyAvailable, stageBodyFile, stageBodyOf, stageFallbackScale } from './stages';
+export type { StageBody } from './stages';
+
+/** The frames of a loaded stage body (the baby fills both frames) and its clips with the translation tracks scaled to its skeleton. */
+export interface StageSet {
+  frames: Record<BodyFrame, FrameAssets>;
+  clips: Record<BodyFrame, Map<string, THREE.AnimationClip>>;
+}
 
 /** Textures and build data of a Meshy body frame. */
 export interface MeshyFrame {
@@ -46,7 +58,7 @@ export interface MpfbFrame {
 
 export interface FrameAssets {
   frame: BodyFrame;
-  /** Cache key of everything generated for this frame ('a', 'b' for classic bodies; 'am', 'bm' for Meshy bodies; 'ap', 'bp' for MPFB). */
+  /** Cache key of everything generated for this frame ('a', 'b' for classic bodies; 'am', 'bm' for Meshy bodies; 'ap', 'bp' for MPFB; 'ap:child' etc. for a stage body). */
   key: string;
   /** Present for Meshy bodies: the skin shader recolours its albedo through the mask. */
   meshy: MeshyFrame | null;
@@ -69,6 +81,11 @@ export interface CharacterAssets {
   style: CharacterStyle;
   /** Frame sets loaded so far (a style is loaded on first use). */
   sets: Partial<Record<CharacterStyle, Record<BodyFrame, FrameAssets>>>;
+  /** Life-stage bodies loaded so far (natural style only, loaded on first use: `requestStageBody`). */
+  stages: Partial<Record<StageBody, StageSet>>;
+  stagesPending?: Partial<Record<StageBody, Promise<StageSet | null>>>;
+  /** Stage bodies that failed to load (not tried again). */
+  stagesFailed?: Set<StageBody>;
   baseUrl: string;
   /** Animation clips by source name (e.g. 'Idle_Loop'). */
   clips: Map<string, THREE.AnimationClip>;
@@ -95,7 +112,7 @@ export async function loadCharacterAssets(baseUrl = './assets/', style: Characte
   const [an1, an2] = await Promise.all(['anims_1', 'anims_2'].map((n) => loader.loadAsync(`${base}characters/${n}.glb`)));
   const clips = new Map<string, THREE.AnimationClip>();
   for (const g of [an1!, an2!]) for (const clip of g.animations) clips.set(clip.name, clip);
-  const assets: CharacterAssets = { frames: null as unknown as Record<BodyFrame, FrameAssets>, style, sets: {}, baseUrl: base, clips, cache: new Map() };
+  const assets: CharacterAssets = { frames: null as unknown as Record<BodyFrame, FrameAssets>, style, sets: {}, stages: {}, baseUrl: base, clips, cache: new Map() };
   await setCharacterStyle(assets, style);
   return assets;
 }
@@ -122,6 +139,95 @@ export async function setCharacterStyle(assets: CharacterAssets, style: Characte
   assets.style = want;
   assets.frames = assets.sets[want]!;
   return want;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Life-stage bodies (lazy)
+// ---------------------------------------------------------------------------------------------
+
+/** The loaded stage body, or null (not requested yet, still loading, failed, or the adult bodies). */
+export function stageSet(assets: CharacterAssets, stage: LifeStage): StageSet | null {
+  const body = stageBodyOf(stage);
+  return body ? assets.stages[body] ?? null : null;
+}
+
+/**
+ * Loads the body of a life stage (natural style only; the other styles scale the adult rig) the first time a person of that stage is
+ * shown. Resolves to null when the stage has no body of its own, or it cannot be loaded (the caller keeps the scaled adult).
+ */
+export function requestStageBody(assets: CharacterAssets, stage: LifeStage): Promise<StageSet | null> {
+  const body = stageBodyOf(stage);
+  if (!body || assets.style !== 'mpfb') return Promise.resolve(null);
+  const have = assets.stages[body];
+  if (have) return Promise.resolve(have);
+  if (assets.stagesFailed?.has(body)) return Promise.resolve(null);
+  const pending = (assets.stagesPending ??= {});
+  let p = pending[body];
+  if (!p) {
+    p = loadStageSet(assets, body).then((set) => { assets.stages[body] = set; delete pending[body]; return set; }).catch((e) => {
+      console.warn(`[characters] ${body} bodies unavailable, scaling the adult body instead`, e);
+      (assets.stagesFailed ??= new Set()).add(body);
+      delete pending[body];
+      return null;
+    });
+    pending[body] = p;
+  }
+  return p;
+}
+
+async function loadStageSet(assets: CharacterAssets, body: StageBody): Promise<StageSet> {
+  const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const adult = assets.sets.mpfb ?? assets.frames;
+  const make = async (frame: BodyFrame): Promise<[FrameAssets, Map<string, THREE.AnimationClip>]> => {
+    const gltf = await loader.loadAsync(`${assets.baseUrl}characters/${stageBodyFile(body, frame)}.glb`);
+    const fa = mpfbFrameFromGltf(frame, gltf.scene, `:${body}`);
+    return [fa, retargetClips(assets.clips, adult[frame], fa)];
+  };
+  if (body === 'baby') {
+    // one body for both sexes (built on frame b's skeleton)
+    const [fa, clips] = await make('b');
+    return { frames: { a: fa, b: fa }, clips: { a: clips, b: clips } };
+  }
+  const [[fa, ca], [fb, cb]] = await Promise.all([make('a'), make('b')]);
+  return { frames: { a: fa, b: fb }, clips: { a: ca, b: cb } };
+}
+
+/**
+ * The adult clips for a stage skeleton. Every bone keeps its rotation tracks (the stage skeleton has the adult's rest rotations and
+ * scaled bone lengths); only the translation tracks, which exist for the root and pelvis, are scaled by how much lower the stage's
+ * pelvis sits, so children are neither stretched to adult bone lengths nor sink into the floor.
+ */
+export function retargetClips(clips: Map<string, THREE.AnimationClip>, adult: FrameAssets, stage: FrameAssets): Map<string, THREE.AnimationClip> {
+  const ratio = (name: string): number => {
+    const a = adult.rootBone.getObjectByName(name), s = stage.rootBone.getObjectByName(name);
+    const la = a?.position.length() ?? 0;
+    return la > 1e-4 && s ? s.position.length() / la : 0;
+  };
+  const pelvis = ratio('pelvis') || 1;
+  const out = new Map<string, THREE.AnimationClip>();
+  for (const [name, clip] of clips) {
+    const tracks = clip.tracks.map((tr) => {
+      const m = /^(.*)\.position$/.exec(tr.name);
+      if (!m) return tr.clone();
+      const k = ratio(m[1]!) || pelvis;
+      const t = tr.clone();
+      for (let i = 0; i < t.values.length; i++) t.values[i] = (t.values[i] as number) * k;
+      return t;
+    });
+    out.set(name, new THREE.AnimationClip(clip.name, clip.duration, tracks));
+  }
+  return out;
+}
+
+/**
+ * What draws a person of `stage` with body frame `frame`: the stage's own body when it is loaded (clips scaled to it), else the active
+ * style's adult frame scaled uniformly to the stage's height (`scale`, 1 for the adults), with the shared clips.
+ */
+export function resolveBody(assets: CharacterAssets, frame: BodyFrame, stage: LifeStage): { fa: FrameAssets; clips: Map<string, THREE.AnimationClip>; scale: number; own: boolean } {
+  const set = assets.style === 'mpfb' ? stageSet(assets, stage) : null;
+  if (set) return { fa: set.frames[frame], clips: set.clips[frame], scale: 1, own: true };
+  return { fa: assets.frames[frame], clips: assets.clips, scale: stageFallbackScale(stage), own: false };
 }
 
 async function loadFrameSet(base: string, style: CharacterStyle): Promise<Record<BodyFrame, FrameAssets>> {
@@ -201,7 +307,7 @@ function meshyFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAsset
  * named in the mesh extras. The skin primitive is the body (template, garments and hair are fitted to it); the others are kept as
  * shared geometry that every CharacterView draws as extra meshes on its own skeleton.
  */
-function mpfbFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets {
+function mpfbFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D, keySuffix = ''): FrameAssets {
   const meshes: Partial<Record<MpfbPart, THREE.SkinnedMesh>> = {};
   let extras: MpfbExtras | undefined;
   scene.traverse((o) => {
@@ -231,7 +337,7 @@ function mpfbFrameFromGltf(frame: BodyFrame, scene: THREE.Object3D): FrameAssets
   const underwear = mats.underwear?.color.clone() ?? new THREE.Color('#d9d3c9');
   for (const sm of Object.values(meshes)) { sm.geometry.dispose(); (sm.material as THREE.Material).dispose(); }
   return {
-    frame, key: `${frame}p`, meshy: null, mpfb: { extras, sex: extras.sex, skinMap, maps, parts, underwear, morphNames: source.ids }, raw, template, rootBone,
+    frame, key: `${frame}p${keySuffix}`, meshy: null, mpfb: { extras, sex: extras.sex, skinMap, maps, parts, underwear, morphNames: source.ids }, raw, template, rootBone,
     boneNames: skeleton.bones.map((bn) => bn.name),
     boneInverses: skeleton.boneInverses.map((m) => m.clone()),
     skinGeometry: toGeometry(built.skin!, `skin-${frame}p`),
@@ -372,8 +478,9 @@ export function disposeCharacterAssets(assets: CharacterAssets): void {
   for (const a of assets.aiHair?.values() ?? []) a.map.dispose();
   assets.aiHair?.clear();
   assets.aiHairPending?.clear();
-  for (const set of Object.values(assets.sets)) {
-    for (const f of Object.values(set)) {
+  const frameSets: Array<Record<BodyFrame, FrameAssets>> = [...Object.values(assets.sets), ...Object.values(assets.stages).map((st) => st.frames)];
+  for (const set of frameSets) {
+    for (const f of new Set(Object.values(set))) {
       f.skinGeometry.dispose();
       f.meshy?.albedo.dispose();
       f.meshy?.mask.dispose();

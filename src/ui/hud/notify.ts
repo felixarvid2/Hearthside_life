@@ -41,6 +41,7 @@ const FEED_STYLE: Record<FeedEntry['kind'], { kind: ToastKind; sound: SoundId | 
   need: { kind: 'warning', sound: 'notify', priority: 3 },
   warning: { kind: 'warning', sound: 'error', priority: 4 },
   build: { kind: 'info', sound: null, priority: 1 },
+  family: { kind: 'success', sound: 'levelUp', priority: 5 },
   info: { kind: 'info', sound: null, priority: 1 },
 };
 

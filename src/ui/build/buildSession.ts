@@ -9,6 +9,7 @@
 // and in the game, not in the DOM.
 
 import { formatMoney } from '../../core/money';
+import { isGateDef } from '../../world/fences';
 import type { BuildPoint, BuildPreview, BuildTarget, BuildTool, GameAPI, PickResult, Result, SoundId } from '../../game/api';
 
 /** What the session needs from the interface around it (kept apart so the session has no DOM). */
@@ -27,6 +28,9 @@ export function toolMode(tool: BuildTool | null): ToolMode {
     case 'wall': return tool.shape === 'run' ? 'drag' : 'click';
     case 'eraseWall': return tool.shape === 'segment' ? 'click' : 'drag';
     case 'floor': case 'eraseFloor': return tool.shape === 'rect' ? 'drag' : 'click';
+    // Milestone 9 exterior: a fence run is dragged, a gate is tapped on an edge; a roof is dragged (or 'auto'); paint is a tile or a rectangle
+    case 'fence': return isGateDef(tool.defId) ? 'click' : 'drag';
+    case 'roof': case 'terrain': return tool.shape === 'rect' ? 'drag' : 'click';
     default: return 'click';
   }
 }
@@ -104,7 +108,7 @@ function affordReason(api: GameAPI, cost: number): string | null {
 const keyOf = (t: BuildTarget | null): string => {
   if (!t) return '';
   const r = (p: BuildPoint | null | undefined) => (p ? `${Math.round(p.x * 4) / 4},${Math.round(p.z * 4) / 4}` : '-');
-  return `${r(t.from)}|${r(t.to)}|${t.wallId ?? ''}`;
+  return `${r(t.from)}|${r(t.to)}|${t.wallId ?? ''}|${t.level ?? 0}`;
 };
 
 export class BuildSession {
@@ -120,6 +124,8 @@ export class BuildSession {
   private flipMode = false;
   private readonly listeners = new Set<() => void>();
   private readonly offs: Array<() => void> = [];
+  /** Milestone 9: the floor the tools work on. */
+  private lastLevel = 0;
 
   private readonly sound: (id: SoundId) => void;
   private readonly toast: SessionHooks['toast'];
@@ -130,6 +136,7 @@ export class BuildSession {
     this.toolKey = JSON.stringify(api.buildTool());
     this.offs.push(api.onChange((what) => {
       if (what === 'mode') { this.reset(); return; }
+      if (what === 'camera') this.followLevel();
       if (what === 'build') {
         const k = JSON.stringify(api.buildTool());
         if (k !== this.toolKey) { this.toolKey = k; this.dropTarget(); }
@@ -138,6 +145,21 @@ export class BuildSession {
     }));
     this.offs.push(api.events.on('lot.changed', () => this.refresh()));
     this.offs.push(api.events.on('state.replaced', () => this.reset()));
+  }
+
+  /** The floor the build tools work on (the HUD's floor selector). */
+  level(): number { return this.api.view.level?.() ?? 0; }
+
+  /** Another floor was chosen: the target, preview and room selection belonged to the old one. */
+  private followLevel(): void {
+    const l = this.level();
+    if (l === this.lastLevel) return;
+    this.lastLevel = l;
+    this.selectedRoom = null;
+    this.hoveredRoom = null;
+    this.api.highlightRoom(null);
+    this.dropTarget();
+    this.emit();
   }
 
   destroy(): void { for (const off of this.offs.splice(0)) off(); this.listeners.clear(); }
@@ -168,13 +190,13 @@ export class BuildSession {
   /** The selected room (tap with no tool), or null. */
   selection(): { uid: string; area: number } | null {
     if (!this.selectedRoom) return null;
-    const r = this.api.rooms(0).find((x) => x.uid === this.selectedRoom);
+    const r = this.api.rooms(this.level()).find((x) => x.uid === this.selectedRoom);
     return r ? { uid: r.uid, area: r.area } : null;
   }
 
   private indoorRoomAt(x: number, y: number) {
     const g = this.ground(x, y);
-    const room = g ? this.api.roomAt({ x: Math.floor(g.x), z: Math.floor(g.z) }, 0) : null;
+    const room = g ? this.api.roomAt({ x: Math.floor(g.x), z: Math.floor(g.z) }, this.level()) : null;
     return room && !room.outdoor ? room : null;
   }
 
@@ -207,11 +229,11 @@ export class BuildSession {
 
   /** Previews demolishing the selected room (Confirm applies). */
   deleteSelectedRoom(): void {
-    const room = this.api.rooms(0).find((r) => r.uid === this.selectedRoom);
+    const room = this.api.rooms(this.level()).find((r) => r.uid === this.selectedRoom);
     const t = room?.tiles[0];
     if (!room || !t) return;
     this.setTool({ kind: 'deleteRoom' });
-    this.target = { from: { x: t.x + 0.5, z: t.z + 0.5 }, level: 0 };
+    this.target = { from: { x: t.x + 0.5, z: t.z + 0.5 }, level: this.level() };
     this.lastKey = '';
     this.runPreview();
     this.pending = true;
@@ -236,6 +258,7 @@ export class BuildSession {
     if (!tool) return;
     let next: BuildTool | null = null;
     if (tool.kind === 'opening') next = { ...tool, flip: !tool.flip };
+    else if (tool.kind === 'stairs') next = { ...tool, rot: (((tool.rot ?? 0) + 1) % 4) };
     else if (tool.kind === 'moveOpening' && tool.openingId) {
       const st = this.api.state();
       const cur = st?.lots[st.activeLotId]?.openings[tool.openingId]?.flip ?? false;
@@ -269,7 +292,7 @@ export class BuildSession {
       }
     }
     const g = this.ground(x, y);
-    return g ? { from: g, level: 0 } : null;
+    return g ? { from: g, level: this.level() } : null;
   }
 
   // ---- previews ----
@@ -282,6 +305,16 @@ export class BuildSession {
     this.preview = t ? this.api.buildPreview(t) : null;
     if (!t) this.api.buildCancel();
     this.syncRoomOutline();
+    this.emit();
+  }
+
+  /** Milestone 9: previews the tool at a ground point without a pointer (the auto roof's panel), ready for Confirm. */
+  aim(from: BuildPoint): void {
+    if (!this.tool()) return;
+    this.target = { from, level: this.level() };
+    this.lastKey = '';
+    this.runPreview();
+    this.pending = true;
     this.emit();
   }
 
@@ -346,10 +379,10 @@ export class BuildSession {
     const mode = toolMode(tool);
     const mouse = kind === 'mouse';
     if (mode === 'drag') {
-      if ((tool.kind === 'floor' || tool.kind === 'eraseFloor') && tool.shape === 'rect') {
+      if (((tool.kind === 'floor' || tool.kind === 'eraseFloor' || tool.kind === 'terrain') && tool.shape === 'rect')) {
         const g = this.ground(x, y);
         if (!g) return true;
-        this.target = { from: g, to: g, level: 0 };
+        this.target = { from: g, to: g, level: this.level() };
         this.afterPoint(mouse);
         return true;
       }
@@ -410,7 +443,7 @@ export class BuildSession {
     const tool: BuildTool = { kind: 'moveOpening', openingId: found.openingId, flip: !found.flip };
     this.toolKey = JSON.stringify(tool);
     this.api.setBuildTool(tool);
-    this.target = { from: { x: 0, z: 0 }, wallId: found.wallId, level: 0 };
+    this.target = { from: { x: 0, z: 0 }, wallId: found.wallId, level: this.level() };
     this.lastKey = '';
     this.runPreview();
     if (mouse) { this.apply(true); return; }
@@ -426,7 +459,7 @@ export class BuildSession {
     this.dragging = true;
     this.aborted = false;
     this.pending = false;
-    this.target = { from: g, to: g, level: 0 };
+    this.target = { from: g, to: g, level: this.level() };
     this.lastKey = '';
     this.runPreview();
   }
@@ -474,14 +507,14 @@ export class BuildSession {
     const t = this.target;
     if (!tool || !t || toolMode(tool) !== 'drag' || !this.pending) return [];
     const a = t.from, b = t.to ?? t.from;
-    if ((tool.kind === 'floor' || tool.kind === 'eraseFloor') && tool.shape === 'rect') {
+    if ((tool.kind === 'floor' || tool.kind === 'eraseFloor' || tool.kind === 'terrain') && tool.shape === 'rect') {
       return [
         { id: 'a', x: Math.floor(a.x) + 0.5, z: Math.floor(a.z) + 0.5 },
         { id: 'b', x: Math.floor(b.x) + 0.5, z: Math.floor(b.z) + 0.5 },
       ];
     }
     const va = this.vertex(a), vb = this.vertex(b);
-    if (tool.kind === 'room' || (tool.kind === 'eraseWall' && tool.shape === 'rect')) {
+    if (tool.kind === 'room' || tool.kind === 'roof' || (tool.kind === 'eraseWall' && tool.shape === 'rect')) {
       const x0 = Math.min(va.x, vb.x), x1 = Math.max(va.x, vb.x), z0 = Math.min(va.z, vb.z), z1 = Math.max(va.z, vb.z);
       return [{ id: 'c0', x: x0, z: z0 }, { id: 'c1', x: x1, z: z0 }, { id: 'c2', x: x1, z: z1 }, { id: 'c3', x: x0, z: z1 }];
     }
@@ -522,7 +555,7 @@ export class BuildSession {
       if (quiet) { this.cancelPreviewOnly(); }
       return r;
     }
-    this.sound(tool?.kind === 'floor' ? 'paint' : tool?.kind === 'eraseWall' || tool?.kind === 'eraseOpening' || tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' ? 'sell' : 'place');
+    this.sound(tool?.kind === 'floor' ? 'paint' : tool?.kind === 'eraseWall' || tool?.kind === 'eraseOpening' || tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' || tool?.kind === 'eraseStairs' ? 'sell' : 'place');
     const money = (r.cost ?? 0) > 0 ? ` for ${formatMoney(r.cost ?? 0)}` : (r.cost ?? 0) < 0 ? `, ${formatMoney(-(r.cost ?? 0))} back` : '';
     this.toast(`${r.label ?? 'Done'}${money}. Undo is in the panel.`, 'success', 2600);
     this.dropTarget();

@@ -35,7 +35,8 @@ function setPhase(ctx: SimCtx, a: ActionInstance, phase: ActionPhase): void {
 export function runPerson(ctx: SimCtx, p: Person): void {
   if (!lotLoc(p)) return;
   const a = p.queue[0];
-  if (!a) { idle(ctx, p); return; }
+  // A baby in its crib stays lying down (Milestone 8); a carried baby stands with its caregiver.
+  if (!a) { if (p.lifeStage === 'baby' && lotLoc(p)?.posture === 'lying') return; idle(ctx, p); return; }
   runAction(ctx, p, a);
   if (p.queue.length === 0) idle(ctx, p);
 }

@@ -11,6 +11,7 @@ import type { ContentDB, OpeningDef } from '../content/types';
 import { footprintTiles } from '../core/geometry';
 import { parseEdgeKey } from '../core/ids';
 import type { Lot, WorldState } from '../core/types';
+import { levelY } from '../world/levels';
 import { openingEdgeKeys } from '../world/walls';
 import { buildOpeningMesh, WALL_THICKNESS } from './openingMeshes';
 
@@ -87,6 +88,12 @@ export class BuildView {
   // Grid
   // ---------------------------------------------------------------------------------------------
 
+  /** Milestone 9: the grid and room outlines follow the floor being worked on (the preview follows its own highlight level). */
+  setLevel(level: number): void {
+    this.gridGroup.position.y = levelY(level);
+    this.roomGroup.position.y = levelY(level);
+  }
+
   /** Shows the grid over the lot (null hides it and the preview). */
   setGrid(lot: Lot | null): void {
     this.group.visible = lot !== null;
@@ -118,6 +125,7 @@ export class BuildView {
   setHighlight(h: BuildHighlight | null, ok: boolean, extras: BuildViewExtras, lot: Lot | null, world: WorldState | null): void {
     this.clearPreview();
     if (!h || !lot) return;
+    this.previewGroup.position.y = levelY(h.level);
     const add = (o: THREE.Object3D, order = 6) => { o.renderOrder = order; this.previewGroup.add(o); };
     const edgeBox = (key: string, height: number, pad: number, y0 = 0): THREE.Mesh => {
       const e = parseEdgeKey(key);

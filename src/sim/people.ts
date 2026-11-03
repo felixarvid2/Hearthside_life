@@ -5,9 +5,11 @@ import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { newId, pairKey } from '../core/ids';
 import { Rng } from '../core/rng';
 import type {
-  BondStatus, FamilyTie, Id, Needs, Person, PersonLocation, WorldState,
+  FamilyTie, Id, Needs, Person, PersonLocation, WorldState,
 } from '../core/types';
 import { NEED_IDS } from '../core/types';
+import { TIE_START, linkParent } from './family';
+import { ensureSchool } from './school';
 import { addMemory, ensureRel, invertTie, refreshLabel } from './relationships';
 
 const copy = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
@@ -64,19 +66,9 @@ export function createPerson(
   };
   state.people[person.id] = person;
   hh.memberIds.push(person.id);
+  ensureSchool(content, person);
   return person;
 }
-
-/** Starting relationship values between household members by tie (b is a's <tie>). */
-const TIE_START: Record<FamilyTie, { familiarity: number; friendship: number; trust: number; romance: number; status: BondStatus }> = {
-  spouse: { familiarity: 80, friendship: 55, trust: 50, romance: 55, status: 'spouse' },
-  partner: { familiarity: 75, friendship: 50, trust: 45, romance: 50, status: 'partner' },
-  parent: { familiarity: 85, friendship: 45, trust: 50, romance: 0, status: 'friend' },
-  child: { familiarity: 85, friendship: 45, trust: 50, romance: 0, status: 'friend' },
-  sibling: { familiarity: 80, friendship: 35, trust: 35, romance: 0, status: 'friend' },
-  roommate: { familiarity: 50, friendship: 25, trust: 20, romance: 0, status: 'friend' },
-  none: { familiarity: 40, friendship: 15, trust: 10, romance: 0, status: 'acquaintance' },
-};
 
 const TIE_TEXT: Record<FamilyTie, string> = {
   spouse: 'Married to {b}', partner: 'Moved in with my partner {b}', parent: '{b} is my parent', child: '{b} is my child', sibling: '{b} is my sibling',
@@ -95,6 +87,13 @@ export function applyHouseholdTies(state: WorldState, memberIds: Id[], ties: Hou
     const a = memberIds[t.a], b = memberIds[t.b];
     if (!a || !b || a === b) continue;
     explicit.set(pairKey(a, b), { from: a, tie: t.tie });
+  }
+  // Parent ties are also the family graph (Milestone 8): the child's parentIds.
+  for (const t of ties) {
+    const a = memberIds[t.a], b = memberIds[t.b];
+    if (!a || !b || a === b) continue;
+    if (t.tie === 'parent') linkParent(state, a, b);
+    else if (t.tie === 'child') linkParent(state, b, a);
   }
   for (let i = 0; i < memberIds.length; i++) {
     for (let j = i + 1; j < memberIds.length; j++) {

@@ -9,6 +9,11 @@ import { hourOfDay } from '../core/clock';
 import type { ActionInstance, NeedId, Person } from '../core/types';
 import { NEED_IDS } from '../core/types';
 import { BOOK_MAX_LEVEL } from '../content/skillEffects';
+import { HOMEWORK_INTERACTION, offeredInteractionIds } from '../content/capabilities';
+import { isDependentStage, isSchoolStage } from '../core/lifeStages';
+import { careWishes } from './care';
+import { stageAllows } from './gating';
+import { homeworkDueDay } from './school';
 import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
 import { choreCandidates } from './chores';
 import { availableMeals, stovesOn } from './cooking';
@@ -30,7 +35,7 @@ import type { ActionRequest } from './types';
 /** Behaviors visitors may use on their own (besides socials). */
 const VISITOR_BEHAVIORS: ReadonlySet<string> = new Set(['sit', 'watchTv']);
 /** Behaviors autonomy never picks (they need player intent or data). */
-const NEVER_AUTONOMOUS: ReadonlySet<string> = new Set(['changeOutfit', 'editOutfits', 'goToWork', 'goHere', 'invite', 'leaveLot']);
+const NEVER_AUTONOMOUS: ReadonlySet<string> = new Set(['changeOutfit', 'editOutfits', 'goToWork', 'goHere', 'invite', 'leaveLot', 'goToSchool', 'care', 'openAdopt', 'ageUp', 'homework']);
 
 /** Key in Person.cooldowns holding the next minute this person may make an autonomous decision. */
 export const DECIDE_KEY = '@decide';
@@ -112,7 +117,7 @@ function householdCooking(ctx: SimCtx, p: Person): boolean {
 /** All autonomy candidates for a person on a lot, scored. */
 export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   const loc = lotLoc(p);
-  if (!loc) return [];
+  if (!loc || p.lifeStage === 'baby') return [];
   const visitor = isVisitor(ctx, p);
   const out: Candidate[] = [];
   const funds = ctx.state.households[p.householdId]?.funds ?? 0;
@@ -124,7 +129,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       const def = ctx.content.interactions[iid];
       if (!def || !def.autonomy.enabled || def.status !== 'ready' || def.kind !== 'object') continue;
       const beh = def.behavior ?? 'generic';
-      if (NEVER_AUTONOMOUS.has(beh)) continue;
+      if (NEVER_AUTONOMOUS.has(beh) || !stageAllows(def, p.lifeStage)) continue;
       if (venueRestriction(ctx, p, def)) continue; // no naps in the cafe, no games on the library computers
       if (visitor && !(def.allowVisitors && VISITOR_BEHAVIORS.has(beh))) continue;
       if (def.cost && def.cost > funds) continue;
@@ -169,7 +174,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   if (!visitor) {
     for (const def of Object.values(ctx.content.interactions)) {
       if (def.kind !== 'self' || !def.autonomy.enabled || def.status !== 'ready') continue;
-      if (NEVER_AUTONOMOUS.has(def.behavior ?? 'generic')) continue;
+      if (NEVER_AUTONOMOUS.has(def.behavior ?? 'generic') || !stageAllows(def, p.lifeStage)) continue;
       if (venueRestriction(ctx, p, def)) continue; // a jog is for the park
       if (def.cost && def.cost > funds) continue;
       let data: ActionRequest['data'] | undefined;
@@ -186,9 +191,38 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
   }
   const social = socialCandidate(ctx, p);
   if (social) out.push(social);
-  if (!visitor) { const inv = inviteCandidate(ctx, p); if (inv) out.push(inv); }
-  if (!visitor) out.push(...choreCandidates(ctx, p, { biasFor, cooldownMult }));
+  if (!visitor && !isDependentStage(p.lifeStage) && p.lifeStage !== 'child') { const inv = inviteCandidate(ctx, p); if (inv) out.push(inv); }
+  if (!visitor && !isDependentStage(p.lifeStage) && p.lifeStage !== 'child') out.push(...choreCandidates(ctx, p, { biasFor, cooldownMult }));
+  if (!visitor) {
+    for (const w of careWishes(ctx, p)) {
+      const score = w.score * cooldownMult(ctx, p, w.interactionId, w.personId);
+      if (score > 0) out.push({ req: { interactionId: w.interactionId, target: { kind: 'person', personId: w.personId } }, score, key: w.key, addresses: w.addresses });
+    }
+    const hw = homeworkCandidate(ctx, p);
+    if (hw) out.push(hw);
+  }
   return out;
+}
+
+/** A pupil with homework due sits down at the nearest desk, table or computer in the afternoon and evening. */
+function homeworkCandidate(ctx: SimCtx, p: Person): Candidate | null {
+  const loc = lotLoc(p);
+  if (!loc || !isSchoolStage(p.lifeStage) || !p.school) return null;
+  const h = hourOfDay(ctx.now);
+  if (h < 8 || h >= 21 || p.needs.energy < 25) return null;
+  if (homeworkDueDay(ctx.state, ctx.content, p, ctx.now) === null) return null;
+  const def = ctx.content.interactions[HOMEWORK_INTERACTION];
+  if (!def || def.status !== 'ready') return null;
+  let best: { id: string; d: number } | null = null;
+  for (const ref of lotObjects(ctx, loc.lotId, loc.level)) {
+    if (isBroken(ref.obj) || !offeredInteractionIds(ref.def).includes(def.id) || !freeUsePointExists(ctx, p, def, ref.obj.id)) continue;
+    const c = objectCenter(ref);
+    const d = dist(loc.x, loc.z, c.x, c.z);
+    if (!best || d < best.d) best = { id: ref.obj.id, d };
+  }
+  if (!best) return null;
+  const score = (1.3 / (1 + best.d / 20)) * cooldownMult(ctx, p, def.id, best.id);
+  return score > 0 ? { req: { interactionId: def.id, target: { kind: 'object', objectId: best.id, slotId: null } }, score, key: `${def.id}@${best.id}`, addresses: [] } : null;
 }
 
 /** The skill a person studies from a skill book: the lowest of the book skills below the book cap (ties by id). */
@@ -341,7 +375,7 @@ function currentScore(ctx: SimCtx, p: Person, a: ActionInstance): number {
 export function runAutonomy(ctx: SimCtx): void {
   for (const p of Object.values(ctx.state.people)) {
     const loc = lotLoc(p);
-    if (!loc) continue;
+    if (!loc || p.lifeStage === 'baby') continue;
     const visitor = isVisitor(ctx, p);
     // The autonomy setting governs the player's household wherever it is (also as guests or on a venue); everybody else
     // looks after themselves.

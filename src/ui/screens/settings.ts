@@ -3,7 +3,8 @@
 // (the game stores them in localStorage); world settings go through api.setSimSettings (stored in the save).
 
 import type { GameSettings } from '../../game/api';
-import type { SimSettings } from '../../core/types';
+import type { LifeStage, SimSettings } from '../../core/types';
+import { MAX_STAGE_DAYS, MIN_STAGE_DAYS, NORMAL_STAGE_DAYS, STAGE_LABELS, STAGE_ORDER, stageLength } from '../../core/lifeStages';
 import { modal, segmented, slider } from '../kit/components';
 import { h } from '../kit/dom';
 import { icon } from '../kit/icons';
@@ -57,6 +58,46 @@ export function openSettings(sh: Shell): void {
   const visitors = toggleSwitch({ label: 'Neighbour visits', hint: 'Neighbours may drop by on their own.', value: sim?.visitors ?? true, disabled: !sim, onChange: (on) => { setSim({ visitors: on }); sh.sound('toggle'); } });
   if (!sim) visitors.setDisabled(true, noGame);
 
+  // ---- Aging and life stages (Milestone 8) ----
+  type AgingMode = SimSettings['aging'];
+  const agingNow = (): AgingMode => api.state()?.settings.aging ?? 'off';
+  const customBox = h('div', { class: 'aging-custom', role: 'group', attrs: { 'aria-label': 'Days in each life stage' } });
+  const refreshCustom = () => { customBox.hidden = agingNow() !== 'custom'; };
+  const aging = segmented<AgingMode>({
+    label: 'Aging', value: sim?.aging ?? 'off',
+    options: [{ id: 'off', label: 'Off' }, { id: 'long', label: 'Long' }, { id: 'normal', label: 'Normal' }, { id: 'custom', label: 'Custom' }],
+    onChange: (v) => {
+      const prefill = v === 'custom' && !api.state()?.settings.agingDays ? { agingDays: { ...NORMAL_STAGE_DAYS } } : {};
+      setSim({ aging: v, ...prefill });
+      refreshCustom();
+      agingHint.textContent = agingText();
+      sh.sound('toggle');
+    },
+  });
+  if (!sim) for (const b of aging.el.querySelectorAll('button')) b.disabled = true;
+  const agingText = (): string => {
+    const mode = agingNow();
+    const s = api.state()?.settings;
+    if (!s || mode === 'off') return 'Nobody ages: everybody stays in their life stage. "Age up now" at a birthday cake still works.';
+    const days = (['baby', 'toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'] as LifeStage[]).map((st) => stageLength(s, st) ?? 0);
+    return `Days per stage: baby ${days[0]}, toddler ${days[1]}, child ${days[2]}, teen ${days[3]}, young adult ${days[4]}, adult ${days[5]}, elder ${days[6]}.`;
+  };
+  const agingHint = h('p', { class: 'muted-note aging-hint', text: agingText() });
+  for (const stage of STAGE_ORDER) {
+    const cur = () => api.state()?.settings.agingDays?.[stage] ?? NORMAL_STAGE_DAYS[stage];
+    const sl = slider({
+      label: `${STAGE_LABELS[stage]} (days)`, min: MIN_STAGE_DAYS, max: 40, step: 1, value: Math.min(40, cur()), format: (v) => `${Math.round(v)} days`,
+      onInput: (v) => { setSim({ agingDays: { [stage]: Math.min(MAX_STAGE_DAYS, v) } }); agingHint.textContent = agingText(); },
+    });
+    customBox.append(sl.el);
+  }
+  refreshCustom();
+  const endOfLife = toggleSwitch({
+    label: 'Elders pass away peacefully', hint: 'At the end of the elder stage an elder passes away; the family remembers. Off: elders stay elders.',
+    value: sim?.elderEndOfLife ?? false, disabled: !sim, onChange: (on) => { setSim({ elderEndOfLife: on }); sh.sound('toggle'); },
+  });
+  if (!sim) endOfLife.setDisabled(true, noGame);
+
   const stats = toggleSwitch({ label: 'Performance overlay', hint: 'Frame rate, draw calls and simulation timing.', value: cfg().showStats, onChange: (on) => { set({ showStats: on }); sh.sound('toggle'); } });
   const tutorial = toggleSwitch({ label: 'Tutorial', hint: 'Show the Guided Start checklist.', value: cfg().tutorial, onChange: (on) => { set({ tutorial: on }); sh.sound('toggle'); } });
 
@@ -64,6 +105,7 @@ export function openSettings(sh: Shell): void {
     section('Sound', 'sound', vol('Master volume', 'masterVolume').el, vol('Sound effects', 'soundVolume').el, vol('Music', 'musicVolume').el),
     section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el),
     section('Household life', 'people', autonomy.el, level.el, visitors.el, sim?.unlimitedFunds ? h('p', { class: 'muted-note' }, icon('build', 18), h('span', { text: 'This world has unlimited building funds (Build Sandbox).' })) : null),
+    section('Aging and family', 'family', aging.el, agingHint, customBox, endOfLife.el),
     section('Help', 'info', tutorial.el, stats.el,
       h('details', { class: 'shortcuts' }, h('summary', { text: 'Keyboard shortcuts' }),
         h('dl', { class: 'facts' },

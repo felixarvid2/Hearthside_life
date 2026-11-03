@@ -105,7 +105,7 @@ function itemGoal(ctx: SimCtx, p: Person, a: ActionInstance, item: WorldItem, la
   if (onSurface) return usePointGoal(ctx, p, a, 'use');
   const x = a.data.useX, z = a.data.useZ;
   if (typeof x !== 'number' || typeof z !== 'number') return `The ${label} is gone.`;
-  return { kind: 'tile', tile: { x, z }, face: { x: item.position.x, z: item.position.z }, label };
+  return { kind: 'tile', tile: { x, z, level: item.position.level }, face: { x: item.position.x, z: item.position.z }, label };
 }
 
 function playable(ctx: SimCtx, p: Person): boolean {

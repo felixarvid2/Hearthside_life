@@ -1,0 +1,33 @@
+/* ---------- Family and life stages (Milestone 8) ---------- */
+.stage-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; background: var(--paper-2); border: 2px solid var(--line); color: var(--ink-2); }
+.stage-chip:empty { display: none; }
+.stage-chip.stage-big { font-size: 0.95rem; border-color: var(--accent-2); color: var(--ink); }
+.family-stage { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); align-items: flex-start; }
+.family-stage .pbar { width: 100%; }
+.family-stage-main { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.family-birthday { font-weight: 700; color: var(--ink-2); font-size: 0.9rem; }
+.pp-tree { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 4px; }
+.pp-tree .cr-tree-scroll { overflow-x: auto; }
+.relative-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.relative-row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.relative-name { font-weight: 800; }
+.relative-meta { color: var(--ink-2); font-size: 0.8rem; flex-basis: 100%; }
+.family-actions { justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+.school-facts dd { overflow-wrap: anywhere; }
+
+/* Dialogs: adopt a child, move out or in */
+.adopt-dialog .modal-body, .split-dialog .modal-body { display: flex; flex-direction: column; gap: 12px; }
+.adopt-intro { display: flex; gap: 8px; align-items: flex-start; margin: 0; color: var(--ink-2); font-size: 0.9rem; }
+.adopt-name-row { display: flex; gap: 8px; align-items: center; }
+.adopt-name-row .text-input { flex: 1; min-width: 0; }
+.adopt-fee { margin: 0; font-weight: 700; font-size: 0.9rem; }
+.adopt-note { margin: 0; color: var(--ink-2); font-size: 0.88rem; min-height: 1.2em; }
+.adopt-note.is-bad { color: var(--critical); font-weight: 700; }
+.split-who, .split-where { display: flex; flex-wrap: wrap; gap: 6px; }
+.split-lines { margin: 0; padding-left: 18px; font-size: 0.88rem; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+
+/* Settings: custom aging */
+.aging-custom { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; }
+.aging-custom[hidden] { display: none; }
+.aging-hint { margin: 0 0 6px; }
+.split-dialog .chip, .adopt-dialog .seg { min-height: 44px; }

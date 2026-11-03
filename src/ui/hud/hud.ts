@@ -11,6 +11,7 @@ import { h, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { layout, onLayoutChange } from '../kit/layout';
 import { tripFromState, tripView } from './neighbourhoodModel';
+import { createLevelSelector } from './levelSelector';
 import { createStrip } from './strip';
 import type { Shell } from './shell';
 
@@ -127,17 +128,27 @@ export function createHud(sh: Shell): Hud {
 
   // ---- camera ----
   const wallsBtn = toolBtn({ icon: 'wallsCut', label: 'Cutaway', className: 'walls-btn', onClick: () => { api.view.setCutaway(CUTAWAY[api.view.cutaway()].next); sh.sound('toggle'); onCamera(); } });
+  // Milestone 9: roofs on or off (they only draw with the walls up, or while a roof tool is open in Build)
+  const roofBtn = toolBtn({ icon: 'roof', label: 'Roof', className: 'roof-btn', onClick: () => {
+    api.view.setRoofsVisible?.(!(api.view.roofsVisible?.() ?? true));
+    sh.sound('toggle');
+    onCamera();
+  } });
+  roofBtn.hidden = !api.view.setRoofsVisible;
   const centreBtn = toolBtn({ icon: 'center', label: 'Centre', className: 'centre-btn', onClick: () => { const id = api.selected(); if (id) { api.view.focusPerson(id); sh.sound('click'); } } });
   const zoomAtCentre = (f: number) => {
     const c = document.getElementById('game-canvas')?.getBoundingClientRect();
     api.view.zoomAt(f, (c?.width ?? window.innerWidth) / 2, (c?.height ?? window.innerHeight) / 2);
   };
+  // Milestone 9: the floor selector (src/ui/hud/levelSelector.ts)
+  const levelSel = createLevelSelector(api, (id) => sh.sound(id));
   const camBtns = [
     toolBtn({ icon: 'rotateLeft', label: 'Turn left', onClick: () => { api.view.rotate(-1); sh.sound('click'); } }),
     toolBtn({ icon: 'rotateRight', label: 'Turn right', onClick: () => { api.view.rotate(1); sh.sound('click'); } }),
     toolBtn({ icon: 'zoomIn', label: 'Zoom in', onClick: () => { zoomAtCentre(1.25); sh.sound('click'); } }),
     toolBtn({ icon: 'zoomOut', label: 'Zoom out', onClick: () => { zoomAtCentre(0.8); sh.sound('click'); } }),
     wallsBtn,
+    roofBtn,
     centreBtn,
   ];
   const camGroup = h('div', { class: 'camera-bar', role: 'group', ariaLabel: 'Camera' }, ...camBtns);
@@ -157,6 +168,8 @@ export function createHud(sh: Shell): Hud {
     portraitLayout = portrait;
     const spacer = () => h('div', { class: 'hud-spacer' });
     if (portrait) {
+      // the floor selector is the last of the camera cluster: it stays on screen above an open sheet when the rest does not fit (hud.css)
+      camGroup.append(levelSel.el);
       topBar.replaceChildren(menuBtn, clock, spacer(), speedGroup, pausedNote);
       row2.replaceChildren(strip.el, spacer(), fundsBtn);
       bottomBar.replaceChildren(modeBar, spacer(), mapBtn, feedBtn);
@@ -164,7 +177,8 @@ export function createHud(sh: Shell): Hud {
       row2.hidden = false;
       cluster.hidden = false;
     } else {
-      topBar.replaceChildren(menuBtn, clock, speedGroup, pausedNote, spacer(), mapBtn, feedBtn, fundsBtn);
+      // landscape: the floor selector sits in the top bar (the bottom bar is full with the member strip, modes and camera)
+      topBar.replaceChildren(menuBtn, clock, speedGroup, pausedNote, levelSel.el, spacer(), mapBtn, feedBtn, fundsBtn);
       bottomBar.replaceChildren(strip.el, modeBar, camGroup);
       row2.replaceChildren();
       row2.hidden = true;
@@ -259,6 +273,12 @@ export function createHud(sh: Shell): Hud {
       wallsBtn.setAttribute('aria-label', t);
       wallsBtn.title = t;
     }
+    const roofsOn = api.view.roofsVisible?.() ?? true;
+    roofBtn.setAttribute('aria-pressed', String(roofsOn));
+    toggleClass(roofBtn, 'is-active', roofsOn);
+    const rt = roofsOn ? 'Roofs shown when the walls are up (tap to hide)' : 'Roofs hidden (tap to show)';
+    roofBtn.setAttribute('aria-label', rt);
+    roofBtn.title = rt;
   };
 
   const updateCentre = () => {

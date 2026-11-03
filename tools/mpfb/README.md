@@ -18,6 +18,43 @@ Iterating without touching the game's files: `node --experimental-strip-types to
 Blender options of `build_body.py` (after `--`): `--no-morphs`, `--no-face-morphs`, `--face-amp`, `--stylise 0` (plain MakeHuman face),
 `--smooth N`, `--smooth-shoulders`.
 
+## Life stages (Milestone 8)
+
+`npm run assets:mpfb` also builds the people of the other life stages with MakeHuman's age macro, in the same GLB format 2
+(`--stage=baby,toddler,child,teen,elder` builds only those; `--stage=adult` the two adults):
+
+| Stage | File | Age macro (years) | Height | Underwear |
+|---|---|---|---|---|
+| baby | `mpfb_baby.glb` (one body for both sexes) | 0 (1) | 0.68 m | generated diaper (white) |
+| toddler | `mpfb_toddler_{f,m}.glb` | 0.0375 (3) | 0.93 m | generated briefs |
+| child | `mpfb_child_{f,m}.glb` | 0.13 (8) | 1.28 m | generated briefs |
+| teen | `mpfb_teen_{f,m}.glb` | 0.28 (15) | 1.60 / 1.66 m | like the adults (CC0 MakeHuman set for girls, generated trunks for boys) |
+| elder | `mpfb_elder_{f,m}.glb` | 0.92 (about 80) | 1.66 / 1.76 m | like the adults |
+| youngAdult | the adult GLB | | 1.80 m | the game adds a younger face (`CharacterView`: `STAGE_FACE`, face morphs) |
+
+How a stage body differs from an adult one:
+
+* **Skeleton.** Same 65 joints in the same order with the adult rest rotations, so the clips' rotation tracks play unchanged. Every
+  joint's local translation is scaled by a factor (`joint_scale` in Blender's manifest): the ratio of that bone in the stage's
+  MakeHuman rig to the same bone of the adult MakeHuman rig (a child's head is bigger and its legs shorter than an adult's scaled
+  down), times one factor that brings the body to the stage height. `build_body.py` fits the mesh to these joints with the same
+  retarget as the adults, the node step writes the scaled skeleton and recomputes the skin's inverse bind matrices. The game scales
+  the clips' only translation tracks (`root.position`, `pelvis.position`) by the stage's pelvis ratio (`retargetClips` in
+  `src/characters/assets.ts`), so children are neither stretched to adult bone lengths nor sunk into the floor.
+* **Morphs.** The same names; babies, toddlers and children lack the adult body shapes that make no sense on them (`bust_*`, `waist_wide`,
+  `hips_wide`, `shoulders_wide`), the others have all 24. Detail targets are scaled to the stage (`STAGES[...]["detail"]`), morph deltas
+  are rounded to 0.12 mm (the files are about a third smaller). The face morphs are the same 14.
+* **Underwear.** Generated from the skin mesh like the men's trunks (`make_trunks`, now with a `UW_PARAMS` table: waistband rise, hem,
+  slanted leg openings, stand-off), so it follows every morph and costs no licence; CC0 like the base mesh.
+* **Budget.** About 420-760 kB each (meshopt), 12-14k triangles.
+* **In the game.** `src/characters/stages.ts` (heights, file names), `assets.ts` (`requestStageBody` loads a stage's body on first use,
+  `resolveBody`, `retargetClips`), `CharacterView` (stage, scale fallback, face of the youngAdult, stoop, cradle), `stagePose.ts`
+  (stoop, cradle arms, cadence), `posture.ts` (seat and lying anchors by stage). Classic and detailed styles scale the adult rig uniformly.
+
+Screenshots: `node dev/mpfb/shootStages.mjs --plan=single|lineup|faces|sit|walk|held` (raw PNGs in `dev/mpfb/shots/raw`, gitignored), then
+`node dev/mpfb/composeStages.mjs` writes the JPGs kept in `dev/mpfb/shots/` (`stages_*.jpg`). `--plan=measure` measures the seated and lying
+anchors of every body (`dev/mpfb/out/stage-anchors.json`, copied into `STAGE_SEATED` / `STAGE_LYING` in `posture.ts`).
+
 ## Install (once, outside the repo)
 
 ```sh
