@@ -63,14 +63,14 @@ describe('staircase objects in ObjectsView', () => {
 });
 
 describe('staircase models after a purge', () => {
-  it('a runtime model purged by a lot change is built again on the next load', async () => {
+  it('a lot change never purges a runtime model, and loading it again still works', async () => {
     const assets = new ObjectAssets('./assets/');
     expect(await assets.load('proc:stair-straight-1x3')).not.toBeNull();
     await new Promise((r) => setTimeout(r, 0));
-    expect(assets.purgeUnused()).toBe(1);
-    expect(assets.isLoaded('proc:stair-straight-1x3')).toBe(false);
-    expect(await assets.load('proc:stair-straight-1x3')).not.toBeNull();
+    expect(assets.purgeUnused()).toBe(0); // runtime models are kept
     expect(assets.isLoaded('proc:stair-straight-1x3')).toBe(true);
+    expect(assets.purgeUnused(new Set())).toBe(0);
+    expect(await assets.load('proc:stair-straight-1x3')).not.toBeNull();
   });
 });
 

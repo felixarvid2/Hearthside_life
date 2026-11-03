@@ -219,7 +219,8 @@ export class ObjectAssets {
   purgeUnused(keep: ReadonlySet<string> = new Set()): number {
     let n = 0;
     for (const [asset, tpl] of this.templates) {
-      if (tpl.refs > 0 || keep.has(asset)) continue;
+      // runtime-built models (stairs) are small and may have been built synchronously during the same lot change
+      if (tpl.refs > 0 || keep.has(asset) || isProceduralAsset(asset)) continue;
       tpl.scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose(); });
       const all = [...tpl.base.values(), ...[...tpl.sets.values()].flatMap((s) => [...s.values()]), ...(tpl.ghost ? [...tpl.ghost.values()] : [])];
       for (const m of all) { this.lampMaterials.delete(m); m.dispose(); }
