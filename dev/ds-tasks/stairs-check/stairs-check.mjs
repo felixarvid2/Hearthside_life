@@ -91,8 +91,16 @@ async function main() {
     });
     log('setup', JSON.stringify(setup).slice(0, 600));
     report.setup = setup;
+    // the household travels 20-40 game minutes; the active lot switches on arrival
+    const arrived = await page.evaluate(() => {
+      const d = window.hearthside.debug;
+      const want = window.hearthside.game.neighbourhood().lots.find((l) => /Hazelbank/.test(l.name)).id;
+      for (let i = 0; i < 400; i++) { d.step(30); if (d.state().activeLotId === want) return i; }
+      return -1;
+    });
+    log('arrival after chunks of 30 ticks:', arrived);
     await page.waitForTimeout(1500);
-    await frames(10);
+    await frames(20);
 
     const info = await page.evaluate(() => {
       const st = window.hearthside.debug.state();

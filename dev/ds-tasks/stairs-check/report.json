@@ -1,0 +1,63 @@
+{
+  "shots": [],
+  "diag": {},
+  "errors": [],
+  "setup": {
+    "lot": {
+      "id": "lot_3f",
+      "name": "Hazelbank House",
+      "tenure": "for-sale",
+      "price": 2100000,
+      "rent": null
+    },
+    "preview": {
+      "ok": true,
+      "lotId": "lot_3f",
+      "mode": "buy",
+      "cost": 2100000,
+      "proceeds": 2897200,
+      "lines": [
+        "Hazelbank House costs $21000.00. You will own it, and pay property tax on it.",
+        "Your home Wren Cottage is sold for $28972.00 (80 % of its value). The furniture stays with the house.",
+        "Everyone who is with you travels there (20 to 40 minutes); anyone at work comes home to the new place."
+      ]
+    },
+    "move": {
+      "ok": false,
+      "reason": "Not enough household funds."
+    }
+  },
+  "info": {
+    "lot": "Wren Cottage",
+    "levels": 1,
+    "stairs": [],
+    "members": [
+      {
+        "id": "per_2w",
+        "name": "Theo",
+        "loc": {
+          "kind": "lot",
+          "lotId": "lot_1",
+          "level": 0,
+          "x": 8.5,
+          "z": 15.5,
+          "facing": 3.141592653589793,
+          "posture": "standing"
+        }
+      },
+      {
+        "id": "per_2x",
+        "name": "Sasha",
+        "loc": {
+          "kind": "lot",
+          "lotId": "lot_1",
+          "level": 0,
+          "x": 7.5,
+          "z": 16.5,
+          "facing": 3.141592653589793,
+          "posture": "standing"
+        }
+      }
+    ]
+  }
+}
