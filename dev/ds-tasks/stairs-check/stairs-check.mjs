@@ -16,7 +16,8 @@ const root = resolve(here, '../../..');
 const LOCK = '/tmp/hearthside-browser.lock';
 const PORT = 5197;
 const DIST = process.env.STAIRS_DIST || '/tmp/claude-0/stairs-check-dist';
-const SHOTS = join(here, 'shots');
+const PATCH = process.env.STAIRS_PATCH === '1'; // in-page experiment: drop the stale pending entry, reload the stair model, resync
+const SHOTS = join(here, PATCH ? 'shots-patched' : 'shots');
 
 if (!process.env.HEARTHSIDE_E2E_LOCKED) {
   const r = spawnSync('flock', [LOCK, process.execPath, fileURLToPath(import.meta.url), ...process.argv.slice(2)], {
@@ -72,7 +73,8 @@ async function main() {
     const frames = (n = 4, dt = 1 / 30) => page.evaluate(([n2, dt2]) => { for (let i = 0; i < n2; i++) window.hearthside.debug.frame(dt2); }, [n, dt]);
     const shot = async (name, clip) => {
       await frames(6);
-      await page.screenshot({ path: join(SHOTS, `${name}.jpg`), type: 'jpeg', quality: 72, ...(clip ? { clip } : {}) });
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).catch(() => undefined);
+      try { await page.screenshot({ path: join(SHOTS, `${name}.jpg`), type: 'jpeg', quality: 72, timeout: 120000, ...(clip ? { clip } : {}) }); } catch (e) { report.errors.push(`shot ${name}: ${String(e.message).split('\n')[0]}`); log('SHOT FAILED', name); return; }
       report.shots.push(name);
       log('shot', name);
     };
@@ -86,7 +88,7 @@ async function main() {
       const n = g.neighbourhood();
       const lot = n.lots.find((l) => /Hazelbank/.test(l.name));
       const out = { lot: lot ? { id: lot.id, name: lot.name, tenure: lot.tenure, price: lot.price, rent: lot.rent } : null };
-      if (lot) { out.preview = g.movePreview(lot.id); out.move = g.moveHousehold(lot.id); }
+      if (lot) { const st = window.hearthside.debug.state(); st.households[st.activeHouseholdId].funds = 10000000; /* in-page only: enough to buy the house */ out.preview = g.movePreview(lot.id); out.move = g.moveHousehold(lot.id); }
       return out;
     });
     log('setup', JSON.stringify(setup).slice(0, 600));
@@ -113,6 +115,14 @@ async function main() {
     log('active lot', info.lot, 'levels', info.levels, 'stairs', JSON.stringify(info.stairs));
     if (!info.stairs.length) throw new Error('no stair on the active lot');
     const stair = info.stairs[0];
+    const asset = await page.evaluate((d) => window.hearthside.game.content.objects[d].model.asset, stair.defId);
+    report.state = await page.evaluate((a) => { const v = window.hearthside.view; const e = [...v.objects.objects.values()].find((x) => x.def.stair); return { asset: a, isLoaded: v.objectAssets.isLoaded(a), hasFailed: v.objectAssets.hasFailed(a), stalePending: v.objectAssets.pending.has(a), placeholder: e?.placeholder, hasModel: !!e?.model }; }, asset);
+    log('asset state before any patch', JSON.stringify(report.state));
+    if (PATCH) {
+      report.patched = await page.evaluate(async (a) => { const v = window.hearthside.view; v.objectAssets.pending.delete(a); await v.objectAssets.load(a); v.objects.sync(window.hearthside.game.gameView.lot ?? v.lot); const e = [...v.objects.objects.values()].find((x) => x.def.stair); return { isLoaded: v.objectAssets.isLoaded(a), placeholder: e?.placeholder, hasModel: !!e?.model }; }, asset);
+      log('patched', JSON.stringify(report.patched));
+      await frames(10);
+    }
     const cx = stair.x + 0.5, cz = stair.z + 1.5; // 1 x 3 stair at rot 0
 
     // diagnostics: is the stair group in the scene, visible, and where is its box
@@ -209,7 +219,7 @@ async function main() {
     }
     await context.close();
   } finally {
-    writeFileSync(join(here, 'report.json'), JSON.stringify(report, null, 2));
+    writeFileSync(join(here, PATCH ? 'report-patched.json' : 'report.json'), JSON.stringify(report, null, 2));
     await browser?.close().catch(() => undefined);
     server.kill('SIGTERM');
   }

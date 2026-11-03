@@ -1,6 +1,292 @@
 {
-  "shots": [],
-  "diag": {},
+  "shots": [
+    "01-floor1-cutaway",
+    "02-floor1-walls-up",
+    "03-floor2-stairwell-cutaway",
+    "04-floor2-stairwell-walls-up",
+    "05-floor2-stairwell-cutaway-rot2",
+    "06-climb-0-floor1-view",
+    "06-climb-1-floor1-view",
+    "07-climb-1-floor2-view",
+    "06-climb-2-floor1-view",
+    "08-floor2-after-climb"
+  ],
+  "diag": {
+    "floor1Cutaway": {
+      "label": "floor1 cutaway",
+      "found": true,
+      "visible": true,
+      "meshes": 0,
+      "tris": 0,
+      "mats": [],
+      "level": 0,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421348983,
+        "y": 412.88540748695755,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086578651012,
+        "y": -7.394191103982557,
+        "visible": true
+      }
+    },
+    "floor1Up": {
+      "label": "floor1 walls up",
+      "found": true,
+      "visible": true,
+      "meshes": 0,
+      "tris": 0,
+      "mats": [],
+      "level": 0,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421348983,
+        "y": 412.88540748695755,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086578651012,
+        "y": -7.394191103982557,
+        "visible": true
+      }
+    },
+    "floor2Cutaway": {
+      "label": "floor2 cutaway",
+      "found": true,
+      "visible": true,
+      "meshes": 0,
+      "tris": 0,
+      "mats": [],
+      "level": 1,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421348984,
+        "y": 700.394191103983,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086578651012,
+        "y": 280.1145925130429,
+        "visible": true
+      }
+    },
+    "floor2Up": {
+      "label": "floor2 walls up",
+      "found": true,
+      "visible": true,
+      "meshes": 0,
+      "tris": 0,
+      "mats": [],
+      "level": 1,
+      "box": {
+        "min": [
+          9,
+          0,
+          13
+        ],
+        "max": [
+          10,
+          3,
+          16
+        ]
+      },
+      "foot": {
+        "x": 529.6913421348984,
+        "y": 700.394191103983,
+        "visible": true
+      },
+      "head": {
+        "x": 750.3086578651012,
+        "y": 280.1145925130429,
+        "visible": true
+      }
+    },
+    "climb0": {
+      "loc": {
+        "x": 9.5,
+        "z": 15.250000000000007,
+        "level": 0,
+        "rise": 0.75
+      },
+      "personPos": {
+        "x": 12.5,
+        "z": 20.30000000000001,
+        "y": 0
+      },
+      "sc": {
+        "x": 640.0000000000007,
+        "y": 162.0151971790751,
+        "visible": true
+      },
+      "vis": null,
+      "stair": {
+        "label": "climb 0",
+        "found": true,
+        "visible": true,
+        "meshes": 0,
+        "tris": 0,
+        "mats": [],
+        "level": 0,
+        "box": {
+          "min": [
+            9,
+            0,
+            13
+          ],
+          "max": [
+            10,
+            3,
+            16
+          ]
+        },
+        "foot": {
+          "x": 585.5527778486372,
+          "y": 379.2671562595873,
+          "visible": true
+        },
+        "head": {
+          "x": 842.9396462005406,
+          "y": -111.05904209650987,
+          "visible": false
+        }
+      }
+    },
+    "climb1": {
+      "loc": {
+        "x": 9.5,
+        "z": 14.500000000000007,
+        "level": 0,
+        "rise": 1.5
+      },
+      "personPos": {
+        "x": 9.5,
+        "z": 15.250000000000007,
+        "y": 0.75
+      },
+      "sc": {
+        "x": 640.0000000000007,
+        "y": 78.15846862410932,
+        "visible": true
+      },
+      "vis": null,
+      "stair": {
+        "label": "climb 1",
+        "found": true,
+        "visible": true,
+        "meshes": 0,
+        "tris": 0,
+        "mats": [],
+        "level": 0,
+        "box": {
+          "min": [
+            9,
+            0,
+            13
+          ],
+          "max": [
+            10,
+            3,
+            16
+          ]
+        },
+        "foot": {
+          "x": 511.3065658240498,
+          "y": 423.94964206811636,
+          "visible": true
+        },
+        "head": {
+          "x": 768.693434175953,
+          "y": -66.37655628798079,
+          "visible": false
+        }
+      }
+    },
+    "climb2": {
+      "loc": {
+        "x": 9.5,
+        "z": 13.000000000000007,
+        "level": 0,
+        "rise": 2.75
+      },
+      "personPos": {
+        "x": 9.5,
+        "z": 14.500000000000007,
+        "y": 1.5
+      },
+      "sc": {
+        "x": 640.0000000000006,
+        "y": -61.60274563416678,
+        "visible": false
+      },
+      "vis": null,
+      "stair": {
+        "label": "climb 2",
+        "found": true,
+        "visible": true,
+        "meshes": 0,
+        "tris": 0,
+        "mats": [],
+        "level": 0,
+        "box": {
+          "min": [
+            9,
+            0,
+            13
+          ],
+          "max": [
+            10,
+            3,
+            16
+          ]
+        },
+        "foot": {
+          "x": 362.81414177487466,
+          "y": 513.3146136851745,
+          "visible": true
+        },
+        "head": {
+          "x": 620.201010126778,
+          "y": 22.98841532907741,
+          "visible": true
+        }
+      }
+    }
+  },
   "errors": [],
   "setup": {
     "lot": {
@@ -18,31 +304,50 @@
       "proceeds": 2897200,
       "lines": [
         "Hazelbank House costs $21000.00. You will own it, and pay property tax on it.",
-        "Your home Wren Cottage is sold for $28972.00 (80 % of its value). The furniture stays with the house.",
+        "Your home Blue Door House is sold for $28972.00 (80 % of its value). The furniture stays with the house.",
         "Everyone who is with you travels there (20 to 40 minutes); anyone at work comes home to the new place."
       ]
     },
     "move": {
-      "ok": false,
-      "reason": "Not enough household funds."
+      "ok": true
     }
   },
   "info": {
-    "lot": "Wren Cottage",
-    "levels": 1,
-    "stairs": [],
+    "lot": "Hazelbank House",
+    "levels": 2,
+    "stairs": [
+      {
+        "id": "obj_6c",
+        "defId": "stair-straight-basic",
+        "level": 0,
+        "x": 9,
+        "z": 13,
+        "rot": 0,
+        "finishes": {
+          "wood": "honey-oak",
+          "rail": "white"
+        },
+        "purchasePrice": 120000,
+        "boughtAt": -960,
+        "ownerHouseholdId": "hh_2",
+        "condition": {
+          "dirt": 0,
+          "broken": false
+        }
+      }
+    ],
     "members": [
       {
         "id": "per_2w",
         "name": "Theo",
         "loc": {
           "kind": "lot",
-          "lotId": "lot_1",
+          "lotId": "lot_3f",
           "level": 0,
-          "x": 8.5,
-          "z": 15.5,
+          "x": 12.5,
+          "z": 20.30000000000001,
           "facing": 3.141592653589793,
-          "posture": "standing"
+          "posture": "walking"
         }
       },
       {
@@ -50,14 +355,33 @@
         "name": "Sasha",
         "loc": {
           "kind": "lot",
-          "lotId": "lot_1",
+          "lotId": "lot_3f",
           "level": 0,
-          "x": 7.5,
-          "z": 16.5,
-          "facing": 3.141592653589793,
+          "x": 12.5,
+          "z": 22.5,
+          "facing": 3.1891757568667765,
           "posture": "standing"
         }
       }
     ]
-  }
+  },
+  "walker": "per_2w",
+  "goTo": {
+    "ok": true
+  },
+  "climbSamples": [
+    {
+      "x": 12.5,
+      "z": 19.89999999999999,
+      "level": 0,
+      "rise": 0
+    },
+    {
+      "x": 9.5,
+      "z": 13.000000000000007,
+      "level": 0,
+      "rise": 2.75
+    }
+  ],
+  "maxRise": 2.75
 }
