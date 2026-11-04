@@ -44,6 +44,7 @@ import type { NeighbourhoodInfo } from './neighbourhoodView';
 import { placeOf } from './places';
 import type { PersonPlace } from './places';
 import { reconcileStrays, runLightWorld } from './townlife';
+import { ensureWeather, updateWeatherMoods } from './weather';
 import { ageUp, dailyAging } from './aging';
 import { adopt, adoptionPreview } from './adoption';
 import type { AdoptionPreview, AdoptionSpec, AdoptResult } from './adoption';
@@ -119,6 +120,8 @@ export class Simulation {
     const ctx = this.makeCtx(state);
     const day = dayIndex(ctx.now);
     if (day !== prevDay) this.dailyRollover(ctx, day);
+    // Seasons and weather: keep the stored plan current (half-day boundaries roll the current weather).
+    ensureWeather(ctx);
     // 2. Schedule
     ensureFirstVisit(ctx);
     processSchedule(ctx);
@@ -139,6 +142,7 @@ export class Simulation {
     // 6b. Accidents and the moods of a clean or messy home
     runHousekeeping(ctx);
     // 7. Moodlets, thoughts, aspirations, meals
+    updateWeatherMoods(ctx);
     for (const p of people) {
       expireMoodlets(p, ctx.now);
       if (p.thought && p.thought.until <= ctx.now) p.thought = null;
@@ -152,6 +156,11 @@ export class Simulation {
     spoilMeals(ctx);
     this.events.emit({ type: 'tick', minutes: ctx.now });
     this.lastTickMs = performance.now() - t0;
+  }
+
+  /** Re-plans the weather after a settings change (weather off clears it; turning it back on rerolls today). */
+  refreshWeather(): void {
+    ensureWeather(this.ctx(), true);
   }
 
   private dailyRollover(ctx: SimCtx, day: number): void {
@@ -182,6 +191,16 @@ export class Simulation {
     const source = req.source ?? 'player';
     if (source === 'player' && p.isNpc) return { ok: false, reason: `${p.firstName} decides for themself.` };
     if (!behaviorOf(ctx, req.interactionId)) return { ok: false, reason: 'That interaction is not available.' };
+    // Milestone 12: Get Out is not queued behind the swim; it cancels the running pool action, which then climbs out.
+    if (req.interactionId === 'getOutOfPool') {
+      const head = p.queue[0];
+      if (!head || (head.interactionId !== 'swimInPool' && head.interactionId !== 'relaxInPool')) {
+        return { ok: false, reason: `${p.firstName} isn't in the pool.` };
+      }
+      if (head.phase === 'queued') requestCancel(ctx, p, head.id);
+      else head.cancelRequested = true;
+      return { ok: true, actionId: head.id };
+    }
     const startsNow = !p.queue.some((x) => x.source !== 'autonomy');
     const reason = requestReason(ctx, p, req, startsNow);
     if (reason) return { ok: false, reason };

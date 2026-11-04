@@ -326,7 +326,10 @@ export class PeopleView {
       e.align += Math.sign(target - e.align) * Math.min(Math.abs(target - e.align), reducedMotion ? 1 : dt / 0.6);
       if (!lowered && !slot) e.slot = target === 0 && e.align === 0 ? null : e.slot;
       const ground = this.floorY(e.id, loc, x, z, dt, reducedMotion);
-      let rx = x, rz = z, ry = ground, rot = e.facing;
+      // Milestone 12: swimmers sit in the water, only head and shoulders above the surface.
+      const swimming = p.anim.id === 'swim' || p.anim.id === 'float';
+      const sink = swimming ? 0.92 * Math.max(e.view.stageHeight / 1.8, 0.55) : 0;
+      let rx = x, rz = z, ry = ground - sink, rot = e.facing;
       const s = e.slot;
       const sy = levelY(s?.level ?? 0); // slot heights are above the floor of their level
       // the body of the person's life stage sits and lies lower (children) or on a mat (babies): see characters/posture.ts
@@ -359,7 +362,7 @@ export class PeopleView {
       e.view.root.position.set(rx, ry, rz);
       e.view.root.rotation.y = rot;
       e.shadow.position.set(rx, ground + 0.012, rz);
-      e.shadow.visible = e.align < 0.5;
+      e.shadow.visible = e.align < 0.5 && !swimming;
       const w = 0.3 * Math.max(k, 0.55);
       e.box.min.set(rx - w, ry, rz - w);
       e.box.max.set(rx + w, ry + (posture === 'lying' ? 0.6 : posture === 'seated' ? 1.35 : 1.85) * Math.max(k, 0.4), rz + w);
@@ -373,7 +376,7 @@ export class PeopleView {
       // the character's own selection ring sits at the root: hide it on seats and in bed
       if (e.id === this.selected) {
         const ring = e.view.root.getObjectByName('selection');
-        if (ring) ring.visible = e.align < 0.5;
+        if (ring) ring.visible = e.align < 0.5 && !swimming;
       }
     }
     // babies in somebody's arms lie across the cradling forearms of the carrier (placed after the carrier moved this frame)

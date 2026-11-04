@@ -7,6 +7,7 @@ import type { Lot } from '../core/types';
 import type { GameEvent } from '../core/events';
 import { FenceView } from './fenceView';
 import { GardenView } from './gardenView';
+import { PoolView } from './poolView';
 import { RoofView } from './roofView';
 import { TerrainView } from './terrainView';
 
@@ -19,6 +20,8 @@ export class ExteriorView {
   readonly roofs: RoofView;
   readonly terrain: TerrainView;
   readonly gardens: GardenView;
+  /** Milestone 12: basins, water and ladders. */
+  readonly pools: PoolView;
   private lot: Lot | null = null;
   private view = { enabled: true, walls: 'cutaway' as WallMode, level: 99, editing: false };
 
@@ -28,7 +31,8 @@ export class ExteriorView {
     this.roofs = new RoofView(content);
     this.terrain = new TerrainView(content);
     this.gardens = new GardenView(content);
-    this.group.add(this.terrain.group, this.fences.group, this.gardens.group, this.roofs.group);
+    this.pools = new PoolView(content);
+    this.group.add(this.terrain.group, this.fences.group, this.gardens.group, this.pools.group, this.roofs.group);
   }
 
   /** Everything for a lot (or nothing). */
@@ -39,6 +43,7 @@ export class ExteriorView {
     this.fences.build(lot);
     this.roofs.build(lot);
     this.gardens.sync(lot, true);
+    this.pools.build(lot);
     this.apply();
   }
 
@@ -50,11 +55,15 @@ export class ExteriorView {
     if (what === 'fences' || what === 'all') this.fences.build(lot);
     if (what === 'roofs' || what === 'all' || what === 'walls' || what === 'floors') this.roofs.build(lot);
     if (what === 'objects' || what === 'all' || what === 'floors') this.gardens.sync(lot, true);
+    if (what === 'pools' || what === 'all') this.pools.build(lot);
     this.apply();
   }
 
   /** A crop bed changed (planted, watered, grown, harvested). */
   gardensChanged(): void { if (this.lot) this.gardens.sync(this.lot); }
+
+  /** Advances the water animation each frame. */
+  update(dt: number): void { this.pools.update(dt); }
 
   /** Camera settings: the wall mode, the roof toggle, the level in view and whether a roof tool is open. */
   setView(o: Partial<{ enabled: boolean; walls: WallMode; level: number; editing: boolean }>): void {
@@ -74,9 +83,10 @@ export class ExteriorView {
     this.fences.build({ fences: {} } as unknown as Lot);
     this.roofs.build({ roofs: {}, walls: {} } as unknown as Lot);
     this.gardens.sync({ objects: {} } as unknown as Lot, true);
+    this.pools.build({ pools: {} } as unknown as Lot);
   }
 
   dispose(): void {
-    this.terrain.dispose(); this.fences.dispose(); this.roofs.dispose(); this.gardens.dispose();
+    this.terrain.dispose(); this.fences.dispose(); this.roofs.dispose(); this.gardens.dispose(); this.pools.dispose();
   }
 }

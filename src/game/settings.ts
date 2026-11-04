@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   quality: 'high',
   characterStyle: 'mpfb', // 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback)
   shadows: true,
+  weatherEffects: true,
   showStats: false,
   tutorial: true,
 });
@@ -49,7 +50,7 @@ export function mergeSettings(base: GameSettings, patch: Partial<GameSettings> |
   if (ts !== null) out.textScale = clamp(ts, 0.9, 1.3);
   if (patch.quality === 'low' || patch.quality === 'high') out.quality = patch.quality;
   if (patch.characterStyle === 'mpfb' || patch.characterStyle === 'detailed' || patch.characterStyle === 'classic') out.characterStyle = patch.characterStyle;
-  for (const k of ['reducedMotion', 'shadows', 'showStats', 'tutorial'] as const) {
+  for (const k of ['reducedMotion', 'shadows', 'weatherEffects', 'showStats', 'tutorial'] as const) {
     if (typeof patch[k] === 'boolean') out[k] = patch[k] as boolean;
   }
   return out;

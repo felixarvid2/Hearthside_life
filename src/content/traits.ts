@@ -12,7 +12,7 @@
 // - enjoys: multiplies the need gains of interactions carrying that autonomy tag.
 // `effectText` is generated from `effects` (describeTraitEffects), so the UI text always matches the data.
 
-import type { NeedId } from '../core/types';
+import type { NeedId, WeatherKind } from '../core/types';
 import type { SocialCategory, TraitDef } from './types';
 import { INTERACTIONS } from './interactions';
 import { SOCIALS } from './socials';
@@ -42,6 +42,8 @@ function keyLabel(key: string): string {
 }
 
 /** Plain-English lines for exactly the given effects (used as TraitDef.effectText). */
+const WEATHER_LABELS: Record<WeatherKind, string> = { clear: 'Sunny', cloudy: 'Cloudy', rain: 'Rainy', snow: 'Snowy' };
+
 export function describeTraitEffects(e: TraitDef['effects']): string[] {
   const out: string[] = [];
   for (const [need, m] of Object.entries(e.needDecay ?? {})) {
@@ -63,6 +65,9 @@ export function describeTraitEffects(e: TraitDef['effects']): string[] {
   for (const [tag, m] of Object.entries(e.enjoys ?? {})) {
     out.push(`Gets ${pct(m)} ${m > 1 ? 'more' : 'less'} out of ${TAG_LABELS[tag] ?? tag} activities.`);
   }
+  for (const [kind, m] of Object.entries(e.weatherBias ?? {})) {
+    out.push(`${WEATHER_LABELS[kind as WeatherKind]} weather lifts their mood ${pct(m)} ${m > 1 ? 'more' : 'less'}.`);
+  }
   return out;
 }
 
@@ -79,7 +84,7 @@ export const TRAITS: TraitDef[] = [
     needDecay: { social: 0.7 }, autonomyBias: { social: 0.7, reading: 1.2 }, socialReceive: { romantic: -0.1 },
   }),
   trait('cheerful', 'Cheerful', 'social', 'sun', [], 'Finds the bright side of most things and loves a good joke.', {
-    needDecay: { fun: 0.85 }, socialReceive: { funny: 0.15 },
+    needDecay: { fun: 0.85 }, socialReceive: { funny: 0.15 }, weatherBias: { clear: 1.15 },
   }),
   trait('hot-tempered', 'Hot-Tempered', 'social', 'warning', ['patient'], 'Quick to anger and slow to back down.', {
     autonomyBias: { argue: 1.6, criticize: 1.4, insult: 1.3 }, socialReceive: { mean: -0.15, support: -0.05 }, workPerformance: -1,
@@ -117,6 +122,7 @@ export const TRAITS: TraitDef[] = [
   }),
   trait('green-thumb', 'Green Thumb', 'tidiness', 'sparkle', [], 'Happiest with soil under their nails.', {
     autonomyBias: { gardening: 1.7, waterPlant: 1.5, outdoor: 1.2 }, skillRate: { gardening: 1.35 }, enjoys: { gardening: 1.25 },
+    weatherBias: { rain: 1.15 },
   }),
   // --- Activity and energy
   trait('athletic', 'Athletic', 'energy', 'energy', ['lazy'], 'Happiest when moving and full of stamina.', {
@@ -158,6 +164,7 @@ export const TRAITS: TraitDef[] = [
   }),
   trait('daydreamer', 'Daydreamer', 'creativity', 'fun', ['practical'], 'Head in the clouds, but the clouds are interesting.', {
     autonomyBias: { creative: 1.3, watchClouds: 1.4 }, needDecay: { fun: 0.9 }, enjoys: { creative: 1.2 },
+    weatherBias: { cloudy: 1.15, snow: 1.1 },
   }),
   // --- Food and leisure
   trait('foodie', 'Foodie', 'leisure', 'hunger', [], 'Lives for the next great meal and loves to cook it.', {
@@ -174,13 +181,14 @@ export const TRAITS: TraitDef[] = [
   }),
   trait('outdoorsy', 'Outdoorsy', 'leisure', 'leaf', [], 'Inside is for sleeping; everything else is outside.', {
     autonomyBias: { outdoor: 1.5, goForJog: 1.4 }, skillRate: { fishing: 1.25 }, enjoys: { outdoor: 1.2, jog: 1.15 },
+    weatherBias: { clear: 1.2 },
   }),
   // --- Ambition and lifestyle
   trait('ambitious', 'Ambitious', 'lifestyle', 'briefcase', ['relaxed'], 'Driven to climb the ladder, even at the cost of downtime.', {
     needDecay: { fun: 1.1 }, autonomyBias: { skill: 1.3 }, workPerformance: 3,
   }),
   trait('relaxed', 'Relaxed', 'lifestyle', 'home', ['ambitious'], 'Takes life slowly. Work can wait until after the nap.', {
-    autonomyBias: { rest: 1.4, tv: 1.2, skill: 0.8 }, workPerformance: -1, enjoys: { rest: 1.2 },
+    autonomyBias: { rest: 1.4, tv: 1.2, skill: 0.8 }, workPerformance: -1, enjoys: { rest: 1.2 }, weatherBias: { rain: 1.1 },
   }),
   trait('family-oriented', 'Family-Oriented', 'lifestyle', 'family', [], 'Home is where the heart is, and the people in it come first.', {
     autonomyBias: { phoneChat: 1.3 }, socialReceive: { family: 0.15, support: 0.1, deep: 0.05 }, enjoys: { social: 1.2 },
@@ -196,5 +204,6 @@ export const TRAITS: TraitDef[] = [
   }),
   trait('homebody', 'Homebody', 'lifestyle', 'home', ['outgoing'], 'No place like home, and no reason to leave it.', {
     autonomyBias: { tv: 1.3, rest: 1.15, cleaning: 1.1 }, socialReceive: { greeting: -0.05 }, enjoys: { rest: 1.15 },
+    weatherBias: { rain: 1.15, snow: 1.1, clear: 0.9 },
   }),
 ];

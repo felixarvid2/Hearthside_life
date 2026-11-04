@@ -61,6 +61,11 @@ export interface WorldState {
    * and the named NPC households were created, never regenerated. Absent in older saves, which get one on load.
    */
   neighbourhood?: NeighbourhoodState;
+  /**
+   * Milestone 12: current weather and the stored today/tomorrow forecast. Optional in older saves; absent = clear.
+   * The sim writes it on the first tick and preserves a stored plan across a save/load (sim/weather.ts).
+   */
+  weather?: WeatherState;
 }
 
 /** What the neighbourhood generator recorded about itself (so it is generated exactly once). */
@@ -105,6 +110,44 @@ export interface SimSettings {
   speed?: 0 | 1 | 2 | 3;
   /** Pay each new bill as soon as it is issued (Milestone 6). Absent = off. */
   autoPayBills?: boolean;
+  /** Milestone 12: seasons on (default). Off = a perpetual summer-like spring with no snow. */
+  seasons?: boolean;
+  /** Milestone 12: game days per season (3, 7 or 14; default 7). */
+  seasonDays?: number;
+  /** Milestone 12: weather on (default). Off = always clear. */
+  weather?: boolean;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Milestone 12: seasons and weather
+// ---------------------------------------------------------------------------------------------
+
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+export type WeatherKind = 'clear' | 'cloudy' | 'rain' | 'snow';
+
+/** Current weather plus the stored forecast, so loading a save keeps the same weather. Optional in older saves. */
+export interface WeatherState {
+  current: WeatherKind;
+  /** The two half-day slots of the current day: [morning (00:00-11:59), afternoon/evening (12:00-23:59)]. */
+  today: [WeatherKind, WeatherKind];
+  /** The two half-day slots of the next day. */
+  tomorrow: [WeatherKind, WeatherKind];
+  /** Absolute game day the plan was made for. */
+  day: number;
+  /** Game minute the current half-day began. */
+  since: GameMinutes;
+  /** Snow has settled on the ground this winter (drives the renderer's snow cover until spring). */
+  snowCover?: boolean;
+}
+
+/** Milestone 12: what an interaction needs from the weather/season. Absent = no restriction. */
+export interface WeatherRule {
+  /** Blocked in these weather kinds ("It is raining."). */
+  not?: WeatherKind[];
+  /** Only possible in these weather kinds. */
+  only?: WeatherKind[];
+  /** Only possible in these seasons. */
+  seasons?: Season[];
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -202,6 +245,33 @@ export interface Lot {
   roofs?: Record<Id, Roof>;
   /** Milestone 9: ground paint per level-0 tile keyed by tileKey(0, x, z); missing = `ground`. */
   terrain?: Record<string, string>;
+  /** Milestone 12: swimming pools keyed by id (src/world/pools.ts). Absent = none. */
+  pools?: Record<Id, Pool>;
+}
+
+/** Milestone 12: a ladder or steps on one edge tile of a pool. `side` is the pool edge it sits on. */
+export interface PoolLadder {
+  x: number;
+  z: number;
+  side: 'n' | 's' | 'e' | 'w';
+}
+
+/** Milestone 12: a rectangular pool of level-0 tiles. Bounds are inclusive tile coordinates. */
+export interface Pool {
+  id: Id;
+  /** Pools are ground level only (outdoors, or in a level-0 room). */
+  level: 0;
+  x0: number;
+  z0: number;
+  x1: number;
+  z1: number;
+  /** PoolStyleDef id (src/content/exterior.ts). */
+  styleId: string;
+  /** At least one ladder/steps; the player may move and add them. */
+  ladders: PoolLadder[];
+  purchasePrice?: Cents;
+  /** Game minute it was built; with purchasePrice it decides the refund when removed (building/poolPlans.ts). */
+  boughtAt?: GameMinutes;
 }
 
 /** Milestone 9: a fence or gate on one grid edge (same edge convention as Wall). `defId` is a FenceDef id. */

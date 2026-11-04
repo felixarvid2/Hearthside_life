@@ -65,6 +65,8 @@ export const ANIM_CLIPS: Record<AnimId, AnimSpec> = {
   read: S('Idle_TalkingPhone_Loop', true, 'standing', { speed: 0.6 }),
   watchTv: S('Idle_FoldArms_Loop', true, 'standing'),
   computer: S('Interact', true, 'standing', { speed: 0.6 }),
+  swim: S('Swim_Fwd_Loop', true, 'standing'),
+  float: S('Swim_Idle_Loop', true, 'standing'),
 };
 
 /** Variants used while seated (Sitting_* base, upper-body overlays). */

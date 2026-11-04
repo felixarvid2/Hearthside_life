@@ -100,12 +100,30 @@ export interface CropDef {
   grownIn: string[];
 }
 
+/** Milestone 12: a pool finish (tile colour, coping stone) and its price per water tile. */
+export interface PoolStyleDef {
+  id: string;
+  name: string;
+  description: string;
+  /** Water tint. */
+  water: Hex;
+  /** Basin wall/floor tile colour. */
+  tile: Hex;
+  /** Coping stone colour around the rim. */
+  coping: Hex;
+  /** Price of one water tile (the coping is included). */
+  pricePerTile: Cents;
+  tags: string[];
+  status: 'ready' | 'dev';
+}
+
 export interface ExteriorContent {
   fences: Record<string, FenceDef>;
   roofStyles: Record<string, RoofStyleDef>;
   roofFinishes: Record<string, RoofFinishDef>;
   terrain: Record<string, TerrainPaintDef>;
   crops: Record<string, CropDef>;
+  poolStyles: Record<string, PoolStyleDef>;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -314,6 +332,21 @@ export const TERRAIN_PAINTS: TerrainPaintDef[] = [
 
 const VEG_BEDS = ['garden-vegpatch'];
 
+// ---------------------------------------------------------------------------------------------
+// Pool styles
+// ---------------------------------------------------------------------------------------------
+
+const poolStyle = (
+  id: string, name: string, description: string, water: Hex, tile: Hex, coping: Hex, price: number, tags: string[],
+): PoolStyleDef => ({ id, name, description, water, tile, coping, pricePerTile: dollars(price), tags, status: 'ready' });
+
+/** Three pool finishes: mosaic azure, lagoon green and warm terracotta. */
+export const POOL_STYLES: PoolStyleDef[] = [
+  poolStyle('azure-mosaic', 'Azure Mosaic', 'Small blue mosaic tiles with pale stone coping: the classic bright pool.', '#46b4d6', '#79cfe2', '#e7e3d7', 22, ['mosaic', 'classic', 'blue']),
+  poolStyle('lagoon-tile', 'Lagoon Tiles', 'Deep green-blue tiles and weathered limestone coping.', '#3fa9a0', '#6cc4b4', '#d8d1bf', 26, ['tile', 'natural', 'green']),
+  poolStyle('terracotta-tile', 'Terracotta Sun', 'Warm terracotta basin walls with pale sand coping.', '#4bb6c6', '#d08a5a', '#e0c9a4', 30, ['terracotta', 'mediterranean']),
+];
+
 export const CROPS: CropDef[] = [
   { id: 'tomato', name: 'Tomatoes', kind: 'veg', days: 5, regrow: 0, yield: [4, 7], unitPrice: dollars(1.2), fruit: '#d6453d', leaf: '#3f8f4a', grownIn: VEG_BEDS },
   { id: 'carrot', name: 'Carrots', kind: 'veg', days: 4, regrow: 0, yield: [5, 8], unitPrice: dollars(0.8), fruit: '#ec8a2e', leaf: '#4f9a4a', grownIn: VEG_BEDS },
@@ -341,23 +374,25 @@ export const GARDEN_INTERACTIONS: InteractionDef[] = [
   gi({
     id: 'gardenPlant', name: 'Plant Seeds', description: 'Sow the bed with the next crop. Seeds cost $3. Water it and the crop grows by the day.',
     icon: 'sparkle', duration: { kind: 'fixed', minutes: 20 }, needsOnComplete: { fun: 4 }, skill: { id: 'gardening', xpPerHour: 120 },
-    cost: dollars(3), anims: { perform: 'interact' },
+    cost: dollars(3), anims: { perform: 'interact' }, weather: { not: ['snow'] },
   }),
   gi({
     id: 'gardenWater', name: 'Water the Bed', description: 'Soak the soil. Watered plants grow at full speed; the water is used up in about two days.',
     icon: 'sparkle', duration: { kind: 'fixed', minutes: 10 }, needsOnComplete: { fun: 3 }, skill: { id: 'gardening', xpPerHour: 140 },
     moodletOnComplete: 'greenThumb', autonomy: { enabled: true, ads: { fun: 3 }, tags: ['gardening', 'skill'] },
+    weather: { not: ['rain', 'snow'] },
   }),
   gi({
     id: 'gardenWeed', name: 'Weed the Bed', description: 'Pull the weeds that slow the plants down.',
     icon: 'build', duration: { kind: 'fixed', minutes: 15 }, needsOnComplete: { fun: 2 }, skill: { id: 'gardening', xpPerHour: 140 },
     anims: { perform: 'interact' }, autonomy: { enabled: true, ads: { fun: 2 }, tags: ['gardening', 'skill'] },
+    weather: { not: ['snow'] },
   }),
   gi({
     id: 'gardenHarvest', name: 'Harvest', description: 'Pick what is ripe. Part of it goes to the kitchen, the rest is sold at the market stall for cash. Better gardeners get bigger harvests.',
     icon: 'sparkle', duration: { kind: 'fixed', minutes: 15 }, needsOnComplete: { fun: 6 }, skill: { id: 'gardening', xpPerHour: 160 },
     moodletOnComplete: 'greenThumb', anims: { perform: 'interact' },
-    autonomy: { enabled: true, ads: { fun: 4 }, tags: ['gardening', 'skill'] },
+    autonomy: { enabled: true, ads: { fun: 4 }, tags: ['gardening', 'skill'] }, weather: { not: ['snow'] },
   }),
 ];
 
@@ -380,11 +415,17 @@ export const EXTERIOR: ExteriorContent = {
   roofFinishes: byId('roof finish', ROOF_FINISHES),
   terrain: byId('terrain paint', TERRAIN_PAINTS),
   crops: byId('crop', CROPS),
+  poolStyles: byId('pool style', POOL_STYLES),
 };
 
 /** The exterior content of a ContentDB (older fixtures without it use the shared registry). */
-export function exteriorOf(db?: { exterior?: ExteriorContent } | null): ExteriorContent {
-  return db?.exterior ?? EXTERIOR;
+export function exteriorOf(db?: { exterior?: Partial<ExteriorContent> } | null): ExteriorContent {
+  return db?.exterior ? { ...EXTERIOR, ...db.exterior } : EXTERIOR;
+}
+
+/** Pool style by id (unknown ids fall back to the first style so old saves still render). */
+export function poolStyleOf(content: ExteriorContent, id: string | undefined): PoolStyleDef {
+  return (id ? content.poolStyles[id] : undefined) ?? POOL_STYLES[0]!;
 }
 
 /** Variant of a fence def (index wraps into range). */

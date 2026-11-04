@@ -150,5 +150,15 @@ const FAMILY: MoodletDef[] = [
   m('missedThem', 'Missing Someone', -10, 2880, 'heart', 'Someone close has gone.'),
 ];
 
+/** Milestone 12: the weather (sim/weather.ts; one at a time, with a cooldown, scaled by weather preferences and traits). */
+const WEATHER: MoodletDef[] = [
+  m('lovelyWeather', 'Lovely Weather', 6, 90, 'sun', 'A beautiful day to be outside.'),
+  m('gloomyDay', 'Gloomy Day', -5, 120, 'cloud', 'Grey skies and a grey mood to match.'),
+  m('cosyRain', 'Cosy Rain', 5, 120, 'rain', 'Safe indoors while it patters on the window.'),
+  m('snowDay', 'Snow Day!', 10, 180, 'snow', 'The world is white and quiet.'),
+  m('caughtInRain', 'Caught in the Rain', -4, 60, 'rain', 'Out in the rain without shelter.'),
+  m('chilly', 'Chilly', -6, 90, 'snow', 'Out in the snow without a winter coat.'),
+];
+
 /** Every moodlet definition. */
-export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS, ...FAMILY];
+export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS, ...FAMILY, ...WEATHER];

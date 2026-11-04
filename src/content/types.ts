@@ -4,7 +4,7 @@
 
 import type {
   BodyFrame, BondStatus, Cents, EventGoalKind, GarmentLayer, HomeEventType, Hex, LifeStage, MemoryKind, NeedId, OutfitCategory, Posture,
-  WorldItemKind,
+  WeatherKind, WeatherRule, WorldItemKind,
 } from '../core/types';
 import type { AnimId } from '../core/anim';
 import type { ExteriorContent } from './exterior';
@@ -219,6 +219,11 @@ export interface InteractionDef {
    * adult romance, careers and bills.
    */
   ages?: LifeStage[];
+  /**
+   * Milestone 12: seasons and weather this needs. Absent = no restriction. Outdoor interactions that make no sense
+   * in rain or snow stay listed but greyed with a reason ("It is raining."); autonomy skips them (sim/weather.ts).
+   */
+  weather?: WeatherRule;
   status: ContentStatus;
 }
 
@@ -334,6 +339,8 @@ export interface TraitDef {
     workPerformance?: number;
     /** Need gain multipliers when performing interactions with these autonomy tags. */
     enjoys?: Record<string, number>;
+    /** Milestone 12: how much this trait likes or dislikes each weather kind (a mood multiplier, 1 = neutral). */
+    weatherBias?: Partial<Record<WeatherKind, number>>;
   };
   /** Plain-English list of the implemented effects for the UI. */
   effectText: string[];

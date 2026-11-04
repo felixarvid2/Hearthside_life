@@ -6,7 +6,8 @@ import * as THREE from 'three';
 import { exteriorOf } from '../content/exterior';
 import type { ContentDB } from '../content/types';
 import { parseTileKey } from '../core/ids';
-import type { Lot } from '../core/types';
+import type { Lot, Season } from '../core/types';
+import { poolContains, poolsOf } from '../world/pools';
 import { GROUND_Y } from './environment';
 import { ATLAS_COLS, terrainAtlas, type TerrainAtlas } from './exteriorTextures';
 import { hash01 } from './geo';
@@ -16,6 +17,8 @@ export class TerrainView {
   private atlas: TerrainAtlas | null = null;
   private material: THREE.MeshStandardMaterial | null = null;
   private mesh: THREE.Mesh | null = null;
+  /** Milestone 12: seasonal tint multiplied onto the paint atlas (snow cools every paint down). */
+  private readonly tint = new THREE.Color(0xffffff);
 
   constructor(private readonly content?: ContentDB) { this.group.name = 'terrain'; }
 
@@ -27,7 +30,18 @@ export class TerrainView {
     this.material = new THREE.MeshStandardMaterial({
       map: this.atlas.texture, roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, name: 'terrain',
     });
+    this.material.color.copy(this.tint);
     return this.material;
+  }
+
+  /** Recolours the painted terrain for the season (snow makes every paint read cold and pale). */
+  setSeason(season: Season, snowy: boolean): void {
+    if (snowy) this.tint.set(0xdfeaf2);
+    else if (season === 'winter') this.tint.set(0xe2e8e4);
+    else if (season === 'autumn') this.tint.set(0xf6e3c4);
+    else if (season === 'spring') this.tint.set(0xf4fae8);
+    else this.tint.set(0xffffff);
+    if (this.material) this.material.color.copy(this.tint);
   }
 
   /** Rebuilds the paint of the lot (nothing when the lot has none). */
@@ -40,8 +54,11 @@ export class TerrainView {
     if (!mat || !atlas) return;
     const pos: number[] = [], nor: number[] = [], uv: number[] = [];
     const rows = atlas.rows, inset = 0.5 / 96;
+    const pools = poolsOf(lot);
     for (const key of keys.sort()) {
       const { x, z } = parseTileKey(key);
+      // Milestone 12: no paint floats on a pool's water (the basin has its own tiled floor)
+      if (pools.some((p) => poolContains(p, x, z))) continue;
       const idx = atlas.index[lot.terrain![key]!];
       if (idx === undefined) continue;
       const cx = idx % ATLAS_COLS, cy = Math.floor(idx / ATLAS_COLS);

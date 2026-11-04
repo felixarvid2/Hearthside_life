@@ -309,7 +309,82 @@ export function fillExteriorDefaults(raw: Record<string, unknown>): void {
     }
   }
 }
-// ===== end Milestone 9 exterior =====================================================================================
+// ===== Milestone 12: pools (optional lot field): fill and repair ====================================================
+/**
+ * `lot.pools` is optional (absent = no pool). This drops pools that would confuse the simulation or the renderer: a
+ * missing rectangle, a pool without a style, or a pool whose ladders are all off its edge. Valid pools are untouched.
+ */
+export function fillPoolDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const int = (v: unknown): v is number => num(v) && Number.isInteger(v);
+  const sides = new Set(['n', 's', 'e', 'w']);
+  if (!isRecord(raw.lots)) return;
+  for (const lot of Object.values(raw.lots)) {
+    if (!isRecord(lot) || lot.pools === undefined) continue;
+    if (!isRecord(lot.pools)) { delete lot.pools; continue; }
+    for (const [id, pool] of Object.entries(lot.pools)) {
+      const rect = isRecord(pool) && int(pool.x0) && int(pool.z0) && int(pool.x1) && int(pool.z1)
+        && (pool.x1 as number) >= (pool.x0 as number) && (pool.z1 as number) >= (pool.z0 as number);
+      if (!rect || !isRecord(pool) || typeof pool.styleId !== 'string') { delete lot.pools[id]; continue; }
+      pool.id = id;
+      pool.level = 0;
+      if (!Array.isArray(pool.ladders)) { delete lot.pools[id]; continue; }
+      const x0 = pool.x0 as number, x1 = pool.x1 as number, z0 = pool.z0 as number, z1 = pool.z1 as number;
+      const seen = new Set<string>();
+      const ladders = (pool.ladders as unknown[]).filter((l) => {
+        if (!isRecord(l) || !int(l.x) || !int(l.z) || !sides.has(l.side as string)) return false;
+        const x = l.x as number, z = l.z as number;
+        if (x < x0 || x > x1 || z < z0 || z > z1) return false;
+        if (x !== x0 && x !== x1 && z !== z0 && z !== z1) return false;
+        const key = `${x},${z}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        l.side = z === z0 ? 'n' : z === z1 ? 's' : x === x0 ? 'w' : 'e';
+        return true;
+      });
+      pool.ladders = ladders;
+      if (ladders.length === 0) delete lot.pools[id];
+      else {
+        if (pool.purchasePrice !== undefined && !int(pool.purchasePrice)) delete pool.purchasePrice;
+        if (pool.boughtAt !== undefined && !num(pool.boughtAt)) delete pool.boughtAt;
+      }
+    }
+    if (Object.keys(lot.pools).length === 0) delete lot.pools;
+  }
+}
+// ===== end Milestone 12 pools =======================================================================================
+
+// ===== Milestone 12: seasons and weather (optional schema 1 fields): fill and repair ==================================
+const WEATHER_KINDS = ['clear', 'cloudy', 'rain', 'snow'];
+const SEASON_DAY_OPTIONS = [3, 7, 14];
+
+/**
+ * Defaults for fields added to schema 1 by Milestone 12. `settings.seasons`, `settings.seasonDays` and
+ * `settings.weather` are optional (absent = on / 7 / on), and `weather` holds the current kind plus today's and
+ * tomorrow's half-day forecast. Old saves have none of it and the simulation plans on the first tick. This only
+ * repairs values that would confuse the sim or the renderer (unknown kinds, bad array shapes, bad day numbers),
+ * so a valid stored forecast survives a save/load untouched.
+ */
+export function fillWeatherDefaults(raw: Record<string, unknown>): void {
+  const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const isPlan = (p: unknown): boolean => Array.isArray(p) && p.length === 2 && p.every((k) => typeof k === 'string' && WEATHER_KINDS.includes(k));
+  if (isRecord(raw.settings)) {
+    const s = raw.settings;
+    if (s.seasons !== undefined && typeof s.seasons !== 'boolean') delete s.seasons;
+    if (s.weather !== undefined && typeof s.weather !== 'boolean') delete s.weather;
+    if (s.seasonDays !== undefined && !(typeof s.seasonDays === 'number' && SEASON_DAY_OPTIONS.includes(s.seasonDays))) delete s.seasonDays;
+  }
+  if (raw.weather === undefined) return;
+  const w = raw.weather;
+  const ok = isRecord(w) && typeof w.current === 'string' && WEATHER_KINDS.includes(w.current) &&
+    isPlan(w.today) && isPlan(w.tomorrow) && num(w.day) && Number.isInteger(w.day) && num(w.since) &&
+    (w.snowCover === undefined || typeof w.snowCover === 'boolean');
+  if (!ok) { delete raw.weather; return; }
+  w.day = Math.max(0, Math.floor(w.day as number));
+  w.since = Math.max(0, Math.floor(w.since as number));
+  if (w.snowCover !== true) delete w.snowCover;
+}
+// ===== end Milestone 12 seasons and weather ==========================================================================
 
 /** Oldest schema version this build can still upgrade. */
 export const OLDEST_SUPPORTED_VERSION = 1;
@@ -386,6 +461,8 @@ export function migrate(raw: unknown, opts: MigrateOptions = {}): MigrateResult 
   fillNeighbourhoodDefaults(r.data);
   fillFloorsDefaults(r.data);
   fillExteriorDefaults(r.data); // Milestone 9 exterior (M9-ext block above)
+  fillWeatherDefaults(r.data); // Milestone 12 seasons and weather (optional fields)
+  fillPoolDefaults(r.data); // Milestone 12 pools (optional lot field)
   return { ok: true, state: r.data as unknown as WorldState, fromVersion: r.fromVersion, toVersion: r.toVersion, migrated: r.migrated };
 }
 

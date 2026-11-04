@@ -36,7 +36,7 @@ export const ROOMS: Rect[] = [{ x0: 4, z0: 4, x1: 9, z1: 11 }, { x0: 10, z0: 4, 
 export const LOT_SIZE = 24;
 
 const DEFAULT_SETTINGS: GameSettings = {
-  masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.4, reducedMotion: false, textScale: 1, quality: 'high', characterStyle: 'mpfb', shadows: true, showStats: false, tutorial: false,
+  masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.4, reducedMotion: false, textScale: 1, quality: 'high', characterStyle: 'mpfb', shadows: true, weatherEffects: true, showStats: false, tutorial: false,
 };
 
 type Snapshot = { label: string; before: WorldState; after: WorldState };

@@ -20,6 +20,7 @@ import type { SimCtx } from '../../../src/sim/context';
 import { Reservations } from '../../../src/sim/reservations';
 import { applyHouseholdTies, createPerson } from '../../../src/sim/people';
 import { Simulation } from '../../../src/sim/simulation';
+import { poolTiles, poolsOf } from '../../../src/world/pools';
 
 // ---------------------------------------------------------------------------------------------
 // Content
@@ -194,6 +195,8 @@ export class GridNav implements NavProvider {
       if (!def || !def.blocksMovement || def.layer !== 'floor' || o.level !== level) continue;
       for (const t of footprintTiles(o.x, o.z, def.footprint, o.rot)) out.add(`${t.x},${t.z}`);
     }
+    // Milestone 12: pool water is not walkable (the deck around it is).
+    if (level === 0) for (const pool of poolsOf(lot)) for (const t of poolTiles(pool)) out.add(`${t.x},${t.z}`);
     return out;
   }
 

@@ -203,7 +203,13 @@ export type BuildTool =
   | { kind: 'eraseFence' }
   | { kind: 'roof'; shape: 'rect' | 'auto'; spec: RoofToolSpec }
   | { kind: 'eraseRoof' }
-  | { kind: 'terrain'; paintId: string; shape: 'tile' | 'rect' };
+  | { kind: 'terrain'; paintId: string; shape: 'tile' | 'rect' }
+  // Milestone 12: swimming pools (building/poolPlans.ts). `pool` drags a rectangle like the room tool; `erasePool`
+  // removes the pool under the pointer; `poolLadder` moves the ladder the panel picked (`from`) or adds/removes one
+  // on the tapped edge tile.
+  | { kind: 'pool'; styleId: string }
+  | { kind: 'erasePool' }
+  | { kind: 'poolLadder'; mode: 'move' | 'add' | 'remove'; poolId?: Id | null; from?: BuildPoint | null };
 
 /** Style, pitch, ridge direction (null = along the long side) and finish of the roof tool. */
 export interface RoofToolSpec { styleId: string; pitch?: number; ridge?: 'h' | 'v' | null; finish: FinishRef }
@@ -279,6 +285,8 @@ export interface GameSettings {
   /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter). */
   characterStyle: 'mpfb' | 'detailed' | 'classic';
   shadows: boolean;
+  /** Milestone 12: rain/snow particles (render-only; the weather light tint stays when this is off). */
+  weatherEffects: boolean;
   showStats: boolean;
   tutorial: boolean;
 }

@@ -66,6 +66,11 @@ export interface Behavior {
   end?(ctx: SimCtx, p: Person, a: ActionInstance, result: EndResult): void;
   /** True when a running autonomous action of this behavior may be interrupted for a conversation. */
   interruptible?: boolean;
+  /**
+   * Milestone 12: handles a cancel request that must not stop the action dead (a swimmer has to reach a ladder
+   * first). Returning true means the behavior took the request over; the runner keeps the action running.
+   */
+  cancelGraceful?(ctx: SimCtx, p: Person, a: ActionInstance): boolean;
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -21,6 +21,7 @@
 
 import type { InteractionDef } from './types';
 import { dollars } from '../core/money';
+import { POOL_INTERACTIONS } from './poolInteractions';
 
 type Def = Omit<InteractionDef, 'needsPerHour' | 'needsOnComplete' | 'status' | 'allowVisitors' | 'slotKinds'> &
   Partial<Pick<InteractionDef, 'needsPerHour' | 'needsOnComplete' | 'status' | 'allowVisitors' | 'slotKinds'>>;
@@ -296,7 +297,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'snack', posture: 'standing',
     anims: { perform: 'cook' },
     duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 6 }, needsOnComplete: { hunger: 40 }, cost: dollars(6),
-    skill: { id: 'cooking', xpPerHour: 40 }, moodletOnComplete: 'goodMeal',
+    skill: { id: 'cooking', xpPerHour: 40 }, moodletOnComplete: 'goodMeal', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { hunger: 40 }, tags: ['food', 'cooking', 'grill', 'outdoor'] }, allowVisitors: true,
   }),
   def({
@@ -558,7 +559,7 @@ const VENUE: InteractionDef[] = [
     icon: 'energy', kind: 'self', behavior: 'generic', posture: 'standing',
     anims: { perform: 'jog' },
     duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { energy: -9, hygiene: -6, fun: 9 }, skill: { id: 'fitness', xpPerHour: 55 },
-    moodletOnComplete: 'energized',
+    moodletOnComplete: 'energized', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { fun: 9 }, tags: ['active', 'fitness', 'skill', 'outdoor', 'jog'] }, allowVisitors: true,
   }),
   def({
@@ -566,7 +567,7 @@ const VENUE: InteractionDef[] = [
     icon: 'hunger', kind: 'object', behavior: 'snack', posture: 'standing',
     anims: { perform: 'eat' },
     duration: { kind: 'fixed', minutes: 35 }, needsOnComplete: { hunger: 36, fun: 8 }, cost: dollars(8),
-    moodletOnComplete: 'picnicJoy',
+    moodletOnComplete: 'picnicJoy', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { hunger: 36, fun: 8 }, tags: ['food', 'picnic', 'outdoor', 'social'] }, allowVisitors: true,
   }),
   def({
@@ -574,7 +575,7 @@ const VENUE: InteractionDef[] = [
     icon: 'sparkle', kind: 'object', slotKinds: ['sit'], behavior: 'generic', posture: 'seated',
     anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
     duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { fun: 10, energy: 5 },
-    moodletOnComplete: 'peaceful',
+    moodletOnComplete: 'peaceful', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { fun: 8, energy: 4 }, tags: ['relax', 'outdoor', 'clouds'] }, allowVisitors: true,
   }),
   def({
@@ -582,7 +583,7 @@ const VENUE: InteractionDef[] = [
     icon: 'fun', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
     anims: { perform: 'dance' },
     duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 26, energy: -6 },
-    moodletOnComplete: 'playtime',
+    moodletOnComplete: 'playtime', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { fun: 20 }, tags: ['play', 'outdoor', 'fun', 'playground'] }, allowVisitors: true,
   }),
   def({
@@ -590,7 +591,7 @@ const VENUE: InteractionDef[] = [
     icon: 'fun', kind: 'object', slotKinds: ['sit'], behavior: 'generic', posture: 'seated',
     anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
     duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 22, energy: -4 }, skill: { id: 'fitness', xpPerHour: 12 },
-    moodletOnComplete: 'playtime',
+    moodletOnComplete: 'playtime', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { fun: 18 }, tags: ['play', 'outdoor', 'fun', 'playground'] }, allowVisitors: true,
   }),
   // Library study desk
@@ -641,7 +642,7 @@ const M11_SKILLS: InteractionDef[] = [
     icon: 'eyedropper', kind: 'self', behavior: 'photo', posture: 'standing',
     anims: { perform: 'interact' },
     duration: { kind: 'fixed', minutes: 50 }, needsPerHour: { fun: 12, energy: -3 }, skill: { id: 'photography', xpPerHour: 55 },
-    moodletOnComplete: 'inspired',
+    moodletOnComplete: 'inspired', weather: { not: ['rain', 'snow'] },
     autonomy: { enabled: true, ads: { fun: 12 }, tags: ['camera', 'photography', 'creative', 'skill', 'outdoor'] }, allowVisitors: true,
   }),
   def({
@@ -649,6 +650,7 @@ const M11_SKILLS: InteractionDef[] = [
     icon: 'sun', kind: 'object', slotKinds: ['use'], behavior: 'fish', posture: 'standing',
     anims: { perform: 'interact' },
     duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 5, energy: -2 }, skill: { id: 'fishing', xpPerHour: 55 },
+    weather: { not: ['snow'] }, // fishing in the rain is fine; a frozen pond is not
     autonomy: { enabled: true, ads: { fun: 5 }, tags: ['fishing', 'water', 'skill', 'outdoor'] }, allowVisitors: true,
   }),
   def({
@@ -656,6 +658,7 @@ const M11_SKILLS: InteractionDef[] = [
     icon: 'sun', kind: 'self', behavior: 'fish', posture: 'standing',
     anims: { perform: 'interact' },
     duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 6, energy: -3 }, skill: { id: 'fishing', xpPerHour: 60 },
+    weather: { not: ['snow'] }, // fishing in the rain is fine; the lake does not freeze for skating
     autonomy: { enabled: true, ads: { fun: 6 }, tags: ['fishing', 'water', 'skill', 'outdoor'] }, allowVisitors: true,
   }),
   def({
@@ -748,4 +751,4 @@ const M11_B_SKILLS: InteractionDef[] = [
 ];
 
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS, ...POOL_INTERACTIONS];

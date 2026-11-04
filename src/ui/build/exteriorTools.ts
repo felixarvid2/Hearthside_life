@@ -6,7 +6,7 @@
 // finishes with colour palettes. Fence: 24 fence designs and 12 gates with colour variants; drag a run, tap an edge for a gate, or
 // remove. Garden: terrain paint (12 paints, a tile or an area) and a shortcut to the garden objects in Buy.
 
-import { exteriorOf, fenceVariant, type FenceDef, type RoofFinishDef, type RoofStyleDef, type TerrainPaintDef } from '../../content/exterior';
+import { exteriorOf, fenceVariant, type FenceDef, type PoolStyleDef, type RoofFinishDef, type RoofStyleDef, type TerrainPaintDef } from '../../content/exterior';
 import { formatMoney } from '../../core/money';
 import type { BuildTool, GameAPI, RoofToolSpec } from '../../game/api';
 import { setHidden, stripes, thumbImg } from '../buy/editorCommon';
@@ -14,10 +14,10 @@ import { button, cardGrid, segmented, type CardGrid } from '../kit/components';
 import { h, setChildren, setText } from '../kit/dom';
 import { layout } from '../kit/layout';
 import type { BuildSession } from './buildSession';
-import { fenceThumb, finishThumb, paintThumb, roofThumb } from './exteriorThumbs';
+import { fenceThumb, finishThumb, paintThumb, poolThumb, roofThumb } from './exteriorThumbs';
 import './exterior.css';
 
-export type ExteriorId = 'roof' | 'fence' | 'garden';
+export type ExteriorId = 'roof' | 'fence' | 'garden' | 'pool';
 
 export interface ExteriorDeps { api: GameAPI; session: BuildSession }
 
@@ -35,6 +35,8 @@ export interface ExteriorTools {
 type RoofMode = 'rect' | 'auto' | 'remove';
 type FenceMode = 'run' | 'gate' | 'remove';
 type GardenMode = 'tile' | 'area' | 'remove';
+type PoolMode = 'draw' | 'remove' | 'ladder';
+type LadderMode = 'move' | 'add' | 'remove';
 
 export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
   const { api, session } = deps;
@@ -56,12 +58,16 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
     variant: {} as Record<string, number>,
     gardenMode: 'tile' as GardenMode,
     paint: 'gravel',
+    poolMode: 'draw' as PoolMode,
+    ladderMode: 'move' as LadderMode,
+    poolStyle: 'azure-mosaic',
   };
 
   const styles = (): RoofStyleDef[] => Object.values(ex().roofStyles).filter((s) => s.status === 'ready');
   const finishes = (): RoofFinishDef[] => Object.values(ex().roofFinishes).filter((f) => f.status === 'ready');
   const fenceDefs = (kind: 'fence' | 'gate'): FenceDef[] => Object.values(ex().fences).filter((f) => f.kind === kind && f.status === 'ready');
   const paints = (): TerrainPaintDef[] => Object.values(ex().terrain).filter((p) => p.status === 'ready');
+  const poolStyles = (): PoolStyleDef[] => Object.values(ex().poolStyles).filter((s) => s.status === 'ready');
   const palOf = (fin: RoofFinishDef): string => (fin.palettes.some((p) => p.id === st.palette[fin.id]) ? st.palette[fin.id]! : fin.palettes[0]!.id);
 
   // ---- the tool each section chooses ----
@@ -88,6 +94,10 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
       case 'garden':
         if (st.gardenMode === 'remove') return { kind: 'terrain', paintId: 'grass', shape: 'tile' };
         return ex().terrain[st.paint] ? { kind: 'terrain', paintId: st.paint, shape: st.gardenMode === 'area' ? 'rect' : 'tile' } : null;
+      case 'pool':
+        if (st.poolMode === 'remove') return { kind: 'erasePool' };
+        if (st.poolMode === 'ladder') return { kind: 'poolLadder', mode: st.ladderMode, poolId: null, from: null };
+        return { kind: 'pool', styleId: st.poolStyle };
     }
   }
 
@@ -305,14 +315,77 @@ export function createExteriorTools(deps: ExteriorDeps): ExteriorTools {
     setHidden(buyBtn, false);
   }
 
+  // ---- Pool (Milestone 12) ----
+
+  const poolMode = segmented<PoolMode>({
+    label: 'Pool tool',
+    value: st.poolMode,
+    options: [{ id: 'draw', label: 'Draw (drag)', icon: 'pool' }, { id: 'remove', label: 'Remove', icon: 'trash' }, { id: 'ladder', label: 'Ladder', icon: 'move' }],
+    onChange: (v) => { st.poolMode = v; api.sound('tap'); choose(); },
+  });
+  poolMode.el.classList.add('bb-seg-tight');
+  const ladderMode = segmented<LadderMode>({
+    label: 'Ladder tool',
+    value: st.ladderMode,
+    options: [{ id: 'move', label: 'Move', icon: 'move' }, { id: 'add', label: 'Add', icon: 'plus' }, { id: 'remove', label: 'Remove', icon: 'minus' }],
+    onChange: (v) => { st.ladderMode = v; api.sound('tap'); choose(); },
+  });
+  ladderMode.el.classList.add('bb-seg-tight');
+  const poolHost = h('div', { class: 'bb-ext-host bb-ext-pools' });
+  const poolNote = h('p', { class: 'bb-note bb-muted' });
+  const poolSection = h('section', { class: 'bb-tool-section', ariaLabel: 'Pools', dataset: { section: 'pool' } }, poolMode.el, ladderMode.el, poolHost, poolNote);
+  let poolGrid: CardGrid<PoolStyleDef> | null = null;
+
+  function renderPool(): void {
+    poolMode.set(st.poolMode);
+    const draw = st.poolMode === 'draw';
+    const ladder = st.poolMode === 'ladder';
+    poolHost.hidden = !draw;
+    ladderMode.el.hidden = !ladder;
+    if (draw) {
+      if (!poolGrid) {
+        poolGrid = cardGrid<PoolStyleDef>({
+          key: 'build:pool-styles', pageSize: () => (layout().compact ? 6 : 12), empty: 'No pool styles yet.',
+          render: (s) => {
+            const on = st.poolStyle === s.id;
+            return h('button', {
+              type: 'button', class: ['card', 'bb-card', on && 'is-selected'], dataset: { styleId: s.id }, attrs: { 'aria-pressed': on },
+              ariaLabel: `${s.name}, ${formatMoney(s.pricePerTile)} per square metre of water`,
+              onClick: () => { st.poolStyle = s.id; api.sound('tap'); choose(); },
+            }, thumbImg(() => poolThumb(s, 120)), h('span', { class: 'card-name', text: s.name }), h('span', { class: 'card-meta bb-card-price', text: `${formatMoney(s.pricePerTile)} / m2` }));
+          },
+        });
+        setChildren(poolHost, poolGrid.el);
+      }
+      poolGrid.setItems(poolStyles());
+      const cur = ex().poolStyles[st.poolStyle] ?? poolStyles()[0];
+      setText(poolNote, cur
+        ? `${cur.name}: ${formatMoney(cur.pricePerTile)} per m2 of water. Drag a rectangle of at least 2 x 3 m on open ground or a ground-floor room. A ladder goes on a short side.`
+        : 'Drag a rectangle on open ground.');
+      return;
+    }
+    if (ladder) {
+      ladderMode.set(st.ladderMode);
+      const verb = touch() ? 'Tap' : 'Click';
+      setText(poolNote, st.ladderMode === 'move'
+        ? `${verb} a ladder to pick it up, then tap the edge tile to move it to.`
+        : st.ladderMode === 'add'
+          ? `${verb} an edge tile of a pool to add a ladder there.`
+          : `${verb} a ladder to remove it. Every pool keeps at least one ladder.`);
+      return;
+    }
+    setText(poolNote, `${touch() ? 'Tap' : 'Click'} a pool, then confirm to drain it. Refunded like the rest: 80 % back, all of it on the day it was built.`);
+  }
+
   function render(): void {
     if (st.active === 'roof') renderRoof();
     else if (st.active === 'fence') renderFence();
     else if (st.active === 'garden') renderGarden();
+    else if (st.active === 'pool') renderPool();
   }
 
   const tools: ExteriorTools = {
-    sections: { roof: roofSection, fence: fenceSection, garden: gardenSection },
+    sections: { roof: roofSection, fence: fenceSection, garden: gardenSection, pool: poolSection },
     enter(id) {
       st.active = id;
       api.view.setRoofEdit?.(id === 'roof');

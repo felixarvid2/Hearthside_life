@@ -19,13 +19,16 @@ import { choreCandidates } from './chores';
 import { availableMeals, stovesOn } from './cooking';
 import { isBroken } from './housekeeping';
 import type { SimCtx } from './context';
-import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, venueRestriction } from './context';
+import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, tileOfLoc, venueRestriction } from './context';
+import { ladderDeckTile, poolCenter, poolsOf, usableLadders } from '../world/pools';
+import { poolIsOutdoors } from './pool';
 import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
 import { eventMealsFor, eventSocialBonus, onDateTogether } from './events';
 import { commitmentOf, familyTie, hasRecentMemory, peekRel } from './relationships';
 import { personKey } from './reservations';
 import { isVisitPending, neighbours } from './visitors';
+import { currentSeason, currentWeather, weatherGateReason } from './weather';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
   EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
@@ -189,6 +192,32 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (score > 0) out.push({ req: { interactionId: def.id, target: { kind: 'self' }, ...(data ? { data } : {}) }, score, key: `${def.id}@self`, addresses });
     }
   }
+  // Milestone 12: a dip in the pool. Pools are not objects, so they have their own candidate loop.
+  if (!visitor) {
+    const lot = ctx.state.lots[loc.lotId];
+    const swim = ctx.content.interactions.swimInPool;
+    if (lot && swim && swim.autonomy.enabled && swim.status === 'ready' && stageAllows(swim, p.lifeStage)) {
+      const snow = currentWeather(ctx.state) === 'snow';
+      const from = tileOfLoc(loc);
+      for (const pool of poolsOf(lot)) {
+        if (snow && poolIsOutdoors(ctx, lot, pool)) continue;
+        const reachableLadder = usableLadders(lot, pool).some((l) => {
+          const d = ladderDeckTile(l);
+          return ctx.nav.isWalkable(lot.id, 0, d.x, d.z) && ctx.nav.findPath(lot.id, 0, from, [d]) !== null;
+        });
+        if (!reachableLadder) continue;
+        const c = poolCenter(pool);
+        const addresses: NeedId[] = [];
+        const score = interactionScore(ctx, p, swim, dist(loc.x, loc.z, c.x + 0.5, c.z + 0.5), `${c.x},${c.z}`, addresses);
+        if (score > 0) {
+          out.push({
+            req: { interactionId: swim.id, target: { kind: 'tile', x: c.x, z: c.z, level: 0 }, data: { poolId: pool.id } },
+            score, key: `${swim.id}@${c.x},${c.z}`, addresses,
+          });
+        }
+      }
+    }
+  }
   const social = socialCandidate(ctx, p);
   if (social) out.push(social);
   if (!visitor && !isDependentStage(p.lifeStage) && p.lifeStage !== 'child') { const inv = inviteCandidate(ctx, p); if (inv) out.push(inv); }
@@ -201,7 +230,13 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
     const hw = homeworkCandidate(ctx, p);
     if (hw) out.push(hw);
   }
-  return out;
+  // Weather and season gating (Milestone 12): autonomy never picks an interaction the weather rules out.
+  const weather = currentWeather(ctx.state);
+  const season = currentSeason(ctx.state);
+  return out.filter((c) => {
+    const def = ctx.content.interactions[c.req.interactionId];
+    return !def || !weatherGateReason(def.weather, weather, season);
+  });
 }
 
 /** A pupil with homework due sits down at the nearest desk, table or computer in the afternoon and evening. */

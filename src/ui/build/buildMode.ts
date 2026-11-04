@@ -94,8 +94,10 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     { id: 'tool-roof', section: 'roof', label: 'Roof', icon: 'roof' },
     { id: 'tool-fence', section: 'fence', label: 'Fence', icon: 'fence' },
     { id: 'tool-garden', section: 'garden', label: 'Garden', icon: 'leaf' },
+    // Milestone 12: pools (exteriorTools.ts)
+    { id: 'tool-pool', section: 'pool', label: 'Pool', icon: 'pool' },
   ];
-  const EXTERIOR_IDS: readonly ExteriorId[] = ['roof', 'fence', 'garden'];
+  const EXTERIOR_IDS: readonly ExteriorId[] = ['roof', 'fence', 'garden', 'pool'];
   const isExterior = (s: Section): s is ExteriorId => (EXTERIOR_IDS as readonly string[]).includes(s);
   const toolTabs = tabs({
     label: 'Build tools',
@@ -189,7 +191,7 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
   const exterior = createExteriorTools({ api, session });
   const paintSection = h('div', { class: 'bb-paint-section', dataset: { section: 'paint' } }, kindBar, roomInfo, current, recentSec, browse);
   p.body.append(subbar, paintSection, structure.sections.wall, structure.sections.room, structure.sections.stairs, structure.sections.door, structure.sections.window, structure.sections.erase,
-    exterior.sections.roof, exterior.sections.fence, exterior.sections.garden, cutaway.el);
+    exterior.sections.roof, exterior.sections.fence, exterior.sections.garden, exterior.sections.pool, cutaway.el);
   p.el.append(structure.footer);
   for (const k of ['wall', 'room', 'stairs', 'door', 'window', 'erase'] as const) structure.sections[k].hidden = true;
   for (const k of EXTERIOR_IDS) exterior.sections[k].hidden = true;

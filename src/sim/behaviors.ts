@@ -21,6 +21,7 @@ import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
 import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
+import { getOutBehavior, poolSwimBehavior } from './pool';
 import { socialBehavior } from './social';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
@@ -221,7 +222,8 @@ export const genericBehavior: Behavior = {
 /** Need-restoring interactions that should not be interrupted for small talk. */
 const restoreBehavior: Behavior = { ...genericBehavior, interruptible: false };
 
-function switchOutfit(ctx: SimCtx, p: Person, category: OutfitCategory, index = 0): void {
+/** Changes the outfit and notifies the renderer (swim uses this too, sim/pool.ts). */
+export function switchOutfit(ctx: SimCtx, p: Person, category: OutfitCategory, index = 0): void {
   const list = p.outfits.outfits[category];
   if (!list || list.length === 0) return;
   const i = Math.max(0, Math.min(index, list.length - 1));
@@ -741,6 +743,8 @@ function buildRegistry(): Record<string, Behavior> {
     openCareers: openCareersBehavior,
     social: socialBehavior,
     garden: gardenBehavior,
+    poolSwim: poolSwimBehavior,
+    getOut: getOutBehavior,
   };
 }
 

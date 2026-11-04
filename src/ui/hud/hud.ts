@@ -5,8 +5,11 @@
 
 import type { CutawayMode, GameMode } from '../../game/api';
 import { DAY_NAMES, dayIndex, formatClock, formatDay, weekday, type Speed } from '../../core/clock';
+import { SEASON_NAMES, dayWithinSeason, seasonFor } from '../../core/season';
 import { formatMoney, formatMoneyShort } from '../../core/money';
 import { activeHousehold } from '../../core/state';
+import type { Season, WeatherKind } from '../../core/types';
+import { WEATHER_NAMES, currentWeather } from '../../sim/weather';
 import { h, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { layout, onLayoutChange } from '../kit/layout';
@@ -21,6 +24,9 @@ const SPEEDS: Array<{ s: Speed; icon: string; label: string }> = [
   { s: 2, icon: 'fast', label: 'Fast' },
   { s: 3, icon: 'faster', label: 'Very fast' },
 ];
+
+const SEASON_ICONS: Record<Season, string> = { spring: 'leaf', summer: 'sun', autumn: 'leaf', winter: 'snow' };
+const WEATHER_ICONS: Record<WeatherKind, string> = { clear: 'sun', cloudy: 'cloud', rain: 'rain', snow: 'snow' };
 
 const CUTAWAY: Record<CutawayMode, { icon: string; label: string; next: CutawayMode }> = {
   up: { icon: 'wallsUp', label: 'Walls up', next: 'cutaway' },
@@ -72,7 +78,13 @@ export function createHud(sh: Shell): Hud {
   const timeEl = h('span', { class: 'clock-time' });
   const dayEl = h('span', { class: 'clock-day' });
   const pausedTag = h('span', { class: 'clock-paused', text: 'Paused' });
-  const clock = h('div', { class: 'clock', role: 'timer', attrs: { 'aria-live': 'off' } }, timeEl, dayEl, pausedTag);
+  // Milestone 12: season + weather chip in the clock area ("Autumn, day 3 - Rain"); the text is hidden in the tight
+  // portrait bar, where the two icons and the title/aria-label carry the information.
+  const seasonIcon = h('span', { class: 'clock-sky-icon clock-season-icon' });
+  const weatherIcon = h('span', { class: 'clock-sky-icon clock-weather-icon' });
+  const skyText = h('span', { class: 'clock-sky-text' });
+  const sky = h('span', { class: 'clock-sky' }, seasonIcon, weatherIcon, skyText);
+  const clock = h('div', { class: 'clock', role: 'timer', attrs: { 'aria-live': 'off' } }, timeEl, dayEl, sky, pausedTag);
   const speedBtns = SPEEDS.map((sp) => {
     const b = h('button', { type: 'button', class: 'speed-btn', ariaLabel: sp.label, title: `${sp.label} (${sp.s === 0 ? 'Space' : sp.s})`, dataset: { speed: String(sp.s) } }, icon(sp.icon, 20));
     b.addEventListener('click', () => { api.setSpeed(sp.s); sh.sound('click'); });
@@ -192,6 +204,7 @@ export function createHud(sh: Shell): Hud {
 
   // ---- updates ----
   let lastClock = '';
+  let lastSky = '';
   let lastFunds = '';
   let lastUnread = -1;
   const refresh = () => {
@@ -200,11 +213,26 @@ export function createHud(sh: Shell): Hud {
     const m = st.clock.minutes;
     const portrait = !!portraitLayout;
     const ck = `${Math.floor(m)}|${portrait}`;
-    if (ck !== lastClock) {
-      lastClock = ck;
+    const season = seasonFor(m, st.settings);
+    const weather = currentWeather(st);
+    const skyKey = `${season}|${dayWithinSeason(m, st.settings)}|${weather}|${st.settings.seasons}|${st.settings.weather}|${portrait}`;
+    if (ck !== lastClock || skyKey !== lastSky) {
+      const dayInSeason = dayWithinSeason(m, st.settings);
+      const label = st.settings.weather === false
+        ? `${SEASON_NAMES[season]}, day ${dayInSeason} - Weather off`
+        : `${SEASON_NAMES[season]}, day ${dayInSeason} - ${WEATHER_NAMES[weather]}`;
       setText(timeEl, formatClock(m));
       setText(dayEl, portrait ? `${(DAY_NAMES[weekday(m)] ?? '').slice(0, 3)} · Day ${dayIndex(m) + 1}` : formatDay(m));
-      clock.setAttribute('aria-label', `${formatDay(m)}, ${formatClock(m)}`);
+      setText(skyText, label);
+      sky.title = label;
+      sky.setAttribute('aria-label', label);
+      if (skyKey !== lastSky) {
+        lastSky = skyKey;
+        seasonIcon.replaceChildren(icon(SEASON_ICONS[season], 16));
+        weatherIcon.replaceChildren(icon(WEATHER_ICONS[weather], 16));
+      }
+      clock.setAttribute('aria-label', `${formatDay(m)}, ${formatClock(m)}. ${label}`);
+      lastClock = ck;
     }
     const hh = activeHousehold(st);
     const fk = `${hh?.funds ?? 0}|${st.settings.unlimitedFunds}`;

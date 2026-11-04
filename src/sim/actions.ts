@@ -60,7 +60,12 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
     if (!stillHead(p, a)) return;
     if (a.cancelRequested) {
       a.cancelRequested = false;
-      if (a.phase !== 'cleanup') { interrupt(ctx, p, a, beh, 'cancelled', null); continue; }
+      if (a.phase !== 'cleanup') {
+        // Milestone 12: a swimmer climbs out first instead of being dropped in the water.
+        if (beh.cancelGraceful?.(ctx, p, a)) continue;
+        interrupt(ctx, p, a, beh, 'cancelled', null);
+        continue;
+      }
     }
     switch (a.phase) {
       case 'queued':
@@ -133,12 +138,16 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
         setPhase(ctx, a, 'apply');
         continue;
       }
-      case 'apply':
-        applyEffects(ctx, p, a, beh);
-        if (!stillHead(p, a)) return;
-        a.data.result = 'done';
+      case 'apply': {
+        // A gracefully cancelled action (the swim exit) keeps its result and gives no completion effects.
+        if (a.data.result !== 'cancelled') {
+          applyEffects(ctx, p, a, beh);
+          if (!stillHead(p, a)) return;
+          a.data.result = 'done';
+        }
         beginCleanup(ctx, p, a, beh);
         continue;
+      }
       case 'cleanup': {
         const need = typeof a.data.cleanupMin === 'number' ? a.data.cleanupMin : 0;
         if (ctx.now - a.phaseSince < need - EPS) return;

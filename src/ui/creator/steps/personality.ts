@@ -14,7 +14,7 @@ const TRAIT_CATEGORY_NAMES: Record<TraitCategory, string> = {
   leisure: 'Food and leisure', lifestyle: 'Ambition and lifestyle',
 };
 const TRAIT_CATEGORY_ORDER: readonly TraitCategory[] = ['social', 'tidiness', 'energy', 'creativity', 'leisure', 'lifestyle'];
-const PREF_GROUP_NAMES: Record<string, string> = { activity: 'Activities', music: 'Music', decor: 'Decor styles', food: 'Food', topic: 'Conversation topics' };
+const PREF_GROUP_NAMES: Record<string, string> = { activity: 'Activities', music: 'Music', decor: 'Decor styles', food: 'Food', topic: 'Conversation topics', weather: 'Weather' };
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const money = (cents: number) => `$${(cents / 100).toLocaleString('en-US', { maximumFractionDigits: cents % 100 === 0 ? 0 : 2 })}`;

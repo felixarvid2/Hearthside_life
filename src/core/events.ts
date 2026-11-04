@@ -6,7 +6,7 @@ import type { Cents, GameMinutes, Id, LifeStage, NeedId } from './types';
 export type GameEvent =
   | { type: 'tick'; minutes: GameMinutes }
   | { type: 'state.replaced' } // new game or load: everything must resync
-  | { type: 'lot.changed'; lotId: Id; what: 'walls' | 'floors' | 'objects' | 'openings' | 'fences' | 'roofs' | 'terrain' | 'all' }
+  | { type: 'lot.changed'; lotId: Id; what: 'walls' | 'floors' | 'objects' | 'openings' | 'fences' | 'roofs' | 'terrain' | 'pools' | 'all' }
   | { type: 'person.changed'; personId: Id; what: 'appearance' | 'outfit' | 'location' | 'queue' | 'needs' | 'all' }
   | { type: 'person.added'; personId: Id }
   | { type: 'person.removed'; personId: Id }

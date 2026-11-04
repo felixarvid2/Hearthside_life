@@ -16,6 +16,7 @@ import { tileKey } from '../core/ids';
 import type { Id, Lot } from '../core/types';
 import { fenceEdgeState } from './fences';
 import { stairHoles } from './levels';
+import { poolTiles, poolsOf } from './pools';
 import { openingEdgeKeys } from './walls';
 
 /** Occupant id of tiles of an upper level that have no floor (or a stairwell hole): nobody can stand there. */
@@ -73,6 +74,8 @@ export function buildNavGrid(lot: Lot, content: ContentDB, level: number, o: Gri
     if (blocksMovement(def)) block(obj.id, blockingTiles(obj.x, obj.z, def, obj.rot));
   }
   if (o.extra) block(o.extra.id, o.extra.tiles);
+  // Milestone 12: pool water is never walkable; the deck around it is (people enter only at a ladder, sim/pool.ts).
+  if (level === 0) for (const pool of poolsOf(lot)) block(`pool:${pool.id}`, poolTiles(pool));
   // Milestone 9: above the ground floor only floored tiles can be walked on (balconies included, stairwells not)
   if (level >= 1) {
     const holes = stairHoles(lot, content, level);
