@@ -1083,6 +1083,12 @@ const tileLay: PainterDef = {
           softBlob(ctx, bx0 + (bx1 - bx0) * 0.3, by0 + (by1 - by0) * 0.28, (bx1 - bx0) * 0.38, (by1 - by0) * 0.16, -0.6, '#ffffff', 0.2, 4);
         }
         ctx.restore();
+        if (layout === 'scales') {
+          ctx.strokeStyle = rgba(groutC, 0.85);
+          ctx.lineWidth = g * 1.2;
+          polyPath(ctx, inner);
+          ctx.stroke();
+        }
         if (finish !== 'flat' && finish !== 'ribbed') bevelEdges(ctx, s, inner, hair(s, 0.0025), finish === 'pillow' ? 0.35 : 0.3);
         else if (finish === 'ribbed') bevelEdges(ctx, s, inner, hair(s, 0.002), 0.2);
         // hand-painted motif

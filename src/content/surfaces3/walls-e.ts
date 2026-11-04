@@ -396,7 +396,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Overlapping fish-scale tiles in rows, arcs facing up, each scale glazed in a slightly different pool of colour.',
     family: 'tile', tags: ['tile', 'fish-scale', 'mermaid', 'scales', 'coastal', 'bathroom', 'kitchen', 'feature-wall'],
     packs: ['coastal-home', 'art-deco'], price: 33,
-    painter: 'wall-tile-lay', params: { layout: 'scales', size: 0.1, map: 'glaze-reactive', glaze: 0.5, grain: 0.5, grout: 0.003, variation: 0.4, finish: 'gloss' }, repeat: 0.6,
+    painter: 'wall-tile-lay', params: { layout: 'scales', size: 0.1, map: 'glaze-reactive', glaze: 0.3, grain: 0.5, grout: 0.003, variation: 0.4, finish: 'gloss' }, repeat: 0.6,
     palettes: tilePal(GLAZES),
   }),
   wall({
@@ -404,7 +404,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Fan-shaped scallops with their arcs turned down, in a soft matt speckled glaze. Pretty without being fussy.',
     family: 'tile', tags: ['tile', 'scallop', 'fan', 'speckled', 'matt', 'retro', 'bathroom', 'kitchen', 'nursery'],
     packs: ['mid-century', 'coastal-home'], price: 31,
-    painter: 'wall-tile-lay', params: { layout: 'scales', size: 0.12, flip: true, map: 'glaze-speckle', glaze: 0.55, grain: 0.5, grout: 0.003, variation: 0.3, finish: 'bevel' }, repeat: 0.72,
+    painter: 'wall-tile-lay', params: { layout: 'scales', size: 0.12, flip: true, map: 'glaze-speckle', glaze: 0.45, grain: 0.5, grout: 0.003, variation: 0.3, finish: 'bevel' }, repeat: 0.72,
     palettes: tilePal(GLAZES),
   }),
   wall({
