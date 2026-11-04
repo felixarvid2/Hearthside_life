@@ -52,6 +52,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 | 9 | Multiple floors and exteriors | Three floors, stairs, roofs, balconies, gardens | Structural tools, multi-floor houses | 2 |
 | 10 | Complete catalogs | Broad, coherent decoration and character content | 360 walls, 200 floors, 560 furnishings, full creator catalog | 2, 3, 9 |
 | 11 | Complete progression and social scope | Long-term play, varied goals | 12 careers, 16 skills, 40 traits, 12 aspirations, 40 socials | 5, 6 |
+| 11.5 | Animations and activity feedback | Actions read visually: moving appliance parts, hand-held props and food, screens that show the activity, a progress pill above the head | Fridge/oven/wardrobe/shower states, props for eating/reading/phone, computer and TV screen modes | 4, 11 |
 | 12 | Environment and venues | Seasons/weather, pools, outdoor life, venue variety | 6 public venues, 40 activities | 7, 9 |
 | 13 | Release preparation | Guidance, balance, accessibility, recovery, measured mobile performance | All targets audited | all |
 
