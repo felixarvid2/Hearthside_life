@@ -7,7 +7,9 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 ## Current milestone
 
 **Milestones 1-9 and 11 complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see CONTINUATION.md; M11 on
-PR #6). Next: **Milestone 10 - Complete catalogs** or **Milestone 12 - Environment and venues**.
+PR #6). **Milestone 10 - Complete catalogs is in progress: the surface catalog is complete** (360 wall finishes,
+200 floor designs). The 560 furnishings and the full creator catalog are still open. Next: the rest of Milestone 10, or
+**Milestone 12 - Environment and venues**.
 
 ## Completed-project targets (brief section 2)
 
@@ -83,6 +85,21 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   activities, six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond) and
   once-only payouts. 40 traits in six categories, 13 three-stage aspirations (adult-only) and 45 social interactions.
   Saves stay at schema 1; no new fields.
+
+## Milestone 10, complete catalogs (in progress)
+
+- **Surfaces (complete).** 360 wall finishes (3382 palettes) and 200 floor designs (1523 palettes), meeting the brief
+  allocation: walls paint 28, stripes 24, geometric 32, floral 32, botanical 24, vintage-deco 24, playful 24,
+  wood-panel 24, tile 36, brick-stone 32, concrete 20, luxury 20, mural 20, themed 20; floors wood-planks 40,
+  parquet 24, laminate-vinyl 20, tile 32, stone 24, carpet 24, concrete 12, exterior 24. 278 wall and 156 floor
+  designs use AI-generated sources (tinted greyscale detail maps, motifs or murals); 82 walls and 44 floors are
+  painted entirely by code. Sources: 153 material maps, 131 motifs and 16 murals in `public/assets/surfaces/`
+  (about 13 MB), generated with fal.ai FLUX.2 [dev] (`fal-ai/flux-2`) on 2026-11-04. Palettes tint the sources, so
+  every palette works. Pipeline: `node dev/surfaces-ai/generate.mjs --group <group>` (sources in
+  `dev/surfaces-ai/sources/<group>.mjs`, budget cap and ledger), `npm run assets:surfaces -- --group <group>`, and
+  `npm run visual:surfaces -- --group <group> [--ids a,b] [--palettes]`; per-group painters in
+  `src/render/textures/packs/<group>.ts`, content in `src/content/surfaces3/<group>.ts`.
+- **Still open.** 560 furnishings and the full creator catalog target.
 
 ## Unfinished systems after M1 (by dependency)
 

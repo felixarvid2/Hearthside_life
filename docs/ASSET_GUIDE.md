@@ -200,13 +200,20 @@ hat; hair below the band (side locks, hanging lengths) is left alone. Hats stand
   (pebbles, lawn, fibre) or in grouted cells that each show a random part of the map (marble slabs),
   `map-boards` lays staggered boards cut from a grain map (wide oak, narrow strip). Layout (boards, joints,
   grout, skirting) is always procedural.
-- The 14 original maps are AI-generated (fal.ai FLUX.1 [dev], see LICENSES); the Milestone 10 sources use FLUX.2 [dev]
-  (`fal-ai/flux-2`). Both are reproducible: `dev/surfaces-ai/generate.mjs` fetches raw sources (catalogue as data in
+- **AI sources**: the 14 original maps are AI-generated (fal.ai FLUX.1 [dev], see LICENSES). The Milestone 10 catalog
+  adds 153 greyscale material maps (512 px WebP), 131 motifs (256 px) and 16 murals (1024 x 512, seamless along x),
+  about 13 MB in `public/assets/surfaces/`, generated with fal.ai FLUX.2 [dev] (`fal-ai/flux-2`) on 2026-11-04:
+  290 images, $3.69 (all surface work: 316 calls, $4.31; `dev/surfaces-ai/LEDGER.md`). FLUX.2 [dev] was the best of
+  the probed models at continuous materials without baked-in joints and at isolated motifs (FLUX.1 [dev] baked in
+  grids, Qwen-Image ignored isolation, Recraft gave perspective or product shots), costs half as much as FLUX.1 [dev],
+  and fal lists it for commercial use. Palettes tint the sources, so every palette works.
+- Both are reproducible: `node dev/surfaces-ai/generate.mjs --group <group>` fetches raw sources (catalogue as data in
   `dev/surfaces-ai/sources/<group>.mjs`, kinds material, motif, mural) into `dev/surfaces-ai/raw/` (gitignored,
   cached, never fetched twice) and logs the spend to `dev/surfaces-ai/LEDGER.md` (budget guard $15);
-  `npm run assets:surfaces` (`tools/build-surface-maps.mjs`) turns them into the committed WebP images: material maps
-  (512 px, flattened, seamless, normalised), motif masks (`motifs/`, 256 px, ink = alpha) and murals (`murals/`,
-  1024 x 512, seamless along x), and writes `surfaceMapIds.generated.ts` from what is in `public/`.
+  `npm run assets:surfaces -- --group <group>` (`tools/build-surface-maps.mjs`) turns them into the committed WebP
+  images: material maps (512 px, flattened, seamless, normalised), motif masks (`motifs/`, 256 px, ink = alpha) and
+  murals (`murals/`, 1024 x 512, seamless along x), and writes `src/render/textures/surfaceMapIds.generated.ts` from
+  what is in `public/`. Maps load on demand: only the 14 base maps and the active lot's maps are preloaded.
 - **Motifs and murals** (`motifPainters.ts`): `motif-wall` and `motif-floor` stamp a motif mask, tinted with one palette
   colour, in a grid, half-drop, brick, diagonal, scatter or trail layout (floors also `tile`: grouted tiles with the
   motif centred and turned) over a ground colour with an optional low-contrast ground map; `mural-wall` stretches a
@@ -215,8 +222,10 @@ hat; hair below the band (side locks, hanging lengths) is left alone. Hats stand
   everything else loads on demand: until an image has arrived the painter draws a flat fallback of the same layout,
   `surfaceTextures` repaints the texture in place when it loads and does not cache thumbnails painted without it
   (`onSurfaceMapArrived` lets the UI repaint thumbnails).
-- Review sheets: `npm run visual:surfaces -- --group walls-a` writes room-scale contact sheets to
-  `dev/tasks/m10-surfaces/sheets/`.
+- **Groups**: shared painters are `motif-wall`, `motif-floor` and `mural-wall`; per-group painters live in
+  `src/render/textures/packs/<group>.ts` and their content in `src/content/surfaces3/<group>.ts`.
+- Review sheets: `npm run visual:surfaces -- --group <group> [--ids a,b] [--palettes]` writes room-scale contact
+  sheets to `dev/tasks/m10-surfaces/sheets/`.
 - UV convention: walls `u = world coordinate along the wall axis / repeat`, `v = height / 2.8`; floors
   `uv = (x, z) / repeat`. Patterns stay aligned along wall runs and across tiles.
 - Doors and windows are procedural meshes (`src/render/openingMeshes.ts`) with real wall holes. All openings are
@@ -230,7 +239,7 @@ hat; hair below the band (side locks, hanging lengths) is left alone. Hats stand
 - `tools/build-assets.mjs` is the only way third-party files enter `public/assets/` (the AI-generated Meshy bodies
   come in through `tools/build-meshy-bodies.mts`, see Characters); it records bounds, materials and sources in
   `public/assets/manifest.json`. Re-run it after changing the source selection.
-- Runtime models are GLB. Wall and floor textures are painted at runtime; the only image files are the 14 detail maps in `public/assets/surfaces/` (about 1 MB in total).
+- Runtime models are GLB. Wall and floor textures are painted at runtime; the only image files are the surface sources in `public/assets/surfaces/` (153 material maps, 131 motifs, 16 murals; about 13 MB in total).
 - Every visible default asset must fit this guide; temporary art is marked as such in CONTENT_STATUS.
 
 ## Licenses
@@ -242,6 +251,7 @@ hat; hair below the band (side locks, hanging lengths) is left alone. Hats stand
 | Furniture models and thumbnails | Kenney, Furniture Kit 2.0 | CC0 1.0 |
 | UI sounds and jingles | Kenney, Interface Sounds and Music Jingles | CC0 1.0 |
 | Detail maps for AI-textured walls and floors (`public/assets/surfaces/`) | Generated with fal.ai FLUX.1 [dev] on 2026-11-01 | fal.ai and FLUX.1 [dev] terms for outputs (check before distribution) |
+| Surface sources for Milestone 10 walls and floors (`public/assets/surfaces/`) | Generated with fal.ai FLUX.2 [dev] (`fal-ai/flux-2`) on 2026-11-04 | fal.ai and FLUX.2 [dev] terms for outputs (check before distribution) |
 | Faces, hair, clothing, wall and floor layouts and palettes, doors, windows, icons | Original, generated by this project's code | Project license |
 
 See also `public/assets/LICENSES.md`.
