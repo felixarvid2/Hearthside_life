@@ -18,8 +18,11 @@ const LEDGER = path.join(HERE, 'LEDGER.md');
 const DEFAULT_MODEL = 'fal-ai/flux-2';
 /** Dollars per megapixel (fal-ai/flux-2); other models are billed per image at the old flat price. */
 const PER_MP = { 'fal-ai/flux-2': 0.012 };
-/** Budget for the whole M10 surfaces job on fal-ai/flux-2 (the ledger rows are summed). */
-export const BUDGET = 15;
+/**
+ * Budget for the whole M10 surfaces job on fal-ai/flux-2 (the ledger rows are summed). The account had $7.36 left
+ * when the ledger stood at $0.98, so the hard cap is $8.34; 7.6 leaves room for calls in flight in parallel runs.
+ */
+export const BUDGET = 7.6;
 const CONCURRENCY = 4;
 
 export const BASE = 'seamless tileable material texture, flat orthographic front view, even soft diffuse lighting, no shadows, no perspective, no border, fills the whole frame, highly detailed, photographic';
@@ -147,10 +150,14 @@ async function main() {
   fs.mkdirSync(RAW, { recursive: true });
   const key = readKey();
   const queue = [...todo];
+  let inflight = 0;
   const worker = async () => {
     for (let p = queue.shift(); p; p = queue.shift()) {
-      // refuse a call that would pass the budget (spent includes the calls in flight)
+      // refuse a call that would pass the budget: re-read the ledger before every call (other groups run in
+      // parallel and append to it) and add this run's calls in flight
+      spent = ledgerTotal(model) + inflight;
       if (spent + p.cost > BUDGET + 1e-9) { console.log(`${p.id} skipped (budget $${BUDGET} would be passed)`); continue; }
+      inflight += p.cost;
       spent += p.cost;
       try {
         const body = {
@@ -163,9 +170,11 @@ async function main() {
         fs.writeFileSync(path.join(RAW, `${p.id}.${p.ext}`), Buffer.from(await (await fetch(url)).arrayBuffer()));
         fs.writeFileSync(path.join(RAW, `${p.id}.json`), JSON.stringify({ model: p.model, seed: p.seed, prompt: p.fullPrompt, kind: p.kind, size: [p.w, p.h] }, null, 1));
         fs.appendFileSync(LEDGER, `| ${new Date().toISOString().slice(0, 10)} | ${p.id} | ${p.model} | ${p.w}x${p.h} | $${p.cost.toFixed(4)} | ${p.group} ${p.kind} |\n`);
-        console.log(`${p.id} ok  total $${spent.toFixed(3)}`);
+        inflight -= p.cost;
+        console.log(`${p.id} ok  total $${(ledgerTotal(model) + inflight).toFixed(3)}`);
       } catch (e) {
-        spent -= p.cost; // a failed request is not billed
+        inflight -= p.cost; // a failed request is not billed
+        spent -= p.cost;
         console.log(`${p.id} failed (${e.message})  total $${spent.toFixed(3)}`);
       }
     }
