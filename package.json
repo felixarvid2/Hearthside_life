@@ -21,6 +21,7 @@
     "e2e": "node tests/e2e/run-e2e.mjs",
     "e2e:acceptance": "node tests/e2e/acceptance.mjs",
     "e2e:creator": "node tests/e2e/creator-m3.mjs",
+    "visual:surfaces": "node dev/surfaces-sheet.mjs",
     "visual:m5": "node dev/ds-tasks/visual-m5.mjs",
     "visual:m11:careers": "node dev/ds-tasks/m11/shots-careers.mjs",
     "visual:m11:skills-c": "node dev/ds-tasks/m11/shoot-skills-c.mjs",

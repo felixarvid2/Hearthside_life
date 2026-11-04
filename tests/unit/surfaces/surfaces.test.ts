@@ -4,7 +4,7 @@ import {
   paletteTone, tierForPrice,
 } from '../../../src/content/surfaces';
 import type { SurfaceDesign } from '../../../src/content/types';
-import { MAP_IDS } from '../../../src/render/textures/mapKit';
+import { MAP_IDS, MOTIF_IDS, MURAL_IDS } from '../../../src/render/textures/mapKit';
 
 const HEX = /^#[0-9a-f]{6}$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -60,7 +60,8 @@ describe('surface catalog', () => {
     expect(Number.isInteger(d.price) && d.price > 0, d.id).toBe(true);
     expect(tierForPrice(d.surface, d.price), `${d.id} tier`).toBe(d.tier);
     expect(d.repeat, d.id).toBeGreaterThan(0.1);
-    expect(d.repeat, d.id).toBeLessThanOrEqual(4);
+    // a mural is one picture over the whole run: its repeat is the mural width
+    expect(d.repeat, d.id).toBeLessThanOrEqual(d.painter === 'mural-wall' ? 6 : 4);
     expect(d.palettes.length, d.id).toBeGreaterThanOrEqual(minPalettes);
     expect(unique(d.palettes.map((p) => p.id)), `${d.id} palette ids`).toBe(true);
     expect(unique(d.palettes.map((p) => p.name)), `${d.id} palette names`).toBe(true);
@@ -91,8 +92,17 @@ describe('surface catalog', () => {
 
   it('keeps added detail maps and design ids in step', () => {
     for (const d of [...WALL_DESIGNS, ...FLOOR_DESIGNS]) {
-      const map = d.params.map;
-      if (typeof map === 'string') expect(MAP_IDS as readonly string[], d.id).toContain(map);
+      for (const key of ['map', 'ground']) {
+        const v = d.params[key];
+        if (typeof v === 'string' && v !== '') expect(MAP_IDS as readonly string[], `${d.id} ${key}`).toContain(v);
+      }
+      // `motif` also names procedural shapes in older painters; only the motif painters take image ids
+      if (d.painter === 'motif-wall' || d.painter === 'motif-floor') {
+        expect(MOTIF_IDS, `${d.id} motif`).toContain(d.params.motif);
+        const m2 = d.params.motif2;
+        if (typeof m2 === 'string' && m2 !== '') expect(MOTIF_IDS, `${d.id} motif2`).toContain(m2);
+      }
+      if (d.painter === 'mural-wall') expect(MURAL_IDS, `${d.id} mural`).toContain(d.params.mural);
     }
   });
 

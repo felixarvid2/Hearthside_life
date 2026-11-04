@@ -41,3 +41,15 @@ Cost per call is the listed per-image price (1 MP or less); the account is not q
 2. `npm run assets:surfaces` (`tools/build-surface-maps.mjs`) turns raw sources into `public/assets/surfaces/<id>.webp`: greyscale, optional crop/rotation, 512 px, illumination flatten, seamless by variance-preserving offset-and-blend, wrap-around high-pass against slow drift, normalised to mean 0.5. About 0.9 MB for the 14 maps.
 3. At run time the painters tint each map with the palette (0 -> dark, 0.5 -> base, 1 -> light).
 
+
+## M10 surfaces: fal-ai/flux-2 (FLUX.2 [dev], $0.012 per megapixel)
+
+Budget for the whole job: $15.00 on `fal-ai/flux-2`. `generate.mjs` sums these rows and refuses a call that would pass it.
+Rows are appended by the script (keep this table the last thing in the file). Source catalogue: `sources/<group>.mjs`.
+
+| date | source | model | size | cost | result |
+|---|---|---|---|---|---|
+| 2026-11-04 | paper-linen | fal-ai/flux-2 | 1024x1024 | $0.0126 | pilot material |
+| 2026-11-04 | motif-peony | fal-ai/flux-2 | 1024x1024 | $0.0126 | pilot motif |
+| 2026-11-04 | mural-misty-pines | fal-ai/flux-2 | 1536x768 | $0.0142 | pilot mural |
+| 2026-11-04 | motif-rocket | fal-ai/flux-2 | 1024x1024 | $0.0126 | pilot motif |

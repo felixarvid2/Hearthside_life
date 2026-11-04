@@ -200,13 +200,23 @@ hat; hair below the band (side locks, hanging lengths) is left alone. Hats stand
   (pebbles, lawn, fibre) or in grouted cells that each show a random part of the map (marble slabs),
   `map-boards` lays staggered boards cut from a grain map (wide oak, narrow strip). Layout (boards, joints,
   grout, skirting) is always procedural.
-- The maps are AI-generated (fal.ai FLUX.1 [dev], see LICENSES) and reproducible: `dev/surfaces-ai/generate.mjs`
-  fetches raw sources into `dev/surfaces-ai/raw/` (gitignored, cached, never fetched twice) and logs the spend to
-  `dev/surfaces-ai/LEDGER.md`; `npm run assets:surfaces` (`tools/build-surface-maps.mjs`) turns them into the
-  committed WebP maps (illumination flattened, made seamless by offset-and-blend, normalised). The maps load once
-  at start-up (`preloadSurfaceMaps`, started by `GameView`); until a map has arrived the painter draws a flat
-  fallback of the same layout, `surfaceTextures` repaints the texture in place when the map loads and does not
-  cache thumbnails painted without it.
+- The 14 original maps are AI-generated (fal.ai FLUX.1 [dev], see LICENSES); the Milestone 10 sources use FLUX.2 [dev]
+  (`fal-ai/flux-2`). Both are reproducible: `dev/surfaces-ai/generate.mjs` fetches raw sources (catalogue as data in
+  `dev/surfaces-ai/sources/<group>.mjs`, kinds material, motif, mural) into `dev/surfaces-ai/raw/` (gitignored,
+  cached, never fetched twice) and logs the spend to `dev/surfaces-ai/LEDGER.md` (budget guard $15);
+  `npm run assets:surfaces` (`tools/build-surface-maps.mjs`) turns them into the committed WebP images: material maps
+  (512 px, flattened, seamless, normalised), motif masks (`motifs/`, 256 px, ink = alpha) and murals (`murals/`,
+  1024 x 512, seamless along x), and writes `surfaceMapIds.generated.ts` from what is in `public/`.
+- **Motifs and murals** (`motifPainters.ts`): `motif-wall` and `motif-floor` stamp a motif mask, tinted with one palette
+  colour, in a grid, half-drop, brick, diagonal, scatter or trail layout (floors also `tile`: grouted tiles with the
+  motif centred and turned) over a ground colour with an optional low-contrast ground map; `mural-wall` stretches a
+  mural over one repeat as a tritone. Design params name images: `map`, `ground`, `motif`, `motif2`, `mural`
+  (`designMaps()` lists them). Only the 14 base maps and the images of the active lot's designs are preloaded;
+  everything else loads on demand: until an image has arrived the painter draws a flat fallback of the same layout,
+  `surfaceTextures` repaints the texture in place when it loads and does not cache thumbnails painted without it
+  (`onSurfaceMapArrived` lets the UI repaint thumbnails).
+- Review sheets: `npm run visual:surfaces -- --group walls-a` writes room-scale contact sheets to
+  `dev/tasks/m10-surfaces/sheets/`.
 - UV convention: walls `u = world coordinate along the wall axis / repeat`, `v = height / 2.8`; floors
   `uv = (x, z) / repeat`. Patterns stay aligned along wall runs and across tiles.
 - Doors and windows are procedural meshes (`src/render/openingMeshes.ts`) with real wall holes. All openings are

@@ -9,36 +9,36 @@
 
 import type { OpeningDef, Palette, PriceTier, SurfaceDesign } from './types';
 
-const pal = (id: string, name: string, ...colors: string[]): Palette => ({ id, name, colors });
-const dollars = (d: number) => Math.round(d * 100);
+export const pal = (id: string, name: string, ...colors: string[]): Palette => ({ id, name, colors });
+export const dollars = (d: number) => Math.round(d * 100);
 
 /** Lightens (t > 0, toward white) or darkens (t < 0, toward black) a '#rrggbb' colour. */
-function shd(hex: string, t: number): string {
+export function shd(hex: string, t: number): string {
   const n = parseInt(hex.slice(1, 7), 16);
   const to = t >= 0 ? 255 : 0, k = Math.min(1, Math.abs(t));
   const ch = (sh: number) => Math.round(((n >> sh) & 255) + (to - ((n >> sh) & 255)) * k).toString(16).padStart(2, '0');
   return `#${ch(16)}${ch(8)}${ch(0)}`;
 }
 
-function tierOf(surface: 'wall' | 'floor', price: number): PriceTier {
+export function tierOf(surface: 'wall' | 'floor', price: number): PriceTier {
   const d = price / 100;
   if (surface === 'wall') return d < 6 ? 'budget' : d <= 12 ? 'standard' : d < 25 ? 'premium' : 'luxury';
   return d < 7 ? 'budget' : d <= 12 ? 'standard' : d < 25 ? 'premium' : 'luxury';
 }
 
-type DesignInput = Omit<SurfaceDesign, 'surface' | 'status' | 'tier' | 'price'> & { price: number };
-const wall = (d: DesignInput): SurfaceDesign => ({ ...d, surface: 'wall', status: 'ready', price: dollars(d.price), tier: tierOf('wall', dollars(d.price)) });
-const floor = (d: DesignInput): SurfaceDesign => ({ ...d, surface: 'floor', status: 'ready', price: dollars(d.price), tier: tierOf('floor', dollars(d.price)) });
+export type DesignInput = Omit<SurfaceDesign, 'surface' | 'status' | 'tier' | 'price'> & { price: number };
+export const wall = (d: DesignInput): SurfaceDesign => ({ ...d, surface: 'wall', status: 'ready', price: dollars(d.price), tier: tierOf('wall', dollars(d.price)) });
+export const floor = (d: DesignInput): SurfaceDesign => ({ ...d, surface: 'floor', status: 'ready', price: dollars(d.price), tier: tierOf('floor', dollars(d.price)) });
 
 /** Palette factory: `roles` derives the full colour list from the tuple's colours. */
-type Tuple = [id: string, name: string, ...c: string[]];
-const make = (roles: (...c: string[]) => string[]) => (list: Tuple[]): Palette[] => list.map(([id, name, ...c]) => pal(id, name, ...roles(...c)));
+export type Tuple = [id: string, name: string, ...c: string[]];
+export const make = (roles: (...c: string[]) => string[]) => (list: Tuple[]): Palette[] => list.map(([id, name, ...c]) => pal(id, name, ...roles(...c)));
 
-const plain = make((...c) => c);
-const TRIM = '#f5f1e8';
+export const plain = make((...c) => c);
+export const TRIM = '#f5f1e8';
 
 // Ground + motif colour pairs shared by the printed patterns. colors[0] = ground.
-const DUO: Tuple[] = [
+export const DUO: Tuple[] = [
   ['cream-sage', 'Cream and Sage', '#f1ead8', '#9db08f'],
   ['ivory-navy', 'Ivory and Navy', '#f2eee4', '#34456a'],
   ['blush-rose', 'Blush and Rose', '#f1dcd5', '#cf7f86'],
@@ -50,15 +50,15 @@ const DUO: Tuple[] = [
   ['midnight-silver', 'Midnight and Silver', '#1f2a44', '#b9bec9'],
 ];
 // roles: ground, motifA, motifB (a lighter tint of the motif), trim
-const duoP = make((g, m) => [g!, m!, shd(m!, 0.4), shd(g!, 0.72)]);
+export const duoP = make((g, m) => [g!, m!, shd(m!, 0.4), shd(g!, 0.72)]);
 // roles: ground, stripe, accent, trim
-const stripeP = make((g, m) => [g!, m!, shd(m!, -0.3), shd(g!, 0.72)]);
+export const stripeP = make((g, m) => [g!, m!, shd(m!, -0.3), shd(g!, 0.72)]);
 // roles: ground, band, band2, overcheck, trim (buffalo check)
-const checkP = make((g, m) => [g!, m!, shd(m!, 0.35), shd(m!, -0.35), shd(g!, 0.72)]);
+export const checkP = make((g, m) => [g!, m!, shd(m!, 0.35), shd(m!, -0.35), shd(g!, 0.72)]);
 
 // Single-colour ramps for detail maps: [base, light, dark, trim]
-const ramp = make((c) => [c!, shd(c!, 0.24), shd(c!, -0.3), TRIM]);
-const NEUTRAL_RAMP: Tuple[] = [
+export const ramp = make((c) => [c!, shd(c!, 0.24), shd(c!, -0.3), TRIM]);
+export const NEUTRAL_RAMP: Tuple[] = [
   ['chalk', 'Chalk', '#e6e0d3'], ['oat', 'Oat', '#d3c5ae'], ['stone-grey', 'Stone Grey', '#a9a59d'], ['sage', 'Sage', '#9aa890'],
   ['dusk-blue', 'Dusk Blue', '#6b7e93'], ['clay-pink', 'Clay Pink', '#cf9c88'], ['terracotta', 'Terracotta', '#bb6a4a'],
   ['ochre', 'Ochre', '#c79a48'], ['charcoal', 'Charcoal', '#45454a'],
@@ -546,17 +546,17 @@ export const WALL_DESIGNS_2: SurfaceDesign[] = [
 // ---------------------------------------------------------------------------------------------
 
 // wood: [base, light, dark, seam]
-const woodP = make((c) => [c!, shd(c!, 0.25), shd(c!, -0.38), shd(c!, -0.62)]);
-const WOODS: Tuple[] = [
+export const woodP = make((c) => [c!, shd(c!, 0.25), shd(c!, -0.38), shd(c!, -0.62)]);
+export const WOODS: Tuple[] = [
   ['natural-oak', 'Natural Oak', '#c49a6c'], ['honey-oak', 'Honey Oak', '#c98f4f'], ['whitewashed-oak', 'Whitewashed Oak', '#e2d6c3'], ['grey-ash', 'Grey Ash', '#a9a296'],
   ['cherry', 'Cherry', '#9a5034'], ['smoked-oak', 'Smoked Oak', '#7a5a40'], ['walnut', 'Walnut', '#5e4030'], ['ebony', 'Ebony', '#3a2d28'],
 ];
-const WEATHERED: Tuple[] = [
+export const WEATHERED: Tuple[] = [
   ['silver-barn', 'Silver Barnwood', '#9a958b'], ['tobacco-barn', 'Tobacco Barnwood', '#8a6a4a'], ['bleached-barn', 'Bleached Barnwood', '#cfc5b0'],
   ['driftwood', 'Driftwood', '#b8aa94'], ['charred-barn', 'Charred Barnwood', '#4a4038'], ['honey-barn', 'Honey Barnwood', '#b98a52'],
 ];
 // carpets and fibres: [base, light, dark, grout(unused)]
-const fibreP = make((c) => [c!, shd(c!, 0.22), shd(c!, -0.32), shd(c!, -0.5)]);
+export const fibreP = make((c) => [c!, shd(c!, 0.22), shd(c!, -0.32), shd(c!, -0.5)]);
 
 export const FLOOR_DESIGNS_2: SurfaceDesign[] = [
   floor({
