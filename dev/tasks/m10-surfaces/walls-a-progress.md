@@ -32,7 +32,7 @@ Tuning done while looking at the sheets: plaster/metal/velvet/silk maps use one 
 | `npx vitest run tests/unit/surfaces/m10-walls-a.test.ts` | 8 tests pass |
 | `npm run typecheck` | clean |
 | `npm run content:check` | 0 errors, 0 warnings |
-| `npm test` (once, whole tree) | see final report; failures only in other groups' files |
+| `npm test` (once, whole tree) | 18 failures in 9 files, none about walls-a (other groups: rubber-studded, plaster-peeled-brick, stripes-cabana, stone-sandstone-herringbone, fb-glass-cloud; unrelated timeouts under load) |
 
 ## Open issues
 - Strie, swirl render and the matt/satin stripe are subtle on the lightest palettes by design; they read clearly on mid and dark ones.
