@@ -49,6 +49,12 @@ export function openSettings(sh: Shell): void {
     label: 'Weather effects', hint: 'Rain streaks and snowflakes. Off keeps the weather light and colour but draws no particles. Reduced motion also hides them.',
     value: cfg().weatherEffects, onChange: (on) => { set({ weatherEffects: on }); sh.sound('toggle'); },
   });
+  // Milestone 11.5: the small progress pill above a person's head while an action runs.
+  const progressPills = segmented<'household' | 'all' | 'off'>({
+    label: 'Action progress', value: cfg().actionProgress,
+    options: [{ id: 'household', label: 'Household' }, { id: 'all', label: 'Everyone' }, { id: 'off', label: 'Off' }],
+    onChange: (v) => { set({ actionProgress: v }); sh.sound('toggle'); },
+  });
 
   const noGame = 'Available while a game is running.';
   const autonomy = toggleSwitch({ label: 'Autonomy', hint: 'Household members look after themselves when idle.', value: sim?.autonomy ?? true, disabled: !sim, onChange: (on) => { setSim({ autonomy: on }); level.el.classList.toggle('is-disabled', !on); sh.sound('toggle'); } });
@@ -128,7 +134,7 @@ export function openSettings(sh: Shell): void {
 
   m.body.append(
     section('Sound', 'sound', vol('Master volume', 'masterVolume').el, vol('Sound effects', 'soundVolume').el, vol('Music', 'musicVolume').el),
-    section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el, weatherEffects.el),
+    section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el, weatherEffects.el, progressPills.el),
     section('Household life', 'people', autonomy.el, level.el, visitors.el, seasons.el, seasonLength.el, weather.el,
       sim?.unlimitedFunds ? h('p', { class: 'muted-note' }, icon('build', 18), h('span', { text: 'This world has unlimited building funds (Build Sandbox).' })) : null),
     section('Aging and family', 'family', aging.el, agingHint, customBox, endOfLife.el),
@@ -144,6 +150,6 @@ export function openSettings(sh: Shell): void {
     if (w !== 'settings') return;
     const c = cfg();
     reduced.set(c.reducedMotion); shadows.set(c.shadows); weatherEffects.set(c.weatherEffects); stats.set(c.showStats); tutorial.set(c.tutorial);
-    quality.set(c.quality); style.set(c.characterStyle); text.set(nearestTextSize(c.textScale));
+    quality.set(c.quality); style.set(c.characterStyle); text.set(nearestTextSize(c.textScale)); progressPills.set(c.actionProgress);
   });
 }

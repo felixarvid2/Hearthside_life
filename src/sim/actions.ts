@@ -110,6 +110,15 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
         setPhase(ctx, a, 'perform');
         a.elapsed = 0;
         a.duration = step.duration.kind === 'fixed' ? step.duration.minutes : step.duration.kind === 'instant' ? 0 : null;
+        // Milestone 11.5 (task B): remember where the driving need started, so the render-side progress pill can
+        // show untilFull progress without guessing the modified rate. Render-only read; no schema change.
+        if (step.duration.kind === 'untilFull') {
+          a.data.startNeedId = step.duration.need;
+          a.data.startNeed = p.needs[step.duration.need];
+        } else {
+          a.data.startNeedId = null;
+          a.data.startNeed = null;
+        }
         setAnim(p, step.performAnim, ctx.now);
         continue;
       }

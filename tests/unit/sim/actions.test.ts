@@ -375,3 +375,34 @@ describe('rebuild after load', () => {
     expect(h2.sim.reservations()).toHaveLength(1);
   });
 });
+
+describe('progress pill data (Milestone 11.5)', () => {
+  it('records the start value and id of the driving need when perform begins', () => {
+    const w = quietWorld();
+    w.state.people[w.mira]!.needs.hygiene = 40;
+    const h = harness(w.state);
+    h.sim.queue(w.mira, { interactionId: 'takeShower', target: { kind: 'object', objectId: w.objects.shower!.id, slotId: null } });
+    runUntil(h, () => head(h, w.mira)?.phase === 'perform');
+    const a = head(h, w.mira)!;
+    expect(a.data.startNeedId).toBe('hygiene');
+    // The value is the need at the start of perform (one tick of rate may already have been applied by the time
+    // the test observes the phase), and it does not change as the action runs.
+    expect(a.data.startNeed).toBeGreaterThan(39.5);
+    expect(a.data.startNeed).toBeLessThanOrEqual(40);
+    expect(w.state.people[w.mira]!.needs.hygiene).toBeGreaterThan(a.data.startNeed as number);
+    const recorded = a.data.startNeed;
+    runTicks(h, 4);
+    expect(head(h, w.mira)!.data.startNeed).toBe(recorded);
+    expect(head(h, w.mira)!.data.startNeedId).toBe('hygiene');
+  });
+
+  it('records a null start for fixed-duration actions', () => {
+    const w = quietWorld();
+    const h = harness(w.state);
+    watchTv(h, w);
+    runUntil(h, () => head(h, w.mira)?.phase === 'perform');
+    const a = head(h, w.mira)!;
+    expect(a.data.startNeedId).toBeNull();
+    expect(a.data.startNeed).toBeNull();
+  });
+});

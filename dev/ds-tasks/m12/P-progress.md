@@ -1,6 +1,6 @@
 # Task P — Pools (build tool, geometry, swimming, outfits)
 
-Status: design complete, implementation starting.
+Status: implementation complete; check results at the end of this file.
 
 ## Design
 
@@ -179,4 +179,30 @@ switch is visible because `switchOutfit` updates `p.outfits.current`, which the 
 
 ## Check results
 
-(pending)
+On this working tree (2026-11-04). The acceptance scenario never builds a pool, so nothing below depends on pool
+behaviour being right except the pool suites and the pool screenshots.
+
+- `npm run typecheck` — pass (`tsc --noEmit`, exit 0).
+- `npm run content:check` — pass, 0 errors, 0 warnings; the three pool styles are validated with the rest of the
+  exterior content.
+- Pool suites (`building/poolPlans`, `world/poolNav`, `sim/poolLifecycle`, `integration/poolPlaytest`) —
+  26/26 pass.
+- `npm run e2e` — portrait, landscape and desktop pass. The first full run had one landscape flake ("picking the
+  selected person" returned an overlapping household member); rerunning `--only=landscape --no-build` passed.
+- `npm run e2e:creator` — 288 passed, 0 failed (portrait 390x844, landscape 844x390, desktop 1280x720), including
+  the creator's outfit categories with `swim`.
+- `npm run e2e:acceptance` — 925 passed, 5 failed. None involve pools:
+  - portrait step 8 "the finished article was sold and paid once" and "the sale is announced in the feed": the
+    household member's actions all ended with "Can't reach the desktop computer" / "Can't reach the fridge" etc.
+    from that moment on. This is the step already listed as an occasional flake in `docs/CONTINUATION.md`; the
+    same step passed in landscape and desktop.
+  - portrait and landscape step 11 "Water the Bed fills the bed" were refused with "It is raining." (and
+    landscape's "after some game days the crop is ripe" then fell short). The refusal comes from the weather work
+    (rain blocks garden watering); desktop passed. Not a Task P behaviour.
+- `npm run visual:m12:pools` — 33/33 checks in all three viewports: the Build panel has a Pool tab with three
+  styles and draw/remove/ladder tools; a rectangle previews with its price; confirming builds one pool with an
+  auto-placed ladder and charges the posted price; a household member changes into the `swim` outfit, climbs in and
+  swims (stage `swim`, `inWater`); Get Out is offered while swimming; no page errors. Screenshots:
+  `dev/ds-tasks/m12/shots/P/pool-{panel,preview,built,swim}-{portrait,landscape,desktop}.png`.
+
+Full `npx vitest run` — see the note at the end of this section after the run.

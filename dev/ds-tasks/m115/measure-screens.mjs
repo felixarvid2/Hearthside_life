@@ -41,13 +41,17 @@ function accessorData(json, bin, index) {
   const a = json.accessors[index];
   const bv = json.bufferViews[a.bufferView];
   const comps = COMP[a.type];
+  // 5121 u8, 5123 u16, 5125 u32, 5126 f32
+  const ctype = a.componentType ?? 5126;
+  const csize = ctype === 5121 ? 1 : ctype === 5123 ? 2 : ctype === 5125 ? 4 : 4;
+  const read = ctype === 5121 ? (o) => bin.readUInt8(o) : ctype === 5123 ? (o) => bin.readUInt16LE(o) : ctype === 5125 ? (o) => bin.readUInt32LE(o) : (o) => bin.readFloatLE(o);
   const base = (bv.byteOffset ?? 0) + (a.byteOffset ?? 0);
-  const stride = bv.byteStride ?? comps * 4;
+  const stride = bv.byteStride ?? comps * csize;
   const out = [];
   for (let i = 0; i < a.count; i++) {
     const o = base + i * stride;
     const v = [];
-    for (let c = 0; c < comps; c++) v.push(bin.readFloatLE(o + c * 4));
+    for (let c = 0; c < comps; c++) v.push(read(o + c * csize));
     out.push(v);
   }
   return out;
@@ -81,7 +85,7 @@ function apply(m, p) {
 
 function collect(glb) {
   const { json, bin } = glb;
-  const out = []; // { material, node, prim, points: [[x,y,z]...], tris }
+  const out = []; // { material, node, prim, points: [[x,y,z]...], tris, faces: [[a,b,c]...] }
   const ident = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
   const walk = (nodeIndex, parent) => {
     const node = json.nodes[nodeIndex];
@@ -90,15 +94,39 @@ function collect(glb) {
       for (const prim of json.meshes[node.mesh].primitives) {
         const matName = prim.material !== undefined ? json.materials[prim.material].name : '(none)';
         const pos = accessorData(json, bin, prim.attributes.POSITION).map((p) => apply(m, p));
-        let tris = 0;
-        if (prim.indices !== undefined) tris = json.accessors[prim.indices].count / 3;
-        else tris = pos.length / 3;
-        out.push({ material: matName, node: node.name ?? `#${nodeIndex}`, points: pos, tris });
+        let faces;
+        if (prim.indices !== undefined) {
+          const idx = accessorData(json, bin, prim.indices).map((v) => v[0]);
+          faces = [];
+          for (let i = 0; i + 2 < idx.length; i += 3) faces.push([idx[i], idx[i + 1], idx[i + 2]]);
+        } else {
+          faces = [];
+          for (let i = 0; i + 2 < pos.length; i += 3) faces.push([i, i + 1, i + 2]);
+        }
+        out.push({ material: matName, node: node.name ?? `#${nodeIndex}`, points: pos, tris: faces.length, faces });
       }
     }
     for (const c of node.children ?? []) walk(c, m);
   };
   for (const n of json.scenes[json.scene ?? 0].nodes ?? []) walk(n, ident);
+  return out;
+}
+
+function triangleInfo(parts) {
+  const out = [];
+  for (const part of parts) {
+    for (const [ia, ib, ic] of part.faces) {
+      const a = part.points[ia], b = part.points[ib], c = part.points[ic];
+      const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+      const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+      const len = Math.hypot(...n);
+      if (len < 1e-12) continue;
+      const area = len / 2;
+      const nn = n.map((x) => x / len);
+      out.push({ material: part.material, area, normal: nn, points: [a, b, c] });
+    }
+  }
   return out;
 }
 
@@ -169,6 +197,15 @@ for (const asset of wanted) {
     const b = bounds(pts);
     const thin = b.mx[2] - b.mn[2] < 0.02;
     if (thin) console.log(`  flat material ${mat}: front z ${r4(b.mx[2])}, x ${r4(b.mn[0])}..${r4(b.mx[0])}, y ${r4(b.mn[1])}..${r4(b.mx[1])}`);
+  }
+  const tris = triangleInfo(parts).sort((a, b) => b.area - a.area);
+  console.log('  largest front-facing triangles (nz > 0.5, or ny > 0.5 for tilted screens):');
+  let shown = 0;
+  for (const t of tris) {
+    if (t.normal[2] < 0.5 && t.normal[1] < 0.5) continue;
+    const b = bounds(t.points);
+    console.log(`    mat ${t.material.padEnd(12)} area ${t.area.toFixed(5)} n ${t.normal.map((x) => x.toFixed(2)).join(',')}  x ${r4(b.mn[0])}..${r4(b.mx[0])} y ${r4(b.mn[1])}..${r4(b.mx[1])} z ${r4(b.mn[2])}..${r4(b.mx[2])}`);
+    if (++shown >= 14) break;
   }
 }
 

@@ -17,6 +17,8 @@ import { resolveSlots } from '../world/slots';
 import type { CameraRig } from './cameraRig';
 import { lyingPlacement, seatedPlacement } from '../characters/posture';
 import { CRADLE } from '../characters/stagePose';
+import { HandProps, propsFor } from './handProps';
+import { ProgressPills, type ProgressScope } from './progressPills';
 
 const ANIMS = new Set<string>(ANIM_IDS);
 const TWO_PI = Math.PI * 2;
@@ -25,6 +27,8 @@ const SPEECH_SECONDS = 4.5;
 interface Entry {
   id: Id;
   view: CharacterView;
+  /** Milestone 11.5: the props in this person's hands (and the plate put down in front). */
+  props: HandProps;
   prevX: number; prevZ: number; curX: number; curZ: number;
   facing: number;
   animKey: string;
@@ -113,6 +117,8 @@ export class PeopleView {
   /** Milestone 9: people on floors above this one are not drawn. */
   private activeLevel = 0;
   private readonly smoothY = new Map<Id, number>();
+  /** Milestone 11.5: one progress pill per person, above the thought bubble/name tag. */
+  private readonly pills = new ProgressPills();
   private time = 0;
   private readonly tmp = new THREE.Vector3();
   private readonly scr = { x: 0, y: 0, visible: false };
@@ -134,6 +140,9 @@ export class PeopleView {
   invalidateSlots(): void { this.slotsLot = null; }
 
   setActiveLevel(level: number): void { this.activeLevel = level; }
+
+  /** Which people get a progress pill (device setting, see game/settings.ts). */
+  setProgressScope(scope: ProgressScope): void { this.pills.setScope(scope); }
 
   /** Height of the floor under a person: the floor of their level plus their height on a staircase, eased between frames. */
   private floorY(id: Id, loc: { level: number; rise?: number }, x: number, z: number, dt: number, reduced: boolean): number {
@@ -182,20 +191,24 @@ export class PeopleView {
   }
 
   clear(): void {
+    this.pills.clear();
     for (const e of [...this.entries.values()]) this.remove(e);
     this.slotsLot = null;
   }
 
   private remove(e: Entry): void {
+    e.props.dispose();
     e.view.dispose();
     e.shadow.removeFromParent();
     e.el.remove();
+    this.pills.remove(e.id);
     this.entries.delete(e.id);
   }
 
   private create(p: Person): Entry {
     const outfit = currentOutfit(p);
     const view = new CharacterView(this.assets, this.content, p.appearance, outfit, p.lifeStage);
+    const props = new HandProps(view);
     view.root.traverse((o) => { o.frustumCulled = false; });
     this.group.add(view.root);
     const shadow = new THREE.Mesh(this.shadowGeo, this.shadowMat);
@@ -207,10 +220,11 @@ export class PeopleView {
     const speech = document.createElement('div'); speech.className = 'wo-speech'; speech.hidden = true;
     const name = document.createElement('div'); name.className = 'wo-name'; name.hidden = true; name.textContent = p.firstName;
     el.append(bubble, speech, name);
+    if (this.overlay) this.pills.add(p.id, el);
     this.overlay?.appendChild(el);
     const loc = p.location.kind === 'lot' ? p.location : null;
     const e: Entry = {
-      id: p.id, view, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
+      id: p.id, view, props, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
       facing: loc?.facing ?? 0, animKey: '', appearanceKey: stageKey(p), outfitKey: JSON.stringify(outfit),
       align: loc && (loc.posture === 'seated' || loc.posture === 'lying') ? 1 : 0, slot: null, posture: loc?.posture ?? 'standing',
       shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0, baby: p.lifeStage === 'baby',
@@ -292,9 +306,9 @@ export class PeopleView {
     const heldNow: Array<[Entry, Entry]> = [];
     for (const e of this.entries.values()) {
       const p = state.people[e.id];
-      if (!p || p.location.kind !== 'lot') { e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
+      if (!p || p.location.kind !== 'lot') { e.props.hide(); e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
       const loc = p.location;
-      if (loc.level > this.activeLevel) { e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
+      if (loc.level > this.activeLevel) { e.props.hide(); e.view.root.visible = false; e.shadow.visible = false; e.visible = false; continue; }
       e.visible = true;
       e.view.root.visible = true;
       e.shadow.visible = true;
@@ -313,7 +327,7 @@ export class PeopleView {
       e.view.update(dt);
       if (e.baby) {
         const holder = this.holderOf(state, e);
-        if (holder) { heldNow.push([e, holder]); continue; }
+        if (holder) { e.props.hide(); heldNow.push([e, holder]); continue; }
       }
       // facing
       const d = shortestAngle(e.facing, loc.facing);
@@ -361,6 +375,13 @@ export class PeopleView {
       }
       e.view.root.position.set(rx, ry, rz);
       e.view.root.rotation.y = rot;
+      // Milestone 11.5, task H: the props in the hands follow the animated bones; a seated eater's plate is
+      // placed on the table in front (0.74 m above the floor, a little ahead of the pelvis).
+      const rootScale = e.view.root.scale.x || 1;
+      e.props.update(
+        propsFor(p, p.queue[0] ?? null, p.anim, state.clock.minutes, state.items),
+        { scale: e.view.hasOwnBody ? k : 1, tableY: (ground + 0.74 - ry) / rootScale, forward: 0.48 / rootScale },
+      );
       e.shadow.position.set(rx, ground + 0.012, rz);
       e.shadow.visible = e.align < 0.5 && !swimming;
       const w = 0.3 * Math.max(k, 0.55);
@@ -412,14 +433,21 @@ export class PeopleView {
     const now = state.clock.minutes;
     for (const e of this.entries.values()) {
       const p = state.people[e.id];
-      const thought = p?.thought && p.thought.until > now ? p.thought : null;
-      const speaking = e.speechUntil > this.time;
-      const named = e.id === this.selected || e.id === this.hovered;
-      const show = e.visible && (!!thought || speaking || named);
-      if (!show) { if (e.lastShown !== '') { e.el.style.transform = 'translate(-9999px,0)'; e.lastShown = ''; } continue; }
+      const off = (): void => {
+        this.pills.hide(e.id);
+        if (e.lastShown !== '') { e.el.style.transform = 'translate(-9999px,0)'; e.lastShown = ''; }
+      };
+      if (!p || !e.visible) { off(); continue; }
+      // Milestone 11.5: project even when there is no bubble/name: the progress pill needs the same anchor.
       e.view.headTop(this.tmp);
       camera.project(this.tmp.x, this.tmp.y + 0.03, this.tmp.z, this.scr);
-      if (!this.scr.visible) { if (e.lastShown !== '') { e.el.style.transform = 'translate(-9999px,0)'; e.lastShown = ''; } continue; }
+      if (!this.scr.visible) { off(); continue; }
+      const pill = this.pills.update(e.id, state, p, this.content, true);
+      const thought = p.thought && p.thought.until > now ? p.thought : null;
+      const speaking = e.speechUntil > this.time;
+      const named = e.id === this.selected || e.id === this.hovered;
+      const show = pill || !!thought || speaking || named;
+      if (!show) { off(); continue; }
       const tk = thought ? `${thought.icon}|${thought.text}` : '';
       if (tk !== e.thoughtKey) {
         e.thoughtKey = tk;
@@ -434,7 +462,7 @@ export class PeopleView {
       e.name.hidden = !named;
       e.name.classList.toggle('sel', e.id === this.selected);
       // keep the bubble on screen (speech lines are wide)
-      const layoutKey = `${tk}|${speaking ? e.speech.textContent : ''}|${named ? 1 : 0}`;
+      const layoutKey = `${tk}|${speaking ? e.speech.textContent : ''}|${named ? 1 : 0}|${pill ? 1 : 0}`;
       if (layoutKey !== e.layoutKey) { e.layoutKey = layoutKey; e.width = e.el.offsetWidth; }
       const half = e.width / 2 + 6;
       const sx = Math.max(half, Math.min(camera.width - half, this.scr.x));

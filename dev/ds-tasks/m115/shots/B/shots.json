@@ -1,0 +1,147 @@
+[
+  {
+    "name": "portrait: cooking starts and reaches the cooking stage",
+    "ok": true,
+    "evidence": "Theo Brennan recipe=grilled-cheese duration=20"
+  },
+  {
+    "name": "portrait: cooking at ~30% shows a partially filled amber pill",
+    "ok": true,
+    "evidence": "{\"set\":{\"elapsed\":4.8999999999999995,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 30%\",\"now\":\"30\",\"width\":\"30%\",\"colour\":\"rgb(220, 175, 40)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":200,\"y\":369,\"w\":44,\"h\":10}}"
+  },
+  {
+    "name": "portrait: the pill sits above the head and is phone-sized",
+    "ok": true,
+    "evidence": "w=44 h=10 at 200,369"
+  },
+  {
+    "name": "portrait: cooking at ~90% is green",
+    "ok": true,
+    "evidence": "{\"set\":{\"elapsed\":18.7,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 90%\",\"now\":\"90\",\"width\":\"90%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":201,\"y\":369,\"w\":44,\"h\":10}}"
+  },
+  {
+    "name": "portrait: completion shows the check and the full green pill",
+    "ok": true,
+    "evidence": "{\"pill\":{\"label\":\"Cook a Meal complete\",\"now\":\"100\",\"width\":\"100%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":true,\"cancelled\":false,\"walking\":false,\"x\":201,\"y\":369,\"w\":44,\"h\":10}}"
+  },
+  {
+    "name": "portrait: two people show two different action pills at once",
+    "ok": true,
+    "evidence": "Sasha:waterPlant + Theo:bakeTreat (15 ticks)"
+  },
+  {
+    "name": "portrait: both pills are visible with different labels",
+    "ok": true,
+    "evidence": "[{\"label\":\"Bake a Treat 9%\",\"now\":\"9\",\"width\":\"8.9%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":226,\"y\":417,\"w\":44,\"h\":10},{\"label\":\"Water Plant 5%\",\"now\":\"5\",\"width\":\"5%\",\"colour\":\"rgb(223, 158, 38)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":36,\"y\":433,\"w\":44,\"h\":10}]"
+  },
+  {
+    "name": "portrait: Settings offers the three action-progress scopes",
+    "ok": true,
+    "evidence": "{\"exists\":true,\"selected\":\"household\",\"labels\":[{\"id\":\"household\",\"text\":\"Household\"},{\"id\":\"all\",\"text\":\"Everyone\"},{\"id\":\"off\",\"text\":\"Off\"}],\"box\":{\"w\":330,\"h\":52,\"top\":426,\"bottom\":478}}"
+  },
+  {
+    "name": "portrait: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: cooking starts and reaches the cooking stage",
+    "ok": true,
+    "evidence": "Theo Brennan recipe=grilled-cheese duration=20"
+  },
+  {
+    "name": "landscape: cooking at ~30% shows a partially filled amber pill",
+    "ok": true,
+    "evidence": "{\"set\":{\"elapsed\":4.8999999999999995,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 30%\",\"now\":\"30\",\"width\":\"30%\",\"colour\":\"rgb(185, 201, 44)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":428,\"y\":92,\"w\":44,\"h\":10}}"
+  },
+  {
+    "name": "landscape: the pill sits above the head and is phone-sized",
+    "ok": true,
+    "evidence": "w=44 h=10 at 428,92"
+  },
+  {
+    "name": "landscape: cooking at ~90% is green",
+    "ok": true,
+    "evidence": "{\"set\":{\"elapsed\":18.7,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 90%\",\"now\":\"90\",\"width\":\"90%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":428,\"y\":92,\"w\":44,\"h\":10}}"
+  },
+  {
+    "name": "landscape: completion shows the check and the full green pill",
+    "ok": true,
+    "evidence": "{\"pill\":{\"label\":\"Cook a Meal complete\",\"now\":\"100\",\"width\":\"100%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":true,\"cancelled\":false,\"walking\":false,\"x\":427,\"y\":92,\"w\":44,\"h\":10}}"
+  },
+  {
+    "name": "landscape: two people show two different action pills at once",
+    "ok": true,
+    "evidence": "Sasha:waterPlant + Theo:bakeTreat (15 ticks)"
+  },
+  {
+    "name": "landscape: both pills are visible with different labels",
+    "ok": true,
+    "evidence": "[{\"label\":\"Bake a Treat 9%\",\"now\":\"9\",\"width\":\"8.9%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":448,\"y\":141,\"w\":44,\"h\":10},{\"label\":\"Water Plant 5%\",\"now\":\"5\",\"width\":\"5%\",\"colour\":\"rgb(223, 158, 38)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":287,\"y\":158,\"w\":44,\"h\":10}]"
+  },
+  {
+    "name": "landscape: Settings offers the three action-progress scopes",
+    "ok": true,
+    "evidence": "{\"exists\":true,\"selected\":\"household\",\"labels\":[{\"id\":\"household\",\"text\":\"Household\"},{\"id\":\"all\",\"text\":\"Everyone\"},{\"id\":\"off\",\"text\":\"Off\"}],\"box\":{\"w\":724,\"h\":52,\"top\":199,\"bottom\":251}}"
+  },
+  {
+    "name": "landscape: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: cooking starts and reaches the cooking stage",
+    "ok": true,
+    "evidence": "Theo Brennan recipe=grilled-cheese duration=20"
+  },
+  {
+    "name": "desktop: cooking at ~30% shows a partially filled amber pill",
+    "ok": true,
+    "evidence": "{\"set\":{\"elapsed\":4.8999999999999995,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 30%\",\"now\":\"30\",\"width\":\"30%\",\"colour\":\"rgb(185, 201, 44)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":646,\"y\":255,\"w\":56,\"h\":12}}"
+  },
+  {
+    "name": "desktop: the pill sits above the head and is phone-sized",
+    "ok": true,
+    "evidence": "w=56 h=12 at 646,255"
+  },
+  {
+    "name": "desktop: cooking at ~90% is green",
+    "ok": false,
+    "evidence": "{\"set\":{\"elapsed\":18.7,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 90%\",\"now\":\"90\",\"width\":\"90%\",\"colour\":\"rgb(185, 201, 44)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":645,\"y\":255,\"w\":56,\"h\":12}}"
+  },
+  {
+    "name": "desktop: completion shows the check and the full green pill",
+    "ok": true,
+    "evidence": "{\"pill\":{\"label\":\"Cook a Meal complete\",\"now\":\"100\",\"width\":\"100%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":true,\"cancelled\":false,\"walking\":false,\"x\":646,\"y\":254,\"w\":56,\"h\":12}}"
+  },
+  {
+    "name": "desktop: two people show two different action pills at once",
+    "ok": true,
+    "evidence": "Sasha:waterPlant + Theo:bakeTreat (15 ticks)"
+  },
+  {
+    "name": "desktop: both pills are visible with different labels",
+    "ok": true,
+    "evidence": "[{\"label\":\"Bake a Treat 9%\",\"now\":\"9\",\"width\":\"8.9%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":703,\"y\":298,\"w\":56,\"h\":12},{\"label\":\"Water Plant 5%\",\"now\":\"5\",\"width\":\"5%\",\"colour\":\"rgb(223, 158, 38)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":318,\"y\":300,\"w\":56,\"h\":12}]"
+  },
+  {
+    "name": "desktop: Settings offers the three action-progress scopes",
+    "ok": true,
+    "evidence": "{\"exists\":true,\"selected\":\"household\",\"labels\":[{\"id\":\"household\",\"text\":\"Household\"},{\"id\":\"all\",\"text\":\"Everyone\"},{\"id\":\"off\",\"text\":\"Off\"}],\"box\":{\"w\":724,\"h\":52,\"top\":364,\"bottom\":416}}"
+  },
+  {
+    "name": "desktop: choosing Off writes the setting and hides the pills",
+    "ok": true,
+    "evidence": "{\"setting\":\"off\",\"visible\":0}"
+  },
+  {
+    "name": "desktop: choosing Household restores the setting",
+    "ok": true,
+    "evidence": "household"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
+  }
+]

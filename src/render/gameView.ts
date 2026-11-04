@@ -33,6 +33,7 @@ import { PeopleView } from './peopleView';
 import { PortraitRenderer } from './portraits';
 import { PlacementPreview } from './previews';
 import { RenderContext, type Quality } from './renderer';
+import { ScreensView } from './screensView';
 import { WeatherView } from './weatherView';
 
 export interface ViewOptions {
@@ -41,6 +42,8 @@ export interface ViewOptions {
   reducedMotion: boolean;
   /** Milestone 12: rain/snow particles (render-only; the weather light tint stays when this is off). */
   weatherEffects: boolean;
+  /** Milestone 11.5: whose running actions show a progress pill (default 'household'). */
+  actionProgress?: 'household' | 'all' | 'off';
 }
 
 export interface RenderStats { drawCalls: number; triangles: number; geometries: number; textures: number; programs: number }
@@ -57,6 +60,8 @@ export class GameView {
   private readonly exterior: ExteriorView;
   private readonly weatherView = new WeatherView();
   private readonly objects: ObjectsView;
+  /** Milestone 11.5: picture quads on computer and TV screens. */
+  private readonly screens: ScreensView;
   private people: PeopleView | null = null;
   private readonly placement: PlacementPreview;
   private readonly buildView: BuildView;
@@ -122,6 +127,7 @@ export class GameView {
     this.objects = new ObjectsView(content, this.objectAssets, opts.quality === 'high' ? 4 : 2);
     this.objects.groundAt = (x, z, level) => this.groundAt(x, z, level);
     this.objects.onModelsLoaded = () => { if (this.lot) this.objects.applyWallVisibility((id) => this.lotView.isLowered(id)); };
+    this.screens = new ScreensView();
     this.placement = new PlacementPreview(content, this.objectAssets);
     this.buildView = new BuildView(content);
     this.openingThumbs = new OpeningThumbs(content);
@@ -138,6 +144,7 @@ export class GameView {
     this.people = new PeopleView(assets, this.content, this.overlay);
     this.people.groundAt = (x, z) => this.groundAt(x, z);
     this.people.setActiveLevel(this.activeLevel);
+    this.people.setProgressScope(this.opts.actionProgress ?? 'household');
     this.scene.add(this.people.group);
     this.creator = new CreatorScene(assets, this.content);
     this.creator.reducedMotion = this.opts.reducedMotion;
@@ -170,7 +177,9 @@ export class GameView {
     this.rig.reducedMotion = o.reducedMotion;
     if (this.creator) this.creator.reducedMotion = o.reducedMotion;
     this.lotView.setQuality(o.quality);
+    this.screens.setQuality(o.quality);
     this.objects.setLampLightCount(o.quality === 'high' ? 4 : 2);
+    this.people?.setProgressScope(o.actionProgress ?? 'household');
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -189,6 +198,7 @@ export class GameView {
     this.lotView.clear();
     this.exterior.setLot(null);
     this.objects.clear();
+    this.screens.clear();
     this.people?.clear();
     this.placement.set(null, null, () => 0);
     this.pendingReveal = null;
@@ -209,6 +219,7 @@ export class GameView {
     this.exterior.setLot(lot);
     this.objects.sync(lot);
     this.objects.syncItems(state, lot.id);
+    this.screens.sync(lot, (id) => this.objects.rootOf(id));
     this.people?.sync(state, lot.id);
     this.people?.snap(state);
     this.people?.invalidateSlots();
@@ -233,7 +244,10 @@ export class GameView {
     this.exterior.lotChanged(what);
     if (what === 'fences' || what === 'roofs' || what === 'terrain' || what === 'pools') return; // nothing for the lot view, the objects or the people to do
     this.lotView.update(lot, what);
-    if (what === 'objects' || what === 'all') this.objects.sync(lot);
+    if (what === 'objects' || what === 'all') {
+      this.objects.sync(lot);
+      this.screens.sync(lot, (id) => this.objects.rootOf(id));
+    }
     this.people?.invalidateSlots();
     this.objects.applyWallVisibility((id) => this.lotView.isLowered(id));
   }
@@ -470,7 +484,8 @@ export class GameView {
     this.fog.color.copy(this.lighting.background);
     r.toneMappingExposure = this.lighting.exposure;
     this.objects.setNight(this.lighting.night, this.rig.target);
-    this.objects.animate(dt, this.opts.reducedMotion);
+    this.objects.animate(dt, this.opts.reducedMotion, { state: world, now: world.clock.minutes });
+    this.screens.update(world, lot.id, dt, this.opts.reducedMotion, world.clock.minutes, this.rig.target);
     // people
     const people = this.people;
     if (people) {
@@ -656,6 +671,7 @@ export class GameView {
     this.openingThumbs.dispose();
     this.buildView.dispose();
     this.placement.dispose();
+    this.screens.dispose();
     this.objects.dispose();
     this.lotView.dispose();
     this.exterior.dispose();

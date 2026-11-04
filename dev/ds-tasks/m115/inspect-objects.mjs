@@ -4,8 +4,10 @@
 // sink, toilet).
 import { NodeIO } from '@gltf-transform/core';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const root = new URL('../../../', import.meta.url);
+const rootPath = fileURLToPath(root);
 const manifest = JSON.parse(readFileSync(new URL('public/assets/manifest.json', root), 'utf8'));
 
 const DEFAULT = [
@@ -42,7 +44,7 @@ function fmt(v) { return '[' + v.map((n) => (Math.round(n * 1000) / 1000).toFixe
 for (const asset of assets) {
   const entry = manifest.furniture[asset];
   if (!entry) { console.log(`## ${asset}: NOT IN MANIFEST`); continue; }
-  const doc = await io.read(new URL(`public/assets/${entry.file}`, root));
+  const doc = await io.readBinary(readFileSync(`${rootPath}public/assets/${entry.file}`));
   console.log(`\n## ${asset}  file=${entry.file}  manifestBounds=${fmt(entry.min)}..${fmt(entry.max)}`);
   console.log(`   materials: ${entry.materials.map((m) => `${m.name}=rgb(${m.color.map((c) => Math.round(c * 255)).join(',')})`).join(', ')}`);
   const walk = (node, depth) => {

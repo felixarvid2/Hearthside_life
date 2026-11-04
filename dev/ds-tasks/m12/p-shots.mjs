@@ -183,11 +183,17 @@ async function framePool(page, pool, ppm) {
     const cx = (p.x0 + p.x1 + 1) / 2, cz = (p.z0 + p.z1 + 1) / 2;
     h.view.setCutaway('cutaway');
     h.view.rig.setYawStep(0);
+    // A build/preview reveal queued earlier would glide the camera back to the house mid-screenshot; let it fire and
+    // finish first (0.2 s wait + 0.5 s glide), then point at the pool again and leave no motion running.
+    h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
+    for (let i = 0; i < 48; i++) h.debug.frame(1 / 60);
     h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
     h.debug.frame(1 / 30);
     const out = { x: 0, y: 0, visible: false };
     h.view.rig.project(cx, 0, cz, out);
-    return { cx, cz, screen: out };
+    // project() answers in canvas pixels; normalise to -0.5..0.5 so a check can ask "near the middle".
+    const vw = window.innerWidth || 1, vh = window.innerHeight || 1;
+    return { cx, cz, screen: out, nx: out.x / vw - 0.5, ny: out.y / vh - 0.5 };
   }, [pool, ppm]);
 }
 
@@ -279,8 +285,8 @@ async function main() {
       await frames(page, 4);
       const prevFrame = await framePool(page, prev.rect, ppm);
       await page.screenshot({ path: join(OUT, `pool-preview-${vp.id}.png`) });
-      note(`${vp.id}: the preview highlight is centred on screen`, prevFrame.screen.visible && Math.abs(prevFrame.screen.x) < 0.45 && Math.abs(prevFrame.screen.y) < 0.45,
-        `screen=${JSON.stringify(prevFrame.screen)}`);
+      note(`${vp.id}: the preview highlight is centred on screen`, prevFrame.screen.visible && Math.abs(prevFrame.nx) < 0.3 && prevFrame.ny > -0.45 && prevFrame.ny < 0.25,
+        `screen=${JSON.stringify(prevFrame.screen)} offset=${prevFrame.nx.toFixed(2)},${prevFrame.ny.toFixed(2)}`);
 
       // 3. Built: the basin, coping and ladder are in the world and the charge is exact. Frame it in live mode so the
       // open Build panel does not hide half of the screenshot.
@@ -293,8 +299,8 @@ async function main() {
       await frames(page, 8);
       const builtFrame = await framePool(page, built.pool, ppm);
       await page.screenshot({ path: join(OUT, `pool-built-${vp.id}.png`) });
-      note(`${vp.id}: the built pool is centred on screen`, builtFrame.screen.visible && Math.abs(builtFrame.screen.x) < 0.45 && Math.abs(builtFrame.screen.y) < 0.45,
-        `screen=${JSON.stringify(builtFrame.screen)}`);
+      note(`${vp.id}: the built pool is centred on screen`, builtFrame.screen.visible && Math.abs(builtFrame.nx) < 0.3 && Math.abs(builtFrame.ny) < 0.3,
+        `screen=${JSON.stringify(builtFrame.screen)} offset=${builtFrame.nx.toFixed(2)},${builtFrame.ny.toFixed(2)}`);
 
       // 4. Someone changes into swimwear, climbs in and swims; the camera frames the water.
       const swim = await startSwim(page, built.pool);
@@ -304,8 +310,17 @@ async function main() {
       // A slightly wider shot than the idle view so the rim, the water and the swimmer all fit.
       const swimFrame = await framePool(page, built.pool, Math.round(ppm * 0.8));
       await page.screenshot({ path: join(OUT, `pool-swim-${vp.id}.png`) });
-      note(`${vp.id}: the swimmer is framed on screen`, swimFrame.screen.visible && Math.abs(swimFrame.screen.x) < 0.45 && Math.abs(swimFrame.screen.y) < 0.45,
-        `screen=${JSON.stringify(swimFrame.screen)}`);
+      // Diagnostic: did the camera stay on the pool while the screenshot was taken?
+      const afterShot = await page.evaluate((p) => {
+        const h = window.hearthside;
+        const cx = (p.x0 + p.x1 + 1) / 2, cz = (p.z0 + p.z1 + 1) / 2;
+        const out = { x: 0, y: 0, visible: false };
+        h.view.rig.project(cx, 0, cz, out);
+        return { target: { x: h.view.rig.target.x, z: h.view.rig.target.z }, ppm: h.view.rig.ppm, yaw: h.view.rig.yaw, screen: out };
+      }, built.pool);
+      console.log(`[m12-p] ${vp.id}: camera after shot ${JSON.stringify(afterShot)}`);
+      note(`${vp.id}: the swimmer is framed on screen`, swimFrame.screen.visible && Math.abs(swimFrame.nx) < 0.3 && Math.abs(swimFrame.ny) < 0.35,
+        `screen=${JSON.stringify(swimFrame.screen)} offset=${swimFrame.nx.toFixed(2)},${swimFrame.ny.toFixed(2)}`);
 
       // 5. Get Out still exists while swimming and is offered in the context menu.
       const getOut = swim.ok ? await page.evaluate(([id, pool]) => {

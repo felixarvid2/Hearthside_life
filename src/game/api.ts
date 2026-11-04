@@ -287,6 +287,8 @@ export interface GameSettings {
   shadows: boolean;
   /** Milestone 12: rain/snow particles (render-only; the weather light tint stays when this is off). */
   weatherEffects: boolean;
+  /** Milestone 11.5: progress pills above the head for the active household (default), everyone, or nobody. */
+  actionProgress: 'household' | 'all' | 'off';
   showStats: boolean;
   tutorial: boolean;
 }

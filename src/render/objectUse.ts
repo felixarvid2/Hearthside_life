@@ -2,12 +2,19 @@
 // Render-only helper (no sim writes). Object animations, screen contents and hand props all read this,
 // so the sim does not need an extra "in use" field and saves stay unchanged.
 
-import type { ActionInstance, ActionPhase, GameState, Id, Person } from '../core/types';
+import type { ActionInstance, ActionPhase, Id, Person, WorldState } from '../core/types';
 
 export interface ObjectUse {
+  /** Object this entry is recorded under (the action target, or a work station such as a stove/sink). */
+  objectId: Id;
+  /** `target` = the action's target object; `station` = an auxiliary object named in the action data. */
+  role: 'target' | 'station';
   personId: Id;
   /** Interaction id of the running action (e.g. 'cookMeal', 'useComputer'). */
   interactionId: string;
+  /** Id and start time of the running action: a stable seed for deterministic visuals. */
+  actionId: Id;
+  queuedAt: number;
   phase: ActionPhase;
   /** The person's current animation id (e.g. 'openFridge', 'cook', 'computer'). */
   anim: string;
@@ -31,16 +38,18 @@ export function runningAction(p: Person): ActionInstance | null {
 }
 
 /** objectId -> uses (normally one) for people standing on `lotId`. */
-export function objectUses(state: GameState, lotId: Id = state.activeLotId): Map<Id, ObjectUse[]> {
+export function objectUses(state: WorldState, lotId: Id = state.activeLotId): Map<Id, ObjectUse[]> {
   const out = new Map<Id, ObjectUse[]>();
   for (const p of Object.values(state.people)) {
     if (p.location.kind !== 'lot' || p.location.lotId !== lotId) continue;
     const a = runningAction(p);
-    if (!a || a.target.kind !== 'object') continue;
+    if (!a) continue;
     const stage = a.data?.stage;
-    const use: ObjectUse = {
+    const base = {
       personId: p.id,
       interactionId: a.interactionId,
+      actionId: a.id,
+      queuedAt: a.queuedAt,
       phase: a.phase,
       anim: p.anim?.id ?? 'idle',
       animSince: p.anim?.since ?? a.phaseSince,
@@ -49,8 +58,16 @@ export function objectUses(state: GameState, lotId: Id = state.activeLotId): Map
       duration: a.duration,
       data: a.data,
     };
-    const list = out.get(a.target.objectId);
-    if (list) list.push(use); else out.set(a.target.objectId, [use]);
+    const add = (objectId: Id, role: ObjectUse['role']) => {
+      const use: ObjectUse = { ...base, objectId, role };
+      const list = out.get(objectId);
+      if (list) list.push(use); else out.set(objectId, [use]);
+    };
+    if (a.target.kind === 'object') add(a.target.objectId, 'target');
+    // multi-stage chains keep their original target (cookMeal targets the fridge) but act on a station later:
+    // the stove in stage 1 and the sink/dishwasher that washDishes picked.
+    if (typeof a.data?.stoveObj === 'string') add(a.data.stoveObj, 'station');
+    if (typeof a.data?.washObj === 'string') add(a.data.washObj, 'station');
   }
   return out;
 }
