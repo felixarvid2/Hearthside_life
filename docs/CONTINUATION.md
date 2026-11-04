@@ -1,7 +1,7 @@
 # Continuation note
 
 State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
-gaps) are merged. Milestone 11 is on PR #6 (draft, not merged; merge only after the user approves). **Milestones 1-9 and 11 are
+gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9 and 11 are
 complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete catalogs) or 12 (environment and
 venues).
 
@@ -76,7 +76,7 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Next steps, in order
 
-1. Merge PR #6 (Milestone 11) after the user approves.
+1. Merge PR #6 (Milestone 11); standing approval: merge every PR once all checks pass.
 2. Milestone 10, complete catalogs: 360 walls, 200 floors, 560 furnishings, full creator catalog (ROADMAP). Current counts are in
    `docs/CONTENT_STATUS.md`. Milestone 12 (seasons, weather, pools, venue variety) is the other next choice.
 3. Polish of the M8, M9 and M11 gaps (listed under "Known issues").
