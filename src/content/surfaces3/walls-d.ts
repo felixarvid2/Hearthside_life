@@ -25,7 +25,7 @@ const RETRO3: Tuple[] = [
   ['lagoon', 'Lagoon', '#f3efe4', '#2f7f80', '#8cc3c0'], ['berry-night', 'Berry Night', '#3a2a3a', '#c9506a', '#e8a84a'],
   ['cocoa', 'Cocoa', '#4a362a', '#c9792f', '#e8c26a'], ['blush-pop', 'Blush Pop', '#f1dcd5', '#cf7f86', '#7d3a5a'],
   ['denim-gold', 'Denim and Gold', '#2f4468', '#e1a93a', '#e87f5a'], ['greige-moss', 'Greige and Moss', '#b9b0a3', '#5f6f4a', '#c4714d'],
-  ['mint-navy', 'Mint and Navy', '#cfe8dc', '#2f4a6a', '#e87f6a'],
+  ['tangerine-navy', 'Tangerine and Navy', '#e8894a', '#2f4a6a', '#f3e6cc'],
 ];
 const RETRO: Tuple[] = [
   ['mustard-teal', 'Mustard and Teal', '#d9a641', '#2f6f78'], ['avocado-cream', 'Avocado and Cream', '#7d8a3e', '#f0e6c8'],
@@ -46,14 +46,14 @@ const COAST: Tuple[] = [
   ['seafoam-navy', 'Seafoam and Navy', '#c9e3dc', '#2b4a6a'], ['driftwood-white', 'Driftwood and White', '#a69c8e', '#f3f1ea'],
   ['cream-coral', 'Cream and Coral', '#f1e8d8', '#e07a5f'], ['navy-sand', 'Navy and Sand', '#1f3355', '#e6d8b5'],
   ['sage-white', 'Sage and White', '#a9bfae', '#f3f1ea'], ['slate-sand', 'Slate and Sand', '#6f7f8c', '#eadfc8'],
-  ['aqua-teal', 'Aqua and Teal', '#9fd3d0', '#1f6f78'],
+  ['lagoon-white', 'Lagoon and White', '#3fa9b0', '#f4f1ea'],
 ];
 const RUSTIC: Tuple[] = [
   ['oat-forest', 'Oat and Forest', '#e4d8c0', '#3f5a45'], ['cream-barn', 'Cream and Barn Red', '#efe6d2', '#9a3d32'],
   ['flour-navy', 'Flour and Navy', '#f0ebe0', '#2f3d5a'], ['sage-charcoal', 'Sage and Charcoal', '#b3c0a3', '#33363b'],
   ['tan-brown', 'Tan and Walnut', '#c9b48a', '#5a3f2c'], ['charcoal-cream', 'Charcoal and Cream', '#33363b', '#e6dcc4'],
   ['forest-tan', 'Forest and Tan', '#2f4a3c', '#d8c49a'], ['barn-cream', 'Barn Red and Cream', '#8a2f2c', '#efe3cc'],
-  ['greige-moss', 'Greige and Moss', '#b9b0a3', '#5f7048'],
+  ['mustard-forest', 'Mustard and Forest', '#d9a641', '#2f4a3c'],
 ];
 const BOLD: Tuple[] = [
   ['cream-plum', 'Cream and Plum', '#efe3d0', '#5a2f4f'], ['mustard-ink', 'Mustard and Ink', '#d6a23a', '#2b2f44'],
@@ -458,7 +458,7 @@ function QUILT(): Tuple[] {
   return [
     ['barn-red', 'Barn Red', '#efe6d2', '#9a3d32', '#2f3d5a'], ['harvest', 'Harvest', '#efe3cc', '#c9792f', '#5f7048'],
     ['navy-cream', 'Navy and Cream', '#f0ebe0', '#2f3d5a', '#b8523a'], ['sage', 'Sage Quilt', '#d8dfcf', '#6f8b6a', '#8a5a44'],
-    ['denim', 'Denim', '#dfe3e8', '#4a6285', '#d9a641'], ['charcoal', 'Charcoal', '#4a4b50', '#e8dfc8', '#b8523a'],
+    ['denim', 'Denim', '#9aa6b5', '#2f4468', '#d9a641'], ['charcoal', 'Charcoal', '#4a4b50', '#e8dfc8', '#b8523a'],
     ['mustard', 'Mustard', '#d9a641', '#2f3d5a', '#efe6d2'], ['blush', 'Blush', '#f1dcd5', '#b9707a', '#6a7f6a'],
     ['forest', 'Forest', '#2f4a3c', '#e8dcc0', '#c9792f'],
   ];

@@ -4,10 +4,10 @@
 // the painters in src/render/textures/packs/floors-a.ts.
 const wood = (what) => `close up of ${what}, one continuous surface of wood, grain lines running horizontally, no joints, no seams, no boards, no planks, no edges`;
 export default [
-  { id: 'grain-walnut', kind: 'material', prompt: wood('dark American walnut wood, rich chocolate brown, flowing wavy grain with fine pores and soft figure') },
+  // grain-walnut is shared; its source lives in dev/surfaces-ai/sources/walls-e.mjs
   { id: 'grain-maple', kind: 'material', prompt: wood('pale hard maple wood, very fine tight straight grain with faint ray flecks, creamy and calm') },
-  { id: 'grain-ash', kind: 'material', prompt: wood('ash wood, bold open cathedral grain with coarse visible pores, pale cream and light brown') },
-  { id: 'grain-cherry', kind: 'material', prompt: wood('American cherry wood, smooth warm reddish brown, fine grain with small mineral streaks and gum flecks') },
+  // grain-ash is shared; its source lives in dev/surfaces-ai/sources/walls-e.mjs
+  // grain-cherry is shared; its source lives in dev/surfaces-ai/sources/walls-e.mjs
   { id: 'grain-pine', kind: 'material', prompt: wood('knotty pine wood with many small round knots and visible growth rings') },
   { id: 'grain-teak', kind: 'material', prompt: wood('teak wood, straight golden brown grain with oily dark streaks and fine pores') },
   { id: 'grain-bamboo', kind: 'material', prompt: wood('strand woven bamboo, dense fibrous dark and light streaks, faint nodes') },

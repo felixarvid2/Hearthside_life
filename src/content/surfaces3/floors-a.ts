@@ -211,7 +211,7 @@ export const FLOORS_A_PARQUET: SurfaceDesign[] = ([
   { id: 'parquet-basket-diagonal', name: 'Diagonal Basket Weave', description: 'Cherry basket-weave squares turned on the diagonal, so the weave runs corner to corner.',
     tags: ['wood', 'parquet', 'basket-weave', 'diagonal', 'cherry', 'classic', 'dining', 'hall'], packs: ['classic-townhouse'], price: 36, repeat: 1.5, painter: 'wood-parquet',
     params: Q('grain-cherry', { layout: 'basket', block: 0.3, strips: 3, diagonal: true, scale: 0.6 }), palettes: woodBank('cherry', '#a05e3e') },
-  { id: 'parquet-harlequin-diamond', name: 'Harlequin Diamonds', description: 'Oak diamonds set on the point, each with its grain turned across the last and tones alternating.',
+  { id: 'parquet-harlequin-diamond', name: 'Harlequin Parquet', description: 'Oak diamonds set on the point, each with its grain turned across the last and tones alternating.',
     tags: ['wood', 'parquet', 'diamond', 'harlequin', 'oak', 'graphic', 'hall', 'dining'], packs: ['art-deco', 'classic-townhouse'], price: 34, repeat: 1.5, painter: 'wood-parquet',
     params: Q('grain-oak', { layout: 'basket', block: 0.3, strips: 1, diagonal: true, alt: 0.6, scale: 0.6 }), palettes: woodBank('oak', '#c09868') },
   { id: 'parquet-checker-wood', name: 'Wood Checkerboard', description: 'Walnut squares laid with the grain all one way, alternating light and dark like a chessboard.',

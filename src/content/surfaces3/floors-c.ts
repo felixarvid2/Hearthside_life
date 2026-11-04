@@ -194,7 +194,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     ] as Tuple[]),
   }),
   floor({
-    id: 'carpet-trellis', name: 'Diamond Trellis',
+    id: 'carpet-trellis', name: 'Trellis Carpet',
     description: 'A lattice of crossing diagonals with a dot at every crossing and a tiny flower inside each diamond. Hallways and landings.',
     family: 'carpet', tags: ['carpet', 'trellis', 'lattice', 'diamond', 'geometric', 'woven', 'hall', 'stairs', 'bedroom'],
     packs: ['classic-townhouse', 'art-deco'], price: 16,
@@ -355,7 +355,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     ] as Tuple[]),
   }),
   floor({
-    id: 'industrial-steel-plates', name: 'Riveted Steel Plates',
+    id: 'industrial-steel-plates', name: 'Steel Deck Plates',
     description: 'Brushed steel floor plates bolted edge to edge, with a rivet in every corner. Ship, foundry and loft-kitchen character.',
     family: 'concrete', tags: ['steel', 'plates', 'riveted', 'brushed', 'industrial', 'loft', 'workshop', 'kitchen', 'luxury'],
     packs: ['industrial-loft'], price: 34,

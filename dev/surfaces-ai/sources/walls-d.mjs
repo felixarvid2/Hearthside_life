@@ -41,7 +41,7 @@ export default [
   m('motif-block', 'a toy wooden building block cube drawn in a simple isometric view with a star and a circle cut out on its faces, children illustration'),
   m('motif-paperboat', 'a folded paper boat on a small wave, simple origami sailboat, children illustration'),
   m('motif-unicorn', 'a cute cartoon unicorn standing, with a spiral horn, a flowing mane and tail, side view, children illustration'),
-  m('motif-rainbow', 'a rainbow arch made of four concentric bands with two small clouds at its ends, children illustration'),
+  // motif-rainbow is shared; its source lives in dev/surfaces-ai/sources/walls-a.mjs
   m('motif-balloons', 'a bunch of three party balloons tied together with curly strings, children illustration'),
   m('motif-paw', 'a puppy paw print: one large pad and four toe pads, simple'),
   m('motif-monster', 'a friendly cartoon monster with two eyes, small horns, a toothy grin and stubby arms and legs, children illustration'),

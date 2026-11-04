@@ -17,7 +17,7 @@ export default [
   { id: 'glaze-reactive', kind: 'material', prompt: `close up of a reactive ceramic glaze with soft streaks, drips and variegated tonal pooling, glossy studio pottery, ${ONE}` },
   { id: 'glaze-speckle', kind: 'material', prompt: `close up of speckled stoneware glaze, matte ceramic with small dark iron speckles scattered evenly, ${ONE}` },
   { id: 'stone-terrazzo', kind: 'material', prompt: `close up of terrazzo, many small irregular marble chips of different sizes set in pale cement, evenly distributed, ${ONE}` },
-  { id: 'stone-travertine-wall', kind: 'material', prompt: `close up of warm beige travertine stone, soft cloudy banding with small pits and short fissures, a single seamless slab of stone with no lines running across it, ${ONE}` },
+  // stone-travertine-wall is shared with walls-f, which owns the source (dev/surfaces-ai/sources/walls-f.mjs)
   { id: 'stone-onyx', kind: 'material', prompt: `close up of polished onyx stone, translucent swirling bands and veins in flowing curves, ${ONE}` },
   // --- hand-painted tile motifs (one subject, symmetrical where the tile calls for it) ----------------------------
   { id: 'motif-tile-tulip', kind: 'motif', prompt: 'a single Delft blue-and-white style tulip with two leaves, hand-painted ceramic tile illustration, bold silhouette with fine cut-out line details' },

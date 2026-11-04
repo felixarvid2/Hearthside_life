@@ -18,7 +18,7 @@ export default [
   { id: 'motif-star', kind: 'motif', prompt: 'a chubby five pointed star with rounded corners, simple bold silhouette' },
   { id: 'motif-medallion', kind: 'motif', prompt: 'an ornate oriental carpet medallion, symmetrical lobed diamond with scrolling arabesque details and small cut-out circles, bold silhouette' },
   { id: 'motif-paisley', kind: 'motif', prompt: 'a single paisley boteh teardrop with a curled tip, decorated with cut-out dots and curved lines, bold silhouette' },
-  { id: 'motif-paw', kind: 'motif', prompt: 'a dog paw print, one large pad and four toe pads, bold silhouette' },
+  // motif-paw is shared; its source lives in dev/surfaces-ai/sources/walls-d.mjs
   { id: 'motif-kilim', kind: 'motif', prompt: 'a kilim rug diamond motif, stepped geometric diamond with hooked corners and a small diamond inside, stepped pixel edges, bold silhouette' },
   // --- concrete and industrial ----------------------------------------------------------
   { id: 'concrete-trowel', kind: 'material', prompt: `close up of power trowelled concrete floor, soft burnished swirl marks and subtle cloudy tonal variation, a few hairline pores, ${ONE}`, build: { std: 0.1, flatten: 1 } },
@@ -26,11 +26,11 @@ export default [
   { id: 'concrete-broom', kind: 'material', prompt: `close up of broom finished concrete, fine parallel scratch lines running horizontally across rough cement, ${ONE}`, build: { std: 0.13 } },
   { id: 'concrete-stain', kind: 'material', prompt: `close up of acid stained concrete floor, mottled cloudy marbled variations with tiny branching veins, ${ONE}`, build: { std: 0.18, flatten: 0.4 } },
   { id: 'epoxy-flake', kind: 'material', prompt: `close up of epoxy flake garage floor coating, many small flat irregular chips of different tones scattered densely on a smooth glossy ground, ${ONE}`, build: { std: 0.3 } },
-  { id: 'steel-brushed', kind: 'material', prompt: `close up of brushed steel plate, fine parallel brushing scratches running horizontally, subtle scuffs, ${ONE}`, build: { std: 0.1 } },
+  // steel-brushed is shared; its source lives in dev/surfaces-ai/sources/walls-f.mjs
   // --- exterior ------------------------------------------------------------------------
   { id: 'brick-clay', kind: 'material', prompt: `close up of fired clay paving brick surface, fine sandy grain, tiny pits and soft kiln mottling, ${ONE}`, build: { std: 0.14 } },
   { id: 'paver-concrete', kind: 'material', prompt: `close up of concrete block paver surface, fine aggregate speckle, tiny air holes, matte and slightly rough, ${ONE}`, build: { std: 0.13 } },
-  { id: 'stone-sandstone', kind: 'material', prompt: `close up of rough sandstone paving, riven surface with faint sedimentary banding and fine grain, ${ONE}`, build: { std: 0.17 } },
+  // stone-sandstone is shared; its source lives in dev/surfaces-ai/sources/walls-f.mjs
   { id: 'wood-deck', kind: 'material', prompt: `close up of weathered hardwood decking boards texture, long straight grain lines running horizontally, small checks and cracks, ${ONE}`, build: { std: 0.15 } },
   { id: 'composite-grain', kind: 'material', prompt: `close up of embossed composite decking surface, repeating faux wood grain streaks running horizontally, even and regular, ${ONE}`, build: { std: 0.1 } },
   { id: 'wood-sleeper', kind: 'material', prompt: `close up of old railway sleeper timber, deep rough grain, splits and weathered checks running horizontally, ${ONE}`, build: { std: 0.18 } },

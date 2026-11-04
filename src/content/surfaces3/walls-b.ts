@@ -13,7 +13,7 @@ const DUO2: Tuple[] = [
   ['lilac-plum', 'Lilac and Plum', '#ddd3e3', '#6a3f6f'],
   ['mint-pine', 'Mint and Pine', '#cde3d6', '#2d5a47'],
   ['peach-brick', 'Peach and Brick', '#f2d5c0', '#a8452f'],
-  ['sand-olive', 'Sand and Olive', '#dccfb0', '#6b7040'],
+  ['stone-olive', 'Stone and Olive', '#bdb29a', '#5f6438'],
   ['rust-cream', 'Rust and Cream', '#b5502f', '#f0e6d0'],
   ['teal-gold', 'Deep Teal and Gold', '#1f4f55', '#d4aa55'],
   ['black-white', 'Black and White', '#1c1c1e', '#f2f0ea'],

@@ -27,12 +27,12 @@ export default [
   { id: 'silk-dupioni', kind: 'material', prompt: `raw silk dupioni fabric, irregular horizontal slubs and nubs in the weft, fine shimmering weave, ${ONE}` },
   // --- luxury motifs ---
   { id: 'motif-damask-medallion', kind: 'motif', prompt: 'an ornate baroque damask medallion, perfectly symmetrical about a vertical axis, scrolling acanthus leaves around a central lotus flower, tall oval silhouette, filled solid shapes with fine cut-out veins' },
-  { id: 'motif-acanthus', kind: 'motif', prompt: 'a classical acanthus leaf scroll ornament, flowing curled leaves, symmetrical about a vertical axis, solid bold shapes' },
+  // motif-acanthus is shared; its source lives in dev/surfaces-ai/sources/walls-d.mjs
   { id: 'motif-pomegranate', kind: 'motif', prompt: 'a pomegranate fruit with a crown, leaves and a small split-open fruit, ornate Renaissance brocade style, symmetrical, solid shapes with white cut-out seeds' },
   { id: 'motif-flourish', kind: 'motif', prompt: 'a bold ornamental fleuron: a symmetric four-petal filigree flower with curling scroll arms and a solid diamond centre, thick solid black shapes filling most of the frame' },
   { id: 'motif-crane', kind: 'motif', prompt: 'a crane bird standing in an elegant pose beside a pine branch, Japanese silk screen style, bold silhouette with white cut-out feather lines' },
   // --- feature motifs ---
-  { id: 'motif-moon', kind: 'motif', prompt: 'a large full moon disc with a few crater shapes cut out in white, simple and bold, perfectly round' },
+  // motif-moon is shared; its source lives in dev/surfaces-ai/sources/walls-d.mjs
   { id: 'motif-tree', kind: 'motif', prompt: 'a large bare oak tree with spreading branches and visible roots, bold silhouette, full height of the frame' },
   { id: 'motif-rainbow', kind: 'motif', prompt: 'a boho rainbow of five concentric arches with clean white gaps between the arches, flat graphic, symmetrical' },
   // --- murals ---

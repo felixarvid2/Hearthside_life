@@ -20,7 +20,7 @@ const WARM: Tuple[] = [
 ];
 const COOL: Tuple[] = [
   ['white-indigo', 'White and Indigo', '#f4f2ec', '#2f4272', '#8fa9b9'], ['mist-lavender', 'Mist and Lavender', '#e3e2ea', '#7b6aa6', '#4f6b47'],
-  ['lilac-aubergine', 'Lilac and Aubergine', '#cdbfd6', '#5d3f6e', '#f2eef4'], ['powder-slate', 'Powder and Slate', '#c8d6e0', '#46597a', '#f1e8d8'],
+  ['lilac-aubergine', 'Lilac and Aubergine', '#cdbfd6', '#5d3f6e', '#f2eef4'], ['cornflower-cream', 'Cornflower and Cream', '#6f8fd1', '#f4f0e6', '#2f4272'],
   ['stone-rust', 'Stone and Rust', '#d6d0c4', '#a4522f', '#4a5848'], ['oat-denim', 'Oat and Denim', '#e6dcc8', '#3f5f8a', '#d98b9a'],
   ['ink-gold', 'Ink and Gold', '#1f2833', '#d3b261', '#e3b5b0'], ['bottle-rose', 'Bottle and Rose', '#233a30', '#e49aa5', '#f1e8d8'],
   ['berry-cream', 'Berry and Cream', '#6e2c48', '#f1e1cf', '#e8c15a'],
