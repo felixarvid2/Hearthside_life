@@ -372,6 +372,6 @@ export const WALLS_F: SurfaceDesign[] = [
     id: 'diamond-plate-wall', name: 'Diamond Plate Cladding',
     description: 'Bright tread plate with raised lozenges, screwed up the wall in sheets. The garage and food-truck finish.',
     tags: ['diamond-plate', 'tread-plate', 'steel', 'garage', 'industrial', 'workshop', 'utility'], price: 44, repeat: 2.4, palettes: STEEL, packs: ['industrial-loft', 'everyday-essentials'],
-    painter: 'tread-wall', params: { map: 'steel-brushed', pitch: 0.04, sheetW: 1.2, sheetH: 1.4 },
+    painter: 'tread-wall', params: { map: 'steel-brushed', pitch: 0.05, sheetW: 1.2, sheetH: 1.4 },
   }),
 ];

@@ -591,7 +591,7 @@ const fanSetts: PainterDef = {
         ctx.beginPath();
         ctx.arc(cx, cy, R, 0, TAU);
         ctx.clip();
-        ctx.globalAlpha = 0.32;
+        ctx.globalAlpha = 0.16;
         drawMapRect(ctx, img, cx - R, cy - R, 2 * R, 2 * R, 0.5, cx - R - (row * 0.13 + i * 0.07) % 0.5, cy - R - (i * 0.11 + row * 0.05) % 0.5, s.ppm);
         ctx.globalAlpha = 1;
         ctx.restore();

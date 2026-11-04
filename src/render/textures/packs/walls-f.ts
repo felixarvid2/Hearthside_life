@@ -693,9 +693,6 @@ const treadWall: PainterDef = {
               ctx.lineWidth = lw * 1.5;
               ctx.strokeStyle = rgba(col(s, 1), 0.85);
               ctx.beginPath(); ctx.moveTo(cx - dx, cy - dy); ctx.lineTo(cx + dx, cy + dy); ctx.stroke();
-              ctx.lineWidth = lw * 0.5;
-              ctx.strokeStyle = rgba('#ffffff', 0.45);
-              ctx.beginPath(); ctx.moveTo(cx - dx - 0.0008, cy - dy - 0.0008); ctx.lineTo(cx + dx - 0.0008, cy + dy - 0.0008); ctx.stroke();
             }
           }
         });
