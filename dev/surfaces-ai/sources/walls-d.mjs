@@ -1,0 +1,70 @@
+// Generated-source catalogue for group 'walls-d' (see dev/surfaces-ai/generate.mjs).
+// Entries: { id, kind: 'material' | 'motif' | 'mural', prompt, w?, h?, seed?, build? }
+// All motifs: one subject, bold silhouette with a few white cut-out details (the generator adds the black-on-white suffix).
+const m = (id, prompt) => ({ id, kind: 'motif', prompt: `${prompt}, bold graphic silhouette with a few white cut-out details` });
+
+export default [
+  // --- vintage and Art Deco ---
+  m('motif-deco-lotus', 'an Art Deco stylised lotus flower, symmetrical, five pointed petals with fine radiating lines, Egyptian revival'),
+  m('motif-deco-peacock', 'an Art Deco peacock feather, a long slender stem with a large oval eye at the top and fine barbs, elegant 1920s style'),
+  m('motif-deco-crane', 'an Art Deco crane bird standing on one leg with a long curved neck, streamlined geometric 1920s style'),
+  m('motif-deco-shell', 'an Art Deco scallop shell with fine radiating ribs and a small base, symmetrical, 1920s style'),
+  m('motif-atomic', 'a 1950s atomic starburst with a small central circle and thin rays ending in tiny balls, mid-century modern'),
+  m('motif-boomerang', 'a 1950s boomerang shape, a smooth curved kidney-like form with three small round holes, mid-century modern'),
+  m('motif-toile', 'a toile de Jouy pastoral vignette: a small cottage under a large tree with a lamb in front, fine engraved hatching, oval composition'),
+  m('motif-acanthus', 'a Victorian acanthus leaf scroll medallion, symmetrical curling leaves, classical ornament'),
+  m('motif-teapot', 'a 1950s teapot with a lid knob, curved spout and handle, retro kitchenware'),
+  m('motif-teacup', 'a retro teacup on a saucer with a small steam curl, kitchenware'),
+  m('motif-chinoiserie', 'a chinoiserie bird perched on a flowering branch, delicate oriental style, long tail feathers'),
+  m('motif-nouveau', 'an Art Nouveau lily flower with a long whiplash curved stem and two leaves, flowing organic lines'),
+  m('motif-plume', 'a Gatsby ostrich feather plume curving to one side, soft fronds with a central quill, 1920s'),
+  m('motif-memphis-squiggle', 'a thick 1980s Memphis style squiggle line, a wavy zigzag ribbon, playful postmodern'),
+  m('motif-memphis-triangle', 'a 1980s Memphis style cluster: a triangle with a small circle and three short diagonal dashes next to it, postmodern confetti'),
+  m('motif-deco-fountain', 'an Art Deco fountain, a stepped basin with a central jet and four curving sprays of water, symmetrical geometric 1920s style'),
+
+  // --- children's and playful ---
+  m('motif-dino-stego', 'a friendly cartoon stegosaurus with round back plates, side view, cute for children'),
+  m('motif-dino-trex', 'a friendly cartoon tyrannosaurus rex with tiny arms and a big smile, side view, cute for children'),
+  m('motif-elephant', 'a cute cartoon baby elephant with a raised trunk and a big ear, side view, children illustration'),
+  m('motif-giraffe', 'a cute cartoon giraffe with a long neck and ossicones and a few round spots, children illustration'),
+  m('motif-teddy', 'a cute cartoon teddy bear sitting, with round ears and a small bow tie, front view, children illustration'),
+  m('motif-bunny', 'a cute cartoon bunny sitting with long upright ears, side view, children illustration'),
+  m('motif-duck', 'a cute cartoon rubber duck, side view, children illustration'),
+  m('motif-whale', 'a cute cartoon whale with a water spout, side view, children illustration'),
+  m('motif-planet', 'a ringed planet like Saturn with a few crater holes and a tilted ring, children illustration'),
+  m('motif-train', 'a cute cartoon steam train engine with a funnel puffing a little smoke, round wheels, side view, children illustration'),
+  m('motif-car', 'a cute cartoon small car with round wheels and a rounded roof, side view, children illustration'),
+  m('motif-hotair', 'a cute hot air balloon with decorative stripe cut-outs and a small basket hanging by ropes, children illustration'),
+  m('motif-owl', 'a cute cartoon owl sitting on a branch with big round eyes and feather scallops on the belly, children illustration'),
+  m('motif-fox', 'a cute cartoon fox sitting with a big bushy tail, side view, children illustration'),
+  m('motif-mushroom', 'a cute cartoon toadstool mushroom with a round spotted cap, children illustration'),
+  m('motif-block', 'a toy wooden building block cube drawn in a simple isometric view with a star and a circle cut out on its faces, children illustration'),
+  m('motif-paperboat', 'a folded paper boat on a small wave, simple origami sailboat, children illustration'),
+  m('motif-unicorn', 'a cute cartoon unicorn standing, with a spiral horn, a flowing mane and tail, side view, children illustration'),
+  // motif-rainbow is shared; its source lives in dev/surfaces-ai/sources/walls-a.mjs
+  m('motif-balloons', 'a bunch of three party balloons tied together with curly strings, children illustration'),
+  m('motif-paw', 'a puppy paw print: one large pad and four toe pads, simple'),
+  m('motif-monster', 'a friendly cartoon monster with two eyes, small horns, a toothy grin and stubby arms and legs, children illustration'),
+  m('motif-castle', 'a fairy tale castle with three towers with pointed roofs and little flags, children illustration'),
+  m('motif-cow', 'a cute cartoon cow standing with big patches, side view, children illustration'),
+
+  // --- themed, rustic, coastal, eclectic ---
+  m('motif-anchor', 'a classic ship anchor with a rope twisted around its shank, nautical'),
+  m('motif-conch', 'a spiral conch seashell with a ribbed surface, side view'),
+  m('motif-starfish', 'a five-armed starfish with small dots along each arm'),
+  m('motif-sailboat', 'a sailboat with two triangular sails and a flag on a small wave, side view, nautical'),
+  m('motif-lighthouse', 'a lighthouse tower with horizontal bands, a lantern room with light rays and a rocky base, nautical'),
+  m('motif-fish', 'a simple tropical fish with a fin, an eye and a few scale lines, side view'),
+  m('motif-coral', 'a branching staghorn coral with several rounded tips'),
+  m('motif-pine', 'a tall pine tree with layered drooping boughs, lodge style'),
+  m('motif-antlers', 'a pair of deer antlers on a small skull plate, front view, rustic lodge style'),
+  m('motif-wheat', 'a single sheaf of wheat: a tied bundle of ears with long awns, farmhouse style'),
+  m('motif-rooster', 'a country rooster with a large comb and sweeping tail feathers, folk art style, side view'),
+  m('motif-leopard', 'a cluster of leopard rosette spots, an irregular broken ring shape with a few small dots inside'),
+  m('motif-vase', 'a curvy ceramic vase with two handles and a few simple flower stems with round blossoms, eclectic still life'),
+  m('motif-sun', 'a bohemian sun with a smiling serene face and alternating straight and wavy rays'),
+  m('motif-moon', 'a bohemian crescent moon with a serene face in profile and tiny stars beside it'),
+  m('motif-cactus', 'a saguaro cactus with two raised arms and a few spines, desert southwest style'),
+  m('motif-pineapple', 'a pineapple with a diamond lattice skin and a spiky leafy crown'),
+  m('motif-pirateship', 'a pirate sailing ship with three masts, billowing sails and a jolly roger flag, side view'),
+];

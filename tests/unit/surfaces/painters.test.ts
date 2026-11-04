@@ -94,7 +94,7 @@ describe('painters', () => {
         expect(ctx.calls, d.id).toBeGreaterThan(20);
       }
     }
-  });
+  }, 120_000); // every design x every palette: about 4 400 paints since the M10 catalog
 
   it('are deterministic', () => {
     for (const d of ALL) {

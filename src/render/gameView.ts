@@ -3,10 +3,11 @@
 // screen-space questions (picking, projection, anchors). It never changes the world state.
 
 import * as THREE from 'three';
-import { preloadSurfaceMaps, setSurfaceMapBase } from './textures/surfaceMaps';
+import { BASE_MAP_IDS, designMaps } from './textures/mapKit';
+import { onSurfaceMapArrived, preloadSurfaceMaps, setSurfaceMapBase } from './textures/surfaceMaps';
 import type { CharacterAssets, CharacterStyle } from '../characters/assets';
 import { setCharacterStyle } from '../characters/assets';
-import type { ContentDB } from '../content/types';
+import type { ContentDB, SurfaceDesign } from '../content/types';
 import { hourOfDay } from '../core/clock';
 import { parseEdgeKey, tileKey } from '../core/ids';
 import { rotatedSize } from '../core/geometry';
@@ -86,6 +87,7 @@ export class GameView {
   onCamera: (() => void) | null = null;
   /** Called when the detail maps of the surface designs finished loading (flat thumbnails can be repainted). */
   onSurfaceMaps: (() => void) | null = null;
+  private mapsTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(canvas: HTMLCanvasElement, readonly content: ContentDB, readonly overlay: HTMLElement | null, opts: ViewOptions, assetBase: string) {
     this.opts = { ...opts };
@@ -98,7 +100,13 @@ export class GameView {
     };
     this.objectAssets = new ObjectAssets(assetBase);
     setSurfaceMapBase(`${assetBase}surfaces/`); // detail maps for AI-textured walls and floors
-    void preloadSurfaceMaps().then(() => this.onSurfaceMaps?.());
+    // only the 14 base maps are loaded up front; the images of a lot's designs load with the lot and everything
+    // else on demand. Every arrival (debounced) lets the UI repaint thumbnails that were painted flat.
+    void preloadSurfaceMaps(BASE_MAP_IDS);
+    onSurfaceMapArrived(() => {
+      if (this.mapsTimer !== null) return;
+      this.mapsTimer = setTimeout(() => { this.mapsTimer = null; this.onSurfaceMaps?.(); }, 60);
+    });
     this.lighting = new Lighting(this.scene);
     this.fog = new THREE.Fog(0xefe7da, 85, 150);
     this.scene.fog = this.fog;
@@ -182,6 +190,7 @@ export class GameView {
     this.buildView.setGrid(this.buildGrid ? lot : null);
     if (!state || !lot) return;
     this.env.build(lot);
+    this.preloadLotSurfaces(lot);
     this.lotView.setCutaway(this.cutaway, this.rig.viewDir(this.tmpV));
     this.lotView.setActiveLevel(this.activeLevel);
     this.objects.setActiveLevel(this.activeLevel);
@@ -200,6 +209,15 @@ export class GameView {
     this.rig.setBounds(-1, -1, lot.width + 1, lot.depth + 1);
     this.lighting.setFocus(lot.width / 2, lot.depth / 2, Math.max(lot.width, lot.depth) * 0.75);
     this.objectAssets.purgeUnused();
+  }
+
+  /** Starts loading the maps, motifs and murals of every wall and floor design used on the lot. */
+  private preloadLotSurfaces(lot: Lot): void {
+    const ids = new Set<string>();
+    const add = (db: Record<string, SurfaceDesign>, designId: string) => { const d = db[designId]; if (d) for (const m of designMaps(d)) ids.add(m); };
+    for (const w of Object.values(lot.walls)) { add(this.content.wallDesigns, w.sideA.designId); add(this.content.wallDesigns, w.sideB.designId); }
+    for (const f of Object.values(lot.floors)) add(this.content.floorDesigns, f.designId);
+    if (ids.size) void preloadSurfaceMaps([...ids]);
   }
 
   lotChanged(what: Extract<GameEvent, { type: 'lot.changed' }>['what']): void {

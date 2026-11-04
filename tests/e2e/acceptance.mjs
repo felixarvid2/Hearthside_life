@@ -693,8 +693,23 @@ async function pointFor(T, kind, id, extra) {
     const lim = 140;
     dx = Math.max(-lim, Math.min(lim, dx)); dy = Math.max(-lim, Math.min(lim, dy));
     if (Math.abs(dx) < 12 && Math.abs(dy) < 12) { dx = (i % 2 ? 1 : -1) * 30; }
-    const from = { x: Math.max(20, Math.min(T.page.viewportSize().width - 20, c.x - dx / 2)), y: Math.max(20, Math.min(T.page.viewportSize().height - 20, c.y - dy / 2)) };
-    await drag(T, from, { x: from.x + dx, y: from.y + dy });
+    const { width: vw, height: vh } = T.page.viewportSize();
+    const clampX = (x) => Math.max(20, Math.min(vw - 20, x));
+    const clampY = (y) => Math.max(20, Math.min(vh - 20, y));
+    const onCanvas = (x, y) => T.page.evaluate(([px, py]) => { const e = document.elementFromPoint(px, py); return !!e && e.id === 'game-canvas'; }, [x, y]);
+    // The start of the drag must be on the canvas: a gesture that begins on the HUD (the camera cluster
+    // sits over the middle of the free area on a phone) never reaches it and the camera does not move.
+    // Prefer the old midpoint, fall back to the free centre itself (sampled as free by freeCentre).
+    const candidates = [
+      { x: clampX(c.x - dx / 2), y: clampY(c.y - dy / 2) },
+      { x: c.x, y: c.y },
+      { x: clampX(c.x - dx / 4), y: clampY(c.y - dy / 4) },
+    ];
+    let from = candidates[0];
+    for (const cand of candidates) {
+      if (await onCanvas(cand.x, cand.y)) { from = cand; break; }
+    }
+    await drag(T, from, { x: clampX(from.x + dx), y: clampY(from.y + dy) });
     await T.frames(6);
   }
   return T.page.evaluate(([k, a, b]) => window.__t[k](a, b), [kind, id, extra]);

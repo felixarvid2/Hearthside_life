@@ -1,0 +1,12 @@
+export const MOTIF_BORDER_MAX: number;
+export const MOTIF_COVERAGE_MIN: number;
+export const MOTIF_COVERAGE_MAX: number;
+export const MOTIF_MARGIN: number;
+export const MOTIF_PX: number;
+export const MURAL_W: number;
+export const MURAL_H: number;
+export const GENERIC_MATERIAL: { std: number; flatten: number; drift: number };
+export function coverageMask(grey: ArrayLike<number>, lo?: number, hi?: number): Uint8Array;
+export function inkBox(mask: ArrayLike<number>, w: number, h: number, thr?: number): { x0: number; y0: number; x1: number; y1: number } | null;
+export function motifCheck(mask: ArrayLike<number>, w: number, h: number, thr?: number): { ok: boolean; reason: string; coverage: number; border: number };
+export function squareMotif(mask: ArrayLike<number>, w: number, box: { x0: number; y0: number; x1: number; y1: number }, margin?: number): { side: number; data: Uint8Array };

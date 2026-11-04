@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { FLOOR_DESIGNS, WALL_DESIGNS } from '../../../src/content/surfaces';
 import type { SurfaceDesign } from '../../../src/content/types';
-import { MAP_IDS, designMaps, drawMapRect, setSurfaceMapProvider } from '../../../src/render/textures/mapKit';
+import { MAP_IDS, MOTIF_IDS, MURAL_IDS, designMaps, drawMapRect, setSurfaceMapProvider } from '../../../src/render/textures/mapKit';
 import { paintDesign, textureLayout } from '../../../src/render/textures/painters';
 import { FakeCanvas } from './fakeCanvas';
 
@@ -24,22 +24,40 @@ class ImageCanvas extends FakeCanvas {
 afterEach(() => setSurfaceMapProvider(null));
 
 describe('detail maps', () => {
-  it('lists maps that exist on disk and no stray files', () => {
-    const dir = resolve(__dirname, '../../../public/assets/surfaces');
-    const files = readdirSync(dir).filter((f) => f.endsWith('.webp')).map((f) => f.replace(/\.webp$/, '')).sort();
-    expect(files).toEqual([...MAP_IDS].sort());
-    let total = 0;
-    for (const f of files) {
-      const size = statSync(resolve(dir, `${f}.webp`)).size;
-      expect(size, f).toBeLessThan(150 * 1024);
-      total += size;
-    }
-    expect(total).toBeLessThan(1.2 * 1024 * 1024); // the whole set stays about a megabyte
+  const listIds = (sub: string) => {
+    const dir = resolve(__dirname, '../../../public/assets/surfaces', sub);
+    return readdirSync(dir).filter((f) => f.endsWith('.webp')).map((f) => f.replace(/\.webp$/, '')).sort();
+  };
+  const sizes = (sub: string, ids: readonly string[]) => ids.map((id) => statSync(resolve(__dirname, '../../../public/assets/surfaces', sub, `${id}.webp`)).size);
+
+  it('lists the maps, motifs and murals that exist on disk (the generated id lists) and no stray files', () => {
+    expect(listIds('')).toEqual([...MAP_IDS].sort());
+    expect(listIds('motifs')).toEqual([...MOTIF_IDS].sort());
+    expect(listIds('murals')).toEqual([...MURAL_IDS].sort());
+    for (const id of [...MAP_IDS, ...MOTIF_IDS, ...MURAL_IDS]) expect(id, id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    // the three kinds never share an id: a design param names one image without a kind
+    expect(new Set([...MAP_IDS, ...MOTIF_IDS, ...MURAL_IDS]).size).toBe(MAP_IDS.length + MOTIF_IDS.length + MURAL_IDS.length);
   });
 
-  it('uses every shipped map in at least one design', () => {
+  it('keeps the image files small', () => {
+    for (const n of sizes('', MAP_IDS)) expect(n).toBeLessThan(150 * 1024);
+    for (const n of sizes('motifs', MOTIF_IDS)) expect(n).toBeLessThan(60 * 1024);
+    for (const n of sizes('murals', MURAL_IDS)) expect(n).toBeLessThan(150 * 1024);
+    expect(sizes('', MAP_IDS).reduce((a, b) => a + b, 0)).toBeLessThan(0.08 * 1024 * 1024 * MAP_IDS.length + 0.4 * 1024 * 1024);
+  });
+
+  it('uses every shipped map, motif and mural in at least one design', () => {
     const used = new Set(MAP_DESIGNS.flatMap((d) => designMaps(d)));
-    for (const id of MAP_IDS) expect(used.has(id), id).toBe(true);
+    for (const id of [...MAP_IDS, ...MOTIF_IDS, ...MURAL_IDS]) expect(used.has(id), id).toBe(true);
+  });
+
+  it('designMaps reads map, ground, motif, motif2 and mural, and ignores procedural motif names', () => {
+    expect(designMaps({ params: { map: 'grain-oak' } })).toEqual(['grain-oak']);
+    expect(designMaps({ params: { motif: 'chevron', size: 0.3 } })).toEqual([]);
+    expect(designMaps({ params: { motif: 0.48 } })).toEqual([]);
+    const m = MOTIF_IDS[0] ?? 'x', u = MURAL_IDS[0] ?? 'y';
+    expect(designMaps({ params: { motif: m, motif2: m, ground: 'paper-linen', mural: u, map: '' } })).toEqual(['paper-linen', m, u]);
+    expect(designMaps({ params: { motif: m, motif2: '', ground: '' } })).toEqual([m]);
   });
 
   it('drawMapRect tiles the rectangle and overdraws by a pixel fraction', () => {

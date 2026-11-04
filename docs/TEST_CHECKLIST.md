@@ -72,6 +72,7 @@ Record real devices separately from emulation:
 | 2026-11-02 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M1-M7: acceptance 203/203 portrait, 200/201 landscape (step 2 random social did not raise the relationship; unrelated to M7), 194/194 desktop; step 9 29/29 in each viewport; typecheck clean, npm test 95 files / 1190 tests, content:check 0 errors 0 warnings, build passes |
 | 2026-11-03 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | Post-M9 gaps (teen part-time jobs, town children, kids' clothes, elder wrinkles, L/rectangle fences): acceptance 315/315 portrait, 313/313 landscape, 300/300 desktop; creator 288/288; e2e OK; typecheck clean, npm test 120 files / 1676 tests, content:check 0 errors 0 warnings, build passes |
 | 2026-11-03 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M11 (13 careers, 19 ready skills, 40 traits, 13 aspirations, 45 socials): acceptance 315/315 portrait, 313/313 landscape, 302/302 desktop; creator 288/288; e2e OK; typecheck clean, npm test 129 files / 1746 tests, content:check 0 errors 0 warnings, build passes |
+| 2026-11-04 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M10 surfaces (360 wall finishes, 200 floor designs): typecheck, test, content:check, build, e2e, e2e:creator, acceptance portrait/landscape/desktop - all pass (acceptance portrait 315/315, landscape 313/313, desktop 302/302) |
 
 ## Manual browser checks, Milestone 5 (emulation only; no named device)
 

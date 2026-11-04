@@ -1,9 +1,10 @@
 # Continuation note
 
-State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
+State on 2026-11-04. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
 gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9 and 11 are
-complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete catalogs) or 12 (environment and
-venues).
+complete and verified** (brief section 26, docs/ROADMAP.md). **Milestone 10 is in progress: the surface catalog is complete**
+(360 wall finishes, 200 floor designs); 560 furnishings and the full creator catalog are still open. The next work is the rest of
+Milestone 10 or Milestone 12 (environment and venues).
 
 ## Milestone status
 
@@ -18,6 +19,7 @@ venues).
 | 7 Neighbourhood and venues | Lot travel (20-40 game minutes, free), one active lot, 4 NPC households generated once from the world seed with jobs and cross-household relationships, light off-lot schedule (work, home, venue visits), NPC pay once and NPC bill auto-pay, invite home, household switching, rent/buy and moving (owned home sells at 80%), lazy venue/home layouts validated for reachability, 15 venue interactions with once-only costs, library quiet rule, no sleeping in public venues; Map/List modal, lot detail sheet, trip chip, away card; phone landscape HUD (funds drop cents from $1,000 up, icon-only Map/Menu) | 14 lots (12), 6 usable venues (3), 121 furniture (10 new models) | acceptance step 9 (map, travel to park, venue activity, go home, switch preview) in all viewports |
 | 8 Family and life stages (PR #4) | seven life stages (baby to elder) with per-stage MPFB bodies, lazy-loaded; aging off / long / normal / custom, optional elder end of life; birthdays; school with performance, homework and report cards; babysitter; adoption; moving out (household split); age-gated interactions and family socials; family view and dialogs; 6 family furniture models | 7 life stages | acceptance step 10 (`stepFamily`) in all viewports; `npm run e2e:acceptance` |
 | 9 Multiple floors and exteriors (PR #4) | levels 0-2 (3 m apart, walls 2.8 m); upper floors need support, balconies up to 2 tiles out; stairs as objects with stairwell cut and undo; multi-level path search; HUD level selector; two-storey Hazelbank loft; 12 roof styles and 11 finishes, Roof camera toggle, auto roof; 24 fence designs (123 variants) and 12 gates (64 variants); 12 terrain paints; 16 garden objects and 10 crops (plant, water, weed, harvest at 75 % of value) | 3 floors, 12 roof styles, 24 fences, 12 gates, 12 staircases (catalogue has 9 straight and 4 spiral) | acceptance step 11 (`stepFloors`, `stepExterior`) in all viewports; `--steps=12` runs the exterior part alone |
+| 10 Complete catalogs | surfaces done: AI-sourced and code-painted wall and floor designs, palette tinting, on-demand maps (pipeline below) | 360 walls (360), 200 floors (200), 560 furnishings (open), full creator catalog (open) | surfaces complete; furnishings and creator catalog still open |
 | 11 Complete progression and social scope (own PR) | 13 careers (130 levels) with 17 on-the-job events; six ready skills with practice activities and effects (baking, wellness, creativity, photography, fishing, research); six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond); 40 traits in six categories; 13 three-stage, adult-only aspirations; 45 social interactions; once-only payouts through `transact` | 13 careers (12), 19 skills (16), 40 traits (40), 13 aspirations (12), 45 socials (40) | typecheck, 1746 tests, content check, build, `e2e:creator`; visual checks 25/25 careers, 45/45 skills, 39/39 photography/fishing/research, 19/19 traits |
 
 Checks on the final state:
@@ -77,8 +79,9 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 ## Next steps, in order
 
 1. Merge PR #6 (Milestone 11); standing approval: merge every PR once all checks pass.
-2. Milestone 10, complete catalogs: 360 walls, 200 floors, 560 furnishings, full creator catalog (ROADMAP). Current counts are in
-   `docs/CONTENT_STATUS.md`. Milestone 12 (seasons, weather, pools, venue variety) is the other next choice.
+2. Milestone 10, complete catalogs: surfaces are done (360 walls, 200 floors). The remaining targets are 560 furnishings and the
+   full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`. Milestone 12 (seasons, weather, pools, venue
+   variety) is the other next choice.
 3. Polish of the M8, M9 and M11 gaps (listed under "Known issues").
 4. People: brow styles, the garment hem flare on the female body, real-device performance.
 5. Performance:
@@ -147,7 +150,16 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - Allowed models: FLUX schnell/dev and TRELLIS. Do not use Hunyuan3D: its licence excludes the EU.
 - **AI hair.** `npm run hair:ai` (`tools/build-ai-hair.mts`, `tools/hair-ai/`). Raw generations are cached in
   `dev/hair-ai/raw/` (gitignored, so a fresh clone has to regenerate them, which costs money).
-- **AI surface maps.** `npm run assets:surfaces` builds them from `dev/surfaces-ai/raw/` (gitignored).
+- **AI surface maps.** `npm run assets:surfaces -- --group <group>` builds them from `dev/surfaces-ai/raw/` (gitignored).
+  Sources are data in `dev/surfaces-ai/sources/<group>.mjs`; `node dev/surfaces-ai/generate.mjs --group <group>` fetches
+  missing ones (budget cap and ledger in `dev/surfaces-ai/LEDGER.md`).
+- **Adding or fixing a surface design.** Content lives in `src/content/surfaces3/<group>.ts` and per-group painters in
+  `src/render/textures/packs/<group>.ts`; the shared painters are `motif-wall`, `motif-floor` and `mural-wall`. Add a source
+  to `dev/surfaces-ai/sources/<group>.mjs` (kind material, motif or mural), generate it, run
+  `npm run assets:surfaces -- --group <group>` (rebuilds the maps and `src/render/textures/surfaceMapIds.generated.ts`), then
+  check with `npm run visual:surfaces -- --group <group> [--ids a,b] [--palettes]` and `npm run content:check`. Palettes tint
+  the sources, so a design works with every palette; maps load on demand (only the 14 base maps and the active lot's maps are
+  preloaded).
 - **Licences.** Check the Meshy, FLUX and TRELLIS output terms before distribution (see `public/assets/LICENSES.md`).
 - **MPFB bodies.** Blender 4.5.15, MPFB 2.0.18 and MakeHuman CC0 asset packs are installed outside the repo (see
   `tools/mpfb/README.md`, which also defines the GLB format). `npm run assets:mpfb` builds `public/assets/characters/mpfb_{f,m}.glb`
@@ -200,5 +212,5 @@ only; git, curl and rm are blocked, so a supervising session commits its work. T
 | `npm run e2e:creator` | |
 | `npm run assets` | needs `../test/assets` |
 | `npm run assets:meshy` | |
-| `npm run assets:surfaces` | |
+| `npm run assets:surfaces -- --group <g>` | builds the committed maps and `surfaceMapIds.generated.ts` |
 | `npm run hair:ai -- images\|models\|build\|sheet\|content` | |

@@ -13,6 +13,7 @@
 import type { FinishRef } from '../core/types';
 import type { OpeningDef, Palette, PriceTier, SurfaceDesign } from './types';
 import { FLOOR_DESIGNS_2, OPENINGS_2, WALL_DESIGNS_2 } from './surfaces2';
+import { FLOOR_DESIGNS_3, WALL_DESIGNS_3 } from './surfaces3';
 
 /** Brief section 14 wall families (id, display name, full-catalog target). */
 export const WALL_FAMILIES: ReadonlyArray<{ id: string; name: string; target: number }> = [
@@ -290,8 +291,8 @@ const WALL_DESIGNS_1: SurfaceDesign[] = [
   }),
 ];
 
-/** Every wall finish: the Milestone 1 set here, then the Milestone 2 set (surfaces2.ts). */
-export const WALL_DESIGNS: SurfaceDesign[] = [...WALL_DESIGNS_1, ...WALL_DESIGNS_2];
+/** Every wall finish: the Milestone 1 set here, then Milestone 2 (surfaces2.ts) and Milestone 10 (surfaces3/). */
+export const WALL_DESIGNS: SurfaceDesign[] = [...WALL_DESIGNS_1, ...WALL_DESIGNS_2, ...WALL_DESIGNS_3];
 
 // ---------------------------------------------------------------------------------------------
 // Floor designs
@@ -438,8 +439,8 @@ const FLOOR_DESIGNS_1: SurfaceDesign[] = [
   }),
 ];
 
-/** Every floor design: the Milestone 1 set here, then the Milestone 2 set (surfaces2.ts). */
-export const FLOOR_DESIGNS: SurfaceDesign[] = [...FLOOR_DESIGNS_1, ...FLOOR_DESIGNS_2];
+/** Every floor design: the Milestone 1 set here, then Milestone 2 (surfaces2.ts) and Milestone 10 (surfaces3/). */
+export const FLOOR_DESIGNS: SurfaceDesign[] = [...FLOOR_DESIGNS_1, ...FLOOR_DESIGNS_2, ...FLOOR_DESIGNS_3];
 
 // ---------------------------------------------------------------------------------------------
 // Doors and windows
@@ -521,7 +522,7 @@ const OPENINGS_1: OpeningDef[] = [
   }),
 ];
 
-/** Every door and window: the Milestone 1 set here, then the Milestone 2 set (surfaces2.ts). */
+/** Every door and window: the Milestone 1 set here, then Milestone 2 (surfaces2.ts) and Milestone 10 (surfaces3/). */
 export const OPENINGS: OpeningDef[] = [...OPENINGS_1, ...OPENINGS_2];
 
 // ---------------------------------------------------------------------------------------------

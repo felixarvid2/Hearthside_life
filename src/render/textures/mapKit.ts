@@ -9,16 +9,29 @@
 import type { SurfaceDesign } from '../../content/types';
 import type { Canvas2DLike } from './painterKit';
 
-/** Every shipped detail map (public/assets/surfaces/<id>.webp). */
-export const MAP_IDS = [
+import { MATERIAL_MAP_IDS, MOTIF_IDS, MURAL_IDS } from './surfaceMapIds.generated';
+
+/** Every detail map (public/assets/surfaces/<id>.webp); generated from the files by tools/build-surface-maps.mjs. */
+export const MAP_IDS = MATERIAL_MAP_IDS;
+export type MapId = (typeof MAP_IDS)[number];
+export { MOTIF_IDS, MURAL_IDS };
+
+/** The 14 original detail maps: preloaded at start-up; every other image loads on demand (or with its lot). */
+export const BASE_MAP_IDS: readonly string[] = [
   'grain-oak', 'grain-barn', 'stone-marble', 'stone-slate', 'fibre-berber', 'fibre-sisal',
   'concrete-aggregate', 'gravel', 'lawn',
   'plaster-rough', 'grasscloth', 'rubble-stone', 'slate-ledge', 'concrete-board',
-] as const;
-export type MapId = (typeof MAP_IDS)[number];
+];
 
-/** Returns a tinted, drawable image of the map for the palette colours, or null while it is not available. */
-export type MapProvider = (mapId: string, colors: readonly string[]) => unknown;
+/** What an id names: a material detail map, a motif mask (tinted with one colour) or a mural. */
+export type MapKind = 'material' | 'motif' | 'mural';
+
+/**
+ * Returns a tinted, drawable image for the palette colours, or null while it is not available.
+ * material: colours [base, light, dark] tint the map; motif: colours[0] is the ink colour; mural: [base, light, dark]
+ * as a tritone.
+ */
+export type MapProvider = (mapId: string, colors: readonly string[], kind?: MapKind) => unknown;
 
 let provider: MapProvider | null = null;
 
@@ -26,14 +39,35 @@ export function setSurfaceMapProvider(p: MapProvider | null): void {
   provider = p;
 }
 
-export function surfaceMapImage(mapId: string, colors: readonly string[]): unknown {
-  return provider ? provider(mapId, colors) : null;
+export function surfaceMapImage(mapId: string, colors: readonly string[], kind: MapKind = 'material'): unknown {
+  return provider ? provider(mapId, colors, kind) : null;
 }
 
-/** Detail maps a design needs (empty for purely procedural painters). */
+/** Params that name an image: map and ground (material), motif and motif2, mural. */
+const PARAM_KINDS: ReadonlyArray<readonly [string, MapKind]> = [
+  ['map', 'material'], ['ground', 'material'], ['motif', 'motif'], ['motif2', 'motif'], ['mural', 'mural'],
+];
+
+/**
+ * Every map, motif and mural id a design's params reference (empty for purely procedural painters). Older painters
+ * use a `motif` param for procedural shapes ('chevron', 0.48), so motif and mural values only count when they name
+ * an existing image; a misspelt id is caught by checkParams (the painter's enum), not here.
+ */
 export function designMaps(design: Pick<SurfaceDesign, 'params'>): string[] {
-  const m = design.params.map;
-  return typeof m === 'string' ? [m] : [];
+  const out: string[] = [];
+  for (const [key, kind] of PARAM_KINDS) {
+    const v = design.params[key];
+    if (typeof v !== 'string' || v === '' || out.includes(v)) continue;
+    if (kind === 'material' || (kind === 'motif' ? MOTIF_IDS : MURAL_IDS).includes(v)) out.push(v);
+  }
+  return out;
+}
+
+/** Kind of an id by the list it is in (material when unknown). */
+export function mapKindOf(id: string): MapKind {
+  if ((MOTIF_IDS as readonly string[]).includes(id)) return 'motif';
+  if ((MURAL_IDS as readonly string[]).includes(id)) return 'mural';
+  return 'material';
 }
 
 /**

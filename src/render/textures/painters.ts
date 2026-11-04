@@ -10,7 +10,17 @@ import { findPalette } from '../../content/surfaces';
 import { FLOOR_PAINTERS } from './floorPainters';
 import { FLOOR_PAINTERS_2 } from './floorPainters2';
 import { MAP_PAINTERS } from './mapPainters';
+import { MOTIF_PAINTERS } from './motifPainters';
 import { hashString, mixSeed, resolveParams, type Canvas2DLike, type PainterDef, type PaintSpec } from './painterKit';
+import { PAINTERS_WALLS_A } from './packs/walls-a';
+import { PAINTERS_WALLS_B } from './packs/walls-b';
+import { PAINTERS_WALLS_C } from './packs/walls-c';
+import { PAINTERS_WALLS_D } from './packs/walls-d';
+import { PAINTERS_WALLS_E } from './packs/walls-e';
+import { PAINTERS_WALLS_F } from './packs/walls-f';
+import { PAINTERS_FLOORS_A } from './packs/floors-a';
+import { PAINTERS_FLOORS_B } from './packs/floors-b';
+import { PAINTERS_FLOORS_C } from './packs/floors-c';
 import { WALL_MATERIAL_PAINTERS } from './wallMaterials';
 import { WALL_MATERIAL_PAINTERS_2 } from './wallMaterials2';
 import { WALL_PATTERN_PAINTERS } from './wallPatterns';
@@ -32,7 +42,9 @@ export const PAINTERS: Readonly<Record<string, PainterDef>> = Object.freeze(
   Object.fromEntries(
     [
       ...WALL_PATTERN_PAINTERS, ...WALL_MATERIAL_PAINTERS, ...WALL_PATTERN_PAINTERS_2, ...WALL_MATERIAL_PAINTERS_2,
-      ...FLOOR_PAINTERS, ...FLOOR_PAINTERS_2, ...MAP_PAINTERS,
+      ...FLOOR_PAINTERS, ...FLOOR_PAINTERS_2, ...MAP_PAINTERS, ...MOTIF_PAINTERS,
+      ...PAINTERS_WALLS_A, ...PAINTERS_WALLS_B, ...PAINTERS_WALLS_C, ...PAINTERS_WALLS_D, ...PAINTERS_WALLS_E, ...PAINTERS_WALLS_F,
+      ...PAINTERS_FLOORS_A, ...PAINTERS_FLOORS_B, ...PAINTERS_FLOORS_C,
     ].map((p) => [p.id, p]),
   ),
 );
