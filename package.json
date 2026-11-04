@@ -32,6 +32,8 @@
     "visual:m12:pools": "node dev/ds-tasks/m12/p-shots.mjs",
     "dev:m115:inspect": "node dev/ds-tasks/m115/inspect-objects.mjs",
     "visual:m115:d": "node dev/ds-tasks/m115/shoot-d.mjs",
+    "visual:m115:probe": "node dev/ds-tasks/m115/probe-d.mjs",
+    "visual:m115:promote": "node dev/ds-tasks/m115/promote-d.mjs",
     "visual:m115:screens": "node dev/ds-tasks/m115/shoot-s.mjs",
     "visual:m115:b": "node dev/ds-tasks/m115/shoot-b.mjs",
     "visual:m115:h": "node dev/ds-tasks/m115/shoot-h.mjs",

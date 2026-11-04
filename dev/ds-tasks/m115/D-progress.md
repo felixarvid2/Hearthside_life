@@ -81,6 +81,21 @@ Add `objectId` and `role: 'target' | 'station'` to `ObjectUse`. The map gains an
 use: the target object (as today, when it is a placed object) plus `cookMeal`'s `data.stoveObj` and `washDishes`'
 `data.washObj` stations. This is additive; the target-keyed entries keep their meaning.
 
+### Decisions taken while implementing
+
+- Openness is a small state machine per part (`OpenMotion { from, to, since, duration, active }`), not a single
+  formula: `activeParts` says what should be open now; `seedMotion` turns that into the right pose for a part that
+  loads mid-action (from the anim's `since`); `stepMotion` only restarts a tween when the target flips and reverses
+  from the current value. Pulses (oven door at a bake start, dishwasher at either end of a run) are driven by
+  `elapsed`/`duration`, so they genuinely close again while the action continues.
+- Timings are game minutes everywhere (0.4 min = 0.4 s at 1x); the frame loop passes `world.clock.minutes`, so
+  pausing freezes a door mid-swing and 2x/3x make it faster in real time without extra code.
+- Only nodes that are actually animated stay separate. The freezer leaf, shower glass doors and everything else are
+  merged exactly as before; placeholders (loading/missing models) get no `ObjectAnim` at all.
+- Interiors are shallow, code-built recesses that sit just proud of the solid model front. The GLB body is one
+  merged mesh without a real cavity, so a deeper interior would be hidden by it; the shallow version reads as an
+  open cavity once the door is out of the way and costs nothing while closed.
+
 ### Files
 
 - `src/render/objectAssets.ts` — preserve door/lid nodes as `part:<name>` pivots.
@@ -144,3 +159,26 @@ use: the target object (as today, when it is a placed object) plus `cookMeal`'s 
   `tests/unit/render` 120/120, targeted `objectAnim`/`objectUse` 24/24. A full `npx vitest run` under heavy parallel
   load (screenshot browsers + other agents) reported 12 failures, all 5 s timeouts in unrelated surface/integration
   suites plus one travel-autonomy assertion; re-run when the machine is quiet.
+
+### Screenshot review and tuning (in progress)
+
+The first full run passed all 24 checks (portrait/landscape/desktop; five shots each) and produced readable evidence
+for the fridge closed, the wardrobe doors and the shower stall, but two shots needed work:
+
+- `reveal()` only fits a box into the current view and never zooms in, and the person's use slot is between the
+  camera and the appliance, so from the front the person covers the open part. The stove was almost entirely out of
+  frame and the open fridge cavity was hidden behind the person.
+- Effects were too faint: six short shower streaks at 0.32 opacity and 0.32-opacity steam, and the hob rings at
+  1.6 emissive intensity read as small dark circles at gameplay zoom.
+
+Changes made:
+
+- `objectAnim.ts` effects: ten shower streaks in two radii, 0.026 m wide, 0.46 opacity, with a stronger haze
+  (0.17); steam raised to eight sprites at 0.42 opacity; hob rings slightly larger (0.06 scale) and brighter
+  (emissive 2.4), pot 0.11 m radius. Still cheap: 10 quads, 8 sprites, 4 rings, one pot.
+- `shoot-d.mjs`: the closed-fridge and wardrobe shots keep the natural reveal view. The open fridge, stove and shower
+  shots now drive the rig directly (`GameView.rig.setYawStep` + `glideTo` aimed at the object's footprint centre at
+  a fixed zoom) and take all four yaw steps as `-k0..3` candidates; `promote-d.mjs` copies the best candidate to the
+  required `<viewport>-<state>.png` name. The candidate idea comes from `probe-d.mjs`, a small four-angle probe kept
+  for future camera work.
+- `package.json`: `visual:m115:probe` and `visual:m115:promote` scripts next to `visual:m115:d`.

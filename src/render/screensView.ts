@@ -317,7 +317,9 @@ export class ScreensView {
   /** A cheap change key: redraw when the content or animation frame moved enough. */
   private signature(e: QuadEntry, mode: ScreenMode, progress: number, gameMinutes: number): string {
     const p = Math.round(progress * 400);
-    const t = this.reducedMotion ? 0 : Math.floor(gameMinutes * 2);
+    // Continuous motion is drawn still under reduced motion, so the key stays put; the TV must
+    // still change programme (a cut, not motion), so its 2-minute scene boundary stays in the key.
+    const t = mode === 'tv' ? Math.floor(gameMinutes / 2) : this.reducedMotion ? 0 : Math.floor(gameMinutes * 2);
     const blink = !this.reducedMotion && (mode === 'document' || mode === 'code') ? Math.floor(this.now * 1.6) % 2 : 0;
     return `${mode}|${p}|${t}|${blink}|${e.id}`;
   }

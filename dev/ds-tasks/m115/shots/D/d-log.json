@@ -1,0 +1,194 @@
+{
+  "checks": [
+    {
+      "name": "portrait: cookMeal is queueable at the fridge",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: cookMeal reaches the fridge stage",
+      "ok": true,
+      "evidence": "stage 0 at 0.25 min"
+    },
+    {
+      "name": "portrait: cookMeal reaches the stove stage",
+      "ok": true,
+      "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "portrait: changeOutfit is queueable at the wardrobe",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: changeOutfit reaches the wardrobe",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "portrait: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "portrait: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: cookMeal is queueable at the fridge",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: cookMeal reaches the fridge stage",
+      "ok": true,
+      "evidence": "stage 0 at 0.25 min"
+    },
+    {
+      "name": "landscape: cookMeal reaches the stove stage",
+      "ok": true,
+      "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "landscape: changeOutfit is queueable at the wardrobe",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: changeOutfit reaches the wardrobe",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "landscape: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "landscape: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: cookMeal is queueable at the fridge",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: cookMeal reaches the fridge stage",
+      "ok": true,
+      "evidence": "stage 0 at 0.25 min"
+    },
+    {
+      "name": "desktop: cookMeal reaches the stove stage",
+      "ok": true,
+      "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "desktop: changeOutfit is queueable at the wardrobe",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: changeOutfit reaches the wardrobe",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "desktop: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "desktop: no page errors",
+      "ok": true,
+      "evidence": ""
+    }
+  ],
+  "shots": [
+    "portrait-fridge-closed.png",
+    "portrait-fridge-open.png",
+    "portrait-stove-cooking.png",
+    "portrait-wardrobe-open.png",
+    "portrait-shower-running.png",
+    "landscape-fridge-closed.png",
+    "landscape-fridge-open.png",
+    "landscape-stove-cooking.png",
+    "landscape-wardrobe-open.png",
+    "landscape-shower-running.png",
+    "desktop-fridge-closed.png",
+    "desktop-fridge-open.png",
+    "desktop-stove-cooking.png",
+    "desktop-wardrobe-open.png",
+    "desktop-shower-running.png"
+  ],
+  "viewports": [
+    {
+      "name": "portrait",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "setup": {
+        "personId": "per_2w",
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "isMobile": true,
+      "setup": {
+        "personId": "per_2w",
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 720,
+      "isMobile": false,
+      "setup": {
+        "personId": "per_2w",
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    }
+  ]
+}

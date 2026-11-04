@@ -187,7 +187,8 @@ async function framePool(page, pool, ppm) {
     // finish first (0.2 s wait + 0.5 s glide), then point at the pool again and leave no motion running.
     h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
     for (let i = 0; i < 48; i++) h.debug.frame(1 / 60);
-    h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
+    // Snap rather than glide: an animated glide would still be under way when the screenshot is taken.
+    h.view.rig.glideTo(cx, cz, ppmArg, 0);
     h.debug.frame(1 / 30);
     const out = { x: 0, y: 0, visible: false };
     h.view.rig.project(cx, 0, cz, out);

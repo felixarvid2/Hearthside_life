@@ -17,7 +17,7 @@
   {
     "name": "portrait: the preview highlight is centred on screen",
     "ok": true,
-    "evidence": "screen={\"x\":195.00000000000006,\"y\":204.86826538640685,\"visible\":true} offset=0.00,-0.26"
+    "evidence": "screen={\"x\":195.00000000000006,\"y\":197.99999999999997,\"visible\":true} offset=0.00,-0.27"
   },
   {
     "name": "portrait: confirming builds one pool with a ladder",
@@ -32,17 +32,17 @@
   {
     "name": "portrait: the built pool is centred on screen",
     "ok": true,
-    "evidence": "screen={\"x\":195.00000000000006,\"y\":465.3682653864069,\"visible\":true} offset=0.00,0.05"
+    "evidence": "screen={\"x\":195.00000000000006,\"y\":458.49999999999994,\"visible\":true} offset=0.00,0.04"
   },
   {
     "name": "portrait: a household member is swimming in the built pool",
     "ok": true,
-    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":75,\"hygiene\":83}"
+    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":88,\"hygiene\":86}"
   },
   {
     "name": "portrait: the swimmer is framed on screen",
     "ok": true,
-    "evidence": "screen={\"x\":195.00000000000006,\"y\":463.93072146832174,\"visible\":true} offset=0.00,0.05"
+    "evidence": "screen={\"x\":195.00000000000006,\"y\":458.5,\"visible\":true} offset=0.00,0.04"
   },
   {
     "name": "portrait: Get Out is offered while swimming",
@@ -72,12 +72,12 @@
   {
     "name": "landscape: the preview highlight is centred on screen",
     "ok": true,
-    "evidence": "screen={\"x\":240.00000000000003,\"y\":197.86826538640685,\"visible\":true} offset=-0.22,0.01"
+    "evidence": "screen={\"x\":240.00000000000003,\"y\":191,\"visible\":true} offset=-0.22,-0.01"
   },
   {
     "name": "landscape: confirming builds one pool with a ladder",
     "ok": true,
-    "evidence": "ok pools=1 pool={\"id\":\"pool_4r\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4m\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
   },
   {
     "name": "landscape: the pool costs the posted price",
@@ -87,17 +87,17 @@
   {
     "name": "landscape: the built pool is centred on screen",
     "ok": true,
-    "evidence": "screen={\"x\":422,\"y\":188.3682653864069,\"visible\":true} offset=0.00,-0.02"
+    "evidence": "screen={\"x\":422,\"y\":181.5,\"visible\":true} offset=0.00,-0.03"
   },
   {
     "name": "landscape: a household member is swimming in the built pool",
     "ok": true,
-    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":77,\"hygiene\":80}"
+    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":70,\"hygiene\":85}"
   },
   {
     "name": "landscape: the swimmer is framed on screen",
     "ok": true,
-    "evidence": "screen={\"x\":422,\"y\":186.9307214683217,\"visible\":true} offset=0.00,-0.02"
+    "evidence": "screen={\"x\":422,\"y\":181.49999999999997,\"visible\":true} offset=0.00,-0.03"
   },
   {
     "name": "landscape: Get Out is offered while swimming",
@@ -127,12 +127,12 @@
   {
     "name": "desktop: the preview highlight is centred on screen",
     "ok": true,
-    "evidence": "screen={\"x\":445.00000000000006,\"y\":365.58362612056777,\"visible\":true} offset=-0.15,0.01"
+    "evidence": "screen={\"x\":445.00000000000006,\"y\":356,\"visible\":true} offset=-0.15,-0.01"
   },
   {
     "name": "desktop: confirming builds one pool with a ladder",
     "ok": true,
-    "evidence": "ok pools=1 pool={\"id\":\"pool_4v\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4j\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
   },
   {
     "name": "desktop: the pool costs the posted price",
@@ -142,17 +142,17 @@
   {
     "name": "desktop: the built pool is centred on screen",
     "ok": true,
-    "evidence": "screen={\"x\":640,\"y\":356.08362612056777,\"visible\":true} offset=0.00,-0.01"
+    "evidence": "screen={\"x\":640,\"y\":346.5,\"visible\":true} offset=0.00,-0.02"
   },
   {
     "name": "desktop: a household member is swimming in the built pool",
     "ok": true,
-    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":78,\"hygiene\":88}"
+    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":83,\"hygiene\":79}"
   },
   {
     "name": "desktop: the swimmer is framed on screen",
     "ok": true,
-    "evidence": "screen={\"x\":640,\"y\":354.1669008964542,\"visible\":true} offset=0.00,-0.01"
+    "evidence": "screen={\"x\":640,\"y\":346.5,\"visible\":true} offset=0.00,-0.02"
   },
   {
     "name": "desktop: Get Out is offered while swimming",

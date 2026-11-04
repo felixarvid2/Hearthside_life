@@ -645,14 +645,14 @@ export class ObjectAnim {
       for (const fx of xs) for (const fz of zs) {
         const ring = new THREE.Mesh(RING_GEO, e.ringMat);
         ring.position.set(box.x0 + fx * (box.x1 - box.x0), hobY, box.z0 + fz * (box.z1 - box.z0));
-        ring.scale.setScalar(0.055);
+        ring.scale.setScalar(0.06);
         g.add(ring);
         e.rings.push(ring);
       }
       // pot on the front-left ring
       const pan = new THREE.Group();
       const pot = new THREE.Mesh(UNIT_CYL, PAN_MAT);
-      pot.scale.set(0.10, 0.075, 0.10);
+      pot.scale.set(0.11, 0.08, 0.11);
       pot.position.y = 0.038;
       pan.add(pot);
       const handle = new THREE.Mesh(UNIT_BOX, PAN_MAT);
@@ -669,30 +669,36 @@ export class ObjectAnim {
     if (kind === 'oven') {
       const tex = softSpriteTexture();
       if (tex) {
-        e.steamMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.32, depthWrite: false });
+        e.steamMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.42, depthWrite: false });
         this.ownMaterials.push(e.steamMat);
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 8; i++) {
           const s = new THREE.Sprite(e.steamMat);
           s.scale.setScalar(0.09 + (i % 3) * 0.025);
           s.visible = false;
-          s.userData.phase = i / 6;
+          s.userData.phase = i / 8;
           g.add(s);
           e.steam.push(s);
         }
       }
     }
     if (kind === 'shower') {
-      const mat = new THREE.MeshBasicMaterial({ color: 0xd7edf5, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide });
+      // A grid of short streaks spread over the tray: a ring around the centre would sit inside the person standing
+      // in the stall and be hidden. Mixed plane angles keep some of them facing the camera from any side.
+      const mat = new THREE.MeshBasicMaterial({ color: 0xcfebf7, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide });
       this.ownMaterials.push(mat);
       const cx = (box.x0 + box.x1) / 2, cz = (box.z0 + box.z1) / 2;
       const top = box.y1 - 0.10;
       const len = Math.max(0.4, top - 0.05);
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const quad = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 0.55), mat);
-        quad.rotation.y = angle;
-        quad.position.set(cx + Math.cos(angle) * 0.12, top - len * 0.5, cz + Math.sin(angle) * 0.12);
-        quad.userData.phase = i / 6;
+      const spots: [number, number][] = [
+        [0.24, 0.30], [0.50, 0.22], [0.76, 0.30], [0.24, 0.56], [0.76, 0.56],
+        [0.24, 0.80], [0.50, 0.86], [0.76, 0.80], [0.38, 0.68], [0.62, 0.68],
+      ];
+      for (let i = 0; i < spots.length; i++) {
+        const [fx, fz] = spots[i]!;
+        const quad = new THREE.Mesh(new THREE.PlaneGeometry(0.024, 0.5), mat);
+        quad.rotation.y = (i % 3) * 0.62;
+        quad.position.set(box.x0 + fx * (box.x1 - box.x0), top - len * 0.5, box.z0 + fz * (box.z1 - box.z0));
+        quad.userData.phase = i / spots.length;
         quad.userData.top = top;
         quad.userData.len = len;
         this.ownGeometries.push(quad.geometry);
@@ -701,8 +707,8 @@ export class ObjectAnim {
       }
       const tex = softSpriteTexture();
       if (tex) {
-        const haze = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.12, depthWrite: false }));
-        haze.scale.set(0.75, 0.55, 1);
+        const haze = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.17, depthWrite: false }));
+        haze.scale.set(0.8, 0.6, 1);
         haze.position.set(cx, box.y0 + (box.y1 - box.y0) * 0.45, cz);
         this.ownMaterials.push(haze.material);
         g.add(haze);
@@ -747,7 +753,7 @@ export class ObjectAnim {
 
     // hob rings + pot
     for (const ring of e.rings) ring.visible = act.burners.on;
-    e.ringMat.emissiveIntensity += ((act.burners.on ? 1.6 : 0) - e.ringMat.emissiveIntensity) * Math.min(1, dt * 8);
+    e.ringMat.emissiveIntensity += ((act.burners.on ? 2.4 : 0) - e.ringMat.emissiveIntensity) * Math.min(1, dt * 8);
     if (e.pan) e.pan.visible = act.pan.on;
 
     // steam (hidden entirely with reduced motion)
@@ -772,8 +778,9 @@ export class ObjectAnim {
         const len = q.userData.len as number;
         const top = q.userData.top as number;
         const phase = q.userData.phase as number;
-        const fall = ((this.elapsed * 1.25 + phase * len) % len);
-        q.position.y = top - fall;
+        const travel = Math.max(0.3, len - 0.5);
+        const fall = (this.elapsed * 1.25 + phase * travel) % travel;
+        q.position.y = top - 0.25 - fall;
       }
     }
     if (e.haze) e.haze.visible = act.shower.on && !reducedMotion;

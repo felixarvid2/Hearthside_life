@@ -205,4 +205,14 @@ behaviour being right except the pool suites and the pool screenshots.
   swims (stage `swim`, `inWater`); Get Out is offered while swimming; no page errors. Screenshots:
   `dev/ds-tasks/m12/shots/P/pool-{panel,preview,built,swim}-{portrait,landscape,desktop}.png`.
 
-Full `npx vitest run` — see the note at the end of this section after the run.
+Full `npx vitest run` — 153 of 155 files pass, 2016 of 2019 tests pass. The three failures are not pool-related:
+
+  - `tests/unit/integration/travel.test.ts` — "the household's own autonomy setting rules on every lot: with it off,
+    guests and patrons wait for orders": a guest started `introduce` with autonomy off. This is the known existing
+    failure in `src/sim/social.ts` and it failed before Task P.
+  - `tests/unit/surfaces/painters.test.ts` — "are deterministic" and "keep the same layout across palettes" timed out
+    at 5 s while the machine was busy with the rest of the suite. Rerun alone, the file passes 17/17 in 29 s, so this
+    is a load-induced timeout, not a regression.
+
+  No pool suite failed in the full run (all 26 pool tests are part of it) and no pool source file appears in the
+  stack of any failure.

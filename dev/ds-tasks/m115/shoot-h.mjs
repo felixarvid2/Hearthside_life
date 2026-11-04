@@ -88,7 +88,8 @@ async function focus(page, x, z, facing = null, ahead = 0) {
       }
       rig.setYawStep(best);
     }
-    rig.glideTo(tx, tz, 150, 0.55, 1.0);
+    // The tall portrait viewport needs a gentler zoom than the wide ones to keep the whole figure in frame.
+    rig.glideTo(tx, tz, window.innerWidth < 500 ? 95 : 140, 0.55, 1.0);
   }, [x, z, facing, ahead]);
   await page.waitForTimeout(1200);
   await frames(page, 6);

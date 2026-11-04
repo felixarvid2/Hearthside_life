@@ -89,7 +89,7 @@ async function forceRepaint(page, width, height) {
   await settle(page, 400);
 }
 
-/** Frames the appliance with the person standing at it (closer than the default follow view, wider than a portrait). */
+/** Natural view: reveals the object and keeps the current lot zoom, so the person at it stays in frame. */
 async function frameObject(page, objectId) {
   await page.evaluate((id) => window.hearthside.game.view.reveal({ kind: 'object', objectId: id }), objectId);
   await page.waitForTimeout(1800);
@@ -97,6 +97,37 @@ async function frameObject(page, objectId) {
   await page.evaluate(({ x, y }) => window.hearthside.game.view.zoomAt(0.82, x, y), centre);
   await page.waitForTimeout(900);
   await settle(page);
+}
+
+/**
+ * Close view: aims the rig at the object's footprint centre from one of the four yaw steps at a fixed zoom.
+ * reveal() only fits a box and keeps the current zoom, and the person stands between the camera and the appliance
+ * from the front, so the moving part is best framed from a side step and a fixed aim.
+ */
+async function aimObject(page, objectId, yawStep, ppm, y) {
+  await page.evaluate(({ objectId, yawStep, ppm, y }) => {
+    const th = window.hearthside;
+    const st = th.debug.state();
+    const lot = st.lots[st.activeLotId];
+    const o = lot.objects[objectId];
+    const def = th.core.content.objects[o.defId];
+    const swap = ((o.rot ?? 0) % 2) === 1;
+    const w = swap ? def.footprint.d : def.footprint.w;
+    const d = swap ? def.footprint.w : def.footprint.d;
+    const v = th.view;
+    v.rig.setYawStep(yawStep);
+    v.rig.glideTo(o.x + w / 2, o.z + d / 2, ppm, 0, y);
+    v.rig.update(0);
+  }, { objectId, yawStep, ppm, y });
+  await settle(page, 500);
+}
+
+/** Candidate angles for one state; the best one is promoted to the required file name afterwards. */
+async function angleCandidates(page, vp, name, objectId, ppm, y) {
+  for (let k = 0; k < 4; k++) {
+    await aimObject(page, objectId, k, ppm, y);
+    await shot(page, vp, `${name}-k${k}`);
+  }
 }
 
 async function clearQueue(page) {
@@ -223,8 +254,7 @@ async function main() {
       if (reaching) {
         await page.evaluate(() => window.hearthside.debug.step(3)); // let the 0.4 min door tween finish
         await settle(page);
-        await frameObject(page, setup.fridgeId);
-        await shot(page, vp, 'fridge-open');
+        await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 1.0);
       }
 
       // 3. Stove cooking: same chain, stage 1, with rings, pot and steam.
@@ -232,8 +262,7 @@ async function main() {
       check(`${vp.name}: cookMeal reaches the stove stage`, !!cooking, cooking ? `stage 1 at ${cooking.elapsed} min` : 'never');
       if (cooking) {
         await settle(page, 900); // steam rises in real time
-        await frameObject(page, setup.stoveId);
-        await shot(page, vp, 'stove-cooking');
+        await angleCandidates(page, vp, 'stove-cooking', setup.stoveId, 150, 0.95);
       }
 
       // 4. Wardrobe open while changing outfit.
@@ -257,8 +286,7 @@ async function main() {
       check(`${vp.name}: takeShower reaches the shower`, !!showering, showering ? `at ${showering.elapsed} min` : 'never');
       if (showering) {
         await settle(page, 1100);
-        await frameObject(page, setup.showerId);
-        await shot(page, vp, 'shower-running');
+        await angleCandidates(page, vp, 'shower-running', setup.showerId, 130, 1.2);
       }
 
       check(`${vp.name}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' | '));

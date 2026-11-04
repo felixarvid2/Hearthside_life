@@ -109,9 +109,24 @@ The script waits for each pill write and then disables the fill transition befor
 ### Checks (this session)
 
 - `npm run typecheck` — pass.
+- `npm run build` — pass (tsc + vite).
+- `npm run content:check` — 0 errors, 0 warnings.
 - Task B unit tests (`actionProgress`, `progressPill`, `actions`, `settings`) — 59/59 pass.
 - `npx vitest run` (whole suite) — 2011/2019 pass; the 8 failures are outside task B: five surface-painter timeouts
   under the parallel run, two heavy simulation timeouts (`floors`, `m11-skills`) while the browser checks were also
   running, and one travel autonomy assertion (`introduce` while autonomy is off). To be re-run once the browser run
   has finished and the other agents' WIP settles.
-- Visual checks: `npm run visual:m115:b` (self-locking; screenshots in `dev/ds-tasks/m115/shots/B/`).
+- Visual checks: `npm run visual:m115:b` — **29/29 checks passed** in portrait 390x844, landscape 844x390 and
+  desktop 1280x720 (screenshots in `dev/ds-tasks/m115/shots/B/`, log in `shots.json`):
+  - cooking at ~30%: amber `rgb(218,182,37)`, 30% wide, 44x10 (phones) or 56x12 (desktop), not done;
+  - cooking at ~90%: green `rgb(77,154,91)`, 90% wide;
+  - completion: 100% green pill with the check, label "Cook a Meal complete";
+  - two people: two pills with different labels at the same time (Water Plant + Bake a Treat);
+  - Settings shows the three scopes with Household selected; on desktop choosing Off writes the setting and hides
+    the pills, choosing Household restores it; no page errors in any viewport.
+  - Screenshot reliability: the script verifies the saved PNG really contains the pill pixels (fill colour and the
+    white check) and retries after closing any panel/menu that covers the overlay. The 700 ms completion state is
+    held by freezing the pill controller's `performance.now()` while the slow SwiftShader screenshot is taken; the
+    two actions are framed together with `focusOn` on their midpoint rather than the whole lot.
+- `npm run e2e` was started but the browser lock was held by other agents' visual runs for the whole session; the
+  result is recorded in the handover note when it completes.

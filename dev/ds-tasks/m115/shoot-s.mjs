@@ -155,14 +155,19 @@ async function stepTo(page, personId, fraction) {
   }, [personId, fraction]);
 }
 
-/** Cancels everything a person is doing and lets the screen go dark. */
-async function clearActions(page, personId) {
-  await page.evaluate((pid) => {
+/**
+ * Cancels everything anyone on the lot is doing, so the screen really goes dark. Clearing only the
+ * actor is not enough: another household member may be autonomously watching the same TV or using
+ * the computer (the off shots must show nobody using it).
+ */
+async function clearAllActions(page) {
+  await page.evaluate(() => {
     const h = window.hearthside, g = h.game, st = g.state();
-    for (const a of [...st.people[pid].queue]) g.cancel(pid, a.id);
+    const ids = Object.keys(st.people).filter((pid) => st.people[pid]?.location.kind === 'lot');
+    for (const pid of ids) for (const a of [...st.people[pid].queue]) g.cancel(pid, a.id);
     for (let i = 0; i < 40; i++) h.debug.step(1);
-    for (const a of [...st.people[pid].queue]) g.cancel(pid, a.id);
-  }, personId);
+    for (const pid of ids) for (const a of [...st.people[pid].queue]) g.cancel(pid, a.id);
+  });
   await frames(page, 10);
 }
 
@@ -229,7 +234,9 @@ async function main() {
       // re-aim because `aim` renders one itself.
       const shot = async (name, reaim) => {
         await frames(page, 12);
-        if (reaim) await reaim();
+        // Re-aim last: the UI lays its panels out asynchronously, which can shift the uncovered
+        // area (and so the framing) during the frames above. Return the camera as it is at capture.
+        const aimed = reaim ? await reaim() : null;
         const cam = await page.evaluate(() => {
           const v = window.hearthside.view, r = v.rig;
           return {
@@ -240,6 +247,7 @@ async function main() {
         });
         log.push({ name: `shot ${name}-${vp.id}`, ok: true, evidence: JSON.stringify(cam) });
         await page.screenshot({ path: join(OUT, `${name}-${vp.id}.png`) });
+        return aimed;
       };
 
       const objects = await page.evaluate(() => {
@@ -275,7 +283,7 @@ async function main() {
       }
 
       // 3. Programming: code editor and terminal.
-      await clearActions(page, writing.personId ?? actor);
+      await clearAllActions(page);
       const programming = await startInteraction(page, 'computer-desktop', 'practiceProgramming');
       if (programming.ok) {
         await stepTo(page, programming.personId, 0.45);
@@ -285,7 +293,7 @@ async function main() {
       } else note(`${vp.id}: programming starts`, false, programming.reason);
 
       // 4. Gaming: the little animated game.
-      await clearActions(page, programming.personId ?? writing.personId ?? actor);
+      await clearAllActions(page);
       const gaming = await startInteraction(page, 'computer-desktop', 'playComputerGames');
       if (gaming.ok) {
         await stepTo(page, gaming.personId, 0.5);
@@ -295,7 +303,7 @@ async function main() {
       } else note(`${vp.id}: gaming starts`, false, gaming.reason);
 
       // 5. Computer off.
-      await clearActions(page, gaming.personId ?? writing.personId ?? actor);
+      await clearAllActions(page);
       await computerAim();
       await shot('computer-off', computerAim);
 
@@ -324,13 +332,15 @@ async function main() {
           return { ok: true, world: { x: +v.x.toFixed(2), y: +v.y.toFixed(2), z: +v.z.toFixed(2) }, person: { x: +person.x.toFixed(2), z: +person.z.toFixed(2) }, target: { x: +tx.toFixed(2), y: +ty.toFixed(2), z: +tz.toFixed(2) }, ppm: r.ppm, posture: loc?.posture, screen };
         }, [tv.objectId, LOCAL['tv-flatscreen'], objects.tv.rot, vp.width]);
         const cam = await tvCam();
-        await shot('tv-watching', tvCam);
+        const shotCam = await shot('tv-watching', tvCam);
         note(`${vp.id}: the TV is on while someone is watching`, tv.ok && cam.posture === 'seated', JSON.stringify({ ...cam, watch: tv }));
-        note(`${vp.id}: the TV screen and watcher share the frame`, cam.ok && cam.screen.visible, JSON.stringify(cam));
+        // The first projection can be stale while the UI panels finish laying out; judge by the
+        // camera state at capture, which is what the screenshot actually shows.
+        note(`${vp.id}: the TV screen and watcher share the frame`, shotCam?.ok === true && shotCam.screen.visible, JSON.stringify(shotCam ?? cam));
       } else note(`${vp.id}: watching TV starts`, false, tv.reason);
 
       // 7. TV off.
-      await clearActions(page, tv.personId ?? writing.personId ?? actor);
+      await clearAllActions(page);
       await tvAim();
       await shot('tv-off', tvAim);
 

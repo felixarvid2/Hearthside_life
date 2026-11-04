@@ -162,7 +162,8 @@ export class ObjectsView {
       else if (Math.abs(wx - Math.round(wx)) < 1e-6) wallId = edgeKey(o.level, 'v', Math.round(wx), Math.floor(wz));
     }
     const isLamp = def.subcategory?.includes('lamp') === true || def.tags.includes('lamp');
-    const objectAnim = createObjectAnim(def, model && !placeholder ? model : null, this.content);
+    // No parts/interiors over a loading or missing placeholder: sync rebuilds the entry with the real model.
+    const objectAnim = model && !placeholder ? createObjectAnim(def, model, this.content) : null;
     if (objectAnim) g.add(objectAnim.root);
     const e: ObjEntry = { id: o.id, level: o.level, sig, group: g, model, placeholder, def, box, wallId, isLamp, condSig: '', cond: null, anim: [], objectAnim };
     g.visible = o.id !== this.hiddenId && o.level <= this.activeLevel && !(wallId && this.isLowered(wallId));

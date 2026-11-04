@@ -13,6 +13,7 @@ import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../../..');
@@ -28,6 +29,10 @@ if (!process.env.HEARTHSIDE_M115B_LOCKED) {
   process.exit(locked.status ?? 1);
 }
 mkdirSync(OUT, { recursive: true });
+
+// Chromium's close can occasionally hang in this container; never keep the shared browser lock forever.
+const watchdog = setTimeout(() => { console.error('[m115-b] watchdog: exiting'); process.exit(0); }, 25 * 60 * 1000);
+watchdog.unref();
 
 const require = createRequire(import.meta.url);
 function loadPlaywright() {
@@ -49,11 +54,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = [];
 const note = (name, ok, evidence = '') => { log.push({ name, ok, evidence }); console.log(`[m115-b] ${ok ? 'ok  ' : 'FAIL'} ${name}${evidence ? ` — ${evidence}` : ''}`); };
 
-const VIEWPORTS = [
+const ALL_VIEWPORTS = [
   { id: 'portrait', width: 390, height: 844, mobile: true },
   { id: 'landscape', width: 844, height: 390, mobile: true },
   { id: 'desktop', width: 1280, height: 720, mobile: false },
 ];
+// `--only=desktop` (etc.) re-captures one viewport without redoing the others.
+const only = process.argv.find((a) => a.startsWith('--only='))?.slice('--only='.length);
+const VIEWPORTS = ALL_VIEWPORTS.filter((v) => !only || v.id === only);
+if (VIEWPORTS.length === 0) throw new Error(`--only must be one of ${ALL_VIEWPORTS.map((v) => v.id).join(', ')}`);
 
 async function waitForServer(url, ms, server) {
   const end = Date.now() + ms;
@@ -202,6 +211,101 @@ async function pillState(page) {
   });
 }
 
+/**
+ * Closes panels/menus that may cover the world overlay. The person panel and the pause menu slide over the overlay
+ * with a scrim; at speed 0 closing the pause menu does not resume the game.
+ */
+async function clearOverlays(page) {
+  const before = await page.evaluate(() => ({
+    menu: !!document.querySelector('.game-menu'),
+    backdrop: !!document.querySelector('.modal-backdrop'),
+    panel: !!document.querySelector('.panel'),
+  }));
+  if (before.menu || before.backdrop || before.panel) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+  }
+  return before;
+}
+
+/** Two real animation frames so the compositor has painted the latest overlay state. */
+async function repaint(page) {
+  await page.evaluate(() => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(() => res(null)))));
+  await page.waitForTimeout(120);
+}
+
+/** Counts fill-coloured (and check-white) pixels inside a pill's rect in a saved screenshot. */
+async function pillPixels(file, pill, done = false) {
+  const meta = await sharp(file).metadata();
+  const left = Math.max(0, Math.round(pill.x - pill.w / 2) - 6);
+  const top = Math.max(0, Math.round(pill.y) - 6);
+  const width = Math.min(meta.width - left, pill.w + 12);
+  const height = Math.min(meta.height - top, pill.h + 12);
+  const { data, info } = await sharp(file).extract({ left, top, width, height }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const target = (pill.colour.match(/\d+/g) ?? []).map(Number);
+  let fill = 0, whiteRight = 0;
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      const i = (y * info.width + x) * info.channels;
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      if (target.length >= 3 && Math.abs(r - target[0]) <= 26 && Math.abs(g - target[1]) <= 26 && Math.abs(b - target[2]) <= 26) fill++;
+      if (done && x > info.width * 0.55 && r > 215 && g > 215 && b > 215) whiteRight++;
+    }
+  }
+  return { fill, whiteRight, box: { left, top, width, height } };
+}
+
+/**
+ * Takes a screenshot and checks the saved PNG really contains the pill fill (SwiftShader can capture the overlay
+ * mid-layout). Retries after closing any panel/menu and repainting.
+ */
+async function capture(page, file, { count = 1, done = false, minFill = 12 } = {}) {
+  const path = join(OUT, file);
+  let last = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const cleared = await clearOverlays(page);
+    await repaint(page);
+    const state = await pillState(page);
+    const pills = state.pills.slice(0, count);
+    await page.screenshot({ path, animations: 'disabled' });
+    const checks = [];
+    for (let i = 0; i < pills.length; i++) checks.push(await pillPixels(path, pills[i], done && i === 0));
+    const ok = pills.length >= count && checks.every((c) => c.fill >= minFill) && (!done || (checks[0]?.whiteRight ?? 0) >= 2);
+    console.log(`[m115-b] shot ${file}${attempt > 1 ? ` attempt ${attempt}` : ''}: pills=${state.count} fills=${checks.map((c) => c.fill).join(',')} check=${checks[0]?.whiteRight ?? 0}${cleared.menu ? ' (closed menu)' : ''}`);
+    if (ok) return { pills, checks };
+    last = { pills, checks };
+  }
+  return { ...last, failed: true };
+}
+
+/**
+ * Keeps the pill's 700 ms completion state alive while a 1280x720 SwiftShader screenshot is taken. The controller
+ * reads performance.now(); freezing it after the done state has been sampled makes the ending timer stand still.
+ */
+async function installClock(page) {
+  await page.evaluate(() => {
+    const real = performance.now.bind(performance);
+    let frozen = real(), on = false;
+    Object.defineProperty(performance, 'now', { configurable: true, value: () => (on ? frozen : real()) });
+    window.__m115bClock = {
+      freeze() { frozen = real(); on = true; },
+      tick(ms) { frozen += ms; },
+      release() { on = false; },
+    };
+  });
+}
+
+/** Freezes the clock, nudges it past the 100 ms sample throttle, and waits for the done pill to be written. */
+async function holdDone(page) {
+  await page.evaluate(() => { window.__m115bClock.freeze(); window.__m115bClock.tick(1300); });
+  await repaint(page);
+  await page.waitForFunction(() => {
+    const pill = document.querySelector('#world-overlay .wo-pill:not([hidden])');
+    return pill?.classList.contains('is-done') === true;
+  }, null, { timeout: 8000 }).catch(() => {});
+  await repaint(page);
+}
+
 /** Queues two different object actions for two different people and advances until both are performing. */
 async function twoActions(page) {
   const r = await page.evaluate(() => {
@@ -232,11 +336,12 @@ async function twoActions(page) {
         if (a.person === b.person || a.objectId === b.objectId || a.opt.interactionId === b.opt.interactionId) continue;
         const dist = Math.hypot(a.x - b.x, a.z - b.z);
         if (dist > 14) continue;
-        tries.push([a, b]);
-        if (tries.length >= 12) break;
+        tries.push([a, b, dist]);
       }
-      if (tries.length >= 12) break;
     }
+    // Closest pairs first: the camera can frame both pills together.
+    tries.sort((x, y) => x[2] - y[2]);
+    tries.length = Math.min(12, tries.length);
     for (const [a, b] of tries) {
       const qa = g.queue(a.person, a.opt);
       const qb = g.queue(b.person, b.opt);
@@ -253,8 +358,9 @@ async function twoActions(page) {
         if (ha.phase === 'perform' && hb.phase === 'perform') {
           return {
             ok: true,
-            a: { person: a.person, name: st.people[a.person].firstName, action: ha.interactionId },
-            b: { person: b.person, name: st.people[b.person].firstName, action: hb.interactionId },
+            a: { person: a.person, name: st.people[a.person].firstName, action: ha.interactionId, x: a.x, z: a.z },
+            b: { person: b.person, name: st.people[b.person].firstName, action: hb.interactionId, x: b.x, z: b.z },
+            midX: (a.x + b.x) / 2, midZ: (a.z + b.z) / 2,
             ticks: i,
           };
         }
@@ -267,8 +373,11 @@ async function twoActions(page) {
     return { ok: false, reason: `no pair started (${tries.length} tried)` };
   });
   if (r.ok) {
+    // Reset to the lot view, then centre and zoom on both actors: the pills should be readable together.
     await page.evaluate(() => window.hearthside.view.frameLot(true));
     await page.waitForTimeout(350);
+    await page.evaluate(([mx, mz]) => window.hearthside.view.focusOn(mx, mz, true), [r.midX, r.midZ]);
+    await page.waitForTimeout(1200);
   }
   await frames(page, 6);
   return r;
@@ -322,6 +431,7 @@ async function main() {
       page.on('pageerror', (e) => errors.push(String(e)));
       page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
       await startGame(page);
+      await installClock(page);
 
       const cook = await startCooking(page);
       note(`${vp.id}: cooking starts and reaches the cooking stage`, cook.ok, cook.ok ? `${cook.name} recipe=${cook.recipeId} duration=${cook.duration}` : cook.reason);
@@ -332,12 +442,14 @@ async function main() {
       await settlePill(page, 30);
       let pills = await pillState(page);
       const p30 = pills.pills[0];
+      const rgb30 = (p30?.colour.match(/\d+/g) ?? []).map(Number);
       note(`${vp.id}: cooking at ~30% shows a partially filled amber pill`,
         !!p30 && /%/i.test(p30.label) && parseFloat(p30.width) >= 24 && parseFloat(p30.width) <= 36 &&
-          !p30.done && p30.colour.replace(/\s/g, '') !== 'rgb(77,154,91)',
+          !p30.done && rgb30.length >= 3 && rgb30[0] > rgb30[1],
         JSON.stringify({ set: at30, pill: p30 }));
       if (p30) note(`${vp.id}: the pill sits above the head and is phone-sized`, p30.h >= 9 && p30.h <= 14 && p30.w >= 40 && p30.w <= 60, `w=${p30.w} h=${p30.h} at ${p30.x},${p30.y}`);
-      await page.screenshot({ path: join(OUT, `cook-30-${vp.id}.png`) });
+      const shot30 = await capture(page, `cook-30-${vp.id}.png`, { minFill: 8 });
+      note(`${vp.id}: the 30% screenshot shows the amber fill`, !shot30.failed, `fill=${shot30.checks?.[0]?.fill ?? 0}`);
 
       // ~90%: green.
       const at90 = await setCookFraction(page, cook.id, 0.9);
@@ -348,16 +460,21 @@ async function main() {
       note(`${vp.id}: cooking at ~90% is green`,
         !!p90 && parseFloat(p90.width) >= 85 && !p90.done && green === 'rgb(77,154,91)',
         JSON.stringify({ set: at90, pill: p90 }));
-      await page.screenshot({ path: join(OUT, `cook-90-${vp.id}.png`) });
+      const shot90 = await capture(page, `cook-90-${vp.id}.png`, { minFill: 30 });
+      note(`${vp.id}: the 90% screenshot shows the green fill`, !shot90.failed, `fill=${shot90.checks?.[0]?.fill ?? 0}`);
 
-      // Completion: green with the check.
+      // Completion: green with the check. Freeze the controller clock so the 700 ms ending cannot expire before
+      // the (slow under SwiftShader) screenshot is captured.
       await showCompletion(page, cook.id);
       await settlePill(page, 100);
+      await holdDone(page);
       pills = await pillState(page);
       const pd = pills.pills[0];
       note(`${vp.id}: completion shows the check and the full green pill`,
         !!pd && pd.done && pd.width === '100%' && /complete/i.test(pd.label), JSON.stringify({ pill: pd }));
-      await page.screenshot({ path: join(OUT, `done-check-${vp.id}.png`) });
+      const doneShot = await capture(page, `done-check-${vp.id}.png`, { done: true, minFill: 40 });
+      note(`${vp.id}: the completion screenshot shows the green pill and the check`, !doneShot.failed, `fill=${doneShot.checks?.[0]?.fill ?? 0} check=${doneShot.checks?.[0]?.whiteRight ?? 0}`);
+      await page.evaluate(() => window.__m115bClock.release());
       // Revert the held action so the pair setup starts from a clean queue.
       await page.evaluate(() => {
         const st = window.hearthside.debug.state();
@@ -373,7 +490,8 @@ async function main() {
       pills = await pillState(page);
       note(`${vp.id}: both pills are visible with different labels`, pills.count >= 2 && new Set(pills.pills.map((p) => p.label)).size >= 2,
         JSON.stringify(pills.pills));
-      await page.screenshot({ path: join(OUT, `two-actions-${vp.id}.png`) });
+      const pairShot = await capture(page, `two-actions-${vp.id}.png`, { count: 2, minFill: 4 });
+      note(`${vp.id}: the pair screenshot shows both pill fills`, !pairShot.failed, `fills=${pairShot.checks?.map((c) => c.fill).join(',') ?? ''}`);
 
       // The setting in the options screen.
       const setting = await openSettings(page, vp.mobile);
@@ -412,4 +530,11 @@ async function main() {
   if (failed.length) process.exitCode = 1;
 }
 
-await main();
+try {
+  await main();
+} catch (e) {
+  console.error(e);
+  process.exitCode = 1;
+}
+// Explicit exit: a hung Chromium close must not keep the shared browser lock after the checks are done.
+process.exit(process.exitCode ?? 0);
