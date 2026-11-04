@@ -1,7 +1,7 @@
 // Group walls-a (M10 surfaces): counts per family, unique ids, params, palettes and a fake-canvas paint of every design.
 import { describe, expect, it } from 'vitest';
 import { WALLS_A } from '../../../src/content/surfaces3/walls-a';
-import { WALL_DESIGNS } from '../../../src/content/surfaces';
+import { WALL_DESIGNS, paletteTone } from '../../../src/content/surfaces';
 import { PAINTERS, WALL_TEXTURE_HEIGHT, checkParams, paintDesign, paintThumbnail, textureLayout } from '../../../src/render/textures/painters';
 import { PAINTERS_WALLS_A } from '../../../src/render/textures/packs/walls-a';
 import { FakeCanvas } from './fakeCanvas';
@@ -31,6 +31,10 @@ describe('walls-a: content', () => {
       const painter = PAINTERS[d.painter];
       for (const p of d.palettes) expect(p.colors.length, `${d.id}/${p.id}`).toBeGreaterThanOrEqual(painter?.colors.length ?? 1);
     }
+  });
+
+  it('offers light, dark, neutral and accent palettes in every design', () => {
+    for (const d of WALLS_A) expect([...new Set(d.palettes.map(paletteTone))].sort(), d.id).toEqual(['accent', 'dark', 'light', 'neutral']);
   });
 
   it('names a registered painter with valid params, packs and tags', () => {

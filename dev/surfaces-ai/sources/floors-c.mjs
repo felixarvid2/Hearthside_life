@@ -4,11 +4,11 @@
 const ONE = 'one continuous surface seen from directly above, no joints, no seams, no tiles, no grid, no boards';
 export default [
   // --- carpets and textiles -------------------------------------------------------------
-  { id: 'pile-shag', kind: 'material', prompt: `close up of long shag pile carpet, thick tangled yarn strands lying in all directions, deep soft pile, ${ONE}` },
+  { id: 'pile-shag', kind: 'material', prompt: `close up of long shag pile carpet, thick tangled yarn strands lying in all directions, deep soft pile, ${ONE}`, build: { std: 0.24 } },
   { id: 'pile-saxony', kind: 'material', prompt: `close up of cut pile saxony carpet, dense upright tufts of twisted yarn ends forming a fine speckled velvety surface, ${ONE}` },
   { id: 'pile-frieze', kind: 'material', prompt: `close up of frieze twist carpet, short curly kinked yarn strands tangled in random directions, ${ONE}` },
   { id: 'pile-velvet', kind: 'material', prompt: `close up of dense velvet plush carpet, very short smooth pile with soft brushed light and dark sweeps, almost uniform, ${ONE}`, build: { std: 0.1 } },
-  { id: 'wool-boucle', kind: 'material', prompt: `close up of wool boucle textile, small looped curly yarn knots, nubby and irregular, ${ONE}` },
+  { id: 'wool-boucle', kind: 'material', prompt: `close up of wool boucle textile, small looped curly yarn knots, nubby and irregular, ${ONE}`, build: { std: 0.24 } },
   { id: 'wool-tweed', kind: 'material', prompt: `close up of flatwoven wool tweed carpet, fine twill herringbone weave with flecked yarns, ${ONE}` },
   { id: 'weave-jute', kind: 'material', prompt: `close up of natural jute rug, chunky braided herringbone weave of thick fibre ropes, ${ONE}` },
   { id: 'weave-seagrass', kind: 'material', prompt: `close up of seagrass matting, flat twisted grass strands woven in a tight checkerboard weave, ${ONE}` },
@@ -25,7 +25,7 @@ export default [
   { id: 'concrete-smooth', kind: 'material', prompt: `close up of smooth ground concrete slab, fine sand-like grain, tiny pores and soft mottled clouds, ${ONE}`, build: { std: 0.12, flatten: 1 } },
   { id: 'concrete-broom', kind: 'material', prompt: `close up of broom finished concrete, fine parallel scratch lines running horizontally across rough cement, ${ONE}`, build: { std: 0.13 } },
   { id: 'concrete-stain', kind: 'material', prompt: `close up of acid stained concrete floor, mottled cloudy marbled variations with tiny branching veins, ${ONE}`, build: { std: 0.18, flatten: 0.4 } },
-  { id: 'epoxy-flake', kind: 'material', prompt: `close up of epoxy flake garage floor coating, many small flat irregular chips of different tones scattered densely on a smooth glossy ground, ${ONE}`, build: { std: 0.2 } },
+  { id: 'epoxy-flake', kind: 'material', prompt: `close up of epoxy flake garage floor coating, many small flat irregular chips of different tones scattered densely on a smooth glossy ground, ${ONE}`, build: { std: 0.3 } },
   { id: 'steel-brushed', kind: 'material', prompt: `close up of brushed steel plate, fine parallel brushing scratches running horizontally, subtle scuffs, ${ONE}`, build: { std: 0.1 } },
   // --- exterior ------------------------------------------------------------------------
   { id: 'brick-clay', kind: 'material', prompt: `close up of fired clay paving brick surface, fine sandy grain, tiny pits and soft kiln mottling, ${ONE}`, build: { std: 0.14 } },

@@ -72,7 +72,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'Deep, tousled shag pile in long yarns. Very soft underfoot and a little retro.',
     family: 'carpet', tags: ['carpet', 'shag', 'deep-pile', 'retro', 'cosy', 'bedroom', 'living', 'nursery'],
     packs: ['mid-century', 'cozy-cottage'], price: 14,
-    painter: 'map-floor', params: { map: 'pile-shag', tiles: 2, cell: 0 }, repeat: 1.2,
+    painter: 'map-floor', params: { map: 'pile-shag', tiles: 1, cell: 0 }, repeat: 1.2,
     palettes: fibre(CARPETS),
   }),
   floor({
@@ -104,7 +104,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'Nubby looped wool in tight knots, like a bouclé armchair laid across the floor. Warm, sculptural and quiet.',
     family: 'carpet', tags: ['carpet', 'boucle', 'wool', 'looped', 'textured', 'modern', 'bedroom', 'living'],
     packs: ['modern-minimal', 'mid-century'], price: 18,
-    painter: 'map-floor', params: { map: 'wool-boucle', tiles: 2, cell: 0 }, repeat: 1.2,
+    painter: 'map-floor', params: { map: 'wool-boucle', tiles: 1, cell: 0 }, repeat: 1.2,
     palettes: fibre(CARPETS),
   }),
   floor({
@@ -177,8 +177,8 @@ export const FLOORS_C: SurfaceDesign[] = [
     painter: 'carpet-pattern', params: { style: 'houndstooth', size: 0.25, pile: 'wool-tweed', pileAlpha: 0.2 }, repeat: 2.0,
     // roles: light thread, dark thread, unused, overcheck
     palettes: make((l, d) => [l!, d!, shd(d!, 0.3), shd(l!, -0.3)])([
-      ['black-cream', 'Black and Cream', '#ece6d6', '#26272a'], ['navy-ivory', 'Navy and Ivory', '#e8e2d2', '#2d3a5a'], ['brown-oat', 'Brown and Oat', '#d8c9a8', '#5a4030'],
-      ['grey-white', 'Grey and White', '#e6e4de', '#6a6c70'], ['green-cream', 'Green and Cream', '#e6dfc8', '#2f5a42'], ['red-cream', 'Red and Cream', '#ece3d0', '#9a2f36'],
+      ['cream-black', 'Cream and Black', '#ece6d6', '#26272a'], ['navy-ivory', 'Navy and Ivory', '#2d3a5a', '#e8e2d2'], ['brown-oat', 'Brown and Oat', '#5a4030', '#d8c9a8'],
+      ['grey-white', 'Grey and White', '#8e9094', '#e6e4de'], ['green-cream', 'Green and Cream', '#2f5a42', '#e6dfc8'], ['red-cream', 'Red and Cream', '#9a2f36', '#ece3d0'],
     ] as Tuple[]),
   }),
   floor({
@@ -263,7 +263,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     family: 'carpet', tags: ['carpet', 'kilim', 'flatweave', 'geometric', 'diamond', 'boho', 'living', 'hall', 'bedroom'],
     packs: ['botanical-living', 'creative-studio'], price: 24,
     painter: 'motif-floor',
-    params: { motif: 'motif-kilim', ground: 'wool-tweed', groundScale: 0.6, groundContrast: 0.5, layout: 'tile', cols: 4, size: 0.84, grout: 0.006, groutColor: 'motif', spin: 'none' },
+    params: { motif: 'motif-kilim', ground: 'wool-tweed', groundScale: 0.6, groundContrast: 0.5, layout: 'tile', cols: 4, size: 0.84, grout: 0.004, groutColor: 'accent', spin: 'none' },
     repeat: 2.4,
     palettes: printP([
       ['sand-rust', 'Sand and Rust', '#e0d2b4', '#a8553a'], ['ivory-indigo', 'Ivory and Indigo', '#ece6d6', '#35476b'], ['rust-cream', 'Rust and Cream', '#a8553a', '#ece0c4'],
@@ -277,7 +277,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'A burnished power-floated slab with soft trowel swirls and cloudy tone. The factory floor, brought indoors.',
     family: 'concrete', tags: ['concrete', 'power-float', 'burnished', 'industrial', 'loft', 'kitchen', 'living', 'garage'],
     packs: ['industrial-loft', 'modern-minimal'], price: 9,
-    painter: 'map-floor', params: { map: 'concrete-trowel', tiles: 2, cell: 0 }, repeat: 2.0,
+    painter: 'map-floor', params: { map: 'concrete-trowel', tiles: 1, cell: 0 }, repeat: 2.0,
     palettes: fibre(CONCRETES),
   }),
   floor({
@@ -323,10 +323,10 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'Open steel bar grating with twisted cross rods over a dark void, for walkways, mezzanines and boiler rooms.',
     family: 'concrete', tags: ['steel', 'grating', 'mesh', 'walkway', 'mezzanine', 'industrial', 'loft', 'workshop'],
     packs: ['industrial-loft'], price: 28,
-    painter: 'grating', params: { pitch: 0.035, cross: 0.1, wear: 0.4 }, repeat: 0.7,
+    painter: 'grating', params: { pitch: 0.045, cross: 0.1, wear: 0.4 }, repeat: 1.0,
     // roles: steel, light, dark, void
     palettes: make((c, v) => [c!, shd(c!, 0.35), shd(c!, -0.4), v!])([
-      ['galvanised', 'Galvanised', '#aab0b4', '#14161a'], ['mild-steel', 'Mild Steel', '#6e7378', '#101214'], ['black-steel', 'Black Painted', '#2c2d30', '#0a0a0c'],
+      ['galvanised', 'Galvanised', '#aab0b4', '#2a2d32'], ['mild-steel', 'Mild Steel', '#7e8388', '#24272a'], ['black-steel', 'Black Painted', '#3c3d40', '#18181a'],
       ['safety-yellow', 'Safety Yellow', '#c8a830', '#16161a'], ['machine-green', 'Machine Green', '#4f6a5a', '#101614'], ['blue-steel', 'Navy Painted', '#3a4a64', '#0e1218'],
       ['stainless', 'Stainless', '#c3c7ca', '#1e2024'],
     ] as Tuple[]),
@@ -339,8 +339,8 @@ export const FLOORS_C: SurfaceDesign[] = [
     painter: 'rubber-floor', params: { style: 'studs', tile: 0.6, pitch: 0.028, joint: 0.003 }, repeat: 1.8,
     // roles: rubber, light, dark, joint
     palettes: make((c) => [c!, shd(c!, 0.3), shd(c!, -0.4), shd(c!, -0.55)])([
-      ['black', 'Black', '#2c2d30'], ['grey', 'Grey', '#76787c'], ['red', 'Brick Red', '#8e3a34'], ['green', 'Racing Green', '#3f5f4a'],
-      ['blue', 'Blue', '#38507a'], ['tan', 'Tan', '#a89270'], ['yellow', 'Yellow', '#c0a030'],
+      ['black', 'Black', '#44454a'], ['grey', 'Grey', '#85878c'], ['red', 'Brick Red', '#a04840'], ['green', 'Racing Green', '#4c7058'],
+      ['blue', 'Blue', '#46629a'], ['tan', 'Tan', '#a89270'], ['yellow', 'Yellow', '#c0a030'],
     ] as Tuple[]),
   }),
   floor({
@@ -350,8 +350,8 @@ export const FLOORS_C: SurfaceDesign[] = [
     packs: ['industrial-loft', 'everyday-essentials'], price: 14,
     painter: 'rubber-floor', params: { style: 'ribs', tile: 0.6, pitch: 0.024, joint: 0.003 }, repeat: 1.8,
     palettes: make((c) => [c!, shd(c!, 0.3), shd(c!, -0.4), shd(c!, -0.55)])([
-      ['black', 'Black', '#2c2d30'], ['grey', 'Grey', '#76787c'], ['sand', 'Sand', '#b4a488'], ['green', 'Racing Green', '#3f5f4a'],
-      ['blue', 'Blue', '#38507a'], ['terracotta', 'Terracotta', '#a05a40'], ['white', 'Light Grey', '#c4c6c8'],
+      ['black', 'Black', '#44454a'], ['grey', 'Grey', '#85878c'], ['sand', 'Sand', '#b4a488'], ['green', 'Racing Green', '#4c7058'],
+      ['blue', 'Blue', '#46629a'], ['terracotta', 'Terracotta', '#a05a40'], ['white', 'Light Grey', '#c4c6c8'],
     ] as Tuple[]),
   }),
   floor({
@@ -421,7 +421,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'Square stone slabs set in staggered steps across a bed of gravel. Easy to walk, easy on the eye.',
     family: 'exterior', tags: ['stepping-stones', 'slabs', 'gravel', 'path', 'garden', 'zen', 'modern', 'exterior', 'courtyard'],
     packs: ['garden-patio', 'modern-minimal'], price: 15,
-    painter: 'stepping-stones', params: { ground: 'gravel', groundScale: 1.2, map: 'stone-sandstone', shape: 'square', cols: 3, size: 0.78, jitter: 0.06 }, repeat: 2.4,
+    painter: 'stepping-stones', params: { ground: 'gravel', groundScale: 1.2, map: 'stone-sandstone', shape: 'square', cols: 4, size: 0.62, jitter: 0.08 }, repeat: 2.4,
     // roles: ground, ground light, ground dark, stone, stone light, stone dark
     palettes: make((g, st) => [g!, shd(g!, 0.22), shd(g!, -0.32), st!, shd(st!, 0.2), shd(st!, -0.28)])([
       ['grey-gravel-sandstone', 'Grey Gravel, Sandstone', '#8f9094', '#cdb690'], ['golden-grey', 'Golden Gravel, Grey Slabs', '#b89a66', '#8f9094'], ['white-slate', 'White Gravel, Slate', '#cfcdc4', '#4a4f52'],
@@ -433,7 +433,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'Round stone discs scattered in staggered steps through the lawn, each a little different in size and tone.',
     family: 'exterior', tags: ['stepping-stones', 'round', 'lawn', 'path', 'garden', 'cottage', 'exterior', 'yard'],
     packs: ['garden-patio', 'botanical-living'], price: 9,
-    painter: 'stepping-stones', params: { ground: 'lawn', groundScale: 1.2, map: 'granite-sett', shape: 'round', cols: 4, size: 0.62, jitter: 0.14 }, repeat: 2.4,
+    painter: 'stepping-stones', params: { ground: 'lawn', groundScale: 1.2, map: 'granite-sett', shape: 'round', cols: 5, size: 0.7, jitter: 0.14 }, repeat: 2.4,
     palettes: make((g, st) => [g!, shd(g!, 0.22), shd(g!, -0.32), st!, shd(st!, 0.2), shd(st!, -0.28)])([
       ['summer-grey', 'Summer Lawn, Grey', '#5f8f3f', '#9a9894'], ['spring-sand', 'Spring Lawn, Sandstone', '#7fae4f', '#cdb690'], ['meadow-slate', 'Meadow, Slate', '#8a9a4a', '#5f6a70'],
       ['straw-limestone', 'Dry Straw, Limestone', '#b8a460', '#ddd5c4'], ['moss-granite', 'Shaded Moss, Granite', '#2f5a30', '#8f8d8a'], ['frost-charcoal', 'Frosted Lawn, Charcoal', '#d3dccb', '#4c4d50'],
@@ -496,7 +496,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     painter: 'map-floor', params: { map: 'slate-chips', tiles: 2, cell: 0 }, repeat: 1.2,
     palettes: fibre([
       ['plum', 'Plum Slate', '#6a5a68'], ['blue-grey', 'Blue Grey', '#586670'], ['green', 'Welsh Green', '#5f7266'], ['charcoal', 'Charcoal', '#46484c'],
-      ['rustic', 'Rustic Brown', '#7a6454'], ['silver', 'Silver Grey', '#9a9d9e'], ['bone', 'Bone', '#bdb4a2'],
+      ['rustic', 'Rustic Red', '#a0523c'], ['silver', 'Silver Grey', '#9a9d9e'], ['bone', 'Pale Quartz', '#dad6ca'],
     ] as Tuple[]),
   }),
   floor({
@@ -504,7 +504,7 @@ export const FLOORS_C: SurfaceDesign[] = [
     description: 'Large smooth river stones packed tight. Beautiful around a pond or a modern entrance, rough to walk on.',
     family: 'exterior', tags: ['pebbles', 'river-stones', 'cobbles', 'border', 'garden', 'zen', 'pond', 'exterior', 'outdoor'],
     packs: ['garden-patio', 'coastal-home'], price: 14,
-    painter: 'map-floor', params: { map: 'pebbles-river', tiles: 2, cell: 0 }, repeat: 1.2,
+    painter: 'map-floor', params: { map: 'pebbles-river', tiles: 1, cell: 0 }, repeat: 1.6,
     palettes: fibre([...GRAVELS, ['ivory', 'Ivory', '#e0d8c4']] as Tuple[]),
   }),
   floor({

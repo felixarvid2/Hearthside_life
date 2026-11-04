@@ -56,21 +56,39 @@ function inradius(pts: readonly P[], c: P): number {
   return Number.isFinite(best) ? best : 0.01;
 }
 
-/** Moves every vertex toward the centroid by about d (a grout joint of 2d), then jitters and rotates by `wobble` (hand-made). */
+/** Offsets every edge of a convex polygon inward by d (a grout joint of 2d), then jitters and rotates by `wobble` (hand-made). */
 function shrink(pts: readonly P[], d: number, rng: Rng | null, wob: number): P[] {
+  const n = pts.length;
+  let area = 0;
+  for (let i = 0; i < n; i++) { const a = pts[i]!, b = pts[(i + 1) % n]!; area += a[0] * b[1] - b[0] * a[1]; }
+  const sg = area >= 0 ? 1 : -1;
   const c = centroid(pts);
   const r = inradius(pts, c);
-  const k = Math.max(0.2, (r - d) / Math.max(r, 1e-6));
-  const rot = rng ? (rng.next() - 0.5) * 0.06 * wob : 0;
-  const cs = Math.cos(rot), sn = Math.sin(rot);
-  return pts.map(([x, y]) => {
-    let dx = (x - c[0]) * k, dy = (y - c[1]) * k;
-    if (rng && wob > 0) {
-      dx += (rng.next() - 0.5) * r * 0.1 * wob;
-      dy += (rng.next() - 0.5) * r * 0.1 * wob;
-    }
-    return [c[0] + dx * cs - dy * sn, c[1] + dx * sn + dy * cs] as P;
+  const dd = Math.min(d, r * 0.45);
+  // offset line of edge i: point + normal * dd, direction e
+  const lines = pts.map((p, i) => {
+    const q = pts[(i + 1) % n]!;
+    const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    const ex = (q[0] - p[0]) / len, ey = (q[1] - p[1]) / len;
+    const nx = -ey * sg, ny = ex * sg;
+    return { px: p[0] + nx * dd, py: p[1] + ny * dd, ex, ey, nx, ny };
   });
+  let out: P[] = pts.map((p, i) => {
+    const l0 = lines[(i + n - 1) % n]!, l1 = lines[i]!;
+    const cross = l0.ex * l1.ey - l0.ey * l1.ex;
+    if (Math.abs(cross) < 1e-6) return [p[0] + l1.nx * dd, p[1] + l1.ny * dd] as P;
+    const t = ((l1.px - l0.px) * l1.ey - (l1.py - l0.py) * l1.ex) / cross;
+    return [l0.px + l0.ex * t, l0.py + l0.ey * t] as P;
+  });
+  if (rng && wob > 0) {
+    const rot = (rng.next() - 0.5) * 0.06 * wob;
+    const cs = Math.cos(rot), sn = Math.sin(rot);
+    out = out.map(([x, y]) => {
+      const dx = x - c[0] + (rng.next() - 0.5) * r * 0.1 * wob, dy = y - c[1] + (rng.next() - 0.5) * r * 0.1 * wob;
+      return [c[0] + dx * cs - dy * sn, c[1] + dx * sn + dy * cs] as P;
+    });
+  }
+  return out;
 }
 
 function polyPath(ctx: Canvas2DLike, pts: readonly P[]): void {

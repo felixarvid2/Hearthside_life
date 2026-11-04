@@ -25,14 +25,14 @@ const sheenP = make((c) => [c!, shd(c!, 0.2), shd(c!, -0.35), TRIM]);
 
 const WASH: Tuple[] = [
   ['dusk-peach', 'Dusk Peach', '#c4714d', '#f1dcc8'], ['sage-mist', 'Sage Mist', '#7f9a86', '#e3eadb'], ['ink-sky', 'Ink to Sky', '#2f3d5a', '#9fb2c8'],
-  ['blush-cream', 'Blush to Cream', '#d9a09a', '#f4e8de'], ['ochre-white', 'Ochre to White', '#c9993f', '#f3ead2'], ['plum-lilac', 'Plum to Lilac', '#5a3f5e', '#c9b6cf'],
+  ['cream-blush', 'Cream to Blush', '#f4e8de', '#d9a09a'], ['ochre-white', 'Ochre to White', '#c9993f', '#f3ead2'], ['plum-lilac', 'Plum to Lilac', '#5a3f5e', '#c9b6cf'],
   ['teal-aqua', 'Teal to Aqua', '#2f7f80', '#cfe5e1'], ['charcoal-fog', 'Charcoal to Fog', '#3a3b3f', '#aeb0b2'],
 ];
 /** roles: wall, block, accent, trim */
 const BLOCK: Tuple[] = [
   ['cream-terracotta', 'Cream and Terracotta', '#efe8d8', '#bb6a4a', '#e0a37f'], ['white-sage', 'White and Sage', '#f1eee6', '#8fa68a', '#c3d0bb'],
-  ['blush-navy', 'Blush and Navy', '#f0dcd4', '#2f3d5a', '#6f84a8'], ['sand-forest', 'Sand and Forest', '#d8c9a8', '#3f5a48', '#7f9a86'],
-  ['grey-mustard', 'Grey and Mustard', '#b9b4aa', '#cfa046', '#e8cd85'], ['duck-charcoal', 'Duck Egg and Charcoal', '#d3e2de', '#45454a', '#8b9094'],
+  ['blush-navy', 'Blush and Navy', '#f0dcd4', '#2f3d5a', '#6f84a8'], ['greige-forest', 'Greige and Forest', '#b9b0a3', '#3f5a48', '#7f9a86'],
+  ['mustard-cream', 'Mustard and Cream', '#cfa046', '#efe8d8', '#f5e0a8'], ['duck-charcoal', 'Duck Egg and Charcoal', '#d3e2de', '#45454a', '#8b9094'],
   ['navy-blush', 'Navy and Blush', '#2a3550', '#e0b5a8', '#f0d6cc'], ['forest-cream', 'Forest and Cream', '#2f4a3c', '#e9e1cf', '#c9b88a'],
 ];
 const blockP = (list: Tuple[]) => list.map(([id, name, ...c]) => pal(id, name, ...c, TRIM));
@@ -58,14 +58,14 @@ const TONAL: Tuple[] = [
   ['ivory-pearl', 'Ivory Pearl', '#efe9da', '#cfc4aa'], ['champagne-tone', 'Champagne', '#e4d6b8', '#bda676'], ['silver-grey', 'Silver Grey', '#cfd0d0', '#9ea1a6'],
   ['sage-tone', 'Sage', '#b4bfa8', '#8a9a7c'], ['duck-tone', 'Duck Egg', '#c2d6d2', '#8fb0aa'], ['blush-tone', 'Blush', '#ecd2cc', '#d0a39b'],
   ['navy-gold', 'Navy and Gold', '#26324f', '#c9a85a'], ['oxblood-gold', 'Oxblood and Gold', '#5a1f24', '#c9a85a'],
-  ['black-gold', 'Black and Gold', '#1f1f22', '#b8954a'], ['emerald-gold', 'Emerald and Gold', '#1f4f40', '#d3b261'],
+  ['coral-tone', 'Coral', '#d9704f', '#f0b89c'], ['black-gold', 'Black and Gold', '#1f1f22', '#b8954a'], ['emerald-gold', 'Emerald and Gold', '#1f4f40', '#d3b261'],
 ];
 const toneP = make((g, m) => [g!, m!, shd(m!, 0.35), shd(g!, 0.7)]);
 
 /** Mural tones: fixed ids and names so every mural offers the same eight moods. */
 const MURAL_TONES: Tuple[] = [
   ['soft-sage', 'Soft Sage', '#7d8f78'], ['fjord', 'Fjord Blue', '#6f8aa0'], ['dawn-grey', 'Dawn Grey', '#9a9c9c'], ['dusk-plum', 'Dusk Plum', '#8a6a86'],
-  ['amber', 'Amber Haze', '#c79a52'], ['midnight', 'Midnight', '#2f3d4a'], ['pale-linen', 'Pale Linen', '#c9c3b1'], ['teal-fog', 'Teal Fog', '#3f8a8a'],
+  ['amber', 'Amber Haze', '#c79a52'], ['midnight', 'Midnight', '#2f3d4a'], ['pale-linen', 'Pale Linen', '#e4dfd0'], ['teal-fog', 'Teal Fog', '#3f8a8a'],
 ];
 
 // ---------------------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ const LUXURY: SurfaceDesign[] = [
       ['black-gold-lacquer', 'Black and Gold', '#1f1f22', '#c9a24e'], ['oxblood-gold-lacquer', 'Oxblood and Gold', '#5a1f24', '#c9a24e'],
       ['navy-gold-lacquer', 'Navy and Gold', '#25324f', '#c9a24e'], ['emerald-gold-lacquer', 'Emerald and Gold', '#1f4f40', '#c9a24e'],
       ['ivory-gold-lacquer', 'Ivory and Gold', '#efe8d6', '#b8954a'], ['teal-silver-lacquer', 'Teal and Silver', '#2e6e6e', '#c4c8ce'],
-      ['plum-rose-lacquer', 'Plum and Rose Gold', '#4a2a48', '#c9958a'], ['charcoal-silver-lacquer', 'Charcoal and Silver', '#3a3b3f', '#b9bcc2'],
+      ['plum-rose-lacquer', 'Plum and Rose Gold', '#4a2a48', '#c9958a'], ['charcoal-silver-lacquer', 'Charcoal and Silver', '#3a3b3f', '#b9bcc2'], ['taupe-champagne-lacquer', 'Taupe and Champagne', '#8a8076', '#e0cfa4'],
     ] as Tuple[]).map(([id, name, g, gilt]) => pal(id, name, g!, gilt!, shd(gilt!, 0.45), TRIM)),
   }),
 ];

@@ -276,7 +276,7 @@ const bondBrick: PainterDef = {
       const pts = rectPts(c.x + j / 2 + jx, c.y + j / 2 + jy, c.w - j, c.h - j);
       unit(ctx, s, img, pts, key, opts, (rng) => {
         const [x, y] = pts[0] as Pt, w = c.w - j, h = c.h - j;
-        if (c.dark) { ctx.fillStyle = rgba(dark, 0.55); ctx.fillRect(x, y, w, h); }
+        if (c.dark) { ctx.fillStyle = rgba(dark, 0.88); ctx.fillRect(x, y, w, h); }
         if (rng.next() < chip) {
           const left = rng.next() < 0.5, sz = Math.min(w, h) * (0.15 + rng.next() * 0.25), top = rng.next() < 0.5;
           const cx = left ? x : x + w, cy = top ? y : y + h;
@@ -438,7 +438,7 @@ const stoneSet: PainterDef = {
         for (let i = 0; i < cols; i++) {
           const cx = (i + 0.5 + (r % 2 ? 0.5 : 0) + (rng.next() - 0.5) * 0.3) * cw;
           const cy = s.h - (r + 0.5) * rowH + (rng.next() - 0.5) * rowH * 0.2;
-          const rx = cw * (layout === 'flint' ? 0.5 : 0.47) * (0.85 + rng.next() * 0.25), ry = rowH * 0.58 * (0.8 + rng.next() * 0.3);
+          const rx = cw * (layout === 'flint' ? 0.5 : 0.5) * (0.85 + rng.next() * 0.25), ry = rowH * 0.58 * (0.8 + rng.next() * 0.3);
           put(blob(cx, cy, rx, ry, layout === 'flint' ? 8 + (i % 3) : 13, layout === 'flint' ? 0.3 + rough * 0.4 : rough * 0.35, rng));
         }
       }
@@ -536,7 +536,7 @@ const plateWall: PainterDef = {
     const dark = col(s, 2), light = col(s, 1);
     // fixings are placed on a plate-relative grid
     const fix = (x: number, y: number, w: number, h: number): void => {
-      const r = hair(s, fixing === 'tie' ? 0.014 : fixing === 'bolt' ? 0.012 : 0.007, 1.2);
+      const r = hair(s, fixing === 'tie' ? 0.014 : fixing === 'bolt' ? 0.014 : fixing === 'rivet' ? 0.012 : 0.008, 1.5);
       const inset = Math.min(0.06, w * 0.12, h * 0.2);
       const dots: Pt[] = [];
       if (fixing === 'tie') {
@@ -562,12 +562,12 @@ const plateWall: PainterDef = {
           ctx.fillStyle = rgba(dark, 0.9);
           ctx.beginPath(); ctx.arc(dx - r * 0.1, dy - r * 0.1, r * 0.75, 0, TAU); ctx.fill();
         } else {
-          ctx.fillStyle = rgba('#000000', 0.4);
-          ctx.beginPath(); ctx.arc(dx + r * 0.2, dy + r * 0.3, r, 0, TAU); ctx.fill();
-          ctx.fillStyle = mix(dark, light, fixing === 'bolt' ? 0.35 : 0.6);
+          ctx.fillStyle = rgba('#000000', 0.6);
+          ctx.beginPath(); ctx.arc(dx + r * 0.3, dy + r * 0.45, r * 1.1, 0, TAU); ctx.fill();
+          ctx.fillStyle = mix(dark, light, fixing === 'bolt' ? 0.3 : 0.45);
           ctx.beginPath(); ctx.arc(dx, dy, r, 0, TAU); ctx.fill();
-          ctx.fillStyle = rgba('#ffffff', 0.55);
-          ctx.beginPath(); ctx.arc(dx - r * 0.3, dy - r * 0.3, r * 0.35, 0, TAU); ctx.fill();
+          ctx.fillStyle = rgba('#ffffff', 0.8);
+          ctx.beginPath(); ctx.arc(dx - r * 0.3, dy - r * 0.3, r * 0.4, 0, TAU); ctx.fill();
         }
       }
     };
@@ -786,7 +786,7 @@ const peeledPlaster: PainterDef = {
     brickMap: MAP_PARAM,
     patches: { type: 'number', min: 1, max: 12, default: 5, integer: true, doc: 'Bare brick patches per repeat.' },
     size: { type: 'number', min: 0.3, max: 1.4, default: 0.7, doc: 'Typical patch size (m).' },
-    mapScale: { type: 'number', min: 0.2, max: 1.6, default: 0.9, doc: 'Metres covered by one plaster-map tile.' },
+    mapScale: { type: 'number', min: 0.2, max: 4, default: 0.9, doc: 'Metres covered by one plaster-map tile.' },
   },
   thumbSpan: 1.4,
   paint(ctx, s) {

@@ -82,10 +82,10 @@ const DUOS: TileTuple[] = [
 ];
 // Natural stone: [stone, second stone, joint].
 const STONES: TileTuple[] = [
-  ['travertine', 'Travertine', '#d8c8a8', '#bfae8a', '#c9bb9f'], ['sand', 'Sandstone', '#c9b48a', '#a8946a', '#b8a57c'], ['marble-white', 'White Marble', '#ece8e0', '#cfcac0', '#d6d1c7'],
-  ['pewter', 'Pewter', '#9a9a96', '#7a7a76', '#8a8a86'], ['slate', 'Slate', '#4a4d52', '#6a6d72', '#2f3134'], ['charcoal-stone', 'Charcoal Stone', '#34363a', '#4e5156', '#222427'],
-  ['terracotta-stone', 'Terracotta Stone', '#b8704f', '#d08e6c', '#9a5a3f'], ['sage-stone', 'Sage Stone', '#9aa890', '#b6c2ac', '#869478'], ['blush-stone', 'Blush Stone', '#d8b8a8', '#e8cfc2', '#c4a392'],
-  ['bone', 'Bone', '#e6dccb', '#d0c4ae', '#cbbfa8'],
+  ['travertine', 'Travertine', '#d8c8a8', '#bfae8a', '#a8987a'], ['sand', 'Sandstone', '#c9b48a', '#a8946a', '#8f7d58'], ['marble-white', 'White Marble', '#ece8e0', '#cfcac0', '#b0aa9e'],
+  ['pewter', 'Pewter', '#9a9a96', '#7a7a76', '#62625e'], ['slate', 'Slate', '#4a4d52', '#6a6d72', '#2a2c30'], ['charcoal-stone', 'Charcoal Stone', '#34363a', '#4e5156', '#1c1d20'],
+  ['terracotta-stone', 'Terracotta Stone', '#b8704f', '#d08e6c', '#8a5238'], ['sage-stone', 'Sage Stone', '#9aa890', '#b6c2ac', '#74826a'], ['blush-stone', 'Blush Stone', '#d8b8a8', '#e8cfc2', '#b09484'],
+  ['bone', 'Bone', '#e6dccb', '#d0c4ae', '#b3a78f'],
 ];
 // Painted-motif tiles: ink is the hand-painted colour.
 const DELFT: TileTuple[] = [
@@ -94,6 +94,14 @@ const DELFT: TileTuple[] = [
   ['cream-navy', 'Cream and Navy', '#e8dcc0', '#cfc09a', '#d8cfb8', '#26324f'], ['navy-cream', 'Navy and Cream', '#26324f', '#3f5282', '#d9dbdc', '#efe8d4'],
   ['mustard-navy', 'Mustard and Navy', '#d6a53e', '#ecc872', '#e8dcc0', '#2f3d5a'], ['terracotta-cream', 'Terracotta and Cream', '#c47452', '#e29a78', '#e8dccb', '#f3eadb'],
   ['charcoal-coral', 'Charcoal and Coral', '#34363a', '#5a5d62', '#9a9a96', '#e4806a'],
+];
+
+// Lemon majolica: yellow fruit on white, plus other inks and dark and bright tile grounds.
+const LEMONS: TileTuple[] = [
+  ['lemon-white', 'Lemon on White', '#f3f0e8', '#d9d3c4', '#d6d2c6', '#e0b52a'], ['lemon-cream', 'Lemon on Cream', '#e8dcc0', '#cfc09a', '#d8cfb8', '#d9a21f'], ['blue-on-white', 'Blue on White', '#f1eee6', '#d9d3c4', '#d6d2c6', '#2b4a8b'],
+  ['green-on-sage', 'Green on Sage', '#a9b8a0', '#8a9e82', '#d6d4c4', '#e8e4cc'], ['lemon-navy', 'Lemon on Navy', '#26324f', '#3f5282', '#d9dbdc', '#e8c13a'], ['terracotta-print', 'Terracotta Print', '#f0e6d4', '#d9cdb4', '#d8cfb8', '#a8512f'],
+  ['lemon-teal', 'Lemon on Teal', '#2f7f80', '#4f9a9a', '#cfd8d2', '#f0d048'], ['lemon-charcoal', 'Lemon on Charcoal', '#34363a', '#5a5d62', '#9a9a96', '#e8c13a'], ['rose-print', 'Rose Print', '#e6bcb2', '#f3d6cf', '#f1e8e0', '#b5566a'],
+  ['lemon-mustard', 'Mustard and Blue', '#d6a53e', '#ecc872', '#e8dcc0', '#2b4a8b'],
 ];
 
 const PACK_WOOD = { cottage: ['cozy-cottage', 'coastal-home'], classic: ['classic-townhouse', 'cozy-cottage'], modern: ['modern-minimal', 'mid-century'] };
@@ -124,7 +132,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Vertical knotty pine boards with a shallow V-groove at every edge, full height. Warm cabin walls cut from a real grain scan.',
     family: 'wood-panel', tags: ['wood', 'pine', 'knotty', 'tongue-and-groove', 'cabin', 'rustic', 'study', 'living', 'bedroom'],
     packs: ['cozy-cottage', 'industrial-loft'], price: 24,
-    painter: 'wall-wood-lay', params: { style: 'tg-v', map: 'grain-pine-knotty', grain: 0.9, unit: 0.12, height: 2.8, gap: 0.0035, variation: 0.5, skirt: 0.1 }, repeat: 0.72,
+    painter: 'wall-wood-lay', params: { style: 'tg-v', map: 'grain-pine-knotty', grain: 1.3, unit: 0.12, height: 2.8, gap: 0.0035, variation: 0.5, skirt: 0.1 }, repeat: 0.72,
     // roles: base, light, dark, trim, upper
     palettes: woodPal(BLONDES),
   }),
@@ -141,7 +149,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Painted vertical V-groove boards with a hint of grain showing through the coat. Simple, hardwearing and easy on the eye.',
     family: 'wood-panel', tags: ['painted', 'v-groove', 'tongue-and-groove', 'vertical', 'cottage', 'kitchen', 'hall', 'bedroom'],
     packs: ['everyday-essentials', 'cozy-cottage'], price: 11,
-    painter: 'wall-wood-lay', params: { style: 'tg-v', map: '', unit: 0.1, height: 2.8, gap: 0.003, variation: 0.25, skirt: 0.12 }, repeat: 0.6,
+    painter: 'wall-wood-lay', params: { style: 'tg-v', map: 'grain-ash', paint: 0.65, grain: 1.2, unit: 0.12, height: 2.8, gap: 0.005, variation: 0.25, skirt: 0.12 }, repeat: 0.72,
     palettes: woodPal([
       ['white', 'Soft White', '#f3f0e8', '#f3f0e8'], ['duck-egg', 'Duck Egg', '#c4d6d3', '#c4d6d3'], ['sage', 'Sage', '#a9b59b', '#a9b59b'], ['navy', 'Navy', '#2f3d5a', '#2f3d5a'],
       ['greige', 'Greige', '#b8afa2', '#b8afa2'], ['black', 'Black', '#2a2a2c', '#2a2a2c'], ['terracotta', 'Terracotta', '#c4714d', '#c4714d'], ['butter', 'Butter', '#ecd27c', '#ecd27c'],
@@ -193,7 +201,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Book-matched burl veneer in tall mirrored panels, the swirling figure meeting along a fine centre seam. Boardroom luxury.',
     family: 'wood-panel', tags: ['wood', 'burl', 'veneer', 'book-matched', 'luxury', 'study', 'dining', 'feature-wall'],
     packs: ['art-deco', 'classic-townhouse'], price: 45,
-    painter: 'wall-wood-lay', params: { style: 'bookmatch', map: 'grain-burl', grain: 0.6, unit: 0.6, cell: 1.4, height: 2.8, gap: 0.003, variation: 0.5, skirt: 0.1 }, repeat: 1.2,
+    painter: 'wall-wood-lay', params: { style: 'bookmatch', map: 'grain-burl', grain: 1.2, unit: 0.6, cell: 1.4, height: 2.8, gap: 0.003, variation: 0.5, skirt: 0.1 }, repeat: 1.2,
     palettes: woodPal(TIMBERS),
   }),
   wall({
@@ -372,7 +380,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Large hexagonal slabs of terrazzo, marble chips scattered in pale cement. Playful, graphic and thoroughly modern.',
     family: 'tile', tags: ['tile', 'hexagon', 'terrazzo', 'speckled', 'modern', 'retro', 'kitchen', 'bathroom', 'living'],
     packs: ['mid-century', 'modern-minimal'], price: 36,
-    painter: 'wall-tile-lay', params: { layout: 'hex', size: 0.2, map: 'stone-terrazzo', glaze: 0.85, grain: 0.6, grout: 0.003, variation: 0.2, finish: 'flat' }, repeat: 0.6,
+    painter: 'wall-tile-lay', params: { layout: 'hex', size: 0.2, map: 'stone-terrazzo', glaze: 0.85, grain: 0.6, grout: 0.005, variation: 0.2, finish: 'bevel' }, repeat: 0.6,
     palettes: tilePal(STONES),
   }),
   wall({
@@ -412,7 +420,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Little triangles of glaze fitted into an isometric mosaic, three tones scattered at random like a shard of stained glass.',
     family: 'tile', tags: ['tile', 'triangle', 'mosaic', 'geometric', 'glazed', 'modern', 'bathroom', 'feature-wall'],
     packs: ['mid-century', 'art-deco'], price: 27,
-    painter: 'wall-tile-lay', params: { layout: 'triangle', size: 0.1, map: 'glaze-zellige', glaze: 0.55, grain: 0.4, grout: 0.003, variation: 0.25, finish: 'bevel' }, repeat: 0.6,
+    painter: 'wall-tile-lay', params: { layout: 'triangle', size: 0.12, map: 'glaze-zellige', glaze: 0.55, grain: 0.4, grout: 0.003, variation: 0.25, finish: 'bevel' }, repeat: 0.6,
     palettes: tilePal(DUOS),
   }),
   wall({
@@ -452,7 +460,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Tiny square mosaic tiles in a gloss glaze, each one catching the light a little differently. Fine grout, endless sparkle.',
     family: 'tile', tags: ['tile', 'mosaic', 'square', 'glass', 'glossy', 'bathroom', 'shower', 'kitchen', 'splashback'],
     packs: ['modern-minimal', 'coastal-home'], price: 22,
-    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.025, aspect: 1, offset: 0, map: 'glaze-reactive', glaze: 0.5, grain: 0.3, grout: 0.0015, variation: 0.45, finish: 'gloss' }, repeat: 0.6,
+    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.04, aspect: 1, offset: 0, map: 'glaze-reactive', glaze: 0.5, grain: 0.3, grout: 0.0015, variation: 0.45, finish: 'gloss' }, repeat: 0.6,
     palettes: tilePal(GLAZES),
   }),
   wall({
@@ -460,7 +468,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Small square mosaic tiles fading from deep colour at the floor to a pale tint at the top. Like sea glass, only vertical.',
     family: 'tile', tags: ['tile', 'mosaic', 'ombre', 'gradient', 'glass', 'luxury', 'bathroom', 'shower', 'feature-wall'],
     packs: ['coastal-home', 'art-deco'], price: 39,
-    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.03, aspect: 1, offset: 0, map: 'glaze-reactive', glaze: 0.5, grain: 0.3, grout: 0.0015, variation: 0.1, finish: 'gloss', ombre: 0.9 }, repeat: 0.6,
+    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.04, aspect: 1, offset: 0, map: 'glaze-reactive', glaze: 0.5, grain: 0.3, grout: 0.0015, variation: 0.1, finish: 'gloss', ombre: 0.9 }, repeat: 0.6,
     palettes: tilePal(DUOS),
   }),
   wall({
@@ -468,7 +476,7 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Square white crackle tiles each hand-painted with a single tulip, in Delft blue or another old-pottery ink.',
     family: 'tile', tags: ['tile', 'delft', 'tulip', 'hand-painted', 'floral', 'dutch', 'kitchen', 'bathroom', 'cottage'],
     packs: ['cozy-cottage', 'classic-townhouse'], price: 26,
-    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.13, aspect: 1, offset: 0, map: 'glaze-crackle', glaze: 0.4, grain: 0.3, grout: 0.003, variation: 0.2, finish: 'bevel', motif: 'motif-tile-tulip', motifRule: 'all', motifSize: 0.78 }, repeat: 0.65,
+    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.15, aspect: 1, offset: 0, map: 'glaze-crackle', glaze: 0.4, grain: 0.3, grout: 0.003, variation: 0.2, finish: 'bevel', motif: 'motif-tile-tulip', motifRule: 'all', motifSize: 0.82 }, repeat: 0.6,
     // roles: tile, alt, grout, ink (the painted colour), upper
     palettes: tilePal(DELFT),
   }),
@@ -477,15 +485,15 @@ export const WALLS_E: SurfaceDesign[] = [
     description: 'Plain crackle-glazed tiles with a little painted sailing ship set in here and there, as on a Dutch seaport kitchen wall.',
     family: 'tile', tags: ['tile', 'delft', 'ship', 'nautical', 'hand-painted', 'coastal', 'kitchen', 'bathroom'],
     packs: ['coastal-home', 'cozy-cottage'], price: 24,
-    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.13, aspect: 1, offset: 0, map: 'glaze-crackle', glaze: 0.4, grain: 0.3, grout: 0.003, variation: 0.2, finish: 'bevel', motif: 'motif-tile-sailboat', motifRule: 'scatter', altRate: 0.22, motifSize: 0.82 }, repeat: 0.65,
+    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.15, aspect: 1, offset: 0, map: 'glaze-crackle', glaze: 0.4, grain: 0.3, grout: 0.003, variation: 0.2, finish: 'bevel', motif: 'motif-tile-sailboat', motifRule: 'scatter', altRate: 0.25, motifSize: 0.85 }, repeat: 0.6,
     palettes: tilePal(DELFT),
   }),
   wall({
     id: 'tile-azulejo-rosette', name: 'Azulejo Rosette',
-    description: 'Glossy square tiles painted with a radial rosette, turned a quarter at every step so the rosettes join into lace. Portuguese in spirit.',
+    description: 'Glossy square tiles each painted with a radial rosette, the medallions touching corner to corner into a lace-like lattice. Portuguese in spirit.',
     family: 'tile', tags: ['tile', 'azulejo', 'rosette', 'hand-painted', 'portuguese', 'glossy', 'hall', 'kitchen', 'feature-wall'],
     packs: ['classic-townhouse', 'art-deco'], price: 31,
-    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.15, aspect: 1, offset: 0, map: 'glaze-zellige', glaze: 0.55, grain: 0.4, grout: 0.003, variation: 0.2, finish: 'gloss', motif: 'motif-tile-rosette', motifRule: 'quarter', motifSize: 0.95 }, repeat: 0.6,
+    painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.2, aspect: 1, offset: 0, map: 'glaze-zellige', glaze: 0.45, grain: 0.4, grout: 0.003, variation: 0.2, finish: 'gloss', motif: 'motif-tile-rosette', motifRule: 'all', motifSize: 0.92 }, repeat: 0.6,
     palettes: tilePal(DELFT),
   }),
   wall({
@@ -494,7 +502,7 @@ export const WALLS_E: SurfaceDesign[] = [
     family: 'tile', tags: ['tile', 'majolica', 'lemon', 'hand-painted', 'mediterranean', 'kitchen', 'splashback', 'dining'],
     packs: ['coastal-home', 'cozy-cottage'], price: 27,
     painter: 'wall-tile-lay', params: { layout: 'grid', size: 0.15, aspect: 1, offset: 0, map: 'glaze-reactive', glaze: 0.5, grain: 0.4, grout: 0.003, variation: 0.25, finish: 'gloss', motif: 'motif-tile-lemon', motifRule: 'checker', motifSize: 0.82 }, repeat: 0.6,
-    palettes: tilePal(DELFT),
+    palettes: tilePal(LEMONS),
   }),
   wall({
     id: 'tile-dado-listello', name: 'Tiled Dado with Listello',

@@ -220,7 +220,7 @@ export const WALLS_F: SurfaceDesign[] = [
     id: 'stone-river-cobble', name: 'River Cobble Wall',
     description: 'Rounded river cobbles set in generous mortar, each one smoothed by water and a little different from its neighbours.',
     tags: ['cobble', 'river-stone', 'rounded', 'rustic', 'cottage', 'fireplace'], price: 42, repeat: 2.0, packs: ['cozy-cottage', 'garden-patio'],
-    params: { map: 'stone-fieldstone', layout: 'cobble', size: 0.2, joint: 0.02, rough: 0.25, relief: 0.006 },
+    params: { map: 'stone-fieldstone', layout: 'cobble', size: 0.2, joint: 0.02, rough: 0.5, relief: 0.006 },
   }),
   stone({
     id: 'stone-knapped-flint', name: 'Knapped Flint',

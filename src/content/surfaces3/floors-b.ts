@@ -82,10 +82,10 @@ export const FLOORS_B: SurfaceDesign[] = [
   // =============================================================================================
   floor({
     id: 'tile-metro-brick', name: 'Metro Brick Bond',
-    description: 'Glossy 20 by 10 cm metro tiles laid in half-bond with fine joints: the bathroom and kitchen classic, now underfoot.',
-    family: 'tile', tags: ['tile', 'ceramic', 'metro', 'brick-bond', 'glossy', 'kitchen', 'bathroom', 'hall', 'washable'],
+    description: 'Crackle-glazed 20 by 10 cm metro tiles laid in half-bond with fine joints: the bathroom and kitchen classic, now underfoot.',
+    family: 'tile', tags: ['tile', 'ceramic', 'metro', 'brick-bond', 'crackle', 'kitchen', 'bathroom', 'hall', 'washable'],
     packs: ['everyday-essentials', 'modern-minimal'], price: 13,
-    painter: 'tile-lay', params: { layout: 'running', tileW: 0.2, tileH: 0.1, offset: 0.5, grout: 0.003, finish: 'gloss', variation: 0.5, bevel: 0.5 }, repeat: 1.2,
+    painter: 'tile-lay', params: { layout: 'running', tileW: 0.2, tileH: 0.1, offset: 0.5, grout: 0.003, finish: 'gloss', map: 'fb-glaze-crackle', mapScale: 0.4, mapMix: 0.5, variation: 0.5, bevel: 0.5 }, repeat: 1.2,
     palettes: tilePals(['white', 'cream', 'sky', 'sage', 'navy', 'charcoal', 'terracotta', 'greige']),
   }),
   floor({
@@ -216,7 +216,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     packs: ['cozy-cottage', 'garden-patio'], price: 27,
     painter: 'tile-lay', params: { layout: 'hex', tileW: 0.15, tileH: 0.0866, grout: 0.006, finish: 'terracotta', map: 'fb-terracotta', mapScale: 0.5, wobble: 0.6, variation: 0.8, bevel: 0.25 }, repeat: 1.05,
     palettes: tilePals(['terracotta', 'cream', 'greige', 'olive', 'mustard', 'burgundy', 'charcoal', 'sage'],
-      { terracotta: { name: 'Provence Red', grout: '#a79a88' }, cream: { name: 'Buff', tile: '#d8c39c', grout: '#a79a88' }, greige: { grout: '#8a8070' }, olive: { grout: '#8a8070' }, mustard: { name: 'Ochre', tile: '#c79245', grout: '#a79a88' }, burgundy: { name: 'Chocolate', tile: '#6d3b2b', grout: '#a79a88' }, charcoal: { grout: '#8a8680' }, sage: { grout: '#8a8070' } }),
+      { terracotta: { name: 'Provence Red', grout: '#a79a88' }, cream: { name: 'Buff', tile: '#eadfc2', grout: '#a79a88' }, greige: { grout: '#8a8070' }, olive: { grout: '#8a8070' }, mustard: { name: 'Ochre', tile: '#c79245', grout: '#a79a88' }, burgundy: { name: 'Chocolate', tile: '#6d3b2b', grout: '#a79a88' }, charcoal: { grout: '#8a8680' }, sage: { grout: '#8a8070' } }),
   }),
   floor({
     id: 'tile-handmade-squares', name: 'Handmade Glaze Squares',
@@ -232,7 +232,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     description: '5 by 2.5 cm glass brick mosaic that drifts softly from one colour to the next across the floor.',
     family: 'tile', tags: ['tile', 'mosaic', 'glass', 'ombre', 'gradient', 'bathroom', 'spa', 'kitchen'],
     packs: ['coastal-home', 'modern-minimal'], price: 46,
-    painter: 'tile-lay', params: { layout: 'running', offset: 0.5, tileW: 0.05, tileH: 0.025, grout: 0.002, finish: 'glass', mode: 'ombre', variation: 0.5, bevel: 0.6 }, repeat: 0.8,
+    painter: 'tile-lay', params: { layout: 'running', offset: 0.5, tileW: 0.05, tileH: 0.025, grout: 0.002, finish: 'glass', map: 'fb-glass-cloud', mapScale: 0.3, mapMix: 0.45, mode: 'ombre', variation: 0.5, bevel: 0.6 }, repeat: 0.8,
     palettes: tilePals(['white', 'sky', 'sage', 'teal', 'navy', 'blush', 'forest', 'charcoal'],
       { white: { alt: '#a9c7d6' }, sky: { alt: '#2f7f80' }, sage: { alt: '#2f4a3c' }, teal: { alt: '#26344f' }, navy: { alt: '#2f7f80' }, blush: { alt: '#c1694a' }, forest: { alt: '#9db094' }, charcoal: { alt: '#8c8f94' } }),
   }),
@@ -269,8 +269,8 @@ export const FLOORS_B: SurfaceDesign[] = [
     family: 'tile', tags: ['tile', 'terracotta', 'brick', 'basketweave', 'rustic', 'kitchen', 'hall', 'porch', 'cottage'],
     packs: ['cozy-cottage', 'garden-patio'], price: 23,
     painter: 'tile-lay', params: { layout: 'basketweave', tileW: 0.18, bars: 3, grout: 0.005, finish: 'terracotta', variation: 0.8, bevel: 0.3 }, repeat: 1.08,
-    palettes: tilePals(['terracotta', 'cream', 'greige', 'burgundy', 'mustard', 'charcoal', 'sage', 'stone'],
-      { terracotta: { name: 'Fired Red', grout: '#b5a791' }, cream: { name: 'Buff Brick', tile: '#d3bb8f', grout: '#a79a88' }, greige: { grout: '#8a8070' }, burgundy: { name: 'Engineering Brown', grout: '#9a8a78' }, mustard: { name: 'Yellow Stock', grout: '#a79a88' }, charcoal: { grout: '#8a8680' }, sage: { grout: '#8a8070' }, stone: { grout: '#8a8680' } }),
+    palettes: tilePals(['terracotta', 'cream', 'greige', 'burgundy', 'mustard', 'charcoal', 'sage', 'white'],
+      { terracotta: { name: 'Fired Red', grout: '#b5a791' }, cream: { name: 'Buff Brick', tile: '#d3bb8f', grout: '#a79a88' }, greige: { grout: '#8a8070' }, burgundy: { name: 'Engineering Brown', grout: '#9a8a78' }, mustard: { name: 'Yellow Stock', grout: '#a79a88' }, charcoal: { grout: '#8a8680' }, sage: { grout: '#8a8070' }, white: { name: 'Whitewashed Brick', tile: '#e9e4d8', grout: '#b5a791' } }),
   }),
   floor({
     id: 'tile-hopscotch', name: 'Hopscotch Tile',
@@ -341,8 +341,8 @@ export const FLOORS_B: SurfaceDesign[] = [
     family: 'stone', tags: ['limestone', 'cabochon', 'diagonal', 'honed', 'classic', 'hall', 'dining', 'living'],
     packs: ['classic-townhouse', 'cozy-cottage'], price: 54,
     painter: 'tile-lay', params: { layout: 'grid', angle: '45', tileW: 0.3, tileH: 0.3, notch: 0.22, grout: 0.003, finish: 'stone', map: 'fb-limestone', mapScale: 0.9, variation: 0.4, bevel: 0.25 }, repeat: 1.27,
-    palettes: stonePals(['ivory', 'beige', 'greige', 'silver', 'sage', 'rose', 'taupe', 'ochre'],
-      { ivory: { accent: '#3b3228' }, beige: { accent: '#3b3228' }, greige: { accent: '#26282b' }, silver: { accent: '#18181a' }, sage: { accent: '#26282b' }, rose: { accent: '#3b2a22' }, taupe: { accent: '#18181a' }, ochre: { accent: '#3b3228' } }),
+    palettes: stonePals(['ivory', 'beige', 'greige', 'silver', 'sage', 'rose', 'taupe', 'charcoal'],
+      { ivory: { accent: '#3b3228' }, beige: { accent: '#3b3228' }, greige: { accent: '#26282b' }, silver: { accent: '#18181a' }, sage: { accent: '#26282b' }, rose: { accent: '#3b2a22' }, taupe: { accent: '#18181a' }, charcoal: { accent: '#d3b261' } }),
   }),
   floor({
     id: 'stone-bluestone-ashlar', name: 'Bluestone Ashlar',
@@ -365,7 +365,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     description: 'Irregular marble offcuts fitted like a jigsaw in pale cement joints, Venetian style, every piece its own colour.',
     family: 'stone', tags: ['marble', 'palladiana', 'irregular', 'crazy-paving', 'venetian', 'hall', 'living', 'kitchen', 'bathroom'],
     packs: ['classic-townhouse', 'cozy-cottage'], price: 66,
-    painter: 'tile-lay', params: { layout: 'crazy', tileW: 0.3, tileH: 0.3, jitter: 0.85, grout: 0.008, finish: 'stone', map: 'fb-marble-breccia', mapScale: 0.7, variation: 1, bevel: 0.3 }, repeat: 1.5,
+    painter: 'tile-lay', params: { layout: 'crazy', tileW: 0.3, tileH: 0.3, jitter: 0.85, grout: 0.008, finish: 'stone', map: 'fb-marble-breccia', mapScale: 0.7, variation: 0.75, bevel: 0.3 }, repeat: 1.5,
     palettes: stonePals(['ivory', 'rose', 'carrara', 'beige', 'sage', 'greige', 'rosso', 'emerald'],
       { ivory: { grout: '#b9ad94' }, rose: { grout: '#b49a8e' }, carrara: { grout: '#a8a59c' }, beige: { grout: '#a8987a' }, sage: { grout: '#8f9684' }, greige: { grout: '#8a8478' }, rosso: { grout: '#8a6a60' }, emerald: { grout: '#6a8076' } }),
   }),
@@ -433,8 +433,8 @@ export const FLOORS_B: SurfaceDesign[] = [
     family: 'stone', tags: ['limestone', 'pinwheel', 'hopscotch', 'honed', 'geometric', 'hall', 'kitchen', 'living'],
     packs: ['classic-townhouse', 'cozy-cottage'], price: 56,
     painter: 'tile-lay', params: { layout: 'hopscotch', tileW: 0.3, tileH: 0.15, grout: 0.003, finish: 'stone', map: 'fb-limestone', mapScale: 0.9, variation: 0.4, bevel: 0.25 }, repeat: 1.35,
-    palettes: stonePals(['ivory', 'beige', 'greige', 'silver', 'sage', 'taupe', 'rose', 'ochre'],
-      { ivory: { accent: '#6e5a3c' }, beige: { accent: '#6e5a3c' }, greige: { accent: '#3d3a36' }, silver: { accent: '#26282b' }, sage: { accent: '#2c342a' }, taupe: { accent: '#2f2923' }, rose: { accent: '#6d3a32' }, ochre: { accent: '#3b3228' } }),
+    palettes: stonePals(['ivory', 'beige', 'greige', 'silver', 'sage', 'taupe', 'rose', 'charcoal'],
+      { ivory: { accent: '#6e5a3c' }, beige: { accent: '#6e5a3c' }, greige: { accent: '#3d3a36' }, silver: { accent: '#26282b' }, sage: { accent: '#2c342a' }, taupe: { accent: '#2f2923' }, rose: { accent: '#6d3a32' }, charcoal: { accent: '#d3b261' } }),
   }),
   floor({
     id: 'stone-sandstone-herringbone', name: 'Sandstone Diagonal Herringbone',
@@ -442,7 +442,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     family: 'stone', tags: ['sandstone', 'herringbone', 'diagonal', 'warm', 'natural', 'hall', 'living', 'patio'],
     packs: ['coastal-home', 'cozy-cottage'], price: 47,
     painter: 'tile-lay', params: { layout: 'herringbone', angle: '45', tileW: 0.3, tileH: 0.1, grout: 0.004, finish: 'stone', map: 'fb-sandstone', mapScale: 0.7, variation: 0.5, bevel: 0.3 }, repeat: 1.27,
-    palettes: stonePals(['beige', 'ochre', 'greige', 'rose', 'sage', 'taupe', 'terracotta', 'silver']),
+    palettes: stonePals(['beige', 'ochre', 'greige', 'ivory', 'sage', 'taupe', 'charcoal', 'silver']),
   }),
   floor({
     id: 'stone-tumbling-blocks', name: 'Marble Tumbling Blocks',
@@ -460,7 +460,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     packs: ['art-deco', 'classic-townhouse'], price: 74,
     painter: 'tile-lay', params: { layout: 'herringbone', tileW: 0.3, tileH: 0.1, grout: 0.002, finish: 'stone', map: 'fb-marble-nero', mapScale: 1.0, variation: 0.35, bevel: 0.3 }, repeat: 1.2,
     palettes: stonePals(['ink', 'charcoal', 'emerald', 'blue', 'rosso', 'taupe', 'greige', 'ivory'],
-      { ink: { name: 'Nero Marquina', light: '#e6e3dc' }, charcoal: { name: 'Grigio', light: '#c9cacf' }, emerald: { light: '#cfe2d8' }, blue: { light: '#d4e0e8' }, rosso: { light: '#f0d0c8' }, taupe: { name: 'Emperador', light: '#e6d8c4' }, greige: { light: '#ece8de' }, ivory: { name: 'Crema', base: '#c9b88e', dark: '#7a6a4a', light: '#f4ecd6' } }),
+      { ink: { name: 'Nero Marquina', light: '#e6e3dc' }, charcoal: { name: 'Grigio', light: '#c9cacf' }, emerald: { light: '#cfe2d8' }, blue: { light: '#d4e0e8' }, rosso: { light: '#f0d0c8' }, taupe: { name: 'Emperador', light: '#e6d8c4' }, greige: { light: '#ece8de' }, ivory: { name: 'Crema', base: '#d9d0b8', dark: '#6a5e44', light: '#faf6e8' } }),
   }),
   floor({
     id: 'stone-travertine-strips', name: 'Travertine Strip Floor',

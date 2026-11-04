@@ -250,13 +250,6 @@ const carpetPattern: PainterDef = {
           runColor = c; run = 1;
         }
       }
-      // accent: a faint overcheck every four modules
-      ctx.fillStyle = rgba(col(s, 3), 0.55);
-      const step = s.w / fitCount(s.w, num(s, 'size') * 4);
-      for (let k = 0; k < s.w / step; k++) {
-        ctx.fillRect(k * step + step * 0.5 - p * 0.3, 0, p * 0.6, s.h);
-        ctx.fillRect(0, k * step + step * 0.5 - p * 0.3, s.w, p * 0.6);
-      }
     } else if (style === 'tartan') {
       const total = SETT.reduce((t, [, w]) => t + w, 0);
       const n = fitCount(s.w, num(s, 'size') * 2);
@@ -658,11 +651,11 @@ const grassPavers: PainterDef = {
           ctx.fillStyle = rgba(rng.next() < 0.5 ? col(s, 1) : col(s, 2), 0.12);
           ctx.fillRect(x, y, w, h);
           ctx.restore();
-          const m = Math.min(w, h) * 0.12;
+          const m = Math.min(w, h) * 0.08;
           const cw = (w - m * 2) / hx, ch = (h - m * 2) / hy;
           for (let q = 0; q < hy; q++) {
             for (let p = 0; p < hx; p++) {
-              const hx0 = x + m + p * cw + cw * 0.12, hy0 = y + m + q * ch + ch * 0.12, hw = cw * 0.76, hh = ch * 0.76;
+              const hx0 = x + m + p * cw + cw * 0.08, hy0 = y + m + q * ch + ch * 0.08, hw = cw * 0.84, hh = ch * 0.84;
               // shaded rim, then turf
               ctx.fillStyle = rgba('#000000', 0.45);
               ctx.beginPath();
@@ -784,7 +777,7 @@ const grating: PainterDef = {
   colors: ['steel', 'light', 'dark', 'void'],
   params: {
     seed: SEED_PARAM,
-    pitch: { type: 'number', min: 0.02, max: 0.08, default: 0.035, doc: 'Bearing bar spacing (m).' },
+    pitch: { type: 'number', min: 0.02, max: 0.08, default: 0.045, doc: 'Bearing bar spacing (m).' },
     cross: { type: 'number', min: 0.05, max: 0.2, default: 0.1, doc: 'Cross rod spacing (m).' },
     wear: { type: 'number', min: 0, max: 1, default: 0.4, doc: 'Scuffs and rust-free wear on the bar tops.' },
   },
@@ -794,7 +787,7 @@ const grating: PainterDef = {
     ctx.fillRect(0, 0, s.w, s.h);
     const n = fitCount(s.w, num(s, 'pitch'));
     const p = s.w / n;
-    const bar = p * 0.22;
+    const bar = p * 0.3;
     const m = fitCount(s.h, num(s, 'cross'));
     const q = s.h / m;
     // faint floor glimpses below the openings
@@ -874,10 +867,10 @@ const rubberFloor: PainterDef = {
         if (style === 'ribs') {
           for (let k = 0; k < np; k++) {
             const y = y0 + k * p;
-            ctx.fillStyle = rgba(col(s, 2), 0.55);
-            ctx.fillRect(x0, y + p * 0.62, w, p * 0.38);
-            ctx.fillStyle = rgba(col(s, 1), 0.5);
-            ctx.fillRect(x0, y + p * 0.12, w, Math.max(p * 0.12, hair(s, 0.0015)));
+            ctx.fillStyle = rgba(col(s, 2), 0.85);
+            ctx.fillRect(x0, y + p * 0.55, w, p * 0.45);
+            ctx.fillStyle = rgba(col(s, 1), 0.95);
+            ctx.fillRect(x0, y + p * 0.1, w, Math.max(p * 0.2, hair(s, 0.0015)));
           }
         } else {
           const rows = style === 'studs' ? np * 2 : np;
@@ -886,18 +879,18 @@ const rubberFloor: PainterDef = {
               const stag = style === 'studs' ? (j % 2) * 0.5 : 0;
               const px = x0 + ((((i + 0.5 + stag) * p) % w) + w) % w;
               const cy = style === 'studs' ? y0 + (j + 0.5) * (p / 2) : y0 + (j + 0.5) * p;
-              const r = style === 'studs' ? p * 0.3 : p * 0.36;
-              ctx.fillStyle = rgba(col(s, 2), 0.6);
+              const r = style === 'studs' ? p * 0.34 : p * 0.36;
+              ctx.fillStyle = rgba(col(s, 2), 0.9);
               ctx.beginPath();
-              ctx.arc(px + r * 0.18, cy + r * 0.28, r, 0, TAU);
+              ctx.arc(px + r * 0.22, cy + r * 0.28, r, 0, TAU);
               ctx.fill();
               ctx.fillStyle = shade(col(s, 0), 0.06);
               ctx.beginPath();
               ctx.arc(px, cy, r, 0, TAU);
               ctx.fill();
-              ctx.fillStyle = rgba(col(s, 1), 0.6);
+              ctx.fillStyle = rgba(col(s, 1), 0.95);
               ctx.beginPath();
-              ctx.arc(px - r * 0.25, cy - r * 0.3, r * 0.4, 0, TAU);
+              ctx.arc(px - r * 0.22, cy - r * 0.26, r * 0.5, 0, TAU);
               ctx.fill();
               if (style === 'coins') {
                 ctx.strokeStyle = rgba(col(s, 2), 0.5);
