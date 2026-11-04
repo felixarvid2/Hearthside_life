@@ -173,9 +173,27 @@ async function buildPool(page, rect) {
   }, rect);
 }
 
-/** Queues a swim for an adult/teen, steps until they are in the water and swims, then frames the pool. */
-async function startSwim(page, pool, ppm) {
-  const r = await page.evaluate(([poolArg, ppm]) => {
+/**
+ * Points the camera at the pool centre and reports where that centre lands on screen, so a shot that missed the
+ * basin is obvious in the log.
+ */
+async function framePool(page, pool, ppm) {
+  return page.evaluate(([p, ppmArg]) => {
+    const h = window.hearthside;
+    const cx = (p.x0 + p.x1 + 1) / 2, cz = (p.z0 + p.z1 + 1) / 2;
+    h.view.setCutaway('cutaway');
+    h.view.rig.setYawStep(0);
+    h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
+    h.debug.frame(1 / 30);
+    const out = { x: 0, y: 0, visible: false };
+    h.view.rig.project(cx, 0, cz, out);
+    return { cx, cz, screen: out };
+  }, [pool, ppm]);
+}
+
+/** Queues a swim for an adult/teen and steps until they are in the water and swimming. */
+async function startSwim(page, pool) {
+  const r = await page.evaluate(([poolArg]) => {
     const h = window.hearthside, g = h.game, st = g.state();
     g.setMode('live');
     const hh = st.households[st.activeHouseholdId];
@@ -208,18 +226,13 @@ async function startSwim(page, pool, ppm) {
     const loc = p.location;
     const inWater = loc.kind === 'lot' && loc.x >= poolArg.x0 && loc.x <= poolArg.x1 && loc.z >= poolArg.z0 && loc.z <= poolArg.z1;
     if (swimTick < 0) return { ok: false, reason: `never swam (anim ${p.anim.id}, loc ${JSON.stringify(loc)})`, id };
-    // A pool-centred view so the basin, water and the swimmer are all in frame.
-    h.view.setCutaway('cutaway');
-    h.view.rig.setYawStep(0);
-    h.view.rig.glideTo(cx + 0.5, cz + 0.5, ppm, 0, 0.2);
-    h.debug.frame(1 / 30);
     const head = p.queue[0];
     return {
       ok: true, id, name: `${p.firstName} ${p.lastName}`, swimTick, anim: p.anim.id, posture: loc.posture,
       inWater, outfit: p.outfits.current.category, needs: { fun: Math.round(p.needs.fun), hygiene: Math.round(p.needs.hygiene) },
       head: head?.interactionId ?? null, stage: head?.data?.stage ?? null,
     };
-  }, [pool, ppm]);
+  }, [pool]);
   await frames(page, 10);
   return r;
 }
@@ -264,7 +277,10 @@ async function main() {
       note(`${vp.id}: a pool rectangle previews as buildable`, prev.ok === true, prev.ok ? `${prev.label} ${prev.measure} $${(prev.charge / 100).toFixed(2)} at ${JSON.stringify(prev.rect)}` : `misses=${JSON.stringify(prev.misses)}`);
       if (!prev.ok) { await context.close(); continue; }
       await frames(page, 4);
+      const prevFrame = await framePool(page, prev.rect, ppm);
       await page.screenshot({ path: join(OUT, `pool-preview-${vp.id}.png`) });
+      note(`${vp.id}: the preview highlight is centred on screen`, prevFrame.screen.visible && Math.abs(prevFrame.screen.x) < 0.45 && Math.abs(prevFrame.screen.y) < 0.45,
+        `screen=${JSON.stringify(prevFrame.screen)}`);
 
       // 3. Built: the basin, coping and ladder are in the world and the charge is exact. Frame it in live mode so the
       // open Build panel does not hide half of the screenshot.
@@ -273,23 +289,23 @@ async function main() {
         `${built.ok ? 'ok' : built.reason} pools=${built.pools} pool=${JSON.stringify(built.pool)}`);
       note(`${vp.id}: the pool costs the posted price`, built.cost === prev.charge, `cost=${built.cost} preview=${prev.charge}`);
       if (!built.ok || !built.pool) { await context.close(); continue; }
-      await page.evaluate(([pool, ppmArg]) => {
-        const h = window.hearthside;
-        h.game.setMode('live');
-        const cx = (pool.x0 + pool.x1 + 1) / 2, cz = (pool.z0 + pool.z1 + 1) / 2;
-        h.view.setCutaway('cutaway');
-        h.view.rig.setYawStep(0);
-        h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
-      }, [built.pool, ppm]);
+      await page.evaluate(() => window.hearthside.game.setMode('live'));
       await frames(page, 8);
+      const builtFrame = await framePool(page, built.pool, ppm);
       await page.screenshot({ path: join(OUT, `pool-built-${vp.id}.png`) });
+      note(`${vp.id}: the built pool is centred on screen`, builtFrame.screen.visible && Math.abs(builtFrame.screen.x) < 0.45 && Math.abs(builtFrame.screen.y) < 0.45,
+        `screen=${JSON.stringify(builtFrame.screen)}`);
 
       // 4. Someone changes into swimwear, climbs in and swims; the camera frames the water.
-      const swim = await startSwim(page, built.pool, ppm);
+      const swim = await startSwim(page, built.pool);
       note(`${vp.id}: a household member is swimming in the built pool`,
         swim.ok && swim.inWater && swim.anim === 'swim' && swim.outfit === 'swim',
         swim.ok ? `${swim.name} anim=${swim.anim} posture=${swim.posture} outfit=${swim.outfit} head=${swim.head} stage=${swim.stage} needs=${JSON.stringify(swim.needs)}` : swim.reason);
+      // A slightly wider shot than the idle view so the rim, the water and the swimmer all fit.
+      const swimFrame = await framePool(page, built.pool, Math.round(ppm * 0.8));
       await page.screenshot({ path: join(OUT, `pool-swim-${vp.id}.png`) });
+      note(`${vp.id}: the swimmer is framed on screen`, swimFrame.screen.visible && Math.abs(swimFrame.screen.x) < 0.45 && Math.abs(swimFrame.screen.y) < 0.45,
+        `screen=${JSON.stringify(swimFrame.screen)}`);
 
       // 5. Get Out still exists while swimming and is offered in the context menu.
       const getOut = swim.ok ? await page.evaluate(([id, pool]) => {
