@@ -12,7 +12,7 @@ export default [
   { id: 'grain-cherry', kind: 'material', prompt: `close up of cherry wood grain, smooth flowing fine grain lines running horizontally with gentle curly figure, ${ONE}` },
   { id: 'grain-burl', kind: 'material', prompt: `close up of burl wood veneer, swirling tight eyes and whorls of figured grain all over, ${ONE}` },
   // --- glazes and stone for the tiles -----------------------------------------------------------------------------
-  { id: 'glaze-crackle', kind: 'material', prompt: `close up of a glossy ceramic glaze with a fine crackle craze of hairline cracks over the whole surface, slight tonal clouding, ${ONE}` },
+  { id: 'glaze-crackle', kind: 'material', prompt: `close up of a glossy ceramic glaze with a fine crackle craze of hairline cracks over the whole surface, slight tonal clouding, ${ONE}`, build: { flatten: 1, drift: 1, driftSigma: 24, std: 0.2 } },
   { id: 'glaze-zellige', kind: 'material', prompt: `close up of handmade zellige tile glaze, uneven pooled glossy glaze with soft cloudy patches, tiny pits and subtle ripples, ${ONE}` },
   { id: 'glaze-reactive', kind: 'material', prompt: `close up of a reactive ceramic glaze with soft streaks, drips and variegated tonal pooling, glossy studio pottery, ${ONE}` },
   { id: 'glaze-speckle', kind: 'material', prompt: `close up of speckled stoneware glaze, matte ceramic with small dark iron speckles scattered evenly, ${ONE}` },

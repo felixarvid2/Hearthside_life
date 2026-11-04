@@ -14,7 +14,7 @@ export default [
   { id: 'grain-hickory', kind: 'material', prompt: wood('hickory wood, dramatic high contrast dark and light streaks, bold grain') },
   { id: 'grain-heartpine', kind: 'material', prompt: wood('reclaimed antique heart pine, tight dense grain, old saw marks, tiny nail holes, rich patina') },
   { id: 'grain-limed', kind: 'material', prompt: wood('limed white oak, pale grey wood with white lime filling the open pores, low contrast, dry brushed look') },
-  { id: 'grain-oak-rift', kind: 'material', prompt: wood('rift sawn white oak, perfectly straight tight parallel linear grain, no cathedral figure, tiny medullary ray flecks') },
+  { id: 'grain-oak-rift', kind: 'material', prompt: wood('rift sawn white oak, perfectly straight tight parallel linear grain, no cathedral figure, tiny medullary ray flecks'), build: { rotate: 90 } },
   { id: 'grain-oak-brushed', kind: 'material', prompt: wood('wire brushed oak, deeply textured open grain with raised grain relief, rustic') },
   { id: 'grain-oak-scraped', kind: 'material', prompt: wood('hand scraped oak, undulating scraped hollows and tool marks across the wood surface with grain') },
   { id: 'grain-elm', kind: 'material', prompt: wood('wild elm wood, interlocking twisting irregular grain with dark swirls and cloudy figure') },

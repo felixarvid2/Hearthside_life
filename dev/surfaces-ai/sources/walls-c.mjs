@@ -15,7 +15,7 @@ export default [
   m('hydrangea', 'a round hydrangea flower cluster made of many small four-petal florets, with two leaves'),
   m('iris', 'a single iris flower with three upright and three drooping petals on a stem with sword-shaped leaves'),
   m('anemone', 'a single anemone flower with broad rounded petals and a dark centre, on a stem with a lobed leaf'),
-  m('wildsprig', 'a loose wildflower sprig with a few small blossoms and thin leaves on a curved stem'),
+  m('wildsprig', 'a curved flowering stem with several open five-petal flowers, buds and pointed leaves, medium line weight'),
   m('cornflower', 'a single cornflower head with fringed petals on a thin stem'),
   m('dahlia', 'a single dahlia bloom seen from the front with many layered pointed petals'),
   m('magnolia', 'a magnolia branch with one large open blossom, a bud and two glossy leaves'),
