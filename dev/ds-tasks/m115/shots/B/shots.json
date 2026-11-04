@@ -105,24 +105,44 @@
     "evidence": "w=56 h=12 at 646,255"
   },
   {
+    "name": "desktop: the 30% screenshot shows the amber fill",
+    "ok": true,
+    "evidence": "fill=28"
+  },
+  {
     "name": "desktop: cooking at ~90% is green",
     "ok": true,
-    "evidence": "{\"set\":{\"elapsed\":18.7,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 90%\",\"now\":\"90\",\"width\":\"90%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":644,\"y\":255,\"w\":56,\"h\":12}}"
+    "evidence": "{\"set\":{\"elapsed\":18.7,\"duration\":20},\"pill\":{\"label\":\"Cook a Meal 90%\",\"now\":\"90\",\"width\":\"90%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":646,\"y\":255,\"w\":56,\"h\":12}}"
+  },
+  {
+    "name": "desktop: the 90% screenshot shows the green fill",
+    "ok": true,
+    "evidence": "fill=112"
   },
   {
     "name": "desktop: completion shows the check and the full green pill",
     "ok": true,
-    "evidence": "{\"pill\":{\"label\":\"Cook a Meal complete\",\"now\":\"100\",\"width\":\"100%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":true,\"cancelled\":false,\"walking\":false,\"x\":646,\"y\":255,\"w\":56,\"h\":12}}"
+    "evidence": "{\"pill\":{\"label\":\"Cook a Meal complete\",\"now\":\"100\",\"width\":\"100%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":true,\"cancelled\":false,\"walking\":false,\"x\":645,\"y\":255,\"w\":56,\"h\":12}}"
+  },
+  {
+    "name": "desktop: the completion screenshot shows the green pill and the check",
+    "ok": false,
+    "evidence": "fill=126 check=0"
   },
   {
     "name": "desktop: two people show two different action pills at once",
     "ok": true,
-    "evidence": "Sasha:waterPlant + Theo:bakeTreat (15 ticks)"
+    "evidence": "Theo:washHands + Sasha:changeOutfit (10 ticks)"
   },
   {
     "name": "desktop: both pills are visible with different labels",
     "ok": true,
-    "evidence": "[{\"label\":\"Bake a Treat 9%\",\"now\":\"9\",\"width\":\"8.9%\",\"colour\":\"rgb(224, 151, 41)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":703,\"y\":298,\"w\":56,\"h\":12},{\"label\":\"Water Plant 5%\",\"now\":\"5\",\"width\":\"5%\",\"colour\":\"rgb(226, 148, 40)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":320,\"y\":303,\"w\":56,\"h\":12}]"
+    "evidence": "[{\"label\":\"Wash Hands 92%\",\"now\":\"92\",\"width\":\"91.7%\",\"colour\":\"rgb(77, 154, 91)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":588,\"y\":318,\"w\":56,\"h\":12},{\"label\":\"Change Outfit 13%\",\"now\":\"13\",\"width\":\"12.5%\",\"colour\":\"rgb(224, 154, 41)\",\"done\":false,\"cancelled\":false,\"walking\":false,\"x\":679,\"y\":286,\"w\":56,\"h\":12}]"
+  },
+  {
+    "name": "desktop: the pair screenshot shows both pill fills",
+    "ok": true,
+    "evidence": "fills=96,8"
   },
   {
     "name": "desktop: Settings offers the three action-progress scopes",

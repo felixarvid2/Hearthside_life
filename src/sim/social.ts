@@ -24,7 +24,7 @@ import {
 } from './relationships';
 import { personKey } from './reservations';
 import type { Behavior, Step } from './steps';
-import { canPlanEvent, noteSocial, planEventFromSocial } from './events';
+import { canPlanEvent, noteSocial, planEventFromSocial, runningEventOf } from './events';
 import {
   ANGRY_MOOD, JEALOUSY_FRIENDSHIP, JEALOUSY_RIVAL_FRIENDSHIP, JEALOUSY_TRUST, ROMANCE_MIN_MOOD, SOCIAL_ACCEPT_MAX,
   SOCIAL_ACCEPT_MIN, SOCIAL_RECENT_DECAY_MINUTES, SOCIAL_SPAM_PENALTY, SOCIAL_WAIT_MINUTES, TAKEN_PENALTY, WITNESS_RADIUS,
@@ -138,6 +138,17 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
  * someone else, and idle or only doing an interruptible autonomous activity.
  */
 export function personAvailable(ctx: SimCtx, target: Person, actor: Person): string | null {
+  // The played household's autonomy setting governs its members on every lot: with it off nobody else (a visitor,
+  // a patron, a neighbour walking up) may pull a member into a conversation, where they would join as the listener
+  // without the player asking. Orders the player gives are unaffected: a controlled actor is always allowed.
+  const controlled = ctx.state.households[target.householdId]?.isPlayable === true;
+  // A guest the player invited to a running event may chat with the host: that is part of the gathering, not the
+  // household acting on its own.
+  const ev = runningEventOf(ctx.state, actor.id);
+  const sameEvent = ev !== undefined && ev.id === runningEventOf(ctx.state, target.id)?.id;
+  if (controlled && !ctx.state.settings.autonomy && ctx.state.households[actor.householdId]?.isPlayable !== true && !sameEvent) {
+    return `${target.firstName} is waiting for orders.`;
+  }
   const tl = lotLoc(target), al = lotLoc(actor);
   if (!tl) return target.location.kind === 'offlot' && target.location.place === 'work' ? `${target.firstName} is at work.` : `${target.firstName} isn't here.`;
   if (al && al.lotId !== tl.lotId) return `${target.firstName} isn't here.`;

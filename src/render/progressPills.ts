@@ -108,8 +108,10 @@ const PILL_CSS = `
 #world-overlay .wo-pill-icon svg { display: block; width: 9px; height: 9px; }
 #world-overlay .wo-pill-track { position: relative; flex: 1 1 auto; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, 0.24); overflow: hidden; }
 #world-overlay .wo-pill-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 99px; transition: width 150ms linear, background-color 200ms linear; }
-#world-overlay .wo-pill-check { display: flex; flex: 0 0 8px; width: 8px; height: 8px; color: #fff; opacity: 0; transform: scale(0.6); transition: opacity 180ms ease-out, transform 180ms ease-out; }
-#world-overlay .wo-pill-check svg { display: block; width: 8px; height: 8px; }
+#world-overlay .wo-pill-check { display: flex; flex: 0 0 10px; width: 10px; height: 10px; color: #fff; opacity: 0; transform: scale(0.6); transition: opacity 180ms ease-out, transform 180ms ease-out; }
+/* The shared icon stroke (1.9/24) is under a pixel at 8-10 px and rasterises to a faint green tick; thicken it so
+   the completion check reads white at 1x on the dark green capsule. */
+#world-overlay .wo-pill-check svg { display: block; width: 10px; height: 10px; stroke-width: 4.5; }
 #world-overlay .wo-pill.is-done { background: rgba(42, 82, 48, 0.88); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.45); }
 #world-overlay .wo-pill.is-done .wo-pill-fill { width: 100% !important; }
 #world-overlay .wo-pill.is-done .wo-pill-check { opacity: 1; transform: none; }
@@ -122,6 +124,8 @@ const PILL_CSS = `
 @media (max-width: 600px), (max-height: 500px) {
   #world-overlay .wo-pill { width: 44px; height: 10px; gap: 2px; padding: 1px 2px; }
   #world-overlay .wo-pill-icon, #world-overlay .wo-pill-icon svg { flex-basis: 8px; width: 8px; height: 8px; }
+  #world-overlay .wo-pill-check, #world-overlay .wo-pill-check svg { flex-basis: 8px; width: 8px; height: 8px; }
+  #world-overlay .wo-pill-check svg { stroke-width: 5; }
   #world-overlay .wo-pill-track { height: 3px; }
 }
 `;

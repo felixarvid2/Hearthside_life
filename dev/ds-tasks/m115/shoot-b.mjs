@@ -10,7 +10,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -98,8 +98,19 @@ async function startGame(page) {
   await frames(page, 6);
 }
 
+/**
+ * Glides to a world point at a fixed moderate zoom. The guided game starts very close to the selected person (well
+ * over 200 px/m) and `view.focusOn(x, z, true)` keeps the current zoom, which pushes the camera into the kitchen
+ * counter — the person ends up clipped by it while the pill still projects above the countertop. A fixed zoom keeps
+ * the actor in frame.
+ */
+async function frameAt(page, x, z, ppm) {
+  await page.evaluate(([px, pz, pp]) => window.hearthside.view.rig.glideTo(px, pz, pp, 0.25, 0.9), [x, z, ppm]);
+  await page.waitForTimeout(500);
+}
+
 /** Queues Cook a Meal on the fridge for a member who is home and advances to the cooking stage. */
-async function startCooking(page) {
+async function startCooking(page, camPpm) {
   const r = await page.evaluate(() => {
     const h = window.hearthside, g = h.game, st = g.state();
     const hh = st.households[st.activeHouseholdId];
@@ -135,9 +146,9 @@ async function startCooking(page) {
     return { ok: false, reason: 'never reached the cooking stage' };
   });
   if (r.ok) {
-    // Close the camera in on the cook and let the glide settle (the sim is paused).
-    await page.evaluate(([x, z]) => window.hearthside.view.focusOn(x, z, true), [r.x, r.z]);
-    await page.waitForTimeout(1100);
+    // Frame the cook at a fixed zoom and let the glide settle (the sim is paused).
+    await frameAt(page, r.x, r.z, camPpm);
+    await page.waitForTimeout(600);
   }
   await frames(page, 8);
   return r;
@@ -243,16 +254,19 @@ async function pillPixels(file, pill, done = false) {
   const height = Math.min(meta.height - top, pill.h + 12);
   const { data, info } = await sharp(file).extract({ left, top, width, height }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const target = (pill.colour.match(/\d+/g) ?? []).map(Number);
-  let fill = 0, whiteRight = 0;
+  let fill = 0, whiteRight = 0, maxCheck = 0;
   for (let y = 0; y < info.height; y++) {
     for (let x = 0; x < info.width; x++) {
       const i = (y * info.width + x) * info.channels;
       const r = data[i], g = data[i + 1], b = data[i + 2];
       if (target.length >= 3 && Math.abs(r - target[0]) <= 26 && Math.abs(g - target[1]) <= 26 && Math.abs(b - target[2]) <= 26) fill++;
-      if (done && x > info.width * 0.55 && r > 215 && g > 215 && b > 215) whiteRight++;
+      if (done && x > info.width * 0.55) {
+        if (r > 215 && g > 215 && b > 215) whiteRight++;
+        maxCheck = Math.max(maxCheck, Math.min(r, g, b));
+      }
     }
   }
-  return { fill, whiteRight, box: { left, top, width, height } };
+  return { fill, whiteRight, maxCheck, box: { left, top, width, height } };
 }
 
 /**
@@ -271,7 +285,7 @@ async function capture(page, file, { count = 1, done = false, minFill = 12 } = {
     const checks = [];
     for (let i = 0; i < pills.length; i++) checks.push(await pillPixels(path, pills[i], done && i === 0));
     const ok = pills.length >= count && checks.every((c) => c.fill >= minFill) && (!done || (checks[0]?.whiteRight ?? 0) >= 2);
-    console.log(`[m115-b] shot ${file}${attempt > 1 ? ` attempt ${attempt}` : ''}: pills=${state.count} fills=${checks.map((c) => c.fill).join(',')} check=${checks[0]?.whiteRight ?? 0}${cleared.menu ? ' (closed menu)' : ''}`);
+    console.log(`[m115-b] shot ${file}${attempt > 1 ? ` attempt ${attempt}` : ''}: pills=${state.count} fills=${checks.map((c) => c.fill).join(',')} check=${checks[0]?.whiteRight ?? 0}${done ? ` maxCheck=${checks[0]?.maxCheck ?? 0}` : ''}${cleared.menu ? ' (closed menu)' : ''}`);
     if (ok) return { pills, checks };
     last = { pills, checks };
   }
@@ -307,7 +321,7 @@ async function holdDone(page) {
 }
 
 /** Queues two different object actions for two different people and advances until both are performing. */
-async function twoActions(page) {
+async function twoActions(page, camPpm) {
   const r = await page.evaluate(() => {
     const h = window.hearthside, g = h.game, st = g.state();
     const hh = st.households[st.activeHouseholdId];
@@ -360,7 +374,7 @@ async function twoActions(page) {
             ok: true,
             a: { person: a.person, name: st.people[a.person].firstName, action: ha.interactionId, x: a.x, z: a.z },
             b: { person: b.person, name: st.people[b.person].firstName, action: hb.interactionId, x: b.x, z: b.z },
-            midX: (a.x + b.x) / 2, midZ: (a.z + b.z) / 2,
+            midX: (a.x + b.x) / 2, midZ: (a.z + b.z) / 2, dist,
             ticks: i,
           };
         }
@@ -373,11 +387,10 @@ async function twoActions(page) {
     return { ok: false, reason: `no pair started (${tries.length} tried)` };
   });
   if (r.ok) {
-    // Reset to the lot view, then centre and zoom on both actors: the pills should be readable together.
-    await page.evaluate(() => window.hearthside.view.frameLot(true));
-    await page.waitForTimeout(350);
-    await page.evaluate(([mx, mz]) => window.hearthside.view.focusOn(mx, mz, true), [r.midX, r.midZ]);
-    await page.waitForTimeout(1200);
+    // Centre both actors at the closest zoom that keeps the pair on screen, so both pills are readable together.
+    const fit = Math.min(camPpm, page.viewportSize().width / (r.dist + 5));
+    await frameAt(page, r.midX, r.midZ, Math.max(20, Math.round(fit)));
+    await page.waitForTimeout(600);
   }
   await frames(page, 6);
   return r;
@@ -433,7 +446,10 @@ async function main() {
       await startGame(page);
       await installClock(page);
 
-      const cook = await startCooking(page);
+      // Fixed zoom: 46 px/m leaves a 1.7 m actor ~78 px tall on phones, 78 px/m ~133 px on desktop, and keeps the
+      // camera outside the kitchen furniture.
+      const camPpm = vp.mobile ? 46 : 78;
+      const cook = await startCooking(page, camPpm);
       note(`${vp.id}: cooking starts and reaches the cooking stage`, cook.ok, cook.ok ? `${cook.name} recipe=${cook.recipeId} duration=${cook.duration}` : cook.reason);
       if (!cook.ok) { await context.close(); continue; }
 
@@ -483,7 +499,7 @@ async function main() {
       await page.evaluate(() => window.hearthside.debug.step(3));
 
       // Two different actions at the same time.
-      const pair = await twoActions(page);
+      const pair = await twoActions(page, camPpm);
       note(`${vp.id}: two people show two different action pills at once`, pair.ok,
         pair.ok ? `${pair.a.name}:${pair.a.action} + ${pair.b.name}:${pair.b.action} (${pair.ticks} ticks)` : pair.reason);
       await settleAllPills(page);
@@ -522,7 +538,14 @@ async function main() {
   } finally {
     if (browser) await browser.close().catch(() => {});
     server.kill('SIGTERM');
-    writeFileSync(join(OUT, 'shots.json'), JSON.stringify(log, null, 2));
+    // A `--only=<viewport>` rerun keeps the entries of the viewports it did not run.
+    const ran = new Set(VIEWPORTS.map((v) => v.id));
+    let kept = [];
+    try {
+      kept = JSON.parse(readFileSync(join(OUT, 'shots.json'), 'utf8'))
+        .filter((l) => !ran.has(String(l.name).split(':')[0]));
+    } catch { /* first run */ }
+    writeFileSync(join(OUT, 'shots.json'), JSON.stringify([...kept, ...log], null, 2));
   }
 
   const failed = log.filter((l) => !l.ok);

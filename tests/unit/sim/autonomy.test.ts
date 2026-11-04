@@ -95,7 +95,8 @@ describe('autonomy', () => {
     const h = harness(w.state);
     runTicks(h, 4 * 60);
     const started = h.log.filter((e) => e.type === 'action.started');
-    // Residents only took part as conversation partners of the visitor; they started nothing of their own.
+    // Residents waited for orders: Ada acted on her own, but they started nothing of their own and nobody pulled
+    // them into a conversation (see social.test.ts "autonomy off for the played household").
     const own = started.filter((e) => e.type === 'action.started' && (e.personId === w.mira || e.personId === w.theo) && !h.content.socials[e.interactionId]);
     expect(own).toEqual([]);
     expect(started.some((e) => e.personId === ada)).toBe(true);

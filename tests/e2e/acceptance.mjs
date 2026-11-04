@@ -277,6 +277,16 @@ const H = {
   },
 };
 
+/**
+ * Milestone 12: weather is planned from the world seed, and the acceptance run starts a new random world, so an
+ * outdoor step could land on rain (the watering rule then rightly refuses: "It is raining."). Pin today's stored
+ * plan to clear just for a step that needs it. This uses the debug console's same-day plan (weather.ts keeps a
+ * same-day plan as stored, so it lasts until midnight and later days are planned normally); weather stays on.
+ */
+async function forceClearWeather(T) {
+  return T.page.evaluate(() => window.hearthside.debug.setWeather('clear'));
+}
+
 // ===============================================================================================================
 // STEP 1 - creator
 // ===============================================================================================================
@@ -3394,6 +3404,9 @@ async function stepExterior(T) {
     return o ? { id: o.id, at: [o.x, o.z], member: hh.memberIds.find((m) => st.people[m].location.kind === 'lot' && st.people[m].location.level === 0) ?? hh.memberIds.find((m) => st.people[m].location.kind === 'lot') } : null;
   });
   if (bed.ok && garden) {
+    // Watering (and other bed work) is weather-gated: keep this seed-independent for the run.
+    const clear = await forceClearWeather(T);
+    T.check(S, 'the garden step can rely on clear weather', clear === true, String(clear));
     const act = async (interactionId) => {
       const r = await page.evaluate(([m, o, i]) => {
         const g = window.hearthside.game;

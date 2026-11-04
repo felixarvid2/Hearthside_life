@@ -173,12 +173,29 @@ for the fridge closed, the wardrobe doors and the shower stall, but two shots ne
 
 Changes made:
 
-- `objectAnim.ts` effects: ten shower streaks in two radii, 0.026 m wide, 0.46 opacity, with a stronger haze
-  (0.17); steam raised to eight sprites at 0.42 opacity; hob rings slightly larger (0.06 scale) and brighter
-  (emissive 2.4), pot 0.11 m radius. Still cheap: 10 quads, 8 sprites, 4 rings, one pot.
+- `objectAnim.ts` effects: ten shower streaks spread over the stall tray (a ring around the centre sat inside the
+  person standing there), 0.024 m wide, 0.5 opacity, with a stronger haze (0.17); steam raised to eight sprites at
+  0.42 opacity; hob rings slightly larger (0.06 scale) and brighter (emissive 2.4), pot 0.11 m radius. Still cheap:
+  10 quads, 8 sprites, 4 rings, one pot.
 - `shoot-d.mjs`: the closed-fridge and wardrobe shots keep the natural reveal view. The open fridge, stove and shower
   shots now drive the rig directly (`GameView.rig.setYawStep` + `glideTo` aimed at the object's footprint centre at
-  a fixed zoom) and take all four yaw steps as `-k0..3` candidates; `promote-d.mjs` copies the best candidate to the
-  required `<viewport>-<state>.png` name. The candidate idea comes from `probe-d.mjs`, a small four-angle probe kept
-  for future camera work.
+  a fixed zoom) and take all four yaw steps at a close zoom (`-k0..3`) and a wide one (`-w0..3`) as candidates;
+  `promote-d.mjs` copies the best candidate to the required `<viewport>-<state>.png` name. The candidate idea comes
+  from `probe-d.mjs`, a small four-angle probe kept for future camera work.
 - `package.json`: `visual:m115:probe` and `visual:m115:promote` scripts next to `visual:m115:d`.
+- Closed fridge and wardrobe shots also take `-k0..3` / `-w0..3` candidates now: the natural reveal kept the lot zoom
+  and picked angles that hid the target behind the pantry/person, so the same rig-aimed candidates are needed for
+  those two states. `promote-d.mjs` treats a `null` choice as "keep the natural shot".
+- The closed-fridge shot had **no person at the fridge**: the rig-aimed candidates centre the appliance correctly,
+  but `PeopleView` only reads `person.location` in `onTicks` and then interpolates from the previous tick's spot at
+  alpha 0, so a teleported-but-not-ticked person still renders at their old position. The script now runs one tick
+  and forces `view.setWorld(state, true)` (which calls `people.snap`) after the teleport; other household members
+  are parked on the porch so they do not stand in the wide shots.
+- Every candidate now records the rig target, yaw, ppm, insets, canvas size and the projected screen position of
+  the object centre/top and the acting person in `d-log.json` (`aims`), so framing can be checked numerically
+  rather than guessed from the diagonal isometric view. `--only=fridge` re-shoots only the two fridge states for a
+  quick iteration.
+- Full candidate run: **24/24 checks passed** (cookMeal queueable and its stage 0 and stage 1 reached, changeOutfit
+  queueable and reached, takeShower queueable and reached, no page errors — eight checks per viewport) and 126 PNGs
+  were written across the three viewports (`d-log-full.json`). The picker (`promote-d.mjs`) then copies one
+  candidate per state to the required `<viewport>-<state>.png` names.

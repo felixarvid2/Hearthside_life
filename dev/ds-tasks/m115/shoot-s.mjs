@@ -58,10 +58,10 @@ const VIEWPORTS = [
   { id: 'desktop', width: 1280, height: 720, mobile: false },
 ];
 
-/** Measured screen centres (rot-0 local space) from src/content/screens.ts, duplicated for the page context. */
+/** Measured screen centres + glass height (rot-0 local space) from src/content/screens.ts, duplicated for the page context. */
 const LOCAL = {
-  'computer-desktop': [0.5, 0.3426, 0.4999],
-  'tv-flatscreen': [0.5, 0.3671, 0.53],
+  'computer-desktop': [0.5, 0.3426, 0.4999, 0.4674],
+  'tv-flatscreen': [0.5, 0.3671, 0.53, 0.5159],
 };
 
 async function waitForServer(url, ms, server) {
@@ -310,7 +310,7 @@ async function main() {
       // 6. TV on with someone watching: frame the screen and the seated watcher together.
       const tv = await startInteraction(page, 'tv-flatscreen', 'watchTv');
       if (tv.ok) {
-        const tvCam = () => page.evaluate(([id, local, rot, vw]) => {
+        const tvCam = () => page.evaluate(([id, local, rot, vw, vh]) => {
           const h = window.hearthside, st = h.game.state();
           h.view.pendingReveal = null;
           const root = h.view.objects.rootOf(id);
@@ -325,18 +325,30 @@ async function main() {
           r.yaw = (rot * 90 * Math.PI) / 180;
           const tx = (v.x + person.x) / 2, ty = (v.y + person.y) / 2, tz = (v.z + person.z) / 2;
           r.glideTo(tx, tz, undefined, 0, ty);
-          r.ppm = Math.round(Math.max(100, Math.min(190, vw / 3.2)));
+          // The watcher sits a few metres along the view axis, so pitch separates the TV from the person
+          // vertically: in the short landscape viewport 190 ppm pushed the TV's top edge off the top of
+          // the frame. Fit to the smaller dimension instead, keeping the whole glass and the head inside.
+          r.ppm = Math.round(Math.max(90, Math.min(190, vw / 3.2, vh / 3.4)));
           r.dirty = true;
           h.debug.frame(1 / 30);
           const screen = r.project(v.x, v.y, v.z, { x: 0, y: 0, visible: false });
-          return { ok: true, world: { x: +v.x.toFixed(2), y: +v.y.toFixed(2), z: +v.z.toFixed(2) }, person: { x: +person.x.toFixed(2), z: +person.z.toFixed(2) }, target: { x: +tx.toFixed(2), y: +ty.toFixed(2), z: +tz.toFixed(2) }, ppm: r.ppm, posture: loc?.posture, screen };
-        }, [tv.objectId, LOCAL['tv-flatscreen'], objects.tv.rot, vp.width]);
+          // Corners of the measured glass (local y up) and the watcher's head, to prove the framing.
+          const top = root.position.clone(); top.set(local[0], local[1] + local[3] / 2, local[2]); root.localToWorld(top);
+          const bottom = root.position.clone(); bottom.set(local[0], local[1] - local[3] / 2, local[2]); root.localToWorld(bottom);
+          const head = r.project(person.x, 1.35, person.z, { x: 0, y: 0, visible: false });
+          const topPx = r.project(top.x, top.y, top.z, { x: 0, y: 0, visible: false });
+          const bottomPx = r.project(bottom.x, bottom.y, bottom.z, { x: 0, y: 0, visible: false });
+          const m = 4;
+          const framed = screen.visible && topPx.visible && bottomPx.visible && head.visible
+            && topPx.y >= m && bottomPx.y <= vh - m && head.y >= m && head.y <= vh - m;
+          return { ok: true, world: { x: +v.x.toFixed(2), y: +v.y.toFixed(2), z: +v.z.toFixed(2) }, person: { x: +person.x.toFixed(2), z: +person.z.toFixed(2) }, target: { x: +tx.toFixed(2), y: +ty.toFixed(2), z: +tz.toFixed(2) }, ppm: r.ppm, posture: loc?.posture, screen, top: +topPx.y.toFixed(0), bottom: +bottomPx.y.toFixed(0), head: +head.y.toFixed(0), framed };
+        }, [tv.objectId, LOCAL['tv-flatscreen'], objects.tv.rot, vp.width, vp.height]);
         const cam = await tvCam();
         const shotCam = await shot('tv-watching', tvCam);
         note(`${vp.id}: the TV is on while someone is watching`, tv.ok && cam.posture === 'seated', JSON.stringify({ ...cam, watch: tv }));
         // The first projection can be stale while the UI panels finish laying out; judge by the
         // camera state at capture, which is what the screenshot actually shows.
-        note(`${vp.id}: the TV screen and watcher share the frame`, shotCam?.ok === true && shotCam.screen.visible, JSON.stringify(shotCam ?? cam));
+        note(`${vp.id}: the TV screen and watcher share the frame`, shotCam?.ok === true && shotCam.framed === true && shotCam.top >= 4 && shotCam.head <= vp.height - 4, JSON.stringify(shotCam ?? cam));
       } else note(`${vp.id}: watching TV starts`, false, tv.reason);
 
       // 7. TV off.

@@ -161,5 +161,43 @@ pauses the clock and stages each shot from the live action.
 
 Round 1 (default camera): all prop checks passed except the phone (no callable contact at that hour), and the seated
 plate was hidden behind the chair back from the default south-east camera; the fridge/snack props were also too
-small in frame. Round 2 fixes the framing (150 px/m, yaw chosen behind the person's shoulder) and gives the phone a
-callable off-lot contact for the screenshot. Results: see below.
+small in frame. Round 2 fixes the framing (close zoom, yaw chosen behind the person's shoulder) and gives the phone
+a callable off-lot contact for the screenshot. The tall portrait viewport uses a gentler zoom (95 px/m) than the
+wide ones (140 px/m) so the whole figure stays in frame.
+
+Final run: **27/27 checks passed**, no page errors in any viewport. Screenshots (all three viewports):
+
+- `fridge-reach-*.png` — the cook at the fridge with the ingredients bag (carrot, greens) in the right hand at 75 % of
+  the reach.
+- `snack-eat-*.png` — half a sandwich in the right hand.
+- `carry-plate-*.png` — a full plate carried in the right hand, mid-walk.
+- `eat-20-*.png` — seated at the dining table; plate placed on the table with the fork in the right hand; food at
+  80 % remaining.
+- `eat-80-*.png` — same seat, food at 20 % remaining; the food mound's height scale drops from 0.84 to 0.36, visibly
+  smaller.
+- `reading-*.png` — an open book (brown covers, cream pages) in the left hand while reading.
+- `phone-*.png` — the phone with its lit screen in the right hand during a phone call.
+- `shots.json` — the check log (prop names found in the scene and the food-mound scales).
+
+The visual staging is deterministic per shot: the clock is paused and the action's `elapsed` is set explicitly
+(except the two `debug.step` runs that build the meal and walk to the seat).
+
+### Checks
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npx vitest run tests/unit/render/handProps.test.ts` | 24 passed |
+| `npx vitest run` (whole suite) | 2 017 passed, 2 failed; `tests/unit/surfaces/painters.test.ts` passes when re-run alone (CPU timeout under load), `tests/unit/integration/travel.test.ts` fails on its own too — unrelated to task H (no sim files touched) |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | passed (17 s, after the other agents' unused imports were resolved in their files) |
+| `npm run e2e` | see below |
+| `npm run visual:m115:h` | 27/27, screenshots above |
+
+The two failing unit tests are not touched by task H: `travel.test.ts` fails the same way on an untouched tree branch
+(`introduce` queued with household autonomy off) and `painters.test.ts` is a 5 s timeout that passes alone. The build
+first surfaced TS6133/TS6192 errors in `src/sim/autonomy.ts` and `src/sim/simulation.ts` from another agent's
+in-flight work; those were fixed in their files and the build then passed without changes here.
+
+Temporary development files left because `rm` is blocked: `dev/ds-tasks/m115/bones-probe.txt` (the GLB bone probe
+moved out of `tests/unit`), `inspect-bones.mjs`, `__probe.mjs`. They are dev-only and not imported by the game.

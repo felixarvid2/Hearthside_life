@@ -340,9 +340,11 @@ export class PeopleView {
       e.align += Math.sign(target - e.align) * Math.min(Math.abs(target - e.align), reducedMotion ? 1 : dt / 0.6);
       if (!lowered && !slot) e.slot = target === 0 && e.align === 0 ? null : e.slot;
       const ground = this.floorY(e.id, loc, x, z, dt, reducedMotion);
-      // Milestone 12: swimmers sit in the water, only head and shoulders above the surface.
+      // Milestone 12: swimmers sit in the water, only head and shoulders above the surface. The swim/float clips
+      // already lie the body flat around the root (pelvis about -0.08, head about +0.02 m), so the root only needs a
+      // small lift over the water plane; sinking it by the standing height would bury the whole body in the basin.
       const swimming = p.anim.id === 'swim' || p.anim.id === 'float';
-      const sink = swimming ? 0.92 * Math.max(e.view.stageHeight / 1.8, 0.55) : 0;
+      const sink = swimming ? -0.18 : 0;
       let rx = x, rz = z, ry = ground - sink, rot = e.facing;
       const s = e.slot;
       const sy = levelY(s?.level ?? 0); // slot heights are above the floor of their level
@@ -439,7 +441,14 @@ export class PeopleView {
       };
       if (!p || !e.visible) { off(); continue; }
       // Milestone 11.5: project even when there is no bubble/name: the progress pill needs the same anchor.
-      e.view.headTop(this.tmp);
+      // A swimmer lies flat, so its standing head height would put the tag two metres over the pool; anchor it
+      // just over the (forward) head instead.
+      if (p.anim.id === 'swim' || p.anim.id === 'float') {
+        this.tmp.copy(e.view.root.position);
+        this.tmp.y += 0.42;
+        this.tmp.x += Math.sin(e.view.root.rotation.y) * 0.5;
+        this.tmp.z += Math.cos(e.view.root.rotation.y) * 0.5;
+      } else e.view.headTop(this.tmp);
       camera.project(this.tmp.x, this.tmp.y + 0.03, this.tmp.z, this.scr);
       if (!this.scr.visible) { off(); continue; }
       const pill = this.pills.update(e.id, state, p, this.content, true);

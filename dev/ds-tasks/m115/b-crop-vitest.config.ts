@@ -3,5 +3,13 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: { include: ['dev/ds-tasks/m115/b-crop.test.ts'], environment: 'node', reporters: ['verbose'] },
+  test: {
+    include: [
+      'dev/ds-tasks/m115/b-crop.test.ts',
+      'dev/ds-tasks/m115/b-check-scan.test.ts',
+      'dev/ds-tasks/m115/b-tick-render.test.ts',
+    ],
+    environment: 'node',
+    reporters: ['verbose'],
+  },
 });

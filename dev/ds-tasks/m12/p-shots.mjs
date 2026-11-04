@@ -308,6 +308,28 @@ async function main() {
       note(`${vp.id}: a household member is swimming in the built pool`,
         swim.ok && swim.inWater && swim.anim === 'swim' && swim.outfit === 'swim',
         swim.ok ? `${swim.name} anim=${swim.anim} posture=${swim.posture} outfit=${swim.outfit} head=${swim.head} stage=${swim.stage} needs=${JSON.stringify(swim.needs)}` : swim.reason);
+      if (swim.ok) {
+        const probe = await page.evaluate((id) => {
+          const h = window.hearthside;
+          const entry = h.view.people.entries.get(id);
+          if (!entry) return { error: 'no entry' };
+          const root = entry.view.root;
+          const tmp = root.position.clone();
+          const ys = [], xs = [], zs = [];
+          root.updateWorldMatrix(true, true);
+          root.traverse((o) => { if (o.isBone) { o.getWorldPosition(tmp); ys.push(tmp.y); xs.push(tmp.x); zs.push(tmp.z); } });
+          ys.sort((a, b) => a - b); xs.sort((a, b) => a - b); zs.sort((a, b) => a - b);
+          const p = h.game.state().people[id];
+          const r3 = (v) => Math.round(v * 1000) / 1000;
+          return { visible: entry.visible, rootVisible: root.visible, at: [r3(root.position.x), r3(root.position.y), r3(root.position.z)], scale: root.scale.x, stage: entry.view.stageHeight, anim: p.anim.id, outfit: p.outfits.current.category, bones: ys.length, y: [r3(ys[0]), r3(ys[ys.length - 1])], x: [r3(xs[0]), r3(xs[xs.length - 1])], z: [r3(zs[0]), r3(zs[zs.length - 1])], water: 0.015 };
+        }, swim.id);
+        console.log(`[m12-p] ${vp.id}: swim probe ${JSON.stringify(probe)}`);
+        // The head/shoulders must break the water plane while the rest of the body stays under it (faintly visible
+        // through the transparent water); the old standing-height sink left every bone below the basin floor.
+        note(`${vp.id}: the swimmer breaks the surface (head above, body under)`,
+          probe.visible === true && probe.y?.[1] > 0.05 && probe.y?.[0] < 0,
+          `bones y ${JSON.stringify(probe.y)} root=${probe.at?.[1]} xz ${JSON.stringify(probe.x)},${JSON.stringify(probe.z)}`);
+      }
       // A slightly wider shot than the idle view so the rim, the water and the swimmer all fit.
       const swimFrame = await framePool(page, built.pool, Math.round(ppm * 0.8));
       await page.screenshot({ path: join(OUT, `pool-swim-${vp.id}.png`) });

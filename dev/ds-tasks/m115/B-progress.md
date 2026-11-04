@@ -66,6 +66,10 @@ begins, with a unit test in `tests/unit/sim/actions.test.ts`.
 successful apply while paused so the check is stable for the screenshot), and the setting in the options screen.
 The script waits for each pill write and then disables the fill transition before capturing: SwiftShader at
 1280×720 renders too slowly for the 200 ms colour transition to have run when the DOM is read.
+Every screenshot is also checked against the saved PNG (the fill colour inside the pill's rect, and the white tick
+for completion), and the camera is placed with a fixed `rig.glideTo(x, z, ppm)` rather than `focusOn(closeUp)`:
+the guided game starts at a very high zoom, which `focusOn` keeps, and at that level the camera clips into the
+kitchen counter and the actor disappears behind it while the pill still projects above the countertop.
 
 ## Progress log
 
@@ -128,5 +132,17 @@ The script waits for each pill write and then disables the fill transition befor
     white check) and retries after closing any panel/menu that covers the overlay. The 700 ms completion state is
     held by freezing the pill controller's `performance.now()` while the slow SwiftShader screenshot is taken; the
     two actions are framed together with `focusOn` on their midpoint rather than the whole lot.
-- `npm run e2e` was started but the browser lock was held by other agents' visual runs for the whole session; the
-  result is recorded in the handover note when it completes.
+- `npm run e2e` — pass (exit 0, all portrait/landscape/desktop stages; screenshots in `tests/e2e/out/screenshots`).
+  It ran late in the session because the shared browser lock was held by other agents' visual runs.
+- Screenshot pixel audit: the first desktop-only rerun passed 14/15 checks. The failing check was the *white tick*,
+  not the pill: scanning the saved PNGs at the DOM-reported rect found the amber fill exactly where expected
+  (`rgb(218,182,37)` at the 30 % fill) and the green fill at 90 %/done, but the completion tick peaked at
+  `rgb(154,170,152)` — the shared 1.9/24 icon stroke is ~0.6 px at an 8 px check and never rasterises to white.
+  Fixed in `progressPills.ts`: the check is 10 px (8 px on phones) with a heavier `stroke-width` (4.5 / 5), so the
+  tick has a white core at 1×. Rasterising the same SVG at the pill's size confirms it: the old 8 px / 1.9 stroke
+  produces 0 white pixels (max channel 170, matching the screenshot's 154–170); the new 10 px / 4.5 and 8 px / 5
+  ticks produce 12 and 10 white pixels. The whole three-viewport set is regenerated and pixel-verified afterwards.
+- Diagnostic helpers kept next to the script (untracked working files; `rm` was blocked this session):
+  `dev/ds-tasks/m115/b-crop.test.ts`, `b-check-scan.test.ts`, `b-tick-render.test.ts` and `b-crop-vitest.config.ts`
+  (`npx vitest run --config dev/ds-tasks/m115/b-crop-vitest.config.ts`). They crop/scan the saved PNGs and rasterise
+  the tick; they are not part of the test suite.

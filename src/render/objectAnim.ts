@@ -645,7 +645,7 @@ export class ObjectAnim {
       for (const fx of xs) for (const fz of zs) {
         const ring = new THREE.Mesh(RING_GEO, e.ringMat);
         ring.position.set(box.x0 + fx * (box.x1 - box.x0), hobY, box.z0 + fz * (box.z1 - box.z0));
-        ring.scale.setScalar(0.06);
+        ring.scale.setScalar(0.06); // ~12 cm across: any larger and the two columns of rings touch
         g.add(ring);
         e.rings.push(ring);
       }

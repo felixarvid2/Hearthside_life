@@ -22,6 +22,8 @@ if (!process.env.HEARTHSIDE_D_SHOTS_LOCKED) {
   process.exit(r.status ?? 1);
 }
 const PORT = 5196;
+/** `--only=fridge` re-shoots just the two fridge states (quick iteration); default is the full set. */
+const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice('--only='.length) ?? '';
 const DIST = join(root, 'dist');
 const SHOTS = join(here, 'shots', 'D');
 mkdirSync(SHOTS, { recursive: true });
@@ -42,7 +44,7 @@ function launchOptions(chromium) {
   return opts;
 }
 
-const log = { checks: [], shots: [], viewports: [] };
+const log = { checks: [], shots: [], viewports: [], aims: [] };
 const check = (name, ok, evidence) => {
   log.checks.push({ name, ok, evidence });
   console.log(`[shots] ${ok ? 'ok  ' : 'FAIL'} ${name}${evidence ? ` — ${evidence}` : ''}`);
@@ -122,15 +124,47 @@ async function aimObject(page, objectId, yawStep, ppm, y) {
   await settle(page, 500);
 }
 
+/**
+ * Where the rig is and where the target and the person actually project, so framing can be checked from the
+ * JSON log instead of by eye. `rig.project` returns canvas CSS px; the canvas fills the page in these shots.
+ */
+async function logAim(page, vp, label, objectId) {
+  const info = await page.evaluate((id) => {
+    const th = window.hearthside;
+    const st = th.debug.state();
+    const lot = st.lots[st.activeLotId];
+    const o = lot.objects[id];
+    const def = th.core.content.objects[o.defId];
+    const rig = th.view.rig;
+    const at = (x, y, z) => {
+      const p = rig.project(x, y, z, { x: 0, y: 0, visible: false });
+      return { x: Math.round(p.x), y: Math.round(p.y) };
+    };
+    const p = st.people[st.households[st.activeHouseholdId].memberIds[0]].location;
+    const cx = o.x + def.footprint.w / 2, cz = o.z + def.footprint.d / 2;
+    return {
+      target: [Number(rig.target.x.toFixed(2)), Number(rig.target.z.toFixed(2))],
+      ppm: Math.round(rig.ppm), yawDeg: Math.round((rig.yaw * 180) / Math.PI),
+      insets: { ...rig.insets }, canvas: [rig.width, rig.height],
+      obj: [o.x, o.z], objScreen: at(cx, 0.5, cz), objTopScreen: at(cx, def.height ?? 1, cz),
+      person: p?.kind === 'lot' ? [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))] : null,
+      personScreen: p?.kind === 'lot' ? at(p.x, 0.5, p.z) : null,
+    };
+  }, objectId);
+  log.aims.push({ viewport: vp.name, label, ...info });
+}
+
 /** Candidate angles for one state at a close and a wide zoom; the best one is promoted to the required name later. */
 async function angleCandidates(page, vp, name, objectId, ppm, ppmWide, y) {
   for (let k = 0; k < 4; k++) {
     await aimObject(page, objectId, k, ppm, y);
     await shot(page, vp, `${name}-k${k}`);
+    await logAim(page, vp, `${name}-k${k}`, objectId);
   }
   for (let k = 0; k < 4; k++) {
     await aimObject(page, objectId, k, ppmWide, y);
     await shot(page, vp, `${name}-w${k}`);
+    await logAim(page, vp, `${name}-w${k}`, objectId);
   }
 }
 
@@ -233,10 +267,19 @@ async function main() {
         const shower = find('shower-stall');
         if (!fridge || !stove || !wardrobe || !shower) throw new Error('starter house is missing an appliance');
         // Stand the person at the fridge for the closed shot (no walking, no autonomy).
-        person.location = { kind: 'lot', lotId: st.activeLotId, x: fridge.x + 0.5, z: fridge.z + 1.35, level: 0 };
+        person.location = {
+          kind: 'lot', lotId: st.activeLotId, x: fridge.x + 0.5, z: fridge.z + 1.35, level: 0,
+          facing: Math.PI, posture: 'standing',
+        };
         person.anim = { id: 'idle', since: st.clock.minutes, loop: true };
+        // The other household members keep their spawn spots (the kitchen) and would stand in the wide shots;
+        // park them on the porch instead.
+        const others = st.households[st.activeHouseholdId].memberIds.filter((id) => id !== person.id);
+        for (const id of others) {
+          st.people[id].location = { kind: 'lot', lotId: st.activeLotId, x: 8.5, z: 18, level: 0, facing: 0, posture: 'standing' };
+        }
         return {
-          personId: person.id,
+          personId: person.id, others,
           fridgeId: fridge.id, stoveId: stove.id, wardrobeId: wardrobe.id, showerId: shower.id,
           fridgeAt: [fridge.x + 0.5, fridge.z + 1.35],
         };
@@ -244,11 +287,19 @@ async function main() {
       await page.evaluate(() => window.hearthside.view.lotChanged('objects'));
       await page.evaluate(() => window.hearthside.game.view.setCutaway('down'));
       await page.evaluate((id) => window.hearthside.game.select(id), setup.personId);
-      await page.waitForTimeout(500);
+      // The people view only follows `location` on a tick (it interpolates between tick positions) and then draws
+      // the previous tick's spot at alpha 0, so the teleport above is invisible until it runs. A forced setWorld
+      // re-syncs and snaps everyone to the state; without it the closed-fridge shot has no person at the fridge.
+      await page.evaluate(() => window.hearthside.debug.step(1));
+      await page.evaluate(() => { const st = window.hearthside.debug.state(); window.hearthside.view.setWorld(st, true); });
+      await page.waitForTimeout(700);
 
-      // 1. Closed fridge, person standing at it.
+      // 1. Closed fridge, person standing at it. Natural framing plus aimed candidates (the natural reveal keeps
+      //    the lot zoom and the pantry/plant can hide the fridge, so the candidates are the dependable evidence).
       await frameObject(page, setup.fridgeId);
       await shot(page, vp, 'fridge-closed');
+      await logAim(page, vp, 'fridge-closed', setup.fridgeId);
+      await angleCandidates(page, vp, 'fridge-closed', setup.fridgeId, 135, 85, 1.0);
 
       // 2. Open fridge during cookMeal stage 0 (reaching in).
       const queued = await queueOption(page, setup.fridgeId, 'cookMeal');
@@ -259,6 +310,13 @@ async function main() {
         await page.evaluate(() => window.hearthside.debug.step(3)); // let the 0.4 min door tween finish
         await settle(page);
         await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 85, 1.0);
+      }
+      // Quick iteration: `--only=fridge` re-shoots just the two fridge states in all three viewports.
+      if (ONLY === 'fridge') {
+        check(`${vp.name}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
+        log.viewports.push({ ...vp, setup });
+        await context.close();
+        continue;
       }
 
       // 3. Stove cooking: same chain, stage 1, with rings, pot and steam.
@@ -280,6 +338,8 @@ async function main() {
         await settle(page);
         await frameObject(page, setup.wardrobeId);
         await shot(page, vp, 'wardrobe-open');
+        await logAim(page, vp, 'wardrobe-open', setup.wardrobeId);
+        await angleCandidates(page, vp, 'wardrobe-open', setup.wardrobeId, 150, 95, 1.1);
       }
 
       // 5. Shower running.
@@ -302,7 +362,7 @@ async function main() {
     await browser?.close().catch(() => undefined);
     server.kill('SIGTERM');
   }
-  writeFileSync(join(SHOTS, 'd-log.json'), JSON.stringify(log, null, 2));
+  writeFileSync(join(SHOTS, ONLY ? `d-log-${ONLY}.json` : 'd-log.json'), JSON.stringify(log, null, 2));
   const failed = log.checks.filter((c) => !c.ok);
   console.log(`[shots] ${log.checks.length - failed.length}/${log.checks.length} checks passed, ${log.shots.length} screenshots`);
   if (failed.length) process.exitCode = 1;

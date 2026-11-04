@@ -59,10 +59,31 @@ Phone interactions have no screen quad of their own, but they are in the table s
 test asserts every interaction whose perform animation is `computer`, `watchTv` or `phone` has an explicit entry, and
 that every id in the table exists in the content database.
 
+## Screenshot method and pitfalls
+
+`shoot-s.mjs` self-locks `/tmp/hearthside-browser.lock`, builds to `tests/e2e/out/dist-m115s`, serves it on
+5201 and drives everything through `debug.step`/`debug.frame`, so `game.state()` is deterministic between steps.
+
+- **The game's own rAF loop is cancelled** after the initial settle. A frame slipping in between the re-aim and
+  the screenshot ran `Game.step` and could start a UI camera glide that reset the close-up zoom (the first run
+  produced 45° wide shots despite `aim` reporting ppm 400). With the loop stopped, every frame is the script's.
+- **The shot re-aims last**, after the 12 settle frames: the UI lays out its panels asynchronously, which moves
+  the uncovered area and therefore the framing. The log records the camera at capture time.
+- **Off shots clear every person**, not just the actor. A second household member autonomously switched the TV
+  back on in the first run; `clearAllActions` cancels all lot members' queues, steps 40 ticks, then cancels again.
+- **TV framing fits the short viewport.** The watcher sits along the view axis, so camera pitch separates the TV
+  from the person vertically. At 190 ppm the landscape shot cut the TV's top edge; the zoom is now
+  `min(190, width/3.2, height/3.4)` so the whole glass, the watcher's head and feet stay in frame in all three
+  viewports. The shot's check projects the glass corners and the watcher's head, not just the centre.
+
 ## Checks
 
+- `npx tsc --noEmit` — clean.
 - `npx vitest run tests/unit/content/screens.test.ts tests/unit/render/screenPrograms.test.ts` — 31 passed.
+- Full `npx vitest run` — 2016 passed, 3 failed, all outside this task and already failing in the shared tree:
+  `tests/unit/integration/travel.test.ts` autonomy assertion (`introduce` started with autonomy off) and two
+  `tests/unit/surfaces/painters.test.ts` tests that time out at the default 5 s while every agent builds; the
+  first painters test has a 120 s allowance and passes, so the timeouts are CPU contention, not regressions.
 - `npm run content:check` — 0 errors, 0 warnings.
-- `npx tsc --noEmit` — our files are clean. Remaining errors belong to other agents' in-progress files
-  (`src/render/actionProgress.ts`, `tests/unit/tmp-bones.test.ts`); re-run before the final commit.
+- `npm run build` — 329 modules, built in 14.2 s.
 - Screenshots/check log: see below (filled in after the script run).
