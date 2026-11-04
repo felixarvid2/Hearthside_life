@@ -143,6 +143,32 @@ switch is visible because `switchOutfit` updates `p.outfits.current`, which the 
   nobody stranded.
 - `dev/ds-tasks/m12/p-shots.mjs`: screenshots of a built pool with someone swimming in all three viewports.
 
+### Implementation notes (what actually shipped)
+
+- `src/building/poolPlans.ts` — pure `planPool` with preview/highlight/measure/diff, `PoolRequest` kinds
+  `pool | erasePool | moveLadder | addLadder | removeLadder`, min 2x3 / max 12x12, lot bounds, walls/openings on the
+  rim, level-0 object footprints (any layer), floors at level 1 above, other pools, people inside. Auto-ladder on the
+  middle tile of a short side, but only where the deck tile is free and reachable; an explicit ladder must be an edge
+  tile. Cost `pricePerTile * tiles`, same-day full refund / 80 % later (`boughtAt`).
+- **Bug found by the tests:** the "does the pool cut the lot off?" check reused the exterior-plan logic, which treated
+  every tile that was free and reachable before but blocked after as "cut off" — including the new pool's own water
+  tiles, so *every* pool in open ground was rejected. Fixed by skipping tiles that are built on (occupied before or
+  after, or already blocked/walkable before). The regression is covered by the wall-gap test in `poolPlans.test.ts`.
+- Commands in `src/building/poolCommands.ts` (`buildPool`, `removePool`, `movePoolLadder`, `addPoolLadder`,
+  `removePoolLadder`, `poolCommand`) are ordinary `UndoableCommand`s; money goes through `transact`/`chargeFor` and
+  `saleValue`, and they emit `lot.changed` with `what: 'pools'` (nav cache + running actions revalidate).
+- Nav (`src/world/navgrid.ts`) marks level-0 water with occupant `pool:<id>`; ladders are scripted links, not edges.
+  `src/world/levels.ts` seeds/spreads reachability as before, so the deck stays reachable and the lot check sees a
+  blocked pool correctly.
+- `src/sim/pool.ts` runs the scripted stages `toDeck -> enter -> swim -> exit` in `a.data.stage`; `cancelGraceful`
+  moves a swimmer into `exit`, `end()` has a rescue fallback that puts anyone still in water on the nearest deck, and
+  `getOutOfPool` requests the same graceful exit. Swimming is gated by `ages`, and `check()` refuses an outdoor pool
+  while it snows ("It is snowing."), while a pool under a roof stays open.
+- Autonomy adds pool candidates (fun utility) in `src/sim/autonomy.ts`; `src/sim/options.ts` offers Swim / Relax on
+  water and Get Out while a pool action runs.
+- Renderer: `src/render/poolView.ts` (basin, coping, shader water, ladder), `environment.ts` cuts the ground hole and
+  `terrainView.ts` skips water tiles; `peopleView.ts` sinks swimmers so head and shoulders are above the surface.
+
 ## Decisions
 
 - Pool interactions use explicit `ages` rather than touching `gating.ts`.

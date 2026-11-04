@@ -2,9 +2,10 @@
 // rendering (snow, rain, clear) and the four new settings, in portrait 390x844, landscape 844x390 and desktop
 // 1280x720. Self-locks /tmp/hearthside-browser.lock and builds its own copy of the game.
 //
-//   flock /tmp/hearthside-browser.lock node dev/ds-tasks/m12/shoot-w.mjs
+//   npm run visual:m12:weather
 //
-// Screenshots go to dev/ds-tasks/m12/shots/W/.
+// The script takes /tmp/hearthside-browser.lock itself (like the e2e scripts), so do not wrap it in flock: an outer
+// lock would wait on the inner one forever. Screenshots go to dev/ds-tasks/m12/shots/W/.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';

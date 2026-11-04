@@ -1,0 +1,27 @@
+[
+  {
+    "name": "portrait: the Build panel has a Pool section with styles and tools",
+    "ok": true,
+    "evidence": "cards=azure-mosaic,lagoon-tile,terracotta-tile modes=draw,remove,ladder,move,add,remove tool={\"kind\":\"pool\",\"styleId\":\"azure-mosaic\"} box={\"w\":346,\"h\":327,\"top\":436,\"bottom\":764}"
+  },
+  {
+    "name": "portrait: the pool styles are selectable cards with a price",
+    "ok": true,
+    "evidence": "azure-mosaic:110x163 lagoon-tile:110x163 terracotta-tile:110x163"
+  },
+  {
+    "name": "portrait: a pool rectangle previews as buildable",
+    "ok": true,
+    "evidence": "Build azure mosaic pool (4 x 3 m) 4 x 3 m (12 m2) $264.00 at {\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20}"
+  },
+  {
+    "name": "portrait: confirming builds one pool with a ladder",
+    "ok": true,
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4n\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+  },
+  {
+    "name": "portrait: the pool costs the posted price",
+    "ok": true,
+    "evidence": "cost=26400 preview=26400"
+  }
+]

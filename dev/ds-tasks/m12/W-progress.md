@@ -77,4 +77,32 @@ determinism/distribution, persistence, moodlet cooldown/rules, gating reasons an
   the weatherEffects setting hide the mesh entirely while the light tint remains.
 
 ## Check results
-(to fill after running typecheck/test/content:check/build/e2e and the visual script)
+
+Checked at the end of the task (2026-11-04) on a machine shared with the other Milestone 12 agents, so the heavy
+checks were run more than once and the slower runs are called out below.
+
+- `npm run typecheck` - pass, 0 errors. Earlier in the session it failed only in the parallel pool agent's files
+  (`src/building/poolPlans.ts`, `src/sim/pool.ts`, `src/render/gameView.ts`, `src/persistence/schema.ts`); those were
+  fixed by that agent before the final run, which is clean.
+- `npm test` (vitest, 148 files / 1911 tests) - 1907 passed, 4 failed:
+  - `tests/unit/integration/travel.test.ts` "the household's own autonomy setting rules on every lot: with it off,
+    guests and patrons wait for orders": expected `[]`, got `['introduce']`. Pre-existing and unrelated to weather (it
+    also fails without these changes); left untouched.
+  - three `tests/unit/surfaces/painters.test.ts` cases hit the suite's 5 s default timeout while the full 148-file run
+    was competing with the other agents' work (`tests` time 641 s). Run alone they pass 17/17 in 26 s, so this is load,
+    not a regression.
+- `npm run content:check` - 0 errors, 0 warnings.
+- `npm run build` - OK (built repeatedly by the visual script; only the pre-existing chunk-size and dynamic-import
+  warnings).
+- `npm run e2e` - OK in desktop 1280x720, portrait 390x844 and landscape 844x390 (exit 0; screenshots in
+  `tests/e2e/out/screenshots`; night luminance/contrast in the usual range).
+- Visual check `npm run visual:m12:weather` (`dev/ds-tasks/m12/shoot-w.mjs`, self-locks
+  `/tmp/hearthside-browser.lock`) - 29/29 checks passed across the three viewports; screenshots in
+  `dev/ds-tasks/m12/shots/W/` (`winter-snow-*`, `forecast-*`, `autumn-rain-*`, `spring-clear-*`,
+  `winter-snow-interior-*`, `settings-*`). It checks the clock chip text/title/aria-label
+  ("Winter, day 1 - Snow", "Autumn, day 3 - Rain", "Spring, day 2 - Clear"), both icons, the feed forecast line, the
+  four settings (present, enabled, and on desktop they write the world/device setting) and that no page errors occur.
+  The settings list is long, so the script scrolls the season controls into view before the screenshot (they are
+  below the fold in portrait and landscape). The HUD chip refreshes on its 250 ms timer, so the script waits for the
+  expected label before reading or screenshotting; the first runs raced that timer and read the previous sky.
+- API key scan of the working tree before hand-off - no matches (filenames only; `/home/user/apis` was never read).

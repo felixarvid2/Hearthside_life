@@ -90,6 +90,8 @@ async function openPoolTool(page) {
   await tab.evaluate((e) => e.scrollIntoView({ inline: 'nearest', block: 'nearest' }));
   await tab.click({ timeout: 30000 });
   await page.waitForSelector('.bb-tool-section[data-section="pool"]', { state: 'visible', timeout: 30000 });
+  // The tab strip is horizontal; centre the active Pool tab so the screenshot shows which tool is open.
+  await page.evaluate(() => document.querySelector('.bb-tool-tabs .tab[data-id="tool-pool"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
   await page.waitForTimeout(400);
 }
 
@@ -118,14 +120,14 @@ async function poolPanelState(page) {
  * Picks a free 4 x 3 spot on the ground (south yard first, away from the front path), previews it so the highlight is
  * visible for a screenshot, and returns the rectangle plus the preview.
  */
-async function previewPool(page) {
-  return page.evaluate(() => {
+async function previewPool(page, ppm) {
+  return page.evaluate(([ppmArg]) => {
     const h = window.hearthside, g = h.game, st = g.state();
     const lot = st.lots[st.activeLotId];
     const misses = [];
-    const find = (zFrom, zTo, xTo) => {
+    const find = (zFrom, zTo, xFrom, xTo) => {
       for (let z0 = zFrom; z0 <= zTo; z0++) {
-        for (let x0 = 1; x0 + 3 <= xTo; x0++) {
+        for (let x0 = xFrom; x0 + 3 <= xTo; x0++) {
           const target = { from: { x: x0, z: z0 }, to: { x: x0 + 3, z: z0 + 2 } };
           const pv = g.buildPreview(target);
           if (!pv) continue;
@@ -135,14 +137,23 @@ async function previewPool(page) {
       }
       return null;
     };
-    // South yard (the guided starter house ends at z = 17), west of the front path (x 8..12) first; then anywhere.
-    const pick = find(Math.max(1, lot.depth - 7), lot.depth - 2, 7)
-      ?? find(1, Math.max(1, lot.depth - 2), lot.width - 2);
+    // South yard (the guided starter house ends at z = 17), east of the front path (x 8..12) so the open Build panel
+    // does not cover it on desktop; then west of the path; then anywhere.
+    const southFrom = Math.max(1, lot.depth - 7), southTo = lot.depth - 2, xMax = Math.min(lot.width - 2, 19);
+    const pick = find(southFrom, southTo, 13, xMax)
+      ?? find(southFrom, southTo, 1, 7)
+      ?? find(1, Math.max(1, lot.depth - 2), 1, lot.width - 2);
     if (!pick) return { ok: false, misses };
     const target = { from: { x: pick.rect.x0, z: pick.rect.z0 }, to: { x: pick.rect.x1, z: pick.rect.z1 } };
     const pv = g.buildPreview(target);
+    // Frame the rectangle so the highlight is actually in the picture (Build mode keeps the simulation paused).
+    const cx = (pick.rect.x0 + pick.rect.x1 + 1) / 2, cz = (pick.rect.z0 + pick.rect.z1 + 1) / 2;
+    h.view.setCutaway('cutaway');
+    h.view.rig.setYawStep(0);
+    h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
+    h.debug.frame(1 / 30);
     return { ok: true, rect: pick.rect, charge: pick.charge, measure: pick.measure, label: pick.label, misses, preview: { ok: pv?.ok ?? false, cost: pv?.cost ?? 0 } };
-  });
+  }, [ppm]);
 }
 
 /** Applies the previewed pool and reads the built state back. */
@@ -164,17 +175,24 @@ async function buildPool(page, rect) {
 
 /** Queues a swim for an adult/teen, steps until they are in the water and swims, then frames the pool. */
 async function startSwim(page, pool, ppm) {
-  const r = await page.evaluate(([poolArg]) => {
+  const r = await page.evaluate(([poolArg, ppm]) => {
     const h = window.hearthside, g = h.game, st = g.state();
     g.setMode('live');
     const hh = st.households[st.activeHouseholdId];
     const stageOf = (id) => st.people[id]?.lifeStage;
     const canSwim = ['child', 'teen', 'youngAdult', 'adult', 'elder'];
-    const id = hh.memberIds.find((m) => canSwim.includes(stageOf(m)) && st.people[m].location.kind === 'lot');
+    const onLot = (m) => canSwim.includes(stageOf(m)) && st.people[m].location.kind === 'lot';
+    // A free person makes the shot deterministic; otherwise take whoever is home and clear their queue.
+    const id = hh.memberIds.find((m) => onLot(m) && st.people[m].queue.length === 0 && st.people[m].anim.id !== 'sleep')
+      ?? hh.memberIds.find(onLot);
     if (!id) return { ok: false, reason: 'no swimmer' };
+    for (const a of [...st.people[id].queue]) g.cancel(id, a.id);
+    h.debug.step(2);
+    // Autonomy may have picked something new in those two ticks; clear it so the swim starts at once.
+    for (const a of [...st.people[id].queue]) g.cancel(id, a.id);
     const cx = Math.floor((poolArg.x0 + poolArg.x1) / 2);
     const cz = Math.floor((poolArg.z0 + poolArg.z1) / 2);
-    const opts = g.options(id, { kind: 'tile', x: cx, z: cz, level: 0 });
+    const opts = g.options(id, { kind: 'floor', tile: { x: cx, z: cz }, level: 0 });
     const opt = opts.find((o) => o.interactionId === 'swimInPool' && o.enabled);
     if (!opt) return { ok: false, reason: `no swim option (${opts.map((o) => `${o.interactionId}:${o.enabled}`).join(', ')})` };
     const q = g.queue(id, opt);
@@ -182,7 +200,9 @@ async function startSwim(page, pool, ppm) {
     let swimTick = -1;
     for (let i = 0; i < 400; i++) {
       h.debug.step(1);
-      if (st.people[id].anim.id === 'swim') { swimTick = i; break; }
+      const head = st.people[id].queue[0];
+      // The swim stage, not the climb in/out (both use the swim animation).
+      if (st.people[id].anim.id === 'swim' && head?.data.stage === 'swim') { swimTick = i; break; }
     }
     const p = st.people[id];
     const loc = p.location;
@@ -199,7 +219,7 @@ async function startSwim(page, pool, ppm) {
       inWater, outfit: p.outfits.current.category, needs: { fun: Math.round(p.needs.fun), hygiene: Math.round(p.needs.hygiene) },
       head: head?.interactionId ?? null, stage: head?.data?.stage ?? null,
     };
-  }, [pool]);
+  }, [pool, ppm]);
   await frames(page, 10);
   return r;
 }
@@ -239,23 +259,32 @@ async function main() {
       await page.screenshot({ path: join(OUT, `pool-panel-${vp.id}.png`) });
 
       // 2. A previewed rectangle: the highlight is drawn on the ground before confirming.
-      const prev = await previewPool(page);
+      const ppm = Math.round(Math.min(60, Math.max(26, Math.min(vp.width, vp.height) / 9)));
+      const prev = await previewPool(page, ppm);
       note(`${vp.id}: a pool rectangle previews as buildable`, prev.ok === true, prev.ok ? `${prev.label} ${prev.measure} $${(prev.charge / 100).toFixed(2)} at ${JSON.stringify(prev.rect)}` : `misses=${JSON.stringify(prev.misses)}`);
       if (!prev.ok) { await context.close(); continue; }
       await frames(page, 4);
       await page.screenshot({ path: join(OUT, `pool-preview-${vp.id}.png`) });
 
-      // 3. Built: the basin, coping and ladder are in the world and the charge is exact.
+      // 3. Built: the basin, coping and ladder are in the world and the charge is exact. Frame it in live mode so the
+      // open Build panel does not hide half of the screenshot.
       const built = await buildPool(page, prev.rect);
       note(`${vp.id}: confirming builds one pool with a ladder`, built.ok && built.pools === 1 && built.pool?.ladders?.length >= 1,
         `${built.ok ? 'ok' : built.reason} pools=${built.pools} pool=${JSON.stringify(built.pool)}`);
       note(`${vp.id}: the pool costs the posted price`, built.cost === prev.charge, `cost=${built.cost} preview=${prev.charge}`);
       if (!built.ok || !built.pool) { await context.close(); continue; }
-      await frames(page, 6);
+      await page.evaluate(([pool, ppmArg]) => {
+        const h = window.hearthside;
+        h.game.setMode('live');
+        const cx = (pool.x0 + pool.x1 + 1) / 2, cz = (pool.z0 + pool.z1 + 1) / 2;
+        h.view.setCutaway('cutaway');
+        h.view.rig.setYawStep(0);
+        h.view.rig.glideTo(cx, cz, ppmArg, 0, 0.2);
+      }, [built.pool, ppm]);
+      await frames(page, 8);
       await page.screenshot({ path: join(OUT, `pool-built-${vp.id}.png`) });
 
       // 4. Someone changes into swimwear, climbs in and swims; the camera frames the water.
-      const ppm = Math.round(Math.min(60, Math.max(26, Math.min(vp.width, vp.height) / 9)));
       const swim = await startSwim(page, built.pool, ppm);
       note(`${vp.id}: a household member is swimming in the built pool`,
         swim.ok && swim.inWater && swim.anim === 'swim' && swim.outfit === 'swim',
@@ -263,12 +292,12 @@ async function main() {
       await page.screenshot({ path: join(OUT, `pool-swim-${vp.id}.png`) });
 
       // 5. Get Out still exists while swimming and is offered in the context menu.
-      const getOut = await page.evaluate(([id, pool]) => {
+      const getOut = swim.ok ? await page.evaluate(([id, pool]) => {
         const g = window.hearthside.game;
         const cx = Math.floor((pool.x0 + pool.x1) / 2), cz = Math.floor((pool.z0 + pool.z1) / 2);
-        const opts = g.options(id, { kind: 'tile', x: cx, z: cz, level: 0 });
+        const opts = g.options(id, { kind: 'floor', tile: { x: cx, z: cz }, level: 0 });
         return opts.map((o) => ({ id: o.interactionId, enabled: o.enabled }));
-      }, [swim.id, built.pool]);
+      }, [swim.id, built.pool]) : [];
       note(`${vp.id}: Get Out is offered while swimming`, getOut.some((o) => o.id === 'getOutOfPool' && o.enabled), JSON.stringify(getOut.filter((o) => o.id === 'getOutOfPool')));
 
       note(`${vp.id}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' / '));
