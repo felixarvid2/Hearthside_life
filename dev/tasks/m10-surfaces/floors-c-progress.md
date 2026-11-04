@@ -7,7 +7,8 @@ Families reach their targets with the older designs: carpet 24, concrete 12, ext
 
 | id | name | painter | key source / layout |
 |---|---|---|---|
-| carpet-rocket-kids | Rocket Play Carpet | map-floor | pile-shag |
+| carpet-rocket-kids | Rocket Play Carpet | motif-floor | motif-rocket, fibre-berber / scatter |
+| carpet-shag | Shag Pile | map-floor | pile-shag |
 | carpet-saxony | Saxony Cut Pile | map-floor | pile-saxony |
 | carpet-frieze | Frieze Twist | map-floor | pile-frieze |
 | carpet-velvet | Velvet Plush | map-floor | pile-velvet |
@@ -22,7 +23,12 @@ Families reach their targets with the older designs: carpet 24, concrete 12, ext
 | carpet-houndstooth | Houndstooth Wool | carpet-pattern |  / houndstooth |
 | carpet-tartan | Tartan Plaid | carpet-pattern |  / tartan |
 | carpet-trellis | Diamond Trellis | carpet-pattern |  / trellis |
-| carpet-stars | Starry Nursery Carpet | map-floor | concrete-trowel |
+| carpet-stars | Starry Nursery Carpet | motif-floor | motif-star, pile-loop-fine / scatter |
+| carpet-medallion | Medallion Carpet | motif-floor | motif-medallion, wool-tweed / grid |
+| carpet-paisley | Paisley Carpet | motif-floor | motif-paisley, wool-boucle / half-drop |
+| carpet-paw-prints | Paw Print Carpet | motif-floor | motif-paw, pile-loop-fine / brick |
+| carpet-kilim | Kilim Diamond Carpet | motif-floor | motif-kilim, wool-tweed / tile |
+| concrete-power-float | Power-Floated Concrete | map-floor | concrete-trowel |
 | concrete-saw-cut | Saw-Cut Concrete Slabs | map-floor | concrete-smooth |
 | concrete-broomed | Broomed Concrete | map-floor | concrete-broom |
 | concrete-acid-stain | Acid-Stained Concrete | map-floor | concrete-stain |
@@ -46,7 +52,7 @@ Families reach their targets with the older designs: carpet 24, concrete 12, ext
 | ext-crushed-slate | Crushed Slate Chippings | map-floor | slate-chips |
 | ext-river-pebbles | River Pebbles | map-floor | pebbles-river |
 | ext-resin-bound | Resin Bound Gravel | map-floor | resin-gravel |
-| ext-grass-pavers | Grass Block Paving | grass-pavers | paver-concrete |
+| ext-grass-pavers | Grass Block Paving | grass-pavers | paver-concrete, lawn |
 | ext-fan-setts | Fan Pattern Setts | fan-setts | granite-sett |
 | ext-raked-gravel | Raked Zen Gravel | raked-garden | gravel |
 
