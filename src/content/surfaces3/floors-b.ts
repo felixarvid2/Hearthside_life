@@ -97,7 +97,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     palettes: tilePals(['white', 'greige', 'sky', 'olive', 'teal', 'forest', 'black', 'mustard']),
   }),
   floor({
-    id: 'tile-herringbone-gloss', name: 'Glazed Herringbone',
+    id: 'tile-herringbone-gloss', name: 'Glazed Herringbone Floor',
     description: 'Small 5 by 20 cm glazed tiles in a straight herringbone zigzag, a lively weave that suits any narrow hall.',
     family: 'tile', tags: ['tile', 'ceramic', 'herringbone', 'glazed', 'classic', 'hall', 'kitchen', 'bathroom'],
     packs: ['classic-townhouse', 'coastal-home'], price: 22,
@@ -145,7 +145,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     palettes: tilePals(['white', 'cream', 'greige', 'sage', 'terracotta', 'teal', 'charcoal', 'navy']),
   }),
   floor({
-    id: 'tile-picket', name: 'Picket Tile',
+    id: 'tile-picket-floor', name: 'Picket Floor Tile',
     description: 'Elongated hexagon pickets, 8 cm wide and 25 cm tall, in glossy hand-glazed ceramic. Like honeycomb pulled long.',
     family: 'tile', tags: ['tile', 'ceramic', 'picket', 'elongated-hexagon', 'glazed', 'handmade', 'bathroom', 'kitchen', 'hall'],
     packs: ['coastal-home', 'mid-century'], price: 36,
@@ -153,7 +153,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     palettes: tilePals(['white', 'cream', 'blush', 'sky', 'sage', 'teal', 'forest', 'burgundy']),
   }),
   floor({
-    id: 'tile-octagon-dot', name: 'Octagon and Dot',
+    id: 'tile-octagon-dot-floor', name: 'Octagon and Dot Floor',
     description: 'Large octagons with small diamond cabochons at the corners: a Victorian lay that suits a cottage kitchen.',
     family: 'tile', tags: ['tile', 'ceramic', 'octagon', 'dot', 'victorian', 'classic', 'kitchen', 'hall', 'bathroom'],
     packs: ['classic-townhouse', 'cozy-cottage'], price: 29,
@@ -162,7 +162,7 @@ export const FLOORS_B: SurfaceDesign[] = [
       { cream: { alt: '#8f7b5a', accent: '#2f5a46' }, white: { accent: '#2b2c30' }, greige: { accent: '#3b3c40' }, sage: { accent: '#2f4a3c' }, navy: { accent: '#e8e2d2' }, forest: { accent: '#e8e2d2' }, burgundy: { accent: '#e9dcc4' }, charcoal: { accent: '#e8e2d2' } }),
   }),
   floor({
-    id: 'tile-fish-scale', name: 'Fish Scale Tile',
+    id: 'tile-fish-scale-floor', name: 'Fish Scale Floor Tile',
     description: 'Rounded 10 cm scales overlapping row on row like a mermaid\'s tail, each tile glazed a slightly different shade.',
     family: 'tile', tags: ['tile', 'ceramic', 'fish-scale', 'scallop', 'glazed', 'handmade', 'bathroom', 'hall', 'coastal'],
     packs: ['coastal-home', 'art-deco'], price: 38,
@@ -246,7 +246,7 @@ export const FLOORS_B: SurfaceDesign[] = [
       { white: { alt: '#a9c7d6', accent: '#2f7f80' }, cream: { alt: '#9db094', accent: '#c1694a' }, sky: { alt: '#f2efe6', accent: '#26344f' }, sage: { alt: '#e8dfc9', accent: '#2f4a3c' }, teal: { alt: '#a9c7d6', accent: '#f0eee8' }, navy: { alt: '#a9c7d6', accent: '#e8e2d2' }, mustard: { alt: '#c1694a', accent: '#f0eee8' }, terracotta: { alt: '#d4a23a', accent: '#efe3cf' } }),
   }),
   floor({
-    id: 'mosaic-pebble', name: 'River Pebble Mosaic',
+    id: 'mosaic-pebble', name: 'River Pebble Floor Mosaic',
     description: 'Smooth pebbles set edge to edge in grey cement: a barefoot shower floor with no two stones alike.',
     family: 'tile', tags: ['tile', 'mosaic', 'pebble', 'river-stone', 'natural', 'bathroom', 'spa', 'shower', 'garden'],
     packs: ['garden-patio', 'coastal-home'], price: 48,
@@ -387,7 +387,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     palettes: stonePals(['ivory', 'rose', 'greige', 'sage', 'silver', 'taupe', 'blue', 'charcoal']),
   }),
   floor({
-    id: 'stone-terrazzo-hex', name: 'Terrazzo Hexagon',
+    id: 'stone-terrazzo-hex', name: 'Terrazzo Hex Floor',
     description: 'Fine-chip terrazzo cast into 20 cm hexagons and laid like honeycomb with slim brass-toned joints.',
     family: 'stone', tags: ['terrazzo', 'hexagon', 'honeycomb', 'fine-chip', 'retro', 'kitchen', 'bathroom', 'hall'],
     packs: ['mid-century', 'modern-minimal'], price: 46,

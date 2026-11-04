@@ -138,7 +138,6 @@ export const MATERIAL_MAP_IDS = [
   'stone-sandstone',
   'stone-slate',
   'stone-terrazzo',
-  'stone-travertine',
   'stone-travertine-wall',
   'stucco-crumbling',
   'wall-cork',

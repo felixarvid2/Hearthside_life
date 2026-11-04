@@ -582,12 +582,19 @@ const fanSetts: PainterDef = {
           ctx.beginPath();
           polygonPath(ctx, [quad[2] as Pt, quad[3] as Pt, [(quad[3] as Pt)[0] * 0.8 + cx * 0.2, (quad[3] as Pt)[1] * 0.8 + cy * 0.2], [(quad[2] as Pt)[0] * 0.8 + cx * 0.2, (quad[2] as Pt)[1] * 0.8 + cy * 0.2]]);
           ctx.fill();
-          if (mapId !== '' && rng.next() < 0.5) {
-            ctx.fillStyle = rgba(shade(fill, -0.4), 0.3);
-            const d = hair(s, 0.003, 1);
-            ctx.fillRect(cx + (Math.cos((a0 + a1) / 2) * (r0 + r1)) / 2, cy + (Math.sin((a0 + a1) / 2) * (r0 + r1)) / 2, d, d);
-          }
         }
+      }
+      // stone texture: the map drawn neutral and translucent over the whole fan
+      const img = mapId === '' ? null : surfaceMapImage(mapId, ['#808080', '#ffffff', '#000000']);
+      if (img) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, TAU);
+        ctx.clip();
+        ctx.globalAlpha = 0.32;
+        drawMapRect(ctx, img, cx - R, cy - R, 2 * R, 2 * R, 0.5, cx - R - (row * 0.13 + i * 0.07) % 0.5, cy - R - (i * 0.11 + row * 0.05) % 0.5, s.ppm);
+        ctx.globalAlpha = 1;
+        ctx.restore();
       }
     };
     const fanAt = (row: number, i: number, dy: number) => {
