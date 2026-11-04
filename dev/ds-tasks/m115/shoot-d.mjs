@@ -122,11 +122,15 @@ async function aimObject(page, objectId, yawStep, ppm, y) {
   await settle(page, 500);
 }
 
-/** Candidate angles for one state; the best one is promoted to the required file name afterwards. */
-async function angleCandidates(page, vp, name, objectId, ppm, y) {
+/** Candidate angles for one state at a close and a wide zoom; the best one is promoted to the required name later. */
+async function angleCandidates(page, vp, name, objectId, ppm, ppmWide, y) {
   for (let k = 0; k < 4; k++) {
     await aimObject(page, objectId, k, ppm, y);
     await shot(page, vp, `${name}-k${k}`);
+  }
+  for (let k = 0; k < 4; k++) {
+    await aimObject(page, objectId, k, ppmWide, y);
+    await shot(page, vp, `${name}-w${k}`);
   }
 }
 
@@ -254,7 +258,7 @@ async function main() {
       if (reaching) {
         await page.evaluate(() => window.hearthside.debug.step(3)); // let the 0.4 min door tween finish
         await settle(page);
-        await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 1.0);
+        await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 85, 1.0);
       }
 
       // 3. Stove cooking: same chain, stage 1, with rings, pot and steam.
@@ -262,7 +266,7 @@ async function main() {
       check(`${vp.name}: cookMeal reaches the stove stage`, !!cooking, cooking ? `stage 1 at ${cooking.elapsed} min` : 'never');
       if (cooking) {
         await settle(page, 900); // steam rises in real time
-        await angleCandidates(page, vp, 'stove-cooking', setup.stoveId, 150, 0.95);
+        await angleCandidates(page, vp, 'stove-cooking', setup.stoveId, 150, 100, 0.95);
       }
 
       // 4. Wardrobe open while changing outfit.
@@ -286,7 +290,7 @@ async function main() {
       check(`${vp.name}: takeShower reaches the shower`, !!showering, showering ? `at ${showering.elapsed} min` : 'never');
       if (showering) {
         await settle(page, 1100);
-        await angleCandidates(page, vp, 'shower-running', setup.showerId, 130, 1.2);
+        await angleCandidates(page, vp, 'shower-running', setup.showerId, 130, 85, 1.2);
       }
 
       check(`${vp.name}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
