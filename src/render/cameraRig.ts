@@ -73,9 +73,14 @@ export class CameraRig {
   }
 
   rotate(dir: 1 | -1): void {
+    // A turn that arrives while the previous one is still animating adds a quarter turn to its
+    // destination. Starting from the mid-animation angle instead (the old behaviour) dropped part of
+    // every quick second tap and left the camera off the 45-degree grid for good, so a wall that the
+    // view was supposed to have turned towards stayed hidden behind another one.
+    const base = this.turn ? this.turn.to : this.yaw;
     const from = this.yaw;
     this.k = (((this.k + dir) % 4) + 4) % 4;
-    const to = from + dir * 90 * DEG;
+    const to = base + dir * 90 * DEG;
     if (this.reducedMotion) { this.yaw = to; this.turn = null; }
     else this.turn = { from, to, t: 0, dur: 0.42 };
     this.dirty = true;

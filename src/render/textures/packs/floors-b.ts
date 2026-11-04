@@ -121,10 +121,20 @@ export function cellFor(layout: Layout, s: PaintSpec): Cell {
       return { tiles, b1: [2 * B, 0], b2: [0, 2 * B] };
     }
     case 'hopscotch': {
-      const a = L, b = Wd;
+      // Classic hopscotch / pinwheel. One unit is a large square a with a small square b at one corner and the two
+      // slim bars that fill the rest of the (a + b) square. Alternate rows mirror the unit, so the large squares of
+      // each row sit b to the left of the row above (the small tile's width) and the pins pinwheel through the field.
+      // The bars take the large tile's slot so it reads as squares rather than a plaid of bars; the small square takes
+      // the alt tone with `checker` (accent otherwise). The cell spans two rows, so the repeat is (a + b) x 2(a + b).
+      const a = L, b = Wd, small = checker ? 1 : 2, S = a + b;
       return {
-        tiles: [{ pts: rectPts(0, 0, a, a), t: 0 }, { pts: rectPts(a, a, b, b), t: 2 }, { pts: rectPts(a, 0, b, a), t: checker ? 1 : 0 }, { pts: rectPts(0, a, a, b), t: checker ? 1 : 0 }],
-        b1: [a + b, 0], b2: [0, a + b],
+        tiles: [
+          { pts: rectPts(0, 0, a, a), t: 0 }, { pts: rectPts(a, a, b, b), t: small },
+          { pts: rectPts(a, 0, b, a), t: 0 }, { pts: rectPts(0, a, a, b), t: 0 },
+          { pts: rectPts(b, S, a, a), t: 0 }, { pts: rectPts(0, S + a, b, b), t: small },
+          { pts: rectPts(0, S, b, a), t: 0 }, { pts: rectPts(b, S + a, a, b), t: 0 },
+        ],
+        b1: [S, 0], b2: [0, 2 * S],
       };
     }
     case 'hex': {
@@ -480,7 +490,7 @@ const tileLay: PainterDef = {
     grout: { type: 'number', min: 0.001, max: 0.02, default: 0.004, doc: 'Grout joint (m).' },
     angle: { type: 'enum', values: ANGLES, default: '0', doc: 'Rotation of the whole lay in degrees (45 = diagonal, 90 = turned).' },
     offset: { type: 'number', min: 0.2, max: 0.5, default: 0.5, doc: 'Running bond: row offset as a share of the tile (0.5, 0.333, 0.25).' },
-    checker: { type: 'boolean', default: false, doc: 'Use the alt tone for every second tile (grid: checkerboard; running: rows; herringbone, chevron, basketweave: the second direction).' },
+    checker: { type: 'boolean', default: false, doc: 'Use the alt tone for every second tile (grid: checkerboard; running: rows; herringbone, chevron, basketweave: the second direction; hopscotch: the small corner square).' },
     notch: { type: 'number', min: 0, max: 0.45, default: 0, doc: 'Grid: corner cut of each tile, filled with an accent diamond (octagon and dot, cabochon).' },
     bars: { type: 'number', min: 2, max: 4, default: 2, integer: true, doc: 'Basketweave: bars per block.' },
     jitter: { type: 'number', min: 0, max: 1, default: 0.7, doc: 'Crazy paving: how far the seed points wander.' },

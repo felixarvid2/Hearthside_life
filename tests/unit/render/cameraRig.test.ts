@@ -14,6 +14,33 @@ function rig(ppm: number, size = { w: 390, h: 844 }): CameraRig {
 }
 const box = (x: number, z: number, w = 1, d = 1, h = 1) => ({ min: new THREE.Vector3(x, 0, z), max: new THREE.Vector3(x + w, h, z + d) });
 
+describe('CameraRig.rotate', () => {
+  it('a second turn during the animation adds to the pending destination, not to the mid-turn angle', () => {
+    const r = new CameraRig();
+    r.setSize(390, 844);
+    r.update(0);
+    r.rotate(1); // 45 -> 135
+    r.update(0.1); // part-way through the animation
+    expect(r.yaw).toBeGreaterThan(45 * (Math.PI / 180));
+    expect(r.yaw).toBeLessThan(135 * (Math.PI / 180));
+    r.rotate(1); // must end at 225 (45 + 180), not at mid-turn + 90
+    r.update(1);
+    expect(r.yaw).toBeCloseTo(225 * (Math.PI / 180), 6);
+    expect(r.k).toBe(2);
+  });
+
+  it('quick opposite taps cancel out', () => {
+    const r = new CameraRig();
+    r.setSize(390, 844);
+    r.update(0);
+    r.rotate(1);
+    r.update(0.05);
+    r.rotate(-1);
+    r.update(1);
+    expect(r.yaw).toBeCloseTo(45 * (Math.PI / 180), 6);
+  });
+});
+
 describe('CameraRig.reveal', () => {
   it('leaves a visible, big enough target alone', () => {
     const r = rig(66);

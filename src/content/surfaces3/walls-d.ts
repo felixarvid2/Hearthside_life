@@ -196,7 +196,7 @@ export const WALLS_D: SurfaceDesign[] = [
     id: 'vintage-memphis', name: 'Memphis Squiggle',
     description: 'Thick squiggles and confetti triangles scattered at odd angles: loud, playful 1980s Memphis design.',
     family: VD, tags: ['retro', 'memphis', 'eighties', 'squiggle', 'pop', 'bold', 'study', 'kids', 'creative'], packs: ['creative-studio', 'mid-century'], price: 12,
-    params: print('motif-memphis-squiggle', 'scatter', 3, 6, 0.7, { rotJitter: 40, motif2: 'motif-memphis-triangle', motif2Size: 0.7 }), repeat: 1.2, palettes: duo(RETRO),
+    params: print('motif-memphis-squiggle', 'scatter', 2, 4, 1.0, { rotJitter: 30, motif2: 'motif-memphis-triangle', motif2Size: 0.55 }), repeat: 1.2, palettes: duo(RETRO),
   }),
   mk({
     id: 'vintage-deco-fountain', name: 'Deco Fountain',

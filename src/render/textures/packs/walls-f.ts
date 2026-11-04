@@ -487,7 +487,8 @@ const stoneSet: PainterDef = {
       const rows = Math.ceil(s.h / step) + 3;
       for (let r = 0; r < rows; r++) {
         for (let i = 0; i < cols; i++) {
-          const cx = (i + 0.5 + (r % 2 ? 0.5 : 0)) * cw, bottom = s.h - r * step + cw * 0.25;
+          // the lowest row's rounded tails land exactly on the floor line, so no cut-off half row shows there
+          const cx = (i + 0.5 + (r % 2 ? 0.5 : 0)) * cw, bottom = s.h - r * step;
           const rad = cw / 2 - j / 2, top = bottom - rad - cw * 1.1;
           const pts: Pt[] = [[cx - rad, top], [cx + rad, top]];
           for (let k = 0; k <= 12; k++) { const a = (k / 12) * Math.PI; pts.push([cx + Math.cos(a) * rad, bottom - rad + Math.sin(a) * rad]); }
