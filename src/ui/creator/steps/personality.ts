@@ -2,6 +2,7 @@
 // aspiration cards with their stages, likes/dislikes chips by group and the starting job.
 
 import { MAX_DISLIKES, MAX_LIKES, TRAITS_PER_ADULT } from '../../../characters/creator';
+import { ADULT_STAGES } from '../../../core/relations';
 import type { AspirationDef, CareerDef, TraitCategory } from '../../../content/types';
 import { h, setText, toggleClass } from '../../kit/dom';
 import { icon } from '../../kit/icons';
@@ -60,7 +61,7 @@ export const personalityStep: StepDef = {
       const grid = h('div', { class: 'cr-card-grid cr-trait-grid' });
       for (const o of inCat) {
         const c = card({
-          title: o.def.name, desc: o.def.description, icon: o.def.icon, role: 'checkbox',
+          title: o.def.name, meta: o.def.effectText[0], desc: o.def.description, icon: o.def.icon, role: 'checkbox',
           onClick: () => ctx.report(s().toggleTrait(o.def.id)),
           onDisabledClick: (reason) => ctx.status(`${o.def.name}: ${reason}`, 'warning'),
         });
@@ -68,7 +69,8 @@ export const personalityStep: StepDef = {
         traitCards.set(o.def.id, c);
         grid.appendChild(c.el);
       }
-      traitWrap.appendChild(h('div', { class: 'cr-trait-group' }, h('h4', { class: 'cr-group-label', text: TRAIT_CATEGORY_NAMES[catId] ?? catId }), grid));
+      traitWrap.appendChild(h('div', { class: 'cr-trait-group' },
+        h('h4', { class: 'cr-group-label', text: `${TRAIT_CATEGORY_NAMES[catId] ?? catId} (${inCat.length})` }), grid));
     }
     const effects = h('div', { class: 'cr-effects' });
     b.fn(() => {
@@ -83,18 +85,27 @@ export const personalityStep: StepDef = {
       }));
     });
 
-    // ---- aspiration
+    // ---- aspiration (adults only; children and teens choose one when they grow up)
     const aspirations = Object.values(content.aspirations ?? {}).filter((a) => a.status === 'ready');
     const aspGrid = h('div', { class: 'cr-card-grid', role: 'radiogroup', ariaLabel: 'Aspirations' });
     const aspCards = aspirations.map((a) => {
-      const c = card({ title: a.name, desc: a.description, icon: a.icon, onClick: () => ctx.report(s().setAspiration(a.id)) });
+      const c = card({
+        title: a.name, desc: a.description, icon: a.icon, onClick: () => ctx.report(s().setAspiration(a.id)),
+        onDisabledClick: (reason) => ctx.status(`Aspiration: ${reason}`, 'warning'),
+      });
       aspGrid.appendChild(c.el);
       return { a, c };
     });
     const stageHost = h('div', { class: 'cr-asp-host' });
+    const aspAdultHint = hint('Aspirations are for adults. Children and teens can choose one when they grow up.');
+    aspAdultHint.hidden = ADULT_STAGES.includes(p().lifeStage);
     let lastAsp: string | null | undefined;
     b.fn(() => {
-      for (const { a, c } of aspCards) c.set({ selected: p().aspirationId === a.id });
+      const adult = ADULT_STAGES.includes(p().lifeStage);
+      aspAdultHint.hidden = adult;
+      for (const { a, c } of aspCards) {
+        c.set({ selected: adult && p().aspirationId === a.id, disabled: !adult, ...(adult ? {} : { reason: 'Aspirations are for adults.' }) });
+      }
       if (lastAsp !== p().aspirationId) {
         lastAsp = p().aspirationId;
         const a = lastAsp ? content.aspirations[lastAsp] : undefined;
@@ -157,7 +168,7 @@ export const personalityStep: StepDef = {
 
     const el = h('div', { class: 'cr-step cr-step-personality' },
       section('Traits', h('div', { class: 'cr-sec-row' }, hint(`Pick exactly ${TRAITS_PER_ADULT}. Opposites cannot be combined.`), counter), traitWrap, effects),
-      section('Aspiration', aspirations.length > 0 ? aspGrid : hint('No aspirations are available yet.'), stageHost),
+      section('Aspiration', aspirations.length > 0 ? aspGrid : hint('No aspirations are available yet.'), aspAdultHint, stageHost),
       section('Likes and dislikes', prefs.length > 0 ? modeRow : null, prefs.length > 0 ? prefWrap : hint('No preferences are available yet.'),
         hint(`Up to ${MAX_LIKES} likes and ${MAX_DISLIKES} dislikes. Marking something moves it from the other list.`)),
       section('Starting job', jobGrid),

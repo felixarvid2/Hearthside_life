@@ -1,8 +1,9 @@
 # Continuation note
 
-State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PR #1 (Milestones 1-5), PR #2 (Milestones 6-7) and PR #3 (MPFB
-bodies) are merged. Milestones 8 and 9 are on PR #4 (draft, not merged; merge only after the user approves). **Milestones 1-9 are complete
-and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete catalogs).
+State on 2026-11-03. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
+gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9 and 11 are
+complete and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (complete catalogs) or 12 (environment and
+venues).
 
 ## Milestone status
 
@@ -13,10 +14,11 @@ and verified** (brief section 26, docs/ROADMAP.md). The next milestone is 10 (co
 | 3 Character creator | sliders, presets, outfit slots, locks, undo/redo, ties, import/export, hats squeeze hair | 28 hairstyles (24), 54 garments (48), 15 accessories (12), 20 traits (20), 24 face presets | `npm run e2e:creator` 288/288 (96 per viewport) |
 | 4 Daily life | six needs, cleaning, dishes, messes, repairs, repairperson, skill effects, chore autonomy | 111 furniture (100) incl. hobby, kids, outdoor, dishwasher | 7-day playtests (1/2/4 people), `npm run visual:m5` overlays |
 | 5 Relationships and events | friendship/trust/romance, labels, adult romance gating, memories, 8 event types, planner, goal card | 35 socials (24), 8 event types | acceptance social steps; `npm run visual:m5` goal card in landscape |
-| 6 Careers and economy | 7 career tracks with work effort, promotion/demotion and career decisions, freelance income, weekly bills with late fees and utility cut-offs, career/wealth aspirations | 7 careers x 10 levels (6), 10 ready skills (10), 8 aspirations (6) | M6 unit/integration tests; acceptance step 8 (career panel, bill payment, freelance sale) |
+| 6 Careers and economy | 13 career tracks (after M11) with work effort, promotion/demotion and career decisions, freelance income, weekly bills with late fees and utility cut-offs, career/wealth aspirations | 13 careers x 10 levels (6), 19 ready skills (10), 13 aspirations (6) | M6 unit/integration tests; acceptance step 8 (career panel, bill payment, freelance sale) |
 | 7 Neighbourhood and venues | Lot travel (20-40 game minutes, free), one active lot, 4 NPC households generated once from the world seed with jobs and cross-household relationships, light off-lot schedule (work, home, venue visits), NPC pay once and NPC bill auto-pay, invite home, household switching, rent/buy and moving (owned home sells at 80%), lazy venue/home layouts validated for reachability, 15 venue interactions with once-only costs, library quiet rule, no sleeping in public venues; Map/List modal, lot detail sheet, trip chip, away card; phone landscape HUD (funds drop cents from $1,000 up, icon-only Map/Menu) | 14 lots (12), 6 usable venues (3), 121 furniture (10 new models) | acceptance step 9 (map, travel to park, venue activity, go home, switch preview) in all viewports |
 | 8 Family and life stages (PR #4) | seven life stages (baby to elder) with per-stage MPFB bodies, lazy-loaded; aging off / long / normal / custom, optional elder end of life; birthdays; school with performance, homework and report cards; babysitter; adoption; moving out (household split); age-gated interactions and family socials; family view and dialogs; 6 family furniture models | 7 life stages | acceptance step 10 (`stepFamily`) in all viewports; `npm run e2e:acceptance` |
 | 9 Multiple floors and exteriors (PR #4) | levels 0-2 (3 m apart, walls 2.8 m); upper floors need support, balconies up to 2 tiles out; stairs as objects with stairwell cut and undo; multi-level path search; HUD level selector; two-storey Hazelbank loft; 12 roof styles and 11 finishes, Roof camera toggle, auto roof; 24 fence designs (123 variants) and 12 gates (64 variants); 12 terrain paints; 16 garden objects and 10 crops (plant, water, weed, harvest at 75 % of value) | 3 floors, 12 roof styles, 24 fences, 12 gates, 12 staircases (catalogue has 9 straight and 4 spiral) | acceptance step 11 (`stepFloors`, `stepExterior`) in all viewports; `--steps=12` runs the exterior part alone |
+| 11 Complete progression and social scope (own PR) | 13 careers (130 levels) with 17 on-the-job events; six ready skills with practice activities and effects (baking, wellness, creativity, photography, fishing, research); six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond); 40 traits in six categories; 13 three-stage, adult-only aspirations; 45 social interactions; once-only payouts through `transact` | 13 careers (12), 19 skills (16), 40 traits (40), 13 aspirations (12), 45 socials (40) | typecheck, 1746 tests, content check, build, `e2e:creator`; visual checks 25/25 careers, 45/45 skills, 39/39 photography/fishing/research, 19/19 traits |
 
 Checks on the final state:
 
@@ -47,7 +49,24 @@ Checks on the M8 and M9 state (PR #4):
 | `npm run e2e:acceptance`, landscape 844x390 | 313/0 |
 | `npm run e2e:acceptance`, desktop 1280x720 | 302/0 |
 
-The final reruns are in progress; the numbers above are to be updated when they finish.
+Checks on the M11 state (own PR):
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` | 129 files, 1746 tests |
+| `npm run content:check` | 0 errors, 0 warnings; 13 careers / 130 levels, 19 ready skills, 40 traits, 13 aspirations (39 stages), 45 socials |
+| `npm run build` | passes (main chunk about 2.27 MB, warning only) |
+| `npm run e2e` | OK |
+| `npm run e2e:creator` | 288/288 in portrait, landscape and desktop |
+| `npm run e2e:acceptance` | 315/315 portrait, 313/313 landscape, 302/302 desktop |
+| `npm run visual:m11:careers` | 25/25 |
+| `npm run visual:m11:skills` | 45/45 (baking, wellness, creativity; yoga mat, bread oven, sketchbook) |
+| `npm run visual:m11:skills-c` | 39/39 (photography, fishing, research; camera, pond, telescope) |
+| `npm run visual:m11:traits` | 19/19 (40 traits, 13 aspirations, conflict explanation) |
+
+The M11 numbers above were rerun on the final tree after task E (2026-11-03): typecheck clean, 129 files / 1746 tests, content
+0/0, build passes with the existing 2.27 MB main-chunk warning.
 Acceptance step 10 is `stepFamily` (M8); step 11 is `stepFloors`, then `stepExterior` (M9). `--steps=12` runs the exterior part alone.
 Fixed late in M9: stairs did not show their mesh after a lot change. The cause was a stale pending promise in `render/objectAssets.ts`
 together with a purge in `setLot`. Runtime models are no longer purged, and acceptance checks `view.objects.hasModel(id)`.
@@ -57,10 +76,10 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Next steps, in order
 
-1. Merge PR #4 (M8 and M9) after the user approves. Then run the final acceptance reruns and update the marked numbers above.
+1. Merge PR #6 (Milestone 11); standing approval: merge every PR once all checks pass.
 2. Milestone 10, complete catalogs: 360 walls, 200 floors, 560 furnishings, full creator catalog (ROADMAP). Current counts are in
-   `docs/CONTENT_STATUS.md`.
-3. Polish of the M8 and M9 gaps (listed under "Known issues").
+   `docs/CONTENT_STATUS.md`. Milestone 12 (seasons, weather, pools, venue variety) is the other next choice.
+3. Polish of the M8, M9 and M11 gaps (listed under "Known issues").
 4. People: brow styles, the garment hem flare on the female body, real-device performance.
 5. Performance:
    - Main chunk is about 1.8 MB. Lazy-load the build, creator and dev modules and split `content`.
@@ -80,6 +99,15 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - Only straight stairs are tested in acceptance. The spiral and length-4 stairs are in the catalogue but less tested.
   - The camera bar now has 7 buttons and was not measured on phones narrower than 390 px.
   - Roofs only draw at or below the active level, and only with the Roof toggle on.
+- M11 progression and social:
+  - The new career ladders ask for photography, wellness, creativity or research only from level 4-5, so a new hire can climb
+    the first rungs with practised skills. This is deliberate; every new career still trains all its listed skills per shift.
+  - The six new objects have no breakage or plumbing behaviour (they are hobby/outdoor objects, not appliances); the bread
+    oven is cleanable like a stove.
+  - Fishing and photo walks at venues depend on the venue interaction lists; the park is the only fishing venue.
+  - The yoga mat is a rug: it can be placed under furniture and people walk over it, so it is not a blockage.
+  - The fish item uses the normal meal portion path (spoilage and eating); it is not yet a fridge-storable raw ingredient.
+  - No M11 acceptance step was added; the milestone is covered by the unit/integration suites and the four visual scripts.
 - Flakes in acceptance:
   - Step 2 "neighbour visible to tap".
   - Step 7 wall-paint side checks, seen in portrait.

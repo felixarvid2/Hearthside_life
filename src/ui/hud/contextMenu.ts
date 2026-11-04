@@ -4,6 +4,7 @@
 
 import type { MenuOption, PickResult } from '../../game/api';
 import type { Id } from '../../core/types';
+import { fishSpecies } from '../../content/fishing';
 import { avoidToasts, toast } from '../kit/components';
 import { h, shieldWorld } from '../kit/dom';
 import { icon } from '../kit/icons';
@@ -61,6 +62,7 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
         const it = st.items[pick.itemId];
         if (it?.kind === 'dishes') return `Dirty dishes${it.portions > 1 ? ` (${it.portions} plates)` : ''}`;
         if (it?.kind === 'mess') return it.recipeId === 'crumbs' ? 'Crumbs' : it.recipeId === 'spill' ? 'Spill' : 'Puddle';
+        if (it?.kind === 'fish') return `${fishSpecies(it.recipeId)?.name ?? 'Fish'}${it.portions > 1 ? ` (${it.portions} fish)` : ''}`;
         return it ? `${api.content.recipes[it.recipeId]?.name ?? 'Meal'}${it.portions > 1 ? ` (${it.portions} servings)` : ''}` : 'Meal';
       }
       case 'floor': return 'This spot';

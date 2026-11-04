@@ -29,8 +29,13 @@ export const SKILLS: SkillDef[] = [
     { level: 10, text: `Cooks ${fx.cookingTime} faster than a beginner.` },
     { level: 2, text: 'Required for promotion in the Culinary career from Prep Cook upward.' },
   ]),
-  skill('baking', 'Baking', 'hunger', 'dev', 'Breads, cakes and pastries from the oven.', [
-    { level: 3, text: '(later) Bake bread and cakes in the oven.' },
+  skill('baking', 'Baking', 'hunger', 'ready', 'Breads, cakes and pastries from the oven. Practised at a stove or a bread oven; better bakers burn less and know more recipes.', [
+    { level: 1, text: `Bake bread, muffins, scones, cakes and pies at any stove or bread oven. A beginner burns ${fx.bakingMishap1} of batches.` },
+    { level: 2, text: 'Recipe: Berry Muffins.' },
+    { level: 3, text: 'Recipe: Buttermilk Scones.' },
+    { level: 5, text: 'Recipe: Celebration Layer Cake. Sell a box of bakes at the oven for money.' },
+    { level: 7, text: 'Recipe: Apple Pie.' },
+    { level: 10, text: `Bakes take ${fx.bakingTime10} less time and almost never burn.` },
   ]),
   skill('logic', 'Logic', 'book', 'ready', 'Reasoning and problem solving. Practised by reading books and playing chess.', [
     { level: 2, text: 'A quick study: every other skill gains 3% more experience per Logic level, and repairs succeed a little more often.' },
@@ -70,8 +75,13 @@ export const SKILLS: SkillDef[] = [
     { level: 6, text: 'Book advances grow sharply; articles rarely come back rejected.' },
     { level: 2, text: 'Required for promotion in the Journalism career from Copy Runner upward.' },
   ]),
-  skill('photography', 'Photography', 'eyedropper', 'dev', 'Framing the perfect shot.', [
-    { level: 3, text: '(later) Sell photographs.' },
+  skill('photography', 'Photography', 'eyedropper', 'ready', 'Framing the perfect shot. Practised at a camera tripod at home and on photo walks at outdoor venues.', [
+    { level: 1, text: 'Take photos at a camera tripod; every level improves the pictures and the fees.' },
+    { level: 2, text: 'Sell photographs: finish a freelance photo job at a camera. Fees rise with Photography.' },
+    { level: 3, text: 'Take photo walks at the park, market, arts centre and cafe.' },
+    { level: 5, text: 'Gallery-grade prints: photo sales pay 25% more.' },
+    { level: 8, text: 'Photo essays: a further 20% on every photo sale.' },
+    { level: 10, text: `Master photographer: photo sales pay ${fx.photoBonus10} more than a beginner's.` },
   ]),
   skill('charisma', 'Charisma', 'face', 'ready', 'Confidence and charm with people. Practised by rehearsing speeches at a mirror or from a public speaking guide.', [
     { level: 2, text: 'People accept social interactions more often (1.2% per level) and the repairperson gives a 2% discount per level.' },
@@ -85,14 +95,25 @@ export const SKILLS: SkillDef[] = [
     { level: 2, text: 'Required for promotion in the Landscaping career from Gardener upward.' },
     { level: 4, text: '(later) Workout routines and classes.' },
   ]),
-  skill('wellness', 'Wellness', 'heart', 'dev', 'Calm, balance and self-care.', [
-    { level: 2, text: '(later) Meditate to recover mood.' },
+  skill('wellness', 'Wellness', 'heart', 'ready', 'Calm, balance and self-care. Practised by meditating anywhere at home, and by yoga and stretching on a mat.', [
+    { level: 1, text: 'Meditate anywhere at home: a quiet half hour that leaves a Calm moodlet.' },
+    { level: 2, text: 'Do yoga or stretch on a yoga mat for faster progress.' },
+    { level: 5, text: 'A steady practice: energy and fun decay 1% slower per level, and bad moodlets weigh less.' },
+    { level: 10, text: `Energy and fun decay ${fx.wellnessDecay10} slower; bad moodlets weigh ${fx.wellnessStress10} less.` },
   ]),
-  skill('fishing', 'Fishing', 'sun', 'dev', 'Patience at the water\'s edge.', [
-    { level: 2, text: '(later) Fish at public venues.' },
+  skill('fishing', 'Fishing', 'sun', 'ready', 'Patience at the water\'s edge. Practised at the garden pond at home and at Lakeside Park.', [
+    { level: 1, text: 'Fish the garden pond at home; every level improves the catch and its price.' },
+    { level: 2, text: 'Cast a line at Lakeside Park.' },
+    { level: 3, text: 'Land up to two fish per trip.' },
+    { level: 5, text: 'Hook pike, and usually two or three fish a trip.' },
+    { level: 8, text: 'Golden carp, and never an empty net.' },
+    { level: 10, text: 'Master angler: the best catches sell for the most.' },
   ]),
-  skill('creativity', 'Creativity', 'star', 'dev', 'Imagination that feeds every artistic pursuit.', [
-    { level: 3, text: '(later) Creative projects finish faster.' },
+  skill('creativity', 'Creativity', 'star', 'ready', 'Imagination that feeds every artistic pursuit. Practised by sketching ideas in a sketchbook, and by painting, music, writing and baking at a lower rate.', [
+    { level: 1, text: 'Sketch ideas in a sketchbook at a desk or table.' },
+    { level: 2, text: 'Painting, music, writing and baking also train Creativity, at a third of the rate.' },
+    { level: 5, text: `Creative activities are 3% more fun per level (${fx.creativityFun10} by level 10).` },
+    { level: 8, text: `Creative freelance work pays 4% more per level (${fx.creativityPay10} by level 10).` },
   ]),
   skill('motor', 'Motor Skills', 'energy', 'ready', 'Crawling, standing and walking. Little ones learn by being helped to their feet and by playing.', [
     { level: 2, text: 'Walks steadily.' },
@@ -105,7 +126,12 @@ export const SKILLS: SkillDef[] = [
   skill('potty', 'Potty Training', 'bladder', 'ready', 'Learning to use the potty. A toddler needs the potty chair and a patient helper.', [
     { level: 3, text: 'Uses the potty without help.' },
   ]),
-  skill('research', 'Research', 'search', 'dev', 'Finding and connecting information.', [
-    { level: 3, text: '(later) Research topics at the computer.' },
+  skill('research', 'Research', 'search', 'ready', 'Finding and connecting information. Practised at a computer or through a telescope.', [
+    { level: 1, text: 'Research online at a computer or study the sky through a telescope.' },
+    { level: 2, text: `Sharpens Logic and Programming study: ${fx.researchStudy10} more xp at level 10 (2% per level above 1).` },
+    { level: 2, text: `Improves Science career performance (${fx.researchScience10} by level 10).` },
+    { level: 5, text: 'Write and sell research papers at a computer.' },
+    { level: 8, text: `Published research: papers pay ${fx.researchPaper10} more.` },
+    { level: 10, text: 'A recognised researcher: the best paper fees and the sharpest study habits.' },
   ]),
 ];

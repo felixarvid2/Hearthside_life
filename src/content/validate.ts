@@ -154,6 +154,17 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
       if (!db.skills[i.skill.id]) err(`${w}: unknown skill '${i.skill.id}'`);
       if (!(i.skill.xpPerHour > 0)) err(`${w}: skill xpPerHour must be > 0`);
     }
+    if (i.secondarySkill) {
+      const s = i.secondarySkill;
+      if (!db.skills[s.id]) err(`${w}: unknown secondary skill '${s.id}'`);
+      if (!(s.fraction > 0 && s.fraction <= 1)) err(`${w}: secondary skill fraction must be > 0 and <= 1`);
+      if (i.skill && i.skill.id === s.id) err(`${w}: secondary skill is the same as the primary skill`);
+    }
+    if (i.requiresSkill) {
+      const r = i.requiresSkill;
+      if (!db.skills[r.id]) err(`${w}: unknown required skill '${r.id}'`);
+      if (!(r.level >= 1 && r.level <= 10)) err(`${w}: required skill level must be 1..10`);
+    }
     if (i.cost !== undefined && !isCents(i.cost)) err(`${w}: cost must be integer cents >= 0`);
     moodlet(w, i.moodletOnComplete);
     for (const v of i.venues ?? []) if (!INTERACTION_PLACES.includes(v)) err(`${w}: unknown place '${v}' in venues`);
@@ -507,6 +518,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     if (!(r.minutes > 0) || !isCents(r.cost) || r.cost <= 0 || !Number.isInteger(r.servings) || r.servings < 1) err(`${w}: bad minutes, cost or servings`);
     if (!(r.hunger > 0 && r.hunger <= 100)) err(`${w}: hunger must be 1..100`);
     if (!(r.minCookingLevel >= 0 && r.minCookingLevel <= 10)) err(`${w}: minCookingLevel must be 0..10`);
+    if (r.skill && !db.skills[r.skill]) err(`${w}: unknown skill '${r.skill}'`);
   }
   for (const p of Object.values(db.packs)) if (blank(p.name) || blank(p.description)) err(`pack '${p.id}': missing name or description`);
   const prefSeen = new Set<string>();

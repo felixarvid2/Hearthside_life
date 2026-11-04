@@ -3,6 +3,7 @@
 import type { ContentDB } from '../content/types';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { newId, pairKey } from '../core/ids';
+import { ADULT_STAGES } from '../core/relations';
 import { Rng } from '../core/rng';
 import type {
   FamilyTie, Id, Needs, Person, PersonLocation, WorldState,
@@ -29,7 +30,8 @@ export function createPerson(
   for (const n of NEED_IDS) needs[n] = Math.round(rng.range(70, 90));
   const now = state.clock.minutes;
   const careerOk = draft.careerId !== null && content.careers[draft.careerId] !== undefined;
-  const aspirationOk = draft.aspirationId !== null && content.aspirations[draft.aspirationId] !== undefined;
+  // Aspirations are for adults: a draft imported with a child's aspiration simply starts without one.
+  const aspirationOk = draft.aspirationId !== null && content.aspirations[draft.aspirationId] !== undefined && ADULT_STAGES.includes(draft.lifeStage);
   const person: Person = {
     id: newId(state, 'per'),
     householdId,

@@ -1,7 +1,7 @@
 // Need decay, need changes from actions, and low-need feedback (events, thoughts, feed).
 
 import { TICK_MINUTES } from '../core/clock';
-import { fitnessEnergyDecay } from '../content/skillEffects';
+import { fitnessEnergyDecay, wellnessDecay } from '../content/skillEffects';
 import { addFeed } from '../core/state';
 import type { NeedId, Person } from '../core/types';
 import { NEED_IDS } from '../core/types';
@@ -56,7 +56,9 @@ export function decayNeeds(ctx: SimCtx, p: Person): void {
     if (n === 'energy' && lying) continue;
     const posture = lying && (n === 'fun' || n === 'social') ? LYING_FUN_SOCIAL_DECAY : 1;
     const fit = n === 'energy' ? fitnessEnergyDecay(p.skills.fitness?.level ?? 1) : 1;
-    const rate = (NEED_DECAY_PER_HOUR[n] / 60) * TICK_MINUTES * mult * posture * fit * traitDecayMult(ctx, p, n);
+    // A steady wellness practice slows how fast energy and fun run down (Milestone 11).
+    const calm = n === 'energy' || n === 'fun' ? wellnessDecay(p.skills.wellness?.level ?? 1) : 1;
+    const rate = (NEED_DECAY_PER_HOUR[n] / 60) * TICK_MINUTES * mult * posture * fit * calm * traitDecayMult(ctx, p, n);
     changeNeed(ctx, p, n, -rate);
   }
 }

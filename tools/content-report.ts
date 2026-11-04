@@ -21,7 +21,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const markdown = process.argv.includes('--markdown');
 const strict = process.argv.includes('--strict');
 
-interface Row { label: string; ready: number; dev: number; variants?: number | string; m1?: number; m2?: number; m3?: number; m4?: number; m6?: number; target?: number }
+interface Row {
+  label: string; ready: number; dev: number; variants?: number | string;
+  m1?: number; m2?: number; m3?: number; m4?: number; m6?: number; m11?: number; target?: number;
+}
 
 /** Full-project catalog targets per buy category (brief section 16). */
 const CATEGORY_TARGETS: Record<CatalogCategory, number> = {
@@ -103,11 +106,11 @@ async function main(): Promise<void> {
     title: 'Gameplay content',
     rows: [
       { label: 'activities', ...count(Object.values(db.interactions).filter((i) => !NOT_ACTIVITIES.includes(i.behavior ?? ''))), variants: '-', target: 40 },
-      { label: 'social interactions', ...count(socials), variants: `${socials.filter((s) => s.alsoActivity).length} also activities`, target: 40 },
-      { label: 'traits', ...count(Object.values(db.traits)), variants: '-', m3: 20, target: 40 },
-      { label: 'aspirations', ...count(Object.values(db.aspirations)), variants: `${Object.values(db.aspirations).reduce((n, a) => n + a.stages.length, 0)} stages`, m6: 6, target: 12 },
-      { label: 'skills', ...count(Object.values(db.skills)), variants: '-', m6: 10, target: 16 },
-      { label: 'careers (10 levels)', ...count(careers), variants: `${careers.reduce((n, c) => n + c.levels.length, 0)} levels`, m1: 1, m6: 6, target: 12 },
+      { label: 'social interactions', ...count(socials), variants: `${socials.filter((s) => s.alsoActivity).length} also activities`, m11: 40, target: 40 },
+      { label: 'traits', ...count(Object.values(db.traits)), variants: '-', m3: 20, m11: 40, target: 40 },
+      { label: 'aspirations', ...count(Object.values(db.aspirations)), variants: `${Object.values(db.aspirations).reduce((n, a) => n + a.stages.length, 0)} stages`, m6: 6, m11: 12, target: 12 },
+      { label: 'skills', ...count(Object.values(db.skills)), variants: '-', m6: 10, m11: 16, target: 16 },
+      { label: 'careers (10 levels)', ...count(careers), variants: `${careers.reduce((n, c) => n + c.levels.length, 0)} levels`, m1: 1, m6: 6, m11: 12, target: 12 },
       { label: 'part-time jobs (3 levels)', ...count(partTimeJobs), variants: `${partTimeJobs.reduce((n, c) => n + c.levels.length, 0)} levels`, target: 4 },
       { label: 'recipes', ...count(Object.values(db.recipes)), variants: '-' },
       { label: 'moodlets', ready: Object.keys(db.moodlets).length, dev: 0 },
@@ -146,15 +149,16 @@ async function main(): Promise<void> {
 
   for (const s of sections) {
     if (markdown) {
-      console.log(`\n### ${s.title}\n\n| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | full target |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|`);
-      for (const r of s.rows) console.log(`| ${r.label} | ${r.ready} | ${r.dev} | ${r.variants ?? '-'} | ${r.m1 ?? '-'} | ${r.m2 ?? '-'} | ${r.m3 ?? '-'} | ${r.m4 ?? '-'} | ${r.m6 ?? '-'} | ${r.target ?? '-'} |`);
+      console.log(`\n### ${s.title}\n\n| | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | M11 min | full target |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|`);
+      for (const r of s.rows) console.log(`| ${r.label} | ${r.ready} | ${r.dev} | ${r.variants ?? '-'} | ${r.m1 ?? '-'} | ${r.m2 ?? '-'} | ${r.m3 ?? '-'} | ${r.m4 ?? '-'} | ${r.m6 ?? '-'} | ${r.m11 ?? '-'} | ${r.target ?? '-'} |`);
       if (s.note) console.log(`\n${s.note}`);
     } else {
       console.log(`\n${s.title}`);
-      console.log(`  ${'category'.padEnd(40)}${'ready'.padStart(7)}${'dev'.padStart(6)}${'variants'.padStart(18)}${'M1'.padStart(6)}${'M2'.padStart(6)}${'M3'.padStart(6)}${'M4'.padStart(6)}${'M6'.padStart(6)}${'target'.padStart(8)}`);
+      console.log(`  ${'category'.padEnd(40)}${'ready'.padStart(7)}${'dev'.padStart(6)}${'variants'.padStart(18)}${'M1'.padStart(6)}${'M2'.padStart(6)}${'M3'.padStart(6)}${'M4'.padStart(6)}${'M6'.padStart(6)}${'M11'.padStart(6)}${'target'.padStart(8)}`);
       for (const r of s.rows) {
         console.log(`  ${r.label.padEnd(40)}${String(r.ready).padStart(7)}${String(r.dev).padStart(6)}${String(r.variants ?? '-').padStart(18)}` +
-          `${String(r.m1 ?? '-').padStart(6)}${String(r.m2 ?? '-').padStart(6)}${String(r.m3 ?? '-').padStart(6)}${String(r.m4 ?? '-').padStart(6)}${String(r.m6 ?? '-').padStart(6)}${String(r.target ?? '-').padStart(8)}`);
+          `${String(r.m1 ?? '-').padStart(6)}${String(r.m2 ?? '-').padStart(6)}${String(r.m3 ?? '-').padStart(6)}${String(r.m4 ?? '-').padStart(6)}` +
+          `${String(r.m6 ?? '-').padStart(6)}${String(r.m11 ?? '-').padStart(6)}${String(r.target ?? '-').padStart(8)}`);
       }
       if (s.note) console.log(`  (${s.note})`);
     }

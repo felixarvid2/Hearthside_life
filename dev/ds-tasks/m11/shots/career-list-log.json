@@ -1,0 +1,356 @@
+{
+  "checks": [
+    {
+      "name": "portrait: the career panel lists all 13 full careers",
+      "ok": true,
+      "evidence": "13 cards: Athletics, Business, Culinary, Design and Architecture, Education, Hospitality, Journalism, Landscaping, Medicine, Music, Science, Software, Visual Arts"
+    },
+    {
+      "name": "portrait: the list fits the width without horizontal overflow",
+      "ok": true,
+      "evidence": "scrollWidth 378/378, list 346/346"
+    },
+    {
+      "name": "portrait: the list is taller than the panel and scrolls",
+      "ok": true,
+      "evidence": "2900 > 309"
+    },
+    {
+      "name": "portrait: the list stays inside the viewport",
+      "ok": true,
+      "evidence": "list x 22..368 of 390"
+    },
+    {
+      "name": "portrait: no page errors while opening the career panel",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "portrait: the creator starting-job list offers all 13 full careers plus \"No job\"",
+      "ok": true,
+      "evidence": "14 cards: No job, Culinary, Journalism, Software, Medicine, Music, Business, Landscaping, Education, Visual Arts, Science, Athletics, Design and Architecture, Hospitality"
+    },
+    {
+      "name": "portrait: the creator job list wraps without horizontal overflow",
+      "ok": true,
+      "evidence": "grid 362/362, in viewport true"
+    },
+    {
+      "name": "portrait: a new career can be chosen as the starting job",
+      "ok": true,
+      "evidence": "aria-checked true"
+    },
+    {
+      "name": "landscape: the career panel lists all 13 full careers",
+      "ok": true,
+      "evidence": "13 cards: Athletics, Business, Culinary, Design and Architecture, Education, Hospitality, Journalism, Landscaping, Medicine, Music, Science, Software, Visual Arts"
+    },
+    {
+      "name": "landscape: the list fits the width without horizontal overflow",
+      "ok": true,
+      "evidence": "scrollWidth 354/354, list 322/322"
+    },
+    {
+      "name": "landscape: the list is taller than the panel and scrolls",
+      "ok": true,
+      "evidence": "2753 > 170"
+    },
+    {
+      "name": "landscape: the list stays inside the viewport",
+      "ok": true,
+      "evidence": "list x 496..818 of 844"
+    },
+    {
+      "name": "landscape: no page errors while opening the career panel",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: the creator starting-job list offers all 13 full careers plus \"No job\"",
+      "ok": true,
+      "evidence": "14 cards: No job, Culinary, Journalism, Software, Medicine, Music, Business, Landscaping, Education, Visual Arts, Science, Athletics, Design and Architecture, Hospitality"
+    },
+    {
+      "name": "landscape: the creator job list wraps without horizontal overflow",
+      "ok": true,
+      "evidence": "grid 398/398, in viewport true"
+    },
+    {
+      "name": "landscape: a new career can be chosen as the starting job",
+      "ok": true,
+      "evidence": "aria-checked true"
+    },
+    {
+      "name": "desktop: the career panel lists all 13 full careers",
+      "ok": true,
+      "evidence": "13 cards: Athletics, Business, Culinary, Design and Architecture, Education, Hospitality, Journalism, Landscaping, Medicine, Music, Science, Software, Visual Arts"
+    },
+    {
+      "name": "desktop: the list fits the width without horizontal overflow",
+      "ok": true,
+      "evidence": "scrollWidth 380/380, list 348/348"
+    },
+    {
+      "name": "desktop: the list is taller than the panel and scrolls",
+      "ok": true,
+      "evidence": "2541 > 500"
+    },
+    {
+      "name": "desktop: the list stays inside the viewport",
+      "ok": true,
+      "evidence": "list x 906..1254 of 1280"
+    },
+    {
+      "name": "desktop: no page errors while opening the career panel",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: Education can be taken from the career panel",
+      "ok": true,
+      "evidence": "career education"
+    },
+    {
+      "name": "desktop: the creator starting-job list offers all 13 full careers plus \"No job\"",
+      "ok": true,
+      "evidence": "14 cards: No job, Culinary, Journalism, Software, Medicine, Music, Business, Landscaping, Education, Visual Arts, Science, Athletics, Design and Architecture, Hospitality"
+    },
+    {
+      "name": "desktop: the creator job list wraps without horizontal overflow",
+      "ok": true,
+      "evidence": "grid 442/442, in viewport true"
+    },
+    {
+      "name": "desktop: a new career can be chosen as the starting job",
+      "ok": true,
+      "evidence": "aria-checked true"
+    }
+  ],
+  "shots": [
+    "portrait-career-list-top.png",
+    "portrait-career-list-bottom.png",
+    "portrait-creator-starting-jobs.png",
+    "landscape-career-list-top.png",
+    "landscape-career-list-bottom.png",
+    "landscape-creator-starting-jobs.png",
+    "desktop-career-list-top.png",
+    "desktop-career-list-bottom.png",
+    "desktop-education-taken.png",
+    "desktop-creator-starting-jobs.png"
+  ],
+  "viewports": [
+    {
+      "name": "portrait",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "person": {
+        "id": "per_2w",
+        "name": "Theo",
+        "stage": "adult"
+      },
+      "geometry": {
+        "panel": [
+          6,
+          465,
+          378,
+          309
+        ],
+        "list": [
+          22,
+          775,
+          346,
+          2573
+        ],
+        "scrollHeight": 2900,
+        "clientHeight": 309,
+        "scrollWidth": 378,
+        "clientWidth": 378,
+        "listScrollWidth": 346,
+        "listClientWidth": 346,
+        "names": [
+          "Athletics",
+          "Business",
+          "Culinary",
+          "Design and Architecture",
+          "Education",
+          "Hospitality",
+          "Journalism",
+          "Landscaping",
+          "Medicine",
+          "Music",
+          "Science",
+          "Software",
+          "Visual Arts"
+        ],
+        "vw": 390,
+        "vh": 844
+      },
+      "creator": {
+        "cards": 14,
+        "names": [
+          "No job",
+          "Culinary",
+          "Journalism",
+          "Software",
+          "Medicine",
+          "Music",
+          "Business",
+          "Landscaping",
+          "Education",
+          "Visual Arts",
+          "Science",
+          "Athletics",
+          "Design and Architecture",
+          "Hospitality"
+        ],
+        "gridWidth": 362,
+        "scrollWidth": 362,
+        "clientWidth": 362,
+        "inViewport": true
+      }
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "isMobile": true,
+      "person": {
+        "id": "per_2w",
+        "name": "Theo",
+        "stage": "adult"
+      },
+      "geometry": {
+        "panel": [
+          480,
+          125,
+          354,
+          170
+        ],
+        "list": [
+          496,
+          392,
+          322,
+          2471
+        ],
+        "scrollHeight": 2753,
+        "clientHeight": 170,
+        "scrollWidth": 354,
+        "clientWidth": 354,
+        "listScrollWidth": 322,
+        "listClientWidth": 322,
+        "names": [
+          "Athletics",
+          "Business",
+          "Culinary",
+          "Design and Architecture",
+          "Education",
+          "Hospitality",
+          "Journalism",
+          "Landscaping",
+          "Medicine",
+          "Music",
+          "Science",
+          "Software",
+          "Visual Arts"
+        ],
+        "vw": 844,
+        "vh": 390
+      },
+      "creator": {
+        "cards": 14,
+        "names": [
+          "No job",
+          "Culinary",
+          "Journalism",
+          "Software",
+          "Medicine",
+          "Music",
+          "Business",
+          "Landscaping",
+          "Education",
+          "Visual Arts",
+          "Science",
+          "Athletics",
+          "Design and Architecture",
+          "Hospitality"
+        ],
+        "gridWidth": 398,
+        "scrollWidth": 398,
+        "clientWidth": 398,
+        "inViewport": true
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 720,
+      "isMobile": false,
+      "person": {
+        "id": "per_2w",
+        "name": "Theo",
+        "stage": "adult"
+      },
+      "geometry": {
+        "panel": [
+          890,
+          125,
+          380,
+          500
+        ],
+        "list": [
+          906,
+          436,
+          348,
+          2215
+        ],
+        "scrollHeight": 2541,
+        "clientHeight": 500,
+        "scrollWidth": 380,
+        "clientWidth": 380,
+        "listScrollWidth": 348,
+        "listClientWidth": 348,
+        "names": [
+          "Athletics",
+          "Business",
+          "Culinary",
+          "Design and Architecture",
+          "Education",
+          "Hospitality",
+          "Journalism",
+          "Landscaping",
+          "Medicine",
+          "Music",
+          "Science",
+          "Software",
+          "Visual Arts"
+        ],
+        "vw": 1280,
+        "vh": 720
+      },
+      "creator": {
+        "cards": 14,
+        "names": [
+          "No job",
+          "Culinary",
+          "Journalism",
+          "Software",
+          "Medicine",
+          "Music",
+          "Business",
+          "Landscaping",
+          "Education",
+          "Visual Arts",
+          "Science",
+          "Athletics",
+          "Design and Architecture",
+          "Hospitality"
+        ],
+        "gridWidth": 442,
+        "scrollWidth": 442,
+        "clientWidth": 442,
+        "inViewport": true
+      }
+    }
+  ]
+}

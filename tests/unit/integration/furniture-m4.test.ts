@@ -126,6 +126,9 @@ describe('a person can use every new functional object', { timeout: 60_000 }, ()
       for (const iid of def.interactions.filter((i) => !skip.has(i))) {
         const p = s.people[mira!.id]!;
         for (const n of Object.keys(p.needs) as Array<keyof typeof p.needs>) p.needs[n] = 55;
+        // Milestone 11 hobby unlocks: paper writing and print sales are gated by their skill level.
+        if (iid === 'writePaper') p.skills.research = { level: 5, xp: 0 };
+        if (iid === 'sellPhotos') p.skills.photography = { level: 2, xp: 0 };
         const idef = db.interactions[iid]!;
         const xpBefore = idef.skill ? (p.skills[idef.skill.id]?.xp ?? 0) : 0;
         const needsBefore = { ...p.needs };

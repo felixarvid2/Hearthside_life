@@ -135,7 +135,7 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (def.cost && def.cost > funds) continue;
       if (beh === 'cook') {
         if (!hasStove || meals.length > 0 || householdCooking(ctx, p)) continue;
-        const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready').reduce((m, r) => Math.min(m, r.cost), Infinity);
+        const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready' && !r.skill).reduce((m, r) => Math.min(m, r.cost), Infinity);
         if (!(cheapest <= funds)) continue;
       }
       // Skill books: study the skill the person knows least (up to the level books can teach).

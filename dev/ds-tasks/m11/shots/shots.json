@@ -1,0 +1,97 @@
+[
+  {
+    "name": "portrait: all 40 traits are rendered",
+    "ok": true,
+    "evidence": "40 cards"
+  },
+  {
+    "name": "portrait: grouped into six categories with counts",
+    "ok": true,
+    "evidence": "Social (10) | Tidiness (5) | Energy and activity (6) | Creativity and curiosity (7) | Food and leisure (5) | Ambition and lifestyle (7)"
+  },
+  {
+    "name": "portrait: every trait card explains its effect",
+    "ok": true,
+    "evidence": "40 with effect meta"
+  },
+  {
+    "name": "portrait: the panel scrolls",
+    "ok": true,
+    "evidence": "{\"cls\":\"panel-body cr-body\",\"scrollHeight\":8338,\"clientHeight\":293,\"overflowY\":\"auto\"}"
+  },
+  {
+    "name": "portrait: the chosen aspiration shows its three stages",
+    "ok": true,
+    "evidence": "3 stages"
+  },
+  {
+    "name": "portrait: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: all 40 traits are rendered",
+    "ok": true,
+    "evidence": "40 cards"
+  },
+  {
+    "name": "landscape: grouped into six categories with counts",
+    "ok": true,
+    "evidence": "Social (10) | Tidiness (5) | Energy and activity (6) | Creativity and curiosity (7) | Food and leisure (5) | Ambition and lifestyle (7)"
+  },
+  {
+    "name": "landscape: every trait card explains its effect",
+    "ok": true,
+    "evidence": "40 with effect meta"
+  },
+  {
+    "name": "landscape: the panel scrolls",
+    "ok": true,
+    "evidence": "{\"cls\":\"panel cr-panel is-open\",\"scrollHeight\":7880,\"clientHeight\":374,\"overflowY\":\"auto\"}"
+  },
+  {
+    "name": "landscape: the chosen aspiration shows its three stages",
+    "ok": true,
+    "evidence": "3 stages"
+  },
+  {
+    "name": "landscape: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: all 40 traits are rendered",
+    "ok": true,
+    "evidence": "40 cards"
+  },
+  {
+    "name": "desktop: grouped into six categories with counts",
+    "ok": true,
+    "evidence": "Social (10) | Tidiness (5) | Energy and activity (6) | Creativity and curiosity (7) | Food and leisure (5) | Ambition and lifestyle (7)"
+  },
+  {
+    "name": "desktop: every trait card explains its effect",
+    "ok": true,
+    "evidence": "40 with effect meta"
+  },
+  {
+    "name": "desktop: the panel scrolls",
+    "ok": true,
+    "evidence": "{\"cls\":\"panel-body cr-body\",\"scrollHeight\":7152,\"clientHeight\":529,\"overflowY\":\"auto\"}"
+  },
+  {
+    "name": "desktop: the chosen aspiration shows its three stages",
+    "ok": true,
+    "evidence": "3 stages"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "opposites are disabled and explained",
+    "ok": true,
+    "evidence": "Reserved: Opposite of Outgoing. | Homebody: Opposite of Outgoing."
+  }
+]

@@ -262,7 +262,9 @@ describe('venue-restricted interactions', () => {
   it('only name known places, and content validation rejects an unknown one', () => {
     expect(validateContent(db).errors).toEqual([]);
     const restricted = Object.values(db.interactions).filter((i) => i.venues);
-    expect(restricted.map((i) => i.id).sort()).toEqual(['danceSolo', 'goForJog', 'havePicnic', 'playComputerGames']);
+    expect(restricted.map((i) => i.id).sort()).toEqual([
+      'danceSolo', 'fishVenue', 'goForJog', 'havePicnic', 'meditate', 'photoWalk', 'playComputerGames',
+    ]);
     const broken = { ...db, interactions: { ...db.interactions, goForJog: { ...db.interactions.goForJog!, venues: ['moon'] } } };
     expect(validateContent(broken).errors.join('\n')).toMatch(/unknown place 'moon'/);
   });

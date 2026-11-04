@@ -6,4 +6,6 @@ Start with `docs/CONTINUATION.md` (handover note: state, checks, next steps, con
   (TokenEconomizer's learned state lives in the repository).
 - Never print or commit API keys (`/home/user/apis/*`); scan for them before each commit.
 - Never wrap `tests/e2e/*.mjs` in `flock`; they take `/tmp/hearthside-browser.lock` themselves.
-- Merge pull requests only after the user approves.
+- Standing approval from the user: once all checks on a pull request pass (typecheck, test, content:check, build, e2e,
+  e2e:creator, acceptance in all three viewports), mark it ready and merge it into `main` with a merge commit, without
+  asking first.

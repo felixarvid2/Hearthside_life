@@ -81,8 +81,9 @@ const FOOD: InteractionDef[] = [
     id: 'eatMeal', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Eat', description: 'Take a portion and eat it at a table when a chair is free, otherwise standing.',
     icon: 'hunger', kind: 'item', behavior: 'eatMeal', posture: 'seated',
     anims: { prepare: 'pickUp', perform: 'eat' },
-    // Hunger comes from the portion (RecipeDef.hunger scaled by meal quality), applied by the eatMeal behaviour.
-    duration: { kind: 'fixed', minutes: 25 }, moodletOnComplete: 'goodMeal', itemKinds: ['meal'],
+    // Hunger comes from the portion (RecipeDef.hunger scaled by meal quality; fish use their species' hunger),
+    // applied by the eatMeal behaviour.
+    duration: { kind: 'fixed', minutes: 25 }, moodletOnComplete: 'goodMeal', itemKinds: ['meal', 'fish'],
     autonomy: { enabled: true, ads: { hunger: 50 }, tags: ['food', 'meal'] }, allowVisitors: true,
   }),
 ];
@@ -197,6 +198,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'roller', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
     anims: { perform: 'cook' },
     duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 16, energy: -3 }, skill: { id: 'painting', xpPerHour: 50 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     moodletOnComplete: 'inspired',
     autonomy: { enabled: true, ads: { fun: 16 }, tags: ['painting', 'creative', 'skill', 'fun'] },
   }),
@@ -205,6 +207,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'sound', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 18, energy: -2 }, skill: { id: 'music', xpPerHour: 55 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     moodletOnComplete: 'goodTunes',
     autonomy: { enabled: true, ads: { fun: 14 }, tags: ['music', 'instrument', 'creative', 'skill', 'fun'] },
   }),
@@ -214,6 +217,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 4, energy: -3 }, skill: { id: 'writing', xpPerHour: 65 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     autonomy: { enabled: false, ads: {}, tags: ['freelance', 'writing', 'creative', 'skill'] },
   }),
   def({
@@ -221,6 +225,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 180 }, needsPerHour: { fun: 2, energy: -4 }, skill: { id: 'writing', xpPerHour: 45 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     autonomy: { enabled: false, ads: {}, tags: ['freelance', 'writing', 'creative', 'skill'] },
   }),
   def({
@@ -235,6 +240,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'roller', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'standing',
     anims: { perform: 'cook' },
     duration: { kind: 'fixed', minutes: 75 }, needsPerHour: { fun: 14, energy: -3 }, skill: { id: 'painting', xpPerHour: 60 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     moodletOnComplete: 'inspired',
     autonomy: { enabled: false, ads: {}, tags: ['freelance', 'painting', 'creative', 'skill'] },
   }),
@@ -243,6 +249,7 @@ const HOBBY: InteractionDef[] = [
     icon: 'sound', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 14, energy: -2 }, skill: { id: 'music', xpPerHour: 60 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     autonomy: { enabled: false, ads: {}, tags: ['freelance', 'music', 'creative', 'skill'] },
   }),
   def({
@@ -600,10 +607,145 @@ const VENUE: InteractionDef[] = [
     icon: 'book', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
     anims: { perform: 'computer' },
     duration: { kind: 'fixed', minutes: 50 }, needsPerHour: { fun: 8, energy: -3 }, skill: { id: 'writing', xpPerHour: 55 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
     moodletOnComplete: 'clearHead',
     autonomy: { enabled: true, ads: { fun: 8 }, tags: ['study', 'writing', 'creative', 'skill'] },
   }),
 ];
 
+/**
+ * Milestone 11, task C: Photography, Fishing and Research practice. Photo walks and park fishing are self activities
+ * restricted to outdoor venues (InteractionDef.venues); the simulation gates venue fishing at Fishing 2, photo walks
+ * at Photography 3 and research papers at Research 5 (sim/behaviors.ts). Sale and paper payouts use the freelance
+ * behaviour with a once-only occurrence id.
+ */
+const M11_SKILLS: InteractionDef[] = [
+  def({
+    id: 'takePhotos', name: 'Take Photos', description: 'Set up the camera and shoot for an hour: fun, and the practice builds Photography. Every level improves the pictures.',
+    icon: 'eyedropper', kind: 'object', slotKinds: ['use'], behavior: 'photo', posture: 'standing',
+    anims: { prepare: 'interact', perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 8, energy: -2 }, skill: { id: 'photography', xpPerHour: 55 },
+    moodletOnComplete: 'inspired',
+    autonomy: { enabled: true, ads: { fun: 8 }, tags: ['camera', 'photography', 'creative', 'skill', 'fun'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'sellPhotos', name: 'Sell Photo Prints', description: 'Finish and sell a set of prints. Paid on completion; better Photography earns more.',
+    icon: 'eyedropper', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 75 }, needsPerHour: { fun: 6, energy: -3 }, skill: { id: 'photography', xpPerHour: 60 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'photography', 'creative', 'skill'] },
+  }),
+  def({
+    id: 'photoWalk', venues: ['park', 'market', 'arts', 'cafe'], name: 'Take a Photo Walk',
+    description: 'Walk about with the camera and shoot what catches your eye. Needs Photography level 3.',
+    icon: 'eyedropper', kind: 'self', behavior: 'photo', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 50 }, needsPerHour: { fun: 12, energy: -3 }, skill: { id: 'photography', xpPerHour: 55 },
+    moodletOnComplete: 'inspired',
+    autonomy: { enabled: true, ads: { fun: 12 }, tags: ['camera', 'photography', 'creative', 'skill', 'outdoor'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'fishPond', name: 'Fish the Pond', description: 'Cast a line into the garden pond. Catches can be eaten or sold at the market.',
+    icon: 'sun', kind: 'object', slotKinds: ['use'], behavior: 'fish', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 5, energy: -2 }, skill: { id: 'fishing', xpPerHour: 55 },
+    autonomy: { enabled: true, ads: { fun: 5 }, tags: ['fishing', 'water', 'skill', 'outdoor'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'fishVenue', venues: ['park'], name: 'Go Fishing', description: 'Fish the lake at the park. Needs Fishing level 2. Catches can be eaten or sold.',
+    icon: 'sun', kind: 'self', behavior: 'fish', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 6, energy: -3 }, skill: { id: 'fishing', xpPerHour: 60 },
+    autonomy: { enabled: true, ads: { fun: 6 }, tags: ['fishing', 'water', 'skill', 'outdoor'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'sellCatch', name: 'Sell Catch', description: 'Sell the fish you caught. A better angler gets a better price per fish.',
+    icon: 'money', kind: 'item', itemKinds: ['fish'], behavior: 'sellCatch', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 10 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'fishing'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'researchOnline', name: 'Research Online', description: 'Read papers, follow sources and take notes at the computer. Trains Research.',
+    icon: 'search', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 2, energy: -3 }, skill: { id: 'research', xpPerHour: 55 },
+    autonomy: { enabled: true, ads: { fun: 2 }, tags: ['computer', 'research', 'science', 'skill', 'study'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'researchSky', name: 'Study the Night Sky', description: 'Track the sky through the telescope: relaxing, and it trains Research.',
+    icon: 'search', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 8, energy: -2 }, skill: { id: 'research', xpPerHour: 60 },
+    moodletOnComplete: 'inspired',
+    autonomy: { enabled: true, ads: { fun: 8 }, tags: ['telescope', 'research', 'science', 'skill', 'fun'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'writePaper', name: 'Write a Research Paper', description: 'Write and submit a research paper at the computer. Needs Research level 5; paid on completion.',
+    icon: 'search', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'seated',
+    anims: { perform: 'computer' },
+    duration: { kind: 'fixed', minutes: 120 }, needsPerHour: { fun: 1, energy: -4 }, skill: { id: 'research', xpPerHour: 45 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'research', 'science', 'skill'] },
+  }),
+];
+
+/**
+ * Milestone 11, task B: Baking, Wellness and Creativity practice. `bakeTreat` runs at a stove or bread oven and
+ * serves baked goods as portion items; `sellBakes` is freelance work gated at Baking 5; `meditate` is a self
+ * activity for residential lots; the mat offers yoga and stretching; the sketchbook trains Creativity directly.
+ */
+const M11_B_SKILLS: InteractionDef[] = [
+  def({
+    id: 'bakeTreat', name: 'Bake a Treat', description: 'Bake bread, muffins, scones, a cake or a pie in the oven. The batch feeds the household and practises Baking.',
+    icon: 'hunger', kind: 'object', slotKinds: ['use'], behavior: 'bake', posture: 'standing',
+    anims: { perform: 'cook' },
+    duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { fun: 8, energy: -2 }, skill: { id: 'baking', xpPerHour: 55 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
+    moodletOnComplete: 'proudBake',
+    autonomy: { enabled: true, ads: { fun: 8 }, tags: ['baking', 'cooking', 'creative', 'skill', 'food'] },
+  }),
+  def({
+    id: 'sellBakes', name: 'Sell a Box of Bakes', description: 'Box up a batch of your baking and sell it to the neighbours. Needs Baking level 5; paid on completion.',
+    icon: 'money', kind: 'object', slotKinds: ['use'], behavior: 'freelance', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 4, energy: -3 }, skill: { id: 'baking', xpPerHour: 45 },
+    secondarySkill: { id: 'creativity', fraction: 0.35 },
+    requiresSkill: { id: 'baking', level: 5 },
+    autonomy: { enabled: false, ads: {}, tags: ['freelance', 'baking', 'creative', 'skill'] },
+  }),
+  def({
+    id: 'meditate', name: 'Meditate', description: 'Sit quietly and breathe, anywhere at home or on a yoga mat. Leaves a Calm moodlet and trains Wellness.',
+    icon: 'heart', kind: 'self', behavior: 'generic', posture: 'seated',
+    anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
+    duration: { kind: 'fixed', minutes: 30 }, needsPerHour: { fun: 5, energy: 2 }, skill: { id: 'wellness', xpPerHour: 45 },
+    moodletOnComplete: 'calm',
+    venues: ['home'],
+    autonomy: { enabled: false, ads: {}, tags: ['wellness', 'meditation', 'calm'] },
+  }),
+  def({
+    id: 'doYoga', name: 'Do Yoga', description: 'Work through a yoga flow on the mat. Trains Wellness quickly and leaves you calm.',
+    icon: 'heart', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'exercise' },
+    duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { fun: 8, energy: -3, hygiene: -3 }, skill: { id: 'wellness', xpPerHour: 60 },
+    moodletOnComplete: 'calm',
+    autonomy: { enabled: true, ads: { fun: 8 }, tags: ['wellness', 'exercise', 'active', 'yoga'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'stretch', name: 'Stretch', description: 'A gentle stretch on the mat: quick, restful and good for Wellness.',
+    icon: 'heart', kind: 'object', slotKinds: ['use'], behavior: 'generic', posture: 'standing',
+    anims: { perform: 'exercise' },
+    duration: { kind: 'fixed', minutes: 15 }, needsPerHour: { fun: 6, energy: 1 }, skill: { id: 'wellness', xpPerHour: 40 },
+    autonomy: { enabled: true, ads: { fun: 4 }, tags: ['wellness', 'exercise', 'stretch'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'sketchIdeas', name: 'Sketch Ideas', description: 'Fill a page of the sketchbook with ideas and thumbnails. Trains Creativity.',
+    icon: 'star', kind: 'object', slotKinds: ['use'], behavior: 'computer', posture: 'seated',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 12, energy: -2 }, skill: { id: 'creativity', xpPerHour: 55 },
+    moodletOnComplete: 'inspired',
+    autonomy: { enabled: true, ads: { fun: 12 }, tags: ['creative', 'sketch', 'skill', 'fun'] }, allowVisitors: true,
+  }),
+];
+
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS];

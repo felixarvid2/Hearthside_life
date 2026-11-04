@@ -1,7 +1,7 @@
 // Building blocks for interaction behaviors: the Behavior contract, Step descriptions, use-point
 // selection (specific slots or stand tiles, reserved and reachable) and need-rate computation.
 
-import { fitnessEnergyCost, fitnessSweat, musicFun, paintingFun } from '../content/skillEffects';
+import { creativityFun, fitnessEnergyCost, fitnessSweat, musicFun, paintingFun } from '../content/skillEffects';
 import type { InteractionDef } from '../content/types';
 import type { AnimId } from '../core/anim';
 import type { Tile, WorldSlot } from '../core/nav';
@@ -101,9 +101,9 @@ function setUsePoint(a: ActionInstance, prefix: UsePointPrefix, c: UseCandidate)
   else if (c.tile) { a.data[`${prefix}X`] = c.tile.x; a.data[`${prefix}Z`] = c.tile.z; }
 }
 
-/** Item capacity for reservations: a meal's remaining portions; dishes and messes are cleaned by one person at a time. */
+/** Item capacity for reservations: a meal's or a catch's remaining portions; dishes and messes are cleaned by one person at a time. */
 export function itemCapacity(ctx: SimCtx): (itemId: Id) => number {
-  return (id) => { const it = ctx.state.items[id]; return !it ? 0 : it.kind === 'meal' ? it.portions : 1; };
+  return (id) => { const it = ctx.state.items[id]; return !it ? 0 : it.kind === 'meal' || it.kind === 'fish' ? it.portions : 1; };
 }
 
 /** Re-syncs an action's reservations with its data. Returns false when something is held by another action. */
@@ -275,6 +275,8 @@ export function performRates(
       v *= enjoy;
       if (need === 'fun' && def.autonomy.tags.includes('music')) v *= musicFun(p.skills.music?.level ?? 1);
       if (need === 'fun' && def.autonomy.tags.includes('painting')) v *= paintingFun(p.skills.painting?.level ?? 1);
+      // Creativity makes every creative pursuit a little more enjoyable (Milestone 11).
+      if (need === 'fun' && def.autonomy.tags.includes('creative')) v *= creativityFun(p.skills.creativity?.level ?? 1);
     } else if (v < 0 && def.autonomy.tags.includes('active')) {
       // Fit people tire less and sweat less from workouts.
       const fit = p.skills.fitness?.level ?? 1;

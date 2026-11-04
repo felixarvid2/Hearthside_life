@@ -4,6 +4,7 @@
 // other household members through autonomy; meals spoil after a game day.
 
 import { cookingMishap, cookingQuality, cookingSpill, cookingTime, gardeningGroceries } from '../content/skillEffects';
+import { fishSpecies } from '../content/fishing';
 import type { RecipeDef } from '../content/types';
 import { footprintTiles, facingDir } from '../core/geometry';
 import { newId } from '../core/ids';
@@ -41,11 +42,12 @@ export function recipeCost(p: Person, recipe: RecipeDef): number {
   return Math.round(recipe.cost * (1 - gardeningGroceries(p.skills.gardening?.level ?? 1)) * pantry);
 }
 
-/** Recipes the person can cook, best first (higher level requirement, then cheaper). */
+/** Recipes the person can cook, best first (higher level requirement, then cheaper). Baking recipes have their
+ *  own chain (sim/baking.ts) and are excluded here. */
 function cookableRecipes(ctx: SimCtx, p: Person): RecipeDef[] {
   const level = p.skills[COOKING_SKILL]?.level ?? 1;
   return Object.values(ctx.content.recipes)
-    .filter((r) => r.status === 'ready' && r.minCookingLevel <= level)
+    .filter((r) => r.status === 'ready' && !r.skill && r.minCookingLevel <= level)
     .sort((x, y) => y.minCookingLevel - x.minCookingLevel || x.cost - y.cost || (x.id < y.id ? -1 : 1));
 }
 
@@ -53,6 +55,7 @@ function cookableRecipes(ctx: SimCtx, p: Person): RecipeDef[] {
 export function chooseRecipe(ctx: SimCtx, p: Person, a: ActionInstance): RecipeDef | string {
   const level = p.skills[COOKING_SKILL]?.level ?? 1;
   const wanted = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
+  if (wanted?.skill) return 'That recipe is baked, not cooked.';
   if (wanted) return wanted.minCookingLevel <= level ? wanted : `Needs Cooking level ${wanted.minCookingLevel}.`;
   const list = cookableRecipes(ctx, p);
   if (list.length === 0) return 'No recipes known.';
@@ -122,7 +125,7 @@ function stoveOutcome(ctx: SimCtx, p: Person, a: ActionInstance, stove: ObjRef |
 }
 
 /** Creates the meal item on a surface (first free tile) or on the floor at the cook's tile. */
-function serveMeal(ctx: SimCtx, p: Person, a: ActionInstance, surface: ObjRef | null): WorldItem | null {
+export function serveMeal(ctx: SimCtx, p: Person, a: ActionInstance, surface: ObjRef | null): WorldItem | null {
   const loc = lotLoc(p);
   if (!loc) return null;
   const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
@@ -324,10 +327,12 @@ export const eatMealBehavior: Behavior = {
       return { goal, posture: 'standing', performAnim: 'pickUp', duration: { kind: 'fixed', minutes: 1 }, rates: {} };
     }
     const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
+    // Fish are not recipes: a fish portion restores the species' hunger instead of a fixed default.
+    const fish = typeof a.data.recipeId === 'string' ? fishSpecies(a.data.recipeId) : undefined;
     const quality = typeof a.data.quality === 'number' ? a.data.quality : 0.5;
     const duration = defDuration(def);
     const minutes = duration.kind === 'fixed' ? duration.minutes : 25;
-    const total = (recipe?.hunger ?? 40) * (0.7 + 0.3 * quality);
+    const total = (recipe?.hunger ?? fish?.hunger ?? 40) * (0.7 + 0.3 * quality);
     let goal: Step['goal'] = { kind: 'here' };
     let posture: Step['posture'] = 'standing';
     let seat: ObjRef | null = null;
@@ -387,19 +392,19 @@ export const eatMealBehavior: Behavior = {
   },
 };
 
-/** Removes spoiled meals (called every tick; cheap). */
+/** Removes spoiled meals and fish (called every tick; cheap). */
 export function spoilMeals(ctx: SimCtx): void {
   for (const item of Object.values(ctx.state.items)) {
-    if (item.kind === 'meal' && item.spoilsAt <= ctx.now) {
+    if ((item.kind === 'meal' || item.kind === 'fish') && item.spoilsAt <= ctx.now) {
       delete ctx.state.items[item.id];
       ctx.events.emit({ type: 'item.changed', itemId: item.id, lotId: item.lotId });
     }
   }
 }
 
-/** Meal items on a lot with portions not yet reserved, for autonomy. */
+/** Meal and fish items on a lot with portions not yet reserved, for autonomy. */
 export function availableMeals(ctx: SimCtx, lotId: Id, householdId: Id): WorldItem[] {
   return Object.values(ctx.state.items).filter((it) =>
-    it.kind === 'meal' && it.lotId === lotId && (it.ownerHouseholdId === null || it.ownerHouseholdId === householdId) &&
+    (it.kind === 'meal' || it.kind === 'fish') && it.lotId === lotId && (it.ownerHouseholdId === null || it.ownerHouseholdId === householdId) &&
     it.portions - ctx.res.itemReserved(it.id) > 0);
 }

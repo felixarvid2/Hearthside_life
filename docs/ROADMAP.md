@@ -6,7 +6,8 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-9 complete** (M1-7 verified 2026-11-02; M8 and M9 on PR #4, see CONTINUATION.md). Next: **Milestone 10 - Complete catalogs**.
+**Milestones 1-9 and 11 complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see CONTINUATION.md; M11 on
+PR #6). Next: **Milestone 10 - Complete catalogs** or **Milestone 12 - Environment and venues**.
 
 ## Completed-project targets (brief section 2)
 
@@ -63,7 +64,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 - One neighbour household visits; the neighbourhood view and lot travel are M7.
 - Multi-floor data exists (`level` everywhere) but only the ground floor is built and navigated (M9).
 
-## Milestone 8 and 9 (complete, on PR #4)
+## Milestone 8 and 9 (complete, merged in PR #4)
 
 - **Milestone 8, family and life stages.** Seven life stages (baby, toddler, child, teen, young adult, adult, elder), each with its
   own MPFB body (lazy-loaded, UAL skeleton scaled per stage, elders stoop, babies lie in a crib or are carried). Aging is off, long,
@@ -76,6 +77,12 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   and 12 gates (64 variants); a fence that would seal someone in is refused with "Add a gate". 12 terrain paints. 16 garden objects,
   10 crops, planting, watering, weeding, daily growth and harvest at 75 % of value. 9 straight and 4 spiral stairs in the catalogue.
   Saves stay at schema 1 with optional fields. Acceptance steps 11 (`stepFloors`, `stepExterior`) and `--steps=12`.
+- **Milestone 11, complete progression and social scope (on its own PR).** Six more 10-level careers (education, visual
+  arts, science, athletics, design and architecture, hospitality) bring the total to 13 (130 levels), with 17 career
+  events. Baking, wellness, creativity, photography, fishing and research are now ready skills with practice
+  activities, six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond) and
+  once-only payouts. 40 traits in six categories, 13 three-stage aspirations (adult-only) and 45 social interactions.
+  Saves stay at schema 1; no new fields.
 
 ## Unfinished systems after M1 (by dependency)
 
@@ -84,7 +91,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 3. Creator depth (M3): 24 face presets, 18 face parameters, 54 garments, 15 accessories, hat and hair interaction, outfit slots, family tree editing are done; remaining depth (more garment variety, life-stage bodies, height) belongs to M8 and M10.
 4. Dirt, breakage, repair and cleaning are done (M4, see ARCHITECTURE.md "Daily life"); groceries/freshness depth and household routines remain (M4).
 5. Done in M5 (see ARCHITECTURE.md "Relationships and events"): romance ladder, dates, events with invitations, jealousy after exclusivity. Open: weddings as events, group conversations, gifts as objects. Dates are still planned at home.
-6. Done in M6 (see ARCHITECTURE.md "Careers and economy"): seven careers with promotions/demotions and work effort, freelance income, weekly bills with late fees and utility cut-offs, auto-pay, and career/wealth aspirations. Open: renting vs owning beyond property tax, more careers and aspiration stages (M11).
+6. Done in M6 (see ARCHITECTURE.md "Careers and economy"): careers with promotions/demotions and work effort, freelance income, weekly bills with late fees and utility cut-offs, auto-pay, and career/wealth aspirations. M11 extends this to 13 careers, 17 career events, 13 aspirations and 19 ready skills. Open: renting vs owning beyond property tax, more career events per track.
 7. Done in M7 (see ARCHITECTURE.md "Neighbourhood"): neighbourhood map, 14 lot records (target 12), including 2 empty homes, 6 venues, 4 NPC households, household switching, off-lot reconciliation. Open: community events, NPC household movement and job changes, furniture moving with a household (M8 and later).
 8. Done in M8 (see ARCHITECTURE.md "Family and life stages"): seven life stages, aging, birthdays, school, babysitter, adoption, moving out. Added after M8: teen part-time jobs, children in town households, fitted kids' clothes, elder wrinkles, L and rectangle fence drags. Open: the sitter for other households, more life-stage detail (see CONTINUATION.md).
 9. Done in M9 (see ARCHITECTURE.md "Floors", "Exterior"): levels 0-2, stairs, balconies, roofs, fences and gates, terrain paint, gardens. Open: the spiral and length-4 stairs are less tested.

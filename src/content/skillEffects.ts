@@ -51,6 +51,36 @@ export const musicFun = (level: number): number => 1 + 0.04 * lv(level);
 /** Painting: multiplier on the fun gained from painting. */
 export const paintingFun = (level: number): number => 1 + 0.04 * lv(level);
 
+// --- Baking (Milestone 11) -------------------------------------------------------------------------------------
+/** Quality of a baked batch before oven and cleanliness modifiers (0.45 at level 1, 0.9 at level 10). */
+export const bakingQuality = (level: number): number => 0.4 + Math.max(1, level) * 0.05;
+/** Chance that a batch is burnt (quality x0.6); gone from level 9. A dirty oven adds to it. */
+export const bakingMishap = (level: number): number => Math.max(0, 0.2 - 0.025 * lv(level));
+/** Baking time multiplier (0.78 at level 10). */
+export const bakingTime = (level: number): number => clamp(1 - 0.025 * lv(level), 0.78, 1);
+
+// --- Wellness (Milestone 11) -----------------------------------------------------------------------------------
+/** Energy and fun decay multiplier (0.91 at level 10). */
+export const wellnessDecay = (level: number): number => 1 - 0.01 * lv(level);
+/** Negative moodlets weigh less (0.73 at level 10). */
+export const wellnessStress = (level: number): number => 1 - 0.03 * lv(level);
+
+// --- Creativity (Milestone 11) ---------------------------------------------------------------------------------
+/** Fun multiplier for activities tagged 'creative' (1.27 at level 10). */
+export const creativityFun = (level: number): number => 1 + 0.03 * lv(level);
+/** Multiplier on the fees of creative freelance work (1.36 at level 10). */
+export const creativityPay = (level: number): number => 1 + 0.04 * lv(level);
+
+// --- Photography, Fishing and Research (Milestone 11, task C) ---------------------------------------------------
+/** Photography: multiplier on freelance photo fees (gallery-grade prints at 5, photo essays at 8). */
+export const photoSaleMult = (level: number): number => (level >= 5 ? 1.25 : 1) * (level >= 8 ? 1.2 : 1);
+/** Research: extra xp for Logic and Programming study (2% per level above 1). */
+export const researchStudy = (level: number): number => 0.02 * lv(level);
+/** Research: added career performance at the start of a shift in the Science career (0.4 per level above 1). */
+export const researchScience = (level: number): number => 0.4 * lv(level);
+/** Research: multiplier on freelance research-paper pay (published research at 8). */
+export const researchPaperMult = (level: number): number => (level >= 8 ? 1.2 : 1);
+
 /** Highest skill level a skill book can teach. */
 export const BOOK_MAX_LEVEL = 5;
 
@@ -71,4 +101,14 @@ export const effectText = {
   gardening10: pct(gardeningGroceries(10)),
   music10: pct(musicFun(10) - 1),
   painting10: pct(paintingFun(10) - 1),
+  bakingMishap1: pct(bakingMishap(1)),
+  bakingTime10: pct(1 - bakingTime(10)),
+  wellnessDecay10: pct(1 - wellnessDecay(10)),
+  wellnessStress10: pct(1 - wellnessStress(10)),
+  creativityFun10: pct(creativityFun(10) - 1),
+  creativityPay10: pct(creativityPay(10) - 1),
+  photoBonus10: pct(photoSaleMult(10) - 1),
+  researchStudy10: pct(researchStudy(10)),
+  researchScience10: researchScience(10).toFixed(1),
+  researchPaper10: pct(researchPaperMult(10) - 1),
 };

@@ -1,0 +1,564 @@
+{
+  "checks": [
+    {
+      "name": "portrait: takePhotos plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "portrait: camera shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":206.81007221298628,\"y\":328.6613512713522,\"visible\":true}"
+    },
+    {
+      "name": "portrait: fishPond plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "portrait: pond shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":207.26879147799434,\"y\":316.6363705142987,\"visible\":true}"
+    },
+    {
+      "name": "portrait: researchSky plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "portrait: telescope shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":208.32074285286387,\"y\":316.675925522349,\"visible\":true}"
+    },
+    {
+      "name": "portrait: Skills panel lists Photography",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+    },
+    {
+      "name": "portrait: Skills panel lists Fishing",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+    },
+    {
+      "name": "portrait: Skills panel lists Research",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+    },
+    {
+      "name": "portrait: every listed skill shows a level",
+      "ok": true,
+      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Cooking Level 1 of 10; Handiness Level 1 of 10"
+    },
+    {
+      "name": "portrait: the Skills panel fits without horizontal overflow",
+      "ok": true,
+      "evidence": "overflow false, in viewport true"
+    },
+    {
+      "name": "portrait: skills shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":204.4701546586713,\"y\":118.15331531386899,\"visible\":true}"
+    },
+    {
+      "name": "portrait: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: takePhotos plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: camera shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":434.124841096661,\"y\":51.88017014808848,\"visible\":true}"
+    },
+    {
+      "name": "landscape: fishPond plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: pond shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":433.46895641768333,\"y\":39.69936335537648,\"visible\":true}"
+    },
+    {
+      "name": "landscape: researchSky plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: telescope shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":434.2696769572719,\"y\":39.63632118928398,\"visible\":true}"
+    },
+    {
+      "name": "landscape: Skills panel lists Photography",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+    },
+    {
+      "name": "landscape: Skills panel lists Fishing",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+    },
+    {
+      "name": "landscape: Skills panel lists Research",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Cooking, Handiness"
+    },
+    {
+      "name": "landscape: every listed skill shows a level",
+      "ok": true,
+      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Cooking Level 1 of 10; Handiness Level 1 of 10"
+    },
+    {
+      "name": "landscape: the Skills panel fits without horizontal overflow",
+      "ok": true,
+      "evidence": "overflow false, in viewport true"
+    },
+    {
+      "name": "landscape: skills shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":250.82777315302104,\"y\":72.58997855710169,\"visible\":true}"
+    },
+    {
+      "name": "landscape: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: takePhotos plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: camera shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":647.9897467324406,\"y\":217.17748005447208,\"visible\":true}"
+    },
+    {
+      "name": "desktop: fishPond plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: pond shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":649.5791013977189,\"y\":205.00043579805447,\"visible\":true}"
+    },
+    {
+      "name": "desktop: researchSky plays through the real menu",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: telescope shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":648.6976999205644,\"y\":205.2017228034956,\"visible\":true}"
+    },
+    {
+      "name": "desktop: Skills panel lists Photography",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Handiness"
+    },
+    {
+      "name": "desktop: Skills panel lists Fishing",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Handiness"
+    },
+    {
+      "name": "desktop: Skills panel lists Research",
+      "ok": true,
+      "evidence": "Research, Photography, Fishing, Handiness"
+    },
+    {
+      "name": "desktop: every listed skill shows a level",
+      "ok": true,
+      "evidence": "Research Level 1 of 10; Photography Level 1 of 10; Fishing Level 1 of 10; Handiness Level 1 of 10"
+    },
+    {
+      "name": "desktop: the Skills panel fits without horizontal overflow",
+      "ok": true,
+      "evidence": "overflow false, in viewport true"
+    },
+    {
+      "name": "desktop: skills shows the resident on screen",
+      "ok": true,
+      "evidence": "{\"x\":456.34428208549565,\"y\":200.6620283935763,\"visible\":true}"
+    },
+    {
+      "name": "desktop: no page errors",
+      "ok": true,
+      "evidence": ""
+    }
+  ],
+  "shots": [
+    "portrait-camera.png",
+    "portrait-pond.png",
+    "portrait-telescope.png",
+    "portrait-skills.png",
+    "landscape-camera.png",
+    "landscape-pond.png",
+    "landscape-telescope.png",
+    "landscape-skills.png",
+    "desktop-camera.png",
+    "desktop-pond.png",
+    "desktop-telescope.png",
+    "desktop-skills.png"
+  ],
+  "viewports": [
+    {
+      "name": "Maren",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "personId": "per_2w",
+      "skills": {
+        "rows": [
+          {
+            "name": "Research",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Photography",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Fishing",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Cooking",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Handiness",
+            "level": "Level 1 of 10"
+          }
+        ],
+        "overflow": false,
+        "inViewport": true
+      }
+    },
+    {
+      "name": "Maren",
+      "width": 844,
+      "height": 390,
+      "isMobile": true,
+      "personId": "per_2w",
+      "skills": {
+        "rows": [
+          {
+            "name": "Research",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Photography",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Fishing",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Cooking",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Handiness",
+            "level": "Level 1 of 10"
+          }
+        ],
+        "overflow": false,
+        "inViewport": true
+      }
+    },
+    {
+      "name": "Maren",
+      "width": 1280,
+      "height": 720,
+      "isMobile": false,
+      "personId": "per_2w",
+      "skills": {
+        "rows": [
+          {
+            "name": "Research",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Photography",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Fishing",
+            "level": "Level 1 of 10"
+          },
+          {
+            "name": "Handiness",
+            "level": "Level 1 of 10"
+          }
+        ],
+        "overflow": false,
+        "inViewport": true
+      }
+    }
+  ],
+  "diagnostics": [
+    {
+      "viewport": "portrait",
+      "shot": "camera",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 20.5,
+        "z": 19.196,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "takePhotos",
+      "level": 0,
+      "anchor": {
+        "x": 206.81007221298628,
+        "y": 328.6613512713522,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "portrait",
+      "shot": "pond",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 21,
+        "z": 22.25,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "fishPond",
+      "level": 0,
+      "anchor": {
+        "x": 207.26879147799434,
+        "y": 316.6363705142987,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "portrait",
+      "shot": "telescope",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 19.5,
+        "z": 19.25,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "researchSky",
+      "level": 0,
+      "anchor": {
+        "x": 208.32074285286387,
+        "y": 316.675925522349,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "portrait",
+      "shot": "skills",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 12.5,
+        "z": 6.5,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": null,
+      "interactionId": null,
+      "level": 0,
+      "anchor": {
+        "x": 204.4701546586713,
+        "y": 118.15331531386899,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "landscape",
+      "shot": "camera",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 20.5,
+        "z": 19.196,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "takePhotos",
+      "level": 0,
+      "anchor": {
+        "x": 434.124841096661,
+        "y": 51.88017014808848,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "landscape",
+      "shot": "pond",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 21,
+        "z": 22.25,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "fishPond",
+      "level": 0,
+      "anchor": {
+        "x": 433.46895641768333,
+        "y": 39.69936335537648,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "landscape",
+      "shot": "telescope",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 19.5,
+        "z": 19.25,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "researchSky",
+      "level": 0,
+      "anchor": {
+        "x": 434.2696769572719,
+        "y": 39.63632118928398,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "landscape",
+      "shot": "skills",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 14.5,
+        "z": 13.54,
+        "facing": 0,
+        "posture": "seated"
+      },
+      "phase": "perform",
+      "interactionId": "eatMeal",
+      "level": 0,
+      "anchor": {
+        "x": 250.82777315302104,
+        "y": 72.58997855710169,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "shot": "camera",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 20.5,
+        "z": 19.196,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "takePhotos",
+      "level": 0,
+      "anchor": {
+        "x": 647.9897467324406,
+        "y": 217.17748005447208,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "shot": "pond",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 21,
+        "z": 22.25,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "fishPond",
+      "level": 0,
+      "anchor": {
+        "x": 649.5791013977189,
+        "y": 205.00043579805447,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "shot": "telescope",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 19.5,
+        "z": 19.25,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": "perform",
+      "interactionId": "researchSky",
+      "level": 0,
+      "anchor": {
+        "x": 648.6976999205644,
+        "y": 205.2017228034956,
+        "visible": true
+      }
+    },
+    {
+      "viewport": "desktop",
+      "shot": "skills",
+      "location": {
+        "kind": "lot",
+        "lotId": "lot_1",
+        "level": 0,
+        "x": 12.5,
+        "z": 6.5,
+        "facing": 3.141592653589793,
+        "posture": "standing"
+      },
+      "phase": null,
+      "interactionId": null,
+      "level": 0,
+      "anchor": {
+        "x": 456.34428208549565,
+        "y": 200.6620283935763,
+        "visible": true
+      }
+    }
+  ]
+}

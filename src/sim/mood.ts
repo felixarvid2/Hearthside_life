@@ -1,6 +1,7 @@
 // Mood = need contributions + moodlets -> a value (-100..100), a label and readable reasons.
 
 import type { ContentDB } from '../content/types';
+import { wellnessStress } from '../content/skillEffects';
 import type { GameMinutes, NeedId, Person } from '../core/types';
 import { NEED_IDS } from '../core/types';
 import { clamp } from './context';
@@ -44,8 +45,10 @@ export function computeMood(content: ContentDB, p: Person): MoodResult {
     const words = NEED_WORDS[n];
     parts.push({ text: m > 0 ? words[2] : v < 20 ? words[1] : words[0], v: m });
   }
+  // A steady wellness practice makes bad moodlets weigh less (Milestone 11).
+  const stress = wellnessStress(p.skills.wellness?.level ?? 1);
   for (const ml of p.moodlets) {
-    parts.push({ text: content.moodlets[ml.id]?.name ?? ml.id, v: ml.value });
+    parts.push({ text: content.moodlets[ml.id]?.name ?? ml.id, v: ml.value < 0 ? ml.value * stress : ml.value });
   }
   const value = Math.round(clamp(parts.reduce((s, x) => s + x.v, 0), -100, 100));
   const reasons = parts
