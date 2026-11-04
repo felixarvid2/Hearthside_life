@@ -85,7 +85,7 @@ export const FLOORS_B: SurfaceDesign[] = [
     description: 'Crackle-glazed 20 by 10 cm metro tiles laid in half-bond with fine joints: the bathroom and kitchen classic, now underfoot.',
     family: 'tile', tags: ['tile', 'ceramic', 'metro', 'brick-bond', 'crackle', 'kitchen', 'bathroom', 'hall', 'washable'],
     packs: ['everyday-essentials', 'modern-minimal'], price: 13,
-    painter: 'tile-lay', params: { layout: 'running', tileW: 0.2, tileH: 0.1, offset: 0.5, grout: 0.003, finish: 'gloss', map: 'fb-glaze-crackle', mapScale: 0.4, mapMix: 0.5, variation: 0.5, bevel: 0.5 }, repeat: 1.2,
+    painter: 'tile-lay', params: { layout: 'running', tileW: 0.2, tileH: 0.1, offset: 0.5, grout: 0.003, finish: 'gloss', map: 'fb-glaze-crackle', mapScale: 0.4, mapMix: 0.3, variation: 0.5, bevel: 0.5 }, repeat: 1.2,
     palettes: tilePals(['white', 'cream', 'sky', 'sage', 'navy', 'charcoal', 'terracotta', 'greige']),
   }),
   floor({

@@ -28,7 +28,7 @@ const BLONDES: WoodTuple[] = [
 ];
 const WEATHERED_WOODS: WoodTuple[] = [
   ['silver-barn', 'Silver Barnwood', '#9a958b', '#e4e1da'], ['tobacco-barn', 'Tobacco Barnwood', '#8a6a4a', '#e2d8c4'],
-  ['bleached-barn', 'Bleached Barnwood', '#cfc5b0', '#c9d2cc'], ['driftwood', 'Driftwood', '#b8aa94', '#dde4e2'],
+  ['bleached-barn', 'Bleached Barnwood', '#e2dccb', '#c9d2cc'], ['driftwood', 'Driftwood', '#b8aa94', '#dde4e2'],
   ['charred-barn', 'Charred Barnwood', '#4a4038', '#d6cdbf'], ['honey-barn', 'Honey Barnwood', '#b98a52', '#efe6d4'],
   ['red-barn', 'Red Barn', '#a8483a', '#ebdfd0'], ['teal-barn', 'Teal Barn', '#4f8f86', '#e8e4d8'], ['sage-barn', 'Sage Barn', '#9db59a', '#eae6da'],
 ];
@@ -90,7 +90,7 @@ const STONES: TileTuple[] = [
 // Painted-motif tiles: ink is the hand-painted colour.
 const DELFT: TileTuple[] = [
   ['delft-blue', 'Delft Blue', '#f3f0e8', '#d9d3c4', '#d6d2c6', '#2b4a8b'], ['manganese', 'Manganese', '#f1ece2', '#d9d3c4', '#d6d2c6', '#5b3f6e'], ['sage-print', 'Sage Print', '#f1eee4', '#d9d3c4', '#d6d2c6', '#4f7a55'],
-  ['rust-print', 'Rust Print', '#f0e6d4', '#d9cdb4', '#d8cfb8', '#a8512f'], ['black-print', 'Black Print', '#eeeae0', '#d4cfc2', '#cfcabb', '#26262a'],
+  ['rust-print', 'Rust Print', '#f0e6d4', '#d9cdb4', '#d8cfb8', '#a8512f'], ['black-on-grey', 'Black on Grey', '#b8b2a4', '#9a9486', '#d0cabc', '#26262a'],
   ['cream-navy', 'Cream and Navy', '#e8dcc0', '#cfc09a', '#d8cfb8', '#26324f'], ['navy-cream', 'Navy and Cream', '#26324f', '#3f5282', '#d9dbdc', '#efe8d4'],
   ['mustard-navy', 'Mustard and Navy', '#d6a53e', '#ecc872', '#e8dcc0', '#2f3d5a'], ['terracotta-cream', 'Terracotta and Cream', '#c47452', '#e29a78', '#e8dccb', '#f3eadb'],
   ['charcoal-coral', 'Charcoal and Coral', '#34363a', '#5a5d62', '#9a9a96', '#e4806a'],
@@ -266,9 +266,9 @@ export const WALLS_E: SurfaceDesign[] = [
     painter: 'wall-panel-frame', params: { style: 'cane', unit: 0.6, cell: 0.9, mould: 0.04, gap: 0.04, skirt: 0.1 }, repeat: 1.2,
     // roles: wall behind, cane strands, openings, frame
     palettes: ([
-      ['natural-cane', 'Natural Cane', '#d9c08f', '#4a3a2c', '#8a6a44'], ['bleached-cane', 'Bleached Cane', '#e8dcc0', '#6a6258', '#b8a888'], ['dark-cane', 'Dark Cane', '#8a6a44', '#2a2018', '#3a2c20'],
+      ['natural-cane', 'Natural Cane', '#d9c08f', '#4a3a2c', '#8a6a44'], ['bleached-cane', 'Bleached Cane', '#e8dcc0', '#6a6258', '#b8a888'], ['dark-cane', 'Dark Cane', '#4a3626', '#150f0a', '#2a1e16'],
       ['black-frame', 'Black Frame', '#d9c08f', '#2a2a2c', '#2a2a2c'], ['sage-frame', 'Sage Frame', '#e4d8b8', '#4a5a48', '#8fa68a'], ['navy-frame', 'Navy Frame', '#e4d8b8', '#1c2438', '#2f3d5a'],
-      ['terracotta-frame', 'Terracotta Frame', '#e8dcc0', '#4a2a1e', '#c4714d'], ['white-frame', 'White Frame', '#d9c08f', '#5a4a3a', '#f3f0e8'], ['honey-cane', 'Honey Cane', '#c98f4f', '#3e2c1c', '#a8733a'],
+      ['terracotta-frame', 'Terracotta Frame', '#e8dcc0', '#4a2a1e', '#c4714d'], ['white-frame', 'White Frame', '#d9c08f', '#5a4a3a', '#f3f0e8'], ['grey-cane', 'Grey Cane', '#b8aa94', '#3e3a34', '#7a7266'],
     ] as Array<[string, string, string, string, string]>).map(([id, name, cane, hole, frame]) => pal(id, name, cane, cane, hole, frame)),
   }),
   wall({
