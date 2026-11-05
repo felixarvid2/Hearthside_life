@@ -253,6 +253,35 @@ describe('objectAnim: content-declared animation (Milestone 10)', () => {
     expect(allDescriptors().length).toBe(DESCRIPTORS.length + OBJECTS.filter((o) => o.anim && !ANIMATED_DEF_IDS.includes(o.id)).length);
   });
 
+  it('carries tap and hob data from content into the descriptor, and tables-listed defs keep theirs', () => {
+    const sinkNew = OBJECTS.find((o) => o.id === 'sink-single-bowl')!;
+    const d = descriptorForDef(sinkNew)!;
+    expect(d.kind).toBe('sink');
+    expect(d.tap).toEqual(sinkNew.anim!.tap);
+    expect(activeParts(d, [use({ interactionId: 'washHands' })], CONTENT).tap.on).toBe(true);
+    const range = descriptorForDef(OBJECTS.find((o) => o.id === 'range-chef-six')!)!;
+    expect(range.hob).toBe(true);
+    expect(range.hobLayout!.rings).toHaveLength(6);
+    expect(activeParts(range, [use({ interactionId: 'cookMeal', stage: 1, role: 'station' })], CONTENT).burners.on).toBe(true);
+    expect(descriptorFor('stove-basic')!.hobLayout).toBeUndefined();
+    for (const o of OBJECTS) {
+      const t = o.anim?.tap;
+      if (t) { expect(t.top, o.id).toBeGreaterThan(t.bottom); expect(t.x, o.id).toBeGreaterThan(0); expect(t.x, o.id).toBeLessThan(1); }
+      for (const r of o.anim?.hob?.rings ?? []) for (const v of r) { expect(v, o.id).toBeGreaterThan(0); expect(v, o.id).toBeLessThan(1); }
+    }
+  });
+
+  it('opens a shower door while the person steps in and out, and a top-loader lid while it is used', () => {
+    const shower = descriptorForDef(OBJECTS.find((o) => o.id === 'shower-walk-in')!)!;
+    const at = (phase: 'prepare' | 'perform' | 'apply') => activeParts(shower, [use({ interactionId: 'takeShower', phase })], CONTENT);
+    expect([at('prepare').door.on, at('perform').door.on, at('apply').door.on]).toEqual([true, false, true]);
+    expect([at('prepare').shower.on, at('perform').shower.on]).toEqual([false, true]);
+    expect(activeParts(shower, [], CONTENT).door.on).toBe(false);
+    const washer = descriptorForDef(OBJECTS.find((o) => o.id === 'washer-top-load')!)!;
+    expect(activeParts(washer, [use({ interactionId: 'doLaundry' })], CONTENT).lid.on).toBe(true);
+    expect(activeParts(descriptorFor('shower-stall')!, [use({ interactionId: 'takeShower', phase: 'prepare' })], CONTENT).door.on).toBe(true);
+  });
+
   it('opens the retro fridge with the existing openFridge trigger', () => {
     const d = descriptorForDef(fridge)!;
     expect(activeParts(d, [use({ interactionId: 'grabSnack', anim: 'openFridge', animSince: 7 })], CONTENT).door).toEqual({ on: true, since: 7 });

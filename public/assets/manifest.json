@@ -16266,7 +16266,7 @@
    "group": "kitchen-bath-electronics",
    "animNodes": [
     "anim:interior",
-    "anim:door"
+    "anim:lid"
    ]
   },
   "tvPortable": {

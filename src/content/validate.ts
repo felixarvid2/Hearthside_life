@@ -30,6 +30,10 @@ export interface ValidationResult { errors: string[]; warnings: string[] }
 const TIERS: readonly PriceTier[] = ['budget', 'standard', 'premium', 'luxury'];
 const CATEGORIES: readonly CatalogCategory[] = ['seating', 'beds', 'tables', 'storage', 'kitchen', 'bathroom', 'lighting', 'electronics', 'hobby', 'decor', 'outdoor', 'kids', 'stairs'];
 const LAYERS: readonly PlacementLayer[] = ['floor', 'rug', 'wall', 'surface', 'ceiling'];
+/** Kinds that run a water effect: they may declare an anim with no parts (the door of a shower or bath is optional). */
+const WATER_KINDS: readonly AnimKind[] = ['shower', 'bath', 'sink'];
+/** The slot kind a kind's trigger stands at (default 'use'): a toilet's lid follows the person sitting on it. */
+const ANIM_SLOT_KIND: Partial<Record<AnimKind, SlotKind>> = { toilet: 'sit' };
 const ANIM_KINDS: readonly AnimKind[] = ['fridge', 'oven', 'wardrobe', 'toilet', 'shower', 'bath', 'sink', 'dishwasher', 'laundry', 'microwave', 'openWhileUsed'];
 const INTERIOR_KINDS: readonly InteriorKind[] = ['fridge', 'oven', 'wardrobe', 'dishwasher', 'washer'];
 const PART_ROLES: readonly PartRole[] = ['door', 'door2', 'lid', 'oven', 'drawer', 'drawer2', 'interior', 'screen'];
@@ -304,7 +308,23 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
       if (a.interiorBox && (a.interiorBox.length !== 6 || !a.interiorBox.every(finite) || a.interiorBox[0] >= a.interiorBox[3] || a.interiorBox[1] >= a.interiorBox[4] || a.interiorBox[2] >= a.interiorBox[5])) {
         err(`${w}: anim interiorBox must be [x0, y0, z0, x1, y1, z1] with min < max`);
       }
-      if (a.parts.length === 0 && !a.interior) warn(`${w}: anim has no parts and no interior`);
+      if (a.parts.length === 0 && !a.interior && !has(WATER_KINDS, a.kind) && !a.hob) warn(`${w}: anim has no parts and no interior`);
+      if (a.tap) {
+        const t = a.tap;
+        if (a.kind !== 'sink') err(`${w}: anim.tap only applies to kind 'sink'`);
+        if (![t.x, t.z, t.top, t.bottom].every(finite) || t.x <= 0 || t.x >= 1 || t.z < 0 || t.z > 1 || t.bottom < 0 || t.top > 1 || t.top <= t.bottom) {
+          err(`${w}: anim.tap needs x in (0, 1), z in [0, 1] and 0 <= bottom < top <= 1 (fractions of the fitted box)`);
+        }
+      }
+      if (a.hob) {
+        const h = a.hob;
+        if (a.kind !== 'oven') err(`${w}: anim.hob only applies to kind 'oven'`);
+        const spot = (v: unknown) => Array.isArray(v) && v.length === 2 && v.every((n) => finite(n as number) && (n as number) > 0 && (n as number) < 1);
+        if (!Array.isArray(h.rings) || h.rings.length === 0 || !h.rings.every(spot)) err(`${w}: anim.hob.rings must be a non-empty list of [x, z] fractions in (0, 1)`);
+        if (h.pan !== undefined && !spot(h.pan)) err(`${w}: anim.hob.pan must be [x, z] fractions in (0, 1)`);
+        if (h.y !== undefined && !(finite(h.y) && h.y > 0 && h.y <= 1)) err(`${w}: anim.hob.y must be in (0, 1]`);
+        if (h.ringSize !== undefined && !(finite(h.ringSize) && h.ringSize > 0.02 && h.ringSize <= 0.4)) err(`${w}: anim.hob.ringSize is a diameter in metres, 0.02 to 0.4`);
+      }
       const nodes = new Set<string>();
       for (const p of a.parts) {
         const pw = `${w} anim part '${p.node}'`;
@@ -327,7 +347,8 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
         for (const id of a.on) if (!db.interactions[id]) err(`${w}: anim.on names unknown interaction '${id}'`);
       }
       if (ready && a.kind === 'openWhileUsed' && !o.interactions.length) warn(`${w}: openWhileUsed without interactions never opens`);
-      if (ready && !o.slots.some((s) => s.kind === 'use') && a.parts.some((p) => p.role !== 'interior' && p.role !== 'screen')) warn(`${w}: animated parts but no 'use' slot`);
+      const slotKind = ANIM_SLOT_KIND[a.kind] ?? 'use';
+      if (ready && !o.slots.some((s) => s.kind === slotKind) && a.parts.some((p) => p.role !== 'interior' && p.role !== 'screen')) warn(`${w}: animated parts but no '${slotKind}' slot`);
     }
 
     // stats

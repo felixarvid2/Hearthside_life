@@ -893,8 +893,8 @@ def('vanityCompact', (m) => {
 
 
 // --- bathroom: showers and baths --------------------------------------------------------------------------------------
-// A shower or bath has a hinged glass door or screen on the front (`anim:door`). The 'shower' and 'bath' kinds run the water
-// effect; they do not open the door, so it stays shut while somebody uses the unit.
+// A shower or bath has a hinged glass door or screen on the front (`anim:door`). The 'shower' kind swings the door open while
+// the person steps in and out; the 'bath' designs keep their splash screen fixed (their anim declares no parts).
 
 /** A hinged pane on the front plane: x0..x1 wide, y0..y1 high, hinge on the left or right edge. */
 function glassDoor(m, name, o) {
@@ -1177,7 +1177,7 @@ def('washerTopLoad', (m) => {
   m.box('metalLight', [0.03, H - 0.04, D - 0.03], [W - 0.03, H, D]);
   m.cylY('metalDark', W / 2, 0.46, H - 0.04, H - 0.034, 0.22, 0.22, 12); // drum opening, seen when the lid is up
   m.box('carpetBlue', [W / 2 - 0.12, H - 0.034, 0.4], [W / 2 + 0.0, H - 0.01, 0.5]);
-  const lid = m.part('anim:door', [W / 2, H - 0.02, D - 0.03]); // lid hinged on its front edge
+  const lid = m.part('anim:lid', [W / 2, H - 0.02, 0.27]); // lid hinged on its back edge (x axis, negative angle lifts it)
   lid.box('metal', [0.03, H - 0.04, 0.27], [W - 0.03, H - 0.015, D - 0.03]);
   lid.box('glass', [0.1, H - 0.015, 0.34], [W - 0.1, H - 0.011, D - 0.1]);
   lid.box('metalDark', [W / 2 - 0.1, H - 0.04, D - 0.03], [W / 2 + 0.1, H - 0.01, D - 0.01]); // lip

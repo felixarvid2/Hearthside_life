@@ -13,7 +13,7 @@
 
 import * as THREE from 'three';
 import { OBJECTS, fittedBounds, type LocalBox } from '../content/objects';
-import type { AnimKind, ContentDB, InteriorKind, ObjectDef, PartAxis, PartRole } from '../content/types';
+import type { AnimHobSpec, AnimKind, ContentDB, InteriorKind, ObjectDef, PartAxis, PartRole } from '../content/types';
 import type { ObjectUse } from './objectUse';
 
 // ---------------------------------------------------------------------------------------------
@@ -77,6 +77,8 @@ export interface AnimDescriptor {
   interiorBox?: InteriorBox;
   /** Cooking surface on top (stoves): four rings and a pot. */
   hob?: boolean;
+  /** Where the rings and the pot are (content-declared hobs); absent = the default four rings in a 2 x 2 grid. */
+  hobLayout?: AnimHobSpec;
   /** Tap stream anchor as fractions: x across, z from back, top/bottom heights of the fitted box. */
   tap?: { x: number; z: number; top: number; bottom: number };
   /** Minutes at the start and end of a run in which a fold-down door is open (dishwashers). */
@@ -195,6 +197,7 @@ function descriptorFromContent(def: ObjectDef): AnimDescriptor | null {
   if (!d) {
     d = {
       defId: def.id, asset: def.model.asset, kind: a.kind, interior: a.interior, interiorBox: a.interiorBox, on: a.on,
+      ...(a.tap ? { tap: a.tap } : {}), ...(a.hob ? { hob: true, hobLayout: a.hob } : {}),
       parts: a.parts.map((p): NodePart => ({
         kind: 'node', role: p.role, node: p.node, axis: p.axis ?? 'y', angle: p.angle ?? 0, slide: p.slide,
         openMinutes: p.openMinutes ?? T, closeMinutes: p.closeMinutes ?? T,
@@ -336,10 +339,13 @@ export function activeParts(
     }
     case 'shower': {
       setPart(out, 'shower', first(uses, (x) => x.interactionId === 'takeShower' && x.phase === 'perform'));
+      // a glass door (if the model has one) stands open while the person steps in and out, shut while the water runs
+      setPart(out, 'door', first(uses, (x) => x.interactionId === 'takeShower' && x.phase !== 'perform'));
       break;
     }
     case 'bath': {
       setPart(out, 'bath', first(uses, (x) => x.interactionId === 'takeBath' && x.phase === 'perform'));
+      setPart(out, 'door', first(uses, (x) => x.interactionId === 'takeBath' && x.phase !== 'perform'));
       break;
     }
     case 'sink': {
@@ -364,6 +370,7 @@ export function activeParts(
     case 'laundry': {
       const u = first(uses, () => true);
       setPart(out, 'door', u);
+      setPart(out, 'lid', u); // top-loaders: a hinged lid instead of a front door
       setPart(out, 'drum', u);
       setPart(out, 'light', u);
       break;
@@ -743,12 +750,13 @@ export class ObjectAnim {
     };
     this.ownMaterials.push(e.ringMat);
     if (kind === 'oven' && this.desc.hob) {
-      const hobY = box.y1 + 0.004;
-      const xs = [0.28, 0.72], zs = [0.30, 0.64];
-      for (const fx of xs) for (const fz of zs) {
+      const layout = this.desc.hobLayout;
+      const hobY = (layout?.y !== undefined ? box.y0 + layout.y * (box.y1 - box.y0) : box.y1) + 0.004;
+      const spots: [number, number][] = layout ? layout.rings : [[0.28, 0.30], [0.28, 0.64], [0.72, 0.30], [0.72, 0.64]];
+      for (const [fx, fz] of spots) {
         const ring = new THREE.Mesh(RING_GEO, e.ringMat);
         ring.position.set(box.x0 + fx * (box.x1 - box.x0), hobY, box.z0 + fz * (box.z1 - box.z0));
-        ring.scale.setScalar(0.06); // ~12 cm across: any larger and the two columns of rings touch
+        ring.scale.setScalar(layout?.ringSize !== undefined ? layout.ringSize / 2 : 0.06); // default ~12 cm across: any larger and the two columns of rings touch
         g.add(ring);
         e.rings.push(ring);
       }
@@ -762,7 +770,8 @@ export class ObjectAnim {
       handle.scale.set(0.02, 0.016, 0.16);
       handle.position.set(0.14, 0.06, 0);
       pan.add(handle);
-      pan.position.set(box.x0 + xs[0]! * (box.x1 - box.x0), hobY, box.z0 + zs[0]! * (box.z1 - box.z0));
+      const [pfx, pfz] = layout ? (layout.pan ?? layout.rings[0]!) : [0.28, 0.30];
+      pan.position.set(box.x0 + pfx * (box.x1 - box.x0), hobY, box.z0 + pfz * (box.z1 - box.z0));
       g.add(pan);
       e.pan = pan;
       e.steamAnchor.copy(pan.position).add(new THREE.Vector3(0, 0.08, 0));

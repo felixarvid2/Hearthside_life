@@ -52,6 +52,46 @@ describe('anim and screen validation', () => {
   });
 });
 
+describe('tap, hob and water-only kinds', () => {
+  const messages = (id: string, patch: Partial<ObjectDef>) => {
+    const bad: ObjectDef = { ...db.objects[id]!, ...patch };
+    const r = validateContent({ ...db, objects: { ...db.objects, [id]: bad } }, { models: manifest.furniture });
+    return { errors: r.errors.filter((e) => e.includes(`'${id}'`)), warnings: r.warnings.filter((e) => e.includes(`'${id}'`)) };
+  };
+
+  it('accepts the shipped sinks, ranges, showers, baths and toilets without warnings', () => {
+    for (const id of ['sink-single-bowl', 'vanity-double', 'bidet', 'range-steel-gas', 'range-chef-six', 'wall-oven-tower', 'shower-walk-in', 'bath-clawfoot', 'toilet-budget', 'washer-top-load']) {
+      expect(messages(id, {}), id).toEqual({ errors: [], warnings: [] });
+    }
+  });
+
+  it('lets shower, bath and sink anims declare no parts, but not other kinds', () => {
+    expect(messages('shower-walk-in', { anim: { kind: 'shower', parts: [] } }).warnings).toEqual([]);
+    expect(messages('bath-clawfoot', { anim: { kind: 'bath', parts: [] } }).warnings).toEqual([]);
+    expect(messages('chest-of-drawers', { anim: chestAnim([]) }).warnings.join('\n')).toMatch(/no parts and no interior/);
+  });
+
+  it('wants the sit slot for toilets and the use slot elsewhere', () => {
+    const lid = { node: 'anim:lid', role: 'lid' as const, axis: 'x' as const, angle: -1.7 };
+    expect(messages('toilet-budget', { slots: [] , anim: { kind: 'toilet', parts: [lid] } }).warnings.join('\n')).toMatch(/no 'sit' slot/);
+    const sit = db.objects['toilet-budget']!.slots.filter((x) => x.kind === 'sit');
+    expect(messages('toilet-budget', { slots: sit }).warnings).toEqual([]);
+  });
+
+  it('checks tap and hob data', () => {
+    const tap = { x: 0.5, z: 0.3, top: 0.9, bottom: 0.7 };
+    const sinkAnim = (t: object) => ({ kind: 'sink' as const, parts: [], tap: t as typeof tap });
+    expect(messages('sink-single-bowl', { anim: sinkAnim({ ...tap, top: 0.6 }) }).errors.join('\n')).toMatch(/anim.tap needs/);
+    expect(messages('sink-single-bowl', { anim: sinkAnim({ ...tap, x: 1.2 }) }).errors.join('\n')).toMatch(/anim.tap needs/);
+    expect(messages('sink-single-bowl', { anim: { kind: 'microwave', parts: [], tap } }).errors.join('\n')).toMatch(/only applies to kind 'sink'/);
+    const hobAnim = (h: object) => ({ kind: 'oven' as const, parts: [], hob: h as { rings: [number, number][] } });
+    expect(messages('range-steel-gas', { anim: hobAnim({ rings: [] }) }).errors.join('\n')).toMatch(/anim.hob.rings/);
+    expect(messages('range-steel-gas', { anim: hobAnim({ rings: [[0.3, 1.2]] }) }).errors.join('\n')).toMatch(/anim.hob.rings/);
+    expect(messages('range-steel-gas', { anim: hobAnim({ rings: [[0.3, 0.3]], y: 0 }) }).errors.join('\n')).toMatch(/anim.hob.y/);
+    expect(messages('range-steel-gas', { anim: { kind: 'fridge', parts: [], hob: { rings: [[0.3, 0.3]] } } }).errors.join('\n')).toMatch(/only applies to kind 'oven'/);
+  });
+});
+
 describe('generated model data', () => {
   it('has bounds for every Milestone 10 model that match the manifest exactly', () => {
     for (const [name, info] of Object.entries(M10_MODELS)) {

@@ -197,6 +197,23 @@ export interface AnimPartSpec {
   closeMinutes?: number;
 }
 
+/** Tap stream of a 'sink' anim, in fractions of the fitted box: x across, z from the back, top/bottom heights (same as objectAnim DESCRIPTORS). */
+export interface AnimTapSpec { x: number; z: number; top: number; bottom: number }
+
+/**
+ * Hob effects of an 'oven' anim while something is cooked on top: glowing rings, a pot and steam. Positions are fractions of the
+ * fitted box: [x across, z from the back].
+ */
+export interface AnimHobSpec {
+  rings: [number, number][];
+  /** The pot (and steam) sits on this spot; default: the first ring. */
+  pan?: [number, number];
+  /** Height of the hob surface as a fraction of the fitted box height (default 1: the top of the model). */
+  y?: number;
+  /** Ring diameter in metres (default 0.12). */
+  ringSize?: number;
+}
+
 export interface ObjectAnimSpec {
   /** Which interaction / anim ids open the parts (render/objectAnim.ts activeParts). */
   kind: AnimKind;
@@ -207,6 +224,10 @@ export interface ObjectAnimSpec {
   interiorBox?: [number, number, number, number, number, number];
   /** openWhileUsed only: interaction ids that open the parts (default: any interaction on the object). */
   on?: string[];
+  /** 'sink' only: the tap-water stream shown while hands or dishes are washed. */
+  tap?: AnimTapSpec;
+  /** 'oven' only: hob rings, pot and steam shown while a meal is cooked on the object. */
+  hob?: AnimHobSpec;
 }
 
 /** Milestone 9: see ObjectDef.stair. */

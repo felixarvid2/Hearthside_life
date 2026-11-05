@@ -6,7 +6,7 @@ import type { ObjectDef } from '../types';
 import type { ObjectKit } from '../objects';
 
 export default function build(k: ObjectKit): ObjectDef[] {
-  const { fit, obj, useFront, applianceR, metalR, darkMetalR, FP11, WALL_GAP, dollars } = k;
+  const { fit, obj, useFront, applianceR, metalR, darkMetalR, FP11, WALL_GAP, MODEL_BOUNDS, dollars } = k;
 
   // Retro tall fridge: same use as the other fridges (grab a snack, cook a meal), so the door follows `openFridge`.
   const fridgeRetro = fit('fridgeRetroTall', FP11, 2, { back: WALL_GAP });
@@ -28,13 +28,29 @@ export default function build(k: ObjectKit): ObjectDef[] {
   const fridgeAnim = (parts: Anim['parts'], interior = true): Anim => ({ kind: 'fridge', parts: interior ? [...parts, { node: 'anim:interior', role: 'interior' }] : parts });
   const door = (n: 'door' | 'door2', h: 'L' | 'R', a = 1.75): Anim['parts'][number] => ({ node: `anim:${n}`, role: n, axis: 'y', angle: hingeAngle(h, a) });
   const drawer = (z: number): Anim['parts'][number] => ({ node: 'anim:drawer', role: 'drawer', slide: [0, 0, z] });
-  const ovenAnim = (n = 1): Anim => ({
+  // Metres as written in the model file (full size) to fractions of the fitted box (the units of anim.tap and anim.hob): the
+  // GLB is built at half scale (MODEL_BOUNDS are half-scale), and the fit then only scales and shifts it.
+  const frac = (model: string, v: number, axis: 0 | 1 | 2) => {
+    const [mn, mx] = MODEL_BOUNDS[model]!;
+    return Math.round(((v / 2 - mn[axis]) / (mx[axis] - mn[axis])) * 1000) / 1000;
+  };
+  /** Hob rings (a grid of `cols` x `rows`, as fractions of the W x D top) and the surface height `y` in model metres. */
+  const hobOf = (model: string, o: { W: number; D: number; cols: number[]; rows: number[]; y: number; size?: number }): NonNullable<Anim['hob']> => ({
+    rings: o.rows.flatMap((rz) => o.cols.map((cx): [number, number] => [frac(model, cx * o.W, 0), frac(model, rz * o.D, 2)])),
+    y: frac(model, o.y, 1), ...(o.size ? { ringSize: o.size } : {}),
+  });
+  /** Tap stream at model-space (x, z) from the spout height `top` down to the bowl at `bottom` (metres). */
+  const tapOf = (model: string, x: number, z: number, top: number, bottom: number): NonNullable<Anim['tap']> =>
+    ({ x: frac(model, x, 0), z: frac(model, z, 2), top: frac(model, top, 1), bottom: frac(model, bottom, 1) });
+  const sinkAnim = (tap: Anim['tap']): Anim => ({ kind: 'sink', parts: [], tap });
+  const ovenAnim = (n = 1, hob?: Anim['hob']): Anim => ({
     kind: 'oven',
     parts: [
       { node: 'anim:oven', role: 'oven', axis: 'x', angle: 1.35, openMinutes: 0.5, closeMinutes: 0.5 },
       ...(n > 1 ? [{ node: 'anim:oven2', role: 'oven' as const, axis: 'x' as const, angle: 1.35, openMinutes: 0.5, closeMinutes: 0.5 }] : []),
       { node: 'anim:interior', role: 'interior' },
     ],
+    ...(hob ? { hob } : {}),
   });
   const ROOM_K: ObjectDef['rooms'] = ['kitchen'];
   const FR_TAGS = ['fridge', 'appliance', 'food', 'cleanable'];
@@ -62,22 +78,22 @@ export default function build(k: ObjectKit): ObjectDef[] {
 
   // ---- kitchen: ranges, ovens, microwaves, hood --------------------------------------------------------------------------
   const STOVE_TAGS = ['stove', 'appliance', 'cooking', 'baking', 'cleanable'];
-  const stoveDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; stats?: ObjectDef['stats']; fin: ObjectDef['finishes']; ovens?: number; back?: number }) => {
+  const stoveDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; stats?: ObjectDef['stats']; fin: ObjectDef['finishes']; ovens?: number; back?: number; hob: NonNullable<Anim['hob']> }) => {
     const fp = o.fp ?? FP11, f = fit(model, fp, 2, { back: o.back ?? 0.02 });
     return obj(f, {
       id: o.id, name: o.name, category: 'kitchen', subcategory: 'stove', rooms: ROOM_K, style: o.style, description: o.desc, tags: STOVE_TAGS,
       packs: o.packs ?? ['everyday-essentials'], tier: o.tier, price: dollars(o.price), quality: o.q, functional: true, footprint: fp, layer: 'floor',
       blocksMovement: true, slots: [useFront('use', fp.w / 2, f, fp.d)], interactions: ['bakeTreat', 'sellBakes'], stats: o.stats ?? { cooking: 0, baking: 0 },
-      finishes: o.fin, anim: ovenAnim(o.ovens ?? 1),
+      finishes: o.fin, anim: ovenAnim(o.ovens ?? 1, o.hob),
     });
   };
   const KITCHEN_COOKING = [
-    stoveDef('rangeSteelGas', { id: 'range-steel-gas', name: 'Steel Gas Range', desc: 'A stainless gas range with four burners on cast grates and a roomy oven. The oven door drops open when something goes in to bake.', style: 'modern', tier: 'standard', price: 840, q: 3, stats: { cooking: 0.5, baking: 0.5 }, fin: [steelR(), darkMetalR('Hob and trim')] }),
-    stoveDef('rangeInduction', { id: 'range-induction', name: 'Glass Induction Range', desc: 'A black induction hob over a fan oven: fast, clean and easy to wipe. A good range lifts the result a little.', style: 'modern', tier: 'premium', price: 1350, q: 4, packs: ['modern-minimal'], stats: { cooking: 1, baking: 1, environment: 1 }, fin: [darkMetalR('Body'), trimR(['metalMedium'], 'Control strip')] }),
-    stoveDef('rangeCottage', { id: 'range-cottage-cooker', name: 'Cottage Range Cooker', desc: 'A heavy enamel range cooker with two ovens, hotplate lids and a towel rail. Slow, warm and loved by bakers.', style: 'cottage', tier: 'luxury', price: 2100, q: 5, fp: FP21, packs: ['cozy-cottage', 'classic-townhouse'], stats: { cooking: 0.5, baking: 2, environment: 2 }, fin: [darkMetalR('Enamel'), trimR(['metal'])], ovens: 2 }),
-    stoveDef('rangeChef', { id: 'range-chef-six', name: "Chef's Six-Burner Range", desc: 'Six burners and two ovens in a steel body with red knobs. Built for cooking for a crowd.', style: 'industrial', tier: 'luxury', price: 2250, q: 5, fp: FP21, packs: ['industrial-loft'], stats: { cooking: 2, baking: 1 }, fin: [steelR(), darkMetalR('Hob and trim'), fabricR(['carpet'], 'Knobs')], ovens: 2 }),
-    stoveDef('stoveCompact', { id: 'stove-compact', name: 'Studio Two-Plate Stove', desc: 'A small cooker with two hotplates and a mini oven. Fits any studio and does the job.', style: 'modern', tier: 'budget', price: 260, q: 1, stats: { cooking: -0.2, baking: -0.2 }, fin: [applianceR(), metalR(['metalMedium'])] }),
-    stoveDef('rangeRetro', { id: 'range-retro-enamel', name: 'Retro Enamel Range', desc: 'A 1950s-style range with a clock backsplash, chrome trim and chunky red knobs.', style: 'retro', tier: 'premium', price: 1250, q: 4, packs: ['mid-century'], stats: { cooking: 0.5, baking: 0.5, environment: 1 }, fin: [applianceR(), metalR(['metal']), fabricR(['carpet'], 'Knobs')] }),
+    stoveDef('rangeSteelGas', { id: 'range-steel-gas', name: 'Steel Gas Range', desc: 'A stainless gas range with four burners on cast grates and a roomy oven. The oven door drops open when something goes in to bake.', style: 'modern', tier: 'standard', price: 840, q: 3, stats: { cooking: 0.5, baking: 0.5 }, hob: hobOf('rangeSteelGas', { W: 0.9, D: 0.72, cols: [0.25, 0.75], rows: [0.3, 0.72], y: 0.935 }), fin: [steelR(), darkMetalR('Hob and trim')] }),
+    stoveDef('rangeInduction', { id: 'range-induction', name: 'Glass Induction Range', desc: 'A black induction hob over a fan oven: fast, clean and easy to wipe. A good range lifts the result a little.', style: 'modern', tier: 'premium', price: 1350, q: 4, packs: ['modern-minimal'], stats: { cooking: 1, baking: 1, environment: 1 }, hob: hobOf('rangeInduction', { W: 0.9, D: 0.68, cols: [0.27, 0.73], rows: [0.3, 0.7], y: 0.9, size: 0.17 }), fin: [darkMetalR('Body'), trimR(['metalMedium'], 'Control strip')] }),
+    stoveDef('rangeCottage', { id: 'range-cottage-cooker', name: 'Cottage Range Cooker', desc: 'A heavy enamel range cooker with two ovens, hotplate lids and a towel rail. Slow, warm and loved by bakers.', style: 'cottage', tier: 'luxury', price: 2100, q: 5, fp: FP21, packs: ['cozy-cottage', 'classic-townhouse'], stats: { cooking: 0.5, baking: 2, environment: 2 }, hob: hobOf('rangeCottage', { W: 1.4, D: 0.76, cols: [0.27, 0.73], rows: [0.5], y: 0.985, size: 0.2 }), fin: [darkMetalR('Enamel'), trimR(['metal'])], ovens: 2 }),
+    stoveDef('rangeChef', { id: 'range-chef-six', name: "Chef's Six-Burner Range", desc: 'Six burners and two ovens in a steel body with red knobs. Built for cooking for a crowd.', style: 'industrial', tier: 'luxury', price: 2250, q: 5, fp: FP21, packs: ['industrial-loft'], stats: { cooking: 2, baking: 1 }, hob: hobOf('rangeChef', { W: 1.5, D: 0.78, cols: [0.15, 0.5, 0.85], rows: [0.3, 0.7], y: 0.965, size: 0.14 }), fin: [steelR(), darkMetalR('Hob and trim'), fabricR(['carpet'], 'Knobs')], ovens: 2 }),
+    stoveDef('stoveCompact', { id: 'stove-compact', name: 'Studio Two-Plate Stove', desc: 'A small cooker with two hotplates and a mini oven. Fits any studio and does the job.', style: 'modern', tier: 'budget', price: 260, q: 1, stats: { cooking: -0.2, baking: -0.2 }, hob: hobOf('stoveCompact', { W: 0.6, D: 0.6, cols: [0.28, 0.72], rows: [0.5], y: 0.895, size: 0.14 }), fin: [applianceR(), metalR(['metalMedium'])] }),
+    stoveDef('rangeRetro', { id: 'range-retro-enamel', name: 'Retro Enamel Range', desc: 'A 1950s-style range with a clock backsplash, chrome trim and chunky red knobs.', style: 'retro', tier: 'premium', price: 1250, q: 4, packs: ['mid-century'], stats: { cooking: 0.5, baking: 0.5, environment: 1 }, hob: hobOf('rangeRetro', { W: 0.8, D: 0.66, cols: [0.28, 0.72], rows: [0.32, 0.7], y: 0.915 }), fin: [applianceR(), metalR(['metal']), fabricR(['carpet'], 'Knobs')] }),
   ];
   const wallOvenFit = fit('wallOven', FP11, 2, { back: WALL_GAP });
   const WALL_OVEN = obj(wallOvenFit, {
@@ -122,18 +138,18 @@ export default function build(k: ObjectKit): ObjectDef[] {
     dwDef('dishwasherSteel', { id: 'dishwasher-steel-pro', name: 'Steel Pro Dishwasher', desc: 'A heavy steel dishwasher with a bar handle and a quiet motor. Items can stand on its worktop.', style: 'industrial', tier: 'premium', price: 1120, q: 4, packs: ['industrial-loft', 'modern-minimal'], fin: [steelR('Steel')] }),
   ];
   const SINK_TAGS = ['sink', 'counter', 'surface', 'plumbing', 'cleanable'];
-  const sinkDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; fin: ObjectDef['finishes'] }) => {
+  const sinkDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; tap: Anim['tap']; fin: ObjectDef['finishes'] }) => {
     const fp = o.fp ?? FP11, f = fit(model, fp, 2, { back: 0.02 });
     return obj(f, {
-      id: o.id, name: o.name, category: 'kitchen', subcategory: 'counter', rooms: ROOM_K, style: o.style, description: o.desc, tags: SINK_TAGS, packs: o.packs ?? ['everyday-essentials'],
+      id: o.id, name: o.name, category: 'kitchen', subcategory: 'sink', rooms: ROOM_K, style: o.style, description: o.desc, tags: SINK_TAGS, packs: o.packs ?? ['everyday-essentials'],
       tier: o.tier, price: dollars(o.price), quality: o.q, functional: true, footprint: fp, layer: 'floor', blocksMovement: true, surfaceHeight: 0.9,
-      slots: [useFront('use', fp.w / 2, f, fp.d)], interactions: ['washHands'], stats: { hygiene: 1 }, finishes: o.fin,
+      slots: [useFront('use', fp.w / 2, f, fp.d)], interactions: ['washHands'], stats: { hygiene: 1 }, finishes: o.fin, anim: sinkAnim(o.tap),
     });
   };
   const SINKS = [
-    sinkDef('sinkSingleBowl', { id: 'sink-single-bowl', name: 'Single-Bowl Sink Unit', desc: 'A steel worktop with one deep bowl and a swan-neck tap over a shaker cabinet. Wash your hands, or the dishes.', style: 'classic', tier: 'standard', price: 520, q: 3, fin: [wood2(), counterR()] }),
-    sinkDef('sinkDoubleBowl', { id: 'sink-double-bowl', name: 'Double-Bowl Sink Unit', desc: 'Two bowls and a ribbed drainer on a two-tile cabinet with four doors. Plenty of room for a washing-up.', style: 'classic', tier: 'premium', price: 880, q: 4, fp: FP21, fin: [wood2(), counterR()] }),
-    sinkDef('sinkFarmhouse', { id: 'sink-farmhouse', name: 'Farmhouse Apron Sink', desc: 'A deep white ceramic apron-front sink set into a timber cabinet. Wash your hands, or the dishes.', style: 'cottage', tier: 'premium', price: 940, q: 4, packs: ['cozy-cottage', 'botanical-living'], fin: [wood2(), whiteR('Ceramic'), metalR(['metal'])] }),
+    sinkDef('sinkSingleBowl', { id: 'sink-single-bowl', name: 'Single-Bowl Sink Unit', desc: 'A steel worktop with one deep bowl and a swan-neck tap over a shaker cabinet. Wash your hands, or the dishes.', style: 'classic', tier: 'standard', price: 520, q: 3, tap: tapOf('sinkSingleBowl', 0.45, 0.25, 1.1, 0.74), fin: [wood2(), counterR()] }),
+    sinkDef('sinkDoubleBowl', { id: 'sink-double-bowl', name: 'Double-Bowl Sink Unit', desc: 'Two bowls and a ribbed drainer on a two-tile cabinet with four doors. Plenty of room for a washing-up.', style: 'classic', tier: 'premium', price: 880, q: 4, fp: FP21, tap: tapOf('sinkDoubleBowl', 0.76, 0.25, 1.1, 0.74), fin: [wood2(), counterR()] }),
+    sinkDef('sinkFarmhouse', { id: 'sink-farmhouse', name: 'Farmhouse Apron Sink', desc: 'A deep white ceramic apron-front sink set into a timber cabinet. Wash your hands, or the dishes.', style: 'cottage', tier: 'premium', price: 940, q: 4, packs: ['cozy-cottage', 'botanical-living'], tap: tapOf('sinkFarmhouse', 0.45, 0.34, 1.1, 0.65), fin: [wood2(), whiteR('Ceramic'), metalR(['metal'])] }),
   ];
   const counterDef = (model: string, o: { id: string; name: string; desc: string; sub?: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; tags?: string[]; sh?: number; fin: ObjectDef['finishes']; rooms?: ObjectDef['rooms']; back?: number }) => {
     const fp = o.fp ?? FP11, f = fit(model, fp, 2, { back: o.back ?? 0.02 });
@@ -195,7 +211,7 @@ export default function build(k: ObjectKit): ObjectDef[] {
     return obj(f, {
       id: o.id, name: o.name, category: 'bathroom', subcategory: 'toilet', rooms: ['bathroom'], style: o.style, description: o.desc, tags: ['toilet', 'fixture', 'plumbing', 'cleanable'],
       packs: o.packs ?? ['everyday-essentials'], tier: o.tier, price: dollars(o.price), quality: o.q, functional: true, footprint: FP11, layer: 'floor', blocksMovement: true,
-      slots: [sit('seat', f.at(0.5, 0.62), o.seat ?? 0.43, [0, 1]), useFront('front', 0.5, f, 1)], interactions: ['useToilet'], stats: { comfort: o.comfort }, finishes: o.fin, anim: lidAnim,
+      slots: [sit('seat', f.at(0.5, 0.62), o.seat ?? 0.43, [0, 1])], interactions: ['useToilet'], stats: { comfort: o.comfort }, finishes: o.fin, anim: lidAnim,
     });
   };
   const TOILETS = [
@@ -206,31 +222,32 @@ export default function build(k: ObjectKit): ObjectDef[] {
   ];
   const bidetFit = fit('bidet', FP11, 2, { back: WALL_GAP });
   const BIDET = obj(bidetFit, {
-    id: 'bidet', name: 'Bidet', category: 'bathroom', subcategory: 'basin', rooms: ['bathroom'], style: 'classic', description: 'A ceramic bidet with a mixer tap. A quick freshen-up: wash your hands here.',
+    id: 'bidet', name: 'Bidet', category: 'bathroom', subcategory: 'sink', rooms: ['bathroom'], style: 'classic', description: 'A ceramic bidet with a mixer tap. A quick freshen-up: wash your hands here.',
     tags: ['bidet', 'fixture', 'plumbing', 'cleanable'], packs: ['classic-townhouse'], tier: 'standard', price: dollars(380), quality: 3, functional: true, footprint: FP11, layer: 'floor',
     blocksMovement: true, slots: [useFront('use', 0.5, bidetFit, 1)], interactions: ['washHands'], stats: { hygiene: 1.2 }, finishes: [whiteR()],
+    anim: sinkAnim(tapOf('bidet', 0.21, 0.16, 0.5, 0.41)),
   });
 
   // ---- bathroom: basins and vanities ---------------------------------------------------------------------------------------
-  const basinDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; tags?: string[]; fin: ObjectDef['finishes'] }) => {
+  const basinDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; packs?: string[]; tags?: string[]; tap: Anim['tap']; fin: ObjectDef['finishes'] }) => {
     const fp = o.fp ?? FP11, f = fit(model, fp, 2, { back: WALL_GAP });
     return obj(f, {
-      id: o.id, name: o.name, category: 'bathroom', subcategory: 'basin', rooms: ['bathroom'], style: o.style, description: o.desc, tags: o.tags ?? ['sink', 'fixture', 'plumbing', 'cleanable'],
+      id: o.id, name: o.name, category: 'bathroom', subcategory: 'sink', rooms: ['bathroom'], style: o.style, description: o.desc, tags: o.tags ?? ['sink', 'fixture', 'plumbing', 'cleanable'],
       packs: o.packs ?? ['everyday-essentials'], tier: o.tier, price: dollars(o.price), quality: o.q, functional: true, footprint: fp, layer: 'floor', blocksMovement: true,
-      slots: [useFront('use', fp.w / 2, f, fp.d)], interactions: ['washHands'], stats: { hygiene: 1, environment: 1 }, finishes: o.fin,
+      slots: [useFront('use', fp.w / 2, f, fp.d)], interactions: ['washHands'], stats: { hygiene: 1, environment: 1 }, finishes: o.fin, anim: sinkAnim(o.tap),
     });
   };
   const STORE_SINK = ['sink', 'fixture', 'storage', 'plumbing', 'cleanable'];
   const BASINS = [
-    basinDef('basinPedestalRound', { id: 'basin-pedestal-round', name: 'Round Pedestal Basin', desc: 'A round washbasin on a slim column. Pairs with a mirror above it.', style: 'classic', tier: 'budget', price: 150, q: 2, fin: [whiteR(), metalR(['metalLight'])] }),
-    basinDef('vanityDouble', { id: 'vanity-double', name: 'Double Vanity Unit', desc: 'Two basins on a two-tile cabinet with four doors, for a busy morning. Pairs with mirrors above.', style: 'modern', tier: 'premium', price: 1050, q: 4, fp: FP21, tags: STORE_SINK, packs: ['modern-minimal'], fin: [wood2(), whiteR()] }),
-    basinDef('vanityVessel', { id: 'vanity-vessel', name: 'Vessel Basin Vanity', desc: 'A bowl sitting on a wooden vanity with a tall tap and two drawers.', style: 'modern', tier: 'standard', price: 520, q: 3, tags: STORE_SINK, packs: ['modern-minimal', 'botanical-living'], fin: [wood2(), whiteR(), metalR(['metalLight'])] }),
-    basinDef('basinConsole', { id: 'basin-console', name: 'Chrome-Leg Console Basin', desc: 'A wide ceramic basin on chrome legs with a towel rail at the front.', style: 'art-deco', tier: 'standard', price: 440, q: 3, packs: ['art-deco', 'classic-townhouse'], fin: [whiteR(), metalR(['metal'])] }),
-    basinDef('vanityCompact', { id: 'vanity-compact-blue', name: 'Compact Vanity', desc: 'A narrow blue cabinet with a moulded basin top. Fits the smallest bathroom.', style: 'modern', tier: 'budget', price: 210, q: 2, tags: STORE_SINK, packs: ['everyday-essentials', 'coastal-home'], fin: [blueR('Cabinet'), whiteR()] }),
+    basinDef('basinPedestalRound', { id: 'basin-pedestal-round', name: 'Round Pedestal Basin', desc: 'A round washbasin on a slim column. Pairs with a mirror above it.', style: 'classic', tier: 'budget', price: 150, q: 2, tap: tapOf('basinPedestalRound', 0.3, 0.18, 0.99, 0.86), fin: [whiteR(), metalR(['metalLight'])] }),
+    basinDef('vanityDouble', { id: 'vanity-double', name: 'Double Vanity Unit', desc: 'Two basins on a two-tile cabinet with four doors, for a busy morning. Pairs with mirrors above.', style: 'modern', tier: 'premium', price: 1050, q: 4, fp: FP21, tags: STORE_SINK, packs: ['modern-minimal'], tap: tapOf('vanityDouble', 0.37, 0.17, 0.99, 0.69), fin: [wood2(), whiteR()] }),
+    basinDef('vanityVessel', { id: 'vanity-vessel', name: 'Vessel Basin Vanity', desc: 'A bowl sitting on a wooden vanity with a tall tap and two drawers.', style: 'modern', tier: 'standard', price: 520, q: 3, tags: STORE_SINK, packs: ['modern-minimal', 'botanical-living'], tap: tapOf('vanityVessel', 0.4, 0.2, 1.2, 0.99), fin: [wood2(), whiteR(), metalR(['metalLight'])] }),
+    basinDef('basinConsole', { id: 'basin-console', name: 'Chrome-Leg Console Basin', desc: 'A wide ceramic basin on chrome legs with a towel rail at the front.', style: 'art-deco', tier: 'standard', price: 440, q: 3, packs: ['art-deco', 'classic-townhouse'], tap: tapOf('basinConsole', 0.4, 0.2, 0.97, 0.83), fin: [whiteR(), metalR(['metal'])] }),
+    basinDef('vanityCompact', { id: 'vanity-compact-blue', name: 'Compact Vanity', desc: 'A narrow blue cabinet with a moulded basin top. Fits the smallest bathroom.', style: 'modern', tier: 'budget', price: 210, q: 2, tags: STORE_SINK, packs: ['everyday-essentials', 'coastal-home'], tap: tapOf('vanityCompact', 0.3, 0.17, 0.97, 0.85), fin: [blueR('Cabinet'), whiteR()] }),
   ];
 
   // ---- bathroom: showers and baths ----------------------------------------------------------------------------------------
-  // Their hinged glass door or screen is a real part, but the 'shower' and 'bath' kinds only run the water effect.
+  // The glass door swings open while the person steps in and out (render/objectAnim.ts); the water runs behind the closed door.
   const showerDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; angle: number; h: number; packs?: string[]; fin: ObjectDef['finishes']; stats?: ObjectDef['stats'] }) => {
     const f = fit(model, FP11, 2, { back: 0 });
     return obj(f, {
@@ -246,21 +263,22 @@ export default function build(k: ObjectKit): ObjectDef[] {
     showerDef('showerCornerSquare', { id: 'shower-corner-square', name: 'Square Corner Shower', desc: 'A squared corner enclosure with a white tray, a wall head and a hinged door. Showers until fully clean (at most 30 minutes).', style: 'modern', tier: 'standard', price: 680, q: 3, angle: -1.4, h: 0.12, fin: [whiteR('Tray'), applianceR(['metalLight'])] }),
     showerDef('showerCabin', { id: 'shower-cabin', name: 'Full Shower Cabin', desc: 'A closed cabin with a roof, a mirror strip, a fold-down seat and a rain head. Showers until fully clean (at most 30 minutes).', style: 'modern', tier: 'luxury', price: 1600, q: 5, angle: -1.4, h: 0.14, packs: ['modern-minimal'], stats: { hygiene: 1.2, comfort: 1, environment: 1 }, fin: [applianceR(['metalLight']), darkMetalR('Tray')] }),
   ];
-  const bathDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; angle: number; fp?: { w: number; d: number }; soak?: number; packs?: string[]; fin: ObjectDef['finishes']; stats: ObjectDef['stats'] }) => {
+  const bathDef = (model: string, o: { id: string; name: string; desc: string; style: string; tier: ObjectDef['tier']; price: number; q: number; fp?: { w: number; d: number }; soak?: number; packs?: string[]; fin: ObjectDef['finishes']; stats: ObjectDef['stats'] }) => {
     const fp = o.fp ?? FP21, f = fit(model, fp, 2, { back: WALL_GAP });
     return obj(f, {
       id: o.id, name: o.name, category: 'bathroom', subcategory: 'bath', rooms: ['bathroom'], style: o.style, description: o.desc, tags: ['bath', 'fixture', 'plumbing', 'cleanable'],
       packs: o.packs ?? ['everyday-essentials'], tier: o.tier, price: dollars(o.price), quality: o.q, functional: true, footprint: fp, layer: 'floor', blocksMovement: true,
       slots: [{ id: 'soak', kind: 'use', pos: f.at(0.5, 0.62), height: o.soak ?? 0.2, facing: Math.PI / 2, approach: [0, fp.d], posture: 'seated' }],
-      interactions: ['takeBath'], stats: o.stats, finishes: o.fin, anim: { kind: 'bath', parts: [{ node: 'anim:door', role: 'door', axis: 'y', angle: o.angle }] },
+      // the glass screen over the rim is a splash screen, not a door: it stays where it is (a 'bath' anim needs no parts)
+      interactions: ['takeBath'], stats: o.stats, finishes: o.fin, anim: { kind: 'bath', parts: [] },
     });
   };
   const BATHS = [
-    bathDef('bathClawfoot', { id: 'bath-clawfoot', name: 'Clawfoot Bathtub', desc: 'A deep enamel tub on claw feet with a tall riser tap and a splash screen. A long soak lifts the mood.', style: 'classic', tier: 'luxury', price: 2200, q: 5, angle: -1.4, packs: ['classic-townhouse', 'cozy-cottage'], stats: { hygiene: 1.1, comfort: 7, environment: 3 }, fin: [whiteR(), metalR(['metal'])] }),
-    bathDef('bathModern', { id: 'bath-modern-freestanding', name: 'Freestanding Modern Bath', desc: 'A slim-rimmed tub with a sloped backrest and a floor-standing filler. A relaxing soak cleans slowly but lifts the mood.', style: 'modern', tier: 'premium', price: 1750, q: 4, angle: 1.4, packs: ['modern-minimal'], stats: { hygiene: 1.1, comfort: 6, environment: 2 }, fin: [whiteR(), metalR(['metal'])] }),
-    bathDef('bathBudget', { id: 'bath-budget-acrylic', name: 'Budget Acrylic Bath', desc: 'A plain white acrylic tub with a shower plate and a screen. Cheap, and it holds the water.', style: 'modern', tier: 'budget', price: 420, q: 2, angle: -1.4, soak: 0.19, stats: { hygiene: 1, comfort: 4, environment: 1 }, fin: [whiteR()] }),
-    bathDef('bathShowerCombo', { id: 'bath-shower-combo', name: 'Shower-Bath Combo', desc: 'A tub with a tiled wall, a shower head and a long glass screen: a soak or a quick shower in one space.', style: 'modern', tier: 'standard', price: 900, q: 3, angle: 1.4, soak: 0.2, stats: { hygiene: 1.1, comfort: 5, environment: 1 }, fin: [whiteR(), metalR(['metal'])] }),
-    bathDef('bathCornerSpa', { id: 'bath-corner-spa', name: 'Sunken Spa Bath', desc: 'A square tub sunk into a wooden deck with a mixer and a corner step seat. Two tiles of pure indulgence.', style: 'modern', tier: 'luxury', price: 3000, q: 5, angle: -1.4, fp: FP22, soak: 0.3, packs: ['botanical-living', 'modern-minimal'], stats: { hygiene: 1.2, comfort: 9, environment: 4 }, fin: [woodR(['wood']), whiteR(), metalR(['metal'])] }),
+    bathDef('bathClawfoot', { id: 'bath-clawfoot', name: 'Clawfoot Bathtub', desc: 'A deep enamel tub on claw feet with a tall riser tap and a splash screen. A long soak lifts the mood.', style: 'classic', tier: 'luxury', price: 2200, q: 5, packs: ['classic-townhouse', 'cozy-cottage'], stats: { hygiene: 1.1, comfort: 7, environment: 3 }, fin: [whiteR(), metalR(['metal'])] }),
+    bathDef('bathModern', { id: 'bath-modern-freestanding', name: 'Freestanding Modern Bath', desc: 'A slim-rimmed tub with a sloped backrest and a floor-standing filler. A relaxing soak cleans slowly but lifts the mood.', style: 'modern', tier: 'premium', price: 1750, q: 4, packs: ['modern-minimal'], stats: { hygiene: 1.1, comfort: 6, environment: 2 }, fin: [whiteR(), metalR(['metal'])] }),
+    bathDef('bathBudget', { id: 'bath-budget-acrylic', name: 'Budget Acrylic Bath', desc: 'A plain white acrylic tub with a shower plate and a screen. Cheap, and it holds the water.', style: 'modern', tier: 'budget', price: 420, q: 2, soak: 0.19, stats: { hygiene: 1, comfort: 4, environment: 1 }, fin: [whiteR()] }),
+    bathDef('bathShowerCombo', { id: 'bath-shower-combo', name: 'Shower-Bath Combo', desc: 'A tub with a tiled wall, a shower head and a long glass screen: a soak or a quick shower in one space.', style: 'modern', tier: 'standard', price: 900, q: 3, soak: 0.2, stats: { hygiene: 1.1, comfort: 5, environment: 1 }, fin: [whiteR(), metalR(['metal'])] }),
+    bathDef('bathCornerSpa', { id: 'bath-corner-spa', name: 'Sunken Spa Bath', desc: 'A square tub sunk into a wooden deck with a mixer and a corner step seat. Two tiles of pure indulgence.', style: 'modern', tier: 'luxury', price: 3000, q: 5, fp: FP22, soak: 0.3, packs: ['botanical-living', 'modern-minimal'], stats: { hygiene: 1.2, comfort: 9, environment: 4 }, fin: [woodR(['wood']), whiteR(), metalR(['metal'])] }),
   ];
 
   // ---- bathroom: mirrors, rails, shelves, basket, laundry ------------------------------------------------------------------------
@@ -304,7 +322,7 @@ export default function build(k: ObjectKit): ObjectDef[] {
   const doorM = (n: 'door' | 'door2' = 'door'): Anim['parts'][number] => ({ node: `anim:${n}`, role: 'door', axis: 'y', angle: -1.9 });
   const LAUNDRY = [
     laundryDef('washerFrontSteel', { id: 'washer-front-steel', name: 'Steel Front-Load Washer', desc: 'A steel washing machine with a chrome porthole door. Decorative for now; laundry arrives with housework.', style: 'modern', tier: 'premium', price: 880, q: 4, tag: 'washer', anim: { kind: 'laundry', parts: [doorM(), { node: 'anim:interior', role: 'interior' }] }, fin: [steelR()] }),
-    laundryDef('washerTopLoad', { id: 'washer-top-load', name: 'Top-Loading Washer', desc: 'A no-nonsense top-loader with a glass-windowed lid. Decorative for now; laundry arrives with housework.', style: 'classic', tier: 'budget', price: 380, q: 2, tag: 'washer', anim: { kind: 'laundry', parts: [{ node: 'anim:door', role: 'door', axis: 'x', angle: 1.3 }, { node: 'anim:interior', role: 'interior' }] }, fin: [applianceR()] }),
+    laundryDef('washerTopLoad', { id: 'washer-top-load', name: 'Top-Loading Washer', desc: 'A no-nonsense top-loader with a glass-windowed lid. Decorative for now; laundry arrives with housework.', style: 'classic', tier: 'budget', price: 380, q: 2, tag: 'washer', anim: { kind: 'laundry', parts: [{ node: 'anim:lid', role: 'lid', axis: 'x', angle: -1.3 }, { node: 'anim:interior', role: 'interior' }] }, fin: [applianceR()] }),
     laundryDef('dryerVented', { id: 'dryer-vented-black', name: 'Vented Tumble Dryer', desc: 'A big-drum dryer with a black door and a lint filter on top. Decorative for now; laundry arrives with housework.', style: 'modern', tier: 'standard', price: 540, q: 3, tag: 'dryer', anim: { kind: 'laundry', parts: [doorM(), { node: 'anim:interior', role: 'interior' }] }, fin: [applianceR(), metalR(['metalMedium'])] }),
     laundryDef('washerDryerStack', { id: 'washer-dryer-stack', name: 'Washer-Dryer Stack', desc: 'A dryer stacked on a washer: two machines on one tile. Decorative for now; laundry arrives with housework.', style: 'modern', tier: 'premium', price: 1250, q: 4, tag: 'washer', packs: ['modern-minimal'], anim: { kind: 'laundry', parts: [doorM('door'), doorM('door2'), { node: 'anim:interior', role: 'interior' }] }, fin: [applianceR()] }),
   ];

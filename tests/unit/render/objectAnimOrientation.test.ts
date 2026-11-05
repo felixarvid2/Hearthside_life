@@ -105,10 +105,19 @@ function defFor(desc: AnimDescriptor) {
   return def;
 }
 
+/**
+ * The slot the kind's trigger stands at: the 'use' slot, or a content-declared toilet's sit slot (same rule as the validator).
+ * The table's own toilets have a sit slot behind the bowl's centre and were never checked here; that stays as it was.
+ */
+function animSlot(desc: AnimDescriptor) {
+  const slots = defFor(desc).slots ?? [];
+  return slots.find((s) => s.kind === 'use') ?? (desc.kind === 'toilet' && fromContent(desc) ? slots.find((s) => s.kind === 'sit') : undefined);
+}
+
 /** Unit direction from the object towards the use slot (the side the person stands on), null without a slot. */
 function useDir(desc: AnimDescriptor): [number, number] | null {
   const def = defFor(desc);
-  const slot = def.slots?.find((s) => s.kind === 'use');
+  const slot = animSlot(desc);
   if (!slot) return null;
   const box = fittedBounds(def.model)!;
   const cx = (box.x0 + box.x1) / 2, cz = (box.z0 + box.z1) / 2;
@@ -128,7 +137,7 @@ describe('objectAnim: doors and cavities face the use slot', () => {
 
   for (const desc of ALL) {
     const def = defFor(desc);
-    const slot = def.slots?.find((s) => s.kind === 'use');
+    const slot = animSlot(desc);
     if (!slot) continue;
     const box = fittedBounds(def.model)!;
     const cx = (box.x0 + box.x1) / 2, cz = (box.z0 + box.z1) / 2;
@@ -181,6 +190,13 @@ describe('objectAnim: doors and cavities face the use slot', () => {
             const rel = c.clone().sub(new THREE.Vector3(...b.origin));
             const moved = rel.clone().applyAxisAngle(new THREE.Vector3(part.axis === 'x' ? 1 : 0, part.axis === 'y' ? 1 : 0, part.axis === 'z' ? 1 : 0), part.angle).sub(rel);
             expect(moved.x * dir[0] + moved.z * dir[1], `${desc.defId}: ${part.role} opens towards the use slot`).toBeGreaterThan(0.02);
+          }
+          if (!sliding && part.role === 'lid' && part.axis === 'x') {
+            // a lid hinged at the back (pivot behind its centre) lifts: its centre rises when it opens
+            const b = bounds.get(part.node)!;
+            const cy = (b.box.min[1] + b.box.max[1]) / 2, cz = (b.box.min[2] + b.box.max[2]) / 2;
+            const dy = (cy - b.origin[1]) * Math.cos(part.angle) - (cz - b.origin[2]) * Math.sin(part.angle) - (cy - b.origin[1]);
+            expect(dy, `${desc.defId}: lid rises when it opens`).toBeGreaterThan(0.01);
           }
         }
 
