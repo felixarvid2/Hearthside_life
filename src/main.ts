@@ -76,9 +76,11 @@ async function boot(): Promise<void> {
         if (!st || !['clear', 'cloudy', 'rain', 'snow'].includes(kind)) return false;
         // Same-day plans are kept by ensureWeather (a reload never rerolls a day), so this stays until midnight and
         // the next day is planned normally again. Tests use it to make outdoor steps repeatable across seeds.
+        // Pinning a plan must not erase snow that has already settled: the next sim tick keeps it while it is winter.
         const day = Math.floor(st.clock.minutes / 1440);
         const half = st.clock.minutes % 1440 < 720 ? 0 : 1;
-        st.weather = { current: kind, today: [kind, kind], tomorrow: [kind, kind], day, since: day * 1440 + half * 720 };
+        const snowCover = st.weather?.snowCover === true;
+        st.weather = { current: kind, today: [kind, kind], tomorrow: [kind, kind], day, since: day * 1440 + half * 720, ...(snowCover ? { snowCover: true } : {}) };
         return true;
       },
       stats: () => game.devStats(),

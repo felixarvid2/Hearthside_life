@@ -31,6 +31,8 @@ export interface HandPropsResult {
   left?: PropSpec;
   /** A prop put down in front of the person (a plate on the table while seated eating). */
   placed?: PropSpec;
+  /** A level prop carried in front of the body (a plate at waist height, both hands free to use a fork). */
+  carried?: PropSpec;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -135,6 +137,10 @@ function mealPlate(action: PropAction, portion: number): PropSpec {
   return { kind: 'plate', portion, foodColor: foodColor(recipe), upright: true };
 }
 
+/** Root-local carry point of a level prop held in front of the body (adult scale metres, CharacterView faces +z). */
+const CARRY_Y = 1.03;
+const CARRY_Z = 0.36;
+
 /** Hand prop for the everyday interactions that hold one small object (null: nothing in the hands). */
 function everydayProp(id: string, anim: string): { kind: PropKind; hand: 'right' | 'left'; upright?: boolean } | null {
   const right = (kind: PropKind): { kind: PropKind; hand: 'right'; upright?: boolean } => ({ kind, hand: 'right' });
@@ -195,7 +201,7 @@ export function propsFor(
     // Stage 2: carry the served plate to the counter; the item itself takes over when it appears.
     if (typeof action.data.itemId === 'string' && itemExists(items, action.data.itemId)) return {};
     return phase === 'route' || phase === 'prepare' || phase === 'perform' || phase === 'apply'
-      ? { right: mealPlate(action, 1) }
+      ? { carried: mealPlate(action, 1) }
       : {};
   }
 
@@ -205,17 +211,18 @@ export function propsFor(
       if (!taken) return {};
       // The plate comes out of the fridge/counter at the end of the reach, not before the hand is there.
       if (phase === 'perform' && progress < 0.6) return {};
-      return { right: mealPlate(action, 1) };
+      return { carried: mealPlate(action, 1) };
     }
     if (phase === 'apply') return {}; // the dirty plate is the sim's item now
     const portion = mealPortion(action, person, action.phase === 'perform'
       ? Math.max(action.elapsed, Math.min(action.duration ?? action.elapsed, clock - (anim?.since ?? clock)))
       : action.elapsed);
     const seated = person.location?.kind === 'lot' && person.location.posture === 'seated';
-    if (phase === 'route' || phase === 'prepare') return { right: mealPlate(action, portion) };
+    if (phase === 'route' || phase === 'prepare') return { carried: mealPlate(action, portion) };
     const plate = mealPlate(action, portion);
     if (seated) return { placed: plate, right: { kind: 'fork' } };
-    return { left: { ...plate, upright: true }, right: { kind: 'fork' } };
+    // Standing: the plate is held in front of the waist (not dangling by a hip) so the fork hand stays readable.
+    return { carried: plate, right: { kind: 'fork' } };
   }
 
   // Everything else: a hand prop during the perform phase (and the moment of applying it), never while
@@ -230,6 +237,20 @@ export function propsFor(
 // ---------------------------------------------------------------------------------------------
 // Shared low-poly prop resources
 // ---------------------------------------------------------------------------------------------
+
+// The shared rig is chunky and the default camera is far away: true-to-life props are only a few pixels wide. Props
+// are drawn 1.4-1.8x their real size (still believable next to a hand) so a plate, apple, fork or phone reads in
+// portrait. `PROP_SCALE` overrides the default per kind.
+const DEFAULT_PROP_SCALE = 1.5;
+const PROP_SCALE: Partial<Record<PropKind, number>> = {
+  plate: 1.55, fork: 1.7, spoon: 1.7, apple: 1.7, sandwich: 1.6, yoghurt: 1.6,
+  ingredients: 1.45, phone: 1.5, mug: 1.4, glass: 1.4, can: 1.4,
+};
+
+/** Visual size multiplier of a prop kind (exported for the render tests). */
+export function propScale(kind: PropKind): number {
+  return PROP_SCALE[kind] ?? DEFAULT_PROP_SCALE;
+}
 
 const UNIT_BOX = new THREE.BoxGeometry(1, 1, 1);
 const UNIT_CYL = new THREE.CylinderGeometry(0.5, 0.5, 1, 12);
@@ -565,10 +586,10 @@ function emptySlot(): Slot {
   return { group: null, built: null, parent: null, key: '', portion: -1, rot: [0, 0, 0] };
 }
 
-/** One person's hand props: two hand slots and one placed slot, reattached when the rig is rebuilt. */
+/** One person's hand props: two hand slots, a carried slot and a placed slot, reattached when the rig is rebuilt. */
 export class HandProps {
-  private readonly slots = new Map<'right' | 'left' | 'placed', Slot>([
-    ['right', emptySlot()], ['left', emptySlot()], ['placed', emptySlot()],
+  private readonly slots = new Map<'right' | 'left' | 'carried' | 'placed', Slot>([
+    ['right', emptySlot()], ['left', emptySlot()], ['carried', emptySlot()], ['placed', emptySlot()],
   ]);
   private disposed = false;
 
@@ -578,6 +599,7 @@ export class HandProps {
     if (this.disposed) return;
     this.applyHand('right', 'hand_r', result.right, env);
     this.applyHand('left', 'hand_l', result.left, env);
+    this.applyCarried(result.carried, env);
     this.applyPlaced(result.placed, env);
   }
 
@@ -627,6 +649,16 @@ export class HandProps {
     slot.group!.position.set(grip.pos[0] * env.scale, grip.pos[1] * env.scale, grip.pos[2] * env.scale);
   }
 
+  /** A level prop held in front of the body at waist height (the plate a standing eater picks at). */
+  private applyCarried(spec: PropSpec | undefined, env: HandEnv): void {
+    const slot = this.slots.get('carried')!;
+    if (!spec) { if (slot.group) this.clear(slot); return; }
+    this.prepare(slot, spec, this.view.root, env.scale, true, [0, 0, 0]);
+    slot.group!.visible = true;
+    slot.group!.position.set(0, CARRY_Y * env.scale, CARRY_Z * env.scale);
+    slot.group!.rotation.set(0, 0, 0);
+  }
+
   private applyPlaced(spec: PropSpec | undefined, env: HandEnv): void {
     const slot = this.slots.get('placed')!;
     if (!spec) { if (slot.group) this.clear(slot); return; }
@@ -644,7 +676,7 @@ export class HandProps {
       const built = buildProp(spec.kind, spec);
       const group = built.obj;
       group.name = `hand-prop-${spec.kind}`;
-      group.scale.setScalar(scale);
+      group.scale.setScalar(scale * propScale(spec.kind));
       parent.add(group);
       slot.group = group;
       slot.built = built;
@@ -655,6 +687,8 @@ export class HandProps {
       if (!upright) group.rotation.set(rot[0], rot[1], rot[2]);
       built.setPortion?.(spec.portion ?? 1);
     } else if (!reparent) {
+      const s = scale * propScale(spec.kind);
+      if (slot.group.scale.x !== s) slot.group.scale.setScalar(s);
       const portion = spec.portion ?? 1;
       if (Math.abs(portion - slot.portion) > 0.004) { slot.built?.setPortion?.(portion); slot.portion = portion; }
     }

@@ -21,7 +21,9 @@ const DIST = join(root, 'tests/e2e/out/dist-m115h');
 const OUT = join(here, 'shots/H');
 
 // One Chromium at a time across visual scripts. Re-exec under flock once; HEARTHSIDE_M115H_LOCKED marks the child.
-if (!process.env.HEARTHSIDE_M115H_LOCKED) {
+// `--no-lock` skips the lock only to recover from a stale lock held by an orphaned run (never use it while another
+// browser script is actually running).
+if (!process.env.HEARTHSIDE_M115H_LOCKED && !process.argv.includes('--no-lock')) {
   const locked = spawnSync('flock', ['/tmp/hearthside-browser.lock', process.execPath, fileURLToPath(import.meta.url), ...process.argv.slice(2)], {
     stdio: 'inherit', env: { ...process.env, HEARTHSIDE_M115H_LOCKED: '1' },
   });
@@ -68,18 +70,22 @@ async function waitForServer(url, ms, server) {
 const frames = (page, n, dt = 1 / 30) => page.evaluate(([n2, dt2]) => { for (let i = 0; i < n2; i++) window.hearthside.debug.frame(dt2); }, [n, dt]);
 
 /**
- * Glides the camera close over a point, choosing the 90-degree yaw step that looks at the person from behind
- * their left shoulder (so whatever they face — fridge, table, book — is in view) and lets the glide settle.
+ * Glides the camera close over a point and picks the 90-degree yaw step nearest `view` relative to the person's
+ * facing, then lets the glide settle.
+ * - 'behind' (default): from behind their right shoulder, past the body — shows a carried plate held in front and
+ *   whatever the person faces (fridge, table).
+ * - 'front': from the side the person faces — shows a prop held in the hands (snack, fork, book, phone) and the
+ *   table in front of a seated eater, instead of hiding it behind the torso and chair back.
  */
-async function focus(page, x, z, facing = null, ahead = 0) {
-  await page.evaluate(([x2, z2, f, ahead2]) => {
-    const view = window.hearthside.view;
-    const rig = view.rig;
+async function focus(page, x, z, facing = null, ahead = 0, view = 'behind') {
+  await page.evaluate(([x2, z2, f, ahead2, mode]) => {
+    const view2 = window.hearthside.view;
+    const rig = view2.rig;
     const tx = typeof f === 'number' ? x2 + Math.sin(f) * ahead2 : x2;
     const tz = typeof f === 'number' ? z2 + Math.cos(f) * ahead2 : z2;
-    if (!rig) { view.focusOn(tx, tz, true); return; }
+    if (!rig) { view2.focusOn(tx, tz, true); return; }
     if (typeof f === 'number') {
-      const want = f + Math.PI * 3 / 4; // behind the right shoulder, looking past the body
+      const want = f + (mode === 'front' ? 0 : Math.PI * 3 / 4); // in front of the person, or behind their shoulder
       let best = 0, bestD = 9;
       for (let k = 0; k < 4; k++) {
         const yaw = (45 + k * 90) * Math.PI / 180;
@@ -90,7 +96,7 @@ async function focus(page, x, z, facing = null, ahead = 0) {
     }
     // The tall portrait viewport needs a gentler zoom than the wide ones to keep the whole figure in frame.
     rig.glideTo(tx, tz, window.innerWidth < 500 ? 95 : 140, 0.55, 1.0);
-  }, [x, z, facing, ahead]);
+  }, [x, z, facing, ahead, view]);
   await page.waitForTimeout(1200);
   await frames(page, 6);
 }
@@ -187,7 +193,7 @@ async function stageFridgeReach(page) {
     }
     return { ok: false, reason: 'never reached the fridge stage' };
   });
-  if (r.ok) await focus(page, r.x, r.z, r.facing);
+  if (r.ok) await focus(page, r.x, r.z, r.facing, 0, 'front');
   await frames(page, 4);
   return r;
 }
@@ -226,7 +232,7 @@ async function stageSnack(page) {
     }
     return { ok: false, reason: 'no snack option' };
   });
-  if (r.ok) await focus(page, r.x, r.z, r.facing);
+  if (r.ok) await focus(page, r.x, r.z, r.facing, 0, 'front');
   await frames(page, 4);
   return r;
 }
@@ -272,7 +278,9 @@ async function stageCarryPlate(page) {
     }
     return { ok: false, reason: 'never started eating after cooking' };
   });
-  if (route.ok) await focus(page, route.x, route.z, route.facing);
+  // From the front: the plate is carried in front of the belly, so a camera behind the shoulder hides it behind the
+  // torso (and can end up inside the kitchen units). The person walks toward the camera with the plate in view.
+  if (route.ok) await focus(page, route.x, route.z, route.facing, 0, 'front');
   await frames(page, 4);
   return route;
 }
@@ -297,7 +305,7 @@ async function stageSeatedEating(page, id) {
     }
     return { ok: false, reason: 'never sat down to eat' };
   }, id);
-  if (r.ok) await focus(page, r.x, r.z, r.facing, 0.18);
+  if (r.ok) await focus(page, r.x, r.z, r.facing, 0.18, 'front');
   await frames(page, 4);
   return r;
 }
@@ -352,7 +360,7 @@ async function stageReading(page) {
     }
     return { ok: false, reason: 'no reading option' };
   });
-  if (r.ok) await focus(page, r.x, r.z, r.facing);
+  if (r.ok) await focus(page, r.x, r.z, r.facing, 0, 'front');
   await frames(page, 4);
   return r;
 }
@@ -406,7 +414,7 @@ async function stagePhone(page) {
     }
     return { ok: false, reason: 'never started the call' };
   });
-  if (r.ok) await focus(page, r.x, r.z, r.facing);
+  if (r.ok) await focus(page, r.x, r.z, r.facing, 0, 'front');
   await frames(page, 4);
   return r;
 }
@@ -469,7 +477,7 @@ async function main() {
       let dome80 = [];
       if (seated.ok) {
         const at20 = await setEatProgress(page, carry.id, 5);
-        await focus(page, seated.x, seated.z, seated.facing, 0.18);
+        await focus(page, seated.x, seated.z, seated.facing, 0.18, 'front');
         props = await propNames(page);
         dome20 = await plateDomes(page);
         note(`${vp.id}: at 20% the plate is on the table and the fork is in the hand`,

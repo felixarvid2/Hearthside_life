@@ -1,6 +1,11 @@
 {
   "checks": [
     {
+      "name": "portrait: the closed fridge draws no cavity",
+      "ok": true,
+      "evidence": "interiors []"
+    },
+    {
       "name": "portrait: cookMeal is queueable at the fridge",
       "ok": true,
       "evidence": "queued"
@@ -11,9 +16,19 @@
       "evidence": "stage 0 at 0.25 min"
     },
     {
+      "name": "portrait: the fridge interior is built and lit while the door is open",
+      "ok": true,
+      "evidence": "cookMeal stage 0 perform at 0.75; interior:fridge; camera yaw 290"
+    },
+    {
       "name": "portrait: cookMeal reaches the stove stage",
       "ok": true,
       "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "portrait: stove hob, pot and steam are on",
+      "ok": true,
+      "evidence": "4 rings, pot on, 8 steam sprites, ring glow 2.40"
     },
     {
       "name": "portrait: changeOutfit is queueable at the wardrobe",
@@ -41,6 +56,11 @@
       "evidence": ""
     },
     {
+      "name": "landscape: the closed fridge draws no cavity",
+      "ok": true,
+      "evidence": "interiors []"
+    },
+    {
       "name": "landscape: cookMeal is queueable at the fridge",
       "ok": true,
       "evidence": "queued"
@@ -51,9 +71,19 @@
       "evidence": "stage 0 at 0.25 min"
     },
     {
+      "name": "landscape: the fridge interior is built and lit while the door is open",
+      "ok": true,
+      "evidence": "cookMeal stage 0 perform at 0.75; interior:fridge; camera yaw 290"
+    },
+    {
       "name": "landscape: cookMeal reaches the stove stage",
       "ok": true,
       "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "landscape: stove hob, pot and steam are on",
+      "ok": true,
+      "evidence": "4 rings, pot on, 8 steam sprites, ring glow 2.40"
     },
     {
       "name": "landscape: changeOutfit is queueable at the wardrobe",
@@ -81,6 +111,11 @@
       "evidence": ""
     },
     {
+      "name": "desktop: the closed fridge draws no cavity",
+      "ok": true,
+      "evidence": "interiors []"
+    },
+    {
       "name": "desktop: cookMeal is queueable at the fridge",
       "ok": true,
       "evidence": "queued"
@@ -91,9 +126,19 @@
       "evidence": "stage 0 at 0.25 min"
     },
     {
+      "name": "desktop: the fridge interior is built and lit while the door is open",
+      "ok": true,
+      "evidence": "cookMeal stage 0 perform at 0.75; interior:fridge; camera yaw 290"
+    },
+    {
       "name": "desktop: cookMeal reaches the stove stage",
       "ok": true,
       "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "desktop: stove hob, pot and steam are on",
+      "ok": true,
+      "evidence": "4 rings, pot on, 8 steam sprites, ring glow 2.40"
     },
     {
       "name": "desktop: changeOutfit is queueable at the wardrobe",
@@ -131,6 +176,10 @@
     "portrait-fridge-closed-w1.png",
     "portrait-fridge-closed-w2.png",
     "portrait-fridge-closed-w3.png",
+    "portrait-fridge-closed-f70.png",
+    "portrait-fridge-closed-f70w.png",
+    "portrait-fridge-closed-f290.png",
+    "portrait-fridge-closed-f290w.png",
     "portrait-fridge-open-k0.png",
     "portrait-fridge-open-k1.png",
     "portrait-fridge-open-k2.png",
@@ -139,6 +188,10 @@
     "portrait-fridge-open-w1.png",
     "portrait-fridge-open-w2.png",
     "portrait-fridge-open-w3.png",
+    "portrait-fridge-open-f70.png",
+    "portrait-fridge-open-f70w.png",
+    "portrait-fridge-open-f290.png",
+    "portrait-fridge-open-f290w.png",
     "portrait-stove-cooking-k0.png",
     "portrait-stove-cooking-k1.png",
     "portrait-stove-cooking-k2.png",
@@ -147,6 +200,14 @@
     "portrait-stove-cooking-w1.png",
     "portrait-stove-cooking-w2.png",
     "portrait-stove-cooking-w3.png",
+    "portrait-stove-cooking-x0.png",
+    "portrait-stove-cooking-x1.png",
+    "portrait-stove-cooking-x2.png",
+    "portrait-stove-cooking-x3.png",
+    "portrait-stove-cooking-d0.png",
+    "portrait-stove-cooking-d1.png",
+    "portrait-stove-cooking-d2.png",
+    "portrait-stove-cooking-d3.png",
     "portrait-wardrobe-open.png",
     "portrait-wardrobe-open-k0.png",
     "portrait-wardrobe-open-k1.png",
@@ -164,6 +225,10 @@
     "portrait-shower-running-w1.png",
     "portrait-shower-running-w2.png",
     "portrait-shower-running-w3.png",
+    "portrait-shower-running-d0.png",
+    "portrait-shower-running-d1.png",
+    "portrait-shower-running-d2.png",
+    "portrait-shower-running-d3.png",
     "landscape-fridge-closed.png",
     "landscape-fridge-closed-k0.png",
     "landscape-fridge-closed-k1.png",
@@ -173,6 +238,10 @@
     "landscape-fridge-closed-w1.png",
     "landscape-fridge-closed-w2.png",
     "landscape-fridge-closed-w3.png",
+    "landscape-fridge-closed-f70.png",
+    "landscape-fridge-closed-f70w.png",
+    "landscape-fridge-closed-f290.png",
+    "landscape-fridge-closed-f290w.png",
     "landscape-fridge-open-k0.png",
     "landscape-fridge-open-k1.png",
     "landscape-fridge-open-k2.png",
@@ -181,6 +250,10 @@
     "landscape-fridge-open-w1.png",
     "landscape-fridge-open-w2.png",
     "landscape-fridge-open-w3.png",
+    "landscape-fridge-open-f70.png",
+    "landscape-fridge-open-f70w.png",
+    "landscape-fridge-open-f290.png",
+    "landscape-fridge-open-f290w.png",
     "landscape-stove-cooking-k0.png",
     "landscape-stove-cooking-k1.png",
     "landscape-stove-cooking-k2.png",
@@ -189,6 +262,14 @@
     "landscape-stove-cooking-w1.png",
     "landscape-stove-cooking-w2.png",
     "landscape-stove-cooking-w3.png",
+    "landscape-stove-cooking-x0.png",
+    "landscape-stove-cooking-x1.png",
+    "landscape-stove-cooking-x2.png",
+    "landscape-stove-cooking-x3.png",
+    "landscape-stove-cooking-d0.png",
+    "landscape-stove-cooking-d1.png",
+    "landscape-stove-cooking-d2.png",
+    "landscape-stove-cooking-d3.png",
     "landscape-wardrobe-open.png",
     "landscape-wardrobe-open-k0.png",
     "landscape-wardrobe-open-k1.png",
@@ -206,6 +287,10 @@
     "landscape-shower-running-w1.png",
     "landscape-shower-running-w2.png",
     "landscape-shower-running-w3.png",
+    "landscape-shower-running-d0.png",
+    "landscape-shower-running-d1.png",
+    "landscape-shower-running-d2.png",
+    "landscape-shower-running-d3.png",
     "desktop-fridge-closed.png",
     "desktop-fridge-closed-k0.png",
     "desktop-fridge-closed-k1.png",
@@ -215,6 +300,10 @@
     "desktop-fridge-closed-w1.png",
     "desktop-fridge-closed-w2.png",
     "desktop-fridge-closed-w3.png",
+    "desktop-fridge-closed-f70.png",
+    "desktop-fridge-closed-f70w.png",
+    "desktop-fridge-closed-f290.png",
+    "desktop-fridge-closed-f290w.png",
     "desktop-fridge-open-k0.png",
     "desktop-fridge-open-k1.png",
     "desktop-fridge-open-k2.png",
@@ -223,6 +312,10 @@
     "desktop-fridge-open-w1.png",
     "desktop-fridge-open-w2.png",
     "desktop-fridge-open-w3.png",
+    "desktop-fridge-open-f70.png",
+    "desktop-fridge-open-f70w.png",
+    "desktop-fridge-open-f290.png",
+    "desktop-fridge-open-f290w.png",
     "desktop-stove-cooking-k0.png",
     "desktop-stove-cooking-k1.png",
     "desktop-stove-cooking-k2.png",
@@ -231,6 +324,14 @@
     "desktop-stove-cooking-w1.png",
     "desktop-stove-cooking-w2.png",
     "desktop-stove-cooking-w3.png",
+    "desktop-stove-cooking-x0.png",
+    "desktop-stove-cooking-x1.png",
+    "desktop-stove-cooking-x2.png",
+    "desktop-stove-cooking-x3.png",
+    "desktop-stove-cooking-d0.png",
+    "desktop-stove-cooking-d1.png",
+    "desktop-stove-cooking-d2.png",
+    "desktop-stove-cooking-d3.png",
     "desktop-wardrobe-open.png",
     "desktop-wardrobe-open-k0.png",
     "desktop-wardrobe-open-k1.png",
@@ -247,7 +348,11 @@
     "desktop-shower-running-w0.png",
     "desktop-shower-running-w1.png",
     "desktop-shower-running-w2.png",
-    "desktop-shower-running-w3.png"
+    "desktop-shower-running-w3.png",
+    "desktop-shower-running-d0.png",
+    "desktop-shower-running-d1.png",
+    "desktop-shower-running-d2.png",
+    "desktop-shower-running-d3.png"
   ],
   "viewports": [
     {
@@ -257,6 +362,7 @@
       "isMobile": true,
       "setup": {
         "personId": "per_2w",
+        "others": [],
         "fridgeId": "obj_x",
         "stoveId": "obj_z",
         "wardrobeId": "obj_1j",
@@ -274,6 +380,7 @@
       "isMobile": true,
       "setup": {
         "personId": "per_2w",
+        "others": [],
         "fridgeId": "obj_x",
         "stoveId": "obj_z",
         "wardrobeId": "obj_1j",
@@ -291,6 +398,7 @@
       "isMobile": false,
       "setup": {
         "personId": "per_2w",
+        "others": [],
         "fridgeId": "obj_x",
         "stoveId": "obj_z",
         "wardrobeId": "obj_1j",
@@ -298,6 +406,8824 @@
         "fridgeAt": [
           12.5,
           11.35
+        ]
+      }
+    }
+  ],
+  "aims": [
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed",
+      "target": [
+        12.64,
+        10.51
+      ],
+      "ppm": 54,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 190,
+        "y": 476
+      },
+      "objTopScreen": {
+        "x": 190,
+        "y": 412
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 158,
+        "y": 495
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-k0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 114,
+        "y": 561
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-k1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 114,
+        "y": 464
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-k2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 276,
+        "y": 464
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-k3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 276,
+        "y": 561
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-w0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 144,
+        "y": 523
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-w1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 144,
+        "y": 462
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-w2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 246,
+        "y": 462
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-w3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 246,
+        "y": 523
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-f70",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 87,
+        "y": 536
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-f70w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 127,
+        "y": 507
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-f290",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 303,
+        "y": 536
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-closed-f290w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 263,
+        "y": 507
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-k0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 139,
+        "y": 546
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-k1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 139,
+        "y": 479
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-k2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 251,
+        "y": 479
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-k3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 251,
+        "y": 546
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-w0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 160,
+        "y": 514
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-w1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 160,
+        "y": 471
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-w2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 230,
+        "y": 471
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-w3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 230,
+        "y": 514
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-f70",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 121,
+        "y": 529
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-f70w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 148,
+        "y": 503
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-f290",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 354
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 269,
+        "y": 529
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "fridge-open-f290w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 492
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 393
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 242,
+        "y": 503
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-k0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 115,
+        "y": 560
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-k1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 115,
+        "y": 465
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-k2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 275,
+        "y": 465
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-k3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 275,
+        "y": 560
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-w0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 494
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 142,
+        "y": 526
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-w1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 494
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 142,
+        "y": 463
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-w2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 494
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 248,
+        "y": 463
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-w3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 494
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 248,
+        "y": 526
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-x0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 482
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 458
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 161,
+        "y": 503
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-x1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 482
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 458
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 161,
+        "y": 461
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-x2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 482
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 458
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 229,
+        "y": 461
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-x3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 482
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 458
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 229,
+        "y": 503
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-d0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 115,
+        "y": 560
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-d1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 115,
+        "y": 465
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-d2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 275,
+        "y": 465
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-d3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 512
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 457
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 275,
+        "y": 560
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open",
+      "target": [
+        5.25,
+        9.56
+      ],
+      "ppm": 123,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 212,
+        "y": 476
+      },
+      "objTopScreen": {
+        "x": 212,
+        "y": 358
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 252,
+        "y": 452
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-k0",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 530
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 387
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 244,
+        "y": 560
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-k1",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 530
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 387
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 146,
+        "y": 560
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-k2",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 530
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 387
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 146,
+        "y": 501
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-k3",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 530
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 387
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 244,
+        "y": 501
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-w0",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 504
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 413
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 226,
+        "y": 523
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-w1",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 504
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 413
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 164,
+        "y": 523
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-w2",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 504
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 413
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 164,
+        "y": 485
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "wardrobe-open-w3",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 504
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 413
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 226,
+        "y": 485
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed",
+      "target": [
+        12.45,
+        10.32
+      ],
+      "ppm": 54,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 417,
+        "y": 208
+      },
+      "objTopScreen": {
+        "x": 417,
+        "y": 144
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 385,
+        "y": 227
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-k0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 341,
+        "y": 284
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-k1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 341,
+        "y": 187
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-k2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 503,
+        "y": 187
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-k3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 503,
+        "y": 284
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-w0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 371,
+        "y": 246
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-w1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 371,
+        "y": 185
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-w2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 473,
+        "y": 185
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-w3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 473,
+        "y": 246
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-f70",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 314,
+        "y": 259
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-f70w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 354,
+        "y": 230
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-f290",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 530,
+        "y": 259
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-closed-f290w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 490,
+        "y": 230
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-k0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 366,
+        "y": 269
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-k1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 366,
+        "y": 202
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-k2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 478,
+        "y": 202
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-k3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 478,
+        "y": 269
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-w0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 387,
+        "y": 237
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-w1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 387,
+        "y": 194
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-w2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 457,
+        "y": 194
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-w3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 457,
+        "y": 237
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-f70",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 348,
+        "y": 252
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-f70w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 375,
+        "y": 226
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-f290",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 77
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 496,
+        "y": 252
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "fridge-open-f290w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 215
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 116
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 469,
+        "y": 226
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-k0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 342,
+        "y": 283
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-k1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 342,
+        "y": 188
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-k2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 502,
+        "y": 188
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-k3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 502,
+        "y": 283
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-w0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 217
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 369,
+        "y": 249
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-w1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 217
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 369,
+        "y": 186
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-w2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 217
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 475,
+        "y": 186
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-w3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 217
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 475,
+        "y": 249
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-x0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 205
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 181
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 388,
+        "y": 226
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-x1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 205
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 181
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 388,
+        "y": 184
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-x2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 205
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 181
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 456,
+        "y": 184
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-x3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 205
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 181
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 456,
+        "y": 226
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-d0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 342,
+        "y": 283
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-d1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 342,
+        "y": 188
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-d2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 502,
+        "y": 188
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-d3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 235
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 180
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 502,
+        "y": 283
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open",
+      "target": [
+        5.35,
+        9.46
+      ],
+      "ppm": 68,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 431,
+        "y": 198
+      },
+      "objTopScreen": {
+        "x": 431,
+        "y": 132
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 453,
+        "y": 184
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-k0",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 253
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 110
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 471,
+        "y": 283
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-k1",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 253
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 110
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 373,
+        "y": 283
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-k2",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 253
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 110
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 373,
+        "y": 224
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-k3",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 253
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 110
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 471,
+        "y": 224
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-w0",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 227
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 136
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 453,
+        "y": 246
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-w1",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 227
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 136
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 391,
+        "y": 246
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-w2",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 227
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 136
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 391,
+        "y": 208
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "wardrobe-open-w3",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 227
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 136
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 453,
+        "y": 208
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed",
+      "target": [
+        8.45,
+        15.45
+      ],
+      "ppm": 54,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 984,
+        "y": 304
+      },
+      "objTopScreen": {
+        "x": 984,
+        "y": 241
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 952,
+        "y": 324
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-k0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 559,
+        "y": 449
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-k1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 559,
+        "y": 352
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-k2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 721,
+        "y": 352
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-k3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 721,
+        "y": 449
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-w0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 589,
+        "y": 411
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-w1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 589,
+        "y": 350
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-w2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 691,
+        "y": 350
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-w3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 691,
+        "y": 411
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-f70",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 532,
+        "y": 424
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-f70w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 572,
+        "y": 395
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-f290",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 748,
+        "y": 424
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-closed-f290w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.35
+      ],
+      "personScreen": {
+        "x": 708,
+        "y": 395
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-k0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 584,
+        "y": 434
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-k1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 584,
+        "y": 367
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-k2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 696,
+        "y": 367
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-k3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 696,
+        "y": 434
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-w0",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 605,
+        "y": 402
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-w1",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 605,
+        "y": 359
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-w2",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 675,
+        "y": 359
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-w3",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 675,
+        "y": 402
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-f70",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 566,
+        "y": 417
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-f70w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 70,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 593,
+        "y": 391
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-f290",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 135,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 242
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 714,
+        "y": 417
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "fridge-open-f290w",
+      "target": [
+        12.5,
+        10.5
+      ],
+      "ppm": 85,
+      "yawDeg": 290,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 380
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 281
+      },
+      "person": [
+        12.5,
+        11.09
+      ],
+      "personScreen": {
+        "x": 687,
+        "y": 391
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-k0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 560,
+        "y": 448
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-k1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 560,
+        "y": 353
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-k2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 720,
+        "y": 353
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-k3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 720,
+        "y": 448
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-w0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 382
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 587,
+        "y": 414
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-w1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 382
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 587,
+        "y": 351
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-w2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 382
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 693,
+        "y": 351
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-w3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 100,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 382
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 693,
+        "y": 414
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-x0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 370
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 346
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 606,
+        "y": 391
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-x1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 370
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 346
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 606,
+        "y": 349
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-x2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 370
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 346
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 674,
+        "y": 349
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-x3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 65,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 370
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 346
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 674,
+        "y": 391
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-d0",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 560,
+        "y": 448
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-d1",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 560,
+        "y": 353
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-d2",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 720,
+        "y": 353
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-d3",
+      "target": [
+        14.5,
+        10.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        14,
+        10
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 400
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 345
+      },
+      "person": [
+        14.5,
+        11.25
+      ],
+      "personScreen": {
+        "x": 720,
+        "y": 448
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open",
+      "target": [
+        9.93,
+        9.98
+      ],
+      "ppm": 123,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 213,
+        "y": 593
+      },
+      "objTopScreen": {
+        "x": 213,
+        "y": 475
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 253,
+        "y": 569
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-k0",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 418
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 275
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 689,
+        "y": 448
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-k1",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 418
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 275
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 591,
+        "y": 448
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-k2",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 418
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 275
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 591,
+        "y": 389
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-k3",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 418
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 275
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 689,
+        "y": 389
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-w0",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 392
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 301
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 671,
+        "y": 411
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-w1",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 392
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 301
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 609,
+        "y": 411
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-w2",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 392
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 301
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 609,
+        "y": 373
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "wardrobe-open-w3",
+      "target": [
+        5.5,
+        9.5
+      ],
+      "ppm": 95,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        5,
+        9
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 392
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 301
+      },
+      "person": [
+        5.96,
+        9.5
+      ],
+      "personScreen": {
+        "x": 671,
+        "y": 373
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    }
+  ],
+  "diag": [
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking",
+      "found": true,
+      "effects": true,
+      "effectsVisible": true,
+      "group": [
+        199,
+        446
+      ],
+      "objects": [
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            232,
+            371
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            258,
+            377
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            244,
+            352
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            270,
+            357
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "CylinderGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            1.01,
+            10.31
+          ],
+          "screen": [
+            232,
+            368
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.09,
+            10.28
+          ],
+          "screen": [
+            229,
+            363
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.15,
+            10.28
+          ],
+          "screen": [
+            229,
+            359
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.28,
+            1.22,
+            10.3
+          ],
+          "screen": [
+            231,
+            354
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.29,
+            10.33
+          ],
+          "screen": [
+            234,
+            348
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.33,
+            1.36,
+            10.34
+          ],
+          "screen": [
+            235,
+            343
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.3,
+            1.43,
+            10.33
+          ],
+          "screen": [
+            234,
+            340
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.5,
+            10.31
+          ],
+          "screen": [
+            231,
+            336
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.57,
+            10.28
+          ],
+          "screen": [
+            229,
+            331
+          ],
+          "parentVisible": true
+        }
+      ],
+      "ringMat": {
+        "visible": true,
+        "emissiveIntensity": 2.4,
+        "color": "ff5a12"
+      },
+      "action": {
+        "interactionId": "cookMeal",
+        "phase": "perform",
+        "stage": 1,
+        "stoveObj": "obj_z"
+      },
+      "person": {
+        "at": [
+          14.5,
+          11.25
+        ],
+        "screen": [
+          313,
+          382
+        ]
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "stove-cooking-wide",
+      "found": true,
+      "effects": true,
+      "effectsVisible": true,
+      "group": [
+        89,
+        572
+      ],
+      "objects": [
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            153,
+            457
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            188,
+            478
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            196,
+            431
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            231,
+            452
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "CylinderGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            1.01,
+            10.31
+          ],
+          "screen": [
+            153,
+            453
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.09,
+            10.28
+          ],
+          "screen": [
+            149,
+            442
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.15,
+            10.28
+          ],
+          "screen": [
+            147,
+            435
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.28,
+            1.22,
+            10.3
+          ],
+          "screen": [
+            151,
+            427
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.29,
+            10.33
+          ],
+          "screen": [
+            157,
+            418
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.33,
+            1.36,
+            10.34
+          ],
+          "screen": [
+            160,
+            410
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.3,
+            1.43,
+            10.33
+          ],
+          "screen": [
+            156,
+            403
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.5,
+            10.31
+          ],
+          "screen": [
+            150,
+            395
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.57,
+            10.28
+          ],
+          "screen": [
+            148,
+            386
+          ],
+          "parentVisible": true
+        }
+      ],
+      "ringMat": {
+        "visible": true,
+        "emissiveIntensity": 2.4,
+        "color": "ff5a12"
+      },
+      "action": {
+        "interactionId": "cookMeal",
+        "phase": "perform",
+        "stage": 1,
+        "stoveObj": "obj_z"
+      },
+      "person": {
+        "at": [
+          14.5,
+          11.25
+        ],
+        "screen": [
+          275,
+          512
+        ]
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking",
+      "found": true,
+      "effects": true,
+      "effectsVisible": true,
+      "group": [
+        426,
+        169
+      ],
+      "objects": [
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            459,
+            94
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            485,
+            100
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            471,
+            75
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            497,
+            80
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "CylinderGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            1.01,
+            10.31
+          ],
+          "screen": [
+            459,
+            91
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.31,
+            1.51,
+            10.29
+          ],
+          "screen": [
+            458,
+            56
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.28,
+            1.58,
+            10.28
+          ],
+          "screen": [
+            456,
+            53
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.1,
+            10.29
+          ],
+          "screen": [
+            456,
+            86
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.17,
+            10.31
+          ],
+          "screen": [
+            459,
+            81
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.23,
+            10.33
+          ],
+          "screen": [
+            462,
+            75
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.3,
+            10.34
+          ],
+          "screen": [
+            462,
+            71
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.37,
+            10.32
+          ],
+          "screen": [
+            460,
+            67
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.44,
+            10.3
+          ],
+          "screen": [
+            457,
+            63
+          ],
+          "parentVisible": true
+        }
+      ],
+      "ringMat": {
+        "visible": true,
+        "emissiveIntensity": 2.4,
+        "color": "ff5a12"
+      },
+      "action": {
+        "interactionId": "cookMeal",
+        "phase": "perform",
+        "stage": 1,
+        "stoveObj": "obj_z"
+      },
+      "person": {
+        "at": [
+          14.5,
+          11.25
+        ],
+        "screen": [
+          540,
+          105
+        ]
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "stove-cooking-wide",
+      "found": true,
+      "effects": true,
+      "effectsVisible": true,
+      "group": [
+        316,
+        295
+      ],
+      "objects": [
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            380,
+            180
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            415,
+            201
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            423,
+            154
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            458,
+            175
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "CylinderGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            1.01,
+            10.31
+          ],
+          "screen": [
+            380,
+            176
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.31,
+            1.51,
+            10.29
+          ],
+          "screen": [
+            380,
+            114
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.28,
+            1.58,
+            10.28
+          ],
+          "screen": [
+            375,
+            106
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.1,
+            10.29
+          ],
+          "screen": [
+            375,
+            165
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.17,
+            10.31
+          ],
+          "screen": [
+            380,
+            157
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.23,
+            10.33
+          ],
+          "screen": [
+            386,
+            148
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.3,
+            10.34
+          ],
+          "screen": [
+            386,
+            140
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.37,
+            10.32
+          ],
+          "screen": [
+            381,
+            133
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.44,
+            10.3
+          ],
+          "screen": [
+            376,
+            125
+          ],
+          "parentVisible": true
+        }
+      ],
+      "ringMat": {
+        "visible": true,
+        "emissiveIntensity": 2.4,
+        "color": "ff5a12"
+      },
+      "action": {
+        "interactionId": "cookMeal",
+        "phase": "perform",
+        "stage": 1,
+        "stoveObj": "obj_z"
+      },
+      "person": {
+        "at": [
+          14.5,
+          11.25
+        ],
+        "screen": [
+          502,
+          235
+        ]
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking",
+      "found": true,
+      "effects": true,
+      "effectsVisible": true,
+      "group": [
+        644,
+        334
+      ],
+      "objects": [
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            677,
+            259
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            703,
+            265
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            689,
+            240
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            715,
+            245
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "CylinderGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            1.01,
+            10.31
+          ],
+          "screen": [
+            677,
+            256
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.31,
+            1.47,
+            10.3
+          ],
+          "screen": [
+            677,
+            224
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.28,
+            1.54,
+            10.28
+          ],
+          "screen": [
+            674,
+            221
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.05,
+            10.28
+          ],
+          "screen": [
+            674,
+            254
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.12,
+            10.3
+          ],
+          "screen": [
+            676,
+            249
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.19,
+            10.33
+          ],
+          "screen": [
+            679,
+            243
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.33,
+            1.26,
+            10.34
+          ],
+          "screen": [
+            680,
+            238
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.3,
+            1.33,
+            10.33
+          ],
+          "screen": [
+            679,
+            235
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.4,
+            10.3
+          ],
+          "screen": [
+            676,
+            231
+          ],
+          "parentVisible": true
+        }
+      ],
+      "ringMat": {
+        "visible": true,
+        "emissiveIntensity": 2.4,
+        "color": "ff5a12"
+      },
+      "action": {
+        "interactionId": "cookMeal",
+        "phase": "perform",
+        "stage": 1,
+        "stoveObj": "obj_z"
+      },
+      "person": {
+        "at": [
+          14.5,
+          11.25
+        ],
+        "screen": [
+          758,
+          270
+        ]
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "stove-cooking-wide",
+      "found": true,
+      "effects": true,
+      "effectsVisible": true,
+      "group": [
+        534,
+        460
+      ],
+      "objects": [
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            598,
+            345
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            633,
+            366
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.31
+          ],
+          "screen": [
+            641,
+            319
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "TorusGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.7,
+            0.97,
+            10.64
+          ],
+          "screen": [
+            676,
+            340
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "CylinderGeometry",
+          "isSprite": false,
+          "visible": true,
+          "world": [
+            14.3,
+            1.01,
+            10.31
+          ],
+          "screen": [
+            598,
+            341
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.31,
+            1.47,
+            10.3
+          ],
+          "screen": [
+            599,
+            284
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.28,
+            1.54,
+            10.28
+          ],
+          "screen": [
+            594,
+            276
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.05,
+            10.28
+          ],
+          "screen": [
+            592,
+            335
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.29,
+            1.12,
+            10.3
+          ],
+          "screen": [
+            597,
+            327
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.32,
+            1.19,
+            10.33
+          ],
+          "screen": [
+            603,
+            318
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.33,
+            1.26,
+            10.34
+          ],
+          "screen": [
+            604,
+            310
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.3,
+            1.33,
+            10.33
+          ],
+          "screen": [
+            601,
+            303
+          ],
+          "parentVisible": true
+        },
+        {
+          "geo": "BufferGeometry",
+          "isSprite": true,
+          "visible": true,
+          "world": [
+            14.27,
+            1.4,
+            10.3
+          ],
+          "screen": [
+            595,
+            295
+          ],
+          "parentVisible": true
+        }
+      ],
+      "ringMat": {
+        "visible": true,
+        "emissiveIntensity": 2.4,
+        "color": "ff5a12"
+      },
+      "action": {
+        "interactionId": "cookMeal",
+        "phase": "perform",
+        "stage": 1,
+        "stoveObj": "obj_z"
+      },
+      "person": {
+        "at": [
+          14.5,
+          11.25
+        ],
+        "screen": [
+          720,
+          400
         ]
       }
     }

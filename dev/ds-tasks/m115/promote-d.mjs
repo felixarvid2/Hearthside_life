@@ -12,9 +12,11 @@ const SHOTS = join(dirname(fileURLToPath(import.meta.url)), 'shots', 'D');
 // viewport or an object { portrait, landscape, desktop } when the best angle differs by screen shape. Edit after
 // looking at the images.
 const CHOICE = {
-  // k1 is the diagonal that keeps the whole appliance in frame with the person below it (w2 hugs the lot edge).
-  'fridge-closed': 'k1',
-  'fridge-open': 'k1',
+  // k0 is the front-right yaw (camera on the person's side of the fridge): the closed dark door panel and the open
+  // door with the lit cavity beside the person both read. k1 was behind the fridge - it showed the model's back and
+  // made the door panel look like a cavity on the rear. The front-side oblique f70 frames the door against the wall.
+  'fridge-closed': 'k0',
+  'fridge-open': 'k0',
   // The hob reads best close up: portrait w1 keeps the whole stove + person + steam wisps; landscape d1 and
   // desktop d2 put the four lit rings, the pan and the cook in one frame.
   'stove-cooking': { portrait: 'w1', landscape: 'd1', desktop: 'd2' },

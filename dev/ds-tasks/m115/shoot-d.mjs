@@ -127,6 +127,33 @@ async function aimObject(page, objectId, yawStep, ppm, y) {
 }
 
 /**
+ * Aim at an object from an arbitrary yaw (degrees, 0 = camera on the +z/front side) at a fixed zoom. The four yaw
+ * steps are diagonals or rear views; the fridge is set into a corner, so its door and cavity only read from a
+ * front-side angle between the diagonal and straight-on, with the person shifted clear of the opening.
+ */
+async function aimObjectYaw(page, objectId, yawDeg, ppm, y) {
+  await page.evaluate(({ objectId, yawDeg, ppm, y }) => {
+    const th = window.hearthside;
+    const st = th.debug.state();
+    const lot = st.lots[st.activeLotId];
+    const o = lot.objects[objectId];
+    const def = th.core.content.objects[o.defId];
+    const swap = ((o.rot ?? 0) % 2) === 1;
+    const w = swap ? def.footprint.d : def.footprint.w;
+    const d = swap ? def.footprint.w : def.footprint.d;
+    const rig = th.view.rig;
+    rig.setYawStep(0);
+    rig.yaw = (yawDeg * Math.PI) / 180;
+    rig.glide = null;
+    rig.turn = null;
+    rig.target.set(o.x + w / 2, y, o.z + d / 2);
+    rig.setZoom(ppm);
+    rig.update(0);
+  }, { objectId, yawDeg, ppm, y });
+  await settle(page, 500);
+}
+
+/**
  * Where the rig is and where the target and the person actually project, so framing can be checked from the
  * JSON log instead of by eye. `rig.project` returns canvas CSS px; the canvas fills the page in these shots.
  */
@@ -347,7 +374,28 @@ async function main() {
         await frameObject(page, setup.fridgeId);
         await shot(page, vp, 'fridge-closed');
         await logAim(page, vp, 'fridge-closed', setup.fridgeId);
+        // Closed must look exactly like the untouched model: ObjectAnim adds no interior (and no open door) yet.
+        const closedState = await page.evaluate((id) => {
+          const g = window.hearthside.view.scene.getObjectByName(`obj:${id}`);
+          if (!g) return { ok: false, reason: 'object group missing' };
+          g.updateMatrixWorld(true);
+          const anim = g.getObjectByName('object-anim') ?? null;
+          const interiors = (anim?.children ?? []).filter((c) => c.name.startsWith('interior:') && c.visible);
+          return { ok: interiors.length === 0, interiors: interiors.map((c) => c.name) };
+        }, setup.fridgeId);
+        check(`${vp.name}: the closed fridge draws no cavity`, closedState.ok,
+          closedState.reason ?? `interiors ${JSON.stringify(closedState.interiors)}`);
         await angleCandidates(page, vp, 'fridge-closed', setup.fridgeId, 135, 85, 1.0);
+        // Front-side obliques: the camera stays on the person's side of the fridge but off the person's sight line,
+        // so the door (and, when open, the lit cavity) is visible beside them.
+        for (const [suffix, deg] of [['f70', 70], ['f290', 290]]) {
+          await aimObjectYaw(page, setup.fridgeId, deg, 135, 1.0);
+          await shot(page, vp, `fridge-closed-${suffix}`);
+          await logAim(page, vp, `fridge-closed-${suffix}`, setup.fridgeId);
+          await aimObjectYaw(page, setup.fridgeId, deg, 85, 1.0);
+          await shot(page, vp, `fridge-closed-${suffix}w`);
+          await logAim(page, vp, `fridge-closed-${suffix}w`, setup.fridgeId);
+        }
       }
 
       // 2-3. cookMeal chain: stage 0 reaches into the fridge, stage 1 cooks at the stove. The chain runs whenever
@@ -359,9 +407,43 @@ async function main() {
         reaching = await stepUntil(page, 'cookMeal', 0);
         check(`${vp.name}: cookMeal reaches the fridge stage`, !!reaching, reaching ? `stage 0 at ${reaching.elapsed} min` : 'never');
         if (reaching && wants('fridge')) {
-          await page.evaluate(() => window.hearthside.debug.step(3)); // let the 0.4 min door tween finish
+          // The door tween takes 0.4 game minutes and the fridge stage is short: one debug.step is a whole minute,
+          // so a 3-step jump used to leave the stage and close the door again (the "closed while reaching" shot).
+          // Two single steps finish the tween while the person is still reaching in.
+          await page.evaluate(() => window.hearthside.debug.step(1));
+          await settle(page, 350);
+          await page.evaluate(() => window.hearthside.debug.step(1));
           await settle(page);
+          // Prove from the scene graph that the open state is actually rendered: ObjectAnim only builds the lit
+          // interior once the door is open, and only while the fridge is the target of the current action.
+          const openState = await page.evaluate((id) => {
+            const th = window.hearthside;
+            const st = th.debug.state();
+            const p = st.people[st.households[st.activeHouseholdId].memberIds[0]];
+            const a = p.queue[0];
+            const g = th.view.scene.getObjectByName(`obj:${id}`);
+            if (!g) return { ok: false, reason: 'object group missing' };
+            g.updateMatrixWorld(true);
+            const anim = g.getObjectByName('object-anim') ?? null;
+            const interior = anim?.children.find((c) => c.name.startsWith('interior:')) ?? null;
+            return {
+              ok: !!interior && interior.visible,
+              action: a ? `${a.interactionId} stage ${a.data?.stage} ${a.phase} at ${a.elapsed}` : 'none',
+              interior: interior?.name ?? 'none',
+              yawDeg: Math.round((th.view.rig.yaw * 180) / Math.PI),
+            };
+          }, setup.fridgeId);
+          check(`${vp.name}: the fridge interior is built and lit while the door is open`, openState.ok,
+            `${openState.action}; ${openState.interior}; camera yaw ${openState.yawDeg}`);
           await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 85, 1.0);
+          for (const [suffix, deg] of [['f70', 70], ['f290', 290]]) {
+            await aimObjectYaw(page, setup.fridgeId, deg, 135, 1.0);
+            await shot(page, vp, `fridge-open-${suffix}`);
+            await logAim(page, vp, `fridge-open-${suffix}`, setup.fridgeId);
+            await aimObjectYaw(page, setup.fridgeId, deg, 85, 1.0);
+            await shot(page, vp, `fridge-open-${suffix}w`);
+            await logAim(page, vp, `fridge-open-${suffix}w`, setup.fridgeId);
+          }
         }
       }
       if (reaching && wants('stove')) {

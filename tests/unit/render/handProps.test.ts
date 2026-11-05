@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import type { CharacterView } from '../../../src/characters/CharacterView';
 import {
-  HandProps, actionFraction, biteFraction, foodColor, mealDomeScale, mealPortion, propsFor, snackFor,
+  HandProps, actionFraction, biteFraction, foodColor, mealDomeScale, mealPortion, propScale, propsFor, snackFor,
   type HandEnv, type PropAction, type PropAnim, type PropPerson,
 } from '../../../src/render/handProps';
 
@@ -77,11 +77,11 @@ describe('propsFor — cookMeal', () => {
 
   it('carries a full plate to the counter and drops it when the meal item exists', () => {
     const carry = act({ interactionId: 'cookMeal', phase: 'route', data: { stage: 2, recipeId: 'pasta' } });
-    expect(done(carry).right).toMatchObject({ kind: 'plate', portion: 1, foodColor: foodColor('pasta') });
+    expect(done(carry).carried).toMatchObject({ kind: 'plate', portion: 1, foodColor: foodColor('pasta') });
     const placed = act({ interactionId: 'cookMeal', duration: 1, data: { stage: 2, recipeId: 'pasta', itemId: 'itm_1' } });
     expect(propsFor(person(), placed, null, 0, { itm_1: { id: 'itm_1' } })).toEqual({});
-    // a save that already recorded the item id but not the item keeps the plate in hand
-    expect(propsFor(person(), placed, null, 0, {})).toMatchObject({ right: { kind: 'plate' } });
+    // a save that already recorded the item id but not the item keeps the plate carried
+    expect(propsFor(person(), placed, null, 0, {})).toMatchObject({ carried: { kind: 'plate' } });
   });
 });
 
@@ -93,12 +93,12 @@ describe('propsFor — eatMeal', () => {
   it('takes the plate at the end of the pickup, after the item was taken', () => {
     expect(done(act({ interactionId: 'eatMeal', duration: 1, data: { stage: 0 } }))).toEqual({});
     expect(done(pickup({ elapsed: 0.3 }))).toEqual({});
-    expect(done(pickup({ elapsed: 0.7 })).right).toMatchObject({ kind: 'plate', foodColor: foodColor('stew') });
+    expect(done(pickup({ elapsed: 0.7 })).carried).toMatchObject({ kind: 'plate', foodColor: foodColor('stew') });
   });
 
   it('carries the plate to the seat', () => {
     const route = act({ interactionId: 'eatMeal', phase: 'route', data: { stage: 1, itemTaken: true, recipeId: 'stew' } });
-    expect(done(route).right).toMatchObject({ kind: 'plate' });
+    expect(done(route).carried).toMatchObject({ kind: 'plate' });
   });
 
   it('seated: puts the plate in front and eats with a fork, shrinking with elapsed/duration', () => {
@@ -110,11 +110,12 @@ describe('propsFor — eatMeal', () => {
     expect(done({ ...a, elapsed: 20 }, { id: 'eat', since: 0 }, 20, person('seated')).placed?.portion).toBeCloseTo(0.2);
   });
 
-  it('standing: holds the plate in the left hand and the fork in the right', () => {
+  it('standing: carries the plate in front of the body and eats with a fork', () => {
     const a = act({ interactionId: 'eatMeal', duration: 25, elapsed: 5, data: { stage: 1, itemTaken: true, recipeId: 'stew' } });
     const r = done(a, { id: 'eat', since: 0 }, 5, person('standing'));
-    expect(r.left).toMatchObject({ kind: 'plate', portion: 0.8, upright: true });
+    expect(r.carried).toMatchObject({ kind: 'plate', portion: 0.8 });
     expect(r.right).toMatchObject({ kind: 'fork' });
+    expect(r.left).toBeUndefined();
     expect(r.placed).toBeUndefined();
   });
 
@@ -253,7 +254,31 @@ describe('HandProps — attachment and disposal', () => {
 
     props.update({ right: { kind: 'fork' } }, { ...env, scale: 0.75 });
     const fork = bone.children.find((c) => c.name === 'hand-prop-fork');
-    expect(fork!.scale.x).toBeCloseTo(0.75);
+    expect(fork!.scale.x).toBeCloseTo(0.75 * propScale('fork'));
+    props.dispose();
+  });
+
+  it('carries the plate level in front of the body, not at a hand by the hip, and enlarges props to read', () => {
+    const { view, root } = fakeView();
+    const props = new HandProps(view);
+    props.update({ carried: { kind: 'plate', portion: 1, foodColor: 0xd9a441, upright: true } }, env);
+    const carried = root.children.find((c) => c.name === 'hand-prop-plate');
+    expect(carried).toBeTruthy();
+    // Root-local: CharacterView faces +z, so the plate sits out in front at waist/chest height and stays level.
+    expect(carried!.position.x).toBeCloseTo(0);
+    expect(carried!.position.y).toBeCloseTo(1.03);
+    expect(carried!.position.z).toBeCloseTo(0.36);
+    expect(carried!.rotation.x).toBeCloseTo(0);
+    expect(carried!.rotation.z).toBeCloseTo(0);
+    // Drawn larger than life so it reads at the default camera distance.
+    expect(carried!.scale.x).toBeCloseTo(propScale('plate'));
+    expect(propScale('plate')).toBeGreaterThanOrEqual(1.4);
+    expect(propScale('fork')).toBeGreaterThanOrEqual(1.4);
+    expect(propScale('fork')).toBeLessThanOrEqual(1.8);
+
+    props.update({ placed: { kind: 'plate', portion: 1 } }, env);
+    expect(root.children.some((c) => c.name === 'hand-prop-plate')).toBe(true);
+    expect(root.children.filter((c) => c.name === 'hand-prop-plate')).toHaveLength(1);
     props.dispose();
   });
 });

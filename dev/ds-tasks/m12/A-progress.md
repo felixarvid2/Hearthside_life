@@ -1,0 +1,57 @@
+# Task A: acceptance steps and documentation for Milestones 11.5 and 12
+
+State: in progress (acceptance runs per viewport under way).
+
+## What was added to `tests/e2e/acceptance.mjs`
+
+- **Step 13, Milestone 11.5** (`stepAnimations`): one household member cooks a meal and eats it. The step reads only
+  the allowed probes: `window.__t.objectAnimState` (fridge door open while the reach-in plays, closed again at the
+  stove), `window.__t.handProps` (ingredients bag, spatula, carried plate, plate on the table and fork in hand, all
+  put away at the end), `window.__t.pill` (appears above the head, fill grows, "Eat complete" state) and
+  `window.__t.screenMode` (writing screen on with growing text, off when the piece is finished). The door read happens
+  one sim tick after the first frame of the stage, because the tween is seeded from the game clock and at speed 0
+  render frames do not advance it.
+- **Step 14, Milestone 12** (`stepWorldM12`): `window.hearthside.debug.setWeather` pins rain and clear weather for
+  deterministic checks. The step checks the HUD chip (season, day and weather), an outdoor activity greyed with
+  "It is raining." and enabled again in clear weather, winter snow with a snowman built and the snow still on the
+  ground after clearing, the Build Pool tab with its three styles, a small pool built and paid for with a ladder left
+  in place, a member swimming and getting out through the ladder without touching a water tile, and travel to and
+  from the Quayside Baths venue.
+- The self menu is reached with a person pick (`{ kind: 'person', personId }`), since `PickResult` has no `'self'`.
+  The HUD chip is polled (it refreshes on a 250 ms timer and skips while the page is hidden or off the game route).
+
+## Default test timeouts
+
+Explicit, realistic timeouts instead of a global change:
+
+- `tests/unit/surfaces/painters.test.ts`: 30 s for the determinism, layout and thumbnail cases.
+- `tests/unit/surfaces/mapPainters.test.ts`: 30 s for both slow cases.
+- `tests/unit/integration/floors.test.ts`: 20 s for the support cases and 60 s for the long save/reload case.
+
+## Acceptance totals
+
+| Viewport | Steps 13, 14 (targeted `--steps=13,14 --fast-start`) | Full run (steps 1-14) |
+|---|---|---|
+| portrait 390x844 | 43/43 | running |
+| landscape 844x390 | 43/43 | running |
+| desktop 1280x720 | running | running |
+
+## Other checks
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | pass (on the tree with the parallel M11.5 review fixes; re-run before the final commit) |
+| `npm test` | pass: 160 files / 2074 tests |
+| `npm run content:check` | pass: 0 errors, 0 warnings |
+| `npm run build` | pass (12.25 s) |
+| `npm run e2e` | pending |
+| `npm run e2e:creator` | pending |
+
+## Files changed
+
+- `tests/e2e/acceptance.mjs`
+- `tests/unit/surfaces/painters.test.ts`, `tests/unit/surfaces/mapPainters.test.ts`,
+  `tests/unit/integration/floors.test.ts`
+- `src/main.ts` (debug `setWeather` keeps snow that has already settled)
+- `docs/ROADMAP.md`, `docs/CONTINUATION.md`, `docs/CONTENT_STATUS.md`, `docs/TEST_CHECKLIST.md`,
+  `docs/ARCHITECTURE.md`

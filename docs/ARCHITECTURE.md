@@ -819,3 +819,161 @@ Files: `content/exterior.ts` (fence and gate designs, roof styles and finishes, 
 - **Staircases.** 8 straight (1 or 2 wide, 3 or 4 long) and 4 spiral designs, `ObjectDef.stair`, category 'stairs', models rising toward -z with one tread per walked cell
   (`tools/exterior/stairs.mjs`).
 - **Saves.** Schema 1; `fillExteriorDefaults` drops malformed records, `checkExterior` / `checkGarden` validate the rest.
+
+## Seasons and weather (Milestone 12, tasks W and O)
+
+Files: `core/season.ts` (season maths and settings defaults), `sim/weather.ts` (planning, the interaction gate,
+outdoors, `snowLies`, moodlets, HUD and forecast text), `render/lighting.ts`, `environment.ts`, `terrainView.ts` and
+`weatherView.ts` (seasonal light, grass, trees, terrain and capped rain/snow), `content/interactions.ts` (weather
+rules and the outdoor activities), `content/preferences.ts`, `moodlets.ts` and `traits.ts` (weather preferences,
+moodlets and biases), `ui/hud/hud.ts` (the clock chip) and `ui/screens/settings.ts` (Seasons, Weather, season length,
+Weather effects). Pure code except the render and UI files; tested in `tests/unit/core/season.test.ts`,
+`tests/unit/sim/weather.test.ts`, `tests/unit/sim/outdoor.test.ts` and the headless runs
+`tests/unit/integration/{outdoor-playtest,weather}.test.ts`.
+
+**Seasons.** `seasonForDay(day)` (and `seasonFor(minutes)`) is `floor(day / seasonDays) mod 4` with day 0 = spring and
+`seasonDays` 7 by default (3 and 14 in Settings); `SimSettings.seasons: false` always reads as spring, which the
+weather table treats as never-snow. `dayWithinSeason` is 1-based for the HUD ("Autumn, day 1"). Seasons switch at
+midnight of the absolute day, so a season change is just another daily rollover.
+
+**Weather plan.** `ensureWeather` (called every tick from the simulation) stores `WorldState.weather`:
+`{ current, today: [morning, afternoon], tomorrow: [...], day, since, snowCover? }`. Each half-day (00:00-11:59 and
+12:00-23:59) is picked deterministically from `hash32(seed, day, half, season)`, never from the world RNG, using
+per-season weights (winter is the only season with snow). A stored plan for the same day is kept, so a reload never
+rerolls weather; a new day re-plans. `current` is `today[half]`; `since` is the game minute the half began.
+`snowCover` is set while it snows in winter, kept after the snow stops, and dropped when the season leaves winter or
+seasons/weather are off. `weather: false` makes every half-day clear and `weatherHudLabel` reads "Weather off".
+
+**Gates.** `InteractionDef.weather` and `SocialDef.weather` accept `{ not?, only?, seasons? }`; `weatherGateReason`
+turns them into a reason ("It is raining.", "Only available in winter."). Task O extended the same rule with
+`outdoor`, `sheltered`, `night`, `day`, `snowCover` and `rainedRecently`, composed by `outdoorGateReason` (night is
+21:00-05:59; snow lies when `weather.snowCover` is set and the season is still winter; rain counts as recent through
+the first three hours of a rainy afternoon). `requestReason` adds the reason after the age gate, so an option stays
+listed but greyed, and `candidatesFor` / `socialCandidate` filter the same way, so autonomy never starts a blocked
+interaction. `nearestOutdoorTile` (the walk-outside precondition) computes the room map, room index and roofs once
+per call - the per-tile version was quadratic and made autonomy expensive.
+
+**Outdoor life (task O).** `buildSnowman`, `makeSnowAngel`, `flyKite`, `rakeLeaves`, `jumpInPuddles` (children and
+teens), `stargaze`, `watchRain` (under a roof), `sunbathe` and the extended `havePicnic`, plus the `snowballFight` and
+`sharePicnic` socials. The gate table is in `dev/ds-tasks/m12/O-progress.md`. The snowman is an ordinary
+`PlacedObject` with an additive `snowman` state (`madeAt`, `warmDays`, `lastWarmDay`), removed by an hourly check
+when winter ends or after three snow-free winter days; the kite, sun lounger and picnic blanket are procedural
+`proc:` models in `render/outdoorModels.ts`.
+
+**Rendering.** `Lighting.update(hour, weather, season)` tints sky, sun, hemisphere, background and exposure; the
+environment rebuilds seasonal grass, trees and shrubs plus snow cover when `snowLies`; `TerrainView.setSeason` tints
+the painted ground; `WeatherView` is one capped `THREE.Points` mesh (1500 desktop / 600 touch) of rain streaks or
+snowflakes that follows the camera and is hidden for clear/cloudy, with Weather effects off, or with reduced motion
+(the light tint stays). Interior cutaways keep the existing lighting.
+
+**UI and saves.** The HUD `.clock-sky` shows "Season, day N - Weather" in its text, title and aria-label, refreshed on
+a 250 ms timer (skipped while the page is hidden or off the game route); the feed has a two-day forecast line; the
+settings screen has Seasons, Weather, season length and Weather effects. All new fields are optional additions to
+schema 1: `WorldState.weather`, `SimSettings.seasons/seasonDays/weather` and `GameSettings.weatherEffects`;
+`fillWeatherDefaults` repairs malformed plans and drops them without rerolling a valid one.
+
+**Debug.** `window.hearthside.debug.setWeather(kind)` pins the current day's stored plan (current, today, tomorrow,
+day/since) and keeps settled `snowCover`, so acceptance steps are independent of the world seed; `ensureWeather`
+keeps a same-day plan, so it lasts until midnight.
+
+## Pools (Milestone 12, tasks P and F)
+
+Files: `core/types.ts` (`Pool`, `PoolLadder`, `Lot.pools`), `content/exterior.ts` (`PoolStyleDef`; three styles:
+azure mosaic, lagoon tile, terracotta tile), `building/poolPlans.ts` (pure plan, preview, ladder and diff rules),
+`building/poolCommands.ts` (undoable `buildPool`, `removePool`, `movePoolLadder`, `addPoolLadder`,
+`removePoolLadder`), `world/pools.ts` (tile queries), `world/navgrid.ts` (water blocked), `sim/pool.ts` (the swim
+lifecycle), `render/poolView.ts` (basin, coping, shader water, ladder) and the Pool tab in the Build panel. Tested in
+`tests/unit/building/poolPlans.test.ts`, `world/poolNav.test.ts`, `sim/poolLifecycle.test.ts`,
+`integration/poolPlaytest.test.ts` and the `swim-probe` regression test; the visual check is
+`dev/ds-tasks/m12/p-shots.mjs`.
+
+**Shape and build rules.** A pool is a level-0 rectangle in tile bounds (`x0..x1`, `z0..z1` inclusive), min 2 x 3 /
+3 x 2 and max 12 x 12, inside the lot and clear of walls, openings, level-0 objects (any layer), stairs, floors
+above and other pools. The deck around it must stay reachable: after blocking the water, the tiles next to its
+ladders must still connect to the lot entry and no previously reachable tile may be cut off. At least one short side
+needs a reachable deck tile; the auto ladder goes on the middle tile of the shorter side (ties: north, then west),
+and explicit ladder commands must use an edge tile with deck access and keep at least one ladder. Cost is
+`pricePerTile x tiles`, with a full same-day refund and the normal resale rate later, all through `transact` and one
+undo step per command (`lot.changed` what `pools`).
+
+**Navigation.** `buildNavGrid` blocks level-0 water with occupant id `pool:<id>`; deck tiles stay walkable and ladders
+are scripted links, not nav edges, so nobody ever paths across water. `validatePlacement` refuses objects whose
+footprints overlap water, and `lotCheck` flags a pool whose ladders have no reachable deck.
+
+**Swimming.** `swimInPool` and `relaxInPool` are `tile` options on water (plus `getOutOfPool` while a pool action
+runs); `sim/pool.ts` scripts the stages `toDeck -> enter -> swim -> exit` in `data.stage`: route to the ladder deck,
+switch to the `swim` outfit (remembering the previous one), step onto the ladder, swim a deterministic boustrophedon
+path inset one tile from the walls (or float at one point), then climb out to the deck and restore the outfit.
+Movement in water is procedural and clamped to the rect; `ActionInstance.target` stays a tile. `getOutOfPool` and a
+cancel request use the new `cancelGraceful` hook: the action moves into `exit`, ignores further cancels and always
+ends on the ladder deck (`backX/backZ` point at the deck, so even `failNow` cannot leave a swimmer in the water). An
+outdoor pool refuses swimming while it snows ("It is snowing."); a roofed pool stays open. Autonomy adds pool
+candidates with the fun utility. Everyone has a `swim` outfit through `defaultWardrobe`, so no new garments.
+
+**Rendering.** The basin is a recessed floor with inner walls and a coping ring in the style colours; water is one
+plane per pool with a small texture-free `ShaderMaterial` (two scrolling ripples and a caustic pattern, transparent,
+no depth write) updated by elapsed time only; the ladder is two rails with rungs. `EnvironmentView` cuts the ground
+hole and `TerrainView` skips water tiles. Swimmers (`swim`/`float`) put the root on the water plane
+(`WATER_Y = 0.015`) plus 0.04 m rather than sinking by standing height: the shared clips already lie the body flat,
+so the head stays just above the surface and the body just under the transparent water (task F; the `swim-probe`
+test guards this).
+
+**Quayside Baths (task O).** `VenueType` gains `pool` (open 06:00-21:00, capacity 4) and a thirteenth `LOT_SPEC`
+adds the venue to new worlds (15 lots in total; existing saves keep their lot list). `poolPlan()` builds a 22 x 20
+hall with a 6 x 10 pool (x 7..12, z 8..17) and ladders on both short sides, a changing room and shower room, a lobby
+with benches and a vending machine and an outdoor sun deck with loungers. The pool is written straight into
+`lot.pools` before the lot checks, so it passes the same reachability validation as every other venue.
+
+## Action feedback: moving parts, hand props, screens and the progress pill (Milestone 11.5)
+
+All four systems are render-side and derive everything from the running action (`objectUses(state)` and
+`person.queue[0]` / `person.anim`); no save fields were added. Files: `render/objectAssets.ts` (keeps door/lid
+pivots), `render/objectAnim.ts` (moving parts and effects), `render/handProps.ts` (props on the rig),
+`content/screens.ts` + `render/screenPrograms.ts` + `render/screensView.ts` (screen pictures),
+`render/actionProgress.ts` + `render/progressPills.ts` (the pill), `render/objectUse.ts` (the shared action -> object
+map), plus hooks in `objectsView.ts`, `peopleView.ts` and `gameView.ts`. Tests:
+`tests/unit/render/{objectAnim,objectUse,handProps,actionProgress,screenPrograms}.test.ts`,
+`tests/unit/content/screens.test.ts`, `tests/unit/ui/progressPill.test.ts` and `tests/unit/sim/actions.test.ts`.
+
+**`objectUses`.** Maps object id -> the running `ObjectUse` (`action`, `anim`, `progress`, `phase`, plus additive
+`actionId`, `queuedAt`, `objectId`, `role: 'target' | 'station'`). Stations come from `cookMeal`'s `data.stoveObj`
+and `washDishes`' `data.washObj`, so the stove and sink animate while the cook or washer uses them.
+
+**Moving parts (task D).** The GLB loader normally merges by material; `PART_NODES` keeps the named door/lid nodes as
+`part:<name>` pivot groups (hinge at the node origin, original rotation/scale preserved). `objectAnim.ts` has 21
+descriptors (fridges, stoves, bread oven, wardrobe, both toilets, showers, bath, four sinks, dishwasher, microwave,
+washer, dryer) with node pivots or overlay panels for assets without a door node, interiors and cheap effects (hob
+rings, pot, steam sprites, shower streaks and haze, bath water, tap stream, drum/light pulses). `activeParts` maps
+descriptor + uses + anim to the parts that should be open; `opennessAt` / `seedMotion` / `stepMotion` are pure
+smoothstep tweens in game minutes (0.4 min = 0.4 s at 1x), seeded from `anim.since` so loading mid-action shows the
+door already open; reduced motion snaps. Effects advance with the game-clock delta (capped at 3x), so pausing freezes
+them. Interiors are shallow code-built recesses, visible only while a door is open.
+
+**Hand props (task H).** `propsFor(person, action, anim, clock, items)` is pure: snacks (sandwich/apple/yoghurt,
+4 bite steps), cooking ingredients, the carried plate, the seated plate + right-hand fork, books, phone, mug, glass,
+can, watering can, sponge, spray, mop, cloth, wrench, rod, spatula and paintbrush. Props appear only from a
+hand-reach threshold (60% of `openFridge`/`pickUp`) or at perform, and vanish in `apply`/terminal phases. `HandProps`
+parents small shared-geometry groups to `hand_r` / `hand_l` (placed plates to the character root in front of the
+seat), re-parents after a rig rebuild, scales with the life stage, and hides off-lot/other-level people. Props are
+kept level in the body frame so a plate does not tumble with the wrist.
+
+**Screens (task S).** Four furniture definitions have measured glass (`computer-desktop`, `laptop`, `tv-flatscreen`,
+`tv-vintage`); a quad is a child of the object group a few millimetres in front of the glass (`content/screens.ts`
+holds the measured rectangles). `screensView.ts` maps the interaction to a mode: `document` (write*/homework/study/
+sketch), `code` (programming), `game` (games/chess), `web` (phone, job search, adoption, research, planning, bills,
+repair calls), `tv` (news/nature/cartoon/cooking/sport) and `desktop` as the fallback. Progress is
+`elapsed / duration`; the seed is the action id and the picture is deterministic, so text grows monotonically with
+the action. Four pooled 256x160 canvases are redrawn at most 4x/s (2x/s low quality, 1x/s reduced motion); off
+screens share one dark-glass texture. Entries persist in mode `off` after an action ends.
+
+**Progress pill (task B).** `actionProgress(state, person, content)` is pure and returns `{ fraction, icon, label,
+done, status, walking, phase, actionId } | null`: nothing for queued/validate/reserve or off-lot; `route` shows the
+completed share with a walking style so an action is visible from the start; `apply` and a successful `cleanup`
+count as done; fixed durations use `elapsed / duration`, `untilFull` uses `data.startNeed`..100 (recorded by the sim
+when perform begins) or `elapsed / maxMinutes` for older actions; chains (`cookMeal`, `eatMeal`, `read*`,
+`washDishes`, pool stages) weight each stage's planned minutes and replace the current stage with its live duration;
+a social listener uses `elapsed / SocialDef.minutes`. `ProgressPills` samples at 10 Hz only for on-screen people,
+clamps the fraction per action id, writes at most 10 times a second, shows a green check for 700 ms on completion
+(or grey at the stop point when cancelled/failed), and follows the `actionProgress: 'household' | 'all' | 'off'`
+setting (default Household). The pill is the first child of the existing `.wo-p` column, so it stacks above the name
+tag/thought bubble and never blocks the world.

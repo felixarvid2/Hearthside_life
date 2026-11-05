@@ -62,6 +62,11 @@ for (const asset of assets) {
       const b = meshBounds(mesh);
       const prims = mesh.listPrimitives().map((p) => p.getMaterial()?.getName() ?? '?');
       console.log(`${pad}- [node] ${JSON.stringify(name)} mesh=${JSON.stringify(mesh.getName())} prims=${prims.join('/')} bounds=${fmt(b.min)}..${fmt(b.max)} ${extra.join(' ')}`);
+      for (const prim of mesh.listPrimitives()) {
+        const pos = prim.getAttribute('POSITION');
+        if (!pos) continue;
+        console.log(`${pad}    prim ${JSON.stringify(prim.getMaterial()?.getName() ?? '?')} ${fmt(pos.getMin([]))}..${fmt(pos.getMax([]))} verts=${pos.getCount()}`);
+      }
     } else if (name) {
       console.log(`${pad}- [node] ${JSON.stringify(name)} ${extra.join(' ')}`);
     }

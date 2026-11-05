@@ -74,7 +74,9 @@ describe('objectAnim: descriptors', () => {
         expect(y0, d.defId).toBeLessThan(y1);
         expect(z0, d.defId).toBeLessThan(z1);
         for (const f of d.interiorBox) expect(f).toBeGreaterThanOrEqual(0);
-        for (const f of d.interiorBox) expect(f).toBeLessThanOrEqual(1.01);
+        // Cavities of closed-body appliances may start at (or just proud of) the fitted front face, so the lit
+        // interior is visible in front of the body once the door swings away.
+        for (const f of d.interiorBox) expect(f).toBeLessThanOrEqual(1.03);
       }
       if (d.tap) {
         expect(d.tap.top).toBeGreaterThan(d.tap.bottom);

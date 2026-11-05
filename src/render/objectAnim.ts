@@ -93,12 +93,16 @@ function overlay(
   return { kind: 'overlay', role, hinge, size, axis, angle, material, glass, ...timing };
 }
 
-// Default interiors (fractions of the fitted box). z points forward: 1 is the front face.
+// Default interiors (fractions of the fitted box). z points forward: 1 is the front face, and the use slot /
+// approach tile is always on that +z side (see `useFront` in content/objects.ts). The catalog's appliance bodies
+// are closed boxes whose front face sits at the fitted front, so the cavity of an appliance with a separate door
+// has to start at (or just in front of) z = 1 to be visible once the door swings away; a wardrobe's body is open
+// at the front, so its interior sits just behind it.
 const INTERIOR_BOX: Record<InteriorKind, InteriorBox> = {
-  fridge: [0.06, 0.10, 0.86, 0.94, 0.75, 0.96],
-  oven: [0.08, 0.02, 0.94, 0.92, 0.62, 1.0],
+  fridge: [0.06, 0.10, 0.92, 0.94, 0.75, 1.0],
+  oven: [0.08, 0.02, 1.0, 0.92, 0.62, 1.02],
   wardrobe: [0.05, 0.05, 0.93, 0.95, 0.93, 1.0],
-  dishwasher: [0.05, 0.05, 0.93, 0.95, 0.92, 1.0],
+  dishwasher: [0.05, 0.05, 1.0, 0.95, 0.92, 1.02],
   washer: [0.10, 0.10, 0.90, 0.90, 0.90, 0.99],
 };
 
@@ -107,29 +111,29 @@ export const DESCRIPTORS: readonly AnimDescriptor[] = [
   {
     defId: 'fridge-standard', asset: 'kitchenFridge', kind: 'fridge',
     parts: [node('door', 'doorFridge', 'y', -1.75)],
-    interior: 'fridge', interiorBox: [0.07, 0.10, 0.86, 0.93, 0.75, 0.96],
+    interior: 'fridge', interiorBox: [0.07, 0.10, 0.92, 0.93, 0.75, 1.0],
   },
   {
     defId: 'fridge-side-by-side', asset: 'kitchenFridgeLarge', kind: 'fridge',
     parts: [node('door', 'doorLeft', 'y', -1.7), node('door2', 'doorRight', 'y', 1.7)],
-    interior: 'fridge', interiorBox: [0.03, 0.10, 0.86, 0.97, 0.97, 0.96],
+    interior: 'fridge', interiorBox: [0.03, 0.10, 0.92, 0.97, 0.97, 1.0],
   },
   {
     defId: 'fridge-compact', asset: 'kitchenFridgeSmall', kind: 'fridge',
     parts: [node('door', 'doorFridge', 'y', -1.75)],
-    interior: 'fridge', interiorBox: [0.07, 0.15, 0.86, 0.93, 0.95, 0.96],
+    interior: 'fridge', interiorBox: [0.07, 0.15, 0.92, 0.93, 0.95, 1.0],
   },
   {
     defId: 'fridge-built-in', asset: 'kitchenFridgeBuiltIn', kind: 'fridge',
     parts: [node('door', 'doorFridge', 'y', -1.75)],
-    interior: 'fridge', interiorBox: [0.07, 0.13, 0.86, 0.93, 0.76, 0.96],
+    interior: 'fridge', interiorBox: [0.07, 0.13, 0.92, 0.93, 0.76, 1.0],
   },
 
   // --- stoves and ovens ----------------------------------------------------------------------
   {
     defId: 'stove-basic', asset: 'kitchenStove', kind: 'oven', hob: true,
     parts: [node('oven', 'door', 'x', 1.35, { openMinutes: 0.5, closeMinutes: 0.5 })],
-    interior: 'oven', interiorBox: [0.08, 0.02, 0.94, 0.92, 0.62, 1.005],
+    interior: 'oven', interiorBox: [0.08, 0.02, 1.0, 0.92, 0.62, 1.02],
   },
   {
     defId: 'stove-electric', asset: 'kitchenStoveElectric', kind: 'oven', hob: true,
@@ -139,7 +143,7 @@ export const DESCRIPTORS: readonly AnimDescriptor[] = [
   {
     defId: 'bread-oven', asset: 'breadOven', kind: 'oven', hob: false,
     parts: [overlay('oven', [0.06, 0.28, 1.0], [0.88, 0.58, 0.03], 'x', 1.3, 'metalDark', true, { openMinutes: 0.5, closeMinutes: 0.5 })],
-    interior: 'oven', interiorBox: [0.10, 0.28, 0.94, 0.90, 0.84, 1.005],
+    interior: 'oven', interiorBox: [0.10, 0.28, 1.0, 0.90, 0.84, 1.02],
   },
 
   // --- wardrobe ------------------------------------------------------------------------------
@@ -164,7 +168,7 @@ export const DESCRIPTORS: readonly AnimDescriptor[] = [
   {
     defId: 'dishwasher', asset: 'dishwasher', kind: 'dishwasher', pulseMinutes: 0.8,
     parts: [overlay('door', [0.02, 0.05, 1.0], [0.96, 0.82, 0.03], 'x', 1.4, 'metalLight')],
-    interior: 'dishwasher', interiorBox: [0.05, 0.05, 0.93, 0.95, 0.92, 0.995],
+    interior: 'dishwasher', interiorBox: [0.05, 0.05, 1.0, 0.95, 0.92, 1.02],
   },
   { defId: 'microwave', asset: 'kitchenMicrowave', kind: 'microwave', parts: [node('door', 'Group', 'y', -1.9)] },
   {
