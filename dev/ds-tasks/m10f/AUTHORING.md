@@ -216,3 +216,5 @@ Tests that matter to you: `tests/unit/tools/furnitureKit.test.ts` (triangle budg
 `tests/unit/render/objectAnim.test.ts` and `objectAnimOrientation.test.ts` (parts exist, hinge or slide on the use side),
 `tests/unit/content/screens.test.ts`. Commit your group's files together with the generated `*.models.ts`, GLBs, thumbnails and
 manifest changes. Never print or commit API keys.
+
+Finish regions that must name only materials a model really has: `node tools/furniture-extra/gen-mats.mjs --group=<group>` rewrites the `// MATS:BEGIN` / `// MATS:END` table in your group's content file (see `seating-beds.ts`).
