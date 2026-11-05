@@ -4,7 +4,14 @@ State: in progress (acceptance runs per viewport under way). Step 13 now picks a
 after step 11, or walks the chosen one down first: Cook a Meal's check only accepts a stove on the actor's own level,
 while the option is offered from any floor, so in the full run the action was cancelled on its first tick upstairs.
 
-Two causes found by the desktop runs and fixed in the app/script:
+Three causes found by the full runs and fixed in the app/script:
+
+- **Portrait room preview drag.** Step 11 occasionally failed with Confirm disabled ("Draw or tap something first."):
+  `framePair` accepted a camera placement whose corner was 12 px above the build sheet. That point is canvas on the
+  exact pixel but the floating floor selector (`.level-select`, 44 px tall) covers it a moment later, so the synthetic
+  touch pressed a HUD button and no pointer event reached the canvas. `framePair` and `framePairAt` now accept only
+  placements with a 16 px ring of canvas around both points, and the portrait build step drags once more when the
+  sheet is still on its plain hint.
 
 - **Build tool tabs.** Eleven tool tabs in one 380 px row meant Fence, Garden and Pool sat outside the panel, and the
   last tabs could not be clicked (desktop step 11's exterior section failed on Fence, step 14 on Pool, even after

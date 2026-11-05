@@ -55,7 +55,7 @@
 .bb-cutaway.field { margin: 14px 0 4px; padding-top: 10px; border-top: 1px solid var(--line); }
 .bb-cutaway .seg { padding: 0 10px; }
 
-/* ---------- Tool tabs (Paint, Walls, Room, Doors, Windows, Erase, Roof, Fence, Garden, Pool) ---------- */
+/* ---------- Tool tabs (Paint, Walls, Room, Stairs, Doors, Windows, Erase, Roof, Fence, Garden, Pool) ---------- */
 /* The side panel is narrower than the whole set, so the tabs wrap onto two rows rather than scrolling sideways:
    eleven tabs would not fit one row, and the last ones (Fence, Garden, Pool) would sit out of sight. */
 .bb-top-tabs { flex: 1 1 auto; min-width: 0; }

@@ -546,7 +546,10 @@ function PAGE_HELPERS() {
   const conv = (s) => { const r = canvas().getBoundingClientRect(); return { x: s.x + r.left, y: s.y + r.top, vis: s.visible }; };
   const isFree = (x, y) => { const el = document.elementFromPoint(x, y); return !!el && el.id === 'game-canvas'; };
   const inView = (x, y) => x > 4 && y > 4 && x < innerWidth - 4 && y < innerHeight - 4;
-  const finish = (s) => ({ ...s, free: s.vis && inView(s.x, s.y) && isFree(s.x, s.y) });
+  // A finger is wider than a pixel: a point 10 px from a panel or a HUD card is free on the exact pixel but is no place to
+  // start a drag (the sheet and the floating floor selector sit a few px away and move with the layout).
+  const isClear = (x, y, r = 16) => isFree(x, y) && isFree(x - r, y) && isFree(x + r, y) && isFree(x, y - r) && isFree(x, y + r);
+  const finish = (s) => { const ok = s.vis && inView(s.x, s.y) && isFree(s.x, s.y); return { ...s, free: ok, clear: ok && isClear(s.x, s.y) }; };
   const h = () => window.hearthside;
   window.__t = {
     person(id, y = 0.9) { const p = h().view.personPosition(id); if (!p) return null; return finish(conv(h().game.view.worldToScreen(p.x, y, p.z))); },
@@ -1862,7 +1865,8 @@ async function frameNorth(T, cx, cz, tilesWide) {
  * Screen points for two ground points, measured under one camera. Measuring each point after recentring the camera
  * on it separately puts both in the middle of the free area, so a drag between them has zero length (this happened in
  * portrait once the room was wider than the uncovered strip). Here the camera glides to their midpoint and, if needed,
- * zooms out until both are free of UI and at least `minPx` apart, then both are measured under that single camera.
+ * zooms out until both are clear of UI (a 16 px ring is canvas too, see `isClear`) and at least `minPx` apart, then both
+ * are measured under that single camera.
  */
 async function framePair(T, kind, a, b, minPx = 24) {
   const off = kind === 'tile' ? 0.5 : 0;
@@ -1883,8 +1887,8 @@ async function framePair(T, kind, a, b, minPx = 24) {
     for (const [ox, oy] of offsets) {
       await place(ppm, ox, oy);
       const [pa, pb] = await measure();
-      const ok = !!(pa?.free && pb?.free && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx);
-      tried.push({ ppm, ox, oy, ok, a: pa && { x: Math.round(pa.x), y: Math.round(pa.y), free: pa.free }, b: pb && { x: Math.round(pb.x), y: Math.round(pb.y), free: pb.free } });
+      const ok = !!(pa?.clear && pb?.clear && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx);
+      tried.push({ ppm, ox, oy, ok, a: pa && { x: Math.round(pa.x), y: Math.round(pa.y), free: pa.free, clear: pa.clear }, b: pb && { x: Math.round(pb.x), y: Math.round(pb.y), free: pb.free, clear: pb.clear } });
       if (ok) return { a: pa, b: pb, ppm, tried };
     }
     if (ppm <= 20) { const [pa, pb] = await measure(); return { a: pa, b: pb, ppm, tried }; }
@@ -2625,7 +2629,7 @@ async function framePairAt(T, a, b, minPx = 24) {
     for (const [ox, oy] of offsets) {
       await place(ppm, ox, oy);
       const [pa, pb] = await measure();
-      if (pa?.free && pb?.free && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx) return { a: pa, b: pb, ppm };
+      if (pa?.clear && pb?.clear && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx) return { a: pa, b: pb, ppm };
     }
     if (ppm <= 20) { const [pa, pb] = await measure(); return { a: pa, b: pb, ppm }; }
   }
@@ -2728,37 +2732,15 @@ async function stepFloors(T) {
   await frameNorth(T, (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0 + Z1 - Z0);
   const c0 = await framePair(T, 'vertex', [X0, Z0], [X1, Z1]);
   T.check(S, 'both corners of the ground room are on screen, free of UI', !!c0.a?.free && !!c0.b?.free, JSON.stringify(c0));
-  if (flag('probe-room')) {
-    const probe0 = await page.evaluate(([ax, ay, bx, by]) => {
-      const c = document.getElementById('game-canvas'); const r = c.getBoundingClientRect();
-      const rig = window.hearthside.view.rig;
-      const at = (x, y) => { const e = document.elementFromPoint(x, y); return e ? `${e.tagName}#${e.id}.${String(e.className).slice(0, 40)}` : null; };
-      const gp = (x, y) => { try { return window.hearthside.game.view.groundPoint(x - r.left, y - r.top); } catch (e) { return 'err ' + e.message; } };
-      const p = document.querySelector('.bb-build-panel'); const b = p?.getBoundingClientRect();
-      return { canvas: [r.left, r.top, r.width, r.height], vp: [innerWidth, innerHeight], rig: { w: rig.width, h: rig.height, ppm: rig.ppm, yaw: rig.yaw, tx: rig.target?.x, tz: rig.target?.z, insets: JSON.parse(JSON.stringify(rig.insets)) }, panel: p ? [b.x, b.y, b.width, b.height, getComputedStyle(p).height, p.dataset.height, p.className] : null, aEl: at(ax, ay), bEl: at(bx, by), gpa: gp(ax, ay), gpb: gp(bx, by) };
-    }, [c0.a.x, c0.a.y, c0.b.x, c0.b.y]);
-    log(`probe room before ${JSON.stringify(probe0)}`);
-    await page.evaluate(() => {
-      window.__ptr = [];
-      const c = document.getElementById('game-canvas');
-      for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) c.addEventListener(t, (e) => { const q = window.__ptr; if (q.length < 200) q.push(`${t}:${Math.round(e.clientX)},${Math.round(e.clientY)}:${e.pointerType}`); });
-    });
-  }
   await drag(T, c0.a, c0.b);
-  if (flag('probe-room')) {
-    const probe1 = await page.evaluate(([ax, ay, bx, by]) => {
-      const c = document.getElementById('game-canvas'); const r = c.getBoundingClientRect();
-      const rig = window.hearthside.view.rig;
-      const at = (x, y) => { const e = document.elementFromPoint(x, y); return e ? `${e.tagName}#${e.id}.${String(e.className).slice(0, 40)}` : null; };
-      const gp = (x, y) => { try { return window.hearthside.game.view.groundPoint(x - r.left, y - r.top); } catch (e) { return 'err ' + e.message; } };
-      const handles = [...document.querySelectorAll('.bb-handles .bb-handle')].map((e) => { const b = e.getBoundingClientRect(); return [e.dataset.handle, Math.round(b.x), Math.round(b.y), b.width]; });
-      const tip = document.querySelector('.bb-build-tip');
-      return { ptr: (window.__ptr || []).slice(-40), aEl: at(ax, ay), bEl: at(bx, by), gpa: gp(ax, ay), gpb: gp(bx, by), handles, tip: tip ? [tip.hidden, tip.textContent, tip.getBoundingClientRect().x, tip.getBoundingClientRect().y] : null, footer: document.querySelector('.bb-build-status')?.textContent?.trim(), rig: { ppm: rig.ppm, insets: JSON.parse(JSON.stringify(rig.insets)) } };
-    }, [c0.a.x, c0.a.y, c0.b.x, c0.b.y]);
-    log(`probe room after ${JSON.stringify(probe1)}`);
-  }
   await T.frames(4);
-  if (touch) { await T.shot('m9-room-preview'); await tapFooter(T, '.bb-confirm'); }
+  if (touch) {
+    // A synthetic touch can land on a HUD control instead of the canvas (the floating floor selector sits a few px from
+    // the sheet), leaving the sheet on its plain hint: drag once more before giving up on the preview.
+    if (/^Drag a rectangle on the ground/.test((await footerText(T)).trim())) { await drag(T, c0.a, c0.b); await T.frames(4); }
+    await T.shot('m9-room-preview');
+    await tapFooter(T, '.bb-confirm');
+  }
   await page.waitForTimeout(500);
   await T.frames(6);
   const s1 = await floorsSnap(T);

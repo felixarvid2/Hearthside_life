@@ -177,6 +177,11 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - Step 7 wall-paint side checks, seen in portrait.
   - Step 8 "computer: tap point picks the intended thing" hit wall `0:h:13:4` once in landscape and once in desktop; `tapAndOpenMenu` now turns the camera and looks again when a wall hides an object (desktop passed 302/0 after that).
   - Step 11 "Water the Bed" could be refused by rain; the garden section now calls `forceClearWeather(T)` (task F).
+  - Step 11's room preview drag in portrait could start on the floating floor selector: `framePair` accepted a
+    placement whose corner sat 12 px above the build sheet (free on the exact pixel, but covered by `.level-down` a
+    moment later), so the synthetic touch never reached the canvas and Confirm stayed disabled. `framePair` and
+    `framePairAt` now require a 16 px ring of canvas around both points, and the build step drags once more when the
+    sheet is still on its plain hint.
   - Steps 13 and 14 read the HUD chip by polling (its 250 ms timer can lag), advance one sim tick before reading the
     fridge door's openness (at speed 0 frames do not move the game clock), and fetch the self menu with a person pick
     (`{ kind: 'person', personId: m }`; `PickResult` has no `'self'`). The carried plate is read at the first stage-2
