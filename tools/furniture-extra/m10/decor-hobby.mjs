@@ -661,8 +661,8 @@ function candles() {
   return m;
 }
 /** Three-arm candelabra (surface, 0.55 m). */
-function candelabra() {
-  const m = new Model('candelabra');
+function candelabraThreeArm() {
+  const m = new Model('candelabraThreeArm');
   m.cylY('metal', 0.5, 0.5, 0, 0.04, 0.13, 0.1, 10);
   m.cylY('metal', 0.5, 0.5, 0.04, 0.34, 0.03, 0.025, 8);
   m.rod('metal', [0.5, 0.3, 0.5], [0.3, 0.38, 0.5], 0.025);
@@ -1218,8 +1218,8 @@ function telescopeBrass() {
   return m;
 }
 /** Woodworking bench with a vice and a tool wall (2 x 1, 1.7 m). */
-function workbench() {
-  const m = new Model('workbench');
+function workbenchWoodworking() {
+  const m = new Model('workbenchWoodworking');
   bx(m, 'wood', 0.08, 0.85, 0.28, 1.92, 0.93, 0.85);
   for (const x of [0.16, 1.76]) for (const z of [0.34, 0.74]) bx(m, 'woodDark', x, 0, z, x + 0.08, 0.85, z + 0.08);
   bx(m, 'woodDark', 0.16, 0.22, 0.34, 1.84, 0.28, 0.82);
@@ -1286,4 +1286,4 @@ function pottingBench() {
 }
 
 //EXPORT
-export default { rugRunner, rugBraidedOval, rugHexGeo, rugPersian, rugShag, rugKilim, rugCowhide, rugChecker, rugSunburst, rugDoormatCoir, plantFiddleFig, plantMonstera, plantPalmAreca, plantBonsai, plantCactusTall, plantCactusTrio, plantFernStand, plantSucculentTray, plantOrchid, plantOliveTree, terrarium, plantHerbBox, vaseFloorTall, vaseRound, vaseFlowers, sculptureAbstract, sculptureBust, clockGrandfather, clockWallRound, clockCuckoo, mirrorCheval, mirrorWallRound, mirrorSunburst, pictureLandscape, pictureGallery, picturePortrait, globeFloor, globeDesk, aquarium, screenDivider, fireplaceBrick, fireplaceStove, candles, candelabra, bowlFruit, bowlCeramicDuo, bookends, trophyCup, umbrellaStand, magazineRack, poufCushions, basketThrow, windChime, pianoGrand, pianoCottage, keyboardDigital, keyboardStage, harpsichord, organParlour, drumKit, harpConcert, celloStand, easelTabletop, easelGallery, easelFrench, craftTable, sewingTable, exerciseBike, rowingMachine, punchingBag, squatRack, ellipticalTrainer, yogaMatRound, chessTableMarble, boardGameTable, telescopeBrass, workbench, readingNookShelf, pottingBench };
+export default { rugRunner, rugBraidedOval, rugHexGeo, rugPersian, rugShag, rugKilim, rugCowhide, rugChecker, rugSunburst, rugDoormatCoir, plantFiddleFig, plantMonstera, plantPalmAreca, plantBonsai, plantCactusTall, plantCactusTrio, plantFernStand, plantSucculentTray, plantOrchid, plantOliveTree, terrarium, plantHerbBox, vaseFloorTall, vaseRound, vaseFlowers, sculptureAbstract, sculptureBust, clockGrandfather, clockWallRound, clockCuckoo, mirrorCheval, mirrorWallRound, mirrorSunburst, pictureLandscape, pictureGallery, picturePortrait, globeFloor, globeDesk, aquarium, screenDivider, fireplaceBrick, fireplaceStove, candles, candelabraThreeArm, bowlFruit, bowlCeramicDuo, bookends, trophyCup, umbrellaStand, magazineRack, poufCushions, basketThrow, windChime, pianoGrand, pianoCottage, keyboardDigital, keyboardStage, harpsichord, organParlour, drumKit, harpConcert, celloStand, easelTabletop, easelGallery, easelFrench, craftTable, sewingTable, exerciseBike, rowingMachine, punchingBag, squatRack, ellipticalTrainer, yogaMatRound, chessTableMarble, boardGameTable, telescopeBrass, workbenchWoodworking, readingNookShelf, pottingBench };

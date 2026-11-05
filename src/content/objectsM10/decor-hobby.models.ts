@@ -10,7 +10,7 @@ export const MODELS: Record<string, M10ModelInfo> = {
   bookends: { bounds: [[0.07, 0, 0.175], [0.43, 0.12, 0.325]] },
   bowlCeramicDuo: { bounds: [[0.1, 0, 0.1], [0.4, 0.11, 0.4]] },
   bowlFruit: { bounds: [[0.13, 0, 0.1359], [0.37, 0.14, 0.3641]] },
-  candelabra: { bounds: [[0.125, 0, 0.1882], [0.375, 0.29, 0.3118]] },
+  candelabraThreeArm: { bounds: [[0.125, 0, 0.1882], [0.375, 0.29, 0.3118]] },
   candles: { bounds: [[0.125, 0, 0.175], [0.375, 0.1625, 0.325]] },
   celloStand: { bounds: [[0.125, 0, 0.15], [0.405, 0.83, 0.35]] },
   chessTableMarble: { bounds: [[0.056, 0, 0.056], [0.444, 0.397, 0.444]] },
@@ -81,6 +81,6 @@ export const MODELS: Record<string, M10ModelInfo> = {
   vaseFlowers: { bounds: [[0.1735, 0, 0.1859], [0.3325, 0.29, 0.3121]] },
   vaseRound: { bounds: [[0.1595, 0, 0.1639], [0.3405, 0.165, 0.3361]] },
   windChime: { bounds: [[0.2, 0.045, 0], [0.3, 0.4275, 0.2076]] },
-  workbench: { bounds: [[0.04, 0, 0.1], [0.96, 0.85, 0.5]] },
+  workbenchWoodworking: { bounds: [[0.04, 0, 0.1], [0.96, 0.85, 0.5]] },
   yogaMatRound: { bounds: [[0.025, 0, 0.025], [0.475, 0.015, 0.475]] },
 };

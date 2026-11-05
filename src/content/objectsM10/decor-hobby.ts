@@ -61,7 +61,7 @@ export default function build(k: ObjectKit): ObjectDef[] {
   const globeFloor = f('globeFloor', FP11), globeDesk = f('globeDesk', FP11);
   const aquarium = f('aquarium', FP21, { back: WALL_GAP }), screen = f('screenDivider', FP21);
   const fireBrick = f('fireplaceBrick', FP21, { back: WALL_GAP }), fireStove = f('fireplaceStove', FP11, { back: WALL_GAP });
-  const candles = f('candles', FP11), candelabra = f('candelabra', FP11), bowlFruit = f('bowlFruit', FP11), bowlDuo = f('bowlCeramicDuo', FP11);
+  const candles = f('candles', FP11), candelabra = f('candelabraThreeArm', FP11), bowlFruit = f('bowlFruit', FP11), bowlDuo = f('bowlCeramicDuo', FP11);
   const bookends = f('bookends', FP11), trophy = f('trophyCup', FP11), umbrella = f('umbrellaStand', FP11), magRack = f('magazineRack', FP11);
   const pouf = f('poufCushions', FP11), basket = f('basketThrow', FP11), chime = f('windChime', FP11, { back: WALL_GAP, lift: 1.3 });
 
@@ -73,7 +73,7 @@ export default function build(k: ObjectKit): ObjectDef[] {
   const bike = f('exerciseBike', FP11), rower = f('rowingMachine', FP12), bag = f('punchingBag', FP11), rack = f('squatRack', FP12);
   const elliptical = f('ellipticalTrainer', FP12), yogaRound = f('yogaMatRound', FP11);
   const chessMarble = f('chessTableMarble', FP11), gameTable = f('boardGameTable', FP21), telescope = f('telescopeBrass', FP11);
-  const workbench = f('workbench', FP21, { back: WALL_GAP }), nook = f('readingNookShelf', FP21, { back: WALL_GAP }), potting = f('pottingBench', FP21, { back: WALL_GAP });
+  const workbench = f('workbenchWoodworking', FP21, { back: WALL_GAP }), nook = f('readingNookShelf', FP21, { back: WALL_GAP }), potting = f('pottingBench', FP21, { back: WALL_GAP });
 
   const music = (extra: { stats: ObjectDef['stats'] }) => ({
     tags: ['piano', 'instrument', 'music', 'creative'], interactions: ['playPiano', 'busk'], functional: true, ...extra,

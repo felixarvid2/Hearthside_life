@@ -10035,48 +10035,6 @@
    "original": true,
    "group": "decor-hobby"
   },
-  "candelabra": {
-   "file": "furniture/candelabra.glb",
-   "thumb": "furniture/thumbs/candelabra.png",
-   "min": [
-    0.125,
-    0,
-    0.1882
-   ],
-   "max": [
-    0.375,
-    0.29,
-    0.3118
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "decor-hobby"
-  },
   "bowlFruit": {
    "file": "furniture/bowlFruit.glb",
    "thumb": "furniture/thumbs/bowlFruit.png",
@@ -12037,72 +11995,6 @@
    "original": true,
    "group": "decor-hobby"
   },
-  "workbench": {
-   "file": "furniture/workbench.glb",
-   "thumb": "furniture/thumbs/workbench.png",
-   "min": [
-    0.04,
-    0,
-    0.1
-   ],
-   "max": [
-    0.96,
-    0.85,
-    0.5
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "decor-hobby"
-  },
   "readingNookShelf": {
    "file": "furniture/readingNookShelf.glb",
    "thumb": "furniture/thumbs/readingNookShelf.png",
@@ -12229,6 +12121,114 @@
       0.973,
       1,
       1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
+  },
+  "candelabraThreeArm": {
+   "file": "furniture/candelabraThreeArm.glb",
+   "thumb": "furniture/thumbs/candelabraThreeArm.png",
+   "min": [
+    0.125,
+    0,
+    0.1882
+   ],
+   "max": [
+    0.375,
+    0.29,
+    0.3118
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
+  },
+  "workbenchWoodworking": {
+   "file": "furniture/workbenchWoodworking.glb",
+   "thumb": "furniture/thumbs/workbenchWoodworking.png",
+   "min": [
+    0.04,
+    0,
+    0.1
+   ],
+   "max": [
+    0.96,
+    0.85,
+    0.5
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
      ]
     }
    ],
