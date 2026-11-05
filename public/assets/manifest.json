@@ -7901,18 +7901,18 @@
     "anim:drawer2"
    ]
   },
-  "fridgeTopFreezer": {
-   "file": "furniture/fridgeTopFreezer.glb",
-   "thumb": "furniture/thumbs/fridgeTopFreezer.png",
+  "floorLampArc": {
+   "file": "furniture/floorLampArc.glb",
+   "thumb": "furniture/thumbs/floorLampArc.png",
    "min": [
+    0.01,
     0,
-    0,
-    0
+    0.15
    ],
    "max": [
-    0.33,
-    0.78,
-    0.3795
+    0.5,
+    0.92,
+    0.35
    ],
    "materials": [
     {
@@ -7923,6 +7923,82 @@
       0.957
      ]
     },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampTripod": {
+   "file": "furniture/floorLampTripod.glb",
+   "thumb": "furniture/thumbs/floorLampTripod.png",
+   "min": [
+    0.1121,
+    -0.0032,
+    0.0903
+   ],
+   "max": [
+    0.3914,
+    0.81,
+    0.3546
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampTorchiere": {
+   "file": "furniture/floorLampTorchiere.glb",
+   "thumb": "furniture/thumbs/floorLampTorchiere.png",
+   "min": [
+    0.13,
+    0,
+    0.1359
+   ],
+   "max": [
+    0.37,
+    0.86,
+    0.3641
+   ],
+   "materials": [
     {
      "name": "metalDark",
      "color": [
@@ -7946,83 +8022,39 @@
       1,
       1
      ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "fridgeTwinDoor": {
-   "file": "furniture/fridgeTwinDoor.glb",
-   "thumb": "furniture/thumbs/fridgeTwinDoor.png",
+  "floorLampReading": {
+   "file": "furniture/floorLampReading.glb",
+   "thumb": "furniture/thumbs/floorLampReading.png",
    "min": [
+    0.15,
     0,
-    0,
-    0
+    0.1549
    ],
    "max": [
     0.46,
-    0.89,
-    0.4095
+    0.81,
+    0.36
    ],
    "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
     {
      "name": "metalDark",
      "color": [
       0.306,
       0.388,
       0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
      ]
     },
     {
@@ -8034,29 +8066,31 @@
      ]
     },
     {
-     "name": "plant",
+     "name": "woodDark",
      "color": [
-      0.182,
-      0.821,
-      0.576
+      0.678,
+      0.456,
+      0.299
      ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampMidCentury": {
+   "file": "furniture/floorLampMidCentury.glb",
+   "thumb": "furniture/thumbs/floorLampMidCentury.png",
+   "min": [
+    0.1,
+    -0.0036,
+    0.1
+   ],
+   "max": [
+    0.4,
+    0.8,
+    0.4
+   ],
+   "materials": [
     {
      "name": "wood",
      "color": [
@@ -8066,44 +8100,47 @@
      ]
     },
     {
-     "name": "glass",
+     "name": "metal",
      "color": [
-      0.698,
-      0.827,
-      0.769
+      0.741,
+      0.823,
+      0.84
      ]
     },
     {
-     "name": "metalLight",
+     "name": "carpetWhite",
      "color": [
-      0.937,
-      0.98,
-      0.957
+      0.973,
+      1,
+      1
      ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:door2",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "fridgeFrenchDoor": {
-   "file": "furniture/fridgeFrenchDoor.glb",
-   "thumb": "furniture/thumbs/fridgeFrenchDoor.png",
+  "floorLampIndustrial": {
+   "file": "furniture/floorLampIndustrial.glb",
+   "thumb": "furniture/thumbs/floorLampIndustrial.png",
    "min": [
+    0.15,
     0,
-    0,
-    0
+    0.15
    ],
    "max": [
     0.45,
-    0.92,
-    0.4195
+    0.775,
+    0.35
    ],
    "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
     {
      "name": "metalMedium",
      "color": [
@@ -8113,109 +8150,65 @@
      ]
     },
     {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
      "name": "metal",
      "color": [
       0.741,
       0.823,
       0.84
      ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:door2",
-    "anim:drawer",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "fridgeMini": {
-   "file": "furniture/fridgeMini.glb",
-   "thumb": "furniture/thumbs/fridgeMini.png",
+  "floorLampGlobe": {
+   "file": "furniture/floorLampGlobe.glb",
+   "thumb": "furniture/thumbs/floorLampGlobe.png",
    "min": [
+    0.14,
     0,
-    0,
-    0
+    0.1454
    ],
    "max": [
-    0.25,
-    0.275,
-    0.2945
+    0.36,
+    0.81,
+    0.3546
    ],
    "materials": [
     {
-     "name": "carpetBlue",
+     "name": "metal",
      "color": [
-      0.356,
-      0.517,
-      0.868
+      0.741,
+      0.823,
+      0.84
      ]
     },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampPaper": {
+   "file": "furniture/floorLampPaper.glb",
+   "thumb": "furniture/thumbs/floorLampPaper.png",
+   "min": [
+    0.1,
+    -0.002,
+    0.1073
+   ],
+   "max": [
+    0.4,
+    0.68,
+    0.3927
+   ],
+   "materials": [
     {
      "name": "metalDark",
      "color": [
@@ -8225,11 +8218,37 @@
      ]
     },
     {
-     "name": "metalLight",
+     "name": "carpetWhite",
      "color": [
-      0.937,
-      0.98,
-      0.957
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampTree": {
+   "file": "furniture/floorLampTree.glb",
+   "thumb": "furniture/thumbs/floorLampTree.png",
+   "min": [
+    0.045,
+    0,
+    0.035
+   ],
+   "max": [
+    0.455,
+    0.84,
+    0.505
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
      ]
     },
     {
@@ -8247,29 +8266,199 @@
       1,
       1
      ]
-    },
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampBrass": {
+   "file": "furniture/floorLampBrass.glb",
+   "thumb": "furniture/thumbs/floorLampBrass.png",
+   "min": [
+    0.12,
+    0,
+    0.1264
+   ],
+   "max": [
+    0.38,
+    0.84,
+    0.3736
+   ],
+   "materials": [
     {
-     "name": "plant",
+     "name": "metal",
      "color": [
-      0.182,
-      0.821,
-      0.576
+      0.741,
+      0.823,
+      0.84
      ]
     },
     {
-     "name": "carpet",
+     "name": "carpetBlue",
      "color": [
-      0.943,
-      0.367,
-      0.343
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampRattan": {
+   "file": "furniture/floorLampRattan.glb",
+   "thumb": "furniture/thumbs/floorLampRattan.png",
+   "min": [
+    0.12,
+    0,
+    0.12
+   ],
+   "max": [
+    0.38,
+    0.7,
+    0.38
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
      ]
     },
     {
-     "name": "glass",
+     "name": "woodDark",
      "color": [
-      0.698,
-      0.827,
-      0.769
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampStack": {
+   "file": "furniture/floorLampStack.glb",
+   "thumb": "furniture/thumbs/floorLampStack.png",
+   "min": [
+    0.15,
+    0,
+    0.15
+   ],
+   "max": [
+    0.35,
+    0.8,
+    0.35
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampUplight": {
+   "file": "furniture/floorLampUplight.glb",
+   "thumb": "furniture/thumbs/floorLampUplight.png",
+   "min": [
+    0.17,
+    0,
+    0.17
+   ],
+   "max": [
+    0.33,
+    0.865,
+    0.33
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "floorLampCandelabra": {
+   "file": "furniture/floorLampCandelabra.glb",
+   "thumb": "furniture/thumbs/floorLampCandelabra.png",
+   "min": [
+    0.1248,
+    0,
+    0.109
+   ],
+   "max": [
+    0.4,
+    0.78,
+    0.391
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
      ]
     },
     {
@@ -8282,24 +8471,104 @@
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "fridgeCommercial": {
-   "file": "furniture/fridgeCommercial.glb",
-   "thumb": "furniture/thumbs/fridgeCommercial.png",
+  "lampBedside": {
+   "file": "furniture/lampBedside.glb",
+   "thumb": "furniture/thumbs/lampBedside.png",
    "min": [
+    0.175,
     0,
+    0.1787
+   ],
+   "max": [
+    0.325,
+    0.2,
+    0.3213
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampDeskArticulated": {
+   "file": "furniture/lampDeskArticulated.glb",
+   "thumb": "furniture/thumbs/lampDeskArticulated.png",
+   "min": [
+    0.195,
     0,
-    0
+    0.19
+   ],
+   "max": [
+    0.42,
+    0.2541,
+    0.31
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampBanker": {
+   "file": "furniture/lampBanker.glb",
+   "thumb": "furniture/thumbs/lampBanker.png",
+   "min": [
+    0.11,
+    0,
+    0.1928
    ],
    "max": [
     0.39,
-    0.96,
-    0.4165
+    0.1922,
+    0.34
    ],
    "materials": [
     {
@@ -8311,136 +8580,37 @@
      ]
     },
     {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
      "name": "plant",
      "color": [
       0.182,
       0.821,
       0.576
      ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "fridgeBottomFreezer": {
-   "file": "furniture/fridgeBottomFreezer.glb",
-   "thumb": "furniture/thumbs/fridgeBottomFreezer.png",
+  "lampCeramic": {
+   "file": "furniture/lampCeramic.glb",
+   "thumb": "furniture/thumbs/lampCeramic.png",
    "min": [
+    0.165,
     0,
-    0,
-    0
+    0.1692
    ],
    "max": [
-    0.34,
-    0.88,
-    0.3895
+    0.335,
+    0.31,
+    0.3308
    ],
    "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
     {
      "name": "carpetBlue",
      "color": [
       0.356,
       0.517,
       0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
      ]
     },
     {
@@ -8452,44 +8622,115 @@
      ]
     },
     {
-     "name": "metalLight",
+     "name": "carpetWhite",
      "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
+      0.973,
+      1,
+      1
      ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:drawer",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "fridgeUnderCounter": {
-   "file": "furniture/fridgeUnderCounter.glb",
-   "thumb": "furniture/thumbs/fridgeUnderCounter.png",
+  "lampMushroom": {
+   "file": "furniture/lampMushroom.glb",
+   "thumb": "furniture/thumbs/lampMushroom.png",
    "min": [
-    -0.005,
+    0.15,
     0,
-    -0.005
+    0.15
    ],
    "max": [
-    0.315,
-    0.45,
-    0.3595
+    0.35,
+    0.19,
+    0.35
    ],
    "materials": [
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampGlobeTable": {
+   "file": "furniture/lampGlobeTable.glb",
+   "thumb": "furniture/thumbs/lampGlobeTable.png",
+   "min": [
+    0.165,
+    0,
+    0.1692
+   ],
+   "max": [
+    0.335,
+    0.235,
+    0.3308
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampCubeTouch": {
+   "file": "furniture/lampCubeTouch.glb",
+   "thumb": "furniture/thumbs/lampCubeTouch.png",
+   "min": [
+    0.19,
+    0,
+    0.19
+   ],
+   "max": [
+    0.31,
+    0.1325,
+    0.31
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
     {
      "name": "metalLight",
      "color": [
@@ -8497,7 +8738,151 @@
       0.98,
       0.957
      ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampTiffany": {
+   "file": "furniture/lampTiffany.glb",
+   "thumb": "furniture/thumbs/lampTiffany.png",
+   "min": [
+    0.14,
+    0,
+    0.14
+   ],
+   "max": [
+    0.36,
+    0.24,
+    0.36
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
     },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampTaper": {
+   "file": "furniture/lampTaper.glb",
+   "thumb": "furniture/thumbs/lampTaper.png",
+   "min": [
+    0.155,
+    0,
+    0.155
+   ],
+   "max": [
+    0.345,
+    0.35,
+    0.345
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampGourd": {
+   "file": "furniture/lampGourd.glb",
+   "thumb": "furniture/thumbs/lampGourd.png",
+   "min": [
+    0.165,
+    0,
+    0.1692
+   ],
+   "max": [
+    0.335,
+    0.29,
+    0.3308
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampClamp": {
+   "file": "furniture/lampClamp.glb",
+   "thumb": "furniture/thumbs/lampClamp.png",
+   "min": [
+    0.2,
+    0,
+    0.2
+   ],
+   "max": [
+    0.4,
+    0.25,
+    0.3
+   ],
+   "materials": [
     {
      "name": "metalDark",
      "color": [
@@ -8515,43 +8900,71 @@
      ]
     },
     {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
      "name": "carpet",
      "color": [
       0.943,
       0.367,
       0.343
      ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampPharmacy": {
+   "file": "furniture/lampPharmacy.glb",
+   "thumb": "furniture/thumbs/lampPharmacy.png",
+   "min": [
+    0.175,
+    0,
+    0.175
+   ],
+   "max": [
+    0.43,
+    0.25,
+    0.325
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
     },
     {
-     "name": "wood",
+     "name": "carpetWhite",
      "color": [
-      0.896,
-      0.602,
-      0.393
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampCrystal": {
+   "file": "furniture/lampCrystal.glb",
+   "thumb": "furniture/thumbs/lampCrystal.png",
+   "min": [
+    0.15,
+    0,
+    0.15
+   ],
+   "max": [
+    0.35,
+    0.33,
+    0.35
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
      ]
     },
     {
@@ -8561,27 +8974,133 @@
       0.827,
       0.769
      ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "wineCooler": {
-   "file": "furniture/wineCooler.glb",
-   "thumb": "furniture/thumbs/wineCooler.png",
+  "sconceCandle": {
+   "file": "furniture/sconceCandle.glb",
+   "thumb": "furniture/thumbs/sconceCandle.png",
    "min": [
-    0,
+    0.22,
     0,
     0
    ],
    "max": [
     0.28,
-    0.44,
-    0.3215
+    0.15,
+    0.0917
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "sconceSwingArm": {
+   "file": "furniture/sconceSwingArm.glb",
+   "thumb": "furniture/thumbs/sconceSwingArm.png",
+   "min": [
+    0.22,
+    0.025,
+    0
+   ],
+   "max": [
+    0.46,
+    0.15,
+    0.27
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "sconceGlobe": {
+   "file": "furniture/sconceGlobe.glb",
+   "thumb": "furniture/thumbs/sconceGlobe.png",
+   "min": [
+    0.1977,
+    -0.005,
+    0
+   ],
+   "max": [
+    0.3023,
+    0.105,
+    0.1373
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "sconceCone": {
+   "file": "furniture/sconceCone.glb",
+   "thumb": "furniture/thumbs/sconceCone.png",
+   "min": [
+    0.21,
+    0,
+    0
+   ],
+   "max": [
+    0.29,
+    0.17,
+    0.085
    ],
    "materials": [
     {
@@ -8601,6 +9120,100 @@
      ]
     },
     {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "sconceLantern": {
+   "file": "furniture/sconceLantern.glb",
+   "thumb": "furniture/thumbs/sconceLantern.png",
+   "min": [
+    0.195,
+    0,
+    0
+   ],
+   "max": [
+    0.305,
+    0.2,
+    0.155
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "sconceArc": {
+   "file": "furniture/sconceArc.glb",
+   "thumb": "furniture/thumbs/sconceArc.png",
+   "min": [
+    0.21,
+    0,
+    0
+   ],
+   "max": [
+    0.29,
+    0.2,
+    0.2
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "sconceBracketShade": {
+   "file": "furniture/sconceBracketShade.glb",
+   "thumb": "furniture/thumbs/sconceBracketShade.png",
+   "min": [
+    0.2,
+    0.01,
+    0
+   ],
+   "max": [
+    0.3,
+    0.17,
+    0.1276
+   ],
+   "materials": [
+    {
      "name": "wood",
      "color": [
       0.896,
@@ -8609,11 +9222,567 @@
      ]
     },
     {
-     "name": "plant",
+     "name": "carpetWhite",
      "color": [
-      0.182,
-      0.821,
-      0.576
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "pendantBell": {
+   "file": "furniture/pendantBell.glb",
+   "thumb": "furniture/thumbs/pendantBell.png",
+   "min": [
+    0.14,
+    0.095,
+    0.1454
+   ],
+   "max": [
+    0.36,
+    0.45,
+    0.3546
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "pendantGlobe": {
+   "file": "furniture/pendantGlobe.glb",
+   "thumb": "furniture/thumbs/pendantGlobe.png",
+   "min": [
+    0.13,
+    0.02,
+    0.1359
+   ],
+   "max": [
+    0.37,
+    0.45,
+    0.3641
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "chandelierTiered": {
+   "file": "furniture/chandelierTiered.glb",
+   "thumb": "furniture/thumbs/chandelierTiered.png",
+   "min": [
+    0.05,
+    0.05,
+    0.05
+   ],
+   "max": [
+    0.45,
+    0.4,
+    0.45
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "chandelierWheel": {
+   "file": "furniture/chandelierWheel.glb",
+   "thumb": "furniture/thumbs/chandelierWheel.png",
+   "min": [
+    0.05,
+    0.15,
+    0.05
+   ],
+   "max": [
+    0.45,
+    0.4012,
+    0.45
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "pendantTrio": {
+   "file": "furniture/pendantTrio.glb",
+   "thumb": "furniture/thumbs/pendantTrio.png",
+   "min": [
+    0.035,
+    0.125,
+    0.185
+   ],
+   "max": [
+    0.465,
+    0.4,
+    0.315
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "pendantRattan": {
+   "file": "furniture/pendantRattan.glb",
+   "thumb": "furniture/thumbs/pendantRattan.png",
+   "min": [
+    0.1,
+    0.1,
+    0.1073
+   ],
+   "max": [
+    0.4,
+    0.45,
+    0.3927
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lanternHanging": {
+   "file": "furniture/lanternHanging.glb",
+   "thumb": "furniture/thumbs/lanternHanging.png",
+   "min": [
+    0.18,
+    0.1,
+    0.18
+   ],
+   "max": [
+    0.32,
+    0.45,
+    0.32
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lanternFloor": {
+   "file": "furniture/lanternFloor.glb",
+   "thumb": "furniture/thumbs/lanternFloor.png",
+   "min": [
+    0.13,
+    0,
+    0.13
+   ],
+   "max": [
+    0.37,
+    0.49,
+    0.37
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lanternTable": {
+   "file": "furniture/lanternTable.glb",
+   "thumb": "furniture/thumbs/lanternTable.png",
+   "min": [
+    0.185,
+    0,
+    0.185
+   ],
+   "max": [
+    0.315,
+    0.2037,
+    0.315
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "candleSingle": {
+   "file": "furniture/candleSingle.glb",
+   "thumb": "furniture/thumbs/candleSingle.png",
+   "min": [
+    0.215,
+    0,
+    0.215
+   ],
+   "max": [
+    0.285,
+    0.13,
+    0.285
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "candelabra": {
+   "file": "furniture/candelabra.glb",
+   "thumb": "furniture/thumbs/candelabra.png",
+   "min": [
+    0.0825,
+    0,
+    0.21
+   ],
+   "max": [
+    0.4175,
+    0.23,
+    0.29
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "candleTrio": {
+   "file": "furniture/candleTrio.glb",
+   "thumb": "furniture/thumbs/candleTrio.png",
+   "min": [
+    0.125,
+    0,
+    0.175
+   ],
+   "max": [
+    0.375,
+    0.1575,
+    0.325
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "fairyLightStand": {
+   "file": "furniture/fairyLightStand.glb",
+   "thumb": "furniture/thumbs/fairyLightStand.png",
+   "min": [
+    0.1375,
+    0,
+    0.1125
+   ],
+   "max": [
+    0.3625,
+    0.78,
+    0.3875
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lavaLamp": {
+   "file": "furniture/lavaLamp.glb",
+   "thumb": "furniture/thumbs/lavaLamp.png",
+   "min": [
+    0.205,
+    0,
+    0.205
+   ],
+   "max": [
+    0.295,
+    0.225,
+    0.295
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
      ]
     },
     {
@@ -8625,430 +9794,231 @@
      ]
     },
     {
-     "name": "glass",
+     "name": "carpetBlue",
      "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
+      0.356,
+      0.517,
+      0.868
      ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "rangeSteelGas": {
-   "file": "furniture/rangeSteelGas.glb",
-   "thumb": "furniture/thumbs/rangeSteelGas.png",
+  "saltLamp": {
+   "file": "furniture/saltLamp.glb",
+   "thumb": "furniture/thumbs/saltLamp.png",
    "min": [
-    -0.0025,
+    0.175,
     0,
-    -0.0025
+    0.175
    ],
    "max": [
-    0.4525,
-    0.4905,
-    0.409
+    0.325,
+    0.135,
+    0.325
    ],
    "materials": [
     {
-     "name": "metal",
+     "name": "woodDark",
      "color": [
-      0.741,
-      0.823,
-      0.84
+      0.678,
+      0.456,
+      0.299
      ]
     },
     {
-     "name": "metalDark",
+     "name": "carpetDarker",
      "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
+      0.608,
+      0.298,
+      0.285
      ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "rangeInduction": {
-   "file": "furniture/rangeInduction.glb",
-   "thumb": "furniture/thumbs/rangeInduction.png",
+  "neonSign": {
+   "file": "furniture/neonSign.glb",
+   "thumb": "furniture/thumbs/neonSign.png",
    "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.4525,
-    0.452,
-    0.389
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:interior"
-   ]
-  },
-  "rangeCottage": {
-   "file": "furniture/rangeCottage.glb",
-   "thumb": "furniture/thumbs/rangeCottage.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.7025,
-    0.495,
-    0.4462
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:oven2",
-    "anim:interior"
-   ]
-  },
-  "rangeChef": {
-   "file": "furniture/rangeChef.glb",
-   "thumb": "furniture/thumbs/rangeChef.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.7525,
-    0.5055,
-    0.439
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:oven2",
-    "anim:interior"
-   ]
-  },
-  "stoveCompact": {
-   "file": "furniture/stoveCompact.glb",
-   "thumb": "furniture/thumbs/stoveCompact.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.3025,
-    0.4705,
-    0.349
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:interior"
-   ]
-  },
-  "rangeRetro": {
-   "file": "furniture/rangeRetro.glb",
-   "thumb": "furniture/thumbs/rangeRetro.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.4025,
-    0.5575,
-    0.379
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:interior"
-   ]
-  },
-  "wallOven": {
-   "file": "furniture/wallOven.glb",
-   "thumb": "furniture/thumbs/wallOven.png",
-   "min": [
-    0,
+    0.05,
     0,
     0
+   ],
+   "max": [
+    0.45,
+    0.25,
+    0.0225
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "stringLights": {
+   "file": "furniture/stringLights.glb",
+   "thumb": "furniture/thumbs/stringLights.png",
+   "min": [
+    0.01,
+    0.0223,
+    0
+   ],
+   "max": [
+    0.49,
+    0.21,
+    0.0275
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "tikiTorch": {
+   "file": "furniture/tikiTorch.glb",
+   "thumb": "furniture/thumbs/tikiTorch.png",
+   "min": [
+    0.2,
+    0,
+    0.2
+   ],
+   "max": [
+    0.3,
+    0.91,
+    0.3
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "pathLight": {
+   "file": "furniture/pathLight.glb",
+   "thumb": "furniture/thumbs/pathLight.png",
+   "min": [
+    0.2,
+    0,
+    0.2
+   ],
+   "max": [
+    0.3,
+    0.34,
+    0.3
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "lampPost": {
+   "file": "furniture/lampPost.glb",
+   "thumb": "furniture/thumbs/lampPost.png",
+   "min": [
+    0.18,
+    0,
+    0.18
    ],
    "max": [
     0.32,
-    1,
-    0.359
+    1.17,
+    0.32
    ],
    "materials": [
     {
@@ -9057,100 +10027,6 @@
       0.306,
       0.388,
       0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:oven",
-    "anim:interior"
-   ]
-  },
-  "microwaveSteel": {
-   "file": "furniture/microwaveSteel.glb",
-   "thumb": "furniture/thumbs/microwaveSteel.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.26,
-    0.15,
-    0.2305
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
      ]
     },
     {
@@ -9163,74 +10039,22 @@
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "microwaveRetro": {
-   "file": "furniture/microwaveRetro.glb",
-   "thumb": "furniture/thumbs/microwaveRetro.png",
+  "bollardLight": {
+   "file": "furniture/bollardLight.glb",
+   "thumb": "furniture/thumbs/bollardLight.png",
    "min": [
-    -0.005,
+    0.2125,
     0,
-    0
+    0.2125
    ],
    "max": [
-    0.255,
-    0.15,
-    0.2205
+    0.2875,
+    0.32,
+    0.2875
    ],
    "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
     {
      "name": "metalMedium",
      "color": [
@@ -9246,36 +10070,6 @@
       1,
       1
      ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
-  },
-  "rangeHood": {
-   "file": "furniture/rangeHood.glb",
-   "thumb": "furniture/thumbs/rangeHood.png",
-   "min": [
-    0,
-    -0.004,
-    0
-   ],
-   "max": [
-    0.45,
-    0.425,
-    0.255
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
     },
     {
      "name": "metalDark",
@@ -9284,95 +10078,31 @@
       0.388,
       0.388
      ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics"
+   "group": "lighting-outdoor-kids"
   },
-  "dishwasherPanel": {
-   "file": "furniture/dishwasherPanel.glb",
-   "thumb": "furniture/thumbs/dishwasherPanel.png",
+  "nightlightMoon": {
+   "file": "furniture/nightlightMoon.glb",
+   "thumb": "furniture/thumbs/nightlightMoon.png",
    "min": [
-    -0.0025,
+    0.16,
     0,
-    -0.0025
+    0.2
    ],
    "max": [
-    0.4525,
-    0.4525,
-    0.4665
+    0.34,
+    0.2213,
+    0.3
    ],
    "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
     {
      "name": "carpetWhite",
      "color": [
       0.973,
       1,
       1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
      ]
     },
     {
@@ -9385,34 +10115,22 @@
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "dishwasherSteel": {
-   "file": "furniture/dishwasherSteel.glb",
-   "thumb": "furniture/thumbs/dishwasherSteel.png",
+  "pendantCone": {
+   "file": "furniture/pendantCone.glb",
+   "thumb": "furniture/thumbs/pendantCone.png",
    "min": [
-    -0.0025,
-    0,
-    -0.0025
+    0.15,
+    0.095,
+    0.1549
    ],
    "max": [
-    0.4525,
-    0.4525,
-    0.4825
+    0.35,
+    0.45,
+    0.3451
    ],
    "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
     {
      "name": "metalDark",
      "color": [
@@ -9430,11 +10148,113 @@
      ]
     },
     {
-     "name": "glass",
+     "name": "carpetWhite",
      "color": [
-      0.698,
-      0.827,
-      0.769
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "benchIron": {
+   "file": "furniture/benchIron.glb",
+   "thumb": "furniture/thumbs/benchIron.png",
+   "min": [
+    0.125,
+    0,
+    0.08
+   ],
+   "max": [
+    0.875,
+    0.4522,
+    0.39
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "picnicTable": {
+   "file": "furniture/picnicTable.glb",
+   "thumb": "furniture/thumbs/picnicTable.png",
+   "min": [
+    0.05,
+    0.0027,
+    0.05
+   ],
+   "max": [
+    0.95,
+    0.38,
+    0.95
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "parasolStanding": {
+   "file": "furniture/parasolStanding.glb",
+   "thumb": "furniture/thumbs/parasolStanding.png",
+   "min": [
+    0.015,
+    0,
+    0.015
+   ],
+   "max": [
+    0.485,
+    1.21,
+    0.485
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
      ]
     },
     {
@@ -9444,13 +10264,47 @@
       1,
       1
      ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "porchSwing": {
+   "file": "furniture/porchSwing.glb",
+   "thumb": "furniture/thumbs/porchSwing.png",
+   "min": [
+    0.05,
+    -0.0041,
+    0.0304
+   ],
+   "max": [
+    0.95,
+    0.975,
+    0.4696
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
     },
     {
-     "name": "carpet",
+     "name": "metalDark",
      "color": [
-      0.943,
-      0.367,
-      0.343
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
      ]
     },
     {
@@ -9463,32 +10317,28 @@
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door",
-    "anim:interior"
-   ]
+   "group": "lighting-outdoor-kids"
   },
-  "sinkSingleBowl": {
-   "file": "furniture/sinkSingleBowl.glb",
-   "thumb": "furniture/thumbs/sinkSingleBowl.png",
+  "deckChair": {
+   "file": "furniture/deckChair.glb",
+   "thumb": "furniture/thumbs/deckChair.png",
    "min": [
-    -0.005,
-    0,
-    -0.005
+    0.0875,
+    -0.0088,
+    0.0902
    ],
    "max": [
-    0.455,
-    0.6085,
-    0.46
+    0.4125,
+    0.4578,
+    0.4775
    ],
    "materials": [
     {
-     "name": "metalDark",
+     "name": "woodDark",
      "color": [
-      0.306,
-      0.388,
-      0.388
+      0.678,
+      0.456,
+      0.299
      ]
     },
     {
@@ -9500,19 +10350,45 @@
      ]
     },
     {
-     "name": "metal",
+     "name": "carpetBlue",
      "color": [
-      0.741,
-      0.823,
-      0.84
+      0.356,
+      0.517,
+      0.868
      ]
     },
     {
-     "name": "metalLight",
+     "name": "carpetWhite",
      "color": [
-      0.937,
-      0.98,
-      0.957
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "gasGrill": {
+   "file": "furniture/gasGrill.glb",
+   "thumb": "furniture/thumbs/gasGrill.png",
+   "min": [
+    0.04,
+    0,
+    0.1227
+   ],
+   "max": [
+    0.5,
+    0.5,
+    0.4162
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
      ]
     },
     {
@@ -9524,37 +10400,53 @@
      ]
     },
     {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "planterTrough": {
+   "file": "furniture/planterTrough.glb",
+   "thumb": "furniture/thumbs/planterTrough.png",
+   "min": [
+    0.05,
+    0,
+    0.15
+   ],
+   "max": [
+    0.45,
+    0.291,
+    0.35
+   ],
+   "materials": [
+    {
      "name": "woodDark",
      "color": [
       0.678,
       0.456,
       0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "sinkDoubleBowl": {
-   "file": "furniture/sinkDoubleBowl.glb",
-   "thumb": "furniture/thumbs/sinkDoubleBowl.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.905,
-    0.6085,
-    0.457
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
      ]
     },
     {
@@ -9566,6 +10458,40 @@
      ]
     },
     {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "birdBath": {
+   "file": "furniture/birdBath.glb",
+   "thumb": "furniture/thumbs/birdBath.png",
+   "min": [
+    0.1,
+    0,
+    0.1073
+   ],
+   "max": [
+    0.4,
+    0.415,
+    0.3927
+   ],
+   "materials": [
+    {
      "name": "metal",
      "color": [
       0.741,
@@ -9574,13 +10500,39 @@
      ]
     },
     {
-     "name": "metalLight",
+     "name": "glass",
      "color": [
-      0.937,
-      0.98,
-      0.957
+      0.698,
+      0.827,
+      0.769
      ]
     },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "firePit": {
+   "file": "furniture/firePit.glb",
+   "thumb": "furniture/thumbs/firePit.png",
+   "min": [
+    0.01,
+    0,
+    0.0193
+   ],
+   "max": [
+    0.49,
+    0.225,
+    0.4807
+   ],
+   "materials": [
     {
      "name": "metalMedium",
      "color": [
@@ -9590,37 +10542,153 @@
      ]
     },
     {
-     "name": "woodDark",
+     "name": "metal",
      "color": [
-      0.678,
-      0.456,
-      0.299
+      0.741,
+      0.823,
+      0.84
      ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "sinkFarmhouse": {
-   "file": "furniture/sinkFarmhouse.glb",
-   "thumb": "furniture/thumbs/sinkFarmhouse.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.455,
-    0.6085,
-    0.46
-   ],
-   "materials": [
+    },
     {
      "name": "metalDark",
      "color": [
       0.306,
       0.388,
       0.388
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "cribModern": {
+   "file": "furniture/cribModern.glb",
+   "thumb": "furniture/thumbs/cribModern.png",
+   "min": [
+    0.05,
+    0,
+    0.05
+   ],
+   "max": [
+    0.45,
+    0.51,
+    0.75
+   ],
+   "materials": [
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "cribCanopy": {
+   "file": "furniture/cribCanopy.glb",
+   "thumb": "furniture/thumbs/cribCanopy.png",
+   "min": [
+    0.05,
+    0,
+    0.03
+   ],
+   "max": [
+    0.45,
+    0.86,
+    0.75
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "cradleRocking": {
+   "file": "furniture/cradleRocking.glb",
+   "thumb": "furniture/thumbs/cradleRocking.png",
+   "min": [
+    0.0875,
+    -0.0023,
+    0.073
+   ],
+   "max": [
+    0.4125,
+    0.31,
+    0.427
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
      ]
     },
     {
@@ -9640,45 +10708,37 @@
      ]
     },
     {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "changingDresser": {
+   "file": "furniture/changingDresser.glb",
+   "thumb": "furniture/thumbs/changingDresser.png",
+   "min": [
+    0.02,
+    0,
+    0
+   ],
+   "max": [
+    0.48,
+    0.51,
+    0.275
+   ],
+   "materials": [
+    {
      "name": "woodDark",
      "color": [
       0.678,
       0.456,
       0.299
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "counterShaker": {
-   "file": "furniture/counterShaker.glb",
-   "thumb": "furniture/thumbs/counterShaker.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.455,
-    0.45,
-    0.46
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
      ]
     },
     {
@@ -9698,78 +10758,28 @@
      ]
     },
     {
-     "name": "woodDark",
+     "name": "carpetBlue",
      "color": [
-      0.678,
-      0.456,
-      0.299
+      0.356,
+      0.517,
+      0.868
      ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics"
+   "group": "lighting-outdoor-kids"
   },
-  "counterCornerL": {
-   "file": "furniture/counterCornerL.glb",
-   "thumb": "furniture/thumbs/counterCornerL.png",
+  "toyBoxLidded": {
+   "file": "furniture/toyBoxLidded.glb",
+   "thumb": "furniture/thumbs/toyBoxLidded.png",
    "min": [
+    0.055,
     0,
-    0,
-    0
+    0.095
    ],
    "max": [
-    0.47,
-    0.45,
-    0.4795
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "counterButcherBlock": {
-   "file": "furniture/counterButcherBlock.glb",
-   "thumb": "furniture/thumbs/counterButcherBlock.png",
-   "min": [
-    -0.005,
-    0,
-    0
-   ],
-   "max": [
-    0.455,
-    0.45,
+    0.445,
+    0.29,
     0.415
    ],
    "materials": [
@@ -9790,1811 +10800,43 @@
      ]
     },
     {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "wallCabinetShaker": {
-   "file": "furniture/wallCabinetShaker.glb",
-   "thumb": "furniture/thumbs/wallCabinetShaker.png",
-   "min": [
-    0,
-    -0.01,
-    0
-   ],
-   "max": [
-    0.45,
-    0.36,
-    0.22
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "kitchenIsland": {
-   "file": "furniture/kitchenIsland.glb",
-   "thumb": "furniture/thumbs/kitchenIsland.png",
-   "min": [
-    -0.01,
-    0,
-    -0.01
-   ],
-   "max": [
-    0.91,
-    0.475,
-    0.48
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "pantryTall": {
-   "file": "furniture/pantryTall.glb",
-   "thumb": "furniture/thumbs/pantryTall.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.405,
-    1.015,
-    0.2875
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
      "name": "carpetBlue",
      "color": [
       0.356,
       0.517,
       0.868
      ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
+   "group": "lighting-outdoor-kids",
    "animNodes": [
-    "anim:door",
-    "anim:door2",
-    "anim:interior"
+    "anim:lid"
    ]
   },
-  "toasterFourSlice": {
-   "file": "furniture/toasterFourSlice.glb",
-   "thumb": "furniture/thumbs/toasterFourSlice.png",
+  "toyBoxBench": {
+   "file": "furniture/toyBoxBench.glb",
+   "thumb": "furniture/thumbs/toyBoxBench.png",
    "min": [
+    0.045,
     0,
-    0,
-    0
-   ],
-   "max": [
-    0.17,
-    0.102,
     0.12
    ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "coffeeMakerDrip": {
-   "file": "furniture/coffeeMakerDrip.glb",
-   "thumb": "furniture/thumbs/coffeeMakerDrip.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
    "max": [
-    0.13,
-    0.18,
-    0.143
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "kettleElectric": {
-   "file": "furniture/kettleElectric.glb",
-   "thumb": "furniture/thumbs/kettleElectric.png",
-   "min": [
-    0.0025,
-    0,
-    -0.035
-   ],
-   "max": [
-    0.0975,
-    0.145,
-    0.125
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "spiceRack": {
-   "file": "furniture/spiceRack.glb",
-   "thumb": "furniture/thumbs/spiceRack.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.3,
-    0.17,
-    0.06
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "toiletBudget": {
-   "file": "furniture/toiletBudget.glb",
-   "thumb": "furniture/thumbs/toiletBudget.png",
-   "min": [
-    0.005,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.22,
-    0.4,
-    0.345
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:lid"
-   ]
-  },
-  "toiletRound": {
-   "file": "furniture/toiletRound.glb",
-   "thumb": "furniture/thumbs/toiletRound.png",
-   "min": [
-    0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.2075,
-    0.4225,
-    0.36
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:lid"
-   ]
-  },
-  "toiletHighCistern": {
-   "file": "furniture/toiletHighCistern.glb",
-   "thumb": "furniture/thumbs/toiletHighCistern.png",
-   "min": [
-    -0.015,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.225,
-    0.885,
-    0.345
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:lid"
-   ]
-  },
-  "toiletWallHung": {
-   "file": "furniture/toiletWallHung.glb",
-   "thumb": "furniture/thumbs/toiletWallHung.png",
-   "min": [
-    0.01,
-    0,
-    0
-   ],
-   "max": [
-    0.29,
-    0.51,
-    0.35
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:lid"
-   ]
-  },
-  "bidet": {
-   "file": "furniture/bidet.glb",
-   "thumb": "furniture/thumbs/bidet.png",
-   "min": [
-    0.005,
-    0,
-    0
-   ],
-   "max": [
-    0.205,
-    0.2562,
-    0.3
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "basinPedestalRound": {
-   "file": "furniture/basinPedestalRound.glb",
-   "thumb": "furniture/thumbs/basinPedestalRound.png",
-   "min": [
-    0.015,
-    0,
-    0
-   ],
-   "max": [
-    0.285,
-    0.507,
-    0.285
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "vanityDouble": {
-   "file": "furniture/vanityDouble.glb",
-   "thumb": "furniture/thumbs/vanityDouble.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.755,
-    0.507,
-    0.307
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "vanityVessel": {
-   "file": "furniture/vanityVessel.glb",
-   "thumb": "furniture/thumbs/vanityVessel.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.405,
-    0.6075,
-    0.28
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "basinConsole": {
-   "file": "furniture/basinConsole.glb",
-   "thumb": "furniture/thumbs/basinConsole.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.4,
-    0.497,
-    0.23
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "vanityCompact": {
-   "file": "furniture/vanityCompact.glb",
-   "thumb": "furniture/thumbs/vanityCompact.png",
-   "min": [
-    -0.005,
-    0,
-    -0.005
-   ],
-   "max": [
-    0.305,
-    0.497,
-    0.224
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "showerWalkIn": {
-   "file": "furniture/showerWalkIn.glb",
-   "thumb": "furniture/thumbs/showerWalkIn.png",
-   "min": [
-    -0.0075,
-    0,
-    -0.002
-   ],
-   "max": [
-    0.475,
-    1.0075,
-    0.4895
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "showerCornerSquare": {
-   "file": "furniture/showerCornerSquare.glb",
-   "thumb": "furniture/thumbs/showerCornerSquare.png",
-   "min": [
-    -0.002,
-    0,
-    0
-   ],
-   "max": [
-    0.477,
-    0.995,
-    0.4915
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "showerCabin": {
-   "file": "furniture/showerCabin.glb",
-   "thumb": "furniture/thumbs/showerCabin.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.47,
-    1.07,
-    0.4865
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "bathClawfoot": {
-   "file": "furniture/bathClawfoot.glb",
-   "thumb": "furniture/thumbs/bathClawfoot.png",
-   "min": [
-    -0.01,
-    0,
-    -0.01
-   ],
-   "max": [
-    0.86,
-    0.685,
-    0.41
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "bathModern": {
-   "file": "furniture/bathModern.glb",
-   "thumb": "furniture/thumbs/bathModern.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.85,
-    0.68,
-    0.4
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "bathBudget": {
-   "file": "furniture/bathBudget.glb",
-   "thumb": "furniture/thumbs/bathBudget.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.8,
-    0.6,
-    0.37
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "bathShowerCombo": {
-   "file": "furniture/bathShowerCombo.glb",
-   "thumb": "furniture/thumbs/bathShowerCombo.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.85,
-    0.963,
+    0.955,
+    0.245,
     0.385
    ],
    "materials": [
     {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "bathCornerSpa": {
-   "file": "furniture/bathCornerSpa.glb",
-   "thumb": "furniture/thumbs/bathCornerSpa.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.9,
-    0.65,
-    0.9
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:door"
-   ]
-  },
-  "mirrorCabinetWide": {
-   "file": "furniture/mirrorCabinetWide.glb",
-   "thumb": "furniture/thumbs/mirrorCabinetWide.png",
-   "min": [
-    0,
-    0,
-    -0.02
-   ],
-   "max": [
-    0.45,
-    0.375,
-    0.095
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:interior",
-    "anim:door"
-   ]
-  },
-  "mirrorCabinetSlim": {
-   "file": "furniture/mirrorCabinetSlim.glb",
-   "thumb": "furniture/thumbs/mirrorCabinetSlim.png",
-   "min": [
-    0,
-    0,
-    -0.02
-   ],
-   "max": [
-    0.225,
-    0.4,
-    0.095
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:interior",
-    "anim:door"
-   ]
-  },
-  "towelRail": {
-   "file": "furniture/towelRail.glb",
-   "thumb": "furniture/thumbs/towelRail.png",
-   "min": [
-    0.005,
-    0,
-    -0.0075
-   ],
-   "max": [
-    0.27,
-    0.425,
-    0.05
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "bathShelf": {
-   "file": "furniture/bathShelf.glb",
-   "thumb": "furniture/thumbs/bathShelf.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.35,
-    0.2,
-    0.1
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "laundryBasket": {
-   "file": "furniture/laundryBasket.glb",
-   "thumb": "furniture/thumbs/laundryBasket.png",
-   "min": [
-    -0.011,
-    0,
-    -0.0051
-   ],
-   "max": [
-    0.231,
-    0.3,
-    0.2251
-   ],
-   "materials": [
-    {
      "name": "wood",
      "color": [
       0.896,
@@ -11617,1401 +10859,26 @@
       0.517,
       0.868
      ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "washerFrontSteel": {
-   "file": "furniture/washerFrontSteel.glb",
-   "thumb": "furniture/thumbs/washerFrontSteel.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.3125,
-    0.4425,
-    0.3475
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:interior",
-    "anim:door"
-   ]
-  },
-  "dryerVented": {
-   "file": "furniture/dryerVented.glb",
-   "thumb": "furniture/thumbs/dryerVented.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.3225,
-    0.46,
-    0.3675
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:interior",
-    "anim:door"
-   ]
-  },
-  "washerDryerStack": {
-   "file": "furniture/washerDryerStack.glb",
-   "thumb": "furniture/thumbs/washerDryerStack.png",
-   "min": [
-    -0.0025,
-    0,
-    -0.0025
-   ],
-   "max": [
-    0.3225,
-    0.9025,
-    0.3575
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:interior",
-    "anim:door",
-    "anim:door2"
-   ]
-  },
-  "washerTopLoad": {
-   "file": "furniture/washerTopLoad.glb",
-   "thumb": "furniture/thumbs/washerTopLoad.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.31,
-    0.475,
-    0.34
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:interior",
-    "anim:door"
-   ]
-  },
-  "tvPortable": {
-   "file": "furniture/tvPortable.glb",
-   "thumb": "furniture/thumbs/tvPortable.png",
-   "min": [
-    0,
-    0,
-    0.05
-   ],
-   "max": [
-    0.25,
-    0.3363,
-    0.14
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.125,
-     0.12,
-     0.091
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.225,
-    "height": 0.155
-   }
-  },
-  "tvWallSlim": {
-   "file": "furniture/tvWallSlim.glb",
-   "thumb": "furniture/thumbs/tvWallSlim.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.475,
-    0.28,
-    0.036
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.2375,
-     0.14,
-     0.036
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.463,
-    "height": 0.268
-   }
-  },
-  "tvCurved": {
-   "file": "furniture/tvCurved.glb",
-   "thumb": "furniture/thumbs/tvCurved.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.5,
-    0.35,
-    0.1
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.25,
-     0.205,
-     0.046
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.48,
-    "height": 0.27
-   }
-  },
-  "tvCrtBox": {
-   "file": "furniture/tvCrtBox.glb",
-   "thumb": "furniture/thumbs/tvCrtBox.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.31,
-    0.27,
-    0.185
-   ],
-   "materials": [
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.125,
-     0.15,
-     0.171
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.2,
-    "height": 0.2
-   }
-  },
-  "projectorScreen": {
-   "file": "furniture/projectorScreen.glb",
-   "thumb": "furniture/thumbs/projectorScreen.png",
-   "min": [
-    -0.01,
-    -0.01,
-    0
-   ],
-   "max": [
-    0.485,
-    0.5,
-    0.05
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.2375,
-     0.245,
-     0.036
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.475,
-    "height": 0.43
-   }
-  },
-  "pcGaming": {
-   "file": "furniture/pcGaming.glb",
-   "thumb": "furniture/thumbs/pcGaming.png",
-   "min": [
-    0.01,
-    0,
-    0.05
-   ],
-   "max": [
-    0.43,
-    0.33,
-    0.345
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.29,
-     0.2162,
-     0.166
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.27,
-    "height": 0.2175
-   }
-  },
-  "pcAllInOne": {
-   "file": "furniture/pcAllInOne.glb",
-   "thumb": "furniture/thumbs/pcAllInOne.png",
-   "min": [
-    0,
-    0,
-    0.03
-   ],
-   "max": [
-    0.31,
-    0.29,
-    0.27
-   ],
-   "materials": [
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.155,
-     0.1945,
-     0.0785
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.298,
-    "height": 0.179
-   }
-  },
-  "pcRetroBeige": {
-   "file": "furniture/pcRetroBeige.glb",
-   "thumb": "furniture/thumbs/pcRetroBeige.png",
-   "min": [
-    0.025,
-    0,
-    -0.02
-   ],
-   "max": [
-    0.39,
-    0.25,
-    0.375
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.2,
-     0.155,
-     0.261
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.23,
-    "height": 0.14
-   }
-  },
-  "laptopGaming": {
-   "file": "furniture/laptopGaming.glb",
-   "thumb": "furniture/thumbs/laptopGaming.png",
-   "min": [
-    0,
-    0,
-    -0.0337
-   ],
-   "max": [
-    0.2,
-    0.1393,
-    0.142
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.1,
-     0.0794,
-     0.0008
-    ],
-    "normal": [
-     0,
-     0.3746,
-     0.9272
-    ],
-    "width": 0.186,
-    "height": 0.116
-   }
-  },
-  "laptopRetro": {
-   "file": "furniture/laptopRetro.glb",
-   "thumb": "furniture/thumbs/laptopRetro.png",
-   "min": [
-    0,
-    0,
-    -0.012
-   ],
-   "max": [
-    0.17,
-    0.1563,
-    0.15
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.085,
-     0.0929,
-     0.022
-    ],
-    "normal": [
-     0,
-     0.2079,
-     0.9781
-    ],
-    "width": 0.13,
-    "height": 0.09
-   }
-  },
-  "tabletStand": {
-   "file": "furniture/tabletStand.glb",
-   "thumb": "furniture/thumbs/tabletStand.png",
-   "min": [
-    0,
-    0,
-    -0.0012
-   ],
-   "max": [
-    0.15,
-    0.1539,
-    0.1
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.075,
-     0.1032,
-     0.025
-    ],
-    "normal": [
-     0,
-     0.3746,
-     0.9272
-    ],
-    "width": 0.135,
-    "height": 0.095
-   }
-  },
-  "pcUltrawide": {
-   "file": "furniture/pcUltrawide.glb",
-   "thumb": "furniture/thumbs/pcUltrawide.png",
-   "min": [
-    0.01,
-    0,
-    0.05
-   ],
-   "max": [
-    0.46,
-    0.29,
-    0.32
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.2375,
-     0.1925,
-     0.151
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.435,
-    "height": 0.185
-   }
-  },
-  "hifiStack": {
-   "file": "furniture/hifiStack.glb",
-   "thumb": "furniture/thumbs/hifiStack.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.25,
-    0.15,
-    0.195
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "recordPlayer": {
-   "file": "furniture/recordPlayer.glb",
-   "thumb": "furniture/thumbs/recordPlayer.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.22,
-    0.075,
-    0.18
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
+   "group": "lighting-outdoor-kids",
    "animNodes": [
     "anim:lid"
    ]
   },
-  "boombox": {
-   "file": "furniture/boombox.glb",
-   "thumb": "furniture/thumbs/boombox.png",
+  "kidsBedHouse": {
+   "file": "furniture/kidsBedHouse.glb",
+   "thumb": "furniture/thumbs/kidsBedHouse.png",
    "min": [
+    0.012,
     0,
-    0,
-    0
+    0.02
    ],
    "max": [
-    0.25,
-    0.2307,
-    0.1025
-   ],
-   "materials": [
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "soundbar": {
-   "file": "furniture/soundbar.glb",
-   "thumb": "furniture/thumbs/soundbar.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.45,
-    0.045,
-    0.054
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "speakerSatellites": {
-   "file": "furniture/speakerSatellites.glb",
-   "thumb": "furniture/thumbs/speakerSatellites.png",
-   "min": [
-    0.01,
-    0,
-    0.0274
-   ],
-   "max": [
-    0.36,
-    0.36,
-    0.1226
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics"
-  },
-  "consoleSet": {
-   "file": "furniture/consoleSet.glb",
-   "thumb": "furniture/thumbs/consoleSet.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.45,
-    0.42,
-    0.225
+    0.488,
+    0.765,
+    0.97
    ],
    "materials": [
     {
@@ -13023,35 +10890,11 @@
      ]
     },
     {
-     "name": "wood",
+     "name": "carpetWhite",
      "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalLight",
-     "color": [
-      0.937,
-      0.98,
-      0.957
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "plant",
-     "color": [
-      0.182,
-      0.821,
-      0.576
+      0.973,
+      1,
+      1
      ]
     },
     {
@@ -13063,62 +10906,61 @@
      ]
     },
     {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.225,
-     0.295,
-     0.101
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.385,
-    "height": 0.235
-   }
-  },
-  "homeCinema": {
-   "file": "furniture/homeCinema.glb",
-   "thumb": "furniture/thumbs/homeCinema.png",
-   "min": [
-    0,
-    0,
-    0
-   ],
-   "max": [
-    0.85,
-    0.735,
-    0.225
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
      "name": "wood",
      "color": [
       0.896,
       0.602,
       0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsBedCar": {
+   "file": "furniture/kidsBedCar.glb",
+   "thumb": "furniture/thumbs/kidsBedCar.png",
+   "min": [
+    0.02,
+    0.01,
+    0.02
+   ],
+   "max": [
+    0.48,
+    0.525,
+    0.985
+   ],
+   "materials": [
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
      ]
     },
     {
@@ -13136,56 +10978,39 @@
       0.98,
       0.957
      ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
-   ],
-   "screen": {
-    "centre": [
-     0.425,
-     0.51,
-     0.101
-    ],
-    "normal": [
-     0,
-     0,
-     1
-    ],
-    "width": 0.775,
-    "height": 0.435
-   }
+   "group": "lighting-outdoor-kids"
   },
-  "arcadeCabinet": {
-   "file": "furniture/arcadeCabinet.glb",
-   "thumb": "furniture/thumbs/arcadeCabinet.png",
+  "kidsBunkLadder": {
+   "file": "furniture/kidsBunkLadder.glb",
+   "thumb": "furniture/thumbs/kidsBunkLadder.png",
    "min": [
+    0.02,
     0,
-    0,
-    0.025
+    0.02
    ],
    "max": [
-    0.36,
-    0.9,
-    0.45
+    0.405,
+    0.825,
+    0.97
    ],
    "materials": [
     {
-     "name": "metalDark",
+     "name": "wood",
      "color": [
-      0.306,
-      0.388,
-      0.388
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
      ]
     },
     {
@@ -13205,19 +11030,229 @@
      ]
     },
     {
-     "name": "glass",
+     "name": "woodDark",
      "color": [
-      0.698,
-      0.827,
-      0.769
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsLoftBed": {
+   "file": "furniture/kidsLoftBed.glb",
+   "thumb": "furniture/thumbs/kidsLoftBed.png",
+   "min": [
+    0.02,
+    0,
+    0.02
+   ],
+   "max": [
+    0.48,
+    0.775,
+    0.97
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
      ]
     },
     {
-     "name": "metalMedium",
+     "name": "carpetWhite",
      "color": [
-      0.369,
-      0.467,
-      0.467
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsDeskSmall": {
+   "file": "furniture/kidsDeskSmall.glb",
+   "thumb": "furniture/thumbs/kidsDeskSmall.png",
+   "min": [
+    0.045,
+    0,
+    0.095
+   ],
+   "max": [
+    0.455,
+    0.33,
+    0.405
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsChairSmall": {
+   "file": "furniture/kidsChairSmall.glb",
+   "thumb": "furniture/thumbs/kidsChairSmall.png",
+   "min": [
+    0.12,
+    0,
+    0.12
+   ],
+   "max": [
+    0.38,
+    0.35,
+    0.38
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsTableSet": {
+   "file": "furniture/kidsTableSet.glb",
+   "thumb": "furniture/thumbs/kidsTableSet.png",
+   "min": [
+    0.1,
+    0,
+    0.01
+   ],
+   "max": [
+    0.4,
+    0.25,
+    0.49
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "playKitchen": {
+   "file": "furniture/playKitchen.glb",
+   "thumb": "furniture/thumbs/playKitchen.png",
+   "min": [
+    0.02,
+    0,
+    0
+   ],
+   "max": [
+    0.48,
+    0.55,
+    0.2512
+   ],
+   "materials": [
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
      ]
     },
     {
@@ -13226,6 +11261,244 @@
       0.937,
       0.98,
       0.957
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "dollhouse": {
+   "file": "furniture/dollhouse.glb",
+   "thumb": "furniture/thumbs/dollhouse.png",
+   "min": [
+    0.017,
+    0,
+    0.06
+   ],
+   "max": [
+    0.483,
+    0.592,
+    0.36
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "rockingHorse": {
+   "file": "furniture/rockingHorse.glb",
+   "thumb": "furniture/thumbs/rockingHorse.png",
+   "min": [
+    0.1375,
+    0.0078,
+    0.0221
+   ],
+   "max": [
+    0.3625,
+    0.5,
+    0.5
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "easelKids": {
+   "file": "furniture/easelKids.glb",
+   "thumb": "furniture/thumbs/easelKids.png",
+   "min": [
+    0.115,
+    -0.0024,
+    0.0653
+   ],
+   "max": [
+    0.385,
+    0.5524,
+    0.35
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
      ]
     },
     {
@@ -13238,24 +11511,639 @@
     }
    ],
    "original": true,
-   "group": "kitchen-bath-electronics",
-   "animNodes": [
-    "anim:screen"
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsBookshelf": {
+   "file": "furniture/kidsBookshelf.glb",
+   "thumb": "furniture/thumbs/kidsBookshelf.png",
+   "min": [
+    0.05,
+    0,
+    0
    ],
-   "screen": {
-    "centre": [
-     0.18,
-     0.6241,
-     0.3189
-    ],
-    "normal": [
-     0,
-     0.1392,
-     0.9903
-    ],
-    "width": 0.28,
-    "height": 0.21
-   }
+   "max": [
+    0.45,
+    0.45,
+    0.15
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "playTent": {
+   "file": "furniture/playTent.glb",
+   "thumb": "furniture/thumbs/playTent.png",
+   "min": [
+    0.0267,
+    -0.0048,
+    0.0267
+   ],
+   "max": [
+    0.4733,
+    0.5548,
+    0.4733
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "ballPit": {
+   "file": "furniture/ballPit.glb",
+   "thumb": "furniture/thumbs/ballPit.png",
+   "min": [
+    0.05,
+    0,
+    0.05
+   ],
+   "max": [
+    0.95,
+    0.2,
+    0.95
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "trainTable": {
+   "file": "furniture/trainTable.glb",
+   "thumb": "furniture/thumbs/trainTable.png",
+   "min": [
+    0.04,
+    0,
+    0.09
+   ],
+   "max": [
+    0.96,
+    0.375,
+    0.41
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "activityTable": {
+   "file": "furniture/activityTable.glb",
+   "thumb": "furniture/thumbs/activityTable.png",
+   "min": [
+    0.05,
+    0,
+    0.0598
+   ],
+   "max": [
+    0.45,
+    0.41,
+    0.4402
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "nurseryRocker": {
+   "file": "furniture/nurseryRocker.glb",
+   "thumb": "furniture/thumbs/nurseryRocker.png",
+   "min": [
+    0.04,
+    0.0052,
+    0.0476
+   ],
+   "max": [
+    0.46,
+    0.525,
+    0.4524
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "babyBouncer": {
+   "file": "furniture/babyBouncer.glb",
+   "thumb": "furniture/thumbs/babyBouncer.png",
+   "min": [
+    0.09,
+    0,
+    0.09
+   ],
+   "max": [
+    0.41,
+    0.34,
+    0.41
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "kidsWardrobe": {
+   "file": "furniture/kidsWardrobe.glb",
+   "thumb": "furniture/thumbs/kidsWardrobe.png",
+   "min": [
+    0.035,
+    0,
+    0
+   ],
+   "max": [
+    0.465,
+    0.67,
+    0.255
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids",
+   "animNodes": [
+    "anim:doorL",
+    "anim:doorR"
+   ]
+  },
+  "kidsBeanBag": {
+   "file": "furniture/kidsBeanBag.glb",
+   "thumb": "furniture/thumbs/kidsBeanBag.png",
+   "min": [
+    0.05,
+    0,
+    0.0598
+   ],
+   "max": [
+    0.45,
+    0.25,
+    0.4402
+   ],
+   "materials": [
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
+  },
+  "puppetTheater": {
+   "file": "furniture/puppetTheater.glb",
+   "thumb": "furniture/thumbs/puppetTheater.png",
+   "min": [
+    0.05,
+    0,
+    0.025
+   ],
+   "max": [
+    0.45,
+    0.7,
+    0.21
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "lighting-outdoor-kids"
   }
  },
  "audio": {
