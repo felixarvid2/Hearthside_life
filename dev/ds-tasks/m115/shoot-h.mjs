@@ -72,10 +72,11 @@ const frames = (page, n, dt = 1 / 30) => page.evaluate(([n2, dt2]) => { for (let
 /**
  * Glides the camera close over a point and picks the 90-degree yaw step nearest `view` relative to the person's
  * facing, then lets the glide settle.
- * - 'behind' (default): from behind their right shoulder, past the body — shows a carried plate held in front and
- *   whatever the person faces (fridge, table).
- * - 'front': from the side the person faces — shows a prop held in the hands (snack, fork, book, phone) and the
- *   table in front of a seated eater, instead of hiding it behind the torso and chair back.
+ * - 'behind' (default): from behind their right shoulder, past the body — shows whatever the person faces (fridge,
+ *   table) and props held out to the side.
+ * - 'front': from the side the person faces — shows a prop held in the hands (snack, fork, book, phone), a plate
+ *   carried in front of the belly, and the table in front of a seated eater, instead of hiding it behind the torso
+ *   and chair back.
  */
 async function focus(page, x, z, facing = null, ahead = 0, view = 'behind') {
   await page.evaluate(([x2, z2, f, ahead2, mode]) => {

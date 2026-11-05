@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Browser end-to-end check of Hearthside Life (Playwright, headless Chromium with SwiftShader).
 //
-//   node tests/e2e/run-e2e.mjs [--no-build] [--only=desktop,portrait,landscape] [--out=DIR] [--keep]
+//   node tests/e2e/run-e2e.mjs [--no-build] [--only=desktop,portrait,landscape] [--out=DIR] [--keep] [--no-lock]
 //
 // Builds the game (vite build -> tests/e2e/out/dist; screenshots in tests/e2e/out/screenshots, git-ignored), serves it with vite preview on port 5190, then for each viewport
 // (1280x720 desktop, 390x844 portrait touch, 844x390 landscape touch) loads the page, starts a guided game

@@ -81,8 +81,17 @@ was hidden behind the torso (the portrait frame was a dark close-up of the kitch
 - `npm run content:check` - 0 errors, 0 warnings.
 - `npm run build` - ok.
 - D re-shoot - 33/33 checks, 186 screenshots (see above).
-- H re-shoot - running (see below).
-- `npm run e2e` - to run after H.
+- H re-shoot - 27/27 checks (9 per viewport), every screenshot regenerated. Checked the images by eye: the
+  ingredients bag, apple, fork and plate, carried plate and lit phone are legible in portrait, landscape and
+  desktop; the fork is in the hand at 20 % and 80 % of the meal; the carried plate sits in front of the belly, not
+  at the hip.
+- `npm run e2e` - passed in all three viewports (desktop 1280x720, portrait 390x844, landscape 844x390),
+  `[e2e] OK`, no page or console errors, no blank canvases; screenshots in `tests/e2e/out/screenshots`.
 
 Note: an interrupted H run left an orphaned process holding `/tmp/hearthside-browser.lock`; the script grew a
-`--no-lock` flag (documented as recovery-only) so the re-shoot could proceed. Normally H takes the lock itself.
+`--no-lock` flag (documented as recovery-only) so the re-shoot could proceed. Normally H takes the lock itself. The
+same stale lock blocks `npm run e2e` (it also re-execs under `flock`), so `tests/e2e/run-e2e.mjs` grew the same
+documented `--no-lock` recovery flag; no other behaviour of the runner changed.
+
+`bash tools/te-save.sh` could not be run from this agent (the permission checker requires approval for running a
+script); run it before the commit, as CLAUDE.md asks.
