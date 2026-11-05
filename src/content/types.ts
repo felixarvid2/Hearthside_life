@@ -156,7 +156,57 @@ export interface ObjectDef {
    * The footprint of the level above it has no floor (a hole). Stairs are placed on a level that has a floor (level >= 1).
    */
   stair?: StairSpec;
+  /**
+   * Milestone 10: moving parts declared in content instead of the table in render/objectAnim.ts (that table wins for the
+   * defs it lists). The named GLB nodes (`anim:*`, see tools/furniture-extra/kit.mjs `part()`) are animated by `kind`.
+   */
+  anim?: ObjectAnimSpec;
+  /**
+   * Milestone 10: the model has an `anim:screen` part. The picture rectangle (content/screens.ts) is derived from that
+   * part's measured bounds, so a new TV, computer, laptop or tablet needs no hand-measured entry. Hand-measured entries in
+   * SCREENS win.
+   */
+  screen?: boolean;
   status: ContentStatus;
+}
+
+/** Milestone 10: part and animation vocabulary of ObjectDef.anim (render/objectAnim.ts runs it). */
+export type PartAxis = 'x' | 'y' | 'z';
+/**
+ * What a part is. door / door2 / lid / oven / drawer / drawer2 move together as one group each (a role is one switch).
+ * 'interior' is a static node shown only while some part is open; 'screen' is the static `anim:screen` node (documentation
+ * for the validator; the picture itself is ObjectDef.screen).
+ */
+export type PartRole = 'door' | 'door2' | 'lid' | 'oven' | 'drawer' | 'drawer2' | 'interior' | 'screen';
+/** 'openWhileUsed': every door, lid and drawer opens during any interaction on the object (or those in `on`). */
+export type AnimKind =
+  | 'fridge' | 'oven' | 'wardrobe' | 'toilet' | 'shower' | 'bath' | 'sink' | 'dishwasher' | 'laundry' | 'microwave' | 'openWhileUsed';
+export type InteriorKind = 'fridge' | 'oven' | 'wardrobe' | 'dishwasher' | 'washer';
+
+export interface AnimPartSpec {
+  /** GLB node name, `anim:<name>`. */
+  node: string;
+  role: PartRole;
+  /** Hinged: rotation axis through the node origin (in model space; keep def.model.yaw at 0) and signed angle in radians. */
+  axis?: PartAxis;
+  angle?: number;
+  /** Sliding: translation when fully open, in the def's fitted metres (rot-0 local space; +z is the front). */
+  slide?: [number, number, number];
+  /** Game minutes for a full opening / closing (default 0.4). */
+  openMinutes?: number;
+  closeMinutes?: number;
+}
+
+export interface ObjectAnimSpec {
+  /** Which interaction / anim ids open the parts (render/objectAnim.ts activeParts). */
+  kind: AnimKind;
+  parts: AnimPartSpec[];
+  /** Code-built cavity (shelves and food, oven racks, ...) shown while a part is open; not needed with an `anim:interior` node. */
+  interior?: InteriorKind;
+  /** Interior box as fractions of the fitted box [x0, y0, z0, x1, y1, z1]. */
+  interiorBox?: [number, number, number, number, number, number];
+  /** openWhileUsed only: interaction ids that open the parts (default: any interaction on the object). */
+  on?: string[];
 }
 
 /** Milestone 9: see ObjectDef.stair. */

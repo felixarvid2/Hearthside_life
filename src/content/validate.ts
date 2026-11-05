@@ -11,19 +11,29 @@ import { STAGE_ORDER } from '../core/lifeStages';
 import { NEED_IDS, OUTFIT_CATEGORIES } from '../core/types';
 import type { BondStatus, Posture } from '../core/types';
 import type {
-  CatalogCategory, ContentDB, InteractionDef, ObjectDef, PlacementLayer, PriceTier, SlotKind, SocialCategory, TraitCategory,
+  AnimKind, CatalogCategory, ContentDB, InteractionDef, InteriorKind, ObjectDef, PartAxis, PartRole, PlacementLayer, PriceTier, SlotKind,
+  SocialCategory, TraitCategory,
 } from './types';
 import { fittedBounds } from './objects';
 import { capabilityInteractions } from './capabilities';
 
 /** Furniture entry of public/assets/manifest.json (only the fields validation needs). */
-export interface ManifestModel { min: number[]; max: number[]; materials: Array<{ name: string }> }
+export interface ManifestModel {
+  min: number[]; max: number[]; materials: Array<{ name: string }>;
+  /** Names of the `anim:*` part nodes of a generated model, and the measured `anim:screen` rectangle. */
+  animNodes?: string[];
+  screen?: unknown;
+}
 
 export interface ValidationResult { errors: string[]; warnings: string[] }
 
 const TIERS: readonly PriceTier[] = ['budget', 'standard', 'premium', 'luxury'];
 const CATEGORIES: readonly CatalogCategory[] = ['seating', 'beds', 'tables', 'storage', 'kitchen', 'bathroom', 'lighting', 'electronics', 'hobby', 'decor', 'outdoor', 'kids', 'stairs'];
 const LAYERS: readonly PlacementLayer[] = ['floor', 'rug', 'wall', 'surface', 'ceiling'];
+const ANIM_KINDS: readonly AnimKind[] = ['fridge', 'oven', 'wardrobe', 'toilet', 'shower', 'bath', 'sink', 'dishwasher', 'laundry', 'microwave', 'openWhileUsed'];
+const INTERIOR_KINDS: readonly InteriorKind[] = ['fridge', 'oven', 'wardrobe', 'dishwasher', 'washer'];
+const PART_ROLES: readonly PartRole[] = ['door', 'door2', 'lid', 'oven', 'drawer', 'drawer2', 'interior', 'screen'];
+const PART_AXES: readonly PartAxis[] = ['x', 'y', 'z'];
 const SLOT_KINDS: readonly SlotKind[] = ['sit', 'sleep', 'use', 'stand'];
 const POSTURES: readonly Posture[] = ['standing', 'walking', 'seated', 'lying'];
 const SOCIAL_CATEGORIES: readonly SocialCategory[] = ['greeting', 'friendly', 'funny', 'deep', 'support', 'mean', 'romantic', 'family', 'status'];
@@ -281,6 +291,44 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     }
     if (!o.functional && o.interactions.length) err(`${w}: decorative objects (functional false) must not offer interactions`);
     if (o.functional && !o.interactions.length && o.surfaceHeight === undefined && o.slots.length === 0) err(`${w}: functional object without interactions, slots or surface`);
+
+    // Milestone 10: moving parts and screens declared in content
+    if (o.screen) {
+      if (entry && opts.models && !entry.screen) err(`${w}: screen is true but model '${m.asset}' has no anim:screen part`);
+      if (!o.tags.includes('tv') && !o.tags.includes('computer')) warn(`${w}: screen designs are tagged 'tv' or 'computer'`);
+    }
+    if (o.anim) {
+      const a = o.anim;
+      if (!has(ANIM_KINDS, a.kind)) err(`${w}: anim kind '${a.kind}' is unknown`);
+      if (a.interior !== undefined && !has(INTERIOR_KINDS, a.interior)) err(`${w}: anim interior '${a.interior}' is unknown`);
+      if (a.interiorBox && (a.interiorBox.length !== 6 || !a.interiorBox.every(finite) || a.interiorBox[0] >= a.interiorBox[3] || a.interiorBox[1] >= a.interiorBox[4] || a.interiorBox[2] >= a.interiorBox[5])) {
+        err(`${w}: anim interiorBox must be [x0, y0, z0, x1, y1, z1] with min < max`);
+      }
+      if (a.parts.length === 0 && !a.interior) warn(`${w}: anim has no parts and no interior`);
+      const nodes = new Set<string>();
+      for (const p of a.parts) {
+        const pw = `${w} anim part '${p.node}'`;
+        if (!/^anim:[A-Za-z0-9_-]+$/.test(p.node)) err(`${pw}: node names look like 'anim:door'`);
+        if (nodes.has(p.node)) err(`${pw}: listed twice`);
+        nodes.add(p.node);
+        if (!has(PART_ROLES, p.role)) { err(`${pw}: unknown role '${p.role}'`); continue; }
+        if (entry && opts.models && !(entry.animNodes ?? []).includes(p.node)) err(`${pw}: the model '${m.asset}' has no such node (its parts: ${(entry.animNodes ?? []).join(', ') || 'none'})`);
+        const moves = p.role !== 'interior' && p.role !== 'screen';
+        const turns = p.axis !== undefined || p.angle !== undefined;
+        if (moves && !turns && !p.slide) err(`${pw}: a ${p.role} needs axis + angle (hinged) or slide (sliding)`);
+        if (turns && (!has(PART_AXES, p.axis as PartAxis) || !finite(p.angle as number) || p.angle === 0)) err(`${pw}: axis must be x, y or z and angle a non-zero number of radians`);
+        if (p.slide && (p.slide.length !== 3 || !p.slide.every(finite) || p.slide.every((v) => v === 0))) err(`${pw}: slide must be a non-zero [x, y, z]`);
+        if (p.slide && p.slide.some((v) => Math.abs(v) > 2)) warn(`${pw}: slide of more than 2 m`);
+        if (!moves && (turns || p.slide)) err(`${pw}: a ${p.role} does not move`);
+        for (const t of [p.openMinutes, p.closeMinutes]) if (t !== undefined && !(t > 0 && t <= 5)) err(`${pw}: open/close minutes must be in (0, 5]`);
+      }
+      if (a.on) {
+        if (a.kind !== 'openWhileUsed') err(`${w}: anim.on only applies to kind 'openWhileUsed'`);
+        for (const id of a.on) if (!db.interactions[id]) err(`${w}: anim.on names unknown interaction '${id}'`);
+      }
+      if (ready && a.kind === 'openWhileUsed' && !o.interactions.length) warn(`${w}: openWhileUsed without interactions never opens`);
+      if (ready && !o.slots.some((s) => s.kind === 'use') && a.parts.some((p) => p.role !== 'interior' && p.role !== 'screen')) warn(`${w}: animated parts but no 'use' slot`);
+    }
 
     // stats
     for (const [k, v] of Object.entries(o.stats)) if (!finite(v)) err(`${w}: stat '${k}' is not a number`);

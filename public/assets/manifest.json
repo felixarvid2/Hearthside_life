@@ -7669,6 +7669,237 @@
    ],
    "original": true,
    "exterior": true
+  },
+  "fridgeRetroTall": {
+   "file": "furniture/fridgeRetroTall.glb",
+   "thumb": "furniture/thumbs/fridgeRetroTall.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.39,
+    0.87,
+    0.3995
+   ],
+   "materials": [
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "kitchen-bath-electronics",
+   "animNodes": [
+    "anim:door",
+    "anim:interior"
+   ]
+  },
+  "laptopThin": {
+   "file": "furniture/laptopThin.glb",
+   "thumb": "furniture/thumbs/laptopThin.png",
+   "min": [
+    0,
+    0,
+    -0.0177
+   ],
+   "max": [
+    0.16,
+    0.1064,
+    0.12
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    }
+   ],
+   "original": true,
+   "group": "kitchen-bath-electronics",
+   "animNodes": [
+    "anim:screen"
+   ],
+   "screen": {
+    "centre": [
+     0.08,
+     0.0588,
+     0.01
+    ],
+    "normal": [
+     0,
+     0.4067,
+     0.9135
+    ],
+    "width": 0.148,
+    "height": 0.093
+   }
+  },
+  "chestOfDrawers": {
+   "file": "furniture/chestOfDrawers.glb",
+   "thumb": "furniture/thumbs/chestOfDrawers.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.456,
+    0.49,
+    0.2665
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:drawer1",
+    "anim:drawer2"
+   ]
   }
  },
  "audio": {

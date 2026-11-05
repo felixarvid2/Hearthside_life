@@ -5,13 +5,22 @@
 // descriptor's hinge / interior is on that same +z side, and that the relation survives all four rotations
 // (0/90/180/270). It catches a descriptor whose door is on the back, and a fitted model whose door node is not
 // where the descriptor assumes.
+//
+// Milestone 10: the same checks run for designs that declare their animation in content (`ObjectDef.anim`), plus: a
+// hinged door/drawer must move TOWARDS the use slot when it opens (rotated or slid from its closed position), and a content
+// design keeps def.model.yaw at 0 because the declared axis and slide are in model space.
 import { NodeIO } from '@gltf-transform/core';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { rotYaw } from '../../../src/core/geometry';
 import type { Rot } from '../../../src/core/types';
 import { OBJECTS, fittedBounds, MODEL_BOUNDS } from '../../../src/content/objects';
-import { DESCRIPTORS, type AnimDescriptor, type NodePart, type OverlayPart } from '../../../src/render/objectAnim';
+import * as THREE from 'three';
+import { DESCRIPTORS, allDescriptors, type AnimDescriptor, type NodePart, type OverlayPart } from '../../../src/render/objectAnim';
+
+const ALL = allDescriptors();
+const fromContent = (desc: AnimDescriptor) => !DESCRIPTORS.includes(desc);
+const isStatic = (p: { kind: string; role: string }) => p.kind === 'node' && (p.role === 'interior' || p.role === 'screen');
 
 const io = new NodeIO();
 const manifest = JSON.parse(readFileSync('public/assets/manifest.json', 'utf8')) as {
@@ -108,7 +117,7 @@ function useDir(desc: AnimDescriptor): [number, number] | null {
 
 describe('objectAnim: doors and cavities face the use slot', () => {
   it('every animated door/cavity has its use slot in front of the object (+z at rot 0)', () => {
-    for (const desc of DESCRIPTORS) {
+    for (const desc of ALL) {
       // Corner units (the shower stall) have a diagonal approach and no moving part to orient.
       if (desc.parts.length === 0 && !desc.interior) continue;
       const dir = useDir(desc);
@@ -117,7 +126,7 @@ describe('objectAnim: doors and cavities face the use slot', () => {
     }
   });
 
-  for (const desc of DESCRIPTORS) {
+  for (const desc of ALL) {
     const def = defFor(desc);
     const slot = def.slots?.find((s) => s.kind === 'use');
     if (!slot) continue;
@@ -130,6 +139,10 @@ describe('objectAnim: doors and cavities face the use slot', () => {
 
       for (const part of desc.parts) {
         let side: [number, number];
+        if (isStatic(part)) {
+          expect(bounds.get((part as NodePart).node), `${desc.defId}: node ${(part as NodePart).node} missing from ${desc.asset}`).toBeTruthy();
+          continue;
+        }
         if (part.kind === 'overlay') {
           const p = part as OverlayPart;
           // Hinge in fitted-box fractions: z must be the front face (the panel is flush with the model front).
@@ -150,8 +163,26 @@ describe('objectAnim: doors and cavities face the use slot', () => {
             side = norm2(partCx - cx, partCz - cz);
           }
         }
+        const sliding = part.kind === 'node' && part.slide !== undefined;
+        if (sliding) {
+          // a drawer's box spans its whole tray, so judge it by where it travels: towards the use slot
+          const [sx, , sz] = (part as NodePart).slide!;
+          side = norm2(sx, sz);
+        }
         const dot = side[0] * dir[0] + side[1] * dir[1];
         expect(dot, `${desc.defId}: ${part.role} on the use-slot side`).toBeGreaterThan(0.5);
+
+        if (fromContent(desc) && part.kind === 'node') {
+          expect(def.model.yaw, `${desc.defId}: content-declared parts need yaw 0`).toBe(0);
+          if (!sliding && part.role !== 'lid' && part.angle !== 0) {
+            // opened: the part's centre must swing towards the use slot
+            const b = bounds.get(part.node)!;
+            const c = new THREE.Vector3(...b.box.min).add(new THREE.Vector3(...b.box.max)).multiplyScalar(0.5);
+            const rel = c.clone().sub(new THREE.Vector3(...b.origin));
+            const moved = rel.clone().applyAxisAngle(new THREE.Vector3(part.axis === 'x' ? 1 : 0, part.axis === 'y' ? 1 : 0, part.axis === 'z' ? 1 : 0), part.angle).sub(rel);
+            expect(moved.x * dir[0] + moved.z * dir[1], `${desc.defId}: ${part.role} opens towards the use slot`).toBeGreaterThan(0.02);
+          }
+        }
 
         if (part.kind === 'overlay') continue;
         for (let rot = 0; rot < 4; rot++) {
@@ -176,7 +207,7 @@ describe('objectAnim: doors and cavities face the use slot', () => {
   }
 
   it('every animated asset the descriptors name has measured bounds and a manifest file', () => {
-    for (const desc of DESCRIPTORS) {
+    for (const desc of ALL) {
       expect(MODEL_BOUNDS[desc.asset], desc.asset).toBeTruthy();
       expect(manifest.furniture[desc.asset], desc.asset).toBeTruthy();
     }

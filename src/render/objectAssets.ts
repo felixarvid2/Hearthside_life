@@ -12,7 +12,13 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import type { ObjectDef } from '../content/types';
 import { isProceduralAsset, proceduralModel, proceduralThumb } from './stairModel';
 
-export interface ManifestModel { file: string; thumb?: string; min: number[]; max: number[]; materials: Array<{ name: string; color: number[] }> }
+export interface ManifestModel {
+  file: string; thumb?: string; min: number[]; max: number[]; materials: Array<{ name: string; color: number[] }>;
+  /** Milestone 10: names of the `anim:*` part nodes of a generated model. */
+  animNodes?: string[];
+  /** Milestone 10: picture rectangle of the `anim:screen` part (model space). */
+  screen?: { centre: number[]; normal: number[]; width: number; height: number };
+}
 export interface Manifest { furniture: Record<string, ManifestModel> }
 
 interface Template {
@@ -32,6 +38,8 @@ export const LAMP_MATERIAL = 'lamp';
  * GLB sub-nodes that must stay separate because the renderer pivots them (Milestone 11.5, doors and lids).
  * Keyed by asset. Every other node is merged by material as before; each listed node keeps its own origin
  * (the hinge in these models) and becomes a group named `part:<node>` inside the template.
+ * Milestone 10: every node whose name starts with `anim:` is kept the same way automatically (tools/furniture-extra
+ * `part()`), so generated models need no entry here.
  */
 export const PART_NODES: Record<string, readonly string[]> = {
   kitchenFridge: ['doorFridge'],
@@ -250,6 +258,20 @@ export class ObjectAssets {
   }
 }
 
+/** The node's name as authored in the GLB (GLTFLoader keeps it in userData.name when it had to sanitise `anim:door`). */
+function nodeSourceName(node: THREE.Object3D): string {
+  const raw = node.userData?.name;
+  return typeof raw === 'string' && raw ? raw : node.name;
+}
+
+/** True for the named parts of generated models (`anim:door`, `anim:drawer`, `anim:interior`, `anim:screen`, ...). */
+function isAnimNode(node: THREE.Object3D): boolean {
+  return nodeSourceName(node).startsWith(ANIM_NODE_PREFIX);
+}
+
+/** Node name prefix of the parts that stay separate (see tools/furniture-extra/kit.mjs). */
+export const ANIM_NODE_PREFIX = 'anim:';
+
 /**
  * Flattens a model into one mesh per material (geometry baked in the model's root space), so an instance costs
  * one draw call per material instead of one per node primitive. Named nodes in `keep` (doors/lids) are not
@@ -261,12 +283,14 @@ function mergeByMaterial(scene: THREE.Group, keep: readonly string[] = []): THRE
   scene.updateMatrixWorld(true);
   const parts: THREE.Object3D[] = [];
   const partOf = new Map<THREE.Object3D, THREE.Object3D>();
-  for (const name of keep) {
-    const node = scene.getObjectByName(name);
-    if (!node || node === scene) continue;
+  const keepNode = (node: THREE.Object3D | undefined) => {
+    if (!node || node === scene || parts.includes(node)) return;
     parts.push(node);
     node.traverse((o) => partOf.set(o, node));
-  }
+  };
+  for (const name of keep) keepNode(scene.getObjectByName(name));
+  // Milestone 10: `anim:*` nodes. GLTFLoader strips ':' from node names, so the original name is in userData.name.
+  scene.traverse((o) => { if (isAnimNode(o)) keepNode(o); });
   type GeoGroups = Map<THREE.Material, THREE.BufferGeometry[]>;
   const body: GeoGroups = new Map();
   const partGeos = new Map<THREE.Object3D, GeoGroups>();
@@ -314,8 +338,9 @@ function mergeByMaterial(scene: THREE.Group, keep: readonly string[] = []): THRE
       const groups = partGeos.get(node);
       if (!groups || groups.size === 0) continue;
       const pivot = new THREE.Group();
-      pivot.name = `part:${node.name}`;
-      pivot.userData.partName = node.name;
+      const partName = nodeSourceName(node);
+      pivot.name = `part:${partName}`;
+      pivot.userData.partName = partName;
       node.matrixWorld.decompose(pivot.position, pivot.quaternion, pivot.scale);
       // plain array: Object3D.clone() JSON-copies userData
       pivot.userData.baseQuaternion = [pivot.quaternion.x, pivot.quaternion.y, pivot.quaternion.z, pivot.quaternion.w];

@@ -9,6 +9,16 @@
 // so it floats just in front of the actual glass and never z-fights. `facing` is a unit normal
 // pointing out of the screen (the computer and laptop screens are tilted back a little).
 
+// Milestone 10: designs with `screen: true` (types.ts ObjectDef.screen) are not measured by hand. Their model has an
+// `anim:screen` part (tools/furniture-extra kit.mjs), the build measures its largest front face into
+// src/content/objectsM10/<group>.models.ts, and `deriveScreen` maps that model-space rectangle through the def's
+// fit transform exactly like the hand-measured entries below. A hand-measured entry in SCREENS wins.
+
+import { OBJECTS } from './objects';
+import { M10_MODELS } from './objectsM10';
+import type { M10ScreenQuad } from './objectsM10/modelInfo';
+import type { ObjectDef } from './types';
+
 export type ScreenKind = 'computer' | 'tv';
 
 export interface ScreenDef {
@@ -79,8 +89,50 @@ export const SCREENS: Record<string, ScreenDef> = {
   },
 };
 
+/** How far in front of the glass the derived picture floats (metres). */
+const DERIVED_OFFSET = 0.005;
+
+/**
+ * The picture rectangle of a design with `screen: true`: the model-space quad of its `anim:screen` part through the def's
+ * model transform (T * R * S, see content/objects.ts fit()). Undefined when the model has no measured screen.
+ */
+export function deriveScreen(def: Pick<ObjectDef, 'id' | 'model' | 'tags' | 'interactions'>, quad: M10ScreenQuad | undefined = M10_MODELS[def.model.asset]?.screen): ScreenDef | undefined {
+  if (!quad) return undefined;
+  const { scale, yaw, offset } = def.model;
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  // three.js rotation about +y: x' = x cos + z sin, z' = -x sin + z cos
+  const rot = (v: [number, number, number]): [number, number, number] => [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c];
+  const [cx, cy, cz] = rot(quad.centre);
+  const r4 = (v: number) => Math.round(v * 10000) / 10000;
+  const tv = def.tags.includes('tv') || def.interactions.includes('watchTv');
+  return {
+    defId: def.id,
+    kind: tv ? 'tv' : 'computer',
+    centre: [r4(cx * scale + offset[0]), r4(cy * scale + offset[1]), r4(cz * scale + offset[2])],
+    width: r4(quad.width * scale),
+    height: r4(quad.height * scale),
+    facing: unit(rot(quad.normal)),
+    offset: DERIVED_OFFSET,
+  };
+}
+
+let derived: Map<string, ScreenDef> | null = null;
+
+/** Screens derived from the catalog's `screen: true` designs, by def id. */
+export function derivedScreens(): ReadonlyMap<string, ScreenDef> {
+  if (!derived) {
+    derived = new Map();
+    for (const def of OBJECTS) {
+      if (!def.screen || SCREENS[def.id]) continue;
+      const screen = deriveScreen(def);
+      if (screen) derived.set(def.id, screen);
+    }
+  }
+  return derived;
+}
+
 export function screenFor(defId: string): ScreenDef | undefined {
-  return SCREENS[defId];
+  return SCREENS[defId] ?? derivedScreens().get(defId);
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -1,10 +1,13 @@
+import { readFileSync } from 'node:fs';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { describe, expect, it } from 'vitest';
 import { OBJECTS } from '../../../src/content/objects';
-import type { ContentDB } from '../../../src/content/types';
-import { PART_NODES } from '../../../src/render/objectAssets';
+import type { ContentDB, ObjectDef } from '../../../src/content/types';
+import { ObjectAssets, PART_NODES } from '../../../src/render/objectAssets';
 import {
-  ANIMATED_DEF_IDS, CLOSED_MOTION, DESCRIPTORS, activeParts, blankParts, descriptorFor, ease, isBakedRecipe,
-  opennessAt, seedMotion, stepMotion, type OpenMotion,
+  ANIMATED_DEF_IDS, CLOSED_MOTION, DESCRIPTORS, ObjectAnim, activeParts, allDescriptors, blankParts, descriptorFor, descriptorForDef, ease,
+  isBakedRecipe, opennessAt, seedMotion, stepMotion, type OpenMotion,
 } from '../../../src/render/objectAnim';
 import type { ObjectUse } from '../../../src/render/objectUse';
 
@@ -228,5 +231,109 @@ describe('objectAnim: openness', () => {
     const closing: OpenMotion = { from: 1, to: 0, since: 0, duration: 0.4, active: false };
     expect(opennessAt(closing, 0.3)).toBe(1 - ease(0.75));
     expect(opennessAt(closing, 1.2)).toBe(0);
+  });
+});
+
+describe('objectAnim: content-declared animation (Milestone 10)', () => {
+  const fridge = defId('fridge-retro-tall');
+  const chest = defId('chest-of-drawers');
+
+  it('builds a descriptor from ObjectDef.anim, after the table', () => {
+    const d = descriptorForDef(fridge)!;
+    expect(descriptorFor('fridge-retro-tall')).toBe(d);
+    expect(d.kind).toBe('fridge');
+    expect(d.asset).toBe('fridgeRetroTall');
+    expect(d.parts.map((p) => [p.role, p.kind === 'node' && p.node])).toEqual([['door', 'anim:door'], ['interior', 'anim:interior']]);
+    const drawers = descriptorForDef(chest)!;
+    expect(drawers.kind).toBe('openWhileUsed');
+    expect(drawers.parts.map((p) => p.kind === 'node' && p.slide)).toEqual([[0, 0, 0.3], [0, 0, 0.3]]);
+    // the table wins for a def it lists
+    const clash: ObjectDef = { ...fridge, id: 'fridge-standard', model: defId('fridge-standard').model };
+    expect(descriptorForDef(clash)).toBe(descriptorFor('fridge-standard'));
+    expect(allDescriptors().length).toBe(DESCRIPTORS.length + OBJECTS.filter((o) => o.anim && !ANIMATED_DEF_IDS.includes(o.id)).length);
+  });
+
+  it('opens the retro fridge with the existing openFridge trigger', () => {
+    const d = descriptorForDef(fridge)!;
+    expect(activeParts(d, [use({ interactionId: 'grabSnack', anim: 'openFridge', animSince: 7 })], CONTENT).door).toEqual({ on: true, since: 7 });
+    expect(activeParts(d, [use({ interactionId: 'grabSnack', anim: 'eat' })], CONTENT).door.on).toBe(false);
+  });
+
+  it('openWhileUsed opens every door, lid and drawer during the listed interactions only', () => {
+    const d = descriptorForDef(chest)!;
+    const a = activeParts(d, [use({ interactionId: 'changeOutfit', animSince: 3 })], CONTENT);
+    expect([a.drawer.on, a.drawer2.on, a.door.on]).toEqual([true, true, true]);
+    expect(a.drawer.since).toBe(3);
+    expect(activeParts(d, [use({ interactionId: 'cleanObject' })], CONTENT).drawer.on).toBe(false);
+    // without `on`, any interaction opens it
+    const any = { ...d, on: undefined };
+    expect(activeParts(any, [use({ interactionId: 'whatever' })], CONTENT).drawer2.on).toBe(true);
+    expect(activeParts(any, [], CONTENT)).toEqual(blankParts());
+  });
+
+  describe('on the real models', () => {
+    async function instance(def: ObjectDef) {
+      const asset = def.model.asset;
+      const buf = readFileSync(`public/assets/furniture/${asset}.glb`);
+      const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+      const assets = new ObjectAssets('');
+      (assets as unknown as { loader: unknown }).loader = {
+        loadAsync: () => new Promise((res, rej) => new GLTFLoader().parse(ab, '', res, rej)),
+      };
+      assets.manifest = { furniture: { [asset]: { file: `${asset}.glb`, min: [0, 0, 0], max: [1, 1, 1], materials: [] } } };
+      await assets.load(asset);
+      const model = assets.instance(def, {})!;
+      const holder = new THREE.Group();
+      holder.add(model);
+      return { model, holder };
+    }
+
+    it('ObjectAssets keeps every anim:* node as a part:<name> pivot without a PART_NODES entry', async () => {
+      expect(PART_NODES.fridgeRetroTall).toBeUndefined();
+      const { model } = await instance(fridge);
+      const door = model.getObjectByName('part:anim:door')!;
+      expect(door).toBeTruthy();
+      expect(model.getObjectByName('part:anim:interior')).toBeTruthy();
+      // origin at the hinge: x = 0 (left edge), z = the door's mid thickness, in half-scale model units
+      expect(door.position.x).toBeCloseTo(0, 5);
+      expect(door.position.z).toBeCloseTo((0.7 + 0.025) * 0.5, 4);
+      const { model: drawers } = await instance(chest);
+      expect(drawers.getObjectByName('part:anim:drawer1')).toBeTruthy();
+      expect(drawers.getObjectByName('part:anim:drawer2')).toBeTruthy();
+    });
+
+    it('swings the door, shows the interior only while open, and puts the door back', async () => {
+      const { model } = await instance(fridge);
+      const anim = new ObjectAnim(fridge, model, CONTENT);
+      const door = model.getObjectByName('part:anim:door')!;
+      const interior = model.getObjectByName('part:anim:interior')!;
+      expect(interior.visible).toBe(false);
+      anim.update([], 0, 0.016, true);
+      expect(interior.visible).toBe(false);
+      anim.update([use({ interactionId: 'grabSnack', anim: 'openFridge', animSince: 0 })], 1, 0.016, true);
+      const q = door.quaternion;
+      expect(2 * Math.acos(Math.abs(q.w))).toBeCloseTo(1.75, 3);
+      expect(q.y).toBeLessThan(0); // negative turn about y: the door swings out to +z
+      expect(interior.visible).toBe(true);
+      anim.update([], 2, 0.016, true);
+      expect(door.quaternion.w).toBeCloseTo(1, 6);
+      expect(interior.visible).toBe(false);
+    });
+
+    it('slides the drawers by the declared distance (fitted metres) while the chest is used', async () => {
+      const { model } = await instance(chest);
+      const anim = new ObjectAnim(chest, model, CONTENT);
+      const d1 = model.getObjectByName('part:anim:drawer1')!;
+      const rest = d1.position.clone();
+      anim.update([], 0, 0.016, true);
+      expect(d1.position.distanceTo(rest)).toBeLessThan(1e-9);
+      anim.update([use({ interactionId: 'changeOutfit', animSince: 0 })], 1, 0.016, true);
+      // 0.3 m in the fitted space is 0.3 / scale in the model's own units
+      expect(d1.position.z - rest.z).toBeCloseTo(0.3 / chest.model.scale, 5);
+      expect(d1.position.x - rest.x).toBeCloseTo(0, 9);
+      expect(model.getObjectByName('part:anim:drawer2')!.position.z).toBeGreaterThan(rest.z);
+      anim.update([], 2, 0.016, true);
+      expect(d1.position.distanceTo(rest)).toBeLessThan(1e-9);
+    });
   });
 });

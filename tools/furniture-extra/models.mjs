@@ -2,6 +2,7 @@
 // depth with the FRONT at the high-z end, y up. Every model stays inside its footprint so that fit() can centre it.
 
 import { Model } from './kit.mjs';
+import { M10_GROUPS } from './m10/index.mjs';
 
 const range = (n) => Array.from({ length: n }, (_, i) => i);
 
@@ -741,16 +742,47 @@ function breadOven() {
   return m;
 }
 
-export const EXTRA_MODELS = {
+/** The models of Milestones 4-11 (group 'base'). The Milestone 10 groups live in m10/<group>.mjs. */
+const BASE_MODELS = {
   dishwasher, easel, piano, treadmill, weightBench, chessTable, crib, toyChest, grill, patioSet, gardenBed, gardenBench, gardenChair,
   tree, shrub, fountain, playgroundSlide, swingSet, serviceCounter, produceStand, vendingMachine, studyNotes, lockerBank,
   bassinet, highChair, toddlerBed, pottyChair, changingTable, birthdayCake, cameraTripod, telescope, fishingPond,
   yogaMat, sketchbook, breadOven,
 };
 
-/** Builds every model keyed by its asset name (the GLB file name). */
-export function buildModels() {
+/** group name -> { modelName: builderFn }: 'base' plus every file of m10/. */
+export const MODEL_GROUPS = { base: BASE_MODELS, ...M10_GROUPS };
+
+/**
+ * Flattens { group: { name: builder } } into { all: name -> builder, groupOf: name -> group }. A name defined in two groups,
+ * a name that is not camelCase or a value that is not a function throws.
+ */
+export function mergeModelGroups(groups) {
+  const all = {}, groupOf = {};
+  for (const [group, record] of Object.entries(groups)) {
+    for (const [name, make] of Object.entries(record)) {
+      if (!/^[a-z][A-Za-z0-9]*$/.test(name)) throw new Error(`furniture model '${name}' (group ${group}): use a camelCase name`);
+      if (typeof make !== 'function') throw new Error(`furniture model '${name}' (group ${group}) is not a builder function`);
+      if (name in all) throw new Error(`furniture model '${name}' is defined in both '${groupOf[name]}' and '${group}'`);
+      all[name] = make;
+      groupOf[name] = group;
+    }
+  }
+  return { all, groupOf };
+}
+
+const merged = mergeModelGroups(MODEL_GROUPS);
+
+/** model name -> group name. */
+export const MODEL_GROUP_OF = merged.groupOf;
+
+/** Every model builder by asset name. */
+export const EXTRA_MODELS = merged.all;
+
+/** Builds every model (or only those of one group) keyed by its asset name (the GLB file name). */
+export function buildModels(group) {
+  if (group !== undefined && !(group in MODEL_GROUPS)) throw new Error(`unknown furniture group '${group}' (have ${Object.keys(MODEL_GROUPS).join(', ')})`);
   const out = {};
-  for (const [name, make] of Object.entries(EXTRA_MODELS)) { const m = make(); m.id = name; out[name] = m; }
+  for (const [name, make] of Object.entries(group === undefined ? EXTRA_MODELS : MODEL_GROUPS[group])) { const m = make(); m.id = name; out[name] = m; }
   return out;
 }
