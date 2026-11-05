@@ -10,7 +10,7 @@
 // paint preview, walls up vs cutaway. Fails on page errors, console errors, failed requests, blank canvases.
 //
 // Only one browser runs at a time on this machine: the script re-runs itself under
-// `flock /tmp/hearthside-browser.lock`.
+// `flock /tmp/hearthside-browser.lock`. Pass `--no-lock` only to recover from a stale lock left by an orphaned run.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -26,7 +26,9 @@ const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
 const opt = (name, def) => { const a = args.find((x) => x.startsWith(`--${name}=`)); return a ? a.slice(name.length + 3) : def; };
 
-if (!process.env.HEARTHSIDE_E2E_LOCKED) {
+// `--no-lock` skips the lock only to recover from a stale lock held by an orphaned run (never use it while another
+// browser script is actually running).
+if (!process.env.HEARTHSIDE_E2E_LOCKED && !args.includes('--no-lock')) {
   const r = spawnSync('flock', [LOCK, process.execPath, fileURLToPath(import.meta.url), ...args], {
     stdio: 'inherit', env: { ...process.env, HEARTHSIDE_E2E_LOCKED: '1' },
   });

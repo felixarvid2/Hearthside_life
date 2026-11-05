@@ -345,7 +345,10 @@ async function stageReading(page) {
           const a = st.people[m].queue[0];
           if (!a) break;
           if (a.phase === 'perform') {
-            a.elapsed = Math.min(a.duration ?? 45, 20);
+            // Short of the end, then one tick so the shot is not the very first perform frame (the pose is still
+            // settling from the walk-in on that tick).
+            a.elapsed = Math.min((a.duration ?? 45) - 1, 20);
+            h.debug.step(1);
             const p = st.people[m];
             return {
               ok: true, id: m, name: p.firstName, anim: p.anim.id, interactionId: a.interactionId,

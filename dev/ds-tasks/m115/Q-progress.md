@@ -70,7 +70,8 @@ into the wall/pantry). Other states re-shot with their previous promoted angles 
 
 H re-shoot: the camera for prop shots now uses a front view (`view = 'front'` in `focus`) instead of always behind
 the shoulder; the old behind view hid the apple/ingredients/phone behind the torso and put a chair back in front of
-the seated eater. `carry-plate` keeps the behind-the-shoulder view because the carried plate reads well from there.
+the seated eater. `carry-plate` uses the front view too: the plate is carried in front of the belly, so from behind it
+was hidden behind the torso (the portrait frame was a dark close-up of the kitchen units).
 
 ## Checks
 

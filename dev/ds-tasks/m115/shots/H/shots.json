@@ -48,5 +48,90 @@
     "name": "landscape: ingredients appear in the hand during the fridge reach",
     "ok": true,
     "evidence": "Theo openFridge at 1.5/2 — hand-prop-ingredients"
+  },
+  {
+    "name": "landscape: a snack is in the hand half-way through eating",
+    "ok": true,
+    "evidence": "Theo eat at 2.5/5 — hand-prop-apple"
+  },
+  {
+    "name": "landscape: a full plate is carried to the seat",
+    "ok": true,
+    "evidence": "Theo pickUp (standing) food=grilled-cheese — hand-prop-plate"
+  },
+  {
+    "name": "landscape: eating happens seated at a table",
+    "ok": true,
+    "evidence": "Theo eat (seated) 25 min"
+  },
+  {
+    "name": "landscape: at 20% the plate is on the table and the fork is in the hand",
+    "ok": true,
+    "evidence": "{\"elapsed\":5,\"duration\":25,\"posture\":\"seated\",\"anim\":\"eat\"} — hand-prop-fork, hand-prop-plate; food=[0.84]"
+  },
+  {
+    "name": "landscape: at 80% the portion is visibly smaller and the fork is still in hand",
+    "ok": true,
+    "evidence": "{\"elapsed\":20,\"duration\":25,\"posture\":\"seated\",\"anim\":\"eat\"}; food [0.84] -> [0.36] — hand-prop-fork, hand-prop-plate"
+  },
+  {
+    "name": "landscape: an open book is held while reading",
+    "ok": true,
+    "evidence": "Theo pickUp readBook — hand-prop-book"
+  },
+  {
+    "name": "landscape: a lit phone is held during a call",
+    "ok": true,
+    "evidence": "Theo phone phoneChat — hand-prop-phone"
+  },
+  {
+    "name": "landscape: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: ingredients appear in the hand during the fridge reach",
+    "ok": true,
+    "evidence": "Theo openFridge at 1.5/2 — hand-prop-ingredients"
+  },
+  {
+    "name": "desktop: a snack is in the hand half-way through eating",
+    "ok": true,
+    "evidence": "Theo eat at 2.5/5 — hand-prop-apple"
+  },
+  {
+    "name": "desktop: a full plate is carried to the seat",
+    "ok": true,
+    "evidence": "Theo pickUp (standing) food=grilled-cheese — hand-prop-plate"
+  },
+  {
+    "name": "desktop: eating happens seated at a table",
+    "ok": true,
+    "evidence": "Theo eat (seated) 25 min"
+  },
+  {
+    "name": "desktop: at 20% the plate is on the table and the fork is in the hand",
+    "ok": true,
+    "evidence": "{\"elapsed\":5,\"duration\":25,\"posture\":\"seated\",\"anim\":\"eat\"} — hand-prop-fork, hand-prop-plate; food=[0.84]"
+  },
+  {
+    "name": "desktop: at 80% the portion is visibly smaller and the fork is still in hand",
+    "ok": true,
+    "evidence": "{\"elapsed\":20,\"duration\":25,\"posture\":\"seated\",\"anim\":\"eat\"}; food [0.84] -> [0.36] — hand-prop-fork, hand-prop-plate"
+  },
+  {
+    "name": "desktop: an open book is held while reading",
+    "ok": true,
+    "evidence": "Theo pickUp readBook — hand-prop-book"
+  },
+  {
+    "name": "desktop: a lit phone is held during a call",
+    "ok": true,
+    "evidence": "Theo phone phoneChat — hand-prop-phone"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
   }
 ]
