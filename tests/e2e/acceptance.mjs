@@ -3538,8 +3538,6 @@ async function stepAnimations(T) {
       pill: window.__t.pill(m), fridge: window.__t.objectAnimState(f), props: window.__t.handProps(m),
       screen: window.__t.screenMode(c),
       act: a ? { id: a.interactionId, stage: a.data?.stage ?? null, phase: a.phase, elapsed: a.elapsed, duration: a.duration, anim: p.anim?.id ?? null } : null,
-      person: p ? { level: p.location.level, x: Math.round(p.location.x * 10) / 10, z: Math.round(p.location.z * 10) / 10, anim: p.anim?.id ?? null, energy: p.needs?.energy ?? null, hunger: p.needs?.hunger ?? null } : null,
-      toast: document.querySelector('.toast')?.textContent ?? null,
     };
   }, [member, fridge, computer]);
   const clearQueue = async (member) => {
@@ -3562,13 +3560,20 @@ async function stepAnimations(T) {
 
   const info = await page.evaluate(() => {
     const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId], hh = st.households[st.activeHouseholdId];
+    const g = window.hearthside.game;
     const find = (re) => Object.values(lot.objects).find((o) => re.test(o.defId));
     const fridge = find(/fridge/), computer = find(/computer/), stove = find(/stove/);
+    // Step 11 builds a floor and can leave the household upstairs. The cook behaviour only looks for a stove on the
+    // actor's own level, so prefer a member who is already on the ground floor (where the kitchen is).
+    const onLot = hh.memberIds.filter((id) => st.people[id].location.kind === 'lot');
+    const canCook = (id) => !!fridge && g.options(id, { kind: 'object', objectId: fridge.id }).some((o) => o.interactionId === 'cookMeal' && o.enabled);
+    const member = onLot.find((id) => st.people[id].location.level === 0 && canCook(id))
+      ?? onLot.find((id) => st.people[id].location.level === 0) ?? onLot.find(canCook) ?? onLot[0] ?? null;
     return {
       fridge: fridge?.id ?? null, fridgeDef: fridge?.defId ?? null, stove: stove?.id ?? null,
       computer: computer?.id ?? null, computerDef: computer?.defId ?? null, computerLevel: computer?.level ?? 0,
-      member: hh.memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null,
-      memberLevel: (() => { const id = hh.memberIds.find((x) => st.people[x].location.kind === 'lot'); return id ? st.people[id].location.level : null; })(),
+      member, memberLevel: member ? st.people[member].location.level : null,
+      onLot: onLot.map((id) => ({ id, level: st.people[id].location.level, cook: canCook(id) })),
     };
   });
   T.check(S, 'the home has a fridge, a stove and a computer', !!info.fridge && !!info.stove && !!info.computer, JSON.stringify(info));
@@ -3577,7 +3582,8 @@ async function stepAnimations(T) {
     await runUntil(T, 4 * 240, 'Object.values(st.people).some((p) => p.householdId === st.activeHouseholdId && p.location.kind === \'lot\')');
     member = await page.evaluate(() => {
       const st = window.hearthside.debug.state(), hh = st.households[st.activeHouseholdId];
-      return hh.memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null;
+      const onLot = hh.memberIds.filter((id) => st.people[id].location.kind === 'lot');
+      return onLot.find((id) => st.people[id].location.level === 0) ?? onLot[0] ?? null;
     });
   }
   T.check(S, 'a household member is on the lot to cook', !!member, String(member));
@@ -3587,6 +3593,24 @@ async function stepAnimations(T) {
   await T.frames(24);
   await settle(T);
   await clearQueue(member);
+  // If step 11 left the chosen member on another floor, walk them to the kitchen floor first, as a player would:
+  // cookMeal's check only accepts a stove on the actor's own level.
+  const startLevel = await page.evaluate((m) => window.hearthside.debug.state().people[m].location.level, member);
+  if (startLevel !== 0) {
+    const walk = await page.evaluate(([m, f]) => {
+      const h = window.hearthside; const st = h.debug.state(); const o = st.lots[st.activeLotId].objects[f];
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const t = { x: o.x + dx, z: o.z + dz, level: 0 };
+        const r = h.game.goTo(m, t);
+        if (r.ok) return { ok: true, tile: t };
+      }
+      return { ok: false };
+    }, [member, info.fridge]);
+    const down = await runUntil(T, 4 * 240, `st.people['${member}'].location.level === 0`);
+    // Autonomy can queue something (e.g. Sleep) in the tick the walk ends; clear it so the cook is next.
+    await clearQueue(member);
+    log('step 13 walked down', JSON.stringify({ from: startLevel, walk, down: down.done }));
+  }
 
   // ---- Cook a Meal: the fridge reach-in (stage 0), the stove (stage 1), the plate (stage 2), then eatMeal
   const ready = await runUntil(T, 4 * 120, `g.options('${member}', { kind: 'object', objectId: '${info.fridge}' }).some((o) => o.interactionId === 'cookMeal' && o.enabled)`);
@@ -3600,7 +3624,6 @@ async function stepAnimations(T) {
   }, [member, info.fridge]);
   T.check(S, 'Cook a Meal is queued', queued.ok, JSON.stringify({ queued, ready: ready.done }));
   if (!queued.ok) return;
-  log('step 13 queued', JSON.stringify(await probe(member, info.fridge, info.computer)));
 
   // stage 0, late enough for the ingredients prop: the pill, the anchor above the head and the open fridge door
   const stage0 = await runUntil(T, 4 * 90, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'cookMeal' && a.data.stage === 0 && a.phase === 'perform' && a.elapsed >= 1.4; })()`);
@@ -3610,7 +3633,6 @@ async function stepAnimations(T) {
   await runUntil(T, 1, 'false'); // at speed 0 frames do not advance the clock: one tick (0.25 game minutes) lets the door move
   await render();
   const A = await probe(member, info.fridge, info.computer);
-  log('step 13 probe', JSON.stringify(A));
   const head = await page.evaluate((m) => window.__t.person(m, 1.2), member);
   const doorA = A.fridge?.parts?.find((p) => p.flag === 'door');
   T.check(S, 'the progress pill appears above the head while cooking', !!A.pill && !A.pill.hidden && /Cook a Meal/i.test(A.pill.label ?? '') && A.pill.value >= 1 && A.pill.value < 100, JSON.stringify({ pill: A.pill, stage0: stage0.done, act: A.act }));

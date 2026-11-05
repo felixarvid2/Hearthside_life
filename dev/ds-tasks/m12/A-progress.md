@@ -1,6 +1,8 @@
 # Task A: acceptance steps and documentation for Milestones 11.5 and 12
 
-State: in progress (acceptance runs per viewport under way).
+State: in progress (acceptance runs per viewport under way). Step 13 now picks a member who is on the kitchen floor
+after step 11, or walks the chosen one down first: Cook a Meal's check only accepts a stove on the actor's own level,
+while the option is offered from any floor, so in the full run the action was cancelled on its first tick upstairs.
 
 ## What was added to `tests/e2e/acceptance.mjs`
 
@@ -32,8 +34,8 @@ Explicit, realistic timeouts instead of a global change:
 
 | Viewport | Steps 13, 14 (targeted `--steps=13,14 --fast-start`) | Full run (steps 1-14) |
 |---|---|---|
-| portrait 390x844 | 43/43 | running |
-| landscape 844x390 | 43/43 | running |
+| portrait 390x844 | 43/43 | 358/358 |
+| landscape 844x390 | 43/43 | 356/356 |
 | desktop 1280x720 | running | running |
 
 ## Other checks
