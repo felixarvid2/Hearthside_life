@@ -27,8 +27,8 @@ the rest of Milestone 10, then Milestone 13 (release preparation).
 ## How to check Milestones 11.5 and 12
 
 Acceptance steps 13 and 14 run in every viewport (step 13 is M11.5, step 14 is M12); run them alone with
-`npm run e2e:acceptance -- --only=portrait --steps=13,14 --fast-start` (portrait or landscape; the desktop viewport
-takes about 40 minutes for the full run).
+`npm run e2e:acceptance -- --only=portrait --steps=13,14 --fast-start` (portrait or landscape; the two steps alone
+take about 5-10 minutes per viewport, while the full desktop run takes about 68 minutes).
 
 - **Animations and feedback (step 13).** Pause the game, select a household member and queue Cook a Meal at the fridge.
   Step 11 can leave the household upstairs, so the step first picks a member who is already on the kitchen floor, or
@@ -113,6 +113,25 @@ Checks on the M11 state (own PR):
 
 The M11 numbers above were rerun on the final tree after task E (2026-11-03): typecheck clean, 129 files / 1746 tests, content
 0/0, build passes with the existing 2.27 MB main-chunk warning.
+
+Checks on the M11.5 and M12 state (this PR, rerun on the final tree 2026-11-05):
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` | 160 files, 2074 tests |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | passes (main chunk 2.82 MB, warning only) |
+| `npm run e2e` | OK in desktop, landscape and portrait |
+| `npm run e2e:creator` | 288/288 in portrait, landscape and desktop |
+| `npm run e2e:acceptance`, portrait 390x844 | 358/358 (about 23 minutes) |
+| `npm run e2e:acceptance`, landscape 844x390 | 356/356 (about 25 minutes) |
+| `npm run e2e:acceptance`, desktop 1280x720 | 344/344 (about 68 minutes) |
+| Steps 13 and 14 alone (`--steps=13,14 --fast-start`) | 43/43 portrait and landscape, 42/42 desktop |
+
+The acceptance counts differ by viewport because the touch audits add target-size checks. The per-viewport totals and the
+six app/test causes found by the full runs are in `dev/ds-tasks/m12/A-progress.md`.
+
 Acceptance step 10 is `stepFamily` (M8); step 11 is `stepFloors`, then `stepExterior` (M9). `--steps=12` runs the exterior part alone.
 Fixed late in M9: stairs did not show their mesh after a lot change. The cause was a stale pending promise in `render/objectAssets.ts`
 together with a purge in `setLot`. Runtime models are no longer purged, and acceptance checks `view.objects.hasModel(id)`.
@@ -200,8 +219,9 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
     stable" although the tab has not moved. The software renderer holds the page for most of a minute on a first paint
     (new shaders when Build or a tool opens), and Playwright gives up waiting for a stable frame. `T.tap` now retries
     once with a 60 s timeout and logs `tap retry after …`; the retried step passes without a layout change.
-  - Desktop acceptance takes about 35-40 minutes.
-- Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
+  - Acceptance run time on the final tree: about 23 minutes portrait, 25 landscape and 68 minutes desktop
+    (SwiftShader; the desktop run renders 1280x720 and spends most of its time in screenshots).
+- Main JS chunk about 2.82 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.
 - Boot progress bar is not driven.
 - M7 neighbourhood:
