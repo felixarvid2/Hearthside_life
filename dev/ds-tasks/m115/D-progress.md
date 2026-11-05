@@ -272,11 +272,18 @@ Run on the current tree, with the other agents' work present but no edits of min
 | `npx vitest run --no-file-parallelism` | **159 files / 2055 tests passed**, 473.13 s |
 | `npm run content:check` | 0 errors, 0 warnings |
 | `npm run build` | pass (earlier run); the e2e script's own `vite build` also succeeded in the final e2e run |
-| `npm run e2e` | see below |
+| `npm run e2e` | **pass** — desktop, portrait and landscape, 17 shots each, `failures: []`, `[e2e] OK` |
 | targeted `tests/unit/render/objectAnim.test.ts` + `objectUse.test.ts` | 25/25 |
 
 - The earlier full run under parallel load (four agents plus screenshot browsers) reported failures; every one was a
   timeout in a heavy sim/integration suite. Re-running those four files sequentially was green (30/30), and the whole
   suite sequential is green as above, so those were load artefacts rather than regressions.
-- E2E result: _pending at the time this section was written; updated below._
+- E2E details: the run builds `dist` itself (that `vite build` succeeded), serves it with `vite preview`, and checks
+  picking, seated/sleeping postures, wall hiding/cutaway, buy/build ghosts, night lighting, stats and the character
+  creator. All 51 screenshots passed the luminance/contrast checks; the low-quality stats read 13-31 fps and
+  2.4-3.4 ms of explicit frame time per viewport. No page errors or failed requests were reported.
+- The promoted task-D screenshots were checked by eye and with the `d-crop.test.ts` diagnostic; the fridge
+  closed/open pair, stove rings/pan/steam, wardrobe doors and shower water are legible in all three viewports.
+- `bash tools/te-save.sh` could not be run from this session (the Bash permission checker rejects it); the
+  supervisor's commit should run it and include `.tokeneconomizer/` with the rest, as CLAUDE.md requires.
 
