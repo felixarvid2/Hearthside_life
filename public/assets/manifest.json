@@ -7901,156 +7901,62 @@
     "anim:drawer2"
    ]
   },
-  "chairSpindle": {
-   "file": "furniture/chairSpindle.glb",
-   "thumb": "furniture/thumbs/chairSpindle.png",
+  "diningRoundPedestal": {
+   "file": "furniture/diningRoundPedestal.glb",
+   "thumb": "furniture/thumbs/diningRoundPedestal.png",
    "min": [
-    0.1238,
-    -0.0023,
-    0.1138
-   ],
-   "max": [
-    0.3762,
-    0.495,
-    0.3862
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairBentwood": {
-   "file": "furniture/chairBentwood.glb",
-   "thumb": "furniture/thumbs/chairBentwood.png",
-   "min": [
-    0.1201,
-    -0.0034,
-    0.1398
-   ],
-   "max": [
-    0.3799,
-    0.495,
-    0.3646
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairShell": {
-   "file": "furniture/chairShell.glb",
-   "thumb": "furniture/thumbs/chairShell.png",
-   "min": [
-    0.1051,
-    -0.0033,
-    0.095
-   ],
-   "max": [
-    0.3949,
-    0.44,
-    0.3951
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairTolix": {
-   "file": "furniture/chairTolix.glb",
-   "thumb": "furniture/thumbs/chairTolix.png",
-   "min": [
-    0.1063,
-    -0.002,
-    0.1112
-   ],
-   "max": [
-    0.3937,
-    0.4311,
-    0.3888
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairParsons": {
-   "file": "furniture/chairParsons.glb",
-   "thumb": "furniture/thumbs/chairParsons.png",
-   "min": [
-    0.125,
     0,
-    0.13
+    0,
+    0
    ],
    "max": [
+    0.65,
     0.375,
-    0.5,
-    0.37
+    0.65
    ],
    "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "diningSquareModern": {
+   "file": "furniture/diningSquareModern.glb",
+   "thumb": "furniture/thumbs/diningSquareModern.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.7,
+    0.3825,
+    0.7
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
     {
      "name": "wood",
      "color": [
@@ -8060,400 +7966,28 @@
      ]
     },
     {
-     "name": "carpetBlue",
+     "name": "metal",
      "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
+      0.741,
+      0.823,
+      0.84
      ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "chairHighBack": {
-   "file": "furniture/chairHighBack.glb",
-   "thumb": "furniture/thumbs/chairHighBack.png",
+  "diningPlankFarm": {
+   "file": "furniture/diningPlankFarm.glb",
+   "thumb": "furniture/thumbs/diningPlankFarm.png",
    "min": [
-    0.115,
     0,
-    0.125
+    0,
+    0
    ],
    "max": [
+    0.95,
     0.385,
-    0.66,
-    0.375
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairCrossBack": {
-   "file": "furniture/chairCrossBack.glb",
-   "thumb": "furniture/thumbs/chairCrossBack.png",
-   "min": [
-    0.1275,
-    0,
-    0.1275
-   ],
-   "max": [
-    0.3725,
-    0.5,
-    0.3725
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairRattan": {
-   "file": "furniture/chairRattan.glb",
-   "thumb": "furniture/thumbs/chairRattan.png",
-   "min": [
-    0.119,
-    -0.0025,
-    0.1349
-   ],
-   "max": [
-    0.381,
-    0.621,
-    0.3851
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairFolding": {
-   "file": "furniture/chairFolding.glb",
-   "thumb": "furniture/thumbs/chairFolding.png",
-   "min": [
-    0.13,
-    -0.0049,
-    0.1275
-   ],
-   "max": [
-    0.37,
-    0.4505,
-    0.36
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "stoolIndustrial": {
-   "file": "furniture/stoolIndustrial.glb",
-   "thumb": "furniture/thumbs/stoolIndustrial.png",
-   "min": [
-    0.1313,
-    -0.0019,
-    0.1312
-   ],
-   "max": [
-    0.3687,
-    0.385,
-    0.3688
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "stoolBackrest": {
-   "file": "furniture/stoolBackrest.glb",
-   "thumb": "furniture/thumbs/stoolBackrest.png",
-   "min": [
-    0.145,
-    -0.0005,
-    0.13
-   ],
-   "max": [
-    0.355,
-    0.525,
-    0.3587
-   ],
-   "materials": [
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "stoolRustic": {
-   "file": "furniture/stoolRustic.glb",
-   "thumb": "furniture/thumbs/stoolRustic.png",
-   "min": [
-    0.1326,
-    -0.0039,
-    0.1165
-   ],
-   "max": [
-    0.3674,
-    0.37,
-    0.35
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "stoolLeather": {
-   "file": "furniture/stoolLeather.glb",
-   "thumb": "furniture/thumbs/stoolLeather.png",
-   "min": [
-    0.145,
-    0,
-    0.145
-   ],
-   "max": [
-    0.355,
-    0.39,
-    0.355
-   ],
-   "materials": [
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "stoolMilking": {
-   "file": "furniture/stoolMilking.glb",
-   "thumb": "furniture/thumbs/stoolMilking.png",
-   "min": [
-    0.1515,
-    -0.0062,
-    0.155
-   ],
-   "max": [
-    0.3485,
-    0.155,
-    0.3617
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "stoolSwivel": {
-   "file": "furniture/stoolSwivel.glb",
-   "thumb": "furniture/thumbs/stoolSwivel.png",
-   "min": [
-    0.1445,
-    0.0013,
-    0.1629
-   ],
-   "max": [
-    0.3612,
-    0.49,
-    0.3838
-   ],
-   "materials": [
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "armchairWingback": {
-   "file": "furniture/armchairWingback.glb",
-   "thumb": "furniture/thumbs/armchairWingback.png",
-   "min": [
-    0.035,
-    0,
-    0.06
-   ],
-   "max": [
-    0.465,
-    0.56,
     0.45
    ],
    "materials": [
@@ -8466,124 +8000,32 @@
      ]
     },
     {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "armchairClub": {
-   "file": "furniture/armchairClub.glb",
-   "thumb": "furniture/thumbs/armchairClub.png",
-   "min": [
-    0.0325,
-    0,
-    0.05
-   ],
-   "max": [
-    0.4675,
-    0.5,
-    0.455
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "armchairMidcentury": {
-   "file": "furniture/armchairMidcentury.glb",
-   "thumb": "furniture/thumbs/armchairMidcentury.png",
-   "min": [
-    0.0276,
-    -0.0034,
-    0.0474
-   ],
-   "max": [
-    0.4724,
-    0.5013,
-    0.4526
-   ],
-   "materials": [
-    {
      "name": "wood",
      "color": [
       0.896,
       0.602,
       0.393
      ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "armchairBarrel": {
-   "file": "furniture/armchairBarrel.glb",
-   "thumb": "furniture/thumbs/armchairBarrel.png",
+  "diningExtendable": {
+   "file": "furniture/diningExtendable.glb",
+   "thumb": "furniture/thumbs/diningExtendable.png",
    "min": [
-    0.031,
     0,
-    0.0432
+    0,
+    0
    ],
    "max": [
-    0.469,
-    0.45,
+    1.35,
+    0.386,
     0.475
    ],
    "materials": [
     {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
      "name": "wood",
      "color": [
       0.896,
@@ -8591,32 +8033,6 @@
       0.393
      ]
     },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "armchairPapasan": {
-   "file": "furniture/armchairPapasan.glb",
-   "thumb": "furniture/thumbs/armchairPapasan.png",
-   "min": [
-    0.0003,
-    -0.0072,
-    0.0003
-   ],
-   "max": [
-    0.4997,
-    0.425,
-    0.479
-   ],
-   "materials": [
     {
      "name": "woodDark",
      "color": [
@@ -8624,50 +8040,178 @@
       0.456,
       0.299
      ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "armchairSlipcover": {
-   "file": "furniture/armchairSlipcover.glb",
-   "thumb": "furniture/thumbs/armchairSlipcover.png",
+  "diningMidCentury": {
+   "file": "furniture/diningMidCentury.glb",
+   "thumb": "furniture/thumbs/diningMidCentury.png",
    "min": [
-    0.05,
     0,
-    0.06
+    0.0073,
+    0
    ],
    "max": [
-    0.45,
-    0.475,
+    0.85,
+    0.375,
     0.45
    ],
    "materials": [
     {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "diningIndustrialPipe": {
+   "file": "furniture/diningIndustrialPipe.glb",
+   "thumb": "furniture/thumbs/diningIndustrialPipe.png",
+   "min": [
+    0,
+    0,
+    0.002
+   ],
+   "max": [
+    0.9,
+    0.39,
+    0.423
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "diningBistro": {
+   "file": "furniture/diningBistro.glb",
+   "thumb": "furniture/thumbs/diningBistro.png",
+   "min": [
+    -0.005,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.38,
+    0.385,
+    0.38
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "diningDropLeaf": {
+   "file": "furniture/diningDropLeaf.glb",
+   "thumb": "furniture/thumbs/diningDropLeaf.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.8,
+    0.375,
+    0.4
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "diningMarbleLuxury": {
+   "file": "furniture/diningMarbleLuxury.glb",
+   "thumb": "furniture/thumbs/diningMarbleLuxury.png",
+   "min": [
+    -0.0025,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.9525,
+    0.39,
+    0.4775
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
      "name": "carpetWhite",
      "color": [
       0.973,
@@ -8676,29 +8220,97 @@
      ]
     },
     {
-     "name": "carpetBlue",
+     "name": "woodDark",
      "color": [
-      0.356,
-      0.517,
-      0.868
+      0.678,
+      0.456,
+      0.299
      ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "armchairRocking": {
-   "file": "furniture/armchairRocking.glb",
-   "thumb": "furniture/thumbs/armchairRocking.png",
+  "diningPicnic": {
+   "file": "furniture/diningPicnic.glb",
+   "thumb": "furniture/thumbs/diningPicnic.png",
    "min": [
-    0.08,
-    0.0025,
-    0.0357
+    0,
+    0.0033,
+    0.01
    ],
    "max": [
-    0.42,
-    0.57,
-    0.4643
+    0.9,
+    0.385,
+    0.74
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "coffeeRoundMidCentury": {
+   "file": "furniture/coffeeRoundMidCentury.glb",
+   "thumb": "furniture/thumbs/coffeeRoundMidCentury.png",
+   "min": [
+    0,
+    0.0008,
+    0
+   ],
+   "max": [
+    0.425,
+    0.21,
+    0.425
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "coffeeTrunk": {
+   "file": "furniture/coffeeTrunk.glb",
+   "thumb": "furniture/thumbs/coffeeTrunk.png",
+   "min": [
+    -0.005,
+    0,
+    -0.006
+   ],
+   "max": [
+    0.555,
+    0.231,
+    0.31
    ],
    "materials": [
     {
@@ -8718,6 +8330,442 @@
      ]
     },
     {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "coffeeNesting": {
+   "file": "furniture/coffeeNesting.glb",
+   "thumb": "furniture/thumbs/coffeeNesting.png",
+   "min": [
+    0.01,
+    0,
+    0.01
+   ],
+   "max": [
+    0.4,
+    0.23,
+    0.44
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "coffeeCartIndustrial": {
+   "file": "furniture/coffeeCartIndustrial.glb",
+   "thumb": "furniture/thumbs/coffeeCartIndustrial.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.5713,
+    0.3162,
+    0.275
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "coffeeMarbleDrum": {
+   "file": "furniture/coffeeMarbleDrum.glb",
+   "thumb": "furniture/thumbs/coffeeMarbleDrum.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.4,
+    0.22,
+    0.4
+   ],
+   "materials": [
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "sideDrum": {
+   "file": "furniture/sideDrum.glb",
+   "thumb": "furniture/thumbs/sideDrum.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.25,
+    0.265,
+    0.25
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "sideEndTwoTier": {
+   "file": "furniture/sideEndTwoTier.glb",
+   "thumb": "furniture/thumbs/sideEndTwoTier.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.275,
+    0.3,
+    0.275
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "consoleBrass": {
+   "file": "furniture/consoleBrass.glb",
+   "thumb": "furniture/thumbs/consoleBrass.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.7,
+    0.4,
+    0.175
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "consoleIndustrial": {
+   "file": "furniture/consoleIndustrial.glb",
+   "thumb": "furniture/thumbs/consoleIndustrial.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.75,
+    0.43,
+    0.2
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "sideCTable": {
+   "file": "furniture/sideCTable.glb",
+   "thumb": "furniture/thumbs/sideCTable.png",
+   "min": [
+    0.01,
+    0,
+    0.01
+   ],
+   "max": [
+    0.24,
+    0.3,
+    0.24
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "sideTelephone": {
+   "file": "furniture/sideTelephone.glb",
+   "thumb": "furniture/thumbs/sideTelephone.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.3,
+    0.375,
+    0.19
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskSecretary": {
+   "file": "furniture/deskSecretary.glb",
+   "thumb": "furniture/thumbs/deskSecretary.png",
+   "min": [
+    -0.005,
+    0,
+    0
+   ],
+   "max": [
+    0.455,
+    0.62,
+    0.265
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
      "name": "carpet",
      "color": [
       0.943,
@@ -8727,22 +8775,954 @@
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "armchairBucket": {
-   "file": "furniture/armchairBucket.glb",
-   "thumb": "furniture/thumbs/armchairBucket.png",
+  "deskStanding": {
+   "file": "furniture/deskStanding.glb",
+   "thumb": "furniture/thumbs/deskStanding.png",
    "min": [
-    0.0404,
     0,
-    0.0404
+    0,
+    0
    ],
    "max": [
-    0.4596,
-    0.43,
-    0.43
+    0.75,
+    0.53,
+    0.35
    ],
    "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskExecutive": {
+   "file": "furniture/deskExecutive.glb",
+   "thumb": "furniture/thumbs/deskExecutive.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.95,
+    0.386,
+    0.465
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskSchool": {
+   "file": "furniture/deskSchool.glb",
+   "thumb": "furniture/thumbs/deskSchool.png",
+   "min": [
+    0.01,
+    0,
+    0.01
+   ],
+   "max": [
+    0.29,
+    0.39,
+    0.455
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskVanity": {
+   "file": "furniture/deskVanity.glb",
+   "thumb": "furniture/thumbs/deskVanity.png",
+   "min": [
+    -0.005,
+    0,
+    0
+   ],
+   "max": [
+    0.455,
+    0.72,
+    0.24
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskDrafting": {
+   "file": "furniture/deskDrafting.glb",
+   "thumb": "furniture/thumbs/deskDrafting.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.65,
+    0.5905,
+    0.375
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskStudent": {
+   "file": "furniture/deskStudent.glb",
+   "thumb": "furniture/thumbs/deskStudent.png",
+   "min": [
+    -0.005,
+    0,
+    0
+   ],
+   "max": [
+    0.455,
+    0.375,
+    0.265
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskIndustrial": {
+   "file": "furniture/deskIndustrial.glb",
+   "thumb": "furniture/thumbs/deskIndustrial.png",
+   "min": [
+    0,
+    0,
+    0.0015
+   ],
+   "max": [
+    0.75,
+    0.385,
+    0.3235
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskGaming": {
+   "file": "furniture/deskGaming.glb",
+   "thumb": "furniture/thumbs/deskGaming.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.8,
+    0.4,
+    0.375
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "deskRolltop": {
+   "file": "furniture/deskRolltop.glb",
+   "thumb": "furniture/thumbs/deskRolltop.png",
+   "min": [
+    -0.005,
+    0,
+    0
+   ],
+   "max": [
+    0.655,
+    0.595,
+    0.365
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "bedsideMidCentury": {
+   "file": "furniture/bedsideMidCentury.glb",
+   "thumb": "furniture/thumbs/bedsideMidCentury.png",
+   "min": [
+    -0.005,
+    0.0019,
+    -0.0025
+   ],
+   "max": [
+    0.255,
+    0.265,
+    0.215
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "bedsideCrate": {
+   "file": "furniture/bedsideCrate.glb",
+   "thumb": "furniture/thumbs/bedsideCrate.png",
+   "min": [
+    -0.005,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.23,
+    0.26,
+    0.205
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "barTableHigh": {
+   "file": "furniture/barTableHigh.glb",
+   "thumb": "furniture/thumbs/barTableHigh.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.3,
+    0.53,
+    0.3
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "cardTable": {
+   "file": "furniture/cardTable.glb",
+   "thumb": "furniture/thumbs/cardTable.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.425,
+    0.3775,
+    0.425
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "islandTable": {
+   "file": "furniture/islandTable.glb",
+   "thumb": "furniture/thumbs/islandTable.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.8313,
+    0.46,
+    0.4
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "workbench": {
+   "file": "furniture/workbench.glb",
+   "thumb": "furniture/thumbs/workbench.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.8,
+    0.75,
+    0.325
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "wardrobeClassic": {
+   "file": "furniture/wardrobeClassic.glb",
+   "thumb": "furniture/thumbs/wardrobeClassic.png",
+   "min": [
+    -0.0075,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.4825,
+    0.965,
+    0.3015
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:doorL",
+    "anim:doorR"
+   ]
+  },
+  "wardrobePine": {
+   "file": "furniture/wardrobePine.glb",
+   "thumb": "furniture/thumbs/wardrobePine.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.45,
+    0.875,
+    0.2765
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:doorL",
+    "anim:doorR"
+   ]
+  },
+  "wardrobeTriple": {
+   "file": "furniture/wardrobeTriple.glb",
+   "thumb": "furniture/thumbs/wardrobeTriple.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.95,
+    1,
+    0.3265
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
     {
      "name": "metalLight",
      "color": [
@@ -8752,87 +9732,11 @@
      ]
     },
     {
-     "name": "carpet",
+     "name": "glass",
      "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "reclinerClassic": {
-   "file": "furniture/reclinerClassic.glb",
-   "thumb": "furniture/thumbs/reclinerClassic.png",
-   "min": [
-    0.05,
-    0,
-    0.05
-   ],
-   "max": [
-    0.45,
-    0.485,
-    0.46
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "reclinerLeather": {
-   "file": "furniture/reclinerLeather.glb",
-   "thumb": "furniture/thumbs/reclinerLeather.png",
-   "min": [
-    0.0475,
-    0,
-    0
-   ],
-   "max": [
-    0.4525,
-    0.51,
-    0.48
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
+      0.698,
+      0.827,
+      0.769
      ]
     },
     {
@@ -8841,502 +9745,6 @@
       0.741,
       0.823,
       0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sofaChesterfield": {
-   "file": "furniture/sofaChesterfield.glb",
-   "thumb": "furniture/thumbs/sofaChesterfield.png",
-   "min": [
-    0.03,
-    0,
-    0.04
-   ],
-   "max": [
-    0.97,
-    0.49,
-    0.46
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sofaMidcentury": {
-   "file": "furniture/sofaMidcentury.glb",
-   "thumb": "furniture/thumbs/sofaMidcentury.png",
-   "min": [
-    0.03,
-    -0.004,
-    0.0574
-   ],
-   "max": [
-    0.97,
-    0.42,
-    0.4426
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sofaRustic": {
-   "file": "furniture/sofaRustic.glb",
-   "thumb": "furniture/thumbs/sofaRustic.png",
-   "min": [
-    0.02,
-    0,
-    0.03
-   ],
-   "max": [
-    0.98,
-    0.45,
-    0.47
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sofaIndustrial": {
-   "file": "furniture/sofaIndustrial.glb",
-   "thumb": "furniture/thumbs/sofaIndustrial.png",
-   "min": [
-    0.03,
-    0,
-    0.05
-   ],
-   "max": [
-    0.97,
-    0.44,
-    0.45
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "loveseatCottage": {
-   "file": "furniture/loveseatCottage.glb",
-   "thumb": "furniture/thumbs/loveseatCottage.png",
-   "min": [
-    0.07,
-    0,
-    0.05
-   ],
-   "max": [
-    0.93,
-    0.45,
-    0.45
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sofaBedConvertible": {
-   "file": "furniture/sofaBedConvertible.glb",
-   "thumb": "furniture/thumbs/sofaBedConvertible.png",
-   "min": [
-    0.04,
-    0,
-    0.05
-   ],
-   "max": [
-    0.96,
-    0.46,
-    0.47
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sectionalModular": {
-   "file": "furniture/sectionalModular.glb",
-   "thumb": "furniture/thumbs/sectionalModular.png",
-   "min": [
-    0.03,
-    0,
-    0.03
-   ],
-   "max": [
-    0.97,
-    0.42,
-    0.97
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "sectionalCozy": {
-   "file": "furniture/sectionalCozy.glb",
-   "thumb": "furniture/thumbs/sectionalCozy.png",
-   "min": [
-    0.03,
-    0,
-    0.03
-   ],
-   "max": [
-    0.97,
-    0.44,
-    0.97
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chaiseLongue": {
-   "file": "furniture/chaiseLongue.glb",
-   "thumb": "furniture/thumbs/chaiseLongue.png",
-   "min": [
-    0.03,
-    -0.0022,
-    0.05
-   ],
-   "max": [
-    0.47,
-    0.485,
-    0.95
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "benchEntryStorage": {
-   "file": "furniture/benchEntryStorage.glb",
-   "thumb": "furniture/thumbs/benchEntryStorage.png",
-   "min": [
-    0.04,
-    0,
-    0.15
-   ],
-   "max": [
-    0.46,
-    0.26,
-    0.35
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "benchSlat": {
-   "file": "furniture/benchSlat.glb",
-   "thumb": "furniture/thumbs/benchSlat.png",
-   "min": [
-    0.035,
-    -0.0026,
-    0.14
-   ],
-   "max": [
-    0.965,
-    0.235,
-    0.36
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "windowSeat": {
-   "file": "furniture/windowSeat.glb",
-   "thumb": "furniture/thumbs/windowSeat.png",
-   "min": [
-    0.02,
-    0,
-    0.03
-   ],
-   "max": [
-    0.98,
-    0.45,
-    0.475
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
      ]
     },
     {
@@ -9362,32 +9770,6 @@
       0.367,
       0.343
      ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "ottomanStorage": {
-   "file": "furniture/ottomanStorage.glb",
-   "thumb": "furniture/thumbs/ottomanStorage.png",
-   "min": [
-    0.065,
-    0,
-    0.065
-   ],
-   "max": [
-    0.435,
-    0.27,
-    0.44
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
     },
     {
      "name": "carpetDarker",
@@ -9395,1372 +9777,6 @@
       0.608,
       0.298,
       0.285
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "poufKnit": {
-   "file": "furniture/poufKnit.glb",
-   "thumb": "furniture/thumbs/poufKnit.png",
-   "min": [
-    0.065,
-    0,
-    0.0741
-   ],
-   "max": [
-    0.435,
-    0.21,
-    0.4259
-   ],
-   "materials": [
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "poufLeather": {
-   "file": "furniture/poufLeather.glb",
-   "thumb": "furniture/thumbs/poufLeather.png",
-   "min": [
-    0.095,
-    0,
-    0.095
-   ],
-   "max": [
-    0.405,
-    0.22,
-    0.405
-   ],
-   "materials": [
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "floorCushions": {
-   "file": "furniture/floorCushions.glb",
-   "thumb": "furniture/thumbs/floorCushions.png",
-   "min": [
-    0.075,
-    0,
-    0.075
-   ],
-   "max": [
-    0.425,
-    0.17,
-    0.425
-   ],
-   "materials": [
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "beanBag": {
-   "file": "furniture/beanBag.glb",
-   "thumb": "furniture/thumbs/beanBag.png",
-   "min": [
-    0.04,
-    0,
-    0.0373
-   ],
-   "max": [
-    0.46,
-    0.37,
-    0.4497
-   ],
-   "materials": [
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "officeMesh": {
-   "file": "furniture/officeMesh.glb",
-   "thumb": "furniture/thumbs/officeMesh.png",
-   "min": [
-    0.1019,
-    0,
-    0.11
-   ],
-   "max": [
-    0.3981,
-    0.51,
-    0.405
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "officeExecutive": {
-   "file": "furniture/officeExecutive.glb",
-   "thumb": "furniture/thumbs/officeExecutive.png",
-   "min": [
-    0.09,
-    0,
-    0.07
-   ],
-   "max": [
-    0.41,
-    0.6,
-    0.415
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "chairGaming": {
-   "file": "furniture/chairGaming.glb",
-   "thumb": "furniture/thumbs/chairGaming.png",
-   "min": [
-    0.0775,
-    0,
-    0.07
-   ],
-   "max": [
-    0.4225,
-    0.61,
-    0.4175
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedSinglePlatform": {
-   "file": "furniture/bedSinglePlatform.glb",
-   "thumb": "furniture/thumbs/bedSinglePlatform.png",
-   "min": [
-    0.025,
-    0,
-    0.01
-   ],
-   "max": [
-    0.475,
-    0.4,
-    0.95
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedSingleIron": {
-   "file": "furniture/bedSingleIron.glb",
-   "thumb": "furniture/thumbs/bedSingleIron.png",
-   "min": [
-    0.0175,
-    0,
-    0.0048
-   ],
-   "max": [
-    0.4825,
-    0.525,
-    0.9552
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedSingleRustic": {
-   "file": "furniture/bedSingleRustic.glb",
-   "thumb": "furniture/thumbs/bedSingleRustic.png",
-   "min": [
-    0.01,
-    0,
-    0
-   ],
-   "max": [
-    0.49,
-    0.475,
-    0.95
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedSingleMidcentury": {
-   "file": "furniture/bedSingleMidcentury.glb",
-   "thumb": "furniture/thumbs/bedSingleMidcentury.png",
-   "min": [
-    0.03,
-    -0.0043,
-    0
-   ],
-   "max": [
-    0.47,
-    0.45,
-    0.92
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedSingleSleigh": {
-   "file": "furniture/bedSingleSleigh.glb",
-   "thumb": "furniture/thumbs/bedSingleSleigh.png",
-   "min": [
-    0.015,
-    0,
-    -0.015
-   ],
-   "max": [
-    0.485,
-    0.495,
-    0.955
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedDoubleRustic": {
-   "file": "furniture/bedDoubleRustic.glb",
-   "thumb": "furniture/thumbs/bedDoubleRustic.png",
-   "min": [
-    0.105,
-    0,
-    0
-   ],
-   "max": [
-    0.895,
-    0.525,
-    0.95
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedDoubleIron": {
-   "file": "furniture/bedDoubleIron.glb",
-   "thumb": "furniture/thumbs/bedDoubleIron.png",
-   "min": [
-    0.13,
-    0,
-    -0.01
-   ],
-   "max": [
-    0.87,
-    0.65,
-    0.9573
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedDoubleMidcentury": {
-   "file": "furniture/bedDoubleMidcentury.glb",
-   "thumb": "furniture/thumbs/bedDoubleMidcentury.png",
-   "min": [
-    0.01,
-    -0.0053,
-    0
-   ],
-   "max": [
-    0.99,
-    0.5,
-    0.93
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedDoubleBasic": {
-   "file": "furniture/bedDoubleBasic.glb",
-   "thumb": "furniture/thumbs/bedDoubleBasic.png",
-   "min": [
-    0.1375,
-    0,
-    0.01
-   ],
-   "max": [
-    0.8625,
-    0.35,
-    0.94
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedQueenUpholstered": {
-   "file": "furniture/bedQueenUpholstered.glb",
-   "thumb": "furniture/thumbs/bedQueenUpholstered.png",
-   "min": [
-    0.09,
-    0,
-    0.01
-   ],
-   "max": [
-    0.91,
-    0.575,
-    0.95
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedQueenIndustrial": {
-   "file": "furniture/bedQueenIndustrial.glb",
-   "thumb": "furniture/thumbs/bedQueenIndustrial.png",
-   "min": [
-    0.085,
-    0,
-    0.005
-   ],
-   "max": [
-    0.915,
-    0.57,
-    0.965
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "metalMedium",
-     "color": [
-      0.369,
-      0.467,
-      0.467
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedQueenLuxury": {
-   "file": "furniture/bedQueenLuxury.glb",
-   "thumb": "furniture/thumbs/bedQueenLuxury.png",
-   "min": [
-    0.075,
-    0,
-    0.01
-   ],
-   "max": [
-    0.925,
-    0.75,
-    0.96
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedQueenSleigh": {
-   "file": "furniture/bedQueenSleigh.glb",
-   "thumb": "furniture/thumbs/bedQueenSleigh.png",
-   "min": [
-    0.09,
-    0,
-    0.01
-   ],
-   "max": [
-    0.91,
-    0.59,
-    0.965
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedKingModern": {
-   "file": "furniture/bedKingModern.glb",
-   "thumb": "furniture/thumbs/bedKingModern.png",
-   "min": [
-    0.025,
-    0,
-    0
-   ],
-   "max": [
-    0.975,
-    0.51,
-    0.95
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedKingLuxury": {
-   "file": "furniture/bedKingLuxury.glb",
-   "thumb": "furniture/thumbs/bedKingLuxury.png",
-   "min": [
-    0.025,
-    0,
-    0.015
-   ],
-   "max": [
-    0.975,
-    0.82,
-    0.97
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedKingRustic": {
-   "file": "furniture/bedKingRustic.glb",
-   "thumb": "furniture/thumbs/bedKingRustic.png",
-   "min": [
-    0.01,
-    0,
-    0
-   ],
-   "max": [
-    0.99,
-    0.6,
-    0.96
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedBunkIndustrial": {
-   "file": "furniture/bedBunkIndustrial.glb",
-   "thumb": "furniture/thumbs/bedBunkIndustrial.png",
-   "min": [
-    0.0225,
-    0,
-    0.0125
-   ],
-   "max": [
-    0.4775,
-    0.8,
-    0.9
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedBunkModern": {
-   "file": "furniture/bedBunkModern.glb",
-   "thumb": "furniture/thumbs/bedBunkModern.png",
-   "min": [
-    0.02,
-    -0.0024,
-    0
-   ],
-   "max": [
-    0.48,
-    0.775,
-    0.9697
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedLoftKids": {
-   "file": "furniture/bedLoftKids.glb",
-   "thumb": "furniture/thumbs/bedLoftKids.png",
-   "min": [
-    0.0175,
-    0,
-    0.01
-   ],
-   "max": [
-    0.4825,
-    0.875,
-    0.91
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedLoftMetal": {
-   "file": "furniture/bedLoftMetal.glb",
-   "thumb": "furniture/thumbs/bedLoftMetal.png",
-   "min": [
-    0.0225,
-    -0.0002,
-    0.0125
-   ],
-   "max": [
-    0.4775,
-    0.85,
-    0.9187
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
      ]
     },
     {
@@ -10773,286 +9789,25 @@
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:doorL",
+    "anim:doorR"
+   ]
   },
-  "daybedIron": {
-   "file": "furniture/daybedIron.glb",
-   "thumb": "furniture/thumbs/daybedIron.png",
+  "wardrobeSliding": {
+   "file": "furniture/wardrobeSliding.glb",
+   "thumb": "furniture/thumbs/wardrobeSliding.png",
    "min": [
-    0.0225,
     0,
-    0.0125
-   ],
-   "max": [
-    0.4775,
-    0.43,
-    0.9375
-   ],
-   "materials": [
-    {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "daybedCottage": {
-   "file": "furniture/daybedCottage.glb",
-   "thumb": "furniture/thumbs/daybedCottage.png",
-   "min": [
-    0.0175,
-    0,
-    0.0125
-   ],
-   "max": [
-    0.4825,
-    0.45,
-    0.9375
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedFuton": {
-   "file": "furniture/bedFuton.glb",
-   "thumb": "furniture/thumbs/bedFuton.png",
-   "min": [
-    0.12,
-    0,
-    0.01
-   ],
-   "max": [
-    0.88,
-    0.28,
-    0.94
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedCanopy": {
-   "file": "furniture/bedCanopy.glb",
-   "thumb": "furniture/thumbs/bedCanopy.png",
-   "min": [
-    0.08,
-    0,
-    0
-   ],
-   "max": [
-    0.92,
-    1.025,
-    0.97
-   ],
-   "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedFourPoster": {
-   "file": "furniture/bedFourPoster.glb",
-   "thumb": "furniture/thumbs/bedFourPoster.png",
-   "min": [
-    0.065,
-    0,
-    0.005
-   ],
-   "max": [
-    0.935,
-    0.99,
-    0.965
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedPlatformLow": {
-   "file": "furniture/bedPlatformLow.glb",
-   "thumb": "furniture/thumbs/bedPlatformLow.png",
-   "min": [
-    0.05,
     0,
     0
    ],
    "max": [
     0.95,
-    0.36,
-    0.95
+    1.05,
+    0.33
    ],
    "materials": [
     {
@@ -11072,37 +9827,29 @@
      ]
     },
     {
-     "name": "carpetWhite",
+     "name": "metalDark",
      "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
+      0.306,
+      0.388,
+      0.388
      ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "bedStorageDrawers": {
-   "file": "furniture/bedStorageDrawers.glb",
-   "thumb": "furniture/thumbs/bedStorageDrawers.png",
+  "armoireCarved": {
+   "file": "furniture/armoireCarved.glb",
+   "thumb": "furniture/thumbs/armoireCarved.png",
    "min": [
-    0.09,
+    -0.01,
     0,
-    0
+    -0.0075
    ],
    "max": [
-    0.91,
-    0.52,
-    0.955
+    0.485,
+    1.015,
+    0.3015
    ],
    "materials": [
     {
@@ -11130,11 +9877,82 @@
      ]
     },
     {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
      "name": "carpetWhite",
      "color": [
       0.973,
       1,
       1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:doorL",
+    "anim:doorR"
+   ]
+  },
+  "clothesRail": {
+   "file": "furniture/clothesRail.glb",
+   "thumb": "furniture/thumbs/clothesRail.png",
+   "min": [
+    0.015,
+    -0.0012,
+    0.0101
+   ],
+   "max": [
+    0.735,
+    0.8512,
+    0.2399
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
      ]
     },
     {
@@ -11144,31 +9962,21 @@
       0.517,
       0.868
      ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedStorageLift": {
-   "file": "furniture/bedStorageLift.glb",
-   "thumb": "furniture/thumbs/bedStorageLift.png",
-   "min": [
-    0.09,
-    0,
-    0.01
-   ],
-   "max": [
-    0.91,
-    0.6,
-    0.955
-   ],
-   "materials": [
+    },
     {
-     "name": "metal",
+     "name": "carpetWhite",
      "color": [
-      0.741,
-      0.823,
-      0.84
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
      ]
     },
     {
@@ -11180,11 +9988,1440 @@
      ]
     },
     {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "dresserSixDrawer": {
+   "file": "furniture/dresserSixDrawer.glb",
+   "thumb": "furniture/thumbs/dresserSixDrawer.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.756,
+    0.425,
+    0.255
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
      "name": "carpetBlue",
      "color": [
       0.356,
       0.517,
       0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:drawer1",
+    "anim:drawer2",
+    "anim:drawer3",
+    "anim:drawer4"
+   ]
+  },
+  "dresserTallboy": {
+   "file": "furniture/dresserTallboy.glb",
+   "thumb": "furniture/thumbs/dresserTallboy.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.406,
+    0.65,
+    0.24
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:drawer1",
+    "anim:drawer2",
+    "anim:drawer3"
+   ]
+  },
+  "dresserMidCentury": {
+   "file": "furniture/dresserMidCentury.glb",
+   "thumb": "furniture/thumbs/dresserMidCentury.png",
+   "min": [
+    -0.006,
+    -0.0029,
+    -0.005
+   ],
+   "max": [
+    0.756,
+    0.375,
+    0.23
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:drawer1",
+    "anim:drawer2",
+    "anim:drawer3",
+    "anim:drawer4"
+   ]
+  },
+  "dresserCandy": {
+   "file": "furniture/dresserCandy.glb",
+   "thumb": "furniture/thumbs/dresserCandy.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.431,
+    0.475,
+    0.24
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:drawer1",
+    "anim:drawer2"
+   ]
+  },
+  "dresserMirror": {
+   "file": "furniture/dresserMirror.glb",
+   "thumb": "furniture/thumbs/dresserMirror.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.756,
+    0.86,
+    0.255
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:drawer1",
+    "anim:drawer2"
+   ]
+  },
+  "chestBlanket": {
+   "file": "furniture/chestBlanket.glb",
+   "thumb": "furniture/thumbs/chestBlanket.png",
+   "min": [
+    -0.006,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.481,
+    0.236,
+    0.265
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:lid"
+   ]
+  },
+  "trunkSteamer": {
+   "file": "furniture/trunkSteamer.glb",
+   "thumb": "furniture/thumbs/trunkSteamer.png",
+   "min": [
+    -0.015,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.465,
+    0.26,
+    0.265
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:lid"
+   ]
+  },
+  "chestCedar": {
+   "file": "furniture/chestCedar.glb",
+   "thumb": "furniture/thumbs/chestCedar.png",
+   "min": [
+    -0.006,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.481,
+    0.23,
+    0.239
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:interior",
+    "anim:lid"
+   ]
+  },
+  "bookcaseCube": {
+   "file": "furniture/bookcaseCube.glb",
+   "thumb": "furniture/thumbs/bookcaseCube.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.475,
+    0.525,
+    0.19
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "bookcaseLadder": {
+   "file": "furniture/bookcaseLadder.glb",
+   "thumb": "furniture/thumbs/bookcaseLadder.png",
+   "min": [
+    0.0088,
+    -0.002,
+    0.01
+   ],
+   "max": [
+    0.3913,
+    0.902,
+    0.2448
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "bookcaseGlass": {
+   "file": "furniture/bookcaseGlass.glb",
+   "thumb": "furniture/thumbs/bookcaseGlass.png",
+   "min": [
+    -0.0075,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.4825,
+    0.97,
+    0.2165
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage",
+   "animNodes": [
+    "anim:doorL",
+    "anim:doorR"
+   ]
+  },
+  "bookcaseLowWide": {
+   "file": "furniture/bookcaseLowWide.glb",
+   "thumb": "furniture/thumbs/bookcaseLowWide.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.95,
+    0.4,
+    0.175
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "bookcaseIndustrial": {
+   "file": "furniture/bookcaseIndustrial.glb",
+   "thumb": "furniture/thumbs/bookcaseIndustrial.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.75,
+    0.95,
+    0.175
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "bookcaseMidCentury": {
+   "file": "furniture/bookcaseMidCentury.glb",
+   "thumb": "furniture/thumbs/bookcaseMidCentury.png",
+   "min": [
+    0,
+    -0.0027,
+    0
+   ],
+   "max": [
+    0.45,
+    0.7,
+    0.175
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "displayCabinet": {
+   "file": "furniture/displayCabinet.glb",
+   "thumb": "furniture/thumbs/displayCabinet.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.425,
+    0.87,
+    0.2
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "chinaHutch": {
+   "file": "furniture/chinaHutch.glb",
+   "thumb": "furniture/thumbs/chinaHutch.png",
+   "min": [
+    -0.0075,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.7575,
+    1,
+    0.27
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "sideboardMidCentury": {
+   "file": "furniture/sideboardMidCentury.glb",
+   "thumb": "furniture/thumbs/sideboardMidCentury.png",
+   "min": [
+    -0.005,
+    -0.004,
+    -0.005
+   ],
+   "max": [
+    0.805,
+    0.39,
+    0.24
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "sideboardRustic": {
+   "file": "furniture/sideboardRustic.glb",
+   "thumb": "furniture/thumbs/sideboardRustic.png",
+   "min": [
+    -0.0075,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.8075,
+    0.475,
+    0.2395
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "credenzaModern": {
+   "file": "furniture/credenzaModern.glb",
+   "thumb": "furniture/thumbs/credenzaModern.png",
+   "min": [
+    -0.005,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.905,
+    0.35,
+    0.215
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "mediaCabinetModern": {
+   "file": "furniture/mediaCabinetModern.glb",
+   "thumb": "furniture/thumbs/mediaCabinetModern.png",
+   "min": [
+    -0.005,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.905,
+    0.26,
+    0.24
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "mediaConsoleIndustrial": {
+   "file": "furniture/mediaConsoleIndustrial.glb",
+   "thumb": "furniture/thumbs/mediaConsoleIndustrial.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    0.85,
+    0.3,
+    0.225
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "filingCabinet": {
+   "file": "furniture/filingCabinet.glb",
+   "thumb": "furniture/thumbs/filingCabinet.png",
+   "min": [
+    -0.0025,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.2375,
+    0.66,
+    0.32
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
      ]
     },
     {
@@ -11196,6 +11433,14 @@
      ]
     },
     {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
      "name": "carpetWhite",
      "color": [
       0.973,
@@ -11205,20 +11450,78 @@
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "bedCaptain": {
-   "file": "furniture/bedCaptain.glb",
-   "thumb": "furniture/thumbs/bedCaptain.png",
+  "filingLateral": {
+   "file": "furniture/filingLateral.glb",
+   "thumb": "furniture/thumbs/filingLateral.png",
    "min": [
-    0.01,
+    -0.005,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.605,
+    0.375,
+    0.235
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "shoeRack": {
+   "file": "furniture/shoeRack.glb",
+   "thumb": "furniture/thumbs/shoeRack.png",
+   "min": [
+    0,
     0,
     0
    ],
    "max": [
-    0.49,
-    0.5,
-    0.955
+    0.4,
+    0.3,
+    0.15
    ],
    "materials": [
     {
@@ -11238,19 +11541,103 @@
      ]
     },
     {
-     "name": "metal",
+     "name": "carpetBlue",
      "color": [
-      0.741,
-      0.823,
-      0.84
+      0.356,
+      0.517,
+      0.868
      ]
     },
     {
-     "name": "carpetWhite",
+     "name": "carpetDarker",
      "color": [
-      0.973,
-      1,
-      1
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "shoeCabinet": {
+   "file": "furniture/shoeCabinet.glb",
+   "thumb": "furniture/thumbs/shoeCabinet.png",
+   "min": [
+    -0.005,
+    0,
+    -0.0025
+   ],
+   "max": [
+    0.405,
+    0.615,
+    0.135
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "hallTree": {
+   "file": "furniture/hallTree.glb",
+   "thumb": "furniture/thumbs/hallTree.png",
+   "min": [
+    -0.005,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.455,
+    0.95,
+    0.2075
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
      ]
     },
     {
@@ -11260,33 +11647,91 @@
       0.517,
       0.868
      ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "bedTrundle": {
-   "file": "furniture/bedTrundle.glb",
-   "thumb": "furniture/thumbs/bedTrundle.png",
+  "hatStand": {
+   "file": "furniture/hatStand.glb",
+   "thumb": "furniture/thumbs/hatStand.png",
    "min": [
-    0.01,
+    0.02,
+    0,
+    0.02
+   ],
+   "max": [
+    0.28,
+    0.9,
+    0.28
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "wallShelfFloating": {
+   "file": "furniture/wallShelfFloating.glb",
+   "thumb": "furniture/thumbs/wallShelfFloating.png",
+   "min": [
+    0,
     0,
     0
    ],
    "max": [
-    0.49,
     0.45,
-    0.96
+    0.3,
+    0.11
    ],
    "materials": [
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
     {
      "name": "woodDark",
      "color": [
@@ -11296,19 +11741,11 @@
      ]
     },
     {
-     "name": "carpetWhite",
+     "name": "wood",
      "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
+      0.896,
+      0.602,
+      0.393
      ]
     },
     {
@@ -11320,45 +11757,19 @@
      ]
     },
     {
-     "name": "metalDark",
-     "color": [
-      0.306,
-      0.388,
-      0.388
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedCot": {
-   "file": "furniture/bedCot.glb",
-   "thumb": "furniture/thumbs/bedCot.png",
-   "min": [
-    0.08,
-    -0.0074,
-    0.05
-   ],
-   "max": [
-    0.42,
-    0.25,
-    0.9
-   ],
-   "materials": [
-    {
-     "name": "metal",
-     "color": [
-      0.741,
-      0.823,
-      0.84
-     ]
-    },
-    {
      "name": "carpetBlue",
      "color": [
       0.356,
       0.517,
       0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
      ]
     },
     {
@@ -11370,95 +11781,29 @@
      ]
     },
     {
-     "name": "carpetWhite",
+     "name": "plant",
      "color": [
-      0.973,
-      1,
-      1
+      0.182,
+      0.821,
+      0.576
      ]
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
   },
-  "bedWaterbed": {
-   "file": "furniture/bedWaterbed.glb",
-   "thumb": "furniture/thumbs/bedWaterbed.png",
+  "wallShelfBracket": {
+   "file": "furniture/wallShelfBracket.glb",
+   "thumb": "furniture/thumbs/wallShelfBracket.png",
    "min": [
-    0.07,
+    0,
     0,
     0
    ],
    "max": [
-    0.93,
-    0.66,
-    0.96
-   ],
-   "materials": [
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "wood",
-     "color": [
-      0.896,
-      0.602,
-      0.393
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
-     ]
-    },
-    {
-     "name": "glass",
-     "color": [
-      0.698,
-      0.827,
-      0.769
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedHammock": {
-   "file": "furniture/bedHammock.glb",
-   "thumb": "furniture/thumbs/bedHammock.png",
-   "min": [
-    0.0332,
-    -0.0048,
-    0.04
-   ],
-   "max": [
-    0.4668,
-    0.73,
-    0.91
+    0.45,
+    0.2,
+    0.12
    ],
    "materials": [
     {
@@ -11467,72 +11812,6 @@
       0.896,
       0.602,
       0.393
-     ]
-    },
-    {
-     "name": "woodDark",
-     "color": [
-      0.678,
-      0.456,
-      0.299
-     ]
-    },
-    {
-     "name": "carpetWhite",
-     "color": [
-      0.973,
-      1,
-      1
-     ]
-    },
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetBlue",
-     "color": [
-      0.356,
-      0.517,
-      0.868
-     ]
-    }
-   ],
-   "original": true,
-   "group": "seating-beds"
-  },
-  "bedRaceCar": {
-   "file": "furniture/bedRaceCar.glb",
-   "thumb": "furniture/thumbs/bedRaceCar.png",
-   "min": [
-    0,
-    0.0042,
-    0
-   ],
-   "max": [
-    0.5,
-    0.42,
-    0.965
-   ],
-   "materials": [
-    {
-     "name": "carpet",
-     "color": [
-      0.943,
-      0.367,
-      0.343
-     ]
-    },
-    {
-     "name": "carpetDarker",
-     "color": [
-      0.608,
-      0.298,
-      0.285
      ]
     },
     {
@@ -11544,6 +11823,14 @@
      ]
     },
     {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
      "name": "carpetWhite",
      "color": [
       0.973,
@@ -11552,11 +11839,61 @@
      ]
     },
     {
-     "name": "glass",
+     "name": "carpetDarker",
      "color": [
-      0.698,
-      0.827,
-      0.769
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
+  },
+  "linenCupboard": {
+   "file": "furniture/linenCupboard.glb",
+   "thumb": "furniture/thumbs/linenCupboard.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.406,
+    0.915,
+    0.22
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
      ]
     },
     {
@@ -11577,7 +11914,57 @@
     }
    ],
    "original": true,
-   "group": "seating-beds"
+   "group": "tables-storage"
+  },
+  "larderCupboard": {
+   "file": "furniture/larderCupboard.glb",
+   "thumb": "furniture/thumbs/larderCupboard.png",
+   "min": [
+    -0.006,
+    0,
+    -0.005
+   ],
+   "max": [
+    0.406,
+    0.95,
+    0.244
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "glass",
+     "color": [
+      0.698,
+      0.827,
+      0.769
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "tables-storage"
   }
  },
  "audio": {
