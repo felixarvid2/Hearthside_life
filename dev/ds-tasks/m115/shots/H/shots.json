@@ -7,7 +7,7 @@
   {
     "name": "portrait: a snack is in the hand half-way through eating",
     "ok": true,
-    "evidence": "Theo eat at 2.5/5 — hand-prop-sandwich"
+    "evidence": "Theo eat at 2.5/5 — hand-prop-apple"
   },
   {
     "name": "portrait: a full plate is carried to the seat",
@@ -52,7 +52,7 @@
   {
     "name": "landscape: a snack is in the hand half-way through eating",
     "ok": true,
-    "evidence": "Theo eat at 2.5/5 — hand-prop-sandwich"
+    "evidence": "Theo eat at 2.5/5 — hand-prop-apple"
   },
   {
     "name": "landscape: a full plate is carried to the seat",
@@ -97,7 +97,7 @@
   {
     "name": "desktop: a snack is in the hand half-way through eating",
     "ok": true,
-    "evidence": "Theo eat at 2.5/5 — hand-prop-sandwich"
+    "evidence": "Theo eat at 2.5/5 — hand-prop-apple"
   },
   {
     "name": "desktop: a full plate is carried to the seat",
@@ -128,5 +128,10 @@
     "name": "desktop: a lit phone is held during a call",
     "ok": true,
     "evidence": "Theo phone phoneChat — hand-prop-phone"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
   }
 ]

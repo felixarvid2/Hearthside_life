@@ -181,7 +181,7 @@ describe('autonomy chooses each new activity when its conditions fit', { timeout
       setClock(s.w.state, SPRING, 14);
       pinWeather(s.w.state, 'rain', SPRING);
       // a roof over the whole lot: the person is under cover, and no outdoor activity could compete
-      s.w.lot.roofs = { roof_test: { id: 'roof_test', level: 0, x0: 0, z0: 0, x1: s.w.lot.width, z1: s.w.lot.depth, styleId: 'flat', ridge: 'h', pitch: 0 } };
+      s.w.lot.roofs = { roof_test: { id: 'roof_test', level: 0, x0: 0, z0: 0, x1: s.w.lot.width, z1: s.w.lot.depth, styleId: 'flat', ridge: 'h', pitch: 0, finish: { designId: 'plain-paint', paletteId: 'plain-paint-p0' } } };
       s.w.state.people[s.w.mira]!.needs.fun = 20;
       expect(decide(s, s.w.mira)).toBe('watchRain');
     }
@@ -204,7 +204,7 @@ describe('four weeks with the weather on', { timeout: 480_000 }, () => {
     const s = world(11);
     const w = s.w;
     // A roofed west wing gives "indoors" for Watch the Rain; the east yard stays open for the outdoor activities.
-    w.lot.roofs = { roof_west: { id: 'roof_west', level: 0, x0: 0, z0: 0, x1: 8, z1: w.lot.depth, styleId: 'flat', ridge: 'h', pitch: 0 } };
+    w.lot.roofs = { roof_west: { id: 'roof_west', level: 0, x0: 0, z0: 0, x1: 8, z1: w.lot.depth, styleId: 'flat', ridge: 'h', pitch: 0, finish: { designId: 'plain-paint', paletteId: 'plain-paint-p0' } } };
     w.state.settings.visitors = false;
 
     const plan: Record<number, Array<'clear' | 'cloudy' | 'rain' | 'snow'>> = {

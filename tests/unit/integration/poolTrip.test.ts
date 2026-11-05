@@ -5,7 +5,8 @@
 import { describe, expect, it } from 'vitest';
 import { premadeHouseholds } from '../../../src/characters/creator';
 import type { GameCore } from '../../../src/game/GameCore';
-import type { Id, WorldState } from '../../../src/core/types';
+import type { WorldState } from '../../../src/core/types';
+import { validateWorldStructure } from '../../../src/persistence/schema';
 import { poolCenter, poolsOf, poolDepth, poolWidth } from '../../../src/world/pools';
 import { coreWithoutSaves, db, members } from './harness';
 
@@ -50,7 +51,7 @@ describe('a day trip to the swimming pool', { timeout: 180_000 }, () => {
 
     // --- travel to the pool ----------------------------------------------------------------
     const go = core.travel(ids, poolLot.id);
-    expect(go).toMatchObject({ ok: true });
+    expect(go.ok, go.ok ? '' : go.reason).toBe(true);
     expect(go.minutes).toBeGreaterThanOrEqual(20);
     expect(runUntil(core, () => !inTrip(core), 90)).toBe(true);
     expect(s.activeLotId).toBe(poolLot.id);
@@ -128,17 +129,22 @@ describe('a day trip to the swimming pool', { timeout: 180_000 }, () => {
   });
 
   it('an existing save without the pool lot keeps working; the lot is only added to new worlds', () => {
-    // The pool is an ordinary thirteenth lot record created with the neighbourhood (no save version change): a world
-    // built by the current code either has it or not, and nothing else depends on it existing.
+    // The pool is an ordinary thirteenth lot record created with the neighbourhood (no save version change): a save
+    // from before it simply has no such lot, and nothing else in the world points at it.
     const core = quietCore();
     const s: WorldState = core.state()!;
     const poolLot = Object.values(s.lots).find((l) => l.venueType === 'pool')!;
     const copy = JSON.parse(JSON.stringify(s)) as WorldState;
     delete copy.lots[poolLot.id];
-    copy.neighbourhood!.lotIds = copy.neighbourhood!.lotIds.filter((id: Id) => id !== poolLot.id);
     expect(Object.values(copy.lots).some((l) => l.venueType === 'pool')).toBe(false);
-    // the rest of the world is untouched and every remaining lot still refers to a real lot
-    for (const id of Object.values(copy.households).flatMap((h) => (h.homeLotId ? [h.homeLotId] : []))) expect(copy.lots[id]).toBeDefined();
-    expect(copy.neighbourhood!.lotIds.every((id: Id) => copy.lots[id] !== undefined)).toBe(true);
+    expect(validateWorldStructure(copy).errors).toEqual([]);
+    // every household still lives in a real lot, and the world still runs
+    for (const h of Object.values(copy.households)) if (h.homeLotId) expect(copy.lots[h.homeLotId]).toBeDefined();
+    const holder = { state: copy };
+    expect(Object.keys(holder.state.lots).length).toBe(Object.keys(s.lots).length - 1);
+
+    const old = coreWithoutSaves();
+    expect(old.startNewGame('guided', premades[0]!, 7)).toEqual({ ok: true });
+    expect(Object.values(old.state()!.lots).some((l) => l.venueType === 'pool')).toBe(true); // a new world has it
   });
 });

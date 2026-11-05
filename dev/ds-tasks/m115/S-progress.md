@@ -79,7 +79,8 @@ that every id in the table exists in the content database.
 ## Checks
 
 First run (before the machine restart) and a full re-verification after resuming. The resume re-ran every check
-in `common.md` from scratch on the current shared tree (2026-11-05, ~00:05–00:25 UTC, four agents on four cores):
+in `common.md` from scratch on the current shared tree (2026-11-05, ~00:05–01:57 UTC, four agents on four cores;
+the e2e had to queue behind the other agents' browser runs on the shared lock):
 
 - `npm run typecheck` — clean both runs.
 - `npx vitest run tests/unit/content/screens.test.ts tests/unit/render/screenPrograms.test.ts` — 31 passed both runs.
@@ -88,15 +89,15 @@ in `common.md` from scratch on the current shared tree (2026-11-05, ~00:05–00:
   (2), `tests/unit/integration/m11-skills.test.ts` (1). The pre-restart run had the same class of failure (3:
   `travel.test.ts` autonomy assertion plus two painters timeouts), and the painters file includes a 120 s-allowance
   test that passes. Every screen/program test passed; no failure touches task S.
-- `npm run content:check` — **0 errors, 0 warnings** at the start of the resume run (00:07 UTC). When re-run at
-  00:46 the shared tree had gained a `snowman` object from another agent's in-flight weather work
-  (`src/content/objects.ts`, mtime 00:43) and the report shows exactly 2 errors on it: `price must be positive
-  integer cents` (`dollars(0)`) and `functional object without interactions, slots or surface`. Not task S and not
-  touched here (the object is the seasonal Build-a-Snowman result, never sold); left for that agent/the supervisor.
+- `npm run content:check` — **0 errors, 0 warnings** at the start of the resume run (00:07 UTC) and again at the
+  end (01:58 UTC). In between, a re-run at 00:46 transiently showed 2 errors on a `snowman` object another agent
+  was adding (`src/content/objects.ts`, mtime 00:43: `dollars(0)` price, functional without interactions); that
+  agent finished the object and the final report is clean. Task S touches no content definitions.
 - `npm run build` — passed (29.7 s under the shared load; 329 modules in the earlier run).
-- `npm run e2e` — the first resume attempt was stopped by the harness after 10 minutes *still queued* on the shared
-  `/tmp/hearthside-browser.lock` (four processes waiting behind another agent's browser run); restarted with a long
-  background timeout so it can queue behind the other agents. Result recorded below.
+- `npm run e2e` — **passed**, `[e2e] OK` with no page/console errors and no blank canvases in desktop, portrait and
+  landscape. The first resume attempt was stopped by the harness after 10 minutes *still queued* on the shared
+  `/tmp/hearthside-browser.lock` (four processes behind another agent's browser run); the restarted run waited its
+  turn and then completed (exit 0). Screenshots in `tests/e2e/out/screenshots`.
 - `npm run visual:m115:screens` — **57/57 checks passed on the resume run too**, screenshots rewritten
   00:16–00:18 UTC, no page errors in any viewport. Every close-up is a
   real close-up at capture time (`ppmNow` 400 for the computer, 122 portrait / 115 landscape / 190 desktop for the
@@ -122,3 +123,13 @@ in `common.md` from scratch on the current shared tree (2026-11-05, ~00:05–00:
 Housekeeping for the supervisor: `dev/ds-tasks/m115/__probe.mjs` is a leftover scratch probe and can be deleted
 (`rm` is blocked for me). `crop.test.ts` + `crop-vitest.config.ts` are the diagnostic described above, kept for
 re-running; neither is in the default test include.
+
+### Handover
+
+- `git`, `rm` and shell-script execution are blocked in this session, so nothing was committed. Per `CLAUDE.md`,
+  run `bash tools/te-save.sh` before the last commit and include `.tokeneconomizer/` in it.
+- Task S is complete: all five task items are implemented and every `common.md` check was re-run on the resumed
+  tree (typecheck, own tests, full suite, content:check, build, e2e, visual 57/57). The only full-suite failures
+  were unrelated 5 s timeouts from CPU contention; they are listed above.
+- Shared-file edits made by this task are limited to the `ScreensView` hook in `src/render/gameView.ts` and the
+  read-only `rootOf(id)` accessor in `src/render/objectsView.ts`; other agents' parallel edits were left alone.

@@ -645,9 +645,10 @@ walk, queue actions and are ticked by `runPerson`. Every other lot is plain data
 location (`home`, `work`, `visiting` a lot, or `transit`). A lot's state *is* the world state, so leaving a lot "saves" it and entering it
 "loads" it with nothing to copy: a round trip leaves both lots byte-identical (the only things that change are the people on them).
 
-**Lot records** (`world/neighbourhood.ts LOT_SPECS`, `createNeighbourhoodLots`): a new world has 14 lots: the player's home and the house next
-door (built at once, as before) plus twelve generated records with `built: false` - six public venues (`park` Lakeside Park 32x32, `cafe`
-Kettle & Crumb, `gym` Foundry Fitness, `library` Pagebridge Library, `arts` Lantern Hall 32x32, `market` Greengage Market 32x32), four homes of
+**Lot records** (`world/neighbourhood.ts LOT_SPECS`, `createNeighbourhoodLots`): a new world has 15 lots: the player's home and the house next
+door (built at once, as before) plus thirteen generated records with `built: false` - seven public venues (`park` Lakeside Park 32x32, `cafe`
+Kettle & Crumb, `gym` Foundry Fitness, `library` Pagebridge Library, `arts` Lantern Hall 32x32, `market` Greengage Market 32x32, `pool` Quayside
+Baths 32x32), four homes of
 named NPC households (two rented, two owned) and two empty homes (Marigold Flat for rent, Hazelbank House for sale). Optional `Lot` fields:
 `built`, `variant`, `blurb`, `map` {x,y} (0..100, for the map UI), `rent` (weekly; a lot with `rent` and no owner is a rental), `price`.
 `VENUES` holds opening hours and the capacity of each venue type; `travelMinutes` is 20-40 minutes by map distance.

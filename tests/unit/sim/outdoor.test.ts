@@ -77,7 +77,7 @@ function selfOption(h: ReturnType<typeof harness>, p: Person, id: string): Inter
 }
 
 function objectOption(h: ReturnType<typeof harness>, p: Person, objectId: string, id: string): InteractionOption | undefined {
-  return h.sim.options(p.id, { kind: 'object', objectId }).find((o) => o.interactionId === id);
+  return h.sim.options(p.id, { kind: 'object', objectId, slotId: null }).find((o) => o.interactionId === id);
 }
 
 function personOption(h: ReturnType<typeof harness>, p: Person, otherId: string, id: string): InteractionOption | undefined {
@@ -86,12 +86,12 @@ function personOption(h: ReturnType<typeof harness>, p: Person, otherId: string,
 
 /** Covers the whole lot with a flat roof: every tile stops counting as outdoors. */
 function roofEverything(lot: W['lot']): void {
-  lot.roofs = { roof_test: { id: 'roof_test', level: 0, x0: 0, z0: 0, x1: lot.width, z1: lot.depth, styleId: 'flat', ridge: 'h', pitch: 0 } };
+  lot.roofs = { roof_test: { id: 'roof_test', level: 0, x0: 0, z0: 0, x1: lot.width, z1: lot.depth, styleId: 'flat', ridge: 'h', pitch: 0, finish: { designId: 'plain-paint', paletteId: 'plain-paint-p0' } } };
 }
 
 /** Covers the west half of the lot with a flat roof: indoors there, with reachable open air to the east. */
 function roofWestHalf(lot: W['lot']): void {
-  lot.roofs = { roof_test: { id: 'roof_test', level: 0, x0: 0, z0: 0, x1: 8, z1: lot.depth, styleId: 'flat', ridge: 'h', pitch: 0 } };
+  lot.roofs = { roof_test: { id: 'roof_test', level: 0, x0: 0, z0: 0, x1: 8, z1: lot.depth, styleId: 'flat', ridge: 'h', pitch: 0, finish: { designId: 'plain-paint', paletteId: 'plain-paint-p0' } } };
 }
 
 describe('the outdoor activity gates', () => {

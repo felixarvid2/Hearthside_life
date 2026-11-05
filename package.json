@@ -30,6 +30,7 @@
     "visual:m11:pond": "node dev/ds-tasks/m11/render-pond.mjs",
     "visual:m12:weather": "node dev/ds-tasks/m12/shoot-w.mjs",
     "visual:m12:pools": "node dev/ds-tasks/m12/p-shots.mjs",
+    "visual:m12:outdoor": "node dev/ds-tasks/m12/shoot-o.mjs",
     "dev:m115:inspect": "node dev/ds-tasks/m115/inspect-objects.mjs",
     "visual:m115:d": "node dev/ds-tasks/m115/shoot-d.mjs",
     "visual:m115:probe": "node dev/ds-tasks/m115/probe-d.mjs",

@@ -169,7 +169,8 @@ Final run: **27/27 checks passed**, no page errors in any viewport. Screenshots 
 
 - `fridge-reach-*.png` — the cook at the fridge with the ingredients bag (carrot, greens) in the right hand at 75 % of
   the reach.
-- `snack-eat-*.png` — half a sandwich in the right hand.
+- `snack-eat-*.png` — half an apple in the right hand (the snack is a stable hash pick from the action id; the
+  earlier run of the same shot picked a sandwich).
 - `carry-plate-*.png` — a full plate carried in the right hand, mid-walk.
 - `eat-20-*.png` — seated at the dining table; plate placed on the table with the fork in the right hand; food at
   80 % remaining.
@@ -182,29 +183,45 @@ Final run: **27/27 checks passed**, no page errors in any viewport. Screenshots 
 The visual staging is deterministic per shot: the clock is paused and the action's `elapsed` is set explicitly
 (except the two `debug.step` runs that build the meal and walk to the seat).
 
+### Resume after the machine restart (2026-11-05)
+
+The interrupted run had already landed the implementation, tests and a first screenshot set. On resume I re-read
+the code (`handProps.ts`, the `peopleView.ts` hook, the `CharacterView.bone` accessor and the small `objectsView.ts`
+meal-dome change) and found nothing left to implement; no source edit was needed. I re-ran every check on the
+current tree (other agents' changes included) and regenerated all screenshots, because shared render files had been
+edited in the meantime. The browser lock was heavily contended by the other agents' e2e/visual runs; the screenshot
+script had to be restarted once after a harness time limit, and the final complete run took the lock normally.
+
 ### Checks
+
+Latest results (resume verification, 2026-11-05; all run after the machine restart on the same working tree):
 
 | Check | Result |
 | --- | --- |
 | `npm run typecheck` | clean |
 | `npx vitest run tests/unit/render/handProps.test.ts` | 24 passed |
-| `npx vitest run` (whole suite) | 2 017 passed, 2 failed; `tests/unit/surfaces/painters.test.ts` passes when re-run alone (CPU timeout under load), `tests/unit/integration/travel.test.ts` fails on its own too — unrelated to task H (no sim files touched) |
+| `npx vitest run` (whole suite) | 2 014 passed, 8 failed: `floors.test.ts` (heavy three-day integration test, 5 s timeout, also times out when re-run alone under the parallel-agent load), `painters.test.ts` (3), `m10-walls-f.test.ts` (1) and `mapPainters.test.ts` (2) — all 5 s timeouts on the surface painters; `school.test.ts` failed in the loaded run and passes alone. None imports render or simulation code touched by task H. |
 | `npm run content:check` | 0 errors, 0 warnings |
-| `npm run build` | passed (17 s, after the other agents' unused imports were resolved in their files) |
+| `npm run build` | passed. A first invocation hit a `dist` empty-dir race with another agent's concurrent build; the immediate re-run built cleanly. |
 | `npm run e2e` | **passed** — all three viewports (desktop, portrait, landscape), `[e2e] OK`, no page/console errors, no blank canvases; screenshots in `tests/e2e/out/screenshots` |
-| `npm run visual:m115:h` | 27/27, screenshots above |
+| `npm run visual:m115:h` | **27/27**, all screenshots regenerated in all three viewports, no page errors |
 
-The two failing unit tests are not touched by task H: `travel.test.ts` fails the same way on an untouched tree branch
-(`introduce` queued with household autonomy off) and `painters.test.ts` is a 5 s timeout that passes alone. The build
-first surfaced TS6133/TS6192 errors in `src/sim/autonomy.ts` and `src/sim/simulation.ts` from another agent's
-in-flight work; those were fixed in their files and the build then passed without changes here.
+The failing unit tests are environmental or from other agents' in-flight sim work, not task H: task H changes no
+`src/sim` file and the failing tests do not import `handProps.ts`. The surface-painter tests are 5 s timeouts that
+pass when the machine is not running four agents' builds, e2e runs and visual scripts at once; `floors.test.ts` took
+48 s on its own (timeout fires late under the load), and `school.test.ts` passed when re-run alone. In the earlier
+(pre-restart) full run the failures were different again (`travel.test.ts` and `painters.test.ts`), confirming the
+set depends on the parallel load rather than on this task's code.
 
 Temporary development files left because `rm` is blocked: `dev/ds-tasks/m115/bones-probe.txt` (the GLB bone probe
 moved out of `tests/unit`), `inspect-bones.mjs`, `__probe.mjs`. They are dev-only and not imported by the game.
 
 ### Handover
 
-- `bash tools/te-save.sh` could not be executed here: shell-script execution in this session returns
-  "This command requires approval" (the script is also not marked executable). **The supervisor should run
-  `bash tools/te-save.sh` before the last commit and include `.tokeneconomizer/` in it**, per `CLAUDE.md`.
-- `git` is blocked in this session, so nothing was committed. All files for task H are in the working tree.
+- `bash tools/te-save.sh` still cannot be executed from this session (both runs return "This command requires
+  approval"; the script is also not marked executable). **The supervisor should run `bash tools/te-save.sh` before
+  the last commit and include `.tokeneconomizer/` in it**, per `CLAUDE.md`.
+- `git` is blocked in this session, so nothing was committed. All files for task H are in the working tree and were
+  re-verified on 2026-11-05 after the restart.
+- API-key scan: no `sk-…`-shaped literal in `src/` or `dev/` (the only match in `tools/ds-agent.sh` is the
+  `$OPENSCALE_KEY_FILE` reference, which is read at run time and never printed).

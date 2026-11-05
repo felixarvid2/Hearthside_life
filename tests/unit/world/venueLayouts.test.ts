@@ -190,16 +190,23 @@ describe('what each venue offers', () => {
     expect(count(lot, 'shower-stall')).toBeGreaterThanOrEqual(3);
     expect(count(lot, 'vending-machine')).toBeGreaterThanOrEqual(1);
     expect(count(lot, 'toilet-basic')).toBeGreaterThanOrEqual(1);
-    for (const i of ['swimInPool', 'relaxInPool', 'takeShower', 'useToilet', 'buyVendingDrink', 'sunbathe', 'sit']) {
+    for (const i of ['takeShower', 'useToilet', 'buyVendingDrink', 'sunbathe', 'sit']) {
       expect(interactionsOf(lot).has(i), i).toBe(true);
     }
-    const track = Object.values(lot.floors).filter((f) => f.designId === 'brick-paving').length;
-    expect(track).toBeGreaterThanOrEqual(180);
-    // the playground fence is a low wall with a gap: it is a closed room except through the gate
-    const fence = Object.values(lot.walls);
-    expect(fence.length).toBeGreaterThan(20);
-    expect(fence.every((w) => w.height < 1.5)).toBe(true);
-    expect(computeRooms(lot, 0).filter((r) => !r.outdoor)).toHaveLength(0);
+    // Swimming is offered on the pool water itself (sim/pool.ts), not by a placed object.
+    for (const i of ['swimInPool', 'relaxInPool']) expect(db.interactions[i]?.status, i).toBe('ready');
+    // the pool decks are tiled in stone pavers, the sun deck is timber and the lobby is porcelain
+    const floors = Object.values(lot.floors);
+    const paved = floors.filter((f) => f.designId === 'stone-pavers').length;
+    const timber = floors.filter((f) => f.designId === 'timber-decking').length;
+    const porcelain = floors.filter((f) => f.designId === 'porcelain-large').length;
+    expect(paved).toBeGreaterThanOrEqual(80);
+    expect(timber).toBeGreaterThanOrEqual(60);
+    expect(porcelain).toBeGreaterThanOrEqual(40);
+    // full-height building walls all round, with the three indoor rooms already checked above
+    const walls = Object.values(lot.walls);
+    expect(walls.length).toBeGreaterThan(20);
+    expect(Math.min(...walls.map((w) => w.height))).toBeGreaterThan(2);
   });
 });
 

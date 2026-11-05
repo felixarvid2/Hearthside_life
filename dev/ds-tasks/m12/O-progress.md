@@ -1,7 +1,6 @@
 # Task O — outdoor life and the public swimming pool
 
-Status: in progress (resumed after the machine restart; the previous run left no code or progress file behind, so
-this run implements the task from the start and records the design here before coding).
+Status: implementation complete; finishing the screenshots and the check run (resumed after the machine restart).
 
 ## Deliverables
 
@@ -24,7 +23,8 @@ this run implements the task from the start and records the design here before c
 weather/season check (the existing tests keep passing). A new `outdoorGateReason(rule, ctx, person)` in
 sim/weather.ts composes it with the person-dependent checks:
 
-- `outdoor`: the person must be in the open air (`isOutdoors`, which already accounts for roofs).
+- `outdoor`: the person must be in the open air (`isOutdoors`, which already accounts for roofs) or able to walk
+  to an open-air tile (`nearestOutdoorTile`); the outdoor behaviours then step outside before performing.
 - `sheltered`: the person must be under a roof (indoors or a covered porch) - for Watch the Rain.
 - `night` / `day`: 21:00-05:59 is night; the rest is day.
 - `snowCover`: snow must be lying (`weather.snowCover` in winter; set by `ensureWeather`).
@@ -61,9 +61,10 @@ winter, or after three snow-free days in winter (a snowfall resets the count). R
 ### Objects (small, original, procedural)
 
 - `picnic-blanket` (2 x 2 rug, non-blocking) offers Have a Picnic.
-- `sun-lounger` (1 x 2, sit slot) offers Sunbathe and Sit.
-- `kite` (1 x 1 non-blocking lawn prop, the kite on its line) offers Fly a Kite.
-- `snowman` (`'dev'`, not in the Buy catalogue) is created by Build a Snowman.
+- `sun-lounger` (1 x 2) has a seat and a lie slot, so Sunbathe lies on the lounger.
+- `kite` (1 x 1 non-blocking lawn prop) offers Fly a Kite. The model flies at 2.3 m on a taut line from a lawn
+  peg, so the kite reads as airborne in the screenshot and in play.
+- `snowman` (`status: 'dev'`, not in the Buy catalogue) is created by Build a Snowman.
 
 Their models are original `proc:` meshes built at runtime (`src/render/outdoorModels.ts`, registered through the
 existing procedural-model hook), with SVG catalogue thumbnails. `content:check` regenerates
@@ -75,12 +76,12 @@ existing procedural-model hook), with SVG catalogue thumbnails. `content:check` 
   the HUD icon map gain the pool (the `pool` icon already exists).
 - A thirteenth `LOT_SPEC` ("Quayside Baths", 32 x 32, map 50,27) is appended, so new worlds get it. Existing saves
   are untouched: the lot record only exists in worlds created from now on, and no save-version change is needed
-  (Task W owns the version). A free lot record is not reused because a 24 x 24 vacant home cannot hold the 32 x 32
-  plan, and rewriting an existing save's lot list would change ids and household homes.
+  (Task W owns the version).
 - `poolPlan()` (world/venues.ts) builds a 22 x 20 hall: a pool hall on the west with a 6 x 10 pool (x 7..12,
   z 8..17) and ladders on both short sides, a wall at x = 15, a changing room and shower room on the east, a
   lobby with benches and a vending machine, and a sun deck south of the building with loungers, planters and
-  trees. A flat roof is added to `lot.roofs` over the building; windows line the walls.
+  trees. A flat roof covers the building; windows line the walls. Mirrors and sinks hang on the changing room's
+  south wall (the north wall is glazed).
 - The pool record is written straight into `lot.pools` before `finish`/`lotProblems`, so the venue must pass the
   same reachability check as every other venue.
 - Townie outings get a `'pool'` weight in `venueWeight` and the venue is included automatically by the existing
@@ -89,11 +90,16 @@ existing procedural-model hook), with SVG catalogue thumbnails. `content:check` 
 ### Tests
 
 - `tests/unit/sim/outdoor.test.ts`: every new gate (offered in fitting weather/season/time/place, greyed with the
-  expected reason otherwise), snowman create/persist/melt, picnic and snowball socials.
-- `tests/unit/world/venueLayouts.test.ts`: pool added to the venue matrix and its layout requirements.
-- `tests/unit/integration/poolTrip.test.ts`: the household travels to the pool, swims, showers and comes home.
-- `tests/unit/integration/outdoor-playtest.test.ts`: 28 days with weather on; each new activity is chosen by
-  autonomy at least once in fitting conditions and never in unfitting ones.
+  expected reason otherwise), child-only puddles, the walk-outside lifecycle and its moodlet, snowman
+  create/persist/validate/melt (including a snowfall resetting the warm-day count), and the picnic/snowball
+  socials with a fixed RNG for the success/failure branches.
+- `tests/unit/world/venueLayouts.test.ts`: the pool venue matrix entry, the 6 x 10 basin, ladders on both short
+  sides, the roofed hall (three indoor rooms), the furniture, and the pool water interactions.
+- `tests/unit/integration/poolTrip.test.ts`: the household travels to the pool, swims, showers and comes home;
+  and an existing save without the pool lot still validates (the lot is only added to new worlds).
+- `tests/unit/integration/outdoor-playtest.test.ts`: each new activity is chosen by autonomy in fitting
+  conditions (with the competing menu stripped), and a 28-day weather-on run proves autonomy never starts one
+  while its gate would refuse it while exercising several of them.
 - Existing counts that change (neighbourhood lot count, venue-restricted list) are updated.
 
 ## Decisions
@@ -104,20 +110,38 @@ existing procedural-model hook), with SVG catalogue thumbnails. `content:check` 
 - **Weather rule**: extended with optional, additive fields rather than adding a second per-interaction condition
   field, so every gate lives in one place and both the menu and autonomy share it.
 - **Snowman**: an ordinary placed object with an optional state block, so save/load, rendering and nav need no
-  special cases; `status: 'dev'` keeps it out of the Buy catalogue.
+  special cases; `status: 'dev'` keeps it out of the Buy catalogue. Its price is a nominal 1 cent because the
+  content validator requires a positive price even for objects that are never bought.
 - **Kite/sun lounger are object interactions** (a prop on the lawn, a lounger on the deck), which gives the
   activities a real route/use/cleanup lifecycle instead of a self-only animation.
+- **Kite model flies**: a static airborne pose (2.3 m, line to a ground peg) rather than a per-frame animation, so
+  it needs no render hook and looks right both while someone is flying it and when it is left standing.
 
 ## Progress
 
-- [ ] Weather rule + gate helpers
-- [ ] Activities, objects, moodlets, socials
-- [ ] Snowman lifecycle
-- [ ] Pool venue
-- [ ] Tests
+- [x] Weather rule + gate helpers
+- [x] Activities, objects, moodlets, socials
+- [x] Snowman lifecycle
+- [x] Pool venue
+- [x] Tests
 - [ ] Screenshots
 - [ ] Checks
 
 ## Check results
 
-(To be filled in.)
+- `npm run typecheck`: clean.
+- `npm run content:check`: 0 errors, 0 warnings (`docs/CONTENT_STATUS.md` regenerated; the snowman was fixed to
+  carry a nominal price and be decorative).
+- `npm run build`: built successfully.
+- `npx vitest run tests/unit/sim/outdoor.test.ts tests/unit/integration/poolTrip.test.ts`: 18/18 passed.
+- `npx vitest run tests/unit/world/venueLayouts.test.ts`: 85/85 passed.
+- Lot counts: the pool is a thirteenth generated lot, so a new world now has 15 lots. Updated the four assertions
+  that hard-coded 14 (`integration/travel.test.ts`, `integration/neighbourhood.test.ts` x3,
+  `integration/newWorld.test.ts`) and the stale "twelve generated lots" comments/docs. The three affected files now
+  pass 22/22.
+- Long simulations (`sim/content`, `sim/townlife`, `integration/floors`, the long `integration/travel` cases) time
+  out at their 60 s per-test limit while several other agents run browsers and builds in parallel; the same tests
+  pass in isolation when the machine is quiet. Re-running the full suite once the load drops.
+- Screenshots: `dev/ds-tasks/m12/shoot-o.mjs` written; the run is queued on `/tmp/hearthside-browser.lock` behind
+  other agents' e2e/screenshot jobs.
+- `npm run e2e`, `npm run e2e:creator`, `npm run e2e:acceptance`: pending (same browser lock).

@@ -176,7 +176,7 @@ describe('travelling to a venue and back', () => {
     expect(core.travelProblem(ids, s.activeLotId)).toMatch(/^Already at /);
     // the map lists the reason for every lot
     const info = core.neighbourhood()!;
-    expect(info.lots).toHaveLength(14);
+    expect(info.lots).toHaveLength(15);
     expect(info.lots.find((l) => l.id === library.id)).toMatchObject({ open: false, hours: '9:00 AM - 8:00 PM', travelProblem: expect.stringContaining('closed') });
     expect(info.lots.find((l) => l.id === s.activeLotId)).toMatchObject({ active: true, isHome: true, travelProblem: expect.stringMatching(/^Already at/) });
     // a person at work cannot go

@@ -12,7 +12,16 @@ const SHOTS = join(dirname(fileURLToPath(import.meta.url)), 'shots', 'D');
 // viewport or an object { portrait, landscape, desktop } when the best angle differs by screen shape. Edit after
 // looking at the images.
 const CHOICE = {
-  'fridge-closed': null, 'fridge-open': 'w0', 'stove-cooking': 'k0', 'wardrobe-open': null, 'shower-running': 'w0',
+  // k1 is the diagonal that keeps the whole appliance in frame with the person below it (w2 hugs the lot edge).
+  'fridge-closed': 'k1',
+  'fridge-open': 'k1',
+  // The hob reads best close up: portrait w1 keeps the whole stove + person + steam wisps; landscape d1 and
+  // desktop d2 put the four lit rings, the pan and the cook in one frame.
+  'stove-cooking': { portrait: 'w1', landscape: 'd1', desktop: 'd2' },
+  // k1 shows both open doors and the clothes with the person in front in every viewport.
+  'wardrobe-open': 'k1',
+  // Portrait k1 frames the whole stall with the person inside; landscape w2 centres it; desktop detail TBD.
+  'shower-running': { portrait: 'k1', landscape: 'w2', desktop: 'k2' },
 };
 const VIEWPORTS = ['portrait', 'landscape', 'desktop'];
 

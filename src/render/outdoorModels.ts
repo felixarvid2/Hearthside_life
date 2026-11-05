@@ -74,10 +74,13 @@ function sunLounger(): THREE.Group {
   return g;
 }
 
-/** A diamond kite leaning against its line, with a tail of bows. */
+/** A diamond kite riding high on its line above a lawn peg, with a tail of bows. */
 function kite(): THREE.Group {
   const g = new THREE.Group();
   const sail = mat('sail', 0xe36a4a), trim = mat('trim', 0xf3d36b), line = mat('line', 0x6b6459);
+  // The kite itself flies at 2.3 m, angled into the breeze, so the prop reads clearly as a kite in the air even
+  // while nobody is holding the line (the Fly a Kite action brings someone to it and uses the same model).
+  const y = 2.3;
   const shape = new THREE.Shape();
   shape.moveTo(0, 0.65);
   shape.lineTo(0.42, 0);
@@ -86,23 +89,27 @@ function kite(): THREE.Group {
   shape.closePath();
   const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: false });
   const body = new THREE.Mesh(geo, sail);
-  body.position.set(0.5, 0.85, 0.5);
+  body.position.set(0.5, y, 0.5);
   body.rotation.set(0.16, 0, 0.35);
   g.add(body);
-  const crossV = box(0.03, 1.3, 0.03, 0.5, 0.85, 0.5, trim);
+  const crossV = box(0.03, 1.3, 0.03, 0.5, y, 0.5, trim);
   crossV.rotation.z = 0.35;
   crossV.rotation.x = 0.16;
   g.add(crossV);
-  const crossH = box(0.84, 0.03, 0.03, 0.5, 0.85, 0.5, trim);
+  const crossH = box(0.84, 0.03, 0.03, 0.5, y, 0.5, trim);
   crossH.rotation.z = 0.35;
   crossH.rotation.x = 0.16;
   g.add(crossH);
-  const string = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 1, 5), line);
-  string.position.set(0.72, 0.42, 0.68);
-  string.rotation.z = 0.5;
+  // The line runs from a lawn peg at the front of the footprint up to the kite's lower tip.
+  const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.22, 8), line);
+  peg.position.set(0.5, 0.11, 0.88);
+  g.add(peg);
+  const string = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 1.72, 5), line);
+  string.position.set(0.5, 0.95, 0.69);
+  string.rotation.x = -0.22;
   g.add(string);
   for (let i = 0; i < 3; i++) {
-    const bow = box(0.14, 0.02, 0.02, 0.76 + i * 0.1, 0.18 - i * 0.06, 0.5 + i * 0.05, trim);
+    const bow = box(0.14, 0.02, 0.02, 0.5 + (i - 1) * 0.04, y - 0.78 - i * 0.16, 0.52 + i * 0.03, trim);
     bow.rotation.z = 0.3;
     g.add(bow);
   }

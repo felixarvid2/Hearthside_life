@@ -119,7 +119,7 @@ export interface NeighbourhoodLots {
 }
 
 /**
- * Creates the twelve generated lot records (empty, `built: false`) with names, addresses, map positions and listings.
+ * Creates the thirteen generated lot records (empty, `built: false`) with names, addresses, map positions and listings.
  * `names` picks street numbers; the lots are created in LOT_SPECS order.
  */
 export function createNeighbourhoodLots(state: WorldState, names: Rng, street: string): NeighbourhoodLots {

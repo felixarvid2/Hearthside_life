@@ -435,9 +435,9 @@ function poolPlan(): HousePlan {
   const furniture: Furn[] = [
     // changing room
     ...line('locker-bank', 17, 6, 4, 1, 0), F('bench-low-cushion', 17, 8), F('bench-low-cushion', 18, 8),
-    F('bathroom-mirror', 21, 6), F('bathroom-sink', 21, 7), F('toilet-basic', 24, 6), F('trash-can', 25, 6), F('plant-potted', 25, 8), F('rug-doormat', 15, 9),
+    F('bathroom-mirror', 22, 12, 2), F('bathroom-sink', 21, 12, 2), F('toilet-basic', 24, 6), F('trash-can', 25, 6), F('plant-potted', 25, 8), F('rug-doormat', 15, 9),
     // showers
-    ...line('shower-stall', 16, 14, 4, 1, 0), F('bench-low-cushion', 22, 14), F('trash-can', 25, 15), F('plant-fern-pot', 25, 18),
+    ...line('shower-stall', 16, 14, 4, 1, 0), F('bench-low-cushion', 22, 14), F('trash-can', 25, 15), F('plant-potted', 25, 18),
     // lobby: benches, vending, coat rack, plants
     F('bench-cushion', 7, 24, 2), F('bench-cushion', 8, 24, 2), F('vending-machine', 23, 21, 2), F('vending-machine', 24, 21, 2),
     F('coat-rack-standing', 14, 24), F('plant-potted', 6, 21), F('plant-potted', 25, 24), F('trash-can', 20, 25),
@@ -463,7 +463,6 @@ function poolPlan(): HousePlan {
       ...openings('window-picture', 'v', 5, 10, 2), ...openings('window-picture', 'v', 5, 22, 2),
       ...openings('window-picture', 'v', 27, 9, 2), ...openings('window-high', 'v', 27, 16, 2),
       ...openings('window-tall', 'h', 7, 26, 3), ...openings('window-tall', 'h', 21, 26, 3),
-      ...openings('window-clerestory', 'h', 6, 13, 4),
     ],
     rooms: [
       { name: 'pool hall', probe: { x: 10, z: 22 }, wall: P('subway-tile', 1), floor: P('porcelain-large', 4) },
