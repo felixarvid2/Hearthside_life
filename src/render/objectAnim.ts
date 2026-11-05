@@ -218,84 +218,96 @@ function first(uses: readonly ObjectUse[], pred: (u: ObjectUse) => boolean): Obj
   return null;
 }
 
-function act(u: ObjectUse | null): Activation {
-  return u ? { on: true, since: u.animSince } : off();
+const PART_FLAGS: readonly PartFlag[] = [
+  'door', 'door2', 'lid', 'ovenDoor', 'burners', 'pan', 'steam', 'shower', 'bath', 'tap', 'light', 'drum',
+];
+
+/** Clears a reusable record in place, so the runtime can keep one record per object instead of allocating per frame. */
+function resetParts(p: ActiveParts): void {
+  for (const k of PART_FLAGS) {
+    const a = p[k];
+    a.on = false;
+    a.since = 0;
+  }
+}
+
+function setPart(out: ActiveParts, flag: PartFlag, u: ObjectUse | null): void {
+  const a = out[flag];
+  a.on = !!u;
+  a.since = u ? u.animSince : 0;
 }
 
 /**
  * The parts of `desc` that should be open/running right now. `uses` are the ObjectUse entries recorded for this
- * placed object (target or station). Pure: unit-tested without a renderer.
+ * placed object (target or station). Pure: unit-tested without a renderer. Pass `out` to reuse a record.
  */
-export function activeParts(desc: AnimDescriptor, uses: readonly ObjectUse[], content: ContentDB): ActiveParts {
-  const out = blankParts();
-  const set = (flag: PartFlag, a: Activation) => { out[flag] = a; };
+export function activeParts(
+  desc: AnimDescriptor, uses: readonly ObjectUse[], content: ContentDB, out: ActiveParts = blankParts(),
+): ActiveParts {
+  resetParts(out);
   switch (desc.kind) {
     case 'fridge': {
       // The door follows the reach-in animation; cookMeal's stage 0 is the whole fridge stage.
       const u = first(uses, (x) => x.anim === 'openFridge' || (x.interactionId === 'cookMeal' && x.stage === 0));
-      const a = act(u);
-      set('door', a);
+      setPart(out, 'door', u);
       // Side-by-side/wardrobe style second leaf: open together when the descriptor has one.
-      set('door2', desc.parts.some((p) => p.role === 'door2') ? a : off());
-      set('light', { on: a.on, since: a.since });
+      setPart(out, 'door2', desc.parts.some((p) => p.role === 'door2') ? u : null);
+      setPart(out, 'light', u);
       break;
     }
     case 'oven': {
       const cook = first(uses, (x) => (x.interactionId === 'cookMeal' && x.stage === 1) || x.interactionId === 'bakeTreat');
-      const a = act(cook);
       const hob = desc.hob === true && cook?.interactionId === 'cookMeal';
-      set('burners', hob ? a : off());
-      set('pan', hob ? a : off());
-      set('steam', hob ? a : off());
-      set('light', a);
+      setPart(out, 'burners', hob ? cook : null);
+      setPart(out, 'pan', hob ? cook : null);
+      setPart(out, 'steam', hob ? cook : null);
+      setPart(out, 'light', cook);
       const pulse = desc.pulseMinutes ?? 0.8;
-      set('ovenDoor', cook && isBakedRecipe(content, cook) && cook.elapsed < pulse ? a : off());
+      setPart(out, 'ovenDoor', cook && isBakedRecipe(content, cook) && cook.elapsed < pulse ? cook : null);
       break;
     }
     case 'wardrobe': {
       const u = first(uses, (x) => x.interactionId === 'changeOutfit' || x.interactionId === 'editOutfits');
-      const a = act(u);
-      set('door', a);
-      set('door2', desc.parts.some((p) => p.role === 'door2') ? a : off());
+      setPart(out, 'door', u);
+      setPart(out, 'door2', desc.parts.some((p) => p.role === 'door2') ? u : null);
       break;
     }
     case 'toilet': {
-      set('lid', act(first(uses, (x) => x.interactionId === 'useToilet')));
+      setPart(out, 'lid', first(uses, (x) => x.interactionId === 'useToilet'));
       break;
     }
     case 'shower': {
-      set('shower', act(first(uses, (x) => x.interactionId === 'takeShower' && x.phase === 'perform')));
+      setPart(out, 'shower', first(uses, (x) => x.interactionId === 'takeShower' && x.phase === 'perform'));
       break;
     }
     case 'bath': {
-      set('bath', act(first(uses, (x) => x.interactionId === 'takeBath' && x.phase === 'perform')));
+      setPart(out, 'bath', first(uses, (x) => x.interactionId === 'takeBath' && x.phase === 'perform'));
       break;
     }
     case 'sink': {
       const u = first(uses, (x) => x.interactionId === 'washHands' || (x.interactionId === 'washDishes' && x.stage === 1));
-      set('tap', act(u));
+      setPart(out, 'tap', u);
       break;
     }
     case 'dishwasher': {
       const u = first(uses, (x) => x.interactionId === 'washDishes' && x.stage === 1);
-      const a = act(u);
       const pulse = desc.pulseMinutes ?? 0.8;
       const nearEnd = u?.duration != null && u.duration > 0 && u.elapsed > u.duration - pulse;
-      set('door', u && (u.elapsed < pulse || nearEnd) ? a : off());
-      set('light', a);
+      setPart(out, 'door', u && (u.elapsed < pulse || nearEnd) ? u : null);
+      setPart(out, 'light', u);
       break;
     }
     case 'microwave': {
-      const a = act(first(uses, () => true));
-      set('door', a);
-      set('light', a);
+      const u = first(uses, () => true);
+      setPart(out, 'door', u);
+      setPart(out, 'light', u);
       break;
     }
     case 'laundry': {
-      const a = act(first(uses, () => true));
-      set('door', a);
-      set('drum', a);
-      set('light', a);
+      const u = first(uses, () => true);
+      setPart(out, 'door', u);
+      setPart(out, 'drum', u);
+      setPart(out, 'light', u);
       break;
     }
   }
@@ -346,7 +358,7 @@ export function seedMotion(active: boolean, activeSince: number, now: number, ti
  */
 export function stepMotion(m: OpenMotion, active: boolean, now: number, timing: PartTiming, reducedMotion = false): OpenMotion {
   if (reducedMotion) return { from: active ? 1 : 0, to: active ? 1 : 0, since: now, duration: 0, active };
-  if (m.active === active) return { ...m, active };
+  if (m.active === active) return m; // already heading there: keep the tween timestamps (and allocate nothing)
   const current = opennessAt(m, now, false);
   const target = active ? 1 : 0;
   const distance = Math.abs(target - current);
@@ -478,6 +490,9 @@ export class ObjectAnim {
   private seeded = false;
   private readonly ownGeometries: THREE.BufferGeometry[] = [];
   private readonly ownMaterials: THREE.Material[] = [];
+  /** Reused every frame: the active-part record and the quaternion scratch (no per-frame allocation). */
+  private readonly acts: ActiveParts = blankParts();
+  private readonly turn = new THREE.Quaternion();
 
   constructor(def: ObjectDef, model: THREE.Object3D | null, private readonly content: ContentDB) {
     this.root.name = 'object-anim';
@@ -528,8 +543,7 @@ export class ObjectAnim {
 
   /** Per-frame update. `now` is the game clock in minutes, `dt` real seconds. */
   update(uses: readonly ObjectUse[], now: number, dt: number, reducedMotion: boolean): void {
-    const act = activeParts(this.desc, uses.length ? uses : NO_USES, this.content);
-    const scratch = new THREE.Quaternion();
+    const act = activeParts(this.desc, uses.length ? uses : NO_USES, this.content, this.acts);
 
     if (!this.seeded) {
       this.seeded = true;
@@ -545,8 +559,8 @@ export class ObjectAnim {
     for (const p of this.parts) {
       const v = opennessAt(p.motion, now, reducedMotion);
       if (p.flag !== 'burners' && p.flag !== 'pan' && p.flag !== 'steam') doorOpen = Math.max(doorOpen, v);
-      scratch.setFromAxisAngle(AXES[p.axis], p.angle * v);
-      p.pivot.quaternion.copy(p.base).premultiply(scratch);
+      this.turn.setFromAxisAngle(AXES[p.axis], p.angle * v);
+      p.pivot.quaternion.copy(p.base).premultiply(this.turn);
     }
 
     // Interiors are built lazily and only drawn while a door is actually open (closed appliances cost nothing).

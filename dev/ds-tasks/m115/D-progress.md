@@ -140,6 +140,9 @@ use: the target object (as today, when it is a placed object) plus `cookMeal`'s 
   `objectUses(frame.state).get(id)` and `world.clock.minutes`. Only the active lot is held, so only visible-lot
   objects animate. `dispose()` on removal. `sync` signature unchanged.
 - `gameView.ts`: passes `{ state: world, now: world.clock.minutes }` to `objects.animate`.
+- No per-frame allocations in the hot path: each `ObjectAnim` owns one `ActiveParts` record and one scratch
+  quaternion; `activeParts(..., out)` resets and fills that record in place (`resetParts`/`setPart`), and
+  `stepMotion` returns the existing motion unchanged while its target has not flipped.
 - Triggers actually implemented (all from `objectUses` + `person.anim`; no save fields):
   - fridge doors: `anim === 'openFridge'` (grabSnack and any reach-in) or `cookMeal` stage 0, including
     `doorLeft`+`doorRight` for the side-by-side; closes when the anim/stage ends.
@@ -193,8 +196,12 @@ Changes made:
   are parked on the porch so they do not stand in the wide shots.
 - Every candidate now records the rig target, yaw, ppm, insets, canvas size and the projected screen position of
   the object centre/top and the acting person in `d-log.json` (`aims`), so framing can be checked numerically
-  rather than guessed from the diagonal isometric view. `--only=fridge` re-shoots only the two fridge states for a
-  quick iteration.
+  rather than guessed from the diagonal isometric view. `--only=fridge,stove` re-shoots only those states for a
+  quick iteration (the cookMeal chain still runs end to end so the stove stage is reachable).
+- The stove shots also carry a scene-graph diagnostic (`diag` in the log): whether the object's `anim-effects`
+  group exists, the visible flag and projected screen position of every hob ring/pot/steam sprite, the ring
+  material's emissive intensity, and the acting action's `stoveObj`/stage. It settles "is the effect running" from
+  numbers; four extra wide (`-x0..3`) stove candidates keep the whole counter run in frame.
 - Full candidate run: **24/24 checks passed** (cookMeal queueable and its stage 0 and stage 1 reached, changeOutfit
   queueable and reached, takeShower queueable and reached, no page errors — eight checks per viewport) and 126 PNGs
   were written across the three viewports (`d-log-full.json`). The picker (`promote-d.mjs`) then copies one

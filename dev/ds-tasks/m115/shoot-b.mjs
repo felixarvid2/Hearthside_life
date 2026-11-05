@@ -110,7 +110,7 @@ async function frameAt(page, x, z, ppm) {
 }
 
 /** Queues Cook a Meal on the fridge for a member who is home and advances to the cooking stage. */
-async function startCooking(page, camPpm) {
+async function startCooking(page, camPpm, label = '') {
   const r = await page.evaluate(() => {
     const h = window.hearthside, g = h.game, st = g.state();
     const hh = st.households[st.activeHouseholdId];
@@ -146,9 +146,39 @@ async function startCooking(page, camPpm) {
     return { ok: false, reason: 'never reached the cooking stage' };
   });
   if (r.ok) {
+    // Let the character view catch up with the sim position after the tick loop (the sim is paused, but the view
+    // still eases toward the new position on each rendered frame), then frame the *visual* position.
+    await page.waitForTimeout(900);
+    await frames(page, 12);
+    const vis = await page.evaluate((personId) => window.hearthside.view.personPosition(personId), r.id);
+    if (vis) { r.x = vis.x; r.z = vis.z; }
+    // Wide debug shot (not a deliverable): shows whether the household is drawn at all in this session.
+    await page.evaluate(() => window.hearthside.view.frameLot(true));
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `/tmp/m115b-wide-${label || 'vp'}.png` });
     // Frame the cook at a fixed zoom and let the glide settle (the sim is paused).
     await frameAt(page, r.x, r.z, camPpm);
     await page.waitForTimeout(600);
+    // Drive the glide to completion before reading the camera (the render loop is slow under SwiftShader).
+    await frames(page, 12);
+    const cam = await page.evaluate((personId) => {
+      const h = window.hearthside, v = h.view;
+      const pos = v.personPosition(personId);
+      const s = pos ? h.game.view.worldToScreen(pos.x, 1.2, pos.z) : null;
+      const p = h.game.state().people[personId];
+      // Runtime-only introspection (TS-private fields are ordinary properties): is the character mesh attached?
+      const entry = h.view.people?.entries?.get?.(personId);
+      return {
+        ppm: Math.round(v.rig.ppm),
+        screen: s && { x: Math.round(s.x), y: Math.round(s.y) },
+        pos: pos && { x: +pos.x.toFixed(2), z: +pos.z.toFixed(2) },
+        loc: p && p.location, level: v.personLevel(personId),
+        inScene: !!(entry && entry.view?.root?.parent),
+        rootY: entry?.view?.root?.position?.y,
+        visible: entry?.visible,
+      };
+    }, r.id);
+    console.log(`[m115-b] camera on the cook: ${JSON.stringify(cam)}`);
   }
   await frames(page, 8);
   return r;
@@ -356,7 +386,7 @@ async function twoActions(page, camPpm) {
     // Closest pairs first: the camera can frame both pills together.
     tries.sort((x, y) => x[2] - y[2]);
     tries.length = Math.min(12, tries.length);
-    for (const [a, b] of tries) {
+    for (const [a, b, dist] of tries) {
       const qa = g.queue(a.person, a.opt);
       const qb = g.queue(b.person, b.opt);
       if (!qa.ok || !qb.ok) {
@@ -370,11 +400,14 @@ async function twoActions(page, camPpm) {
         const hb = st.people[b.person].queue[0];
         if (!ha || !hb) break;
         if (ha.phase === 'perform' && hb.phase === 'perform') {
+          const va = h.view.personPosition(a.person) ?? a;
+          const vb = h.view.personPosition(b.person) ?? b;
           return {
             ok: true,
-            a: { person: a.person, name: st.people[a.person].firstName, action: ha.interactionId, x: a.x, z: a.z },
-            b: { person: b.person, name: st.people[b.person].firstName, action: hb.interactionId, x: b.x, z: b.z },
-            midX: (a.x + b.x) / 2, midZ: (a.z + b.z) / 2, dist,
+            a: { person: a.person, name: st.people[a.person].firstName, action: ha.interactionId, x: va.x, z: va.z },
+            b: { person: b.person, name: st.people[b.person].firstName, action: hb.interactionId, x: vb.x, z: vb.z },
+            midX: (va.x + vb.x) / 2, midZ: (va.z + vb.z) / 2,
+            dist: Math.hypot(va.x - vb.x, va.z - vb.z),
             ticks: i,
           };
         }
@@ -387,6 +420,20 @@ async function twoActions(page, camPpm) {
     return { ok: false, reason: `no pair started (${tries.length} tried)` };
   });
   if (r.ok) {
+    // Let the character views settle on their sim positions before reading the visual positions used below.
+    await page.waitForTimeout(900);
+    await frames(page, 12);
+    const vis = await page.evaluate((ids) => {
+      const v = window.hearthside.view;
+      return ids.map((id) => v.personPosition(id));
+    }, [r.a.person, r.b.person]);
+    if (vis[0] && vis[1]) {
+      r.a.x = vis[0].x; r.a.z = vis[0].z;
+      r.b.x = vis[1].x; r.b.z = vis[1].z;
+      r.midX = (vis[0].x + vis[1].x) / 2;
+      r.midZ = (vis[0].z + vis[1].z) / 2;
+      r.dist = Math.hypot(vis[0].x - vis[1].x, vis[0].z - vis[1].z);
+    }
     // Centre both actors at the closest zoom that keeps the pair on screen, so both pills are readable together.
     const fit = Math.min(camPpm, page.viewportSize().width / (r.dist + 5));
     await frameAt(page, r.midX, r.midZ, Math.max(20, Math.round(fit)));
@@ -449,7 +496,7 @@ async function main() {
       // Fixed zoom: 46 px/m leaves a 1.7 m actor ~78 px tall on phones, 78 px/m ~133 px on desktop, and keeps the
       // camera outside the kitchen furniture.
       const camPpm = vp.mobile ? 46 : 78;
-      const cook = await startCooking(page, camPpm);
+      const cook = await startCooking(page, camPpm, vp.id);
       note(`${vp.id}: cooking starts and reaches the cooking stage`, cook.ok, cook.ok ? `${cook.name} recipe=${cook.recipeId} duration=${cook.duration}` : cook.reason);
       if (!cook.ok) { await context.close(); continue; }
 

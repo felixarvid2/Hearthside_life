@@ -7,7 +7,7 @@
   {
     "name": "portrait: writing starts at the desktop computer",
     "ok": true,
-    "evidence": "person=per_2w action=act_4l"
+    "evidence": "person=per_2w action=act_4r"
   },
   {
     "name": "portrait: the camera is close to the computer screen",
@@ -22,7 +22,7 @@
   {
     "name": "portrait: writing at 20 % shows a partial page",
     "ok": true,
-    "evidence": "{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4l\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"}"
+    "evidence": "{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4r\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"}"
   },
   {
     "name": "portrait: writing 20 % screen centre is on screen",
@@ -37,7 +37,7 @@
   {
     "name": "portrait: writing at 80 % is further into the same action",
     "ok": true,
-    "evidence": "{\"at20\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4l\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"},\"at80\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4l\",\"elapsed\":48,\"duration\":60,\"progress\":0.8,\"phase\":\"perform\"}}"
+    "evidence": "{\"at20\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4r\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"},\"at80\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4r\",\"elapsed\":48,\"duration\":60,\"progress\":0.8,\"phase\":\"perform\"}}"
   },
   {
     "name": "portrait: writing 80 % screen centre is on screen",
@@ -77,12 +77,12 @@
   {
     "name": "portrait: the TV is on while someone is watching",
     "ok": true,
-    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":122,\"posture\":\"seated\",\"screen\":{\"x\":199.20899999999625,\"y\":317.3715161941894,\"visible\":true},\"watch\":{\"ok\":true,\"personId\":\"per_2w\",\"objectId\":\"obj_o\",\"actionId\":\"act_4u\",\"elapsed\":0.25,\"duration\":60}}"
+    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":122,\"posture\":\"seated\",\"screen\":{\"x\":199.20899999999625,\"y\":317.3715161941894,\"visible\":true},\"top\":292,\"bottom\":343,\"head\":566,\"framed\":true,\"watch\":{\"ok\":true,\"personId\":\"per_2w\",\"objectId\":\"obj_o\",\"actionId\":\"act_50\",\"elapsed\":0.25,\"duration\":60}}"
   },
   {
     "name": "portrait: the TV screen and watcher share the frame",
     "ok": true,
-    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":122,\"posture\":\"seated\",\"screen\":{\"x\":199.20899999999625,\"y\":317.3715161941894,\"visible\":true}}"
+    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":122,\"posture\":\"seated\",\"screen\":{\"x\":199.20899999999625,\"y\":317.3715161941894,\"visible\":true},\"top\":292,\"bottom\":343,\"head\":566,\"framed\":true}"
   },
   {
     "name": "shot tv-off-portrait",
@@ -102,7 +102,7 @@
   {
     "name": "landscape: writing starts at the desktop computer",
     "ok": true,
-    "evidence": "person=per_2w action=act_4i"
+    "evidence": "person=per_2w action=act_4l"
   },
   {
     "name": "landscape: the camera is close to the computer screen",
@@ -117,7 +117,7 @@
   {
     "name": "landscape: writing at 20 % shows a partial page",
     "ok": true,
-    "evidence": "{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4i\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"}"
+    "evidence": "{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4l\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"}"
   },
   {
     "name": "landscape: writing 20 % screen centre is on screen",
@@ -132,7 +132,7 @@
   {
     "name": "landscape: writing at 80 % is further into the same action",
     "ok": true,
-    "evidence": "{\"at20\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4i\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"},\"at80\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4i\",\"elapsed\":48,\"duration\":60,\"progress\":0.8,\"phase\":\"perform\"}}"
+    "evidence": "{\"at20\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4l\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"},\"at80\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4l\",\"elapsed\":48,\"duration\":60,\"progress\":0.8,\"phase\":\"perform\"}}"
   },
   {
     "name": "landscape: writing 80 % screen centre is on screen",
@@ -167,17 +167,17 @@
   {
     "name": "shot tv-watching-landscape",
     "ok": true,
-    "evidence": "{\"ppm\":190,\"yaw\":90,\"k\":0,\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"glide\":false,\"orbiting\":false}"
+    "evidence": "{\"ppm\":115,\"yaw\":90,\"k\":0,\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"glide\":false,\"orbiting\":false}"
   },
   {
     "name": "landscape: the TV is on while someone is watching",
     "ok": true,
-    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":190,\"posture\":\"seated\",\"screen\":{\"x\":428.55499999999415,\"y\":-38.29026166478714,\"visible\":false},\"watch\":{\"ok\":true,\"personId\":\"per_2w\",\"objectId\":\"obj_o\",\"actionId\":\"act_4r\",\"elapsed\":0.25,\"duration\":60}}"
+    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":115,\"posture\":\"seated\",\"screen\":{\"x\":425.96749999999645,\"y\":48.46905215026044,\"visible\":true},\"top\":25,\"bottom\":72,\"head\":282,\"framed\":true,\"watch\":{\"ok\":true,\"personId\":\"per_2w\",\"objectId\":\"obj_o\",\"actionId\":\"act_4u\",\"elapsed\":0.25,\"duration\":60}}"
   },
   {
     "name": "landscape: the TV screen and watcher share the frame",
-    "ok": false,
-    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":190,\"posture\":\"seated\",\"screen\":{\"x\":428.55499999999415,\"y\":-38.29026166478714,\"visible\":false}}"
+    "ok": true,
+    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":115,\"posture\":\"seated\",\"screen\":{\"x\":425.96749999999645,\"y\":48.46905215026044,\"visible\":true},\"top\":25,\"bottom\":72,\"head\":282,\"framed\":true}"
   },
   {
     "name": "shot tv-off-landscape",
@@ -197,7 +197,7 @@
   {
     "name": "desktop: writing starts at the desktop computer",
     "ok": true,
-    "evidence": "person=per_2w action=act_4i"
+    "evidence": "person=per_2w action=act_4r"
   },
   {
     "name": "desktop: the camera is close to the computer screen",
@@ -212,7 +212,7 @@
   {
     "name": "desktop: writing at 20 % shows a partial page",
     "ok": true,
-    "evidence": "{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4i\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"}"
+    "evidence": "{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4r\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"}"
   },
   {
     "name": "desktop: writing 20 % screen centre is on screen",
@@ -227,7 +227,7 @@
   {
     "name": "desktop: writing at 80 % is further into the same action",
     "ok": true,
-    "evidence": "{\"at20\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4i\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"},\"at80\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4i\",\"elapsed\":48,\"duration\":60,\"progress\":0.8,\"phase\":\"perform\"}}"
+    "evidence": "{\"at20\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4r\",\"elapsed\":12,\"duration\":60,\"progress\":0.2,\"phase\":\"perform\"},\"at80\":{\"ok\":true,\"interactionId\":\"writeArticle\",\"actionId\":\"act_4r\",\"elapsed\":48,\"duration\":60,\"progress\":0.8,\"phase\":\"perform\"}}"
   },
   {
     "name": "desktop: writing 80 % screen centre is on screen",
@@ -267,12 +267,12 @@
   {
     "name": "desktop: the TV is on while someone is watching",
     "ok": true,
-    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":190,\"posture\":\"seated\",\"screen\":{\"x\":646.5549999999942,\"y\":126.70973833521289,\"visible\":true},\"watch\":{\"ok\":true,\"personId\":\"per_2w\",\"objectId\":\"obj_o\",\"actionId\":\"act_4r\",\"elapsed\":0.25,\"duration\":60}}"
+    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":190,\"posture\":\"seated\",\"screen\":{\"x\":646.5549999999942,\"y\":126.70973833521289,\"visible\":true},\"top\":88,\"bottom\":166,\"head\":513,\"framed\":true,\"watch\":{\"ok\":true,\"personId\":\"per_2w\",\"objectId\":\"obj_o\",\"actionId\":\"act_50\",\"elapsed\":0.25,\"duration\":60}}"
   },
   {
     "name": "desktop: the TV screen and watcher share the frame",
     "ok": true,
-    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":190,\"posture\":\"seated\",\"screen\":{\"x\":646.5549999999942,\"y\":126.70973833521289,\"visible\":true}}"
+    "evidence": "{\"ok\":true,\"world\":{\"x\":5.53,\"y\":0.97,\"z\":12.5},\"person\":{\"x\":9.42,\"z\":12.57},\"target\":{\"x\":7.47,\"y\":0.98,\"z\":12.53},\"ppm\":190,\"posture\":\"seated\",\"screen\":{\"x\":646.5549999999942,\"y\":126.70973833521289,\"visible\":true},\"top\":88,\"bottom\":166,\"head\":513,\"framed\":true}"
   },
   {
     "name": "shot tv-off-desktop",

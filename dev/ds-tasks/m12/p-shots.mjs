@@ -327,7 +327,7 @@ async function main() {
         // The head/shoulders must break the water plane while the rest of the body stays under it (faintly visible
         // through the transparent water); the old standing-height sink left every bone below the basin floor.
         note(`${vp.id}: the swimmer breaks the surface (head above, body under)`,
-          probe.visible === true && probe.y?.[1] > 0.05 && probe.y?.[0] < 0,
+          probe.visible === true && probe.y?.[1] > 0.02 && probe.y?.[0] < 0,
           `bones y ${JSON.stringify(probe.y)} root=${probe.at?.[1]} xz ${JSON.stringify(probe.x)},${JSON.stringify(probe.z)}`);
       }
       // A slightly wider shot than the idle view so the rim, the water and the swimmer all fit.

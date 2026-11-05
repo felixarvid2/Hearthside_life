@@ -13,7 +13,7 @@ import type { Lot, Pool } from '../core/types';
 import { poolsOf } from '../world/pools';
 
 /** Water surface height: a hair above the ground (floors sit at 0) so it never z-fights with the lawn. */
-const WATER_Y = 0.015;
+export const WATER_Y = 0.015;
 const COPING_TOP = 0.055;
 const BASIN_DEPTH = 0.8;
 /** Width of the coping and of the water's inset from the pool edge. */

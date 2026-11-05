@@ -86,4 +86,27 @@ that every id in the table exists in the content database.
   first painters test has a 120 s allowance and passes, so the timeouts are CPU contention, not regressions.
 - `npm run content:check` — 0 errors, 0 warnings.
 - `npm run build` — 329 modules, built in 14.2 s.
-- Screenshots/check log: see below (filled in after the script run).
+- `npm run visual:m115:screens` — **57/57 checks passed**, no page errors in any viewport. Every close-up is a
+  real close-up at capture time (`ppmNow` 400 for the computer, 122 portrait / 115 landscape / 190 desktop for the
+  TV, no glide running). The TV check also proves the glass corners and the watcher's head are inside the frame.
+- Screenshots, 21 PNGs in `dev/ds-tasks/m115/shots/S/` (portrait 390×844, landscape 844×390, desktop 1280×720),
+  plus `shots.json` with the full check log:
+
+  | shot | what it shows |
+  | --- | --- |
+  | `writing-20-*` | white word-processor page, five typed lines and a cursor, rest of the page empty |
+  | `writing-80-*` | the same action later: a full page of text, scrolled, visibly longer than at 20 % |
+  | `programming-*` | code editor with syntax colours, line numbers and the terminal pane |
+  | `gaming-*` | platformer: green platforms, coins, red player, `SCORE`, `LEVEL` |
+  | `tv-watching-*` | TV on with the seated watcher in frame; news card and red ticker in all three viewports |
+  | `computer-off-*` | dark glossy monitor, no picture |
+  | `tv-off-*` | dark glossy TV with nobody watching (all household members cleared before the shot) |
+
+  Pixel crops (a temporary vitest diagnostic, `dev/ds-tasks/m115/crop.test.ts`) confirmed the pictures read at
+  a glance: writing shots are ~50 % white page, programming ~35 % editor blue, gaming ~45 % game blue with 15 %
+  green platforms, computer-off ~65 % dark with no white. Crops are written to `/tmp/m115s-crops/` and the test
+  is not part of the default suite (`vitest.config.ts` includes only `tests/unit/**`).
+
+Housekeeping for the supervisor: `dev/ds-tasks/m115/__probe.mjs` is a leftover scratch probe and can be deleted
+(`rm` is blocked for me). `crop.test.ts` + `crop-vitest.config.ts` are the diagnostic described above, kept for
+re-running; neither is in the default test include.

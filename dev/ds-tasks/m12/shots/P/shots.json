@@ -22,7 +22,7 @@
   {
     "name": "portrait: confirming builds one pool with a ladder",
     "ok": true,
-    "evidence": "ok pools=1 pool={\"id\":\"pool_4n\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4k\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
   },
   {
     "name": "portrait: the pool costs the posted price",
@@ -37,7 +37,12 @@
   {
     "name": "portrait: a household member is swimming in the built pool",
     "ok": true,
-    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":88,\"hygiene\":86}"
+    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":84,\"hygiene\":82}"
+  },
+  {
+    "name": "portrait: the swimmer breaks the surface (head above, body under)",
+    "ok": true,
+    "evidence": "bones y [-0.223,0.055] root=0.055 xz [13.376,15.74],[19.247,19.754]"
   },
   {
     "name": "portrait: the swimmer is framed on screen",
@@ -92,7 +97,12 @@
   {
     "name": "landscape: a household member is swimming in the built pool",
     "ok": true,
-    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":70,\"hygiene\":85}"
+    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":80,\"hygiene\":84}"
+  },
+  {
+    "name": "landscape: the swimmer breaks the surface (head above, body under)",
+    "ok": true,
+    "evidence": "bones y [-0.207,0.055] root=0.055 xz [13.376,15.746],[19.25,19.75]"
   },
   {
     "name": "landscape: the swimmer is framed on screen",
@@ -132,7 +142,7 @@
   {
     "name": "desktop: confirming builds one pool with a ladder",
     "ok": true,
-    "evidence": "ok pools=1 pool={\"id\":\"pool_4j\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4m\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
   },
   {
     "name": "desktop: the pool costs the posted price",
@@ -147,7 +157,12 @@
   {
     "name": "desktop: a household member is swimming in the built pool",
     "ok": true,
-    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":83,\"hygiene\":79}"
+    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":80,\"hygiene\":75}"
+  },
+  {
+    "name": "desktop: the swimmer breaks the surface (head above, body under)",
+    "ok": true,
+    "evidence": "bones y [-0.243,0.055] root=0.055 xz [13.379,15.731],[19.236,19.76]"
   },
   {
     "name": "desktop: the swimmer is framed on screen",

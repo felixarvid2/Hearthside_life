@@ -191,7 +191,7 @@ The visual staging is deterministic per shot: the clock is paused and the action
 | `npx vitest run` (whole suite) | 2 017 passed, 2 failed; `tests/unit/surfaces/painters.test.ts` passes when re-run alone (CPU timeout under load), `tests/unit/integration/travel.test.ts` fails on its own too — unrelated to task H (no sim files touched) |
 | `npm run content:check` | 0 errors, 0 warnings |
 | `npm run build` | passed (17 s, after the other agents' unused imports were resolved in their files) |
-| `npm run e2e` | see below |
+| `npm run e2e` | **passed** — all three viewports (desktop, portrait, landscape), `[e2e] OK`, no page/console errors, no blank canvases; screenshots in `tests/e2e/out/screenshots` |
 | `npm run visual:m115:h` | 27/27, screenshots above |
 
 The two failing unit tests are not touched by task H: `travel.test.ts` fails the same way on an untouched tree branch
@@ -201,3 +201,10 @@ in-flight work; those were fixed in their files and the build then passed withou
 
 Temporary development files left because `rm` is blocked: `dev/ds-tasks/m115/bones-probe.txt` (the GLB bone probe
 moved out of `tests/unit`), `inspect-bones.mjs`, `__probe.mjs`. They are dev-only and not imported by the game.
+
+### Handover
+
+- `bash tools/te-save.sh` could not be executed here: shell-script execution in this session returns
+  "This command requires approval" (the script is also not marked executable). **The supervisor should run
+  `bash tools/te-save.sh` before the last commit and include `.tokeneconomizer/` in it**, per `CLAUDE.md`.
+- `git` is blocked in this session, so nothing was committed. All files for task H are in the working tree.

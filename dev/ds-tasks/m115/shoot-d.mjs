@@ -22,8 +22,10 @@ if (!process.env.HEARTHSIDE_D_SHOTS_LOCKED) {
   process.exit(r.status ?? 1);
 }
 const PORT = 5196;
-/** `--only=fridge` re-shoots just the two fridge states (quick iteration); default is the full set. */
+/** `--only=fridge,stove` re-shoots just those states (quick iteration); default is the full set. */
 const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice('--only='.length) ?? '';
+const ONLY_SET = new Set(ONLY.split(',').filter(Boolean));
+const wants = (state) => ONLY_SET.size === 0 || ONLY_SET.has(state);
 const DIST = join(root, 'dist');
 const SHOTS = join(here, 'shots', 'D');
 mkdirSync(SHOTS, { recursive: true });
@@ -44,7 +46,7 @@ function launchOptions(chromium) {
   return opts;
 }
 
-const log = { checks: [], shots: [], viewports: [], aims: [] };
+const log = { checks: [], shots: [], viewports: [], aims: [], diag: [] };
 const check = (name, ok, evidence) => {
   log.checks.push({ name, ok, evidence });
   console.log(`[shots] ${ok ? 'ok  ' : 'FAIL'} ${name}${evidence ? ` — ${evidence}` : ''}`);
@@ -152,6 +154,50 @@ async function logAim(page, vp, label, objectId) {
     };
   }, objectId);
   log.aims.push({ viewport: vp.name, label, ...info });
+}
+
+/**
+ * Scene-graph check for one object: does its ObjectAnim exist, are the hob rings switched on, and where do they
+ * project on screen? Answers "is the effect running and is it in frame" from numbers instead of a guess.
+ */
+async function sceneDiag(page, vp, objectId, label) {
+  const info = await page.evaluate((id) => {
+    const th = window.hearthside;
+    const st = th.debug.state();
+    const p = st.people[st.households[st.activeHouseholdId].memberIds[0]];
+    const a = p.queue[0];
+    const rig = th.view.rig;
+    const g = th.view.scene.getObjectByName(`obj:${id}`);
+    const world = (o) => ({ x: o.matrixWorld.elements[12], y: o.matrixWorld.elements[13], z: o.matrixWorld.elements[14] });
+    const screen = (v) => {
+      const q = rig.project(v.x, v.y, v.z, { x: 0, y: 0, visible: false });
+      return [Math.round(q.x), Math.round(q.y)];
+    };
+    const r3 = (v) => [v.x, v.y, v.z].map((n) => Math.round(n * 100) / 100);
+    if (!g) return { found: false, action: a ? { interactionId: a.interactionId, stage: a.data?.stage, stoveObj: a.data?.stoveObj } : null };
+    g.updateMatrixWorld(true);
+    const fx = g.getObjectByName('anim-effects') ?? null;
+    const items = [];
+    fx?.traverse((o) => {
+      if (!o.isMesh && !o.isSprite) return;
+      const geo = o.geometry?.type ?? 'sprite';
+      if (geo !== 'RingGeometry' && geo !== 'CylinderGeometry' && !o.isSprite) return;
+      const w = world(o);
+      items.push({ geo, visible: o.visible, world: r3(w), screen: screen(w), parentVisible: o.parent?.visible ?? null });
+    });
+    return {
+      found: true, effects: !!fx, effectsVisible: fx?.visible ?? null,
+      group: screen(world(g)), objects: items.slice(0, 12),
+      ringMat: items.length && fx?.children.find((c) => c.isMesh) ? (() => {
+        const m = fx.children.find((c) => c.isMesh);
+        return { visible: m.visible, emissiveIntensity: m.material?.emissiveIntensity, color: m.material?.emissive?.getHexString?.() };
+      })() : null,
+      action: a ? { interactionId: a.interactionId, phase: a.phase, stage: a.data?.stage, stoveObj: a.data?.stoveObj } : null,
+      person: p.location.kind === 'lot' ? { at: [Math.round(p.location.x * 100) / 100, Math.round(p.location.z * 100) / 100], screen: screen({ x: p.location.x, y: 0.9, z: p.location.z }) } : null,
+    };
+  }, objectId);
+  log.diag.push({ viewport: vp.name, label, ...info });
+  console.log(`[shots] diag ${vp.name} ${label}: ${JSON.stringify(info)}`);
 }
 
 /** Candidate angles for one state at a close and a wide zoom; the best one is promoted to the required name later. */
@@ -296,61 +342,72 @@ async function main() {
 
       // 1. Closed fridge, person standing at it. Natural framing plus aimed candidates (the natural reveal keeps
       //    the lot zoom and the pantry/plant can hide the fridge, so the candidates are the dependable evidence).
-      await frameObject(page, setup.fridgeId);
-      await shot(page, vp, 'fridge-closed');
-      await logAim(page, vp, 'fridge-closed', setup.fridgeId);
-      await angleCandidates(page, vp, 'fridge-closed', setup.fridgeId, 135, 85, 1.0);
-
-      // 2. Open fridge during cookMeal stage 0 (reaching in).
-      const queued = await queueOption(page, setup.fridgeId, 'cookMeal');
-      check(`${vp.name}: cookMeal is queueable at the fridge`, queued.ok, queued.reason ?? 'queued');
-      const reaching = await stepUntil(page, 'cookMeal', 0);
-      check(`${vp.name}: cookMeal reaches the fridge stage`, !!reaching, reaching ? `stage 0 at ${reaching.elapsed} min` : 'never');
-      if (reaching) {
-        await page.evaluate(() => window.hearthside.debug.step(3)); // let the 0.4 min door tween finish
-        await settle(page);
-        await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 85, 1.0);
-      }
-      // Quick iteration: `--only=fridge` re-shoots just the two fridge states in all three viewports.
-      if (ONLY === 'fridge') {
-        check(`${vp.name}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
-        log.viewports.push({ ...vp, setup });
-        await context.close();
-        continue;
+      if (wants('fridge')) {
+        await frameObject(page, setup.fridgeId);
+        await shot(page, vp, 'fridge-closed');
+        await logAim(page, vp, 'fridge-closed', setup.fridgeId);
+        await angleCandidates(page, vp, 'fridge-closed', setup.fridgeId, 135, 85, 1.0);
       }
 
-      // 3. Stove cooking: same chain, stage 1, with rings, pot and steam.
-      const cooking = await stepUntil(page, 'cookMeal', 1);
-      check(`${vp.name}: cookMeal reaches the stove stage`, !!cooking, cooking ? `stage 1 at ${cooking.elapsed} min` : 'never');
-      if (cooking) {
-        await settle(page, 900); // steam rises in real time
-        await angleCandidates(page, vp, 'stove-cooking', setup.stoveId, 150, 100, 0.95);
+      // 2-3. cookMeal chain: stage 0 reaches into the fridge, stage 1 cooks at the stove. The chain runs whenever
+      //      either state is wanted (the stove stage needs the earlier one), but only the wanted states are shot.
+      let reaching = null;
+      if (wants('fridge') || wants('stove')) {
+        const queued = await queueOption(page, setup.fridgeId, 'cookMeal');
+        check(`${vp.name}: cookMeal is queueable at the fridge`, queued.ok, queued.reason ?? 'queued');
+        reaching = await stepUntil(page, 'cookMeal', 0);
+        check(`${vp.name}: cookMeal reaches the fridge stage`, !!reaching, reaching ? `stage 0 at ${reaching.elapsed} min` : 'never');
+        if (reaching && wants('fridge')) {
+          await page.evaluate(() => window.hearthside.debug.step(3)); // let the 0.4 min door tween finish
+          await settle(page);
+          await angleCandidates(page, vp, 'fridge-open', setup.fridgeId, 135, 85, 1.0);
+        }
+      }
+      if (reaching && wants('stove')) {
+        const cooking = await stepUntil(page, 'cookMeal', 1);
+        check(`${vp.name}: cookMeal reaches the stove stage`, !!cooking, cooking ? `stage 1 at ${cooking.elapsed} min` : 'never');
+        if (cooking) {
+          await settle(page, 900); // steam rises in real time
+          await sceneDiag(page, vp, setup.stoveId, 'stove-cooking');
+          await angleCandidates(page, vp, 'stove-cooking', setup.stoveId, 150, 100, 0.95);
+          // The close aim can put the hob behind the person or a counter; a wide aim keeps the whole run in frame.
+          for (let k = 0; k < 4; k++) {
+            await aimObject(page, setup.stoveId, k, 65, 0.95);
+            await shot(page, vp, `stove-cooking-x${k}`);
+            await logAim(page, vp, `stove-cooking-x${k}`, setup.stoveId);
+          }
+          await sceneDiag(page, vp, setup.stoveId, 'stove-cooking-wide');
+        }
       }
 
       // 4. Wardrobe open while changing outfit.
-      await clearQueue(page);
-      const wq = await queueOption(page, setup.wardrobeId, 'changeOutfit');
-      check(`${vp.name}: changeOutfit is queueable at the wardrobe`, wq.ok, wq.reason ?? 'queued');
-      const changing = await stepUntil(page, 'changeOutfit', null);
-      check(`${vp.name}: changeOutfit reaches the wardrobe`, !!changing, changing ? `at ${changing.elapsed} min` : 'never');
-      if (changing) {
-        await page.evaluate(() => window.hearthside.debug.step(3));
-        await settle(page);
-        await frameObject(page, setup.wardrobeId);
-        await shot(page, vp, 'wardrobe-open');
-        await logAim(page, vp, 'wardrobe-open', setup.wardrobeId);
-        await angleCandidates(page, vp, 'wardrobe-open', setup.wardrobeId, 150, 95, 1.1);
+      if (wants('wardrobe')) {
+        await clearQueue(page);
+        const wq = await queueOption(page, setup.wardrobeId, 'changeOutfit');
+        check(`${vp.name}: changeOutfit is queueable at the wardrobe`, wq.ok, wq.reason ?? 'queued');
+        const changing = await stepUntil(page, 'changeOutfit', null);
+        check(`${vp.name}: changeOutfit reaches the wardrobe`, !!changing, changing ? `at ${changing.elapsed} min` : 'never');
+        if (changing) {
+          await page.evaluate(() => window.hearthside.debug.step(3));
+          await settle(page);
+          await frameObject(page, setup.wardrobeId);
+          await shot(page, vp, 'wardrobe-open');
+          await logAim(page, vp, 'wardrobe-open', setup.wardrobeId);
+          await angleCandidates(page, vp, 'wardrobe-open', setup.wardrobeId, 150, 95, 1.1);
+        }
       }
 
       // 5. Shower running.
-      await clearQueue(page);
-      const sq = await queueOption(page, setup.showerId, 'takeShower');
-      check(`${vp.name}: takeShower is queueable at the shower`, sq.ok, sq.reason ?? 'queued');
-      const showering = await stepUntil(page, 'takeShower', null);
-      check(`${vp.name}: takeShower reaches the shower`, !!showering, showering ? `at ${showering.elapsed} min` : 'never');
-      if (showering) {
-        await settle(page, 1100);
-        await angleCandidates(page, vp, 'shower-running', setup.showerId, 130, 85, 1.2);
+      if (wants('shower')) {
+        await clearQueue(page);
+        const sq = await queueOption(page, setup.showerId, 'takeShower');
+        check(`${vp.name}: takeShower is queueable at the shower`, sq.ok, sq.reason ?? 'queued');
+        const showering = await stepUntil(page, 'takeShower', null);
+        check(`${vp.name}: takeShower reaches the shower`, !!showering, showering ? `at ${showering.elapsed} min` : 'never');
+        if (showering) {
+          await settle(page, 1100);
+          await angleCandidates(page, vp, 'shower-running', setup.showerId, 130, 85, 1.2);
+        }
       }
 
       check(`${vp.name}: no page errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
@@ -362,7 +419,7 @@ async function main() {
     await browser?.close().catch(() => undefined);
     server.kill('SIGTERM');
   }
-  writeFileSync(join(SHOTS, ONLY ? `d-log-${ONLY}.json` : 'd-log.json'), JSON.stringify(log, null, 2));
+  writeFileSync(join(SHOTS, ONLY ? `d-log-${ONLY.replace(/,/g, '-')}.json` : 'd-log.json'), JSON.stringify(log, null, 2));
   const failed = log.checks.filter((c) => !c.ok);
   console.log(`[shots] ${log.checks.length - failed.length}/${log.checks.length} checks passed, ${log.shots.length} screenshots`);
   if (failed.length) process.exitCode = 1;

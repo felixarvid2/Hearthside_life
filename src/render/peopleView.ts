@@ -19,6 +19,7 @@ import { lyingPlacement, seatedPlacement } from '../characters/posture';
 import { CRADLE } from '../characters/stagePose';
 import { HandProps, propsFor } from './handProps';
 import { ProgressPills, type ProgressScope } from './progressPills';
+import { WATER_Y } from './poolView';
 
 const ANIMS = new Set<string>(ANIM_IDS);
 const TWO_PI = Math.PI * 2;
@@ -340,12 +341,13 @@ export class PeopleView {
       e.align += Math.sign(target - e.align) * Math.min(Math.abs(target - e.align), reducedMotion ? 1 : dt / 0.6);
       if (!lowered && !slot) e.slot = target === 0 && e.align === 0 ? null : e.slot;
       const ground = this.floorY(e.id, loc, x, z, dt, reducedMotion);
-      // Milestone 12: swimmers sit in the water, only head and shoulders above the surface. The swim/float clips
-      // already lie the body flat around the root (pelvis about -0.08, head about +0.02 m), so the root only needs a
-      // small lift over the water plane; sinking it by the standing height would bury the whole body in the basin.
+      // Milestone 12: swimmers sit in the water, head and shoulders above the surface and the rest faintly visible
+      // through it. The swim/float clips already lie the body flat around the root (pelvis about -0.08 m, head about
+      // +0.02 m), so the root belongs at the waterline — a few centimetres over it, so the head clears the water at
+      // the low point of a stroke. Sinking it by the standing height (an older assumption) buried the whole body in
+      // the basin, under its floor.
       const swimming = p.anim.id === 'swim' || p.anim.id === 'float';
-      const sink = swimming ? -0.18 : 0;
-      let rx = x, rz = z, ry = ground - sink, rot = e.facing;
+      let rx = x, rz = z, ry = swimming ? WATER_Y + 0.04 : ground, rot = e.facing;
       const s = e.slot;
       const sy = levelY(s?.level ?? 0); // slot heights are above the floor of their level
       // the body of the person's life stage sits and lies lower (children) or on a mat (babies): see characters/posture.ts
