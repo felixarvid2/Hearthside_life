@@ -15,7 +15,7 @@ import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef, ve
 import { NEED_LABELS } from './needs';
 import { CARE_IDS, careProblem } from './care';
 import { interactionStageReason, socialStageReason, stageAllows } from './gating';
-import { currentSeason, currentWeather, weatherGateReason } from './weather';
+import { outdoorGateReason } from './weather';
 import { isDependentStage } from '../core/lifeStages';
 import { schoolDayOn } from './school';
 import { socialFit } from './autonomy';
@@ -57,7 +57,8 @@ export function requestReason(ctx: SimCtx, p: Person, req: ActionRequest, transi
   const gate = gateDef ? interactionStageReason(gateDef, p) : null;
   if (gate) return gate;
   // Seasons and weather (Milestone 12): options stay listed but greyed with a reason, autonomy skips them.
-  const weather = gateDef ? weatherGateReason(gateDef.weather, currentWeather(ctx.state), currentSeason(ctx.state)) : null;
+  const socialDef = gateDef ? undefined : ctx.content.socials[req.interactionId];
+  const weather = outdoorGateReason((gateDef ?? socialDef)?.weather, ctx, p);
   if (weather) return weather;
   const r = beh.check(ctx, p, a);
   if (r || !transient) return r;

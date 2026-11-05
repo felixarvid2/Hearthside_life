@@ -181,13 +181,13 @@ async function sceneDiag(page, vp, objectId, label) {
     fx?.traverse((o) => {
       if (!o.isMesh && !o.isSprite) return;
       const geo = o.geometry?.type ?? 'sprite';
-      if (geo !== 'RingGeometry' && geo !== 'CylinderGeometry' && !o.isSprite) return;
+      if (geo !== 'TorusGeometry' && geo !== 'RingGeometry' && geo !== 'CylinderGeometry' && !o.isSprite) return;
       const w = world(o);
-      items.push({ geo, visible: o.visible, world: r3(w), screen: screen(w), parentVisible: o.parent?.visible ?? null });
+      items.push({ geo, isSprite: o.isSprite === true, visible: o.visible, world: r3(w), screen: screen(w), parentVisible: o.parent?.visible ?? null });
     });
     return {
       found: true, effects: !!fx, effectsVisible: fx?.visible ?? null,
-      group: screen(world(g)), objects: items.slice(0, 12),
+      group: screen(world(g)), objects: items.slice(0, 20),
       ringMat: items.length && fx?.children.find((c) => c.isMesh) ? (() => {
         const m = fx.children.find((c) => c.isMesh);
         return { visible: m.visible, emissiveIntensity: m.material?.emissiveIntensity, color: m.material?.emissive?.getHexString?.() };
@@ -198,6 +198,7 @@ async function sceneDiag(page, vp, objectId, label) {
   }, objectId);
   log.diag.push({ viewport: vp.name, label, ...info });
   console.log(`[shots] diag ${vp.name} ${label}: ${JSON.stringify(info)}`);
+  return info;
 }
 
 /** Candidate angles for one state at a close and a wide zoom; the best one is promoted to the required name later. */
@@ -368,13 +369,28 @@ async function main() {
         check(`${vp.name}: cookMeal reaches the stove stage`, !!cooking, cooking ? `stage 1 at ${cooking.elapsed} min` : 'never');
         if (cooking) {
           await settle(page, 900); // steam rises in real time
-          await sceneDiag(page, vp, setup.stoveId, 'stove-cooking');
+          const stoveDiag = await sceneDiag(page, vp, setup.stoveId, 'stove-cooking');
+          // Prove from the scene graph that the shot has something to show: four lit hob rings, the pan and steam.
+          const fx = stoveDiag.objects ?? [];
+          const rings = fx.filter((o) => o.geo === 'TorusGeometry' && o.visible && o.parentVisible !== false);
+          const pot = fx.find((o) => o.geo === 'CylinderGeometry' && o.visible && o.parentVisible !== false);
+          const steam = fx.filter((o) => o.isSprite && o.visible && o.parentVisible !== false);
+          const glow = stoveDiag.ringMat?.emissiveIntensity ?? 0;
+          check(`${vp.name}: stove hob, pot and steam are on`, rings.length === 4 && !!pot && steam.length > 0 && glow > 1,
+            `${rings.length} rings, pot ${pot ? 'on' : 'off'}, ${steam.length} steam sprites, ring glow ${glow.toFixed(2)}`);
           await angleCandidates(page, vp, 'stove-cooking', setup.stoveId, 150, 100, 0.95);
           // The close aim can put the hob behind the person or a counter; a wide aim keeps the whole run in frame.
           for (let k = 0; k < 4; k++) {
             await aimObject(page, setup.stoveId, k, 65, 0.95);
             await shot(page, vp, `stove-cooking-x${k}`);
             await logAim(page, vp, `stove-cooking-x${k}`, setup.stoveId);
+          }
+          // Detail angles: the hob is small at gameplay zoom, so one close pass per yaw makes the rings, pan and
+          // steam readable in the evidence as well as in the scene-graph diagnostic.
+          for (let k = 0; k < 4; k++) {
+            await aimObject(page, setup.stoveId, k, 240, 0.95);
+            await shot(page, vp, `stove-cooking-d${k}`);
+            await logAim(page, vp, `stove-cooking-d${k}`, setup.stoveId);
           }
           await sceneDiag(page, vp, setup.stoveId, 'stove-cooking-wide');
         }
@@ -407,6 +423,13 @@ async function main() {
         if (showering) {
           await settle(page, 1100);
           await angleCandidates(page, vp, 'shower-running', setup.showerId, 130, 85, 1.2);
+          // Detail angles: the falling-water streaks are short; a close pass shows them in the evidence images.
+          const showerDetail = vp.name === 'landscape' ? 130 : 200;
+          for (let k = 0; k < 4; k++) {
+            await aimObject(page, setup.showerId, k, showerDetail, 1.2);
+            await shot(page, vp, `shower-running-d${k}`);
+            await logAim(page, vp, `shower-running-d${k}`, setup.showerId);
+          }
         }
       }
 

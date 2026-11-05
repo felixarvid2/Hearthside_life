@@ -250,6 +250,7 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   relA.recent[def.id] = recent + 1;
   if (out.social) { changeNeed(ctx, actor, 'social', out.social); changeNeed(ctx, target, 'social', out.social); }
   if (out.fun) { changeNeed(ctx, actor, 'fun', out.fun); changeNeed(ctx, target, 'fun', out.fun); }
+  if (out.hunger) { changeNeed(ctx, actor, 'hunger', out.hunger); changeNeed(ctx, target, 'hunger', out.hunger); }
   if (out.actorMoodlet) addMoodlet(ctx.content, actor, out.actorMoodlet, ctx.now, def.id);
   if (out.targetMoodlet) addMoodlet(ctx.content, target, out.targetMoodlet, ctx.now, def.id);
   if (out.memory) {

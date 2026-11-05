@@ -130,10 +130,10 @@ use: the target object (as today, when it is a placed object) plus `cookMeal`'s 
 - `objectUse.ts`: `ObjectUse` carries `objectId` and `role`; `objectUses` adds `data.stoveObj` / `data.washObj`
   entries as `station` and no longer skips item targets (a washDishes item now resolves to its sink/dishwasher
   station). Target-object entries are unchanged for existing consumers.
-- `objectAnim.ts`: 20 descriptors (4 fridges, stove-basic / stove-electric / bread-oven, wardrobe-tall, both
-  toilets, two showers, bathtub, three sinks, dishwasher, microwave, washer, dryer), pure `activeParts`,
+- `objectAnim.ts`: 21 descriptors (4 fridges, stove-basic / stove-electric / bread-oven, wardrobe-tall, both
+  toilets, two showers, bathtub, four sinks, dishwasher, microwave, washer, dryer), pure `activeParts`,
   `isBakedRecipe`, `opennessAt` / `seedMotion` / `stepMotion`, and the per-object `ObjectAnim` runtime. Interiors
-  are lazily built and visible only while a door is open. Effects: four emissive hob rings + pot, six steam
+  are lazily built and visible only while a door is open. Effects: four emissive hob rings + pot, eight steam
   sprites, shower streaks + haze, bath plane, tap cylinder, drum/light pulses. Steam and haze are hidden with
   reduced motion; all tweens snap under reduced motion.
 - `objectsView.ts`: each entry owns an `ObjectAnim`; `animate(dt, reducedMotion, frame)` feeds it
@@ -206,3 +206,34 @@ Changes made:
   queueable and reached, takeShower queueable and reached, no page errors — eight checks per viewport) and 126 PNGs
   were written across the three viewports (`d-log-full.json`). The picker (`promote-d.mjs`) then copies one
   candidate per state to the required `<viewport>-<state>.png` names.
+
+### Resume run (after a machine restart, same task)
+
+The implementation was complete; the restart interrupted the screenshot promotion. Picking the work back up:
+
+- **Catalog coverage bug found by reading the defs again:** `vanity-basin` (a bathroom sink def) had no descriptor, so
+  a `washHands` at it would have shown no tap stream. Added its effect-only descriptor (`bathroomCabinetDrawer`
+  asset). To stop this class of bug, the "every animated def has a descriptor" test now derives the expected set from
+  `OBJECTS` (`subcategory` fridge/stove/toilet/shower/bath/sink/dishwasher/laundry plus `microwave`) instead of
+  iterating `ANIMATED_DEF_IDS`, which was circular (it could only test defs that already had a descriptor).
+- **Shared geometry:** the shower's ten water streaks now share one `PlaneGeometry` (and the material) instead of ten
+  identical geometries, as the phone-cheap rule requires.
+- **Stove evidence check:** the scene-graph diagnostic filtered for `RingGeometry`, but the hob rings are
+  `TorusGeometry`, so its ring list was always empty. It now accepts torus/ring, filters out hidden parents, and the
+  script adds a per-viewport check that the shot really has four lit rings, the pan and at least one steam sprite
+  with ring emissive intensity above 1 (nine checks per viewport, 27 for the full run). The diag also records
+  `isSprite` and caps its list at 20 objects.
+- **Detail candidates:** the required stove/shower shots are small at gameplay zoom, so each viewport also takes
+  `stove-cooking-d0..3` (240 ppm) and `shower-running-d0..3` (200 ppm; 130 on the short landscape canvas) angle
+  candidates. They are additional evidence; `promote-d.mjs` can pick one for the final image if the wider angle is
+  less legible.
+- **Promotion choices (by eye, pending the fresh run):** fridge closed and open both use the `w2` angle in all three
+  viewports — the same diagonal view of the lot with the person below the fridge, closed (white door) vs open (lit
+  cavity with shelves and food) so the pair reads as a comparison and the person stays in frame. Wardrobe keeps the
+  natural reveal shot, which shows both doors swung open with the person in front in all three viewports. Stove and
+  shower will be picked from the fresh candidates, preferring the angle that shows rings + pan + steam and the water
+  streaks respectively.
+- **Pause behaviour of the running effects:** water/steam used to advance with real `dt`, so they kept moving while
+  the game was paused. They now advance by the game-clock delta, capped at 3x real time (the game's 3x setting is 15
+  clock minutes per second, which would teleport the streaks): paused means frozen, 1x is unchanged, and
+  fast-forward reads as faster water rather than a blur. Doors already used the game clock directly.

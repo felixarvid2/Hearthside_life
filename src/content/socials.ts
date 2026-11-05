@@ -533,7 +533,44 @@ const STATUS: SocialDef[] = [
   }),
 ];
 
+/**
+ * Milestone 12, task O: weather-bound socials. Both are only offered in fitting weather and season (the menu greys
+ * them with the reason, autonomy skips them); snowball fights need snow lying on the ground.
+ */
+const M12_OUTDOOR: SocialDef[] = [
+  social({
+    id: 'snowballFight', name: 'Have a Snowball Fight', description: 'Pack a snowball and let fly. Great fun for both, if a little cold.', icon: 'snow', category: 'funny',
+    minutes: 15, anim: 'dance', requires: { minFamiliarity: 10 }, acceptance: 0.85,
+    success: out({
+      actor: { familiarity: 4, friendship: 5 }, target: { familiarity: 4, friendship: 5 }, social: 16, fun: 22,
+      actorMoodlet: 'playtime', targetMoodlet: 'playtime',
+    }),
+    failure: out({ actor: { friendship: -1 }, target: { friendship: -2 }, social: 4, fun: 6, targetMoodlet: 'shocked' }),
+    lines: {
+      success: ['{a} catches {b} square in the shoulder. Snow everywhere, laughter louder.', '{a} and {b} pelt each other until they can barely stand up straight.', '{b} ducks behind the hedge. {a} waits, snowball ready.'],
+      failure: ['{a}\'s snowball lands in a bush. {b} raises an eyebrow.', '"Not the face, {a}!" {b} brushes snow off their collar.'],
+    },
+    weather: { seasons: ['winter'], snowCover: true, outdoor: true },
+    topics: ['play', 'snow'], autonomy: { enabled: true, weight: 0.9 },
+  }),
+  social({
+    id: 'sharePicnic', name: 'Share a Picnic', description: 'Split the picnic blanket and the basket: a meal, some sun and good company.', icon: 'hunger', category: 'friendly',
+    minutes: 30, anim: 'eat', requires: { minFamiliarity: 10 }, acceptance: 0.9,
+    success: out({
+      actor: { familiarity: 5, friendship: 4 }, target: { familiarity: 5, friendship: 4 }, social: 20, fun: 10, hunger: 28,
+      actorMoodlet: 'picnicJoy', targetMoodlet: 'picnicJoy',
+    }),
+    failure: out({ social: 4, hunger: 8, actorMoodlet: 'awkward' }),
+    lines: {
+      success: ['{a} and {b} spread out the blanket and share the basket.', 'Sandwiches, fruit and a flask of something cold: {a} and {b} take their time.', '{b} passes {a} the last pastry. "Go on, you brought it."'],
+      failure: ['{a} and {b} eat a little awkwardly side by side.', '"Is that... all for us?" {b} eyes the basket.'],
+    },
+    weather: { not: ['rain', 'snow'], seasons: ['spring', 'summer'] },
+    topics: ['food', 'picnic'], autonomy: { enabled: true, weight: 0.6 },
+  }),
+];
+
 /** Every social interaction. None of them is also counted as an activity (alsoActivity false). */
 export const SOCIALS: SocialDef[] = [
-  ...GREETING, ...FRIENDLY, ...FUNNY, ...DEEP_AND_SUPPORT, ...TRUST, ...MEAN, ...BETRAYAL, ...ROMANTIC, ...ROMANTIC_PLUS, ...STATUS,
+  ...GREETING, ...FRIENDLY, ...FUNNY, ...DEEP_AND_SUPPORT, ...TRUST, ...MEAN, ...BETRAYAL, ...ROMANTIC, ...ROMANTIC_PLUS, ...STATUS, ...M12_OUTDOOR,
 ];

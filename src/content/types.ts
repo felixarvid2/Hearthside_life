@@ -237,6 +237,8 @@ export interface SocialOutcome {
   target: RelDelta; // change in target's opinion of actor
   social: number; // social need gain for both
   fun?: number;
+  /** Milestone 12, task O: hunger gain for both (a shared picnic). */
+  hunger?: number;
   actorMoodlet?: string;
   targetMoodlet?: string;
   memory?: { kind: MemoryKind; importance: 1 | 2 | 3; text: string };
@@ -305,6 +307,11 @@ export interface SocialDef {
   /** Authored snippets; {a} = actor first name, {b} = target first name. */
   lines: { success: string[]; failure: string[] };
   topics: string[];
+  /**
+   * Milestone 12, task O: weather/season/place the social needs (snowball fights need snow, a picnic needs a fine
+   * spring or summer day). The menu greys an unavailable social with the reason; autonomy skips it.
+   */
+  weather?: WeatherRule;
   autonomy: { enabled: boolean; weight: number };
   /** Counts as one of the activities in content totals only when true (see brief Section 2). */
   alsoActivity: boolean;

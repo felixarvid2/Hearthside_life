@@ -35,6 +35,15 @@ describe('objectAnim: descriptors', () => {
     }
   });
 
+  it('has a descriptor for every catalog appliance the interactions can drive', () => {
+    // Derived from the catalog (not from DESCRIPTORS itself), so a newly added fridge/sink/etc. fails this test until
+    // it gets descriptor; this is the "every animated def has a descriptor" guarantee.
+    const kinds = new Set(['fridge', 'stove', 'toilet', 'shower', 'bath', 'sink', 'dishwasher', 'laundry']);
+    const expected = OBJECTS.filter((d) => kinds.has(d.subcategory ?? '') || d.id === 'microwave');
+    expect(expected.length).toBeGreaterThanOrEqual(14);
+    for (const d of expected) expect(descriptorFor(d.id), d.id).toBeTruthy();
+  });
+
   it('only pivots nodes that ObjectAssets keeps as separate parts', () => {
     for (const d of DESCRIPTORS) {
       const allowed = PART_NODES[d.asset] ?? [];

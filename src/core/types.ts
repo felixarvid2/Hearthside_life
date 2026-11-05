@@ -148,6 +148,28 @@ export interface WeatherRule {
   only?: WeatherKind[];
   /** Only possible in these seasons. */
   seasons?: Season[];
+  /** Task O: must be done in the open air (no roof overhead). */
+  outdoor?: boolean;
+  /** Task O: must be done under a roof (indoors or a covered porch), e.g. watching the rain. */
+  sheltered?: boolean;
+  /** Task O: night only (21:00-05:59). */
+  night?: boolean;
+  /** Task O: daytime only (06:00-20:59). */
+  day?: boolean;
+  /** Task O: snow must be lying on the ground (winter snow cover). */
+  snowCover?: boolean;
+  /** Task O: it must be raining now, or have rained in the last few hours (puddles). */
+  rainedRecently?: boolean;
+}
+
+/** Task O: state of a snowman built by an interaction. Additive and optional in older saves. */
+export interface SnowmanState {
+  /** Game minute it was built. */
+  madeAt: GameMinutes;
+  /** Snow-free days counted since it last snowed (it melts after a few). */
+  warmDays: number;
+  /** The day the last warm day was counted, so a day is only counted once. */
+  lastWarmDay?: number;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -372,6 +394,8 @@ export interface PlacedObject {
   supportId?: Id;
   /** Milestone 9: growth state of a crop bed (vegetable patch, orchard tree, herb planter), sim/garden.ts. Absent = nothing planted yet. */
   garden?: GardenState;
+  /** Task O: a snowman made by Build a Snowman (absent on everything else). */
+  snowman?: SnowmanState;
 }
 
 /** Milestone 9: what grows in a garden bed. `growth` counts effective growing days up to `need`; see sim/garden.ts. */

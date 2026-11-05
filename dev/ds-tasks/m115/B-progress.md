@@ -146,3 +146,31 @@ kitchen counter and the actor disappears behind it while the pill still projects
   `dev/ds-tasks/m115/b-crop.test.ts`, `b-check-scan.test.ts`, `b-tick-render.test.ts` and `b-crop-vitest.config.ts`
   (`npx vitest run --config dev/ds-tasks/m115/b-crop-vitest.config.ts`). They crop/scan the saved PNGs and rasterise
   the tick; they are not part of the test suite.
+
+### Resumed run (2026-11-05, after the machine restart)
+
+The previous run was interrupted after the tick fix: only the portrait screenshots and an 8-entry `shots.json` had
+been regenerated (the desktop/landscape PNGs still predated the thicker check). No implementation work was left, so
+this run re-verified the code and redid every check from scratch.
+
+- `npm run typecheck` — pass (no output, exit 0).
+- `npm run content:check` — 0 errors, 0 warnings.
+- `npm run build` — pass (tsc + vite, `✓ built in 29.43s`).
+- Task B unit tests (`actionProgress`, `progressPill`, `actions`, `settings`) — 59/59 pass.
+- `npx vitest run` (whole suite) — 2018/2022 pass, 154/156 files. The 4 failures are all surface-painter
+  `Test timed out in 5000ms` (`surfaces/painters.test.ts` ×3, `surfaces/mapPainters.test.ts` ×1) under the
+  full parallel run; re-run in isolation those two files pass 26/26, so they are CPU-contention timeouts, not
+  regressions. The earlier travel-autonomy failure did not recur.
+- Visual checks: `npm run visual:m115:b` — **41/41** checks passed (portrait 390x844, landscape 844x390, desktop
+  1280x720). All 15 PNGs regenerated at 00:08–00:12 and `shots.json` rewritten with all 41 entries. Highlights:
+  - 30 %: amber `rgb(218,182,37)`, 30 % wide, 44x10 phones / 56x12 desktop, not done; PNG fill pixels 14/14/28.
+  - 90 %: green `rgb(77,154,91)`, 90 % wide; PNG fill pixels 52/61/88.
+  - completion: 100 % green, label "Cook a Meal complete", PNG white-check pixels 10 (max channel 255) in every
+    viewport — the thicker 4.5/5 stroke fix is confirmed in the saved images at all three sizes.
+  - two actions: Wash Hands 92 % + Change Outfit 13 % at once (PNG fills 50,5 / 50,5 / 88,8).
+  - settings: Household/Everyone/Off with Household selected; desktop Off writes the setting and hides the pills,
+    Household restores it.
+  - no page errors in any viewport.
+- `npm run e2e` — pass (exit 0; all portrait/landscape/desktop stages, screenshots in
+  `tests/e2e/out/screenshots`).
+- The visual script takes `/tmp/hearthside-browser.lock` itself, so it was run directly (not wrapped in `flock`).

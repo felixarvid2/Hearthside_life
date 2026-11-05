@@ -28,7 +28,7 @@ import { eventMealsFor, eventSocialBonus, onDateTogether } from './events';
 import { commitmentOf, familyTie, hasRecentMemory, peekRel } from './relationships';
 import { personKey } from './reservations';
 import { isVisitPending, neighbours } from './visitors';
-import { currentSeason, currentWeather, weatherGateReason } from './weather';
+import { currentWeather, outdoorGateReason } from './weather';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
   EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
@@ -230,12 +230,10 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
     const hw = homeworkCandidate(ctx, p);
     if (hw) out.push(hw);
   }
-  // Weather and season gating (Milestone 12): autonomy never picks an interaction the weather rules out.
-  const weather = currentWeather(ctx.state);
-  const season = currentSeason(ctx.state);
+  // Weather, season and place gating (Milestone 12): autonomy never picks something the rules out.
   return out.filter((c) => {
-    const def = ctx.content.interactions[c.req.interactionId];
-    return !def || !weatherGateReason(def.weather, weather, season);
+    const def = ctx.content.interactions[c.req.interactionId] ?? ctx.content.socials[c.req.interactionId];
+    return !def || !outdoorGateReason(def.weather, ctx, p);
   });
 }
 
@@ -359,6 +357,7 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     let pick: SocialDef | null = null, pickW = 0;
     for (const def of Object.values(ctx.content.socials)) {
       if (!def.autonomy.enabled || def.status !== 'ready') continue;
+      if (outdoorGateReason(def.weather, ctx, p)) continue;
       if (socialRequirementReason(ctx, p, other, def)) continue;
       const w = def.autonomy.weight * socialFit(ctx, p, other, def) * socialAcceptance(ctx, p, other, def) * cooldownMult(ctx, p, def.id, other.id);
       if (w > pickW) { pickW = w; pick = def; }

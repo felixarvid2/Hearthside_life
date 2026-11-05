@@ -567,7 +567,7 @@ const VENUE: InteractionDef[] = [
     icon: 'hunger', kind: 'object', behavior: 'snack', posture: 'standing',
     anims: { perform: 'eat' },
     duration: { kind: 'fixed', minutes: 35 }, needsOnComplete: { hunger: 36, fun: 8 }, cost: dollars(8),
-    moodletOnComplete: 'picnicJoy', weather: { not: ['rain', 'snow'] },
+    moodletOnComplete: 'picnicJoy', weather: { not: ['rain', 'snow'], seasons: ['spring', 'summer'] },
     autonomy: { enabled: true, ads: { hunger: 36, fun: 8 }, tags: ['food', 'picnic', 'outdoor', 'social'] }, allowVisitors: true,
   }),
   def({
@@ -750,5 +750,82 @@ const M11_B_SKILLS: InteractionDef[] = [
   }),
 ];
 
+/**
+ * Milestone 12, task O: weather- and season-bound outdoor life. Every entry is listed in the menu when its weather
+ * rules out nothing, and greyed with the reason from sim/weather.ts otherwise; autonomy skips it just the same.
+ */
+const M12_OUTDOOR: InteractionDef[] = [
+  def({
+    id: 'buildSnowman', ages: ['child', 'teen', 'youngAdult', 'adult', 'elder'],
+    name: 'Build a Snowman', description: 'Roll the fresh snow into three balls and stack them up. Leaves a snowman in the garden until the thaw.',
+    icon: 'snow', kind: 'self', behavior: 'buildSnowman', posture: 'standing',
+    anims: { perform: 'exercise', cleanup: 'interact' },
+    duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { fun: 14, energy: -5, hygiene: -2 },
+    moodletOnComplete: 'snowmanBuilt', weather: { seasons: ['winter'], snowCover: true, outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 12 }, tags: ['outdoor', 'snow', 'play', 'fun', 'creative'] },
+  }),
+  def({
+    id: 'makeSnowAngel', ages: ['child', 'teen', 'youngAdult', 'adult', 'elder'],
+    name: 'Make a Snow Angel', description: 'Lie back in the untouched snow and sweep your arms and legs. Childish, and all the better for it.',
+    icon: 'snow', kind: 'self', behavior: 'outdoor', posture: 'lying',
+    anims: { prepare: 'lieDown', perform: 'sleep', cleanup: 'getUp' },
+    duration: { kind: 'fixed', minutes: 25 }, needsPerHour: { fun: 18, energy: -3, hygiene: -2 },
+    moodletOnComplete: 'snowAngel', weather: { seasons: ['winter'], snowCover: true, outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 14 }, tags: ['outdoor', 'snow', 'play', 'fun'] },
+  }),
+  def({
+    id: 'flyKite', name: 'Fly a Kite', description: 'Unwind the line and let the kite ride the breeze over the lawn. Best on a clear or cloudy day.',
+    icon: 'sparkle', kind: 'object', behavior: 'generic', posture: 'standing',
+    anims: { perform: 'interact' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 15, energy: -2 },
+    moodletOnComplete: 'kiteHigh', weather: { seasons: ['spring', 'autumn'], only: ['clear', 'cloudy'], outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 14 }, tags: ['outdoor', 'play', 'fun', 'kite'] }, allowVisitors: true,
+  }),
+  def({
+    id: 'rakeLeaves', name: 'Rake Leaves', description: 'Sweep the autumn leaves into tidy piles. A chore that trains Handiness, with a crisp reward.',
+    icon: 'leaf', kind: 'self', behavior: 'outdoor', posture: 'standing',
+    anims: { perform: 'exercise' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 2, energy: -7, hygiene: -3 },
+    skill: { id: 'handiness', xpPerHour: 35 }, moodletOnComplete: 'crispAutumnAir',
+    weather: { seasons: ['autumn'], not: ['rain', 'snow'], outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 2 }, tags: ['chore', 'outdoor', 'autumn', 'handiness', 'skill'] },
+  }),
+  def({
+    id: 'jumpInPuddles', ages: ['child', 'teen'], name: 'Jump in Puddles',
+    description: 'Find every puddle in the garden and jump in it. Fabulous fun; the laundry can wait.',
+    icon: 'fun', kind: 'self', behavior: 'outdoor', posture: 'standing',
+    anims: { perform: 'exercise' },
+    duration: { kind: 'fixed', minutes: 15 }, needsPerHour: { fun: 40, hygiene: -22, energy: -3 },
+    moodletOnComplete: 'puddleSplash', weather: { rainedRecently: true, outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 18 }, tags: ['outdoor', 'play', 'fun', 'rain', 'puddle'] },
+  }),
+  def({
+    id: 'stargaze', ages: ['child', 'teen', 'youngAdult', 'adult', 'elder'],
+    name: 'Stargaze', description: 'Lie back on the grass and pick out constellations. Clear nights train Logic and feed the imagination.',
+    icon: 'moon', kind: 'self', behavior: 'outdoor', posture: 'lying',
+    anims: { prepare: 'lieDown', perform: 'sleep', cleanup: 'getUp' },
+    duration: { kind: 'fixed', minutes: 60 }, needsPerHour: { fun: 7, energy: 2 },
+    skill: { id: 'logic', xpPerHour: 30 }, secondarySkill: { id: 'creativity', fraction: 0.4 },
+    moodletOnComplete: 'starryEyed', weather: { only: ['clear'], night: true, outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 6 }, tags: ['outdoor', 'night', 'stars', 'skill', 'relax'] },
+  }),
+  def({
+    id: 'watchRain', name: 'Watch the Rain', description: 'Settle by a window or under the porch roof and listen to the rain. Quiet, restful and rather lovely.',
+    icon: 'rain', kind: 'self', behavior: 'generic', posture: 'seated',
+    anims: { prepare: 'sitDown', perform: 'sitIdle', cleanup: 'standUp' },
+    duration: { kind: 'fixed', minutes: 45 }, needsPerHour: { fun: 8, energy: 4 },
+    moodletOnComplete: 'cosyRain', weather: { only: ['rain'], sheltered: true },
+    autonomy: { enabled: true, ads: { fun: 7 }, tags: ['rain', 'relax', 'cosy', 'indoor'] },
+  }),
+  def({
+    id: 'sunbathe', name: 'Sunbathe', description: 'Stretch out on the lounger and soak up the summer sun. Warms you right through.',
+    icon: 'sun', kind: 'object', behavior: 'generic', posture: 'lying',
+    anims: { prepare: 'lieDown', perform: 'sleep', cleanup: 'getUp' },
+    duration: { kind: 'fixed', minutes: 90 }, needsPerHour: { fun: 11, energy: 6, hygiene: -1 },
+    moodletOnComplete: 'sunKissed', weather: { seasons: ['summer'], only: ['clear'], outdoor: true },
+    autonomy: { enabled: true, ads: { fun: 10, energy: 5 }, tags: ['outdoor', 'summer', 'sun', 'relax'] }, allowVisitors: true,
+  }),
+];
+
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS, ...POOL_INTERACTIONS];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS, ...POOL_INTERACTIONS, ...M12_OUTDOOR];

@@ -24,7 +24,7 @@ import { buildResidentialLot, buildVenueLot, type VenueType } from '../../../src
 import { draft } from '../sim/fixtures';
 
 const db: ContentDB = content();
-const SIZES: Record<VenueType, number> = { park: 32, cafe: 24, gym: 24, library: 24, arts: 32, market: 32 };
+const SIZES: Record<VenueType, number> = { park: 32, cafe: 24, gym: 24, library: 24, arts: 32, market: 32, pool: 32 };
 const TYPES = Object.keys(SIZES) as VenueType[];
 
 interface Scenario {
@@ -300,6 +300,7 @@ describe('autonomy at a venue', () => {
       library: ['readBook', 'studyHard', 'writeJournal', 'sit', 'practiceProgramming', 'readSkillBook', 'writeArticle', 'buyVendingDrink', 'buyVendingSnack'],
       arts: ['paintCanvas', 'playPiano', 'sit', 'buyVendingDrink', 'buyVendingSnack', 'readBook', 'listenToMusic'],
       market: ['buyProduce', 'buyCoffee', 'buyPastry', 'buySandwich', 'buyVendingSnack', 'grabSnack', 'sit'],
+      pool: ['swimInPool', 'relaxInPool', 'takeShower', 'useToilet', 'sit', 'buyVendingDrink', 'buyVendingSnack'],
     };
     for (const type of TYPES) {
       const s = scenario(type, { funds: 200_000 });

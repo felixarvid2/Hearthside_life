@@ -42,6 +42,14 @@ const ACTIVITY: MoodletDef[] = [
   // Milestone 11, task B: baking and wellness
   m('proudBake', 'Proud Baker', 8, 180, 'star', 'Baked something the whole household can share.'),
   m('calm', 'Calm', 10, 180, 'heart', 'A quiet mind and a steady breath.'),
+  // Milestone 12, task O: outdoor life
+  m('snowmanBuilt', 'Snowman Builder', 10, 240, 'snow', 'Built a snowman out of the fresh snow.'),
+  m('snowAngel', 'Snow Angel', 8, 180, 'snow', 'Flapped about in the snow and left an angel behind.'),
+  m('kiteHigh', 'Kite High', 10, 180, 'sparkle', 'Kept the kite dancing on the wind.'),
+  m('crispAutumnAir', 'Crisp Autumn Air', 7, 180, 'leaf', 'Raked leaves until the lawn was tidy again.'),
+  m('puddleSplash', 'Puddle Splash', 9, 120, 'fun', 'Jumped in every puddle in reach.'),
+  m('starryEyed', 'Starry Eyed', 8, 180, 'moon', 'Found a few constellations in the night sky.'),
+  m('sunKissed', 'Sun Kissed', 8, 240, 'sun', 'Warm through after a spell in the sun.'),
 ];
 
 /** Moodlets from the state of the home, refreshed by the simulation while the condition holds and dropped once it does not. */

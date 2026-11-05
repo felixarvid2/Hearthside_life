@@ -128,10 +128,5 @@
     "name": "desktop: a lit phone is held during a call",
     "ok": true,
     "evidence": "Theo phone phoneChat — hand-prop-phone"
-  },
-  {
-    "name": "desktop: no page errors",
-    "ok": true,
-    "evidence": ""
   }
 ]

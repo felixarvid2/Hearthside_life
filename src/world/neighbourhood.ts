@@ -1,4 +1,4 @@
-// The neighbourhood's lot records (Milestone 7): twelve generated lots plus the two the new world creates first
+// The neighbourhood's lot records (Milestone 7): thirteen generated lots plus the two the new world creates first
 // (the player's home and the next-door house), their map positions, travel times and the opening hours and
 // capacity of the public venues. Pure data and helpers; the NPC households that live in the lots are generated in
 // game/neighbourhood.ts and the lot layouts in world/lotBuilders.ts.
@@ -31,9 +31,10 @@ export const VENUES: Readonly<Record<VenueType, VenueInfo>> = {
   library: { type: 'library', label: 'Library', open: h(9), close: h(20), capacity: 3 },
   arts: { type: 'arts', label: 'Arts centre', open: h(10), close: h(21), capacity: 4 },
   market: { type: 'market', label: 'Market', open: h(8), close: h(20), capacity: 4 },
+  pool: { type: 'pool', label: 'Swimming pool', open: h(6), close: h(21), capacity: 4 },
 };
 
-export const VENUE_TYPES: readonly VenueType[] = ['park', 'cafe', 'gym', 'library', 'arts', 'market'];
+export const VENUE_TYPES: readonly VenueType[] = ['park', 'cafe', 'gym', 'library', 'arts', 'market', 'pool'];
 
 export function isVenueType(v: unknown): v is VenueType {
   return typeof v === 'string' && Object.prototype.hasOwnProperty.call(VENUES, v);
@@ -74,7 +75,7 @@ export interface LotSpec {
   rented?: boolean;
 }
 
-/** The twelve generated lots, in creation order (ids are allocated in this order, so they are stable for a seed). */
+/** The thirteen generated lots, in creation order (ids are allocated in this order, so they are stable for a seed). */
 export const LOT_SPECS: readonly LotSpec[] = [
   { key: 'park', name: 'Lakeside Park', kind: 'venue', venueType: 'park', size: 32, landValue: dollars(30000), variant: 0,
     blurb: 'Lawns and a pond at the end of the street: stroll, sit on a bench, meet people.', map: { x: 50, y: 14 } },
@@ -88,6 +89,8 @@ export const LOT_SPECS: readonly LotSpec[] = [
     blurb: 'The community arts and music centre: easels, a piano and small events.', map: { x: 88, y: 52 } },
   { key: 'market', name: 'Greengage Market', kind: 'venue', venueType: 'market', size: 32, landValue: dollars(26000), variant: 0,
     blurb: 'A small market with fresh produce and a few stalls.', map: { x: 50, y: 40 } },
+  { key: 'pool', name: 'Quayside Baths', kind: 'venue', venueType: 'pool', size: 32, landValue: dollars(29000), variant: 0,
+    blurb: 'A municipal swimming baths: a long lap pool, hot showers and a sun deck for the summer.', map: { x: 50, y: 27 } },
   { key: 'res1', name: 'Bluebell Cottage', kind: 'residential', size: 24, landValue: dollars(15500), variant: 0, home: 0, rented: true,
     blurb: 'A rented cottage with a flower box under every window.', map: { x: 22, y: 72 } },
   { key: 'res2', name: 'Sorrel Lodge', kind: 'residential', size: 24, landValue: dollars(17500), variant: 1, home: 1,

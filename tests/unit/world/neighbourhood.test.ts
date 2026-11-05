@@ -1,4 +1,4 @@
-// Milestone 7 lot records and lazy layouts: twelve generated lots with six venue types, opening hours, travel times, and
+// Milestone 7 lot records and lazy layouts: thirteen generated lots with seven venue types, opening hours, travel times, and
 // the builders indirection (a lot is laid out once, on first use, and a failing builder leaves the lot untouched).
 
 import { describe, expect, it } from 'vitest';
@@ -15,14 +15,14 @@ import { db } from '../integration/harness';
 const world = () => createNewWorld(db, { seed: 7, mode: 'guided', household: premadeHouseholds(db)[0]!, neighbor: NEIGHBOR_HOUSEHOLD(db) });
 
 describe('lot records', () => {
-  it('creates twelve generated lots in a stable order with unique names and addresses', () => {
+  it('creates thirteen generated lots in a stable order with unique names and addresses', () => {
     const s = createEmptyWorld(1, 'guided');
     const lots = createNeighbourhoodLots(s, new Rng(seedRng(5)), 'Test Street');
-    expect(lots.order).toHaveLength(12);
-    expect(LOT_SPECS).toHaveLength(12);
+    expect(lots.order).toHaveLength(13);
+    expect(LOT_SPECS).toHaveLength(13);
     const all = Object.values(s.lots);
-    expect(new Set(all.map((l) => l.name)).size).toBe(12);
-    expect(new Set(all.map((l) => l.address)).size).toBe(12);
+    expect(new Set(all.map((l) => l.name)).size).toBe(13);
+    expect(new Set(all.map((l) => l.address)).size).toBe(13);
     for (const l of all) {
       expect(l.built).toBe(false);
       expect(l.entry).toEqual({ x: Math.floor(l.width / 2), z: l.depth - 1, level: 0 });
@@ -36,10 +36,10 @@ describe('lot records', () => {
     expect(JSON.stringify(t.lots)).toBe(JSON.stringify(s.lots));
   });
 
-  it('a new world has 14 lots: the home, the house next door, six public venues and six more homes', () => {
+  it('a new world has 15 lots: the home, the house next door, seven public venues and six more homes', () => {
     const s = world();
     const lots = Object.values(s.lots);
-    expect(lots).toHaveLength(14);
+    expect(lots).toHaveLength(15);
     const venues = lots.filter((l) => l.kind === 'venue');
     expect(venues.map((l) => l.venueType).sort()).toEqual([...VENUE_TYPES].sort());
     const homes = lots.filter((l) => l.kind === 'residential');

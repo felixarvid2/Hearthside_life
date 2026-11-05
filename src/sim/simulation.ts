@@ -45,6 +45,7 @@ import { placeOf } from './places';
 import type { PersonPlace } from './places';
 import { reconcileStrays, runLightWorld } from './townlife';
 import { ensureWeather, updateWeatherMoods } from './weather';
+import { updateSnowmen } from './snowman';
 import { ageUp, dailyAging } from './aging';
 import { adopt, adoptionPreview } from './adoption';
 import type { AdoptionPreview, AdoptionSpec, AdoptResult } from './adoption';
@@ -122,6 +123,8 @@ export class Simulation {
     if (day !== prevDay) this.dailyRollover(ctx, day);
     // Seasons and weather: keep the stored plan current (half-day boundaries roll the current weather).
     ensureWeather(ctx);
+    // Snowmen thaw when winter ends or after a few snow-free days (task O).
+    if (minuteOfDay(ctx.now) % 60 === 0) updateSnowmen(ctx);
     // 2. Schedule
     ensureFirstVisit(ctx);
     processSchedule(ctx);

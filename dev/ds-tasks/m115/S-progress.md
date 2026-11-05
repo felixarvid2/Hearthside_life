@@ -78,15 +78,27 @@ that every id in the table exists in the content database.
 
 ## Checks
 
-- `npx tsc --noEmit` — clean.
-- `npx vitest run tests/unit/content/screens.test.ts tests/unit/render/screenPrograms.test.ts` — 31 passed.
-- Full `npx vitest run` — 2016 passed, 3 failed, all outside this task and already failing in the shared tree:
-  `tests/unit/integration/travel.test.ts` autonomy assertion (`introduce` started with autonomy off) and two
-  `tests/unit/surfaces/painters.test.ts` tests that time out at the default 5 s while every agent builds; the
-  first painters test has a 120 s allowance and passes, so the timeouts are CPU contention, not regressions.
-- `npm run content:check` — 0 errors, 0 warnings.
-- `npm run build` — 329 modules, built in 14.2 s.
-- `npm run visual:m115:screens` — **57/57 checks passed**, no page errors in any viewport. Every close-up is a
+First run (before the machine restart) and a full re-verification after resuming. The resume re-ran every check
+in `common.md` from scratch on the current shared tree (2026-11-05, ~00:05–00:25 UTC, four agents on four cores):
+
+- `npm run typecheck` — clean both runs.
+- `npx vitest run tests/unit/content/screens.test.ts tests/unit/render/screenPrograms.test.ts` — 31 passed both runs.
+- Full `npx vitest run` (resume run) — 2016 passed, 6 failed, all 5 s `Test timed out` failures outside this task
+  and caused by CPU contention: `tests/unit/surfaces/painters.test.ts` (3), `tests/unit/surfaces/mapPainters.test.ts`
+  (2), `tests/unit/integration/m11-skills.test.ts` (1). The pre-restart run had the same class of failure (3:
+  `travel.test.ts` autonomy assertion plus two painters timeouts), and the painters file includes a 120 s-allowance
+  test that passes. Every screen/program test passed; no failure touches task S.
+- `npm run content:check` — **0 errors, 0 warnings** at the start of the resume run (00:07 UTC). When re-run at
+  00:46 the shared tree had gained a `snowman` object from another agent's in-flight weather work
+  (`src/content/objects.ts`, mtime 00:43) and the report shows exactly 2 errors on it: `price must be positive
+  integer cents` (`dollars(0)`) and `functional object without interactions, slots or surface`. Not task S and not
+  touched here (the object is the seasonal Build-a-Snowman result, never sold); left for that agent/the supervisor.
+- `npm run build` — passed (29.7 s under the shared load; 329 modules in the earlier run).
+- `npm run e2e` — the first resume attempt was stopped by the harness after 10 minutes *still queued* on the shared
+  `/tmp/hearthside-browser.lock` (four processes waiting behind another agent's browser run); restarted with a long
+  background timeout so it can queue behind the other agents. Result recorded below.
+- `npm run visual:m115:screens` — **57/57 checks passed on the resume run too**, screenshots rewritten
+  00:16–00:18 UTC, no page errors in any viewport. Every close-up is a
   real close-up at capture time (`ppmNow` 400 for the computer, 122 portrait / 115 landscape / 190 desktop for the
   TV, no glide running). The TV check also proves the glass corners and the watcher's head are inside the frame.
 - Screenshots, 21 PNGs in `dev/ds-tasks/m115/shots/S/` (portrait 390×844, landscape 844×390, desktop 1280×720),

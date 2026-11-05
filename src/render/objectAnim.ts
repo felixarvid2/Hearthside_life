@@ -158,6 +158,7 @@ export const DESCRIPTORS: readonly AnimDescriptor[] = [
   { defId: 'counter-sink', asset: 'kitchenSink', kind: 'sink', parts: [], tap: { x: 0.5, z: 0.24, top: 0.86, bottom: 0.70 } },
   { defId: 'bathroom-sink', asset: 'bathroomSink', kind: 'sink', parts: [], tap: { x: 0.5, z: 0.20, top: 0.88, bottom: 0.74 } },
   { defId: 'bathroom-sink-square', asset: 'bathroomSinkSquare', kind: 'sink', parts: [], tap: { x: 0.5, z: 0.18, top: 0.90, bottom: 0.78 } },
+  { defId: 'vanity-basin', asset: 'bathroomCabinetDrawer', kind: 'sink', parts: [], tap: { x: 0.5, z: 0.34, top: 0.96, bottom: 0.84 } },
 
   // --- kitchen appliances --------------------------------------------------------------------
   {
@@ -487,6 +488,8 @@ export class ObjectAnim {
   private effects: EffectRuntime | null = null;
   private glowLevel = 0;
   private elapsed = 0;
+  private lastNow = 0;
+  private clockSeeded = false;
   private seeded = false;
   private readonly ownGeometries: THREE.BufferGeometry[] = [];
   private readonly ownMaterials: THREE.Material[] = [];
@@ -573,8 +576,14 @@ export class ObjectAnim {
       if (this.interior.glow) this.interior.glow.emissiveIntensity = this.glowLevel;
     }
 
+    // Water/steam phases follow the game clock (so they freeze while paused and speed up with the game), but the
+    // game's 3x setting is 15 clock minutes per second: cap the rate at 3x real time so fast-forward still reads as
+    // water rather than a teleporting blur. At 1x one game minute is one second, so this is exactly dt.
+    const dGame = this.clockSeeded ? Math.max(0, Math.min(now - this.lastNow, dt * 3)) : 0;
+    this.clockSeeded = true;
+    this.lastNow = now;
+    this.elapsed += dGame;
     this.updateEffects(act, dt, reducedMotion);
-    this.elapsed += dt;
   }
 
   // ---- interiors --------------------------------------------------------------------------
@@ -700,6 +709,9 @@ export class ObjectAnim {
       // in the stall and be hidden. Mixed plane angles keep some of them facing the camera from any side.
       const mat = new THREE.MeshBasicMaterial({ color: 0xcfebf7, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide });
       this.ownMaterials.push(mat);
+      // one geometry for every streak (same size), so a shower costs ten draw calls but one geometry
+      const streak = new THREE.PlaneGeometry(0.024, 0.5);
+      this.ownGeometries.push(streak);
       const cx = (box.x0 + box.x1) / 2, cz = (box.z0 + box.z1) / 2;
       const top = box.y1 - 0.10;
       const len = Math.max(0.4, top - 0.05);
@@ -709,13 +721,12 @@ export class ObjectAnim {
       ];
       for (let i = 0; i < spots.length; i++) {
         const [fx, fz] = spots[i]!;
-        const quad = new THREE.Mesh(new THREE.PlaneGeometry(0.024, 0.5), mat);
+        const quad = new THREE.Mesh(streak, mat);
         quad.rotation.y = (i % 3) * 0.62;
         quad.position.set(box.x0 + fx * (box.x1 - box.x0), top - len * 0.5, box.z0 + fz * (box.z1 - box.z0));
         quad.userData.phase = i / spots.length;
         quad.userData.top = top;
         quad.userData.len = len;
-        this.ownGeometries.push(quad.geometry);
         g.add(quad);
         e.shower.push(quad);
       }

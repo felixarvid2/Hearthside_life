@@ -5,6 +5,7 @@
 
 import type { ContentDB } from '../content/types';
 import { MINUTES_PER_DAY, dayIndex, hourOfDay, minuteOfDay } from '../core/clock';
+import type { Tile } from '../core/nav';
 import { SEASON_NAMES, seasonDays, seasonFor, seasonForDay, seasonsOn } from '../core/season';
 import type {
   Person, Season, WeatherKind, WeatherRule, WeatherState, WorldState,
@@ -155,23 +156,97 @@ export function weatherGateReason(rule: WeatherRule | undefined, weather: Weathe
   return null;
 }
 
-/** Whether the person is in the open air: their room is open to the lot border and no roof covers the tile. */
-export function isOutdoors(ctx: Pick<SimCtx, 'state'>, p: Person): boolean {
-  const loc = lotLoc(p);
-  if (!loc) return false;
-  const lot = ctx.state.lots[loc.lotId];
+/** Milestone 12, task O: night runs 21:00-05:59; everything else is day. */
+export function isNight(now: number): boolean {
+  const h = hourOfDay(now);
+  return h >= 21 || h < 6;
+}
+
+/** Snow is lying on the ground: it has settled this winter and the season has not turned. */
+export function snowLies(state: Pick<WorldState, 'clock' | 'settings' | 'weather'>, now: number): boolean {
+  if (state.settings.weather === false) return false;
+  if (!state.weather?.snowCover) return false;
+  return seasonFor(now, state.settings) === 'winter';
+}
+
+/**
+ * It is raining now, or a rainy morning has left puddles less than three hours into the afternoon. (Rain from the
+ * previous day has drained away by morning.) Task O: Jump in Puddles uses this.
+ */
+export function rainedRecently(state: Pick<WorldState, 'settings' | 'weather'>, now: number): boolean {
+  if (currentWeather(state) === 'rain') return true;
+  const w = state.weather;
+  if (!w || dayIndex(now) !== w.day) return false;
+  const mod = minuteOfDay(now);
+  return w.today[0] === 'rain' && mod >= HALF_DAY_MINUTES && mod < HALF_DAY_MINUTES + 180;
+}
+
+/**
+ * The full Milestone 12 gate for an interaction or social rule: weather, season and the person-dependent conditions
+ * of task O (outside/under a roof, day/night, snow on the ground, puddles). Returns a readable reason, or null.
+ */
+export function outdoorGateReason(
+  rule: WeatherRule | undefined, ctx: Pick<SimCtx, 'state' | 'now' | 'nav'>, p: Person,
+): string | null {
+  const base = weatherGateReason(rule, currentWeather(ctx.state), currentSeason(ctx.state));
+  if (base || !rule) return base;
+  if (rule.outdoor === true && !isOutdoors(ctx, p) && !nearestOutdoorTile(ctx, p)) return 'This has to be done outdoors.';
+  if (rule.sheltered === true && isOutdoors(ctx, p)) return 'Better done under a roof.';
+  if (rule.night === true && !isNight(ctx.now)) return 'Only at night.';
+  if (rule.day === true && isNight(ctx.now)) return 'Only during the day.';
+  if (rule.snowCover === true && !snowLies(ctx.state, ctx.now)) return 'There is no snow on the ground.';
+  if (rule.rainedRecently === true && !rainedRecently(ctx.state, ctx.now)) return 'It has not rained recently.';
+  return null;
+}
+
+/** Whether a tile is in the open air: its room is open to the lot border and no roof covers it. */
+export function outdoorsAt(
+  state: Pick<WorldState, 'lots'>, lotId: string, level: number, x: number, z: number,
+): boolean {
+  const lot = state.lots[lotId];
   if (!lot) return false;
-  const x = Math.floor(loc.x), z = Math.floor(loc.z);
+  x = Math.floor(x); z = Math.floor(z);
   if (x < 0 || z < 0 || x >= lot.width || z >= lot.depth) return false;
-  const rooms = computeRooms(lot, loc.level);
+  const rooms = computeRooms(lot, level);
   const idx = roomIndex(rooms, lot.width, lot.depth)[z * lot.width + x] ?? -1;
   const room = rooms[idx];
   if (!room || !room.outdoor) return false;
-  const roofs = lot.roofs ?? {};
-  for (const r of Object.values(roofs)) {
-    if (r.level === loc.level && x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1) return false;
+  for (const r of Object.values(lot.roofs ?? {})) {
+    if (r.level === level && x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1) return false;
   }
   return true;
+}
+
+/** Whether the person is in the open air (see outdoorsAt). */
+export function isOutdoors(ctx: Pick<SimCtx, 'state'>, p: Person): boolean {
+  const loc = lotLoc(p);
+  if (!loc) return false;
+  return outdoorsAt(ctx.state, loc.lotId, loc.level, loc.x, loc.z);
+}
+
+/**
+ * A walkable outdoor tile the person can walk to on this lot (the nearest by straight-line distance), or null.
+ * Used by the outdoor activities to step outside before they begin.
+ */
+export function nearestOutdoorTile(ctx: Pick<SimCtx, 'state' | 'nav'>, p: Person): Tile | null {
+  const loc = lotLoc(p);
+  if (!loc) return null;
+  const lot = ctx.state.lots[loc.lotId];
+  if (!lot) return null;
+  const from = { x: Math.floor(loc.x), z: Math.floor(loc.z), level: loc.level };
+  let best: { x: number; z: number; level: number } | null = null;
+  let bestD = Infinity;
+  for (let z = 0; z < lot.depth; z++) {
+    for (let x = 0; x < lot.width; x++) {
+      if (!outdoorsAt(ctx.state, lot.id, loc.level, x, z)) continue;
+      if (!ctx.nav.isWalkable(lot.id, loc.level, x, z)) continue;
+      if (x === from.x && z === from.z) return { x, z, level: loc.level };
+      const d = (x - from.x) ** 2 + (z - from.z) ** 2;
+      if (d < bestD) { bestD = d; best = { x, z, level: loc.level }; }
+    }
+  }
+  if (!best) return null;
+  return ctx.nav.findPath(lot.id, loc.level, from, [best]) ? best : null;
 }
 
 /** A 'winter' or 'coat' tagged garment in the outfit currently worn. */

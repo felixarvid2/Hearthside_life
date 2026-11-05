@@ -14,7 +14,10 @@ import { levelY } from '../world/levels';
 import { foodColor, mealDomeScale } from './handProps';
 import { disposePlaceholder, placeholderModel, type ObjectAssets } from './objectAssets';
 import { createObjectAnim, type ObjectAnim } from './objectAnim';
-import { objectUses } from './objectUse';
+import { objectUses, type ObjectUse } from './objectUse';
+
+/** Shared empty use list: most objects have none each frame, so this must not allocate. */
+const NO_USES: readonly ObjectUse[] = [];
 
 interface ObjEntry {
   id: Id;
@@ -320,7 +323,7 @@ export class ObjectsView {
           sprite.material.opacity = 0.15 + 0.85 * Math.min(1, f * 1.6);
         }
       }
-      if (frame && e.objectAnim) e.objectAnim.update(uses?.get(e.id) ?? [], frame.now, dt, reducedMotion);
+      if (frame && e.objectAnim) e.objectAnim.update(uses?.get(e.id) ?? NO_USES, frame.now, dt, reducedMotion);
     }
   }
 
