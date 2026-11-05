@@ -223,7 +223,15 @@ async function runViewport(browser, vpName, vp) {
       if (total) { auditFindings.push({ viewport: vpName, label, ...r }); log(`AUDIT ${label}: ${r.small.length} small targets, ${r.tiny.length} tiny texts, ${r.over.length} overlaps${r.overflowX ? ', horizontal overflow' : ''}`); }
     },
     async frames(n = 3, dt = 1 / 30) { await page.evaluate(([n2, dt2]) => { for (let i = 0; i < n2; i++) window.hearthside.debug.frame(dt2); }, [n, dt]); },
-    async tap(loc, opts = {}) { if (vp.touch) await loc.tap({ timeout: 30000, ...opts }); else await loc.click({ timeout: 30000, ...opts }); },
+    async tap(loc, opts = {}) {
+      const o = { timeout: 30000, ...opts };
+      // The software renderer can hold the page for most of a minute on a first paint (new shaders when Build or a new
+      // tool opens). Playwright then gives up waiting for a stable frame although the element has not moved; retry once.
+      try { if (vp.touch) await loc.tap(o); else await loc.click(o); } catch (e) {
+        log(`tap retry after ${String(e?.message ?? e).split('\n')[0]}`);
+        if (vp.touch) await loc.tap({ ...o, timeout: 60000 }); else await loc.click({ ...o, timeout: 60000 });
+      }
+    },
     async tapAt(x, y) { if (vp.touch) await page.touchscreen.tap(x, y); else await page.mouse.click(x, y); },
     st: () => page.evaluate(() => JSON.parse(JSON.stringify({ clock: window.hearthside.debug.state()?.clock ?? null }))),
   };

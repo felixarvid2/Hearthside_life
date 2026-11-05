@@ -196,6 +196,10 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - The Build tool tabs now wrap onto two rows in the side panel (eleven tools do not fit one 380 px row). Before
     that, Fence, Garden and Pool sat outside the row and desktop Playwright could not click them (step 11's exterior
     section and step 14).
+  - Step 11 Build tool tabs (desktop): a tap can time out after 30 s waiting for the tab to be "visible, enabled and
+    stable" although the tab has not moved. The software renderer holds the page for most of a minute on a first paint
+    (new shaders when Build or a tool opens), and Playwright gives up waiting for a stable frame. `T.tap` now retries
+    once with a 60 s timeout and logs `tap retry after …`; the retried step passes without a layout change.
   - Desktop acceptance takes about 35-40 minutes.
 - Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.

@@ -62,7 +62,7 @@ Explicit, realistic timeouts instead of a global change:
 |---|---|---|
 | portrait 390x844 | 43/43 | 358/358 (rerun on the final tree, 26 min) |
 | landscape 844x390 | 43/43 | 349/350 (one failure: the known step-2 "neighbour: visible to tap" flake — the visitor had gone home; the step's retry skips its dependent checks, hence the lower total) |
-| desktop 1280x720 | running | running |
+| desktop 1280x720 | 43/43 | 344/344 (final tree, 68 min; step 11's tab tap needed the one-shot retry in an earlier targeted run) |
 
 Landscape step 13 (progress pill, fridge door, hand prop, eating) and step 14 (weather, snowman, pool, swim,
 Quayside Baths) all passed in this run. A rerun for a clean sample follows the desktop run.
