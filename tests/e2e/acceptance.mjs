@@ -393,7 +393,8 @@ async function stepCreator(T) {
   if (!patterned) {
     // the random starting garment has no patterns (e.g. overalls): try other garments until one offers a pattern
     T.ok(S, 'clothing: the starting garments offer no pattern; switching garment', 'looking for a patterned garment');
-    outer: for (const layerName of ['top', 'full', 'bottom']) {
+    // A full outfit first: switching a full outfit to a top alone leaves no bottom, and Move In is then refused.
+    outer: for (const layerName of ['full', 'top', 'bottom']) {
       const nG = await page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).count();
       for (let j = 0; j < nG; j++) {
         const chip = page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).nth(j);
@@ -406,6 +407,23 @@ async function stepCreator(T) {
           const label = (await pc.nth(k).innerText()).trim();
           if (!/^\W*solid/i.test(label)) { patterned = { layer: page.locator(`.cr-layer[data-layer="${layerName}"]`), chip: pc.nth(k), label, layerName }; break outer; }
         }
+      }
+    }
+    // A top or bottom chosen in place of a full outfit: make sure the other half is worn too.
+    const other = patterned?.layerName === 'top' ? 'bottom' : patterned?.layerName === 'bottom' ? 'top' : null;
+    if (other) {
+      const og = page.locator(`.cr-layer[data-layer="${other}"] [aria-label$=" garments"] .chip`);
+      const nO = await og.count();
+      let worn = false;
+      for (let j = 0; j < nO && !worn; j++) {
+        worn = (await og.nth(j).getAttribute('aria-checked')) === 'true' && !/^\W*none/i.test((await og.nth(j).innerText()).trim());
+      }
+      for (let j = 0; j < nO && !worn; j++) {
+        if (/^\W*none/i.test((await og.nth(j).innerText()).trim())) continue;
+        await T.tap(og.nth(j));
+        await T.frames(3);
+        worn = true;
+        T.ok(S, `clothing: a ${other} added to go with the patterned ${patterned.layerName}`, (await og.nth(j).innerText()).trim());
       }
     }
   }
