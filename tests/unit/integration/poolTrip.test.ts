@@ -25,7 +25,7 @@ function quietCore(): GameCore {
   s.settings.visitors = false;
   s.settings.autonomy = false;
   s.schedule = s.schedule.filter((e) => e.kind !== 'visitArrive');
-  for (const id of members(s)) if (s.people[id]!.career) core.quitCareer(id);
+  for (const p of members(s)) if (p.career) core.quitCareer(p.id);
   return core;
 }
 
@@ -37,7 +37,7 @@ describe('a day trip to the swimming pool', { timeout: 180_000 }, () => {
   it('travels to Quayside Baths, swims, showers and comes home', () => {
     const core = quietCore();
     const s = core.state()!;
-    const ids = members(s);
+    const ids = members(s).map((p) => p.id);
     expect(ids.length).toBeGreaterThanOrEqual(1);
     const homeId = s.activeLotId;
     const poolLot = Object.values(s.lots).find((l) => l.venueType === 'pool')!;
