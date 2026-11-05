@@ -53,8 +53,8 @@ Explicit, realistic timeouts instead of a global change:
 
 | Viewport | Steps 13, 14 (targeted `--steps=13,14 --fast-start`) | Full run (steps 1-14) |
 |---|---|---|
-| portrait 390x844 | 43/43 | 358/358 |
-| landscape 844x390 | 43/43 | 356/356 |
+| portrait 390x844 | 43/43 | 358/358 (rerun on the final tree, 26 min) |
+| landscape 844x390 | 43/43 | running |
 | desktop 1280x720 | running | running |
 
 ## Other checks
