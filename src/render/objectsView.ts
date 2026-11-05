@@ -307,7 +307,8 @@ export class ObjectsView {
 
   /**
    * Per-frame flicker/bob of condition overlays and (Milestone 11.5) moving parts driven by `objectUses`.
-   * `frame` carries the simulation clock; openness is tweened in game minutes, effects in real seconds.
+   * `frame` carries the simulation clock; openness is tweened in game minutes, and running effects advance with the
+   * game clock too (capped at 3x real time), so they pause and speed up with the game.
    */
   animate(dt: number, reducedMotion: boolean, frame?: { state: WorldState; now: number }): void {
     this.animT += dt;

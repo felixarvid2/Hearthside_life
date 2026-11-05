@@ -1,6 +1,6 @@
 # Task O — outdoor life and the public swimming pool
 
-Status: implementation complete; finishing the screenshots and the check run (resumed after the machine restart).
+Status: complete (resumed after the machine restart; screenshots, all task checks and the progress notes are done).
 
 ## Deliverables
 
@@ -67,8 +67,8 @@ winter, or after three snow-free days in winter (a snowfall resets the count). R
 - `snowman` (`status: 'dev'`, not in the Buy catalogue) is created by Build a Snowman.
 
 Their models are original `proc:` meshes built at runtime (`src/render/outdoorModels.ts`, registered through the
-existing procedural-model hook), with SVG catalogue thumbnails. `content:check` regenerates
-`docs/CONTENT_STATUS.md` counts.
+existing procedural-model hook), with SVG catalogue thumbnails. The counts in `docs/CONTENT_STATUS.md` are refreshed
+from the `content:check -- --markdown` output (the tool prints the tables; it does not write the file itself).
 
 ### Pool venue
 
@@ -110,12 +110,17 @@ existing procedural-model hook), with SVG catalogue thumbnails. `content:check` 
 - **Weather rule**: extended with optional, additive fields rather than adding a second per-interaction condition
   field, so every gate lives in one place and both the menu and autonomy share it.
 - **Snowman**: an ordinary placed object with an optional state block, so save/load, rendering and nav need no
-  special cases; `status: 'dev'` keeps it out of the Buy catalogue. Its price is a nominal 1 cent because the
-  content validator requires a positive price even for objects that are never bought.
+  special cases; `status: 'dev'` keeps it out of the Buy catalogue. Its price is a nominal $1 because the content
+  validator requires a positive price even for objects that are never bought.
 - **Kite/sun lounger are object interactions** (a prop on the lawn, a lounger on the deck), which gives the
   activities a real route/use/cleanup lifecycle instead of a self-only animation.
 - **Kite model flies**: a static airborne pose (2.3 m, line to a ground peg) rather than a per-frame animation, so
   it needs no render hook and looks right both while someone is flying it and when it is left standing.
+- **Outdoor gate cost**: autonomy evaluates the gate for every candidate, so `nearestOutdoorTile` must be linear in
+  the lot area. It now computes the room map, room index and roof list once per call instead of calling
+  `outdoorsAt` (which recomputes `computeRooms` for every tile) inside the per-tile scan. The old version was
+  quadratic (about a million room computations per call) and, with an outdoor rule on every new activity, made the
+  long simulation tests cross their timeouts. Behaviour is unchanged; the travel suite fell from ~150 s to ~15 s.
 
 ## Progress
 
@@ -124,24 +129,49 @@ existing procedural-model hook), with SVG catalogue thumbnails. `content:check` 
 - [x] Snowman lifecycle
 - [x] Pool venue
 - [x] Tests
-- [ ] Screenshots
-- [ ] Checks
+- [x] Screenshots (60/60 checks in portrait, landscape and desktop)
+- [x] Checks
 
 ## Check results
 
-- `npm run typecheck`: clean.
-- `npm run content:check`: 0 errors, 0 warnings (`docs/CONTENT_STATUS.md` regenerated; the snowman was fixed to
-  carry a nominal price and be decorative).
-- `npm run build`: built successfully.
-- `npx vitest run tests/unit/sim/outdoor.test.ts tests/unit/integration/poolTrip.test.ts`: 18/18 passed.
-- `npx vitest run tests/unit/world/venueLayouts.test.ts`: 85/85 passed.
-- Lot counts: the pool is a thirteenth generated lot, so a new world now has 15 lots. Updated the four assertions
-  that hard-coded 14 (`integration/travel.test.ts`, `integration/neighbourhood.test.ts` x3,
-  `integration/newWorld.test.ts`) and the stale "twelve generated lots" comments/docs. The three affected files now
-  pass 22/22.
-- Long simulations (`sim/content`, `sim/townlife`, `integration/floors`, the long `integration/travel` cases) time
-  out at their 60 s per-test limit while several other agents run browsers and builds in parallel; the same tests
-  pass in isolation when the machine is quiet. Re-running the full suite once the load drops.
-- Screenshots: `dev/ds-tasks/m12/shoot-o.mjs` written; the run is queued on `/tmp/hearthside-browser.lock` behind
-  other agents' e2e/screenshot jobs.
-- `npm run e2e`, `npm run e2e:creator`, `npm run e2e:acceptance`: pending (same browser lock).
+Resumed run on 2026-11-05 after the machine restart; the screenshots below were produced by the interrupted run and
+re-checked here.
+
+- `npm run typecheck` - pass (`tsc --noEmit`), also after the performance and test edits.
+- `npm run content:check` - pass, 0 errors, 0 warnings. `docs/CONTENT_STATUS.md` was stale, so its generated tables
+  were refreshed from `content:check -- --markdown`: 108 activities, 47 social interactions, 122 moodlets, 38
+  preferences (6 groups), 31 outdoor furniture designs plus the dev snowman (decor dev 1), 165 furniture designs in
+  total.
+- `npm run build` - pass (vite build; the usual chunk-size warning only).
+- Task O suites (`sim/outdoor`, `integration/poolTrip`, `integration/outdoor-playtest`, `world/venueLayouts`) -
+  108/108 pass.
+- Lot counts: the pool is a thirteenth generated lot, so a new world now has 15 lots. The four assertions that
+  hard-coded 14 (`integration/travel.test.ts`, `integration/neighbourhood.test.ts` x3,
+  `integration/newWorld.test.ts`) were updated; those files pass.
+- **Performance fix found by the check run:** the first isolated run of `integration/travel.test.ts` exceeded the
+  file's hard 60 s per-test cap (the 8-day NPC-payroll case took ~75 s). The cause was Task O's
+  `nearestOutdoorTile`: it called `outdoorsAt` per tile and `outdoorsAt` recomputed `computeRooms` for that tile
+  (quadratic, about a million room computations per call), while autonomy evaluates the gate for every candidate.
+  It now computes the room map, room index and roofs once per call. `travel.test.ts` fell from ~150 s to 15.3 s
+  (13/13) with no behaviour change, and the Task O suites still pass 108/108.
+- `integration/venueActivities.test.ts` - 24/24 pass. The pool's sun-loungers exposed a real interaction between
+  the venue matrix and the new weather gate (Sunbathe is refused in cloudy weather), so the test now gives
+  weather-bound venue activities a clear summer noon while they are queued and performed, then restores the
+  fixture's clock and weather.
+- Full `npx vitest run` - first run: 2050/2055 (the venue-activities weather case plus four 5 s default-timeout
+  cases). Second run after the venue fix: 2049/2055, with the venue failure gone and six 5 s default-timeout cases
+  (`integration/floors` 1, `surfaces/painters` 3, `surfaces/mapPainters` 2) while the machine was loaded (load
+  average ~6 on 4 cores). All the timeout cases pass alone (floors + mapPainters 17/17, painters 17/17), and
+  `npx vitest run --testTimeout=20000` passes **2055/2055 in 159 files** (223 s), so the remaining failures are
+  purely the 5 s default under parallel load, not behaviour.
+- `npm run e2e` - pass, exit 0, on both the pre-fix tree and again on the final tree: desktop 1280x720, portrait
+  390x844 and landscape 844x390, no page errors; screenshots in `tests/e2e/out/screenshots`.
+- `npm run build` was run again after the performance/test edits - pass (`✓ built in 11.03s`).
+- Screenshots `npm run visual:m12:outdoor` (`dev/ds-tasks/m12/shoot-o.mjs`, self-locks the browser lock) - 60/60
+  checks in portrait, landscape and desktop; `dev/ds-tasks/m12/shots/O/` has `snowman-building-*`,
+  `snowman-built-*`, `picnic-*`, `kite-*`, `pool-interior-*` and `map-pool-*`, with the evidence in `shots.json`.
+  The pool check is labelled "two household members are swimming" but only one household member was on the lot
+  when the swim was scripted, so it asserts at least one scripted swimmer; the screenshot itself shows a second
+  swimmer in the pool alongside the scripted one.
+- `npm run e2e:creator` and `npm run e2e:acceptance` were not part of task O's check list (common.md); `e2e` is the
+  required smoke run and passed.

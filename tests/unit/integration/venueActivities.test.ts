@@ -113,17 +113,33 @@ describe.each(TYPES)('activities at the %s', (type) => {
       if (id === 'sellPhotos') p.skills.photography = { level: 2, xp: 0 };
       const before = { funds: funds(s), needs: { ...p.needs }, skill: def.skill ? { ...(p.skills[def.skill.id] ?? { level: 1, xp: 0 }) } : null, ledger: s.state.households[s.hhId]!.ledger.length };
       const data = id === 'readSkillBook' ? { skillId: 'cooking' } : undefined;
-      const q = s.sim.queue(p.id, { interactionId: id, target: onObject(obj.id), ...(data ? { data } : {}) });
       // nobody naps in a public place, and some activities belong to other places (a picnic at the cafe, games on library computers)
       const notHere = def.behavior === 'rest' || def.behavior === 'sleep' || (def.venues !== undefined && !def.venues.includes(type));
+      // Milestone 12: venue objects can offer weather-bound activities (sunbathing on a lounger, a picnic in the
+      // park). Give the patron a clear summer noon while such an activity is queued and performed, then restore.
+      const savedClock = s.state.clock.minutes;
+      const savedWeather = s.state.weather;
+      const weatherBound = !notHere && def.weather !== undefined;
+      if (weatherBound) {
+        s.state.clock.minutes = 10 * 24 * 60 + 12 * 60; // day 10 is summer; noon is inside every venue's hours
+        s.state.weather = { current: 'clear', today: ['clear', 'clear'], tomorrow: ['clear', 'clear'], day: 10, since: 10 * 24 * 60 };
+      }
+      const restore = () => {
+        if (!weatherBound) return;
+        s.state.clock.minutes = savedClock;
+        if (savedWeather) s.state.weather = savedWeather; else delete s.state.weather;
+      };
+      const q = s.sim.queue(p.id, { interactionId: id, target: onObject(obj.id), ...(data ? { data } : {}) });
       if (notHere) {
         expect(q.ok, label).toBe(false);
         expect(funds(s), label).toBe(before.funds);
+        restore();
         continue;
       }
       expect(q.ok, `${label} ${q.ok ? '' : q.reason}`).toBe(true);
-      if (!q.ok) continue;
+      if (!q.ok) { restore(); continue; }
       const f = run(s, q.actionId);
+      restore();
       expect(f?.result, `${label} ${f?.reason ?? ''}`).toBe('done');
       performed++;
       // money: exactly the price, one ledger entry with the action's occurrence (freelance work pays one sale instead)

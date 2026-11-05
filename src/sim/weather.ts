@@ -234,11 +234,22 @@ export function nearestOutdoorTile(ctx: Pick<SimCtx, 'state' | 'nav'>, p: Person
   const lot = ctx.state.lots[loc.lotId];
   if (!lot) return null;
   const from = { x: Math.floor(loc.x), z: Math.floor(loc.z), level: loc.level };
+  // Compute the room map and the roofs for this level once: outdoorsAt() does both per call, which made the
+  // per-tile scan quadratic (O(width * depth) room computations) and dominated long simulations. (Task O.)
+  const rooms = computeRooms(lot, loc.level);
+  const index = roomIndex(rooms, lot.width, lot.depth);
+  const roofs = Object.values(lot.roofs ?? {}).filter((r) => r.level === loc.level);
+  const open = (x: number, z: number): boolean => {
+    const room = rooms[index[z * lot.width + x] ?? -1];
+    if (!room || !room.outdoor) return false;
+    for (const r of roofs) if (x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1) return false;
+    return true;
+  };
   let best: { x: number; z: number; level: number } | null = null;
   let bestD = Infinity;
   for (let z = 0; z < lot.depth; z++) {
     for (let x = 0; x < lot.width; x++) {
-      if (!outdoorsAt(ctx.state, lot.id, loc.level, x, z)) continue;
+      if (!open(x, z)) continue;
       if (!ctx.nav.isWalkable(lot.id, loc.level, x, z)) continue;
       if (x === from.x && z === from.z) return { x, z, level: loc.level };
       const d = (x - from.x) ** 2 + (z - from.z) ** 2;

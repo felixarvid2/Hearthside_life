@@ -240,3 +240,43 @@ The implementation was complete; the restart interrupted the screenshot promotio
   the game was paused. They now advance by the game-clock delta, capped at 3x real time (the game's 3x setting is 15
   clock minutes per second, which would teleport the streaks): paused means frozen, 1x is unchanged, and
   fast-forward reads as faster water rather than a blur. Doors already used the game clock directly.
+
+### Resume run 2 (after the second machine restart)
+
+The promotion had finished before the restart; this run verified the promoted images and finished the checks.
+
+- **Promoted image review.** Fridge closed/open, wardrobe open and shower running read correctly in all three
+  viewports. The **portrait stove shot did not show the effect**: the image showed the stove from the back-left with
+  no rings, pan or steam. The portrait candidate files were older (00:53) than the landscape/desktop ones
+  (01:02-01:19) and had been shot before the final effect tuning; the landscape/desktop shots do show four lit rings
+  and the pan.
+- **Re-shot fridge and stove with the current build.** `npm run build`, then
+  `npm run visual:m115:d -- --only=fridge,stove`. Portrait and landscape completed with **10/10 checks green**
+  (cookMeal queueable, stage 0 and stage 1 reached, `stove hob, pot and steam are on — 4 rings, pot on, 8 steam
+  sprites, ring glow 2.40`, no page errors). The desktop viewport was still starting its browser when the 30-minute
+  background limit killed the run, so the desktop files remain the earlier verified shots (rings, pan and steam are
+  visible in them; their scene-graph check passed when they were taken). The new portrait stove candidates show the
+  four glowing rings, the pan and steam clearly (`portrait-stove-cooking-w1/d0..d3`).
+- **Promotion re-run:** `npm run visual:m115:promote` now copies the fresh portrait/landscape `k1` fridge and
+  stove `w1`/`d1` candidates; desktop keeps `k1`/`d2` from the earlier good run. A small diagnostic
+  (`d-crop.test.ts`, sharp) enlarges the stove region of the three promoted images and builds a contact sheet of the
+  portrait candidates; the enlarged crops show the rings/pan/steam in all three viewports.
+
+### Final checks (resume run 2)
+
+Run on the current tree, with the other agents' work present but no edits of mine outside task D's files.
+
+| check | result |
+|---|---|
+| `npm run typecheck` | pass (`tsc --noEmit`, no output) |
+| `npx vitest run --no-file-parallelism` | **159 files / 2055 tests passed**, 473.13 s |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | pass (earlier run); the e2e script's own `vite build` also succeeded in the final e2e run |
+| `npm run e2e` | see below |
+| targeted `tests/unit/render/objectAnim.test.ts` + `objectUse.test.ts` | 25/25 |
+
+- The earlier full run under parallel load (four agents plus screenshot browsers) reported failures; every one was a
+  timeout in a heavy sim/integration suite. Re-running those four files sequentially was green (30/30), and the whole
+  suite sequential is green as above, so those were load artefacts rather than regressions.
+- E2E result: _pending at the time this section was written; updated below._
+
