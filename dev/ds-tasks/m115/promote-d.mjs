@@ -20,8 +20,9 @@ const CHOICE = {
   'stove-cooking': { portrait: 'w1', landscape: 'd1', desktop: 'd2' },
   // k1 shows both open doors and the clothes with the person in front in every viewport.
   'wardrobe-open': 'k1',
-  // Portrait k1 frames the whole stall with the person inside; landscape w2 centres it; desktop detail TBD.
-  'shower-running': { portrait: 'k1', landscape: 'w2', desktop: 'k2' },
+  // k0/d0 frame the whole stall with the person inside and the water streaks; landscape d1 is the closest
+  // legible view (the wide angles all cut the stall against the lot edge).
+  'shower-running': { portrait: 'k0', landscape: 'd1', desktop: 'd0' },
 };
 const VIEWPORTS = ['portrait', 'landscape', 'desktop'];
 

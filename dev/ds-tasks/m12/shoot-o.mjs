@@ -125,8 +125,8 @@ async function clearQueues(page) {
 }
 
 /** Buys and places an outdoor object in the yard; scans the south lawn, then the east lawn, for a free tile. */
-async function placeInYard(page, defId) {
-  return page.evaluate(([id]) => {
+async function placeInYard(page, defId, avoid = []) {
+  return page.evaluate(([id, skip]) => {
     const h = window.hearthside, g = h.game, core = h.core;
     const st = g.state();
     const lot = st.lots[st.activeLotId];
@@ -135,6 +135,8 @@ async function placeInYard(page, defId) {
         for (let x = xFrom; x <= xTo; x++) {
           const r = g.startPlacement(id);
           if (!r.ok) return { ok: false, reason: r.reason };
+          // A rug lets things be placed on top of it; keep the kite off the picnic blanket so each shot is its own.
+          if (skip.some(([ax, az]) => x === ax && z === az)) { g.cancelPlacement(); continue; }
           core.placementTile(x, z);
           const p = g.placement();
           if (p?.ok) {
@@ -154,13 +156,14 @@ async function placeInYard(page, defId) {
       ?? scan(3, Math.max(3, lot.depth - 3), Math.max(20, 1), lot.width - 2);
     g.setMode('live');
     return pick ?? { ok: false, reason: 'no free yard tile' };
-  }, [defId]);
+  }, [defId, avoid]);
 }
 
 async function queueSelf(page, personId, interactionId) {
   return page.evaluate(([pid, iid]) => {
     const g = window.hearthside.game;
-    const o = g.options(pid, { kind: 'self' }).find((x) => x.interactionId === iid);
+    // Picking the person themselves is how the UI opens their own menu (there is no separate 'self' pick).
+    const o = g.options(pid, { kind: 'person', personId: pid }).find((x) => x.interactionId === iid);
     if (!o) return { ok: false, reason: `${iid} not offered` };
     if (!o.enabled) return { ok: false, reason: o.reason ?? 'disabled' };
     return g.queue(pid, o);
@@ -265,7 +268,10 @@ async function main() {
 
       // --- the yard props: a picnic blanket and a kite ---------------------------------------
       const blanket = await placeInYard(page, 'picnic-blanket');
-      const kite = await placeInYard(page, 'kite');
+      const blanketTiles = blanket.ok
+        ? [[blanket.x, blanket.z], [blanket.x + 1, blanket.z], [blanket.x, blanket.z + 1], [blanket.x + 1, blanket.z + 1]]
+        : [];
+      const kite = await placeInYard(page, 'kite', blanketTiles);
       note(`${vp.id}: a picnic blanket and a kite can be put out in the yard`, blanket.ok && kite.ok,
         `blanket=${JSON.stringify(blanket)} kite=${JSON.stringify(kite)}`);
       if (!blanket.ok || !kite.ok) { await context.close(); continue; }

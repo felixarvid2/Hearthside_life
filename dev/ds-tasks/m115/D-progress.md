@@ -227,12 +227,15 @@ The implementation was complete; the restart interrupted the screenshot promotio
   `stove-cooking-d0..3` (240 ppm) and `shower-running-d0..3` (200 ppm; 130 on the short landscape canvas) angle
   candidates. They are additional evidence; `promote-d.mjs` can pick one for the final image if the wider angle is
   less legible.
-- **Promotion choices (by eye, pending the fresh run):** fridge closed and open both use the `w2` angle in all three
-  viewports — the same diagonal view of the lot with the person below the fridge, closed (white door) vs open (lit
-  cavity with shelves and food) so the pair reads as a comparison and the person stays in frame. Wardrobe keeps the
-  natural reveal shot, which shows both doors swung open with the person in front in all three viewports. Stove and
-  shower will be picked from the fresh candidates, preferring the angle that shows rings + pan + steam and the water
-  streaks respectively.
+- **Promotion choices (by eye, from the fresh 01:0x-02:2x candidates; recorded in `promote-d.mjs`):**
+  - fridge closed and open: `k1` in all three viewports — the diagonal keeps the whole appliance in frame with the
+    person below it (the wide `w*` angles pushed the fridge against the lot edge and cut it). The pair reads as a
+    closed white door vs the lit cavity with shelves and food.
+  - stove cooking: portrait `w1` (whole stove, four lit rings, pan, person and steam wisps), landscape `d1` and
+    desktop `d2` (four rings + pan + cook in one frame).
+  - wardrobe open: `k1` in all three viewports (both doors open, clothes visible, person in front).
+  - shower running: portrait `k0` and desktop `d0` frame the whole stall with the person inside and the falling
+    streaks; landscape `d1` is the closest legible view (the wide angles cut the stall at the lot edge).
 - **Pause behaviour of the running effects:** water/steam used to advance with real `dt`, so they kept moving while
   the game was paused. They now advance by the game-clock delta, capped at 3x real time (the game's 3x setting is 15
   clock minutes per second, which would teleport the streaks): paused means frozen, 1x is unchanged, and
