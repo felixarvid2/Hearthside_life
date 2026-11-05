@@ -41,6 +41,14 @@ body.is-portrait .menu-btn { padding: 0; width: var(--tap); }
 .clock { display: flex; flex-direction: column; justify-content: center; line-height: 1.15; padding: 0 6px; min-width: 76px; flex: none; }
 .clock-time { font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .clock-day { font-size: 0.75rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+/* Milestone 12: season + weather chip. Desktop shows the label; the tight bars keep the two icons (title/aria). */
+.clock-sky { display: flex; align-items: center; gap: 4px; color: var(--ink-2); white-space: nowrap; }
+.clock-sky-icon { display: inline-flex; align-items: center; }
+.clock-sky-icon .icon-wrap { display: inline-flex; }
+.clock-sky-icon .icon { display: block; }
+.clock-sky-text { font-size: 0.7rem; font-weight: 600; }
+body.is-portrait .clock-sky-text { display: none; }
+body.is-landscape.is-compact .clock-sky-text { display: none; }
 .clock-paused { display: none; font-size: 0.75rem; font-weight: 800; color: #a14d26; text-transform: uppercase; letter-spacing: 0.04em; }
 .clock.is-paused .clock-paused { display: block; }
 body.is-portrait .clock.is-paused .clock-day { display: none; }
@@ -260,6 +268,9 @@ body.shell-hud-on.is-landscape.shell-side-open .toasts { left: calc((100% - var(
 .trait-effects { margin: 4px 0 0; padding-left: 20px; font-size: 0.88rem; }
 
 /* ---------- Feed and ledger ---------- */
+.feed-forecast { display: flex; align-items: center; gap: 6px; padding: 6px 10px; margin-bottom: 4px; border-radius: 8px; background: rgba(127, 148, 168, 0.12); color: var(--ink-2); font-size: 0.78rem; font-weight: 600; }
+.feed-forecast .icon-wrap { flex: none; display: inline-flex; }
+.feed-forecast[hidden] { display: none; }
 .feed-list, .ledger-list { list-style: none; padding: 0; margin: 0; }
 .feed-item, .ledger-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .feed-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--paper-2); display: grid; place-items: center; flex: none; color: var(--ink-2); }

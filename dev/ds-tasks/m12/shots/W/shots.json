@@ -1,0 +1,147 @@
+[
+  {
+    "name": "portrait: the clock shows the season and weather",
+    "ok": true,
+    "evidence": "Winter, day 1 - Snow | title=Winter, day 1 - Snow"
+  },
+  {
+    "name": "portrait: season and weather icons are drawn",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "portrait: the clock aria-label carries the sky",
+    "ok": true,
+    "evidence": "Monday, day 22, 9:00 AM. Winter, day 1 - Snow"
+  },
+  {
+    "name": "portrait: the feed shows a forecast for today and tomorrow",
+    "ok": true,
+    "evidence": "Forecast: today Snow then Snow · tomorrow Snow then Snow."
+  },
+  {
+    "name": "portrait: autumn rain reads in the clock",
+    "ok": true,
+    "evidence": "Autumn, day 3 - Rain"
+  },
+  {
+    "name": "portrait: spring clear reads in the clock",
+    "ok": true,
+    "evidence": "Spring, day 2 - Clear"
+  },
+  {
+    "name": "portrait: settings list the season and weather controls",
+    "ok": true,
+    "evidence": "labels=[\"Reduced camera motion\",\"Shadows\",\"Weather effects\",\"Autonomy\",\"Neighbour visits\",\"Seasons\",\"Weather\",\"Elders pass away peacefully\",\"Tutorial\",\"Performance overlay\"] seasons={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":1317} weather={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":1498} effects={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":907} seasonDays=true"
+  },
+  {
+    "name": "portrait: they are enabled with a game running",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "portrait: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: the clock shows the season and weather",
+    "ok": true,
+    "evidence": "Winter, day 1 - Snow | title=Winter, day 1 - Snow"
+  },
+  {
+    "name": "landscape: season and weather icons are drawn",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: the clock aria-label carries the sky",
+    "ok": true,
+    "evidence": "Monday, day 22, 9:00 AM. Winter, day 1 - Snow"
+  },
+  {
+    "name": "landscape: the feed shows a forecast for today and tomorrow",
+    "ok": true,
+    "evidence": "Forecast: today Snow then Snow · tomorrow Snow then Snow."
+  },
+  {
+    "name": "landscape: autumn rain reads in the clock",
+    "ok": true,
+    "evidence": "Autumn, day 3 - Rain"
+  },
+  {
+    "name": "landscape: spring clear reads in the clock",
+    "ok": true,
+    "evidence": "Spring, day 2 - Clear"
+  },
+  {
+    "name": "landscape: settings list the season and weather controls",
+    "ok": true,
+    "evidence": "labels=[\"Reduced camera motion\",\"Shadows\",\"Weather effects\",\"Autonomy\",\"Neighbour visits\",\"Seasons\",\"Weather\",\"Elders pass away peacefully\",\"Tutorial\",\"Performance overlay\"] seasons={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":1131} weather={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":1281} effects={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":822} seasonDays=true"
+  },
+  {
+    "name": "landscape: they are enabled with a game running",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: the clock shows the season and weather",
+    "ok": true,
+    "evidence": "Winter, day 1 - Snow | title=Winter, day 1 - Snow"
+  },
+  {
+    "name": "desktop: season and weather icons are drawn",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: the clock aria-label carries the sky",
+    "ok": true,
+    "evidence": "Monday, day 22, 9:00 AM. Winter, day 1 - Snow"
+  },
+  {
+    "name": "desktop: the feed shows a forecast for today and tomorrow",
+    "ok": true,
+    "evidence": "Forecast: today Snow then Snow · tomorrow Snow then Snow."
+  },
+  {
+    "name": "desktop: autumn rain reads in the clock",
+    "ok": true,
+    "evidence": "Autumn, day 3 - Rain"
+  },
+  {
+    "name": "desktop: spring clear reads in the clock",
+    "ok": true,
+    "evidence": "Spring, day 2 - Clear"
+  },
+  {
+    "name": "desktop: settings list the season and weather controls",
+    "ok": true,
+    "evidence": "labels=[\"Reduced camera motion\",\"Shadows\",\"Weather effects\",\"Autonomy\",\"Neighbour visits\",\"Seasons\",\"Weather\",\"Elders pass away peacefully\",\"Tutorial\",\"Performance overlay\"] seasons={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":1131} weather={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":1281} effects={\"on\":\"true\",\"disabled\":false}@{\"w\":95,\"h\":44,\"top\":822} seasonDays=true"
+  },
+  {
+    "name": "desktop: they are enabled with a game running",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: the Weather toggle writes the world setting",
+    "ok": true,
+    "evidence": "false"
+  },
+  {
+    "name": "desktop: the Weather effects toggle writes the device setting",
+    "ok": true,
+    "evidence": "false"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
+  }
+]

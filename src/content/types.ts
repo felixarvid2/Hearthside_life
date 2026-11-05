@@ -4,7 +4,7 @@
 
 import type {
   BodyFrame, BondStatus, Cents, EventGoalKind, GarmentLayer, HomeEventType, Hex, LifeStage, MemoryKind, NeedId, OutfitCategory, Posture,
-  WorldItemKind,
+  WeatherKind, WeatherRule, WorldItemKind,
 } from '../core/types';
 import type { AnimId } from '../core/anim';
 import type { ExteriorContent } from './exterior';
@@ -156,7 +156,78 @@ export interface ObjectDef {
    * The footprint of the level above it has no floor (a hole). Stairs are placed on a level that has a floor (level >= 1).
    */
   stair?: StairSpec;
+  /**
+   * Milestone 10: moving parts declared in content instead of the table in render/objectAnim.ts (that table wins for the
+   * defs it lists). The named GLB nodes (`anim:*`, see tools/furniture-extra/kit.mjs `part()`) are animated by `kind`.
+   */
+  anim?: ObjectAnimSpec;
+  /**
+   * Milestone 10: the model has an `anim:screen` part. The picture rectangle (content/screens.ts) is derived from that
+   * part's measured bounds, so a new TV, computer, laptop or tablet needs no hand-measured entry. Hand-measured entries in
+   * SCREENS win.
+   */
+  screen?: boolean;
   status: ContentStatus;
+}
+
+/** Milestone 10: part and animation vocabulary of ObjectDef.anim (render/objectAnim.ts runs it). */
+export type PartAxis = 'x' | 'y' | 'z';
+/**
+ * What a part is. door / door2 / lid / oven / drawer / drawer2 move together as one group each (a role is one switch).
+ * 'interior' is a static node shown only while some part is open; 'screen' is the static `anim:screen` node (documentation
+ * for the validator; the picture itself is ObjectDef.screen).
+ */
+export type PartRole = 'door' | 'door2' | 'lid' | 'oven' | 'drawer' | 'drawer2' | 'interior' | 'screen';
+/** 'openWhileUsed': every door, lid and drawer opens during any interaction on the object (or those in `on`). */
+export type AnimKind =
+  | 'fridge' | 'oven' | 'wardrobe' | 'toilet' | 'shower' | 'bath' | 'sink' | 'dishwasher' | 'laundry' | 'microwave' | 'openWhileUsed';
+export type InteriorKind = 'fridge' | 'oven' | 'wardrobe' | 'dishwasher' | 'washer';
+
+export interface AnimPartSpec {
+  /** GLB node name, `anim:<name>`. */
+  node: string;
+  role: PartRole;
+  /** Hinged: rotation axis through the node origin (in model space; keep def.model.yaw at 0) and signed angle in radians. */
+  axis?: PartAxis;
+  angle?: number;
+  /** Sliding: translation when fully open, in the def's fitted metres (rot-0 local space; +z is the front). */
+  slide?: [number, number, number];
+  /** Game minutes for a full opening / closing (default 0.4). */
+  openMinutes?: number;
+  closeMinutes?: number;
+}
+
+/** Tap stream of a 'sink' anim, in fractions of the fitted box: x across, z from the back, top/bottom heights (same as objectAnim DESCRIPTORS). */
+export interface AnimTapSpec { x: number; z: number; top: number; bottom: number }
+
+/**
+ * Hob effects of an 'oven' anim while something is cooked on top: glowing rings, a pot and steam. Positions are fractions of the
+ * fitted box: [x across, z from the back].
+ */
+export interface AnimHobSpec {
+  rings: [number, number][];
+  /** The pot (and steam) sits on this spot; default: the first ring. */
+  pan?: [number, number];
+  /** Height of the hob surface as a fraction of the fitted box height (default 1: the top of the model). */
+  y?: number;
+  /** Ring diameter in metres (default 0.12). */
+  ringSize?: number;
+}
+
+export interface ObjectAnimSpec {
+  /** Which interaction / anim ids open the parts (render/objectAnim.ts activeParts). */
+  kind: AnimKind;
+  parts: AnimPartSpec[];
+  /** Code-built cavity (shelves and food, oven racks, ...) shown while a part is open; not needed with an `anim:interior` node. */
+  interior?: InteriorKind;
+  /** Interior box as fractions of the fitted box [x0, y0, z0, x1, y1, z1]. */
+  interiorBox?: [number, number, number, number, number, number];
+  /** openWhileUsed only: interaction ids that open the parts (default: any interaction on the object). */
+  on?: string[];
+  /** 'sink' only: the tap-water stream shown while hands or dishes are washed. */
+  tap?: AnimTapSpec;
+  /** 'oven' only: hob rings, pot and steam shown while a meal is cooked on the object. */
+  hob?: AnimHobSpec;
 }
 
 /** Milestone 9: see ObjectDef.stair. */
@@ -219,6 +290,11 @@ export interface InteractionDef {
    * adult romance, careers and bills.
    */
   ages?: LifeStage[];
+  /**
+   * Milestone 12: seasons and weather this needs. Absent = no restriction. Outdoor interactions that make no sense
+   * in rain or snow stay listed but greyed with a reason ("It is raining."); autonomy skips them (sim/weather.ts).
+   */
+  weather?: WeatherRule;
   status: ContentStatus;
 }
 
@@ -232,6 +308,8 @@ export interface SocialOutcome {
   target: RelDelta; // change in target's opinion of actor
   social: number; // social need gain for both
   fun?: number;
+  /** Milestone 12, task O: hunger gain for both (a shared picnic). */
+  hunger?: number;
   actorMoodlet?: string;
   targetMoodlet?: string;
   memory?: { kind: MemoryKind; importance: 1 | 2 | 3; text: string };
@@ -300,6 +378,11 @@ export interface SocialDef {
   /** Authored snippets; {a} = actor first name, {b} = target first name. */
   lines: { success: string[]; failure: string[] };
   topics: string[];
+  /**
+   * Milestone 12, task O: weather/season/place the social needs (snowball fights need snow, a picnic needs a fine
+   * spring or summer day). The menu greys an unavailable social with the reason; autonomy skips it.
+   */
+  weather?: WeatherRule;
   autonomy: { enabled: boolean; weight: number };
   /** Counts as one of the activities in content totals only when true (see brief Section 2). */
   alsoActivity: boolean;
@@ -334,6 +417,8 @@ export interface TraitDef {
     workPerformance?: number;
     /** Need gain multipliers when performing interactions with these autonomy tags. */
     enjoys?: Record<string, number>;
+    /** Milestone 12: how much this trait likes or dislikes each weather kind (a mood multiplier, 1 = neutral). */
+    weatherBias?: Partial<Record<WeatherKind, number>>;
   };
   /** Plain-English list of the implemented effects for the UI. */
   effectText: string[];

@@ -115,6 +115,8 @@ describe('a person can use every new functional object', { timeout: 60_000 }, ()
   it('buys, places and uses each object (and fails nowhere)', () => {
     const core = newGame();
     const s = core.state()!;
+    // This test walks every object interaction; the Milestone 12 weather gate (rain/snow outdoors) has its own tests.
+    s.settings.weather = false;
     const [mira] = members(s);
     const lot = s.lots[s.activeLotId]!;
     const failures: string[] = [];

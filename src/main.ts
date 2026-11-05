@@ -7,8 +7,10 @@
 //   hearthside.debug.frame(dt)            run one game frame (simulation + render)
 //   hearthside.debug.state()              the current WorldState (read-only by convention)
 //   hearthside.debug.run(name, ...args)   call any GameAPI method by name
+//   hearthside.debug.setWeather(kind)     pin today's stored weather plan (tests: keeps runs deterministic)
 
 import { content } from './content/index';
+import type { WeatherKind } from './core/types';
 import type { GameAPI } from './game/api';
 import { Game } from './game/Game';
 import { GameCore } from './game/GameCore';
@@ -28,6 +30,8 @@ declare global {
         frame(dt?: number): void;
         state(): ReturnType<GameCore['state']>;
         run(name: keyof GameAPI | string, ...args: unknown[]): unknown;
+        /** Pins the stored plan for the current day so an end-to-end run does not depend on the random world seed. */
+        setWeather(kind: WeatherKind): boolean;
         stats(): ReturnType<Game['devStats']>;
       };
     };
@@ -66,6 +70,18 @@ async function boot(): Promise<void> {
         const fn = (game as unknown as Record<string, unknown>)[name as string];
         if (typeof fn !== 'function') throw new Error(`No GameAPI method "${String(name)}".`);
         return (fn as (...a: unknown[]) => unknown).apply(game, args);
+      },
+      setWeather: (kind: WeatherKind) => {
+        const st = core.state();
+        if (!st || !['clear', 'cloudy', 'rain', 'snow'].includes(kind)) return false;
+        // Same-day plans are kept by ensureWeather (a reload never rerolls a day), so this stays until midnight and
+        // the next day is planned normally again. Tests use it to make outdoor steps repeatable across seeds.
+        // Pinning a plan must not erase snow that has already settled: the next sim tick keeps it while it is winter.
+        const day = Math.floor(st.clock.minutes / 1440);
+        const half = st.clock.minutes % 1440 < 720 ? 0 : 1;
+        const snowCover = st.weather?.snowCover === true;
+        st.weather = { current: kind, today: [kind, kind], tomorrow: [kind, kind], day, since: day * 1440 + half * 720, ...(snowCover ? { snowCover: true } : {}) };
+        return true;
       },
       stats: () => game.devStats(),
     },

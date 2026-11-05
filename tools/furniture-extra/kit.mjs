@@ -5,6 +5,14 @@
 //     with the kit's colours, so finish regions recolour them exactly like the Kenney models;
 //   - the model FRONT faces +z, y is up, the bottom rests on y = 0 (fit() in src/content/objects.ts does the rest);
 //   - sizes are authored in real metres and written at half scale (Kenney units), so the usual fit scale is 2.
+//   - Moving or switchable pieces are NAMED PARTS: `const door = m.part('anim:door', [hx, hy, hz])` returns a builder with the
+//     same primitive API (box, rod, slab, lathe, cylY, cyl, poly, hexa); its geometry is written as a child node of that exact
+//     name whose origin sits at the pivot (hinge point, or any point for a sliding drawer). Primitives are authored in the same
+//     model coordinates as the body, so a closed part lies exactly where it would as part of the body. The game keeps every
+//     node named `anim:*` as a separate pivot group (src/render/objectAssets.ts) and animates it from the design's `anim` field
+//     (src/content/types.ts ObjectAnimSpec, src/render/objectAnim.ts). `anim:interior` (cavity shown while something is open)
+//     and `anim:screen` (a thin box whose largest front face is the picture) are static parts. Models without parts export
+//     exactly as before.
 // Flat per-face normals on boxes and rods, smooth normals around lathe surfaces: the same faceted look as the kit.
 
 import { Document, NodeIO } from '@gltf-transform/core';
@@ -33,6 +41,25 @@ export class Model {
     this.id = id;
     /** material name -> flat triangle list: { p: [[x,y,z]*3], n: [[x,y,z]*3] } */
     this.tris = new Map();
+    /** part name ('anim:door') -> Part, in creation order. */
+    this.parts = new Map();
+  }
+
+  /**
+   * A named sub-part (see the header). `pivot` is the node origin in model coordinates (real metres); asking for the same
+   * name again returns the same builder (and the pivot must match).
+   */
+  part(name, pivot = [0, 0, 0]) {
+    if (typeof name !== 'string' || !/^anim:[A-Za-z0-9_-]+$/.test(name)) throw new Error(`${this.id}: part name must look like 'anim:door', got ${JSON.stringify(name)}`);
+    if (!Array.isArray(pivot) || pivot.length !== 3 || !pivot.every(Number.isFinite)) throw new Error(`${this.id}: part ${name} needs a [x, y, z] pivot`);
+    const have = this.parts.get(name);
+    if (have) {
+      if (have.pivot.some((v, i) => Math.abs(v - pivot[i]) > 1e-9)) throw new Error(`${this.id}: part ${name} was already created with another pivot`);
+      return have;
+    }
+    const made = new Part(this.id, name, pivot);
+    this.parts.set(name, made);
+    return made;
   }
 
   addTri(mat, p0, p1, p2, n0, n1, n2) {
@@ -143,39 +170,110 @@ export class Model {
     }
   }
 
-  triangleCount() { let n = 0; for (const l of this.tris.values()) n += l.length; return n; }
+  /** Triangles of the body and of every part. */
+  triangleCount() {
+    let n = 0;
+    for (const l of this.tris.values()) n += l.length;
+    for (const p of this.parts.values()) n += p.triangleCount();
+    return n;
+  }
 
-  /** All triangles with material names (for the thumbnail renderer), in export scale. */
+  /** All triangles with material names (for the thumbnail renderer), in export scale; parts at their closed position. */
   scaledTriangles() {
     const out = [];
     for (const [mat, list] of this.tris) for (const t of list) out.push({ mat, p: t.p.map((p) => mul(p, EXPORT_SCALE)), n: t.n });
+    for (const p of this.parts.values()) out.push(...p.scaledTriangles());
     return out;
   }
 
-  /** Writes the model as a GLB (one mesh, one primitive per material). */
+  /** Names of the named parts, in creation order (the manifest lists them as `animNodes`). */
+  partNames() { return [...this.parts.keys()]; }
+
+  /**
+   * The picture rectangle of the `anim:screen` part in export scale (what the GLB and the manifest use): the largest face
+   * that points to the front, as { centre, normal, width, height } (width along the horizontal, height along the tilt). Null
+   * without that part.
+   */
+  screenQuad() {
+    const part = this.parts.get('anim:screen');
+    if (!part) return null;
+    const tris = part.scaledTriangles();
+    if (!tris.length) throw new Error(`${this.id}: anim:screen has no geometry`);
+    const groups = new Map();
+    for (const t of tris) {
+      const n = t.n[0];
+      const a = len(cross(sub(t.p[1], t.p[0]), sub(t.p[2], t.p[0]))) / 2;
+      const key = n.map((v) => Math.round(v * 100)).join(',');
+      const g = groups.get(key) ?? { n, area: 0, pts: [] };
+      g.area += a;
+      g.pts.push(...t.p);
+      groups.set(key, g);
+    }
+    // largest face; the back face of a thin slab has the same area, so prefer the one that looks to +z (and up)
+    const bias = norm([0, 0.2, 1]);
+    const all = [...groups.values()];
+    const maxArea = Math.max(...all.map((g) => g.area));
+    const first = all.filter((g) => g.area > maxArea * (1 - 1e-6)).sort((a, b) => dot(b.n, bias) - dot(a.n, bias))[0];
+    const n = norm(first.n);
+    const u = Math.abs(n[1]) > 0.95 ? [1, 0, 0] : norm(cross([0, 1, 0], n));
+    const v = cross(n, u);
+    let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity, nd = 0;
+    for (const p of first.pts) { u0 = Math.min(u0, dot(p, u)); u1 = Math.max(u1, dot(p, u)); v0 = Math.min(v0, dot(p, v)); v1 = Math.max(v1, dot(p, v)); nd += dot(p, n); }
+    nd /= first.pts.length;
+    const c = add(add(mul(u, (u0 + u1) / 2), mul(v, (v0 + v1) / 2)), mul(n, nd));
+    const r = (a) => a.map((x) => +x.toFixed(4));
+    return { centre: r(c), normal: r(n), width: +(u1 - u0).toFixed(4), height: +(v1 - v0).toFixed(4) };
+  }
+
+  /** Writes the model as a GLB (one mesh, one primitive per material; each named part is a child node with its own mesh). */
   toGlb(io = new NodeIO()) {
     const doc = new Document();
     const buffer = doc.createBuffer();
     const scene = doc.createScene(this.id);
-    const mesh = doc.createMesh(this.id);
-    for (const [mat, list] of this.tris) {
-      const pos = new Float32Array(list.length * 9), nor = new Float32Array(list.length * 9);
-      list.forEach((t, i) => {
-        for (let k = 0; k < 3; k++) {
-          pos.set(mul(t.p[k], EXPORT_SCALE), i * 9 + k * 3);
-          nor.set(t.n[k], i * 9 + k * 3);
+    const materials = new Map();
+    const meshOf = (name, tris, pivot) => {
+      const mesh = doc.createMesh(name);
+      for (const [mat, list] of tris) {
+        const pos = new Float32Array(list.length * 9), nor = new Float32Array(list.length * 9);
+        list.forEach((t, i) => {
+          for (let k = 0; k < 3; k++) {
+            pos.set(mul(sub(t.p[k], pivot), EXPORT_SCALE), i * 9 + k * 3);
+            nor.set(t.n[k], i * 9 + k * 3);
+          }
+        });
+        const idx = new Uint32Array(list.length * 3).map((_, i) => i);
+        let material = materials.get(mat);
+        if (!material) {
+          material = doc.createMaterial(mat).setBaseColorFactor([...COLORS[mat], 1]).setMetallicFactor(0).setRoughnessFactor(1);
+          materials.set(mat, material);
         }
-      });
-      const idx = new Uint32Array(list.length * 3).map((_, i) => i);
-      const material = doc.createMaterial(mat).setBaseColorFactor([...COLORS[mat], 1]).setMetallicFactor(0).setRoughnessFactor(1);
-      const prim = doc.createPrimitive().setMaterial(material)
-        .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(pos).setBuffer(buffer))
-        .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(nor).setBuffer(buffer))
-        .setIndices(doc.createAccessor().setType('SCALAR').setArray(idx).setBuffer(buffer));
-      mesh.addPrimitive(prim);
-    }
-    const node = doc.createNode(this.id).setMesh(mesh);
+        const prim = doc.createPrimitive().setMaterial(material)
+          .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(pos).setBuffer(buffer))
+          .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(nor).setBuffer(buffer))
+          .setIndices(doc.createAccessor().setType('SCALAR').setArray(idx).setBuffer(buffer));
+        mesh.addPrimitive(prim);
+      }
+      return mesh;
+    };
+    const node = doc.createNode(this.id);
+    if (this.tris.size || !this.parts.size) node.setMesh(meshOf(this.id, this.tris, [0, 0, 0]));
     scene.addChild(node);
+    for (const [name, part] of this.parts) {
+      if (!part.tris.size) throw new Error(`${this.id}: part ${name} has no geometry`);
+      const child = doc.createNode(name).setTranslation(mul(part.pivot, EXPORT_SCALE)).setMesh(meshOf(name, part.tris, part.pivot));
+      node.addChild(child);
+    }
     return io.writeBinary(doc);
   }
+}
+
+/** A named sub-part of a Model: the same primitive API, geometry in model coordinates, written relative to `pivot`. */
+export class Part extends Model {
+  constructor(modelId, name, pivot) {
+    super(`${modelId}/${name}`);
+    this.name = name;
+    this.pivot = pivot;
+  }
+
+  part() { throw new Error(`${this.id}: parts do not nest; create every part from the model`); }
 }

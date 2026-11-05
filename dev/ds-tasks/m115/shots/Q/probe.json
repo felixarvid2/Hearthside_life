@@ -1,0 +1,605 @@
+{
+  "facts": {
+    "found": true,
+    "object": {
+      "id": "obj_x",
+      "defId": "fridge-standard",
+      "x": 12,
+      "z": 10,
+      "rot": 0
+    },
+    "model": {
+      "asset": "kitchenFridge",
+      "scale": 2.14,
+      "yaw": 0,
+      "offset": [
+        0.0399,
+        0,
+        0.6633
+      ]
+    },
+    "groupYawDeg": 0,
+    "bodyBox": {
+      "min": [
+        0.04,
+        0,
+        0.06
+      ],
+      "max": [
+        0.96,
+        1.969,
+        0.685
+      ]
+    },
+    "doorBox": {
+      "min": [
+        0.097,
+        0.186,
+        0.471
+      ],
+      "max": [
+        0.903,
+        1.505,
+        0.685
+      ]
+    },
+    "doorPivot": {
+      "name": "",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "quat": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "base": null
+    },
+    "anim": {
+      "name": "object-anim",
+      "children": [],
+      "interiorVisible": null
+    },
+    "clock": 480.25,
+    "action": null,
+    "animId": "idle",
+    "door": {
+      "name": "part:doorFridge",
+      "local": [
+        0.097,
+        0.186,
+        0.61
+      ],
+      "visible": true,
+      "parentVisible": true
+    },
+    "cavity": null,
+    "person": {
+      "x": 12.5,
+      "z": 11.35,
+      "local": [
+        0.5,
+        0,
+        1.35
+      ]
+    }
+  },
+  "closed": [
+    {
+      "yawDeg": 45
+    },
+    {
+      "yawDeg": 135
+    },
+    {
+      "yawDeg": 225
+    },
+    {
+      "yawDeg": 315
+    }
+  ],
+  "open": [
+    {
+      "found": true,
+      "object": {
+        "id": "obj_x",
+        "defId": "fridge-standard",
+        "x": 12,
+        "z": 10,
+        "rot": 0
+      },
+      "model": {
+        "asset": "kitchenFridge",
+        "scale": 2.14,
+        "yaw": 0,
+        "offset": [
+          0.0399,
+          0,
+          0.6633
+        ]
+      },
+      "groupYawDeg": 0,
+      "bodyBox": {
+        "min": [
+          0.04,
+          0,
+          0.06
+        ],
+        "max": [
+          0.96,
+          1.969,
+          0.685
+        ]
+      },
+      "doorBox": {
+        "min": [
+          0.097,
+          0.186,
+          0.471
+        ],
+        "max": [
+          0.903,
+          1.505,
+          0.685
+        ]
+      },
+      "doorPivot": {
+        "name": "",
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "quat": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "base": null
+      },
+      "anim": {
+        "name": "object-anim",
+        "children": [],
+        "interiorVisible": null
+      },
+      "clock": 487,
+      "action": {
+        "id": "cookMeal",
+        "phase": "perform",
+        "stage": 0,
+        "elapsed": 0.5,
+        "target": {
+          "kind": "object",
+          "objectId": "obj_x",
+          "slotId": "use"
+        }
+      },
+      "animId": "openFridge",
+      "door": {
+        "name": "part:doorFridge",
+        "local": [
+          0.097,
+          0.186,
+          0.61
+        ],
+        "visible": true,
+        "parentVisible": true
+      },
+      "cavity": null,
+      "person": {
+        "x": 12.5,
+        "z": 11.085,
+        "local": [
+          0.5,
+          0,
+          1.085
+        ]
+      }
+    },
+    {
+      "found": true,
+      "object": {
+        "id": "obj_x",
+        "defId": "fridge-standard",
+        "x": 12,
+        "z": 10,
+        "rot": 0
+      },
+      "model": {
+        "asset": "kitchenFridge",
+        "scale": 2.14,
+        "yaw": 0,
+        "offset": [
+          0.0399,
+          0,
+          0.6633
+        ]
+      },
+      "groupYawDeg": 0,
+      "bodyBox": {
+        "min": [
+          0.04,
+          0,
+          0.06
+        ],
+        "max": [
+          0.96,
+          1.969,
+          1.379
+        ]
+      },
+      "doorBox": {
+        "min": [
+          0.048,
+          0.186,
+          0.59
+        ],
+        "max": [
+          0.489,
+          1.505,
+          1.379
+        ]
+      },
+      "doorPivot": {
+        "name": "",
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "quat": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "base": null
+      },
+      "anim": {
+        "name": "object-anim",
+        "children": [
+          {
+            "name": "interior:fridge",
+            "box": {
+              "min": [
+                0.104,
+                0.197,
+                0.593
+              ],
+              "max": [
+                0.896,
+                1.477,
+                0.677
+              ]
+            },
+            "visible": true
+          }
+        ],
+        "interiorVisible": true
+      },
+      "clock": 487.25,
+      "action": {
+        "id": "cookMeal",
+        "phase": "perform",
+        "stage": 0,
+        "elapsed": 0.75,
+        "target": {
+          "kind": "object",
+          "objectId": "obj_x",
+          "slotId": "use"
+        }
+      },
+      "animId": "openFridge",
+      "door": {
+        "name": "part:doorFridge",
+        "local": [
+          0.097,
+          0.186,
+          0.61
+        ],
+        "visible": true,
+        "parentVisible": true
+      },
+      "cavity": {
+        "local": [
+          0,
+          0,
+          0
+        ]
+      },
+      "person": {
+        "x": 12.5,
+        "z": 11.085,
+        "local": [
+          0.5,
+          0,
+          1.085
+        ]
+      }
+    },
+    {
+      "found": true,
+      "object": {
+        "id": "obj_x",
+        "defId": "fridge-standard",
+        "x": 12,
+        "z": 10,
+        "rot": 0
+      },
+      "model": {
+        "asset": "kitchenFridge",
+        "scale": 2.14,
+        "yaw": 0,
+        "offset": [
+          0.0399,
+          0,
+          0.6633
+        ]
+      },
+      "groupYawDeg": 0,
+      "bodyBox": {
+        "min": [
+          -0.112,
+          0,
+          0.06
+        ],
+        "max": [
+          0.96,
+          1.969,
+          1.412
+        ]
+      },
+      "doorBox": {
+        "min": [
+          -0.112,
+          0.186,
+          0.6
+        ],
+        "max": [
+          0.219,
+          1.505,
+          1.412
+        ]
+      },
+      "doorPivot": {
+        "name": "",
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "quat": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "base": null
+      },
+      "anim": {
+        "name": "object-anim",
+        "children": [
+          {
+            "name": "interior:fridge",
+            "box": {
+              "min": [
+                0.104,
+                0.197,
+                0.593
+              ],
+              "max": [
+                0.896,
+                1.477,
+                0.677
+              ]
+            },
+            "visible": true
+          }
+        ],
+        "interiorVisible": true
+      },
+      "clock": 487.5,
+      "action": {
+        "id": "cookMeal",
+        "phase": "perform",
+        "stage": 0,
+        "elapsed": 1,
+        "target": {
+          "kind": "object",
+          "objectId": "obj_x",
+          "slotId": "use"
+        }
+      },
+      "animId": "openFridge",
+      "door": {
+        "name": "part:doorFridge",
+        "local": [
+          0.097,
+          0.186,
+          0.61
+        ],
+        "visible": true,
+        "parentVisible": true
+      },
+      "cavity": {
+        "local": [
+          0,
+          0,
+          0
+        ]
+      },
+      "person": {
+        "x": 12.5,
+        "z": 11.085,
+        "local": [
+          0.5,
+          0,
+          1.085
+        ]
+      }
+    },
+    {
+      "found": true,
+      "object": {
+        "id": "obj_x",
+        "defId": "fridge-standard",
+        "x": 12,
+        "z": 10,
+        "rot": 0
+      },
+      "model": {
+        "asset": "kitchenFridge",
+        "scale": 2.14,
+        "yaw": 0,
+        "offset": [
+          0.0399,
+          0,
+          0.6633
+        ]
+      },
+      "groupYawDeg": 0,
+      "bodyBox": {
+        "min": [
+          -0.112,
+          0,
+          0.06
+        ],
+        "max": [
+          0.96,
+          1.969,
+          1.412
+        ]
+      },
+      "doorBox": {
+        "min": [
+          -0.112,
+          0.186,
+          0.6
+        ],
+        "max": [
+          0.219,
+          1.505,
+          1.412
+        ]
+      },
+      "doorPivot": {
+        "name": "",
+        "pos": [
+          0,
+          0,
+          0
+        ],
+        "quat": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "base": null
+      },
+      "anim": {
+        "name": "object-anim",
+        "children": [
+          {
+            "name": "interior:fridge",
+            "box": {
+              "min": [
+                0.104,
+                0.197,
+                0.593
+              ],
+              "max": [
+                0.896,
+                1.477,
+                0.677
+              ]
+            },
+            "visible": true
+          }
+        ],
+        "interiorVisible": true
+      },
+      "clock": 487.75,
+      "action": {
+        "id": "cookMeal",
+        "phase": "perform",
+        "stage": 0,
+        "elapsed": 1.25,
+        "target": {
+          "kind": "object",
+          "objectId": "obj_x",
+          "slotId": "use"
+        }
+      },
+      "animId": "openFridge",
+      "door": {
+        "name": "part:doorFridge",
+        "local": [
+          0.097,
+          0.186,
+          0.61
+        ],
+        "visible": true,
+        "parentVisible": true
+      },
+      "cavity": {
+        "local": [
+          0,
+          0,
+          0
+        ]
+      },
+      "person": {
+        "x": 12.5,
+        "z": 11.085,
+        "local": [
+          0.5,
+          0,
+          1.085
+        ]
+      }
+    }
+  ],
+  "cardinal": [
+    {
+      "name": "front",
+      "yawDeg": 0,
+      "cam": [
+        12.5,
+        37.1089013891229,
+        58.41813060283757
+      ]
+    },
+    {
+      "name": "right",
+      "yawDeg": 90,
+      "cam": [
+        60.41813060283757,
+        37.1089013891229,
+        10.500000000000004
+      ]
+    },
+    {
+      "name": "back",
+      "yawDeg": 180,
+      "cam": [
+        12.500000000000005,
+        37.1089013891229,
+        -37.41813060283757
+      ]
+    },
+    {
+      "name": "left",
+      "yawDeg": 270,
+      "cam": [
+        -35.41813060283757,
+        37.1089013891229,
+        10.499999999999991
+      ]
+    }
+  ]
+}

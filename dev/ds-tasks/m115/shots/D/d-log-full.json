@@ -1,0 +1,305 @@
+{
+  "checks": [
+    {
+      "name": "portrait: cookMeal is queueable at the fridge",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: cookMeal reaches the fridge stage",
+      "ok": true,
+      "evidence": "stage 0 at 0.25 min"
+    },
+    {
+      "name": "portrait: cookMeal reaches the stove stage",
+      "ok": true,
+      "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "portrait: changeOutfit is queueable at the wardrobe",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: changeOutfit reaches the wardrobe",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "portrait: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "portrait: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: cookMeal is queueable at the fridge",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: cookMeal reaches the fridge stage",
+      "ok": true,
+      "evidence": "stage 0 at 0.25 min"
+    },
+    {
+      "name": "landscape: cookMeal reaches the stove stage",
+      "ok": true,
+      "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "landscape: changeOutfit is queueable at the wardrobe",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: changeOutfit reaches the wardrobe",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "landscape: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "landscape: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: cookMeal is queueable at the fridge",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: cookMeal reaches the fridge stage",
+      "ok": true,
+      "evidence": "stage 0 at 0.25 min"
+    },
+    {
+      "name": "desktop: cookMeal reaches the stove stage",
+      "ok": true,
+      "evidence": "stage 1 at 0.25 min"
+    },
+    {
+      "name": "desktop: changeOutfit is queueable at the wardrobe",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: changeOutfit reaches the wardrobe",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "desktop: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "desktop: no page errors",
+      "ok": true,
+      "evidence": ""
+    }
+  ],
+  "shots": [
+    "portrait-fridge-closed.png",
+    "portrait-fridge-closed-k0.png",
+    "portrait-fridge-closed-k1.png",
+    "portrait-fridge-closed-k2.png",
+    "portrait-fridge-closed-k3.png",
+    "portrait-fridge-closed-w0.png",
+    "portrait-fridge-closed-w1.png",
+    "portrait-fridge-closed-w2.png",
+    "portrait-fridge-closed-w3.png",
+    "portrait-fridge-open-k0.png",
+    "portrait-fridge-open-k1.png",
+    "portrait-fridge-open-k2.png",
+    "portrait-fridge-open-k3.png",
+    "portrait-fridge-open-w0.png",
+    "portrait-fridge-open-w1.png",
+    "portrait-fridge-open-w2.png",
+    "portrait-fridge-open-w3.png",
+    "portrait-stove-cooking-k0.png",
+    "portrait-stove-cooking-k1.png",
+    "portrait-stove-cooking-k2.png",
+    "portrait-stove-cooking-k3.png",
+    "portrait-stove-cooking-w0.png",
+    "portrait-stove-cooking-w1.png",
+    "portrait-stove-cooking-w2.png",
+    "portrait-stove-cooking-w3.png",
+    "portrait-wardrobe-open.png",
+    "portrait-wardrobe-open-k0.png",
+    "portrait-wardrobe-open-k1.png",
+    "portrait-wardrobe-open-k2.png",
+    "portrait-wardrobe-open-k3.png",
+    "portrait-wardrobe-open-w0.png",
+    "portrait-wardrobe-open-w1.png",
+    "portrait-wardrobe-open-w2.png",
+    "portrait-wardrobe-open-w3.png",
+    "portrait-shower-running-k0.png",
+    "portrait-shower-running-k1.png",
+    "portrait-shower-running-k2.png",
+    "portrait-shower-running-k3.png",
+    "portrait-shower-running-w0.png",
+    "portrait-shower-running-w1.png",
+    "portrait-shower-running-w2.png",
+    "portrait-shower-running-w3.png",
+    "landscape-fridge-closed.png",
+    "landscape-fridge-closed-k0.png",
+    "landscape-fridge-closed-k1.png",
+    "landscape-fridge-closed-k2.png",
+    "landscape-fridge-closed-k3.png",
+    "landscape-fridge-closed-w0.png",
+    "landscape-fridge-closed-w1.png",
+    "landscape-fridge-closed-w2.png",
+    "landscape-fridge-closed-w3.png",
+    "landscape-fridge-open-k0.png",
+    "landscape-fridge-open-k1.png",
+    "landscape-fridge-open-k2.png",
+    "landscape-fridge-open-k3.png",
+    "landscape-fridge-open-w0.png",
+    "landscape-fridge-open-w1.png",
+    "landscape-fridge-open-w2.png",
+    "landscape-fridge-open-w3.png",
+    "landscape-stove-cooking-k0.png",
+    "landscape-stove-cooking-k1.png",
+    "landscape-stove-cooking-k2.png",
+    "landscape-stove-cooking-k3.png",
+    "landscape-stove-cooking-w0.png",
+    "landscape-stove-cooking-w1.png",
+    "landscape-stove-cooking-w2.png",
+    "landscape-stove-cooking-w3.png",
+    "landscape-wardrobe-open.png",
+    "landscape-wardrobe-open-k0.png",
+    "landscape-wardrobe-open-k1.png",
+    "landscape-wardrobe-open-k2.png",
+    "landscape-wardrobe-open-k3.png",
+    "landscape-wardrobe-open-w0.png",
+    "landscape-wardrobe-open-w1.png",
+    "landscape-wardrobe-open-w2.png",
+    "landscape-wardrobe-open-w3.png",
+    "landscape-shower-running-k0.png",
+    "landscape-shower-running-k1.png",
+    "landscape-shower-running-k2.png",
+    "landscape-shower-running-k3.png",
+    "landscape-shower-running-w0.png",
+    "landscape-shower-running-w1.png",
+    "landscape-shower-running-w2.png",
+    "landscape-shower-running-w3.png",
+    "desktop-fridge-closed.png",
+    "desktop-fridge-closed-k0.png",
+    "desktop-fridge-closed-k1.png",
+    "desktop-fridge-closed-k2.png",
+    "desktop-fridge-closed-k3.png",
+    "desktop-fridge-closed-w0.png",
+    "desktop-fridge-closed-w1.png",
+    "desktop-fridge-closed-w2.png",
+    "desktop-fridge-closed-w3.png",
+    "desktop-fridge-open-k0.png",
+    "desktop-fridge-open-k1.png",
+    "desktop-fridge-open-k2.png",
+    "desktop-fridge-open-k3.png",
+    "desktop-fridge-open-w0.png",
+    "desktop-fridge-open-w1.png",
+    "desktop-fridge-open-w2.png",
+    "desktop-fridge-open-w3.png",
+    "desktop-stove-cooking-k0.png",
+    "desktop-stove-cooking-k1.png",
+    "desktop-stove-cooking-k2.png",
+    "desktop-stove-cooking-k3.png",
+    "desktop-stove-cooking-w0.png",
+    "desktop-stove-cooking-w1.png",
+    "desktop-stove-cooking-w2.png",
+    "desktop-stove-cooking-w3.png",
+    "desktop-wardrobe-open.png",
+    "desktop-wardrobe-open-k0.png",
+    "desktop-wardrobe-open-k1.png",
+    "desktop-wardrobe-open-k2.png",
+    "desktop-wardrobe-open-k3.png",
+    "desktop-wardrobe-open-w0.png",
+    "desktop-wardrobe-open-w1.png",
+    "desktop-wardrobe-open-w2.png",
+    "desktop-wardrobe-open-w3.png",
+    "desktop-shower-running-k0.png",
+    "desktop-shower-running-k1.png",
+    "desktop-shower-running-k2.png",
+    "desktop-shower-running-k3.png",
+    "desktop-shower-running-w0.png",
+    "desktop-shower-running-w1.png",
+    "desktop-shower-running-w2.png",
+    "desktop-shower-running-w3.png"
+  ],
+  "viewports": [
+    {
+      "name": "portrait",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "setup": {
+        "personId": "per_2w",
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "isMobile": true,
+      "setup": {
+        "personId": "per_2w",
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 720,
+      "isMobile": false,
+      "setup": {
+        "personId": "per_2w",
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    }
+  ]
+}

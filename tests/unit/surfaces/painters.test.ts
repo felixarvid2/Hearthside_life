@@ -104,7 +104,7 @@ describe('painters', () => {
       expect(a.calls).toBe(b.calls);
       expect(a.log).toEqual(b.log);
     }
-  });
+  }, 30_000); // two 96 px paints per design: about 1 s alone, over the 5 s default under parallel load
 
   it('keep the same layout across palettes (only colours change)', () => {
     for (const d of ALL) {
@@ -113,7 +113,7 @@ describe('painters', () => {
       const b = render(d, d.palettes[1]?.id ?? '', 64);
       expect(strip(a), d.id).toEqual(strip(b));
     }
-  });
+  }, 30_000); // two 64 px paints per design: the same story under load
 
   it('change with the seed param', () => {
     const d = WALL_DESIGNS.find((x) => x.id === 'floral-sprig') as SurfaceDesign;
@@ -129,7 +129,7 @@ describe('painters', () => {
       expect(ctx.depth, d.id).toBe(0);
       expect(ctx.calls, d.id).toBeGreaterThan(20);
     }
-  });
+  }, 30_000); // one 48 px thumbnail per design: about 1.5 s alone
 });
 
 describe('kit helpers', () => {

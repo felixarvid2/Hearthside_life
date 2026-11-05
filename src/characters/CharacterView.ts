@@ -199,6 +199,9 @@ export class CharacterView {
   /** Whether this person is drawn with the body of their life stage (false: the adult body, scaled to the stage's height for a child). */
   get hasOwnBody(): boolean { return this.ownBody || stageBodyOf(this.stage) === null; }
 
+  /** Bone by name of the current rig (null when the body has none), for hand props. */
+  bone(name: string): THREE.Bone | null { return this.bones.get(name) ?? null; }
+
   /** Rebuilds the person on the assets' current character style (after setCharacterStyle) or with a stage body that has just loaded. */
   refreshStyle(): void {
     if (this.disposed) return;

@@ -42,6 +42,14 @@ const ACTIVITY: MoodletDef[] = [
   // Milestone 11, task B: baking and wellness
   m('proudBake', 'Proud Baker', 8, 180, 'star', 'Baked something the whole household can share.'),
   m('calm', 'Calm', 10, 180, 'heart', 'A quiet mind and a steady breath.'),
+  // Milestone 12, task O: outdoor life
+  m('snowmanBuilt', 'Snowman Builder', 10, 240, 'snow', 'Built a snowman out of the fresh snow.'),
+  m('snowAngel', 'Snow Angel', 8, 180, 'snow', 'Flapped about in the snow and left an angel behind.'),
+  m('kiteHigh', 'Kite High', 10, 180, 'sparkle', 'Kept the kite dancing on the wind.'),
+  m('crispAutumnAir', 'Crisp Autumn Air', 7, 180, 'leaf', 'Raked leaves until the lawn was tidy again.'),
+  m('puddleSplash', 'Puddle Splash', 9, 120, 'fun', 'Jumped in every puddle in reach.'),
+  m('starryEyed', 'Starry Eyed', 8, 180, 'moon', 'Found a few constellations in the night sky.'),
+  m('sunKissed', 'Sun Kissed', 8, 240, 'sun', 'Warm through after a spell in the sun.'),
 ];
 
 /** Moodlets from the state of the home, refreshed by the simulation while the condition holds and dropped once it does not. */
@@ -150,5 +158,15 @@ const FAMILY: MoodletDef[] = [
   m('missedThem', 'Missing Someone', -10, 2880, 'heart', 'Someone close has gone.'),
 ];
 
+/** Milestone 12: the weather (sim/weather.ts; one at a time, with a cooldown, scaled by weather preferences and traits). */
+const WEATHER: MoodletDef[] = [
+  m('lovelyWeather', 'Lovely Weather', 6, 90, 'sun', 'A beautiful day to be outside.'),
+  m('gloomyDay', 'Gloomy Day', -5, 120, 'cloud', 'Grey skies and a grey mood to match.'),
+  m('cosyRain', 'Cosy Rain', 5, 120, 'rain', 'Safe indoors while it patters on the window.'),
+  m('snowDay', 'Snow Day!', 10, 180, 'snow', 'The world is white and quiet.'),
+  m('caughtInRain', 'Caught in the Rain', -4, 60, 'rain', 'Out in the rain without shelter.'),
+  m('chilly', 'Chilly', -6, 90, 'snow', 'Out in the snow without a winter coat.'),
+];
+
 /** Every moodlet definition. */
-export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS, ...FAMILY];
+export const MOODLETS: MoodletDef[] = [...ACTIVITY, ...HOME, ...MISHAP, ...SOCIAL, ...PROGRESS, ...NEEDS, ...FAMILY, ...WEATHER];

@@ -16,7 +16,12 @@
 //   9 Milestone 7 neighbourhood: open the map, travel to the park and wait for the arrival, one venue activity, the away card
 //     of the person left at home, go home, open the preview of switching to another household and cancel it,
 //   10 Milestone 8 family: aging in Settings, adopt a child from the Family tab, the School tab (schedule), a school day and
-//     homework, Age up now at a birthday cake, the family tree and relatives, and the preview of moving out or in.
+//     homework, Age up now at a birthday cake, the family tree and relatives, and the preview of moving out or in,
+//   11 Milestone 9 floors (with the exterior part), 12 the exterior part on its own (only with --steps=12),
+//   13 Milestone 11.5 object animations, screens and hand props: cook and eat with the progress pill, the fridge door,
+//     the hand props and a computer writing screen,
+//   14 Milestone 12 seasons and weather: the HUD chip, rain and snow gates, a pool built with the pool tool, a swim out
+//     through a ladder, and a trip to the Quayside Baths and back.
 // Clicks and taps go through the real DOM (and the canvas at positions picked with view.worldToScreen/anchorOf);
 // window.hearthside.debug is only used to fast-forward time and to read state for assertions.
 // Fails on page errors, console errors and failed requests. Screenshots: tests/e2e/out/acceptance/<viewport>/.
@@ -237,6 +242,8 @@ async function runViewport(browser, vpName, vp) {
     ['11', 'Milestone 9: floors - a room, a staircase, Floor 2 with a room over it, a walk upstairs, undo', stepFloors],
     // Milestone 9 exterior on its own (it also runs at the end of step 11): only with --steps=12 --fast-start
     ['12', 'Milestone 9 exterior: roofs, fences, a gate, terrain paint, a garden bed (standalone)', stepExterior],
+    ['13', 'Milestone 11.5: cooking and eating - progress pill, fridge door, hand props, a writing screen', stepAnimations],
+    ['14', 'Milestone 12: seasons and weather, a pool built and swum, the Quayside Baths venue', stepWorldM12],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -276,6 +283,16 @@ const H = {
     }).map((e) => { const r = e.getBoundingClientRect(); return `${(e.getAttribute('aria-label') || e.textContent || e.value || '').trim().slice(0, 30)}@${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)}x${Math.round(r.height)}`; }));
   },
 };
+
+/**
+ * Milestone 12: weather is planned from the world seed, and the acceptance run starts a new random world, so an
+ * outdoor step could land on rain (the watering rule then rightly refuses: "It is raining."). Pin today's stored
+ * plan to clear just for a step that needs it. This uses the debug console's same-day plan (weather.ts keeps a
+ * same-day plan as stored, so it lasts until midnight and later days are planned normally); weather stays on.
+ */
+async function forceClearWeather(T) {
+  return T.page.evaluate(() => window.hearthside.debug.setWeather('clear'));
+}
 
 // ===============================================================================================================
 // STEP 1 - creator
@@ -563,6 +580,54 @@ function PAGE_HELPERS() {
       return n ? { x: sx / n, y: sy / n, n } : null;
     },
     pick(x, y) { const r = canvas().getBoundingClientRect(); return h().game.view.pick(x - r.left, y - r.top); },
+    /**
+     * Milestone 11.5: read-only animation state of a placed object (doors, lids and interiors). The runtime keeps
+     * the motions private; this probe only reads them and evaluates the same smoothstep the renderer uses.
+     */
+    objectAnimState(objectId) {
+      const e = h().view.objects?.objects?.get(objectId);
+      const a = e?.objectAnim;
+      if (!a) return null;
+      const now = h().debug.state()?.clock.minutes ?? 0;
+      const smooth = (t) => { const x = Math.max(0, Math.min(1, t)); return x * x * (3 - 2 * x); };
+      const parts = (a.parts ?? []).map((p) => {
+        const m = p.motion;
+        const openness = m.duration > 0 ? m.from + (m.to - m.from) * smooth((now - m.since) / m.duration) : m.to;
+        return { flag: p.flag, active: !!m.active, target: m.to, openness: Math.max(0, Math.min(1, openness)) };
+      });
+      return { parts, interiorVisible: !!a.interior?.group?.visible };
+    },
+    /** Milestone 11.5: the hand props currently attached to a person (read-only). */
+    handProps(personId) {
+      const e = h().view.people?.entries?.get(personId);
+      if (!e) return null;
+      const out = {};
+      for (const [slot, s] of e.props.slots) {
+        out[slot] = { kind: s.group ? s.group.name.replace(/^hand-prop-/, '') : null, visible: !!s.group?.visible, portion: s.portion };
+      }
+      return out;
+    },
+    /** Milestone 11.5: what a computer/TV screen is showing right now (read-only). */
+    screenMode(objectId) {
+      const e = h().view.screens?.entries?.get(objectId);
+      if (!e) return null;
+      return { mode: e.mode, progress: e.use ? e.use.progress : null, title: e.use ? e.use.title : null };
+    },
+    /** Milestone 11.5: the progress pill above a person's head (read-only). */
+    pill(personId) {
+      const e = h().view.people?.entries?.get(personId);
+      const el = e?.el?.querySelector('.wo-pill');
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const fill = el.querySelector('.wo-pill-fill');
+      const fr = fill?.getBoundingClientRect();
+      return {
+        hidden: el.hidden, label: el.getAttribute('aria-label'), value: Number(el.getAttribute('aria-valuenow')),
+        done: el.classList.contains('is-done'), cancelled: el.classList.contains('is-cancelled'),
+        fillWidth: fr ? Math.round(fr.width * 10) / 10 : 0,
+        box: { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) },
+      };
+    },
     /** Runs ticks one at a time until the JS expression `src` (args: st, g) is true; records wall crossings. */
     run(maxTicks, src) {
       const cond = new Function('st', 'g', `return (${src});`);
@@ -3394,6 +3459,9 @@ async function stepExterior(T) {
     return o ? { id: o.id, at: [o.x, o.z], member: hh.memberIds.find((m) => st.people[m].location.kind === 'lot' && st.people[m].location.level === 0) ?? hh.memberIds.find((m) => st.people[m].location.kind === 'lot') } : null;
   });
   if (bed.ok && garden) {
+    // Watering (and other bed work) is weather-gated: keep this seed-independent for the run.
+    const clear = await forceClearWeather(T);
+    T.check(S, 'the garden step can rely on clear weather', clear === true, String(clear));
     const act = async (interactionId) => {
       const r = await page.evaluate(([m, o, i]) => {
         const g = window.hearthside.game;
@@ -3449,6 +3517,596 @@ async function stepExterior(T) {
   // ---- back to Live with everything built
   await T.shot('m9ext-end-live');
   await T.audit('exterior: end');
+}
+
+// ===============================================================================================================
+// Milestone 11.5: cook a meal and eat it (progress pill, fridge door, hand props), then write at a computer
+// (the writing screen). The visuals are driven by the running action, so this step samples them while it runs.
+// ===============================================================================================================
+
+async function stepAnimations(T) {
+  const S = '13';
+  const { page } = T;
+  // Render and let the real-time (10 Hz) pill sampler take a fresh sample, then wait out the fill's 150 ms
+  // width transition so the measured width is the sampled one.
+  const render = async () => { await T.frames(2); await page.waitForTimeout(150); await T.frames(2); await page.waitForTimeout(180); await T.frames(1); };
+  const probe = (member, fridge, computer) => page.evaluate(([m, f, c]) => {
+    const st = window.hearthside.debug.state();
+    const p = st.people[m];
+    const a = p?.queue?.[0] ?? null;
+    return {
+      pill: window.__t.pill(m), fridge: window.__t.objectAnimState(f), props: window.__t.handProps(m),
+      screen: window.__t.screenMode(c),
+      act: a ? { id: a.interactionId, stage: a.data?.stage ?? null, phase: a.phase, elapsed: a.elapsed, duration: a.duration, anim: p.anim?.id ?? null } : null,
+    };
+  }, [member, fridge, computer]);
+  const clearQueue = async (member) => {
+    await page.evaluate((m) => {
+      const g = window.hearthside.game; const p = window.hearthside.debug.state().people[m];
+      for (const a of [...p.queue]) g.cancel(m, a.id);
+    }, member);
+    await runUntil(T, 24, `st.people['${member}'].queue.length === 0`);
+  };
+
+  await page.evaluate(() => { window.hearthside.game.setSpeed(0); document.querySelectorAll('.toast').forEach((t) => t.remove()); });
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'live') {
+    await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+    await page.waitForTimeout(500);
+  }
+  await page.evaluate(() => { const g = window.hearthside.game; g.view.setLevel?.(0); g.view.setCutaway?.('cutaway'); });
+  await T.frames(8);
+
+  const info = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId], hh = st.households[st.activeHouseholdId];
+    const g = window.hearthside.game;
+    const find = (re) => Object.values(lot.objects).find((o) => re.test(o.defId));
+    const fridge = find(/fridge/), computer = find(/computer/), stove = find(/stove/);
+    // Step 11 builds a floor and can leave the household upstairs. The cook behaviour only looks for a stove on the
+    // actor's own level, so prefer a member who is already on the ground floor (where the kitchen is).
+    const onLot = hh.memberIds.filter((id) => st.people[id].location.kind === 'lot');
+    const canCook = (id) => !!fridge && g.options(id, { kind: 'object', objectId: fridge.id }).some((o) => o.interactionId === 'cookMeal' && o.enabled);
+    const member = onLot.find((id) => st.people[id].location.level === 0 && canCook(id))
+      ?? onLot.find((id) => st.people[id].location.level === 0) ?? onLot.find(canCook) ?? onLot[0] ?? null;
+    return {
+      fridge: fridge?.id ?? null, fridgeDef: fridge?.defId ?? null, stove: stove?.id ?? null,
+      computer: computer?.id ?? null, computerDef: computer?.defId ?? null, computerLevel: computer?.level ?? 0,
+      member, memberLevel: member ? st.people[member].location.level : null,
+      onLot: onLot.map((id) => ({ id, level: st.people[id].location.level, cook: canCook(id) })),
+    };
+  });
+  T.check(S, 'the home has a fridge, a stove and a computer', !!info.fridge && !!info.stove && !!info.computer, JSON.stringify(info));
+  let member = info.member;
+  if (!member) {
+    await runUntil(T, 4 * 240, 'Object.values(st.people).some((p) => p.householdId === st.activeHouseholdId && p.location.kind === \'lot\')');
+    member = await page.evaluate(() => {
+      const st = window.hearthside.debug.state(), hh = st.households[st.activeHouseholdId];
+      const onLot = hh.memberIds.filter((id) => st.people[id].location.kind === 'lot');
+      return onLot.find((id) => st.people[id].location.level === 0) ?? onLot[0] ?? null;
+    });
+  }
+  T.check(S, 'a household member is on the lot to cook', !!member, String(member));
+  if (!member || !info.fridge) return;
+  await selectMember(T, member);
+  await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), member);
+  await T.frames(24);
+  await settle(T);
+  await clearQueue(member);
+  // If step 11 left the chosen member on another floor, walk them to the kitchen floor first, as a player would:
+  // cookMeal's check only accepts a stove on the actor's own level.
+  const startLevel = await page.evaluate((m) => window.hearthside.debug.state().people[m].location.level, member);
+  if (startLevel !== 0) {
+    const walk = await page.evaluate(([m, f]) => {
+      const h = window.hearthside; const st = h.debug.state(); const o = st.lots[st.activeLotId].objects[f];
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const t = { x: o.x + dx, z: o.z + dz, level: 0 };
+        const r = h.game.goTo(m, t);
+        if (r.ok) return { ok: true, tile: t };
+      }
+      return { ok: false };
+    }, [member, info.fridge]);
+    const down = await runUntil(T, 4 * 240, `st.people['${member}'].location.level === 0`);
+    // Autonomy can queue something (e.g. Sleep) in the tick the walk ends; clear it so the cook is next.
+    await clearQueue(member);
+    log('step 13 walked down', JSON.stringify({ from: startLevel, walk, down: down.done }));
+  }
+
+  // ---- Cook a Meal: the fridge reach-in (stage 0), the stove (stage 1), the plate (stage 2), then eatMeal
+  const ready = await runUntil(T, 4 * 120, `g.options('${member}', { kind: 'object', objectId: '${info.fridge}' }).some((o) => o.interactionId === 'cookMeal' && o.enabled)`);
+  const queued = await page.evaluate(([m, f]) => {
+    const g = window.hearthside.game;
+    const opt = g.options(m, { kind: 'object', objectId: f }).find((o) => o.interactionId === 'cookMeal');
+    if (!opt) return { ok: false, reason: 'not offered' };
+    if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
+    const r = g.queue(m, opt);
+    return { ok: r.ok, reason: r.ok ? '' : r.reason };
+  }, [member, info.fridge]);
+  T.check(S, 'Cook a Meal is queued', queued.ok, JSON.stringify({ queued, ready: ready.done }));
+  if (!queued.ok) return;
+
+  // stage 0, late enough for the ingredients prop: the pill, the anchor above the head and the open fridge door
+  const stage0 = await runUntil(T, 4 * 90, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'cookMeal' && a.data.stage === 0 && a.phase === 'perform' && a.elapsed >= 1.4; })()`);
+  await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), member);
+  await T.frames(20);
+  await render(); // the open tween is seeded from the game clock on this first frame of the stage
+  await runUntil(T, 1, 'false'); // at speed 0 frames do not advance the clock: one tick (0.25 game minutes) lets the door move
+  await render();
+  const A = await probe(member, info.fridge, info.computer);
+  const head = await page.evaluate((m) => window.__t.person(m, 1.2), member);
+  const doorA = A.fridge?.parts?.find((p) => p.flag === 'door');
+  T.check(S, 'the progress pill appears above the head while cooking', !!A.pill && !A.pill.hidden && /Cook a Meal/i.test(A.pill.label ?? '') && A.pill.value >= 1 && A.pill.value < 100, JSON.stringify({ pill: A.pill, stage0: stage0.done, act: A.act }));
+  T.check(S, 'the pill is anchored over the cook, not in a corner', !!head && !!A.pill && Math.abs((A.pill.box.x + A.pill.box.w / 2) - head.x) <= 90 && A.pill.box.y + A.pill.box.h <= head.y + 8, JSON.stringify({ pill: A.pill?.box, head }));
+  T.check(S, 'the fridge door is open while the reach-in plays', !!doorA && doorA.target === 1 && doorA.openness > 0.5, JSON.stringify(A.fridge));
+  T.check(S, 'a hand prop is carried from the fridge', Object.values(A.props ?? {}).some((s) => s.visible && s.kind === 'ingredients'), JSON.stringify(A.props));
+  await T.shot('m115-cooking-pill');
+
+  // stage 1: the fridge closes again and the spatula comes out; the fill keeps growing
+  await runUntil(T, 4 * 600, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'cookMeal' && a.data.stage === 1 && a.phase === 'perform'; })()`);
+  await render(); // the first frame after the stage change starts the closing tween
+  await runUntil(T, 3, 'false'); // 0.75 game minutes: longer than the 0.4-minute close
+  await render();
+  const B0 = await probe(member, info.fridge, info.computer);
+  const doorB = B0.fridge?.parts?.find((p) => p.flag === 'door');
+  T.check(S, 'the fridge door is closed again while the stove cooks', !!doorB && doorB.target === 0 && doorB.openness <= 0.05, JSON.stringify({ fridge: B0.fridge, act: B0.act }));
+  T.check(S, 'the hand prop changes to a spatula at the stove', Object.values(B0.props ?? {}).some((s) => s.visible && s.kind === 'spatula'), JSON.stringify(B0.props));
+
+  const lateRun = await runUntil(T, 4 * 600, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'cookMeal' && a.data.stage === 1 && a.phase === 'perform' && a.duration > 0 && a.elapsed >= a.duration * 0.8; })()`);
+  await render();
+  const B = await probe(member, info.fridge, info.computer);
+  T.check(S, 'the pill fill grows as the meal cooks', !!A.pill && !!B.pill && B.pill.value > A.pill.value && B.pill.fillWidth > A.pill.fillWidth, JSON.stringify({ early: A.pill, late: B.pill, lateRun: lateRun.done }));
+
+  // stage 2: the served plate is carried to the table
+  await runUntil(T, 4 * 60, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'cookMeal' && a.data.stage === 2 && a.phase === 'perform'; })()`);
+  await render();
+  const C = await probe(member, info.fridge, info.computer);
+  T.check(S, 'a plate is carried from the stove to the table', Object.values(C.props ?? {}).some((s) => s.visible && s.kind === 'plate'), JSON.stringify({ props: C.props, act: C.act }));
+
+  // ---- eating: plate/fork in hand, then the completion state of the pill
+  const eatCond = `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'eatMeal' && a.data.stage === 1 && a.phase === 'perform' && a.elapsed >= 2; })()`;
+  let eatRun = await runUntil(T, 4 * 90, eatCond);
+  if (!eatRun.done) {
+    // Autonomy may not have sat down yet: take a portion from the served meal (a real player order) instead.
+    const meal = await page.evaluate(() => {
+      const st = window.hearthside.debug.state();
+      const it = Object.values(st.items).find((i) => i.kind === 'meal' && i.lotId === st.activeLotId && i.portions > 0);
+      return it ? it.id : null;
+    });
+    const eatQueued = await page.evaluate(([m, id]) => {
+      const g = window.hearthside.game;
+      const opt = g.options(m, { kind: 'item', itemId: id }).find((o) => o.interactionId === 'eatMeal');
+      if (!opt) return { ok: false, reason: 'not offered' };
+      if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
+      const r = g.queue(m, opt);
+      return { ok: r.ok, reason: r.ok ? '' : r.reason };
+    }, [member, meal]);
+    T.check(S, 'a served meal can be taken from the counter', !!meal && eatQueued.ok, JSON.stringify({ meal, eatQueued }));
+    if (eatQueued.ok) eatRun = await runUntil(T, 4 * 120, eatCond);
+  }
+  await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), member);
+  await T.frames(20);
+  await settle(T);
+  await render();
+  const D = await probe(member, info.fridge, info.computer);
+  T.check(S, 'a hand prop (plate and fork) exists while eating', Object.values(D.props ?? {}).some((s) => s.visible && (s.kind === 'plate' || s.kind === 'fork')), JSON.stringify({ props: D.props, act: D.act, eatRun: eatRun.done }));
+  await T.shot('m115-eating-props');
+
+  const applyRun = await runUntil(T, 4 * 600, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === 'eatMeal' && (a.phase === 'apply' || (a.phase === 'cleanup' && a.data.result === 'done')); })()`);
+  await render();
+  const E = await probe(member, info.fridge, info.computer);
+  T.check(S, 'the pill shows the completion state when the meal is finished', !!E.pill && (E.pill.done || /complete/i.test(E.pill.label ?? '')), JSON.stringify({ pill: E.pill, applyRun: applyRun.done, act: E.act }));
+
+  await runUntil(T, 4 * 60, `!st.people['${member}'].queue.some((a) => a.interactionId === 'eatMeal' || a.interactionId === 'cookMeal')`);
+  await clearQueue(member);
+  await render();
+  const F = await probe(member, info.fridge, info.computer);
+  T.check(S, 'the cooking and eating props are put away', !!F.props && Object.values(F.props).every((s) => !s.visible), JSON.stringify(F.props));
+  await T.shot('m115-after-eating');
+
+  // ---- a computer used for writing: the document screen, and its text grows with the action
+  const writeReady = await runUntil(T, 4 * 300, `g.options('${member}', { kind: 'object', objectId: '${info.computer}' }).some((o) => (o.interactionId === 'writeArticle' || o.interactionId === 'writeBook') && o.enabled)`);
+  const write = await page.evaluate(([m, c]) => {
+    const g = window.hearthside.game;
+    const opts = g.options(m, { kind: 'object', objectId: c });
+    for (const id of ['writeArticle', 'writeBook']) {
+      const opt = opts.find((o) => o.interactionId === id);
+      if (opt && opt.enabled) { const r = g.queue(m, opt); return { ok: r.ok, id, reason: r.ok ? '' : r.reason }; }
+    }
+    return { ok: false, id: null, reason: opts.filter((o) => /write/i.test(o.interactionId)).map((o) => `${o.interactionId}:${o.enabled ? 'enabled' : o.reason}`).join(' | ') || 'not offered' };
+  }, [member, info.computer]);
+  T.check(S, 'a writing action is queued at the computer', write.ok, JSON.stringify({ write, ready: writeReady.done }));
+  if (write.ok) {
+    await page.evaluate((lv) => window.hearthside.game.view.setLevel?.(lv), info.computerLevel);
+    await T.frames(10);
+    const s1 = await runUntil(T, 4 * 180, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === '${write.id}' && a.phase === 'perform' && a.elapsed >= 10; })()`);
+    await render();
+    const W1 = await probe(member, info.fridge, info.computer);
+    const s2 = await runUntil(T, 4 * 600, `(() => { const a = st.people['${member}'].queue[0]; return !!a && a.interactionId === '${write.id}' && a.phase === 'perform' && a.duration > 0 && a.elapsed >= a.duration * 0.7; })()`);
+    await render();
+    const W2 = await probe(member, info.fridge, info.computer);
+    T.check(S, 'the computer shows the writing screen while the piece is written', !!W1.screen && (W1.screen.mode === 'document' || W1.screen.mode === 'desktop'), JSON.stringify({ screen: W1.screen, early: s1.done }));
+    T.check(S, 'the writing screen text grows with the action', !!W1.screen && !!W2.screen && W2.screen.progress > W1.screen.progress + 0.2, JSON.stringify({ early: W1.screen, late: W2.screen, late: s2.done }));
+    await T.shot('m115-writing-screen');
+    const done = await runUntil(T, 4 * 600, `!st.people['${member}'].queue.some((a) => a.interactionId === '${write.id}')`);
+    await clearQueue(member);
+    await render();
+    const W3 = await probe(member, info.fridge, info.computer);
+    T.check(S, 'the screen turns off when the writing is finished', !!W3.screen && W3.screen.mode === 'off', JSON.stringify({ screen: W3.screen, done: done.done }));
+  }
+  await page.evaluate(() => window.hearthside.game.view.setLevel?.(0));
+  await T.shot('m115-end');
+}
+
+// ===============================================================================================================
+// Milestone 12: seasons and weather (the HUD chip, the rain and snow gates), a pool built with the pool tool and
+// swum out through its ladder, then a trip to the Quayside Baths and back.
+// ===============================================================================================================
+
+async function stepWorldM12(T) {
+  const S = '14';
+  const { page } = T;
+  const touch = T.vpInfo.touch;
+  const setDay = async (day, weather) => {
+    const r = await page.evaluate(([d, w]) => {
+      const h = window.hearthside.debug, st = h.state();
+      st.clock.minutes = d * 1440 + 10 * 60;
+      const ok = h.setWeather(w);
+      h.step(1);
+      return { ok, weather: { ...(st.weather ?? {}) }, funds: st.households[st.activeHouseholdId].funds, minutes: st.clock.minutes };
+    }, [day, weather]);
+    return r;
+  };
+  const hud = () => page.evaluate(() => {
+    const e = document.querySelector('.clock-sky');
+    if (!e) return null;
+    return { label: e.getAttribute('aria-label') ?? '', title: e.getAttribute('title') ?? '', text: e.querySelector('.clock-sky-text')?.textContent ?? '' };
+  });
+  // The HUD refreshes on a 250 ms timer (and skips while the page is hidden or off the game route), so poll for the
+  // chip to catch up instead of racing the timer with a fixed wait.
+  const waitSky = async (re, ms = 6000) => {
+    const start = Date.now();
+    let last = await hud();
+    while (!re.test(`${last?.label ?? ''} ${last?.text ?? ''}`) && Date.now() - start < ms) {
+      await page.waitForTimeout(150);
+      last = await hud();
+    }
+    return last;
+  };
+  const actorOnLot = () => page.evaluate(() => {
+    const st = window.hearthside.debug.state(), hh = st.households[st.activeHouseholdId];
+    return hh.memberIds.find((id) => { const p = st.people[id]; return p.location.kind === 'lot' && p.location.level === 0; }) ?? null;
+  });
+  const clearQueue = async (member) => {
+    await page.evaluate((m) => {
+      const g = window.hearthside.game; const p = window.hearthside.debug.state().people[m];
+      for (const a of [...p.queue]) g.cancel(m, a.id);
+    }, member);
+    await runUntil(T, 24, `st.people['${member}'].queue.length === 0`);
+  };
+  // The self menu is reached by picking the person themself (PickResult has no 'self'): optionsFor() returns
+  // selfOptions() when the picked person is the actor.
+  const optionOf = (member, interactionId, pick = null) => page.evaluate(([m, i, p]) => {
+    const opt = window.hearthside.game.options(m, p ?? { kind: 'person', personId: m }).find((o) => o.interactionId === i);
+    return opt ? { enabled: opt.enabled, reason: opt.reason ?? null, label: opt.label } : null;
+  }, [member, interactionId, pick]);
+  const openMap = async () => {
+    await T.tap(page.locator('.map-btn'));
+    await page.waitForSelector('.nbm', { timeout: 8000 });
+    await page.waitForTimeout(450);
+  };
+  const closeMap = async () => {
+    const x = page.locator('.nbm .modal-header button[aria-label="Close"]').first();
+    if (await x.count() && await x.isVisible().catch(() => false)) { await T.tap(x); await page.waitForTimeout(250); }
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+  };
+  const pickLot = async (lotId) => {
+    const pin = page.locator(`.nbm-pin[data-lot-id="${lotId}"]`);
+    try { await T.tap(pin); } catch {
+      await T.tap(page.locator('.nbm-toggle .seg[data-id="list"]'));
+      await T.tap(page.locator(`.nbm-row[data-lot-id="${lotId}"]`));
+    }
+    await page.waitForSelector('.nbm-detail h3', { timeout: 5000 });
+    await page.waitForTimeout(250);
+  };
+
+  await page.evaluate(() => { window.hearthside.game.setSpeed(0); document.querySelectorAll('.toast').forEach((t) => t.remove()); });
+  await closeAnyPanel(T);
+  await dismissMenu(T).catch(() => undefined);
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'live') {
+    await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+    await page.waitForTimeout(500);
+  }
+  await page.evaluate(() => { const g = window.hearthside.game; g.view.setLevel?.(0); g.view.setCutaway?.('cutaway'); });
+  await T.frames(8);
+  const members = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds; });
+  await page.evaluate((ids) => { for (const id of ids) window.hearthside.game.quitCareer?.(id); }, members);
+
+  // ---- 1. seasons and the HUD chip: an autumn rainy morning
+  const autumn = await setDay(14, 'rain');
+  const chipRain = await waitSky(/Autumn.*Rain/);
+  const rainText = `${chipRain?.label ?? ''} ${chipRain?.title ?? ''} ${chipRain?.text ?? ''}`;
+  T.check(S, 'the HUD chip names the season and the weather', /Autumn/.test(rainText) && /Rain/.test(rainText), JSON.stringify({ chip: chipRain, state: autumn }));
+  let actor = await actorOnLot();
+  if (!actor) {
+    await runUntil(T, 4 * 240, 'Object.values(st.people).some((p) => p.householdId === st.activeHouseholdId && p.location.kind === \'lot\' && p.location.level === 0)');
+    actor = await actorOnLot();
+  }
+  const rakeRain = actor ? await optionOf(actor, 'rakeLeaves') : null;
+  T.check(S, 'rain is on: an outdoor activity is greyed with a reason', !!rakeRain && rakeRain.enabled === false && /rain/i.test(rakeRain.reason ?? ''), JSON.stringify({ actor, rake: rakeRain }));
+  await page.evaluate(() => window.hearthside.debug.setWeather('clear'));
+  const chipClear = await waitSky(/Autumn.*Clear/);
+  const clearText = `${chipClear?.label ?? ''} ${chipClear?.title ?? ''} ${chipClear?.text ?? ''}`;
+  const rakeClear = actor ? await optionOf(actor, 'rakeLeaves') : null;
+  T.check(S, 'clear weather lets the outdoor activity run again', !!rakeClear && rakeClear.enabled === true, JSON.stringify({ chip: chipClear, rake: rakeClear }));
+  T.check(S, 'the HUD chip follows the weather change', /Clear/.test(clearText), JSON.stringify(chipClear));
+
+  // ---- 2. winter snow: it lies on the ground and Build a Snowman runs
+  const winter = await setDay(21, 'snow');
+  const chipSnow = await waitSky(/Winter.*Snow/);
+  const snowText = `${chipSnow?.label ?? ''} ${chipSnow?.title ?? ''} ${chipSnow?.text ?? ''}`;
+  T.check(S, 'winter snow lies on the ground', /Winter/.test(snowText) && /Snow/.test(snowText) && !!winter.weather?.snowCover, JSON.stringify({ chip: chipSnow, weather: winter.weather }));
+  actor = (await actorOnLot()) ?? actor;
+  if (!actor) { T.bad(S, 'a member is home for the snowman', 'nobody on the lot'); return; }
+  await selectMember(T, actor);
+  await clearQueue(actor);
+  const snowOpt = await optionOf(actor, 'buildSnowman');
+  T.check(S, 'Build a Snowman is offered in winter snow', !!snowOpt && snowOpt.enabled === true, JSON.stringify(snowOpt));
+  if (snowOpt?.enabled) {
+    const q = await page.evaluate((m) => {
+      const g = window.hearthside.game;
+      const opt = g.options(m, { kind: 'person', personId: m }).find((o) => o.interactionId === 'buildSnowman');
+      if (!opt) return { ok: false, reason: 'not offered' };
+      const r = g.queue(m, opt);
+      return { ok: r.ok, reason: r.ok ? '' : r.reason };
+    }, actor);
+    const built = await runUntil(T, 4 * 240, 'Object.values(st.lots[st.activeLotId].objects).some((o) => o.defId === \'snowman\')');
+    const snowman = await page.evaluate(() => {
+      const st = window.hearthside.debug.state();
+      const o = Object.values(st.lots[st.activeLotId].objects).find((x) => x.defId === 'snowman');
+      return o ? { id: o.id, x: o.x, z: o.z, level: o.level } : null;
+    });
+    T.check(S, 'Build a Snowman leaves a snowman in the yard', q.ok && built.done && !!snowman && snowman.level === 0, JSON.stringify({ q, built: built.done, snowman }));
+    if (snowman) {
+      await page.evaluate((id) => window.hearthside.game.view.reveal({ kind: 'object', objectId: id }), snowman.id);
+      await T.frames(30);
+      await T.shot('m12-snowman');
+    }
+  }
+  // the snow stays on the ground after the weather clears (the pool is outdoors: it may only open when it is not snowing)
+  const cleared = await page.evaluate(() => { const h = window.hearthside.debug; h.setWeather('clear'); h.step(1); const st = h.state(); return { current: st.weather?.current, snowCover: !!st.weather?.snowCover }; });
+  T.check(S, 'snow stays on the ground after the weather clears', cleared.current === 'clear' && cleared.snowCover === true, JSON.stringify(cleared));
+
+  // ---- 3. build a small pool with the Pool tool in Build mode
+  await page.evaluate(() => { const st = window.hearthside.debug.state(); st.households[st.activeHouseholdId].funds += 500000; });
+  await clearQueue(actor);
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
+  await page.waitForTimeout(600);
+  await T.frames(10);
+  const poolTab = page.locator('.bb-tool-tabs .tab[data-id="tool-pool"]');
+  T.check(S, 'the Build tabs include Pool', (await poolTab.count()) === 1, '');
+  await T.tap(poolTab);
+  await page.waitForTimeout(500);
+  await T.frames(6);
+  const cards = page.locator('.bb-ext-pools .bb-card');
+  const cardCount = await cards.count();
+  T.check(S, 'the Pool tab lists pool styles with prices', cardCount >= 2 && /\$/.test(await cards.first().innerText()), `${cardCount} styles`);
+  const styleCard = page.locator('.bb-ext-pools .bb-card[data-style-id="azure-mosaic"]');
+  const chosenCard = (await styleCard.count()) ? styleCard.first() : cards.first();
+  await chosenCard.scrollIntoViewIfNeeded().catch(() => undefined);
+  await T.tap(chosenCard);
+  await page.waitForTimeout(300);
+  const chosen = await page.evaluate(() => { const t = window.hearthside.game.buildTool(); return t && t.kind === 'pool' ? { kind: t.kind, styleId: t.styleId } : t; });
+  T.check(S, 'the pool tool carries the chosen style', !!chosen && chosen.kind === 'pool' && !!chosen.styleId, JSON.stringify(chosen));
+
+  const spot = await page.evaluate(() => {
+    const g = window.hearthside.game;
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+    const busy = new Set();
+    const mark = (x, z) => { if (x >= 0 && z >= 0 && x < lot.width && z < lot.depth) busy.add(`${x},${z}`); };
+    for (const k of Object.keys(lot.floors ?? {})) {
+      const [l, x, z] = k.split(':').map(Number);
+      if (l === 1) mark(x, z);
+    }
+    for (const w of Object.values(lot.walls)) {
+      if (w.level !== 0) continue;
+      if (w.dir === 'h') { mark(w.x, w.z); mark(w.x + 1, w.z); } else { mark(w.x, w.z); mark(w.x, w.z + 1); }
+    }
+    const defs = g.content.objects;
+    for (const o of Object.values(lot.objects)) {
+      if (o.level !== 0) continue;
+      const d = defs[o.defId];
+      const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d;
+      for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) mark(o.x + i, o.z + j);
+    }
+    for (const p of Object.values(st.people)) {
+      const l = p.location;
+      if (l.kind === 'lot' && l.lotId === lot.id && l.level === 0) mark(Math.floor(l.x), Math.floor(l.z));
+    }
+    for (const p of Object.values(lot.pools ?? {})) for (let x = p.x0; x <= p.x1; x++) for (let z = p.z0; z <= p.z1; z++) mark(x, z);
+    for (const k of Object.keys(lot.fences ?? {})) {
+      const [, dir, x, z] = k.split(':');
+      const X = Number(x), Z = Number(z);
+      mark(X, Z);
+      if (dir === 'h') mark(X + 1, Z); else mark(X, Z + 1);
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) mark(X + dx, Z + dz);
+    }
+    const pref = { x: lot.width / 2, z: lot.depth - 2.5 };
+    const cands = [];
+    for (const [w, d] of [[3, 3], [2, 3], [3, 2]]) {
+      for (let z = 0; z + d <= lot.depth; z++) for (let x = 0; x + w <= lot.width; x++) {
+        let free = true;
+        for (let i = 0; i < w && free; i++) for (let j = 0; j < d; j++) if (busy.has(`${x + i},${z + j}`)) { free = false; break; }
+        if (free) cands.push({ x, z, w, d, dist: Math.hypot(x + w / 2 - pref.x, z + d / 2 - pref.z) });
+      }
+    }
+    cands.sort((a, b) => a.dist - b.dist);
+    for (const c of cands) {
+      const pv = g.buildPreview({ from: { x: c.x, z: c.z }, to: { x: c.x + c.w - 1, z: c.z + c.d - 1 }, level: 0 });
+      if (pv && pv.ok) return { ...c, cost: pv.cost, label: pv.label };
+    }
+    return { ok: false, reason: 'no free rectangle', cands: cands.length };
+  });
+  T.check(S, 'there is a free rectangle for a small pool', !!spot && spot.x !== undefined && spot.w >= 2 && spot.d >= 2, JSON.stringify(spot && { x: spot.x, z: spot.z, w: spot.w, d: spot.d, cost: spot.cost, label: spot.label }));
+  if (!spot || spot.x === undefined) return;
+  const funds0 = await page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].funds; });
+  const fp = await framePair(T, 'tile', [spot.x, spot.z], [spot.x + spot.w - 1, spot.z + spot.d - 1]);
+  let applied = false;
+  if (fp.a?.free && fp.b?.free) {
+    await drag(T, fp.a, fp.b);
+    await T.frames(4);
+    if (touch) {
+      const status = (await footerText(T)) ?? '';
+      T.check(S, 'a drag previews the pool with its size and price', /pool/i.test(status) && /\$/.test(status), status.replace(/\s+/g, ' '));
+      await T.shot('m12-pool-preview');
+      await tapFooter(T, '.bb-confirm');
+    }
+    await page.waitForTimeout(500);
+    await T.frames(8);
+    applied = (await page.evaluate(() => Object.keys(window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId].pools ?? {}).length)) > 0;
+  }
+  if (!applied) {
+    const r = await page.evaluate(([s]) => {
+      const g = window.hearthside.game;
+      const t = { from: { x: s.x, z: s.z }, to: { x: s.x + s.w - 1, z: s.z + s.d - 1 }, level: 0 };
+      const pv = g.buildPreview(t), ap = g.buildApply(t);
+      return { pv: pv && { ok: pv.ok, reason: pv.reason }, ok: ap.ok, reason: ap.ok ? '' : ap.reason };
+    }, [spot]);
+    T.check(S, 'the pool tool builds the pool (the corners were under the sheet: same tool through the API)', r.ok, JSON.stringify(r));
+    await T.frames(8);
+    applied = r.ok;
+  }
+  const poolState = await page.evaluate(() => {
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId], hh = st.households[st.activeHouseholdId];
+    return {
+      funds: hh.funds,
+      pools: Object.values(lot.pools ?? {}).map((p) => ({ id: p.id, x0: p.x0, z0: p.z0, x1: p.x1, z1: p.z1, styleId: p.styleId, price: p.purchasePrice, ladders: p.ladders.map((l) => ({ ...l })) })),
+    };
+  });
+  const pool = poolState.pools[0];
+  T.check(S, 'a small pool was built and paid for', applied && !!pool && (pool.x1 - pool.x0 + 1) * (pool.z1 - pool.z0 + 1) >= 6 && poolState.funds === funds0 - (pool.price ?? 0), JSON.stringify({ pool: pool && { x0: pool.x0, z0: pool.z0, x1: pool.x1, z1: pool.z1, styleId: pool.styleId, price: pool.price }, paid: funds0 - poolState.funds }));
+  T.check(S, 'the pool keeps a ladder on one of its edges', !!pool && pool.ladders.length >= 1 && pool.ladders.every((l) => l.x === pool.x0 || l.x === pool.x1 || l.z === pool.z0 || l.z === pool.z1), JSON.stringify(pool?.ladders));
+  if (!pool) return;
+  await T.shot('m12-pool-built');
+  await page.evaluate(() => window.hearthside.game.setBuildTool(null));
+  await T.tap(page.locator('.mode-btn[data-mode="live"]'));
+  await page.waitForTimeout(500);
+  await T.frames(8);
+
+  // ---- 4. swim, then get out through the ladder (never standing on water)
+  actor = (await actorOnLot()) ?? actor;
+  if (!actor) { T.bad(S, 'a member is home to swim', 'nobody on the lot'); return; }
+  await selectMember(T, actor);
+  await clearQueue(actor);
+  const ladder = pool.ladders[0];
+  const swim = await page.evaluate(([m, t]) => {
+    const g = window.hearthside.game;
+    const opts = g.options(m, { kind: 'floor', tile: { x: t.x, z: t.z }, level: 0 });
+    const opt = opts.find((o) => o.interactionId === 'swimInPool');
+    if (!opt) return { ok: false, reason: 'not offered', labels: opts.map((o) => o.label) };
+    if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
+    const r = g.queue(m, opt);
+    return { ok: r.ok, reason: r.ok ? '' : r.reason };
+  }, [actor, { x: ladder.x, z: ladder.z }]);
+  T.check(S, 'Swim in the Pool is queued from the water', swim.ok, JSON.stringify(swim));
+  if (swim.ok) {
+    const inWater = await runUntil(T, 4 * 120, `(() => { const p = st.people['${actor}']; const a = p.queue[0]; return !!a && a.interactionId === 'swimInPool' && a.data.stage === 'swim' && a.phase === 'perform'; })()`);
+    await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), actor);
+    await T.frames(24);
+    await settle(T);
+    await T.frames(10);
+    const sw = await page.evaluate(([m, p]) => {
+      const st = window.hearthside.debug.state(), person = st.people[m];
+      const t = { x: Math.floor(person.location.x), z: Math.floor(person.location.z) };
+      const water = t.x >= p.x0 && t.x <= p.x1 && t.z >= p.z0 && t.z <= p.z1;
+      return { anim: person.anim?.id ?? null, tile: t, water, drawn: !!window.hearthside.view.personPosition(m), act: person.queue[0] ? { id: person.queue[0].interactionId, stage: person.queue[0].data?.stage ?? null } : null };
+    }, [actor, pool]);
+    T.check(S, 'the member swims in the pool water with the swim animation', inWater.done && sw.water === true && sw.anim === 'swim' && sw.drawn === true, JSON.stringify({ ...sw, ticks: inWater.ticks }));
+    await T.shot('m12-pool-swim');
+    // Get Out is offered on the water tile (it is a pool-water menu entry, not a self one).
+    const out = await page.evaluate(([m, t]) => {
+      const g = window.hearthside.game;
+      const opt = g.options(m, { kind: 'floor', tile: { x: t.x, z: t.z }, level: 0 }).find((o) => o.interactionId === 'getOutOfPool');
+      if (!opt) return { ok: false, reason: 'not offered' };
+      if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
+      const r = g.queue(m, opt);
+      return { ok: r.ok, reason: r.ok ? '' : r.reason };
+    }, [actor, { x: ladder.x, z: ladder.z }]);
+    T.check(S, 'Get Out is offered while swimming', out.ok, JSON.stringify(out));
+    if (out.ok) {
+      const swimId = await page.evaluate((m) => window.hearthside.debug.state().people[m].queue[0]?.id ?? null, actor);
+      const exit = await page.evaluate(([m, p, id]) => {
+        const h = window.hearthside;
+        const ids = new Set(['swimInPool', 'relaxInPool', 'getOutOfPool']);
+        const water = (x, z) => x >= p.x0 && x <= p.x1 && z >= p.z0 && z <= p.z1;
+        const bad = [];
+        let last = null;
+        for (let i = 0; i < 4 * 240; i++) {
+          h.debug.step(1);
+          const st = h.debug.state(), person = st.people[m];
+          if (person.location.kind !== 'lot') return { done: false, reason: 'left the lot', bad };
+          const a = person.queue[0];
+          const t = { x: Math.floor(person.location.x), z: Math.floor(person.location.z) };
+          const poolAction = !!a && ids.has(a.interactionId);
+          if (water(t.x, t.z) && !poolAction) bad.push({ x: t.x, z: t.z, at: Math.round(st.clock.minutes), anim: person.anim?.id ?? null, action: a?.interactionId ?? null });
+          last = { x: t.x, z: t.z, level: person.location.level, anim: person.anim?.id ?? null, action: a?.interactionId ?? null };
+          // stop when the swim this Get Out cancelled has finished (autonomy may queue another swim behind it)
+          if (!person.queue.some((q) => q.id === id)) return { done: true, ticks: i + 1, bad, loc: last };
+        }
+        return { done: false, bad, loc: last };
+      }, [actor, pool, swimId]);
+      const deck = pool.ladders.map((l) => l.side === 'n' ? { x: l.x, z: l.z - 1 } : l.side === 's' ? { x: l.x, z: l.z + 1 } : l.side === 'w' ? { x: l.x - 1, z: l.z } : { x: l.x + 1, z: l.z });
+      const onDeck = !!exit.loc && deck.some((d) => d.x === exit.loc.x && d.z === exit.loc.z);
+      const onWater = !!exit.loc && exit.loc.x >= pool.x0 && exit.loc.x <= pool.x1 && exit.loc.z >= pool.z0 && exit.loc.z <= pool.z1;
+      T.check(S, 'the member gets out through the ladder onto the deck, never walking on water', exit.done && !onWater && onDeck && exit.bad.length === 0, JSON.stringify({ exit, deck }));
+      await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), actor);
+      await T.frames(24);
+      await T.shot('m12-pool-out');
+    }
+  }
+
+  // ---- 5. travel to the Quayside Baths and back
+  const poolLot = await page.evaluate(() => { const i = window.hearthside.game.neighbourhood(); return i.lots.find((l) => l.venueType === 'pool') ?? null; });
+  const homeId = await page.evaluate(() => window.hearthside.game.neighbourhood().homeLotId);
+  T.check(S, 'the neighbourhood has the Quayside Baths pool venue', !!poolLot && poolLot.name === 'Quayside Baths', JSON.stringify(poolLot && { id: poolLot.id, name: poolLot.name, open: poolLot.open }));
+  if (poolLot) {
+    actor = (await actorOnLot()) ?? actor;
+    if (actor) await selectMember(T, actor);
+    await openMap();
+    await pickLot(poolLot.id);
+    const sheet = await page.evaluate(() => ({ title: document.querySelector('.nbm-detail h3')?.textContent ?? '', go: document.querySelector('.nbm-go')?.textContent.trim() ?? '', disabled: document.querySelector('.nbm-go')?.disabled ?? true }));
+    T.check(S, 'the map shows the Quayside Baths with a Go here button', sheet.title === poolLot.name && sheet.go === 'Go here' && sheet.disabled === false, JSON.stringify(sheet));
+    await T.tap(page.locator('.nbm-go'));
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+    await page.waitForTimeout(500);
+    const arrived = await runUntil(T, 4 * 120, `st.activeLotId === '${poolLot.id}'`);
+    await T.frames(10);
+    const venue = await page.evaluate(([id, m]) => {
+      const st = window.hearthside.debug.state(), lot = st.lots[id];
+      return {
+        active: st.activeLotId,
+        place: window.hearthside.game.whereIs(m),
+        pools: Object.values(lot?.pools ?? {}).map((p) => ({ w: p.x1 - p.x0 + 1, d: p.z1 - p.z0 + 1, ladders: p.ladders.length })),
+      };
+    }, [poolLot.id, actor]);
+    const vp = venue.pools[0];
+    T.check(S, 'the household travels to the Quayside Baths and its pool is there', arrived.done && venue.place?.text === `At ${poolLot.name}` && !!vp && vp.w >= 4 && vp.d >= 4 && vp.ladders >= 2, JSON.stringify({ ...venue, ticks: arrived.ticks }));
+    await page.evaluate((id) => window.hearthside.game.view.focusPerson(id), actor);
+    await T.frames(24);
+    await T.shot('m12-quayside');
+    await openMap();
+    const homeBtn = page.locator('.nbm-gohome');
+    const homeReady = await homeBtn.count() && await homeBtn.first().isEnabled().catch(() => false);
+    T.check(S, 'the map has a Go home button at the venue', !!homeReady, '');
+    if (homeReady) await T.tap(homeBtn.first());
+    await page.waitForSelector('.nbm', { state: 'detached', timeout: 5000 }).catch(() => undefined);
+    await page.waitForTimeout(500);
+    const back = await runUntil(T, 4 * 120, `st.activeLotId === '${homeId}'`);
+    T.check(S, 'the household travels back home again', back.done, JSON.stringify({ ticks: back.ticks, active: await page.evaluate(() => window.hearthside.debug.state().activeLotId) }));
+    await T.frames(10);
+  }
+  await page.evaluate(() => { const g = window.hearthside.game; g.view.setLevel?.(0); g.view.setCutaway?.('cutaway'); });
+  await T.shot('m12-end');
 }
 
 main().catch((e) => { console.error('[acceptance] error', e); process.exit(1); });

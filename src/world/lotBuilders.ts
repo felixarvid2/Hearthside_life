@@ -13,7 +13,7 @@ import { requireLot } from './lots';
 import { furnishNeighborHouse, furnishStarterHouse } from './starter';
 import { buildResidentialLot, buildVenueLot } from './venues';
 
-export type VenueType = 'park' | 'cafe' | 'gym' | 'library' | 'arts' | 'market';
+export type VenueType = 'park' | 'cafe' | 'gym' | 'library' | 'arts' | 'market' | 'pool';
 
 export interface LotBuilders {
   /** Lays out a public venue of the given type on an empty lot. */

@@ -322,7 +322,7 @@ function checkOpening(
           const id = grid.occupantIds[grid.occupant[t.z * grid.width + t.x] ?? -1];
           if (id === VOID_ID) continue; // Milestone 9: a door onto open air upstairs (a balcony may follow)
           const o = id ? lot.objects[id] : undefined;
-          const name = (o && content.objects[o.defId]?.name) ?? 'furniture';
+          const name = (o && content.objects[o.defId]?.name) ?? (id?.startsWith('pool:') ? 'pool' : 'furniture');
           reject({ kind: 'tile', x: t.x, z: t.z, reason: 'Blocked.' }, `The ${name} blocks the doorway.`);
           if (o) reject({ kind: 'object', objectId: o.id, reason: 'In the way.' }, `The ${name} blocks the doorway.`);
           return;

@@ -977,7 +977,15 @@ export class GameCore {
     }
     if (typeof patch.unlimitedFunds === 'boolean' && state.startMode === 'sandbox') set('unlimitedFunds', patch.unlimitedFunds);
     if (typeof patch.autoPayBills === 'boolean') set('autoPayBills', patch.autoPayBills);
-    if (changed) { this.notify('state'); this.notify('settings'); }
+    // Milestone 12: seasons and weather live in the save; a change re-plans the stored half-days immediately.
+    if (typeof patch.seasons === 'boolean') set('seasons', patch.seasons);
+    if (patch.seasonDays === 3 || patch.seasonDays === 7 || patch.seasonDays === 14) set('seasonDays', patch.seasonDays);
+    if (typeof patch.weather === 'boolean') set('weather', patch.weather);
+    if (changed) {
+      if (patch.seasons !== undefined || patch.seasonDays !== undefined || patch.weather !== undefined) this.sim.refreshWeather();
+      this.notify('state');
+      this.notify('settings');
+    }
   }
 
   devStats(): Pick<DevStats, 'agents' | 'routeRequests' | 'simTickMs' | 'ticksPerFrame'> {

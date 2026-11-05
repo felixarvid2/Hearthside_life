@@ -31,4 +31,8 @@ export const PREFERENCES: ContentDB['preferences'] = [
   p('topic', 'sports', 'Sports'), p('topic', 'books', 'Books'), p('topic', 'travel', 'Travel'),
   p('topic', 'food', 'Food'), p('topic', 'technology', 'Technology'), p('topic', 'music', 'Music'),
   p('topic', 'nature', 'Nature'), p('topic', 'movies', 'Movies'),
+
+  // Milestone 12: weather preferences (sim/weather.ts reads these ids for the weather moodlets).
+  p('weather', 'rain', 'Rainy Days'), p('weather', 'snow', 'Snow'), p('weather', 'sun', 'Sunshine'),
+  p('weather', 'cold', 'Cold Weather'),
 ];

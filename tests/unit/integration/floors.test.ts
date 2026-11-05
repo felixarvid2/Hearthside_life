@@ -101,7 +101,7 @@ describe('floors through GameCore', () => {
     const down = person.location;
     expect(down.kind === 'lot' && down.level).toBe(0);
     expect(down.kind === 'lot' && down.rise).toBeUndefined();
-  });
+  }, 20_000); // three walks of up to 4 000 ticks: about 2 s alone, more under parallel load
 
   it('undoing the upper room with somebody upstairs brings them down instead of leaving them in the air', () => {
     const core = twoStorey();
@@ -201,5 +201,5 @@ describe('floors through GameCore', () => {
     }
     expect(seenLevels.has(1) || maxRise > 0).toBe(true); // somebody went upstairs (the loft has a desk, a sofa and a playroom)
     rec.dispose();
-  });
+  }, 60_000); // three simulated days: about 5 s alone, over the 5 s default under parallel load
 });

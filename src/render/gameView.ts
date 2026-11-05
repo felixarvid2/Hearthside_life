@@ -11,7 +11,8 @@ import type { ContentDB, SurfaceDesign } from '../content/types';
 import { hourOfDay } from '../core/clock';
 import { parseEdgeKey, tileKey } from '../core/ids';
 import { rotatedSize } from '../core/geometry';
-import type { Id, Lot, WorldState } from '../core/types';
+import { seasonFor } from '../core/season';
+import type { Id, Lot, Season, WeatherKind, WorldState } from '../core/types';
 import type { CutawayMode, GameMode, PickResult, PlacementState } from '../game/api';
 import type { PaintHighlight } from '../game/GameCore';
 import type { BuildHighlight } from '../building/buildPlans';
@@ -32,11 +33,17 @@ import { PeopleView } from './peopleView';
 import { PortraitRenderer } from './portraits';
 import { PlacementPreview } from './previews';
 import { RenderContext, type Quality } from './renderer';
+import { ScreensView } from './screensView';
+import { WeatherView } from './weatherView';
 
 export interface ViewOptions {
   quality: Quality;
   shadows: boolean;
   reducedMotion: boolean;
+  /** Milestone 12: rain/snow particles (render-only; the weather light tint stays when this is off). */
+  weatherEffects: boolean;
+  /** Milestone 11.5: whose running actions show a progress pill (default 'household'). */
+  actionProgress?: 'household' | 'all' | 'off';
 }
 
 export interface RenderStats { drawCalls: number; triangles: number; geometries: number; textures: number; programs: number }
@@ -51,7 +58,10 @@ export class GameView {
   private readonly lotView: LotView;
   /** Milestone 9: fences, roofs, terrain paint and garden crops (render/exteriorView.ts). */
   private readonly exterior: ExteriorView;
+  private readonly weatherView = new WeatherView();
   private readonly objects: ObjectsView;
+  /** Milestone 11.5: picture quads on computer and TV screens. */
+  private readonly screens: ScreensView;
   private people: PeopleView | null = null;
   private readonly placement: PlacementPreview;
   private readonly buildView: BuildView;
@@ -117,10 +127,11 @@ export class GameView {
     this.objects = new ObjectsView(content, this.objectAssets, opts.quality === 'high' ? 4 : 2);
     this.objects.groundAt = (x, z, level) => this.groundAt(x, z, level);
     this.objects.onModelsLoaded = () => { if (this.lot) this.objects.applyWallVisibility((id) => this.lotView.isLowered(id)); };
+    this.screens = new ScreensView();
     this.placement = new PlacementPreview(content, this.objectAssets);
     this.buildView = new BuildView(content);
     this.openingThumbs = new OpeningThumbs(content);
-    this.scene.add(this.env.group, this.lotView.group, this.exterior.group, this.objects.group, this.placement.group, this.buildView.group);
+    this.scene.add(this.env.group, this.lotView.group, this.exterior.group, this.objects.group, this.placement.group, this.buildView.group, this.weatherView.points);
     this.rig.reducedMotion = opts.reducedMotion;
     this.applyOptions(opts);
     canvas.addEventListener('pointermove', this.onPointerMove, { passive: true });
@@ -133,6 +144,7 @@ export class GameView {
     this.people = new PeopleView(assets, this.content, this.overlay);
     this.people.groundAt = (x, z) => this.groundAt(x, z);
     this.people.setActiveLevel(this.activeLevel);
+    this.people.setProgressScope(this.opts.actionProgress ?? 'household');
     this.scene.add(this.people.group);
     this.creator = new CreatorScene(assets, this.content);
     this.creator.reducedMotion = this.opts.reducedMotion;
@@ -165,7 +177,9 @@ export class GameView {
     this.rig.reducedMotion = o.reducedMotion;
     if (this.creator) this.creator.reducedMotion = o.reducedMotion;
     this.lotView.setQuality(o.quality);
+    this.screens.setQuality(o.quality);
     this.objects.setLampLightCount(o.quality === 'high' ? 4 : 2);
+    this.people?.setProgressScope(o.actionProgress ?? 'household');
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -184,12 +198,15 @@ export class GameView {
     this.lotView.clear();
     this.exterior.setLot(null);
     this.objects.clear();
+    this.screens.clear();
     this.people?.clear();
     this.placement.set(null, null, () => 0);
     this.pendingReveal = null;
     this.buildView.setGrid(this.buildGrid ? lot : null);
     if (!state || !lot) return;
-    this.env.build(lot);
+    const look = this.weatherNow(state);
+    this.env.build(lot, look.season, look.snowy);
+    this.exterior.terrain.setSeason(look.season, look.snowy);
     this.preloadLotSurfaces(lot);
     this.lotView.setCutaway(this.cutaway, this.rig.viewDir(this.tmpV));
     this.lotView.setActiveLevel(this.activeLevel);
@@ -202,6 +219,7 @@ export class GameView {
     this.exterior.setLot(lot);
     this.objects.sync(lot);
     this.objects.syncItems(state, lot.id);
+    this.screens.sync(lot, (id) => this.objects.rootOf(id));
     this.people?.sync(state, lot.id);
     this.people?.snap(state);
     this.people?.invalidateSlots();
@@ -224,9 +242,12 @@ export class GameView {
     const lot = this.lot;
     if (!lot) return;
     this.exterior.lotChanged(what);
-    if (what === 'fences' || what === 'roofs' || what === 'terrain') return; // nothing for the lot view, the objects or the people to do
+    if (what === 'fences' || what === 'roofs' || what === 'terrain' || what === 'pools') return; // nothing for the lot view, the objects or the people to do
     this.lotView.update(lot, what);
-    if (what === 'objects' || what === 'all') this.objects.sync(lot);
+    if (what === 'objects' || what === 'all') {
+      this.objects.sync(lot);
+      this.screens.sync(lot, (id) => this.objects.rootOf(id));
+    }
     this.people?.invalidateSlots();
     this.objects.applyWallVisibility((id) => this.lotView.isLowered(id));
   }
@@ -452,13 +473,19 @@ export class GameView {
     this.runPendingReveal(dt);
     this.rig.update(dt);
     this.updateCutaway();
-    // clock-driven lighting
+    // clock-driven lighting, tinted by the season and the weather
+    const look = this.weatherNow(world);
     const hour = hourOfDay(world.clock.minutes);
-    this.lighting.update(hour);
+    this.lighting.update(hour, look.weather, look.season);
+    this.env.build(lot, look.season, look.snowy);
+    this.exterior.terrain.setSeason(look.season, look.snowy);
+    this.weatherView.update(look.weather, dt, this.rig.camera, this.opts.weatherEffects && !this.opts.reducedMotion);
+    this.exterior.update(this.opts.reducedMotion ? 0 : dt);
     this.fog.color.copy(this.lighting.background);
     r.toneMappingExposure = this.lighting.exposure;
     this.objects.setNight(this.lighting.night, this.rig.target);
-    this.objects.animate(dt, this.opts.reducedMotion);
+    this.objects.animate(dt, this.opts.reducedMotion, { state: world, now: world.clock.minutes });
+    this.screens.update(world, lot.id, dt, this.opts.reducedMotion, world.clock.minutes, this.rig.target);
     // people
     const people = this.people;
     if (people) {
@@ -484,6 +511,13 @@ export class GameView {
     if (people && (mode === 'live' || mode === 'menu')) people.updateOverlay(world, this.rig);
     if (this.rig.version !== this.lastCameraVersion) { this.lastCameraVersion = this.rig.version; this.onCamera?.(); }
     this.processPortrait();
+  }
+
+  /** Season, weather kind and settled snow for this state (render-only reading of the stored plan). */
+  private weatherNow(state: WorldState): { season: Season; weather: WeatherKind; snowy: boolean } {
+    const season = seasonFor(state.clock.minutes, state.settings);
+    const weather: WeatherKind = state.settings.weather === false ? 'clear' : state.weather?.current ?? 'clear';
+    return { season, weather, snowy: season === 'winter' && !!state.weather?.snowCover };
   }
 
   private captureStats(): void {
@@ -637,10 +671,12 @@ export class GameView {
     this.openingThumbs.dispose();
     this.buildView.dispose();
     this.placement.dispose();
+    this.screens.dispose();
     this.objects.dispose();
     this.lotView.dispose();
     this.exterior.dispose();
     this.env.dispose();
+    this.weatherView.dispose();
     this.ctx.dispose();
   }
 }

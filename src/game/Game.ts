@@ -75,7 +75,7 @@ export class Game implements GameAPI {
     applyDocumentSettings(this.settingsValue);
     this.audio = new GameAudio(this.assetBase, this.settingsValue);
     const s = this.settingsValue;
-    this.gameView = new GameView(opts.canvas, this.content, opts.overlay, { quality: s.quality, shadows: s.shadows, reducedMotion: s.reducedMotion }, this.assetBase);
+    this.gameView = new GameView(opts.canvas, this.content, opts.overlay, { quality: s.quality, shadows: s.shadows, reducedMotion: s.reducedMotion, weatherEffects: s.weatherEffects, actionProgress: s.actionProgress }, this.assetBase);
     this.gameView.onCamera = () => this.emit('camera');
     this.view = this.makeViewApi();
     this.creator = this.makeCreatorApi();
@@ -634,7 +634,7 @@ export class Game implements GameAPI {
     saveSettings(next);
     applyDocumentSettings(next);
     this.audio.setSettings(next);
-    this.gameView.applyOptions({ quality: next.quality, shadows: next.shadows, reducedMotion: next.reducedMotion });
+    this.gameView.applyOptions({ quality: next.quality, shadows: next.shadows, reducedMotion: next.reducedMotion, weatherEffects: next.weatherEffects, actionProgress: next.actionProgress });
     if (next.characterStyle !== prev.characterStyle) void this.gameView.setCharacterStyle(next.characterStyle).then(() => this.emit('portraits'), (e) => console.error('[game] character style', e));
     this.emit('settings');
   }

@@ -12,6 +12,8 @@ import {
 } from '../../building/exteriorPlans';
 import { exteriorOf } from '../../content/exterior';
 import { planBuy, planSell, type BuyRequest } from '../../building/plans';
+import { addPoolLadder, buildPool, movePoolLadder, removePool, removePoolLadder } from '../../building/poolCommands';
+import { planPool, type PoolPlan, type PoolRequest } from '../../building/poolPlans';
 import { rotatedSize } from '../../core/geometry';
 import {
   eraseRectRequest, eraseRunRequest, eraseSegmentRequest, normalizeRect, planBuild, straightenRun, tileRectTiles, wallRectRequest,
@@ -25,6 +27,7 @@ import { edgeKey } from '../../core/ids';
 import type { Tile } from '../../core/nav';
 import type { FinishRef, Id, Lot, Rot, WorldState } from '../../core/types';
 import { hasLevel, inLot } from '../../world/lots';
+import { poolContains, poolsOf } from '../../world/pools';
 import { RoomTracker, roomOutlines, type RoomDelta, type TrackedRoom } from '../../world/roomTracker';
 import { openingEdgeKeys, openingOnWall, openingSpan } from '../../world/walls';
 import { paintCommand } from './paint';
@@ -95,7 +98,9 @@ export type Resolved =
   /** Milestone 9: buy a staircase / sell one (object commands, previewed like the rest). */
   | { ok: true; object: { place: BuyRequest } | { remove: Id } }
   /** Milestone 9 exterior: fences, gates, roofs and terrain paint (building/exteriorPlans.ts). */
-  | { ok: true; exterior: ExteriorRequest };
+  | { ok: true; exterior: ExteriorRequest }
+  /** Milestone 12: a pool, its removal, or a ladder edit (building/poolPlans.ts). */
+  | { ok: true; pool: PoolRequest };
 
 const bad = (reason: string): Resolved => ({ ok: false, reason });
 
@@ -230,6 +235,33 @@ export function resolveBuild(content: ContentDB, lot: Lot, tool: BuildTool, targ
       const found = stairAt(content, lot, level, t.x, t.z);
       return found ? { ok: true, object: { remove: found } } : bad('Point at a staircase.');
     }
+    case 'pool': {
+      // Pools live on the ground floor; the drag corners are inclusive water tiles.
+      if (level !== 0) return bad('Pools go on the ground floor or outside.');
+      const a = snapTile(from), b = snapTile(to ?? from);
+      return {
+        ok: true,
+        pool: { kind: 'pool', rect: { x0: Math.min(a.x, b.x), z0: Math.min(a.z, b.z), x1: Math.max(a.x, b.x), z1: Math.max(a.z, b.z) }, styleId: tool.styleId },
+      };
+    }
+    case 'erasePool': {
+      if (level !== 0) return bad('There is no pool there.');
+      const t = snapTile(from);
+      const pool = poolsOf(lot).find((p) => poolContains(p, t.x, t.z));
+      return pool ? { ok: true, pool: { kind: 'erasePool', poolId: pool.id } } : bad('Point at a pool.');
+    }
+    case 'poolLadder': {
+      if (level !== 0) return bad('There is no pool there.');
+      const t = snapTile(from);
+      const pool = tool.poolId ? lot.pools?.[tool.poolId] : poolsOf(lot).find((p) => poolContains(p, t.x, t.z));
+      if (!pool) return bad('Point at a pool.');
+      if (tool.mode === 'move') {
+        const fromTile = tool.from ? snapTile(tool.from) : null;
+        if (!fromTile) return bad('Tap the ladder to move.');
+        return { ok: true, pool: { kind: 'moveLadder', poolId: pool.id, from: fromTile, to: t } };
+      }
+      return { ok: true, pool: tool.mode === 'add' ? { kind: 'addLadder', poolId: pool.id, tile: t } : { kind: 'removeLadder', poolId: pool.id, tile: t } };
+    }
   }
 }
 
@@ -359,6 +391,7 @@ export class BuildTools {
     }
     if ('object' in resolved) return { resolved, preview: this.objectPreview(state, lot, hh.id, resolved.object, target.level ?? 0) };
     if ('exterior' in resolved) return { resolved, preview: this.exteriorPreview(planExterior(state, this.d.content, lot.id, hh.id, resolved.exterior)) };
+    if ('pool' in resolved) return { resolved, preview: this.poolPreview(planPool(state, this.d.content, lot.id, hh.id, resolved.pool)) };
     const plan = planBuild(state, this.d.content, lot.id, hh.id, resolved.build);
     return { resolved, preview: this.fromPlan(plan) };
   }
@@ -387,6 +420,17 @@ export class BuildTools {
     };
   }
 
+  /** The undoable command for a resolved pool request (Milestone 12). */
+  private poolCommand(lot: Lot, householdId: Id, req: PoolRequest): UndoableCommand {
+    switch (req.kind) {
+      case 'pool': return buildPool(lot.id, householdId, req.rect, req.styleId, req.ladder);
+      case 'erasePool': return removePool(lot.id, householdId, { ...(req.poolId ? { poolId: req.poolId } : {}), ...(req.tile ? { tile: req.tile } : {}) });
+      case 'moveLadder': return movePoolLadder(lot.id, householdId, req.poolId, req.from, req.to);
+      case 'addLadder': return addPoolLadder(lot.id, householdId, req.poolId, req.tile);
+      case 'removeLadder': return removePoolLadder(lot.id, householdId, req.poolId, req.tile);
+    }
+  }
+
   /** Preview of a fence, roof or paint plan (Milestone 9): edges and tiles ride in the usual highlight. */
   private exteriorPreview(plan: ExteriorPlan): BuildPreview {
     const h = plan.highlight;
@@ -399,6 +443,24 @@ export class BuildTools {
         level: h.level, newWalls: h.newEdges, existingWalls: h.existingEdges, removedWalls: h.removedEdges, openingEdges: [], removedOpeningEdges: [],
         tiles: h.tiles, blocked: h.blocked,
       },
+    };
+  }
+
+  /** Preview of a pool plan (Milestone 12): water tiles ride in the usual highlight. */
+  private poolPreview(plan: PoolPlan): BuildPreview {
+    const tiles = plan.highlight.tiles.length > 0
+      ? plan.highlight.tiles
+      : plan.highlight.removedPools.flatMap((r) => {
+        const out: Array<{ x: number; z: number }> = [];
+        for (let z = r.z0; z <= r.z1; z++) for (let x = r.x0; x <= r.x1; x++) out.push({ x, z });
+        return out;
+      });
+    return {
+      ok: plan.ok, ...(plan.ok ? {} : { reason: plan.reasons[0] ?? 'That cannot be built.' }), reasons: plan.reasons,
+      ...(plan.noop ? { unchanged: true as const } : {}), label: plan.label, cost: plan.cost, charge: plan.charge, refund: plan.refund,
+      counts: { ...KINDLESS_COUNTS }, measure: { lengthM: 0, ...(plan.measure.areaM2 !== undefined ? { areaM2: plan.measure.areaM2 } : {}), text: plan.measure.text },
+      rooms: { before: 0, after: 0 },
+      highlight: { level: 0, newWalls: [], existingWalls: [], removedWalls: [], openingEdges: [], removedOpeningEdges: [], tiles, blocked: plan.highlight.blocked },
     };
   }
 
@@ -441,18 +503,20 @@ export class BuildTools {
     const cmd: UndoableCommand = 'paint' in r ? paintCommand(lot.id, hh.id, r.paint.target, r.paint.finish)
       : 'object' in r ? ('place' in r.object ? buyObject(lot.id, hh.id, r.object.place) : sellObject(lot.id, hh.id, r.object.remove))
         : 'exterior' in r ? exteriorCommand(lot.id, hh.id, r.exterior)
-          : buildCommand(lot.id, hh.id, r.build);
+          : 'pool' in r ? this.poolCommand(lot, hh.id, r.pool)
+            : buildCommand(lot.id, hh.id, r.build);
     const before0 = new Set(Object.keys(lot.openings));
     const res = this.d.run(cmd);
     if (!res.ok) return res;
     this.setHighlight(null);
     const plan = (cmd as BuildCommand | ExteriorCommand).plan;
     const exterior = 'exterior' in r;
+    const pool = 'pool' in r;
     const after = this.tracker.current(lot.id, lvl);
     const placedId = Object.keys(lot.openings).find((id) => !before0.has(id));
     const openingId = placedId ?? ('extra' in r ? r.extra?.openingId : undefined);
     return {
-      ok: true, cost: plan ? plan.cost : pv.cost, label: plan ? plan.label : pv.label, counts: plan && !exterior ? (plan as BuildPlan).counts : pv.counts,
+      ok: true, cost: plan ? plan.cost : pv.cost, label: plan ? plan.label : pv.label, counts: plan && !exterior && !pool ? (plan as BuildPlan).counts : pv.counts,
       rooms: RoomTracker.delta(before, after), ...(openingId ? { openingId } : {}),
     };
   }

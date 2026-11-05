@@ -1,7 +1,7 @@
 // Small pictures for the exterior build tools: roof styles, fence and gate designs, ground paints and roof finishes, drawn on a 2D canvas
 // with a tiny isometric projector (no WebGL, so they are cheap and work in any panel). Results are cached data URLs.
 
-import type { FenceDef, RoofFinishDef, RoofPalette, TerrainPaintDef } from '../../content/exterior';
+import type { FenceDef, PoolStyleDef, RoofFinishDef, RoofPalette, TerrainPaintDef } from '../../content/exterior';
 import { fenceVariant } from '../../content/exterior';
 import { RodGeometry, toWorld } from '../../render/fenceView';
 import { groundTexture, roofTexture } from '../../render/exteriorTextures';
@@ -141,6 +141,44 @@ export function finishThumb(fin: RoofFinishDef, palette: RoofPalette): string {
   const img = tex?.image as HTMLCanvasElement | undefined;
   const url = img?.toDataURL ? img.toDataURL('image/png') : '';
   tex?.dispose();
+  cache.set(key, url);
+  return url;
+}
+
+/** A small pool: coping frame, tiled basin walls and floor, the water surface and a ladder. */
+export function poolThumb(def: PoolStyleDef, size = 120): string {
+  const key = `pool:${def.id}:${def.water}:${def.tile}:${def.coping}:${size}`;
+  const hit = cache.get(key);
+  if (hit !== undefined) return hit;
+  const W = 5, D = 3, INSET = 0.3, H = 0.55;
+  const quad = (p: [V3, V3, V3, V3], n: V3, color: string, alpha = 1): Tri[] => [
+    { p: [p[0], p[1], p[2]], n, color, alpha }, { p: [p[0], p[2], p[3]], n, color, alpha },
+  ];
+  const x0 = INSET, x1 = W - INSET, z0 = INSET, z1 = D - INSET;
+  const tris: Tri[] = [];
+  // coping: the flat frame around the water, and the outer lip
+  tris.push(...quad([[0, 0, 0], [W, 0, 0], [W, 0, z0], [0, 0, z0]], [0, 1, 0], def.coping));
+  tris.push(...quad([[0, 0, z1], [W, 0, z1], [W, 0, D], [0, 0, D]], [0, 1, 0], def.coping));
+  tris.push(...quad([[0, 0, z0], [x0, 0, z0], [x0, 0, z1], [0, 0, z1]], [0, 1, 0], def.coping));
+  tris.push(...quad([[x1, 0, z0], [W, 0, z0], [W, 0, z1], [x1, 0, z1]], [0, 1, 0], def.coping));
+  // basin walls (the inside faces) and the tiled floor
+  tris.push(...quad([[x0, -H, z0], [x1, -H, z0], [x1, 0, z0], [x0, 0, z0]], [0, 0, -1], def.tile));
+  tris.push(...quad([[x0, -H, z1], [x1, -H, z1], [x1, 0, z1], [x0, 0, z1]], [0, 0, 1], def.tile));
+  tris.push(...quad([[x0, -H, z0], [x0, -H, z1], [x0, 0, z1], [x0, 0, z0]], [-1, 0, 0], def.tile));
+  tris.push(...quad([[x1, -H, z0], [x1, -H, z1], [x1, 0, z1], [x1, 0, z0]], [1, 0, 0], def.tile));
+  tris.push(...quad([[x0, -H, z0], [x1, -H, z0], [x1, -H, z1], [x0, -H, z1]], [0, 1, 0], shade(def.tile, 0.82)));
+  // water surface, slightly below the coping
+  const wy = -0.07;
+  tris.push(...quad([[x0, wy, z0], [x1, wy, z0], [x1, wy, z1], [x0, wy, z1]], [0, 1, 0], def.water, 0.86));
+  // a ladder on the south coping
+  const lx = W / 2 + 0.35, rail = '#d8dde0';
+  for (const dx of [-0.22, 0.22]) {
+    tris.push(...quad([[lx + dx - 0.04, -H, z1 + 0.02], [lx + dx + 0.04, -H, z1 + 0.02], [lx + dx + 0.04, 0.5, z1 + 0.02], [lx + dx - 0.04, 0.5, z1 + 0.02]], [0, 0, 1], rail));
+  }
+  for (const y of [-H + 0.12, -H + 0.3, 0.12, 0.3]) {
+    tris.push(...quad([[lx - 0.22, y, z1 + 0.0], [lx + 0.22, y, z1 + 0.0], [lx + 0.22, y + 0.05, z1 + 0.05], [lx - 0.22, y + 0.05, z1 + 0.05]], [0, 0, 1], rail));
+  }
+  const url = render(tris, size, '#b7d3a0');
   cache.set(key, url);
   return url;
 }

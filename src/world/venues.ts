@@ -18,7 +18,9 @@
 //   park:    lawns, a red jogging track, plaza with fountain, picnic grove, fenced playground, chess corner, benches and trees.
 
 import type { ContentDB } from '../content/types';
-import type { Id, Lot, WorldState } from '../core/types';
+import { newId } from '../core/ids';
+import type { Id, Lot, Pool, WorldState } from '../core/types';
+import { defaultRoofSpec } from '../building/exteriorPlans';
 import { buildHouse, finishFor, type HousePlan } from './housekit';
 import { finish } from './lotCheck';
 import { requireLot } from './lots';
@@ -417,6 +419,76 @@ function fencePlayground(content: ContentDB, lot: Lot, dx: number, dz: number): 
 }
 
 // ---------------------------------------------------------------------------------------------
+// Swimming pool (32 x 32): "Quayside Baths"
+//
+//   z\x  6 .. 14 (pool hall) | 16 .. 26 (east wing)
+//    6   north deck             | changing room: lockers, benches, mirrors
+//    8   pool x 7..12, z 8..17  | changing room continues
+//   13                           | ---- wall ---- showers (x 16..19), drying bench
+//   18   south deck              | showers continues
+//   20                           | ---- wall ----
+//   21+  corridor and lobby: benches, vending machine, plants; the front door is at (16,26)
+//   27+  outdoor sun deck with loungers, planters and trees; paved lane to the lot entry
+// ---------------------------------------------------------------------------------------------
+
+function poolPlan(): HousePlan {
+  const furniture: Furn[] = [
+    // changing room
+    ...line('locker-bank', 17, 6, 4, 1, 0), F('bench-low-cushion', 17, 8), F('bench-low-cushion', 18, 8),
+    F('bathroom-mirror', 22, 12, 2), F('bathroom-sink', 21, 12, 2), F('toilet-basic', 24, 6), F('trash-can', 25, 6), F('plant-potted', 25, 8), F('rug-doormat', 15, 9),
+    // showers
+    ...line('shower-stall', 16, 14, 4, 1, 0), F('bench-low-cushion', 22, 14), F('trash-can', 25, 15), F('plant-potted', 25, 18),
+    // lobby: benches, vending, coat rack, plants
+    F('bench-cushion', 7, 24, 2), F('bench-cushion', 8, 24, 2), F('vending-machine', 23, 21, 2), F('vending-machine', 24, 21, 2),
+    F('coat-rack-standing', 14, 24), F('plant-potted', 6, 21), F('plant-potted', 25, 24), F('trash-can', 20, 25),
+    F('lamp-floor-square', 12, 24), F('lamp-floor-square', 18, 24), F('rug-doormat', 16, 26),
+    // outdoor sun deck
+    F('sun-lounger', 7, 28), F('sun-lounger', 9, 28), F('sun-lounger', 20, 28), F('sun-lounger', 22, 28),
+    F('table-patio', 12, 29), F('chair-slatted', 12, 28), F('chair-slatted', 13, 28), F('planter-raised', 6, 27), F('planter-raised', 25, 27),
+    F('shrub-round', 5, 29), F('shrub-round', 26, 29), F('tree-park', 2, 28), F('tree-park', 29, 28),
+    F('lamp-floor-square', 10, 27), F('lamp-floor-square', 21, 27), F('trash-can', 17, 29),
+  ];
+  return {
+    walls: [
+      ...outline(5, 6, 27, 26),
+      [{ x: 15, z: 6 }, { x: 15, z: 20 }], // pool hall | east wing
+      [{ x: 15, z: 13 }, { x: 27, z: 13 }], // changing room | showers
+      [{ x: 15, z: 20 }, { x: 27, z: 20 }], // showers | lobby
+    ],
+    openings: [
+      { dir: 'h', x: 16, z: 26, defId: 'door-modern-glass', flip: true }, // front door into the lobby
+      { dir: 'v', x: 15, z: 9, defId: 'door-flush', flip: true }, // changing room
+      { dir: 'h', x: 22, z: 20, defId: 'door-flush', flip: true }, // showers from the lobby
+      ...openings('window-wide', 'h', 7, 6, 5), ...openings('window-clerestory', 'h', 16, 6, 6), // over the pool and changing room
+      ...openings('window-picture', 'v', 5, 10, 2), ...openings('window-picture', 'v', 5, 22, 2),
+      ...openings('window-picture', 'v', 27, 9, 2), ...openings('window-high', 'v', 27, 16, 2),
+      ...openings('window-tall', 'h', 7, 26, 3), ...openings('window-tall', 'h', 21, 26, 3),
+    ],
+    rooms: [
+      { name: 'pool hall', probe: { x: 10, z: 22 }, wall: P('subway-tile', 1), floor: P('porcelain-large', 4) },
+      { name: 'changing room', probe: { x: 20, z: 9 }, wall: P('two-tone-dado', 3), floor: P('hex-mosaic', 0) },
+      { name: 'showers', probe: { x: 20, z: 16 }, wall: P('subway-tile', 4), floor: P('penny-round-tile', 0) },
+    ],
+    exterior: P('brick-classic', 0),
+    featureWalls: [
+      ...Array.from({ length: 6 }, (_, i) => ({ dir: 'h' as const, x: 7 + i, z: 6, side: 'b' as const, finish: P('tile-zellige', 3) })),
+      ...Array.from({ length: 4 }, (_, i) => ({ dir: 'h' as const, x: 16 + i, z: 13, side: 'b' as const, finish: P('tile-zellige', 4) })),
+    ],
+    floorAreas: [
+      area(6, 7, 6, 25, P('stone-pavers', 3)), // west deck strip
+      area(13, 7, 14, 25, P('stone-pavers', 2)), // east deck strip
+      area(7, 7, 12, 7, P('stone-pavers', 2)), // north deck
+      area(7, 18, 12, 25, P('stone-pavers', 3)), // south deck
+      area(16, 21, 26, 25, P('porcelain-large', 5)), // lobby
+      area(4, 27, 27, 30, P('timber-decking', 0)), // sun deck
+      area(15, 27, 16, 30, P('stone-pavers', 1)), // lane to the entry
+    ],
+    path: { to: { x: 16, z: 27 }, finish: P('stone-pavers', 1) },
+    furniture,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
 // Building
 // ---------------------------------------------------------------------------------------------
 
@@ -449,6 +521,10 @@ const TINTS: Record<VenueType, Tint[]> = {
     T('chair-adirondack', 'wood', ['sage-paint', 'navy-paint', 'whitewash']), T('chair-slatted', 'wood', 'whitewash'), T('table-patio', 'canopy', ['coral', 'teal']),
     T('bench-garden', 'wood', ['honey-oak', 'walnut']), T('swing-set', 'seats', 'mustard'),
   ],
+  pool: [
+    T('bench-cushion', 'fabric', 'teal'), T('bench-low-cushion', 'fabric', 'navy'),
+    T('chair-slatted', 'wood', 'whitewash'), T('table-patio', 'canopy', 'teal'),
+  ],
 };
 
 /**
@@ -470,6 +546,26 @@ export function buildVenueLot(state: WorldState, content: ContentDB, lotId: Id, 
       lot.ground = 'grass';
       const { dx, dz } = planOffset(lot, 32, label);
       fencePlayground(content, lot, dx, dz);
+      break;
+    }
+    case 'pool': {
+      applyPlan(state, content, lot, poolPlan(), 32, label, TINTS.pool);
+      lot.ground = 'paving';
+      const { dx, dz } = planOffset(lot, 32, label);
+      // The 6 x 10 lap pool (x 7..12, z 8..17 in the plan) with a ladder on each short side.
+      const pool: Pool = {
+        id: newId(state, 'pool'), level: 0, x0: 7 + dx, z0: 8 + dz, x1: 12 + dx, z1: 17 + dz,
+        styleId: 'azure-mosaic',
+        ladders: [{ x: 9 + dx, z: 8 + dz, side: 'n' }, { x: 9 + dx, z: 17 + dz, side: 's' }],
+      };
+      (lot.pools ??= {})[pool.id] = pool;
+      // A flat roof over the whole building: the pool hall, changing room, showers and lobby are all indoors.
+      const roofSpec = defaultRoofSpec('flat', content);
+      const roof = {
+        id: newId(state, 'roof'), level: 0, x0: 5 + dx, z0: 6 + dz, x1: 27 + dx, z1: 26 + dz,
+        styleId: roofSpec.styleId, ridge: 'h' as const, pitch: roofSpec.pitch ?? 0, finish: roofSpec.finish,
+      };
+      (lot.roofs ??= {})[roof.id] = roof;
       break;
     }
     default: throw new Error(`${label}: unknown venue type`);

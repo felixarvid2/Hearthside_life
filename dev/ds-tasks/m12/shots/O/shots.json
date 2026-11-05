@@ -1,0 +1,302 @@
+[
+  {
+    "name": "portrait: a picnic blanket and a kite can be put out in the yard",
+    "ok": true,
+    "evidence": "blanket={\"ok\":true,\"x\":2,\"z\":18,\"objectId\":\"obj_4v\",\"funds\":895500} kite={\"ok\":true,\"x\":4,\"z\":18,\"objectId\":\"obj_4x\",\"funds\":892500}"
+  },
+  {
+    "name": "portrait: Build a Snowman is offered in the winter snow",
+    "ok": true,
+    "evidence": "{\"ok\":true}"
+  },
+  {
+    "name": "portrait: the builder reaches the open snow and starts rolling snowballs",
+    "ok": true,
+    "evidence": "{\"ok\":true,\"i\":5,\"anim\":\"exercise\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":8.5,\"z\":17.099999999999998,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":40,\"moodlets\":[]}"
+  },
+  {
+    "name": "portrait: winter snow is lying while the snowman is built",
+    "ok": true,
+    "evidence": "{\"weather\":\"snow\",\"snowCover\":true,\"day\":22}"
+  },
+  {
+    "name": "portrait: the snowman-building screenshot is not blank",
+    "ok": true,
+    "evidence": "290385 bytes"
+  },
+  {
+    "name": "portrait: finishing the action leaves a snowman in the garden",
+    "ok": true,
+    "evidence": "{\"objects\":[{\"id\":\"obj_5r\",\"x\":9,\"z\":16,\"snowman\":{\"madeAt\":32261.75,\"warmDays\":0}}],\"finished\":[{\"id\":\"introduce\",\"result\":\"done\"},{\"id\":\"introduce\",\"result\":\"done\"},{\"id\":\"chat\",\"result\":\"done\"},{\"id\":\"chat\",\"result\":\"cancelled\"},{\"id\":\"goToWork\",\"result\":\"done\"},{\"id\":\"buildSnowman\",\"result\":\"done\"}]}"
+  },
+  {
+    "name": "portrait: the snowman screenshot is not blank",
+    "ok": true,
+    "evidence": "306757 bytes"
+  },
+  {
+    "name": "portrait: Have a Picnic is offered at the blanket in the spring sun",
+    "ok": true,
+    "evidence": "{\"queue\":{\"ok\":true},\"perform\":{\"ok\":true,\"i\":19,\"anim\":\"eat\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":3,\"z\":19,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":35,\"moodlets\":[\"snowDay\",\"freshHome\",\"snowmanBuilt\"]}}"
+  },
+  {
+    "name": "portrait: the picnic screenshot is not blank",
+    "ok": true,
+    "evidence": "320134 bytes"
+  },
+  {
+    "name": "portrait: Fly a Kite is offered at the kite in clear spring weather",
+    "ok": true,
+    "evidence": "{\"queue\":{\"ok\":true},\"perform\":{\"ok\":true,\"i\":7,\"anim\":\"interact\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":4.5,\"z\":18.5,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":45,\"moodlets\":[\"freshHome\",\"snowmanBuilt\",\"lovelyWeather\"]}}"
+  },
+  {
+    "name": "portrait: the kite screenshot is not blank",
+    "ok": true,
+    "evidence": "319091 bytes"
+  },
+  {
+    "name": "portrait: the household can travel to Quayside Baths",
+    "ok": true,
+    "evidence": "{\"ok\":true,\"minutes\":35,\"arrivesAt\":2173.25,\"lotId\":\"lot_3a\",\"name\":\"Quayside Baths\",\"built\":true,\"ids\":[\"per_2w\"]}"
+  },
+  {
+    "name": "portrait: the venue is built and holds a 6 x 10 pool under a roof",
+    "ok": true,
+    "evidence": "{\"here\":true,\"built\":true,\"trip\":null,\"pools\":[{\"x0\":7,\"z0\":8,\"x1\":12,\"z1\":17}],\"roofs\":1,\"objects\":[[\"locker-bank\",4],[\"shower-stall\",4],[\"vending-machine\",2],[\"sun-lounger\",4]]}"
+  },
+  {
+    "name": "portrait: the changing room, showers, vending and sun deck are furnished",
+    "ok": true,
+    "evidence": "[[\"locker-bank\",4],[\"shower-stall\",4],[\"vending-machine\",2],[\"sun-lounger\",4]]"
+  },
+  {
+    "name": "portrait: two household members are swimming in the lap pool",
+    "ok": true,
+    "evidence": "[{\"name\":\"Theo Brennan\",\"anim\":\"swim\",\"stage\":\"swim\",\"posture\":\"standing\",\"inWater\":true,\"outfit\":\"swim\"}]"
+  },
+  {
+    "name": "portrait: the pool-interior screenshot is not blank",
+    "ok": true,
+    "evidence": "324506 bytes"
+  },
+  {
+    "name": "portrait: the map shows the pool venue",
+    "ok": true,
+    "evidence": "pins=15 pool={\"id\":\"lot_3a\",\"label\":\"Quayside Baths, Swimming pool, Open, You are here, Theo, Leon\"}"
+  },
+  {
+    "name": "portrait: the map screenshot is not blank",
+    "ok": true,
+    "evidence": "98025 bytes"
+  },
+  {
+    "name": "portrait: the pool sheet names the venue and the pool",
+    "ok": true,
+    "evidence": "Quayside BathsSwimming pool · 15 Market SquareYou are hereOpen6:00 AM - 9:00 PMA municipal swimming baths: a long lap pool, hot showers and a sun deck for the summer.Here now (2)Theo BrennanYouAt Quay"
+  },
+  {
+    "name": "portrait: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: a picnic blanket and a kite can be put out in the yard",
+    "ok": true,
+    "evidence": "blanket={\"ok\":true,\"x\":2,\"z\":18,\"objectId\":\"obj_4s\",\"funds\":895500} kite={\"ok\":true,\"x\":4,\"z\":18,\"objectId\":\"obj_4u\",\"funds\":892500}"
+  },
+  {
+    "name": "landscape: Build a Snowman is offered in the winter snow",
+    "ok": true,
+    "evidence": "{\"ok\":true}"
+  },
+  {
+    "name": "landscape: the builder reaches the open snow and starts rolling snowballs",
+    "ok": true,
+    "evidence": "{\"ok\":true,\"i\":5,\"anim\":\"exercise\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":8.5,\"z\":17.099999999999998,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":40,\"moodlets\":[]}"
+  },
+  {
+    "name": "landscape: winter snow is lying while the snowman is built",
+    "ok": true,
+    "evidence": "{\"weather\":\"snow\",\"snowCover\":true,\"day\":22}"
+  },
+  {
+    "name": "landscape: the snowman-building screenshot is not blank",
+    "ok": true,
+    "evidence": "246930 bytes"
+  },
+  {
+    "name": "landscape: finishing the action leaves a snowman in the garden",
+    "ok": true,
+    "evidence": "{\"objects\":[{\"id\":\"obj_5n\",\"x\":9,\"z\":16,\"snowman\":{\"madeAt\":32261.75,\"warmDays\":0}}],\"finished\":[{\"id\":\"introduce\",\"result\":\"done\"},{\"id\":\"introduce\",\"result\":\"done\"},{\"id\":\"chat\",\"result\":\"done\"},{\"id\":\"chat\",\"result\":\"cancelled\"},{\"id\":\"goToWork\",\"result\":\"done\"},{\"id\":\"buildSnowman\",\"result\":\"done\"}]}"
+  },
+  {
+    "name": "landscape: the snowman screenshot is not blank",
+    "ok": true,
+    "evidence": "256067 bytes"
+  },
+  {
+    "name": "landscape: Have a Picnic is offered at the blanket in the spring sun",
+    "ok": true,
+    "evidence": "{\"queue\":{\"ok\":true},\"perform\":{\"ok\":true,\"i\":19,\"anim\":\"eat\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":3,\"z\":19,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":35,\"moodlets\":[\"snowDay\",\"freshHome\",\"snowmanBuilt\"]}}"
+  },
+  {
+    "name": "landscape: the picnic screenshot is not blank",
+    "ok": true,
+    "evidence": "280727 bytes"
+  },
+  {
+    "name": "landscape: Fly a Kite is offered at the kite in clear spring weather",
+    "ok": true,
+    "evidence": "{\"queue\":{\"ok\":true},\"perform\":{\"ok\":true,\"i\":7,\"anim\":\"interact\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":4.5,\"z\":18.5,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":45,\"moodlets\":[\"freshHome\",\"snowmanBuilt\",\"lovelyWeather\"]}}"
+  },
+  {
+    "name": "landscape: the kite screenshot is not blank",
+    "ok": true,
+    "evidence": "287020 bytes"
+  },
+  {
+    "name": "landscape: the household can travel to Quayside Baths",
+    "ok": true,
+    "evidence": "{\"ok\":true,\"minutes\":35,\"arrivesAt\":2173.25,\"lotId\":\"lot_3a\",\"name\":\"Quayside Baths\",\"built\":true,\"ids\":[\"per_2w\"]}"
+  },
+  {
+    "name": "landscape: the venue is built and holds a 6 x 10 pool under a roof",
+    "ok": true,
+    "evidence": "{\"here\":true,\"built\":true,\"trip\":null,\"pools\":[{\"x0\":7,\"z0\":8,\"x1\":12,\"z1\":17}],\"roofs\":1,\"objects\":[[\"locker-bank\",4],[\"shower-stall\",4],[\"vending-machine\",2],[\"sun-lounger\",4]]}"
+  },
+  {
+    "name": "landscape: the changing room, showers, vending and sun deck are furnished",
+    "ok": true,
+    "evidence": "[[\"locker-bank\",4],[\"shower-stall\",4],[\"vending-machine\",2],[\"sun-lounger\",4]]"
+  },
+  {
+    "name": "landscape: two household members are swimming in the lap pool",
+    "ok": true,
+    "evidence": "[{\"name\":\"Theo Brennan\",\"anim\":\"swim\",\"stage\":\"swim\",\"posture\":\"standing\",\"inWater\":true,\"outfit\":\"swim\"}]"
+  },
+  {
+    "name": "landscape: the pool-interior screenshot is not blank",
+    "ok": true,
+    "evidence": "281849 bytes"
+  },
+  {
+    "name": "landscape: the map shows the pool venue",
+    "ok": true,
+    "evidence": "pins=15 pool={\"id\":\"lot_3a\",\"label\":\"Quayside Baths, Swimming pool, Open, You are here, Theo\"}"
+  },
+  {
+    "name": "landscape: the map screenshot is not blank",
+    "ok": true,
+    "evidence": "94598 bytes"
+  },
+  {
+    "name": "landscape: the pool sheet names the venue and the pool",
+    "ok": true,
+    "evidence": "Quayside BathsSwimming pool · 12 Cinder LaneYou are hereOpen6:00 AM - 9:00 PMA municipal swimming baths: a long lap pool, hot showers and a sun deck for the summer.Here now (1)Theo BrennanYouAt Quaysi"
+  },
+  {
+    "name": "landscape: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: a picnic blanket and a kite can be put out in the yard",
+    "ok": true,
+    "evidence": "blanket={\"ok\":true,\"x\":2,\"z\":18,\"objectId\":\"obj_4v\",\"funds\":895500} kite={\"ok\":true,\"x\":4,\"z\":18,\"objectId\":\"obj_4x\",\"funds\":892500}"
+  },
+  {
+    "name": "desktop: Build a Snowman is offered in the winter snow",
+    "ok": true,
+    "evidence": "{\"ok\":true}"
+  },
+  {
+    "name": "desktop: the builder reaches the open snow and starts rolling snowballs",
+    "ok": true,
+    "evidence": "{\"ok\":true,\"i\":5,\"anim\":\"exercise\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":8.5,\"z\":17.099999999999998,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":40,\"moodlets\":[]}"
+  },
+  {
+    "name": "desktop: winter snow is lying while the snowman is built",
+    "ok": true,
+    "evidence": "{\"weather\":\"snow\",\"snowCover\":true,\"day\":22}"
+  },
+  {
+    "name": "desktop: the snowman-building screenshot is not blank",
+    "ok": true,
+    "evidence": "903885 bytes"
+  },
+  {
+    "name": "desktop: finishing the action leaves a snowman in the garden",
+    "ok": true,
+    "evidence": "{\"objects\":[{\"id\":\"obj_5s\",\"x\":9,\"z\":16,\"snowman\":{\"madeAt\":32261.75,\"warmDays\":0}}],\"finished\":[{\"id\":\"introduce\",\"result\":\"done\"},{\"id\":\"introduce\",\"result\":\"done\"},{\"id\":\"chat\",\"result\":\"done\"},{\"id\":\"chat\",\"result\":\"cancelled\"},{\"id\":\"watchTv\",\"result\":\"failed\"},{\"id\":\"goToWork\",\"result\":\"done\"},{\"id\":\"buildSnowman\",\"result\":\"done\"}]}"
+  },
+  {
+    "name": "desktop: the snowman screenshot is not blank",
+    "ok": true,
+    "evidence": "870793 bytes"
+  },
+  {
+    "name": "desktop: Have a Picnic is offered at the blanket in the spring sun",
+    "ok": true,
+    "evidence": "{\"queue\":{\"ok\":true},\"perform\":{\"ok\":true,\"i\":19,\"anim\":\"eat\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":3,\"z\":19,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":35,\"moodlets\":[\"snowDay\",\"freshHome\",\"snowmanBuilt\"]}}"
+  },
+  {
+    "name": "desktop: the picnic screenshot is not blank",
+    "ok": true,
+    "evidence": "872207 bytes"
+  },
+  {
+    "name": "desktop: Fly a Kite is offered at the kite in clear spring weather",
+    "ok": true,
+    "evidence": "{\"queue\":{\"ok\":true},\"perform\":{\"ok\":true,\"i\":7,\"anim\":\"interact\",\"loc\":{\"kind\":\"lot\",\"lotId\":\"lot_1\",\"level\":0,\"x\":4.5,\"z\":18.5,\"facing\":0,\"posture\":\"standing\"},\"elapsed\":0.25,\"duration\":45,\"moodlets\":[\"freshHome\",\"snowmanBuilt\",\"lovelyWeather\"]}}"
+  },
+  {
+    "name": "desktop: the kite screenshot is not blank",
+    "ok": true,
+    "evidence": "880083 bytes"
+  },
+  {
+    "name": "desktop: the household can travel to Quayside Baths",
+    "ok": true,
+    "evidence": "{\"ok\":true,\"minutes\":35,\"arrivesAt\":2173.25,\"lotId\":\"lot_3a\",\"name\":\"Quayside Baths\",\"built\":true,\"ids\":[\"per_2w\"]}"
+  },
+  {
+    "name": "desktop: the venue is built and holds a 6 x 10 pool under a roof",
+    "ok": true,
+    "evidence": "{\"here\":true,\"built\":true,\"trip\":null,\"pools\":[{\"x0\":7,\"z0\":8,\"x1\":12,\"z1\":17}],\"roofs\":1,\"objects\":[[\"locker-bank\",4],[\"shower-stall\",4],[\"vending-machine\",2],[\"sun-lounger\",4]]}"
+  },
+  {
+    "name": "desktop: the changing room, showers, vending and sun deck are furnished",
+    "ok": true,
+    "evidence": "[[\"locker-bank\",4],[\"shower-stall\",4],[\"vending-machine\",2],[\"sun-lounger\",4]]"
+  },
+  {
+    "name": "desktop: two household members are swimming in the lap pool",
+    "ok": true,
+    "evidence": "[{\"name\":\"Theo Brennan\",\"anim\":\"swim\",\"stage\":\"swim\",\"posture\":\"standing\",\"inWater\":true,\"outfit\":\"swim\"}]"
+  },
+  {
+    "name": "desktop: the pool-interior screenshot is not blank",
+    "ok": true,
+    "evidence": "1054074 bytes"
+  },
+  {
+    "name": "desktop: the map shows the pool venue",
+    "ok": true,
+    "evidence": "pins=15 pool={\"id\":\"lot_3a\",\"label\":\"Quayside Baths, Swimming pool, Open, You are here, Theo\"}"
+  },
+  {
+    "name": "desktop: the map screenshot is not blank",
+    "ok": true,
+    "evidence": "170161 bytes"
+  },
+  {
+    "name": "desktop: the pool sheet names the venue and the pool",
+    "ok": true,
+    "evidence": "Quayside BathsSwimming pool · 15 Old Mill RoadYou are hereOpen6:00 AM - 9:00 PMA municipal swimming baths: a long lap pool, hot showers and a sun deck for the summer.Here now (1)Theo BrennanYouAt Quay"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
+  }
+]

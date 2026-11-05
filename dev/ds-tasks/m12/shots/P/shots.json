@@ -1,0 +1,182 @@
+[
+  {
+    "name": "portrait: the Build panel has a Pool section with styles and tools",
+    "ok": true,
+    "evidence": "cards=azure-mosaic,lagoon-tile,terracotta-tile modes=draw,remove,ladder,move,add,remove tool={\"kind\":\"pool\",\"styleId\":\"azure-mosaic\"} box={\"w\":346,\"h\":327,\"top\":436,\"bottom\":764}"
+  },
+  {
+    "name": "portrait: the pool styles are selectable cards with a price",
+    "ok": true,
+    "evidence": "azure-mosaic:110x163 lagoon-tile:110x163 terracotta-tile:110x163"
+  },
+  {
+    "name": "portrait: a pool rectangle previews as buildable",
+    "ok": true,
+    "evidence": "Build azure mosaic pool (4 x 3 m) 4 x 3 m (12 m2) $264.00 at {\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20}"
+  },
+  {
+    "name": "portrait: the preview highlight is centred on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":195.00000000000006,\"y\":197.99999999999997,\"visible\":true} offset=0.00,-0.27"
+  },
+  {
+    "name": "portrait: confirming builds one pool with a ladder",
+    "ok": true,
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4k\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+  },
+  {
+    "name": "portrait: the pool costs the posted price",
+    "ok": true,
+    "evidence": "cost=26400 preview=26400"
+  },
+  {
+    "name": "portrait: the built pool is centred on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":195.00000000000006,\"y\":458.49999999999994,\"visible\":true} offset=0.00,0.04"
+  },
+  {
+    "name": "portrait: a household member is swimming in the built pool",
+    "ok": true,
+    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":84,\"hygiene\":82}"
+  },
+  {
+    "name": "portrait: the swimmer breaks the surface (head above, body under)",
+    "ok": true,
+    "evidence": "bones y [-0.223,0.055] root=0.055 xz [13.376,15.74],[19.247,19.754]"
+  },
+  {
+    "name": "portrait: the swimmer is framed on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":195.00000000000006,\"y\":458.5,\"visible\":true} offset=0.00,0.04"
+  },
+  {
+    "name": "portrait: Get Out is offered while swimming",
+    "ok": true,
+    "evidence": "[{\"id\":\"getOutOfPool\",\"enabled\":true}]"
+  },
+  {
+    "name": "portrait: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "landscape: the Build panel has a Pool section with styles and tools",
+    "ok": true,
+    "evidence": "cards=azure-mosaic,lagoon-tile,terracotta-tile modes=draw,remove,ladder,move,add,remove tool={\"kind\":\"pool\",\"styleId\":\"azure-mosaic\"} box={\"w\":330,\"h\":298,\"top\":170,\"bottom\":468}"
+  },
+  {
+    "name": "landscape: the pool styles are selectable cards with a price",
+    "ok": true,
+    "evidence": "azure-mosaic:162x64 lagoon-tile:162x64 terracotta-tile:162x64"
+  },
+  {
+    "name": "landscape: a pool rectangle previews as buildable",
+    "ok": true,
+    "evidence": "Build azure mosaic pool (4 x 3 m) 4 x 3 m (12 m2) $264.00 at {\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20}"
+  },
+  {
+    "name": "landscape: the preview highlight is centred on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":240.00000000000003,\"y\":191,\"visible\":true} offset=-0.22,-0.01"
+  },
+  {
+    "name": "landscape: confirming builds one pool with a ladder",
+    "ok": true,
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4m\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+  },
+  {
+    "name": "landscape: the pool costs the posted price",
+    "ok": true,
+    "evidence": "cost=26400 preview=26400"
+  },
+  {
+    "name": "landscape: the built pool is centred on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":422,\"y\":181.5,\"visible\":true} offset=0.00,-0.03"
+  },
+  {
+    "name": "landscape: a household member is swimming in the built pool",
+    "ok": true,
+    "evidence": "Theo Brennan anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":80,\"hygiene\":84}"
+  },
+  {
+    "name": "landscape: the swimmer breaks the surface (head above, body under)",
+    "ok": true,
+    "evidence": "bones y [-0.207,0.055] root=0.055 xz [13.376,15.746],[19.25,19.75]"
+  },
+  {
+    "name": "landscape: the swimmer is framed on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":422,\"y\":181.49999999999997,\"visible\":true} offset=0.00,-0.03"
+  },
+  {
+    "name": "landscape: Get Out is offered while swimming",
+    "ok": true,
+    "evidence": "[{\"id\":\"getOutOfPool\",\"enabled\":true}]"
+  },
+  {
+    "name": "landscape: no page errors",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "name": "desktop: the Build panel has a Pool section with styles and tools",
+    "ok": true,
+    "evidence": "cards=azure-mosaic,lagoon-tile,terracotta-tile modes=draw,remove,ladder,move,add,remove tool={\"kind\":\"pool\",\"styleId\":\"azure-mosaic\"} box={\"w\":348,\"h\":313,\"top\":194,\"bottom\":507}"
+  },
+  {
+    "name": "desktop: the pool styles are selectable cards with a price",
+    "ok": true,
+    "evidence": "azure-mosaic:111x149 lagoon-tile:111x149 terracotta-tile:111x149"
+  },
+  {
+    "name": "desktop: a pool rectangle previews as buildable",
+    "ok": true,
+    "evidence": "Build azure mosaic pool (4 x 3 m) 4 x 3 m (12 m2) $264.00 at {\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20}"
+  },
+  {
+    "name": "desktop: the preview highlight is centred on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":445.00000000000006,\"y\":356,\"visible\":true} offset=-0.15,-0.01"
+  },
+  {
+    "name": "desktop: confirming builds one pool with a ladder",
+    "ok": true,
+    "evidence": "ok pools=1 pool={\"id\":\"pool_4m\",\"x0\":13,\"z0\":18,\"x1\":16,\"z1\":20,\"styleId\":\"azure-mosaic\",\"ladders\":[{\"x\":13,\"z\":19,\"side\":\"w\"}]}"
+  },
+  {
+    "name": "desktop: the pool costs the posted price",
+    "ok": true,
+    "evidence": "cost=26400 preview=26400"
+  },
+  {
+    "name": "desktop: the built pool is centred on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":640,\"y\":346.5,\"visible\":true} offset=0.00,-0.02"
+  },
+  {
+    "name": "desktop: a household member is swimming in the built pool",
+    "ok": true,
+    "evidence": "Sasha Okafor anim=swim posture=standing outfit=swim head=swimInPool stage=swim needs={\"fun\":80,\"hygiene\":75}"
+  },
+  {
+    "name": "desktop: the swimmer breaks the surface (head above, body under)",
+    "ok": true,
+    "evidence": "bones y [-0.243,0.055] root=0.055 xz [13.379,15.731],[19.236,19.76]"
+  },
+  {
+    "name": "desktop: the swimmer is framed on screen",
+    "ok": true,
+    "evidence": "screen={\"x\":640,\"y\":346.5,\"visible\":true} offset=0.00,-0.02"
+  },
+  {
+    "name": "desktop: Get Out is offered while swimming",
+    "ok": true,
+    "evidence": "[{\"id\":\"getOutOfPool\",\"enabled\":true}]"
+  },
+  {
+    "name": "desktop: no page errors",
+    "ok": true,
+    "evidence": ""
+  }
+]

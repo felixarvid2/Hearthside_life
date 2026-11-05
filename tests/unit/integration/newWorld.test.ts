@@ -51,7 +51,7 @@ describe('createNewWorld', () => {
   it('builds a valid, furnished starter home and neighbour house', () => {
     const s = world('guided');
     const home = s.lots[s.activeLotId]!;
-    expect(Object.keys(s.lots)).toHaveLength(14); // the home, the house next door and twelve generated lots (Milestone 7)
+    expect(Object.keys(s.lots)).toHaveLength(15); // the home, the house next door and thirteen generated lots (Milestone 7)
     expect([home.width, home.depth]).toEqual([24, 24]);
     expect(home.entry).toEqual({ x: 12, z: 23, level: 0 });
     expect(home.address).toMatch(/^\d+ [A-Z][a-z]+ [A-Z][a-z]+$/);
