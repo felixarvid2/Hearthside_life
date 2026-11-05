@@ -11,7 +11,13 @@ import { rotateLocal, rotatedSize, rotationOriginShift, rotYaw } from '../core/g
 import { edgeKey } from '../core/ids';
 import type { Id, Lot, PlacedObject, WorldState } from '../core/types';
 import { levelY } from '../world/levels';
+import { foodColor, mealDomeScale } from './handProps';
 import { disposePlaceholder, placeholderModel, type ObjectAssets } from './objectAssets';
+import { createObjectAnim, type ObjectAnim } from './objectAnim';
+import { objectUses, type ObjectUse } from './objectUse';
+
+/** Shared empty use list: most objects have none each frame, so this must not allocate. */
+const NO_USES: readonly ObjectUse[] = [];
 
 interface ObjEntry {
   id: Id;
@@ -30,6 +36,8 @@ interface ObjEntry {
   condSig: string;
   cond: THREE.Group | null;
   anim: Array<{ node: THREE.Object3D; kind: 'spark' | 'bob'; base: number; phase: number }>;
+  /** Milestone 11.5: moving parts and running effects (door pivots, interiors, steam...). */
+  objectAnim: ObjectAnim | null;
 }
 
 interface ItemEntry { id: Id; level: number; sig: string; group: THREE.Group; box: THREE.Box3 }
@@ -157,7 +165,10 @@ export class ObjectsView {
       else if (Math.abs(wx - Math.round(wx)) < 1e-6) wallId = edgeKey(o.level, 'v', Math.round(wx), Math.floor(wz));
     }
     const isLamp = def.subcategory?.includes('lamp') === true || def.tags.includes('lamp');
-    const e: ObjEntry = { id: o.id, level: o.level, sig, group: g, model, placeholder, def, box, wallId, isLamp, condSig: '', cond: null, anim: [] };
+    // No parts/interiors over a loading or missing placeholder: sync rebuilds the entry with the real model.
+    const objectAnim = model && !placeholder ? createObjectAnim(def, model, this.content) : null;
+    if (objectAnim) g.add(objectAnim.root);
+    const e: ObjEntry = { id: o.id, level: o.level, sig, group: g, model, placeholder, def, box, wallId, isLamp, condSig: '', cond: null, anim: [], objectAnim };
     g.visible = o.id !== this.hiddenId && o.level <= this.activeLevel && !(wallId && this.isLowered(wallId));
     this.objects.set(o.id, e);
     this.group.add(g);
@@ -294,12 +305,17 @@ export class ObjectsView {
     e.group.add(g);
   }
 
-  /** Per-frame flicker and bob of condition overlays (still when motion is reduced). */
-  animate(dt: number, reducedMotion: boolean): void {
+  /**
+   * Per-frame flicker/bob of condition overlays and (Milestone 11.5) moving parts driven by `objectUses`.
+   * `frame` carries the simulation clock; openness is tweened in game minutes, and running effects advance with the
+   * game clock too (capped at 3x real time), so they pause and speed up with the game.
+   */
+  animate(dt: number, reducedMotion: boolean, frame?: { state: WorldState; now: number }): void {
     this.animT += dt;
     const t = this.animT;
+    const uses = frame ? objectUses(frame.state) : null;
     for (const e of this.objects.values()) {
-      if (e.anim.length === 0 || !e.group.visible) continue;
+      if (!e.group.visible) continue;
       for (const a of e.anim) {
         if (a.kind === 'bob') a.node.position.y = reducedMotion ? a.base : a.base + 0.04 * Math.sin(t * 2 + a.phase);
         else {
@@ -308,11 +324,13 @@ export class ObjectsView {
           sprite.material.opacity = 0.15 + 0.85 * Math.min(1, f * 1.6);
         }
       }
+      if (frame && e.objectAnim) e.objectAnim.update(uses?.get(e.id) ?? NO_USES, frame.now, dt, reducedMotion);
     }
   }
 
   private removeEntry(e: ObjEntry): void {
     this.clearCondition(e);
+    e.objectAnim?.dispose();
     if (e.model) {
       if (e.model.userData.placeholder) disposePlaceholder(e.model);
       else this.assets.release(e.model);
@@ -429,7 +447,7 @@ export class ObjectsView {
         g.add(plate);
         const food = new THREE.Mesh(this.foodGeo, this.foodMaterial(it.recipeId));
         food.position.y = 0.025;
-        food.scale.set(1, 0.55 + 0.1 * Math.min(4, it.portions), 1);
+        food.scale.set(1, mealDomeScale(it.portions), 1);
         g.add(food);
         if (it.portions > 1) {
           const extra = new THREE.Mesh(this.foodGeo, this.foodMaterial(it.recipeId));
@@ -471,10 +489,8 @@ export class ObjectsView {
   private foodMaterial(recipeId: string): THREE.MeshStandardMaterial {
     let m = this.foodMats.get(recipeId);
     if (m) return m;
-    let h = 0;
-    for (const ch of recipeId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    const palette = ['#d9a441', '#c8553d', '#8fae4a', '#e0c07a', '#b5653a', '#f0d9a0'];
-    m = new THREE.MeshStandardMaterial({ color: palette[h % palette.length], roughness: 0.75 });
+    // the same recipe colour as the plate in hand (handProps.foodColor)
+    m = new THREE.MeshStandardMaterial({ color: foodColor(recipeId), roughness: 0.75 });
     this.foodMats.set(recipeId, m);
     return m;
   }
@@ -528,6 +544,9 @@ export class ObjectsView {
   hasModel(id: Id): boolean { const e = this.objects.get(id); return !!e && !e.placeholder; }
 
   boxOf(id: Id): THREE.Box3 | null { return this.objects.get(id)?.box ?? this.items.get(id)?.box ?? null; }
+
+  /** The placed object's group (rot-0 local space; visibility already follows level, cutaway and hiding). */
+  rootOf(id: Id): THREE.Object3D | null { return this.objects.get(id)?.group ?? null; }
 
   dispose(): void {
     this.clear();

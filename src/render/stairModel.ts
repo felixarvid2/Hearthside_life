@@ -8,6 +8,7 @@
 
 import * as THREE from 'three';
 import { LEVEL_HEIGHT } from '../world/levels';
+import { outdoorModel, outdoorThumb } from './outdoorModels';
 
 export type ProceduralBuilder = () => THREE.Group;
 
@@ -36,6 +37,8 @@ function box(w: number, h: number, d: number, x: number, y: number, z: number, m
 export function proceduralModel(asset: string): THREE.Group | null {
   const custom = registry.get(asset);
   if (custom) return custom();
+  const outdoor = outdoorModel(asset);
+  if (outdoor) return outdoor;
   const straight = /^proc:stair-straight-(\d)x(\d)$/.exec(asset);
   if (straight) return straightStair(Number(straight[1]), Number(straight[2]));
   const spiral = /^proc:stair-spiral-(\d)$/.exec(asset);
@@ -109,6 +112,8 @@ function spiralStair(length: number): THREE.Group {
 
 /** Inline SVG picture of a stair for the catalog (there is no GLB thumbnail). */
 export function proceduralThumb(asset: string): string {
+  const outdoor = outdoorThumb(asset);
+  if (outdoor) return outdoor;
   const spiral = asset.includes('spiral');
   const body = spiral
     ? '<circle cx="48" cy="52" r="26" fill="#d7b087"/><path d="M48 52 L48 26 A26 26 0 0 1 74 52Z" fill="#b98a5c"/><circle cx="48" cy="52" r="5" fill="#f1ece3"/>'

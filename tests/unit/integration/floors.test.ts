@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { BuildTool } from '../../../src/game/api';
-import type { FinishRef } from '../../../src/core/types';
+import type { FinishRef, Person } from '../../../src/core/types';
 import { tileKey } from '../../../src/core/ids';
 import type { GameCore } from '../../../src/game/GameCore';
 import { atDayMinute } from '../../../src/core/clock';
@@ -31,6 +31,19 @@ function twoStorey(seed = 21): GameCore {
   expect(placed, JSON.stringify(placed)).toMatchObject({ ok: true });
   room({ kind: 'room', floor: OAK }, { x: 7, z: 0 }, { x: 15, z: 4 }, 1);
   return core;
+}
+
+/**
+ * Advances until the queued walk ends. Autonomy runs in the same tick the walk finishes and may queue a
+ * follow-up - since Milestone 12 a member upstairs who decides to cook walks down to the stove - so wait for
+ * the goTo itself and drop whatever the walker picked up afterwards, leaving them where they were sent.
+ */
+function walk(core: GameCore, person: Person, onTick?: () => void): void {
+  for (let i = 0; i < 4000 && person.queue.some((a) => a.interactionId === 'goHere'); i++) {
+    core.advanceTicks(1);
+    onTick?.();
+  }
+  for (const a of [...person.queue]) core.cancel(person.id, a.id);
 }
 
 describe('floors through GameCore', () => {
@@ -69,22 +82,21 @@ describe('floors through GameCore', () => {
     expect(person.location.kind === 'lot' && person.location.level).toBe(0);
     // first into the annex, then up
     expect(core.goTo(person.id, { x: 12, z: 2 })).toEqual({ ok: true });
-    for (let i = 0; i < 4000 && person.queue.length > 0; i++) core.advanceTicks(1);
+    walk(core, person);
     expect(person.queue).toHaveLength(0);
     expect(core.goTo(person.id, { x: 13, z: 2, level: 1 })).toEqual({ ok: true });
     let maxRise = 0;
     let riseTicks = 0;
     let stepsOnStairs: number[] = [];
     let last = -1;
-    for (let i = 0; i < 4000 && person.queue.length > 0; i++) {
-      core.advanceTicks(1);
+    walk(core, person, () => {
       const loc = person.location;
-      if (loc.kind !== 'lot') continue;
+      if (loc.kind !== 'lot') return;
       const rise = (loc.rise ?? 0) + loc.level * 3;
       if (loc.rise) { riseTicks++; maxRise = Math.max(maxRise, loc.rise); }
       if (last >= 0 && loc.rise) stepsOnStairs.push(Math.abs(rise - last));
       last = loc.rise ? rise : -1;
-    }
+    });
     stepsOnStairs = stepsOnStairs.filter((d) => d > 0);
     expect(person.queue).toHaveLength(0);
     const loc = person.location;
@@ -97,11 +109,11 @@ describe('floors through GameCore', () => {
     expect(Math.max(...stepsOnStairs)).toBeLessThan(0.5);
     // and back down
     expect(core.goTo(person.id, { x: 12, z: 2, level: 0 })).toEqual({ ok: true });
-    for (let i = 0; i < 4000 && person.queue.length > 0; i++) core.advanceTicks(1);
+    walk(core, person);
     const down = person.location;
     expect(down.kind === 'lot' && down.level).toBe(0);
     expect(down.kind === 'lot' && down.rise).toBeUndefined();
-  });
+  }, 20_000); // three walks of up to 4 000 ticks: about 2 s alone, more under parallel load
 
   it('undoing the upper room with somebody upstairs brings them down instead of leaving them in the air', () => {
     const core = twoStorey();
@@ -136,9 +148,9 @@ describe('floors through GameCore', () => {
     core.setMode('live');
     const person = members(s)[0]!;
     expect(core.goTo(person.id, { x: 12, z: 2 })).toEqual({ ok: true });
-    for (let i = 0; i < 4000 && person.queue.length > 0; i++) core.advanceTicks(1);
+    walk(core, person);
     expect(core.goTo(person.id, { x: 13, z: 2, level: 1 })).toEqual({ ok: true });
-    for (let i = 0; i < 4000 && person.queue.length > 0; i++) core.advanceTicks(1);
+    walk(core, person);
     core.setMode('build');
     core.setBuildTool({ kind: 'eraseStairs' });
     const pv = core.buildPreview({ from: { x: 9.5, z: 1.5 }, level: 1 })!;
@@ -201,5 +213,5 @@ describe('floors through GameCore', () => {
     }
     expect(seenLevels.has(1) || maxRise > 0).toBe(true); // somebody went upstairs (the loft has a desk, a sofa and a playroom)
     rec.dispose();
-  });
+  }, 60_000); // three simulated days: about 5 s alone, over the 5 s default under parallel load
 });

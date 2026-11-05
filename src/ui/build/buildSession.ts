@@ -10,6 +10,7 @@
 
 import { formatMoney } from '../../core/money';
 import { isGateDef } from '../../world/fences';
+import { poolContains, poolsOf } from '../../world/pools';
 import type { BuildPoint, BuildPreview, BuildTarget, BuildTool, GameAPI, PickResult, Result, SoundId } from '../../game/api';
 
 /** What the session needs from the interface around it (kept apart so the session has no DOM). */
@@ -31,6 +32,8 @@ export function toolMode(tool: BuildTool | null): ToolMode {
     // Milestone 9 exterior: a fence run is dragged, a gate is tapped on an edge; a roof is dragged (or 'auto'); paint is a tile or a rectangle
     case 'fence': return isGateDef(tool.defId) ? 'click' : 'drag';
     case 'roof': case 'terrain': return tool.shape === 'rect' ? 'drag' : 'click';
+    // Milestone 12: a pool is dragged like a room; draining and ladder edits act on what is under the pointer
+    case 'pool': return 'drag';
     default: return 'click';
   }
 }
@@ -379,7 +382,7 @@ export class BuildSession {
     const mode = toolMode(tool);
     const mouse = kind === 'mouse';
     if (mode === 'drag') {
-      if (((tool.kind === 'floor' || tool.kind === 'eraseFloor' || tool.kind === 'terrain') && tool.shape === 'rect')) {
+      if (tool.kind === 'pool' || ((tool.kind === 'floor' || tool.kind === 'eraseFloor' || tool.kind === 'terrain') && tool.shape === 'rect')) {
         const g = this.ground(x, y);
         if (!g) return true;
         this.target = { from: g, to: g, level: this.level() };
@@ -392,6 +395,11 @@ export class BuildSession {
     if (tool.kind === 'moveOpening' && !tool.openingId) {
       this.flipMode = tool.flip === true;
       if (this.flipMode) this.tapFlip(x, y, pick, mouse); else this.pickOpening(x, y, pick);
+      return true;
+    }
+    // Moving a pool ladder: the first tap picks the ladder up, the second chooses the edge tile to move it to.
+    if (tool.kind === 'poolLadder' && tool.mode === 'move' && !tool.from) {
+      this.pickLadder(x, y);
       return true;
     }
     const t = this.targetAt(tool, x, y, pick);
@@ -424,6 +432,24 @@ export class BuildSession {
     const def = this.api.content.openings[found.defId];
     this.toast(`Picked up ${def?.name ?? 'the opening'}. Tap the wall to move it to.`, 'success', 2600);
     this.sound('select');
+  }
+
+  /** Picks up the pool ladder under the pointer (the next tap chooses where to move it to). */
+  private pickLadder(x: number, y: number): void {
+    const g = this.ground(x, y);
+    const st = this.api.state();
+    const lot = st ? st.lots[st.activeLotId] : undefined;
+    const tile = g ? { x: Math.floor(g.x), z: Math.floor(g.z) } : null;
+    const pool = tile && lot ? poolsOf(lot).find((p) => poolContains(p, tile.x, tile.z)) : undefined;
+    const ladder = pool && tile ? pool.ladders.find((l) => l.x === tile.x && l.z === tile.z) : undefined;
+    const tool = this.api.buildTool();
+    if (!pool || !ladder || tool?.kind !== 'poolLadder') { this.toast('Tap a pool ladder to pick it up.', 'info', 2200); this.sound('error'); return; }
+    const next: BuildTool = { ...tool, poolId: pool.id, from: { x: ladder.x, z: ladder.z } };
+    this.toolKey = JSON.stringify(next);
+    this.api.setBuildTool(next);
+    this.toast('Picked up the ladder. Tap the edge tile to move it to.', 'success', 2600);
+    this.sound('select');
+    this.emit();
   }
 
   private setPickedOpening(openingId: string): void {
@@ -519,6 +545,13 @@ export class BuildSession {
       ];
     }
     const va = this.vertex(a), vb = this.vertex(b);
+    if (tool.kind === 'pool') {
+      // the drag corners are inclusive water tiles: the handles sit on their tile centres
+      return [
+        { id: 'a', x: Math.floor(a.x) + 0.5, z: Math.floor(a.z) + 0.5 },
+        { id: 'b', x: Math.floor(b.x) + 0.5, z: Math.floor(b.z) + 0.5 },
+      ];
+    }
     if (tool.kind === 'room' || tool.kind === 'roof' || (tool.kind === 'eraseWall' && tool.shape === 'rect')) {
       const x0 = Math.min(va.x, vb.x), x1 = Math.max(va.x, vb.x), z0 = Math.min(va.z, vb.z), z1 = Math.max(va.z, vb.z);
       return [{ id: 'c0', x: x0, z: z0 }, { id: 'c1', x: x1, z: z0 }, { id: 'c2', x: x1, z: z1 }, { id: 'c3', x: x0, z: z1 }];
@@ -564,7 +597,7 @@ export class BuildSession {
       if (quiet) { this.cancelPreviewOnly(); }
       return r;
     }
-    this.sound(tool?.kind === 'floor' ? 'paint' : tool?.kind === 'eraseWall' || tool?.kind === 'eraseOpening' || tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' || tool?.kind === 'eraseStairs' ? 'sell' : 'place');
+    this.sound(tool?.kind === 'floor' ? 'paint' : tool?.kind === 'eraseWall' || tool?.kind === 'eraseOpening' || tool?.kind === 'eraseFloor' || tool?.kind === 'deleteRoom' || tool?.kind === 'eraseStairs' || tool?.kind === 'erasePool' ? 'sell' : 'place');
     const money = (r.cost ?? 0) > 0 ? ` for ${formatMoney(r.cost ?? 0)}` : (r.cost ?? 0) < 0 ? `, ${formatMoney(-(r.cost ?? 0))} back` : '';
     this.toast(`${r.label ?? 'Done'}${money}. Undo is in the panel.`, 'success', 2600);
     this.dropTarget();
@@ -582,6 +615,13 @@ export class BuildSession {
 
   private cancelPreviewOnly(): void {
     this.dropTarget();
+    // Cancel also puts a picked-up ladder back down (the tool keeps its mode).
+    const tool = this.api.buildTool();
+    if (tool?.kind === 'poolLadder' && tool.from) {
+      const next: BuildTool = { ...tool, from: null };
+      this.toolKey = JSON.stringify(next);
+      this.api.setBuildTool(next);
+    }
     this.api.buildCancel();
     this.emit();
   }

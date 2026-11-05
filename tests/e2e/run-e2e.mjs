@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Browser end-to-end check of Hearthside Life (Playwright, headless Chromium with SwiftShader).
 //
-//   node tests/e2e/run-e2e.mjs [--no-build] [--only=desktop,portrait,landscape] [--out=DIR] [--keep]
+//   node tests/e2e/run-e2e.mjs [--no-build] [--only=desktop,portrait,landscape] [--out=DIR] [--keep] [--no-lock]
 //
 // Builds the game (vite build -> tests/e2e/out/dist; screenshots in tests/e2e/out/screenshots, git-ignored), serves it with vite preview on port 5190, then for each viewport
 // (1280x720 desktop, 390x844 portrait touch, 844x390 landscape touch) loads the page, starts a guided game
@@ -10,7 +10,7 @@
 // paint preview, walls up vs cutaway. Fails on page errors, console errors, failed requests, blank canvases.
 //
 // Only one browser runs at a time on this machine: the script re-runs itself under
-// `flock /tmp/hearthside-browser.lock`.
+// `flock /tmp/hearthside-browser.lock`. Pass `--no-lock` only to recover from a stale lock left by an orphaned run.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -26,7 +26,9 @@ const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
 const opt = (name, def) => { const a = args.find((x) => x.startsWith(`--${name}=`)); return a ? a.slice(name.length + 3) : def; };
 
-if (!process.env.HEARTHSIDE_E2E_LOCKED) {
+// `--no-lock` skips the lock only to recover from a stale lock held by an orphaned run (never use it while another
+// browser script is actually running).
+if (!process.env.HEARTHSIDE_E2E_LOCKED && !args.includes('--no-lock')) {
   const r = spawnSync('flock', [LOCK, process.execPath, fileURLToPath(import.meta.url), ...args], {
     stdio: 'inherit', env: { ...process.env, HEARTHSIDE_E2E_LOCKED: '1' },
   });

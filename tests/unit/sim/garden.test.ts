@@ -146,6 +146,8 @@ describe('harvest', () => {
 describe('interactions in the simulation', () => {
   it('plant, water, wait days, harvest: money arrives once and the skill grows', () => {
     const { w, h } = setup();
+    // Garden work is weather-gated (Milestone 12); this test is about growth, not rain, so keep the sky clear.
+    w.state.settings.weather = false;
     const o = place(w.state, w.lot, 'garden-vegpatch', 7, 0);
     h.content.objects['garden-vegpatch'] = GARDEN_OBJECTS.find((d) => d.id === 'garden-vegpatch')!;
     for (const i of GARDEN_INTERACTIONS) h.content.interactions[i.id] = i;

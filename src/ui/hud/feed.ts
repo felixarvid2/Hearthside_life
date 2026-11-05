@@ -7,6 +7,7 @@ import type { FeedEntry, LedgerKind } from '../../core/types';
 import { button, panel, toast, type Panel } from '../kit/components';
 import { h, setChildren } from '../kit/dom';
 import { icon } from '../kit/icons';
+import { forecastLine } from '../../sim/weather';
 import { formatGameTime, formatMoney, personName } from './format';
 import { coalesce, eventToToast, feedToToast, type NotifyContext, type ToastCandidate } from './notify';
 import type { Shell } from './shell';
@@ -26,16 +27,20 @@ export interface ListPanel { panel: Panel; open(): void; close(): void; refresh(
 export function createFeedPanel(sh: Shell, onClosed: () => void): ListPanel {
   const { api } = sh;
   const p = panel({ title: 'Recent events', className: 'feed-panel', initialHeight: 'half', onClose: onClosed });
+  const forecast = h('div', { class: 'feed-forecast' });
   const list = h('ol', { class: 'feed-list', attrs: { 'aria-live': 'polite' } });
-  p.body.append(list);
+  p.body.append(forecast, list);
   let sig = '';
   const refresh = () => {
     if (!p.isOpen()) return;
     const st = api.state();
     const feed = st?.feed ?? [];
-    const s = `${feed.length}:${feed[feed.length - 1]?.id ?? ''}`;
+    const weatherLine = st ? forecastLine(st) : '';
+    const s = `${feed.length}:${feed[feed.length - 1]?.id ?? ''}:${weatherLine}`;
     if (s === sig) return;
     sig = s;
+    forecast.replaceChildren(icon('cloud', 16), h('span', { text: weatherLine }));
+    forecast.hidden = !st;
     if (!st || !feed.length) { list.replaceChildren(h('li', { class: 'pp-empty' }, icon('bell', 22), h('p', { text: 'Nothing has happened yet.' }))); return; }
     list.replaceChildren(...[...feed].reverse().map((f) => h('li', { class: ['feed-item', `feed-${f.kind}`] },
       h('span', { class: 'feed-icon', title: FEED_LABELS[f.kind] ?? 'News' }, icon(FEED_ICONS[f.kind] ?? 'info', 20)),

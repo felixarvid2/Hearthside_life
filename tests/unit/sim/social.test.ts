@@ -3,8 +3,10 @@ import { facingTo } from '../../../src/core/geometry';
 import { pairKey, relKey } from '../../../src/core/ids';
 import { MEMORY_LIMIT } from '../../../src/core/state';
 import type { GameEvent } from '../../../src/core/events';
+import type { Person } from '../../../src/core/types';
+import { candidatesFor } from '../../../src/sim/autonomy';
 import { addMemory, ensureRel } from '../../../src/sim/relationships';
-import { recentUses, socialAcceptance } from '../../../src/sim/social';
+import { personAvailable, recentUses, socialAcceptance } from '../../../src/sim/social';
 import { buildWorld, harness, head, lotLocation, pureCtx, runTicks, runUntil, setNeeds } from './fixtures';
 import type { FixtureWorld, Harness } from './fixtures';
 
@@ -156,6 +158,29 @@ describe('social interactions', () => {
     expect(end).toMatchObject({ result: 'failed', reason: 'Theo walked away.' });
     expect(socials(h)).toHaveLength(0);
     expect(h.sim.reservations()).toEqual([]);
+  });
+});
+
+describe('autonomy off for the played household', () => {
+  it('nobody else can start a conversation with a member, but the player can still order one', () => {
+    // The neighbour Ada is not controlled; Mira and Theo are. With autonomy off Mira waits for orders, so Ada's
+    // own autonomy must not put a conversation (and a forced listener action) on her.
+    const { w, h, ada } = withAda();
+    const ctx = pureCtx(h);
+    const mira = h.holder.state.people[w.mira]!;
+    const adap = h.holder.state.people[ada]!;
+    const partners = (p: Person) =>
+      candidatesFor(pureCtx(h), p).flatMap((c) => (c.req.target?.kind === 'person' ? [c.req.target.personId] : []));
+
+    expect(personAvailable(ctx, mira, adap)).toBe('Mira is waiting for orders.');
+    expect(partners(adap)).not.toContain(w.mira);
+    // An order the player gives (a controlled actor) is unaffected, in either direction.
+    expect(personAvailable(ctx, adap, mira)).toBeNull();
+    expect(partners(mira)).toContain(ada);
+
+    h.holder.state.settings.autonomy = true;
+    expect(personAvailable(pureCtx(h), mira, adap)).toBeNull();
+    expect(partners(adap)).toContain(w.mira);
   });
 });
 

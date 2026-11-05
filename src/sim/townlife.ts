@@ -61,6 +61,7 @@ export function venueWeight(content: ContentDB, p: Person, venueType: string): n
     case 'library': w = 2 * bias('reading') * likes('activity:reading') * likes('topic:books'); break;
     case 'arts': w = 2 * bias('creative') * bias('music') * likes('activity:music') * likes('activity:dance') * likes('topic:music'); break;
     case 'market': w = 2.5 * bias('cookMeal') * likes('activity:cooking') * likes('topic:food'); break;
+    case 'pool': w = 2.2 * bias('active') * likes('activity:fitness') * likes('activity:swim'); break;
     default: break;
   }
   return Math.max(0.2, w);

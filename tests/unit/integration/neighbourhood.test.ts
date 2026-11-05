@@ -1,4 +1,4 @@
-// Milestone 7 neighbourhood generation: twelve generated lots and the named NPC households that live in them are created
+// Milestone 7 neighbourhood generation: thirteen generated lots and the named NPC households that live in them are created
 // exactly once, with names, traits, jobs and relationships, and then never rerolled - not by lot changes, not by saving
 // and loading. Saves from before the milestone get the same neighbourhood generated around what they already have.
 
@@ -172,7 +172,7 @@ describe('saves from before the neighbourhood', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b)); // deterministic
     expect(ensureNeighbourhood(a, db)).toBe(false); // exactly once
 
-    expect(Object.keys(a.lots)).toHaveLength(14);
+    expect(Object.keys(a.lots)).toHaveLength(15);
     expect(a.rng).toEqual(rngBefore);
     expect(npcHouseholds(a)).toHaveLength(4);
     expect(npcHouseholds(a).map((h) => h.name)).toEqual(npcHouseholds(original).map((h) => h.name));
@@ -191,12 +191,12 @@ describe('saves from before the neighbourhood', () => {
     core.replaceState(cloneState(old));
     core.setMode('live');
     const s = core.state()!;
-    expect(Object.keys(s.lots)).toHaveLength(14);
+    expect(Object.keys(s.lots)).toHaveLength(15);
     expect(s.neighbourhood?.nextDoorHouseholdId).toBe(Object.values(old.households).find((h) => !h.isPlayable)!.id); // the people next door keep their number on the phone
     const imp = coreWithoutSaves();
     const json = JSON.stringify({ format: 'hearthside-world', schemaVersion: 1, exportedAt: 'x', packs: [], world: old });
     expect((await imp.importWorld(json)).ok).toBe(true);
-    expect(Object.keys(imp.state()!.lots)).toHaveLength(14);
+    expect(Object.keys(imp.state()!.lots)).toHaveLength(15);
     const members = s.households[s.activeHouseholdId]!.memberIds;
     const cafe = Object.values(s.lots).find((l) => l.venueType === 'cafe')!;
     expect(core.travel(members, cafe.id)).toMatchObject({ ok: true });

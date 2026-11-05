@@ -21,6 +21,7 @@ import type { Id, Lot, PlacedObject, Rot, WorldState } from '../core/types';
 import { levelSeeds, MAX_LEVELS, stairGeometry, stairHoles } from './levels';
 import { hasLevel, inLot } from './lots';
 import { blocksMovement, buildNavGrid, reachableMask, type NavGrid } from './navgrid';
+import { poolContains, poolsOf } from './pools';
 import { slotAccess, standTiles, type AccessContext } from './slots';
 import { edgeBetween, edgeOnSide, edgeTiles, openingEdgeKeys, openingOnWall, type TileSide } from './walls';
 
@@ -90,6 +91,12 @@ export function validatePlacement(state: WorldState, content: ContentDB, lotId: 
   const tiles = footprintTiles(req.x, req.z, def.footprint, req.rot);
   if (tiles.some((t) => !inLot(lot, t.x, t.z))) return fail('It does not fit on the lot.', tiles);
   const fp = new Set(tiles.map(keyOf));
+
+  // Milestone 12: nothing stands in a pool.
+  if (req.level === 0 && tiles.some((t) => poolsOf(lot).some((p) => poolContains(p, t.x, t.z)))) {
+    reasons.push('It would stand in the pool.');
+    return { ok: false, reasons, tiles, warnings };
+  }
 
   // Walls inside the footprint.
   for (const t of tiles) {

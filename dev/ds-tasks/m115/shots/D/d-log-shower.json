@@ -1,0 +1,1586 @@
+{
+  "checks": [
+    {
+      "name": "portrait: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "portrait: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "portrait: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "landscape: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "landscape: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "landscape: no page errors",
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "name": "desktop: takeShower is queueable at the shower",
+      "ok": true,
+      "evidence": "queued"
+    },
+    {
+      "name": "desktop: takeShower reaches the shower",
+      "ok": true,
+      "evidence": "at 0.25 min"
+    },
+    {
+      "name": "desktop: no page errors",
+      "ok": true,
+      "evidence": ""
+    }
+  ],
+  "shots": [
+    "portrait-shower-running-k0.png",
+    "portrait-shower-running-k1.png",
+    "portrait-shower-running-k2.png",
+    "portrait-shower-running-k3.png",
+    "portrait-shower-running-w0.png",
+    "portrait-shower-running-w1.png",
+    "portrait-shower-running-w2.png",
+    "portrait-shower-running-w3.png",
+    "portrait-shower-running-d0.png",
+    "portrait-shower-running-d1.png",
+    "portrait-shower-running-d2.png",
+    "portrait-shower-running-d3.png",
+    "landscape-shower-running-k0.png",
+    "landscape-shower-running-k1.png",
+    "landscape-shower-running-k2.png",
+    "landscape-shower-running-k3.png",
+    "landscape-shower-running-w0.png",
+    "landscape-shower-running-w1.png",
+    "landscape-shower-running-w2.png",
+    "landscape-shower-running-w3.png",
+    "landscape-shower-running-d0.png",
+    "landscape-shower-running-d1.png",
+    "landscape-shower-running-d2.png",
+    "landscape-shower-running-d3.png",
+    "desktop-shower-running-k0.png",
+    "desktop-shower-running-k1.png",
+    "desktop-shower-running-k2.png",
+    "desktop-shower-running-k3.png",
+    "desktop-shower-running-w0.png",
+    "desktop-shower-running-w1.png",
+    "desktop-shower-running-w2.png",
+    "desktop-shower-running-w3.png",
+    "desktop-shower-running-d0.png",
+    "desktop-shower-running-d1.png",
+    "desktop-shower-running-d2.png",
+    "desktop-shower-running-d3.png"
+  ],
+  "viewports": [
+    {
+      "name": "portrait",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "setup": {
+        "personId": "per_2w",
+        "others": [],
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "isMobile": true,
+      "setup": {
+        "personId": "per_2w",
+        "others": [],
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 720,
+      "isMobile": false,
+      "setup": {
+        "personId": "per_2w",
+        "others": [],
+        "fridgeId": "obj_x",
+        "stoveId": "obj_z",
+        "wardrobeId": "obj_1j",
+        "showerId": "obj_1c",
+        "fridgeAt": [
+          12.5,
+          11.35
+        ]
+      }
+    }
+  ],
+  "aims": [
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-k3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 531
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 390
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 531
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-w3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 506
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 414
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 506
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "portrait",
+      "label": "shower-running-d3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 139,
+        "bottom": 66
+      },
+      "canvas": [
+        390,
+        844
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 195,
+        "y": 542
+      },
+      "objTopScreen": {
+        "x": 195,
+        "y": 379
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 195,
+        "y": 542
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-k3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-w3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 229
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 137
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 229
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "landscape",
+      "label": "shower-running-d3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        844,
+        390
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 422,
+        "y": 254
+      },
+      "objTopScreen": {
+        "x": 422,
+        "y": 113
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 422,
+        "y": 254
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-k3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 130,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 419
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 278
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 419
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-w3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 85,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 394
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 302
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 394
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d0",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 45,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d1",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 135,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d2",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 225,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    },
+    {
+      "viewport": "desktop",
+      "label": "shower-running-d3",
+      "target": [
+        12.5,
+        5.5
+      ],
+      "ppm": 150,
+      "yawDeg": 315,
+      "insets": {
+        "left": 0,
+        "right": 0,
+        "top": 62,
+        "bottom": 89
+      },
+      "canvas": [
+        1280,
+        720
+      ],
+      "obj": [
+        12,
+        5
+      ],
+      "objScreen": {
+        "x": 640,
+        "y": 430
+      },
+      "objTopScreen": {
+        "x": 640,
+        "y": 267
+      },
+      "person": [
+        12.5,
+        5.5
+      ],
+      "personScreen": {
+        "x": 640,
+        "y": 430
+      }
+    }
+  ],
+  "diag": []
+}

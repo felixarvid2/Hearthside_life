@@ -1,4 +1,4 @@
-// Neighbourhood generation (Milestone 7): the twelve generated lot records and the named NPC households that live in
+// Neighbourhood generation (Milestone 7): the thirteen generated lot records and the named NPC households that live in
 // them, created exactly once per world. A new world generates it inside createNewWorld; an older save gets one when it
 // is loaded (ensureNeighbourhood), with the player's household, home lot and next-door neighbours left untouched.
 //

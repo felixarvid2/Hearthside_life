@@ -342,6 +342,12 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       case 'terrain': return exteriorHint(tool, t);
       case 'stairs': return t ? 'Tap where the stairs go, check the preview, then confirm. Turn changes which way they climb.' : 'Click where the stairs go. R turns them.';
       case 'eraseStairs': return t ? 'Tap a staircase, then confirm to take it out.' : 'Click a staircase to take it out.';
+      // Milestone 12: pools
+      case 'pool': return t ? 'Drag a rectangle on the ground for the pool, then confirm.' : 'Drag a rectangle on the ground; let go to build the pool. Esc cancels.';
+      case 'erasePool': return t ? 'Tap a pool, then confirm to drain it.' : 'Click a pool to drain it.';
+      case 'poolLadder': return tool.mode === 'move'
+        ? (tool.from ? 'Now tap the edge tile to move the ladder to.' : 'Tap a ladder to move it.')
+        : tool.mode === 'add' ? 'Tap an edge tile to add a ladder.' : 'Tap a ladder to remove it.';
     }
   }
 
@@ -369,7 +375,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       status.title = title;
       setChildren(status, icon(iconName, 20), h('span', { class: 'bb-build-text' }, h('strong', { text: title }), detail ? h('span', { class: 'bb-build-detail', text: detail }) : null));
     }
-    const erasing = s.tool?.kind === 'eraseWall' || s.tool?.kind === 'eraseOpening' || s.tool?.kind === 'eraseFloor' || s.tool?.kind === 'deleteRoom' || s.tool?.kind === 'eraseStairs' || s.tool?.kind === 'eraseFence' || s.tool?.kind === 'eraseRoof';
+    const erasing = s.tool?.kind === 'eraseWall' || s.tool?.kind === 'eraseOpening' || s.tool?.kind === 'eraseFloor' || s.tool?.kind === 'deleteRoom' || s.tool?.kind === 'eraseStairs' || s.tool?.kind === 'eraseFence' || s.tool?.kind === 'eraseRoof' || s.tool?.kind === 'erasePool';
     const verb = erasing ? 'Demolish' : 'Build';
     const cost = pv && pv.ok && !pv.unchanged ? pv.cost : 0;
     const long = cost > 0 ? `${verb} for ${formatMoney(cost)}` : cost < 0 ? `${verb}, ${formatMoney(-cost)} back` : verb;

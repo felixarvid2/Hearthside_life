@@ -15,12 +15,14 @@ import { BUILTIN_INTERACTIONS, interactionDef, lotLoc, lotObjects, objectRef, ve
 import { NEED_LABELS } from './needs';
 import { CARE_IDS, careProblem } from './care';
 import { interactionStageReason, socialStageReason, stageAllows } from './gating';
+import { outdoorGateReason } from './weather';
 import { isDependentStage } from '../core/lifeStages';
 import { schoolDayOn } from './school';
 import { socialFit } from './autonomy';
 import { hasRecentMemory, knownPeople, peekRel } from './relationships';
 import { socialAcceptance } from './social';
 import { QUEUE_MAX, SERVICE_MIN_WEAR } from './tuning';
+import { poolAt } from '../world/pools';
 import type { ActionData, ActionRequest, InteractionOption } from './types';
 
 const OUTFIT_LABELS: Record<OutfitCategory, string> = {
@@ -54,6 +56,10 @@ export function requestReason(ctx: SimCtx, p: Person, req: ActionRequest, transi
   const gateDef = interactionDef(ctx, req.interactionId);
   const gate = gateDef ? interactionStageReason(gateDef, p) : null;
   if (gate) return gate;
+  // Seasons and weather (Milestone 12): options stay listed but greyed with a reason, autonomy skips them.
+  const socialDef = gateDef ? undefined : ctx.content.socials[req.interactionId];
+  const weather = outdoorGateReason((gateDef ?? socialDef)?.weather, ctx, p);
+  if (weather) return weather;
   const r = beh.check(ctx, p, a);
   if (r || !transient) return r;
   const def = interactionDef(ctx, req.interactionId);
@@ -124,6 +130,20 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
       return out;
     }
     case 'tile': {
+      // Milestone 12: pool water offers swimming instead of walking (water is never walkable).
+      const loc = lotLoc(p);
+      const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+      const pool = lot && (target.level ?? 0) === 0 ? poolAt(lot, 0, target.x, target.z) : undefined;
+      const out: InteractionOption[] = [];
+      if (pool) {
+        for (const id of ['swimInPool', 'relaxInPool'] as const) {
+          const def = interactionDef(ctx, id);
+          if (!def || def.status !== 'ready') continue;
+          out.push(option(ctx, p, id, def.name, def.icon, 'move', target, { poolId: pool.id }));
+        }
+        if (isSwimming(p)) out.push(option(ctx, p, 'getOutOfPool', 'Get Out', 'move', 'move', target));
+        return out;
+      }
       const def = interactionDef(ctx, 'goHere')!;
       return [option(ctx, p, def.id, def.name, def.icon, 'move', target)];
     }
@@ -185,6 +205,12 @@ function socialOptions(ctx: SimCtx, p: Person, otherId: string): InteractionOpti
   return out;
 }
 
+/** True while a pool action is the running head of the queue. */
+function isSwimming(p: Person): boolean {
+  const head = p.queue[0];
+  return !!head && head.phase !== 'queued' && (head.interactionId === 'swimInPool' || head.interactionId === 'relaxInPool');
+}
+
 function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
   const out: InteractionOption[] = [];
   const self: ActionInstance['target'] = { kind: 'self' };
@@ -194,6 +220,11 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
   for (const def of defs) {
     const beh = def.behavior ?? 'generic';
     if (beh === 'care' || !stageAllows(def, p.lifeStage)) continue;
+    // Get Out only exists for someone who is actually in the water (sim/pool.ts).
+    if (beh === 'getOut') {
+      if (isSwimming(p)) out.push(option(ctx, p, def.id, def.name, def.icon, 'self', self));
+      continue;
+    }
     if (beh === 'goToSchool' && !p.school) continue;
     if (beh === 'openAdopt') { out.push({ ...option(ctx, p, def.id, def.name, def.icon, 'self', self), section: 'phone' }); continue; }
     if (beh === 'leaveLot' || def.id === 'leaveLot') continue;

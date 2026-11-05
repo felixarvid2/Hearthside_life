@@ -11,7 +11,7 @@ import { placeOf, type PlaceKind } from '../../sim/places';
 
 // ---- icons, marks and one-line status ----
 
-const VENUE_ICONS: Record<string, string> = { park: 'park', cafe: 'cafe', gym: 'gym', library: 'book', arts: 'arts', market: 'market' };
+const VENUE_ICONS: Record<string, string> = { park: 'park', cafe: 'cafe', gym: 'gym', library: 'book', arts: 'arts', market: 'market', pool: 'pool' };
 
 /** Icon name (src/ui/kit/icons.ts) for a lot: its venue type, or a house. */
 export function lotIconName(lot: Pick<LotInfo, 'kind' | 'venueType'>): string {

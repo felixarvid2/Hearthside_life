@@ -6,10 +6,11 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-9 and 11 complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see CONTINUATION.md; M11 on
-PR #6). **Milestone 10 - Complete catalogs is in progress: the surface catalog is complete** (360 wall finishes,
-200 floor designs). The 560 furnishings and the full creator catalog are still open. Next: the rest of Milestone 10, or
-**Milestone 12 - Environment and venues**.
+**Milestones 1-9, 11, 11.5 and 12 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see
+CONTINUATION.md; M11 on PR #6; M11.5 and M12 verified 2026-11-05). **Milestone 10 - Complete catalogs is the only
+milestone still open: the surface catalog is complete** (360 wall finishes, 200 floor designs). The 560 furnishings
+and the full creator catalog are still open. Next: the rest of Milestone 10, then **Milestone 13 - Release
+preparation**.
 
 ## Completed-project targets (brief section 2)
 
@@ -52,6 +53,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 | 9 | Multiple floors and exteriors | Three floors, stairs, roofs, balconies, gardens | Structural tools, multi-floor houses | 2 |
 | 10 | Complete catalogs | Broad, coherent decoration and character content | 360 walls, 200 floors, 560 furnishings, full creator catalog | 2, 3, 9 |
 | 11 | Complete progression and social scope | Long-term play, varied goals | 12 careers, 16 skills, 40 traits, 12 aspirations, 40 socials | 5, 6 |
+| 11.5 | Animations and activity feedback | Actions read visually: moving appliance parts, hand-held props and food, screens that show the activity, a progress pill above the head | Fridge/oven/wardrobe/shower states, props for eating/reading/phone, computer and TV screen modes | 4, 11 |
 | 12 | Environment and venues | Seasons/weather, pools, outdoor life, venue variety | 6 public venues, 40 activities | 7, 9 |
 | 13 | Release preparation | Guidance, balance, accessibility, recovery, measured mobile performance | All targets audited | all |
 
@@ -86,6 +88,25 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   once-only payouts. 40 traits in six categories, 13 three-stage aspirations (adult-only) and 45 social interactions.
   Saves stay at schema 1; no new fields.
 
+## Milestone 11.5 and 12 (complete, this PR)
+
+- **Milestone 11.5, animations and activity feedback.** Moving parts and effects on 21 appliance and furniture
+  descriptors (fridge and oven doors, hob rings and steam, wardrobe doors, toilet lid, shower and bath water, taps,
+  the dishwasher), all derived from the running action with no save fields; hand props that follow the rig (snacks,
+  ingredients, the carried plate and seated fork, books, phone, mug, tools); computer and TV screens that show the
+  activity (word processor, code, game, browser, TV) with text that grows with progress; and a progress pill above
+  the head that fills with the action (stage-weighted, green with a check on completion, grey when cancelled) with a
+  Household/All/Off display setting. Acceptance step 13; screenshots in `dev/ds-tasks/m115/shots/`.
+- **Milestone 12, environment and venues.** Seasons (3/7/14 days, spring to winter) and a deterministic two-half-day
+  weather plan (clear/cloudy/rain/snow stored in the save; snow only in winter); seasonal lighting, grass, trees,
+  terrain and snow cover; capped rain and snow particles behind a Weather effects setting; weather moodlets,
+  preferences and trait biases; weather and season gates that grey out options with a reason and keep autonomy away
+  from them; nine weather-bound outdoor activities plus two socials (snowman, snow angel, kite, raking, puddles,
+  stargazing, watching the rain, sunbathing, picnic, snowball fight); pools built with the Build tool (2 x 3 to
+  12 x 12, auto or moved ladders, decks, blocked water, graceful Get Out) and swum in a swim outfit; and the seventh
+  venue, Quayside Baths, with a 6 x 10 pool, changing rooms and a sun deck. Acceptance step 14; screenshots in
+  `dev/ds-tasks/m12/shots/`.
+
 ## Milestone 10, complete catalogs (in progress)
 
 - **Surfaces (complete).** 360 wall finishes (3382 palettes) and 200 floor designs (1523 palettes), meeting the brief
@@ -112,7 +133,10 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
 7. Done in M7 (see ARCHITECTURE.md "Neighbourhood"): neighbourhood map, 14 lot records (target 12), including 2 empty homes, 6 venues, 4 NPC households, household switching, off-lot reconciliation. Open: community events, NPC household movement and job changes, furniture moving with a household (M8 and later).
 8. Done in M8 (see ARCHITECTURE.md "Family and life stages"): seven life stages, aging, birthdays, school, babysitter, adoption, moving out. Added after M8: teen part-time jobs, children in town households, fitted kids' clothes, elder wrinkles, L and rectangle fence drags. Open: the sitter for other households, more life-stage detail (see CONTINUATION.md).
 9. Done in M9 (see ARCHITECTURE.md "Floors", "Exterior"): levels 0-2, stairs, balconies, roofs, fences and gates, terrain paint, gardens. Open: the spiral and length-4 stairs are less tested.
-10. Seasons, weather, pools (M12).
+10. Done in M11.5 and M12 (see ARCHITECTURE.md "Action feedback", "Seasons and weather", "Pools"): moving parts and
+    effects, hand props, screens, the progress pill, seasons, weather gates and moods, outdoor activities, pools and
+    the Quayside Baths venue. Open: shade and umbrellas do not count as shelter, pools are ground level only, and
+    weather is planned but not forecast beyond tomorrow.
 
 ## Optional expansions (not part of the required plan)
 

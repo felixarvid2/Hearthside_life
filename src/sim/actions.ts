@@ -60,7 +60,12 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
     if (!stillHead(p, a)) return;
     if (a.cancelRequested) {
       a.cancelRequested = false;
-      if (a.phase !== 'cleanup') { interrupt(ctx, p, a, beh, 'cancelled', null); continue; }
+      if (a.phase !== 'cleanup') {
+        // Milestone 12: a swimmer climbs out first instead of being dropped in the water.
+        if (beh.cancelGraceful?.(ctx, p, a)) continue;
+        interrupt(ctx, p, a, beh, 'cancelled', null);
+        continue;
+      }
     }
     switch (a.phase) {
       case 'queued':
@@ -105,6 +110,15 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
         setPhase(ctx, a, 'perform');
         a.elapsed = 0;
         a.duration = step.duration.kind === 'fixed' ? step.duration.minutes : step.duration.kind === 'instant' ? 0 : null;
+        // Milestone 11.5 (task B): remember where the driving need started, so the render-side progress pill can
+        // show untilFull progress without guessing the modified rate. Render-only read; no schema change.
+        if (step.duration.kind === 'untilFull') {
+          a.data.startNeedId = step.duration.need;
+          a.data.startNeed = p.needs[step.duration.need];
+        } else {
+          a.data.startNeedId = null;
+          a.data.startNeed = null;
+        }
         setAnim(p, step.performAnim, ctx.now);
         continue;
       }
@@ -133,12 +147,16 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
         setPhase(ctx, a, 'apply');
         continue;
       }
-      case 'apply':
-        applyEffects(ctx, p, a, beh);
-        if (!stillHead(p, a)) return;
-        a.data.result = 'done';
+      case 'apply': {
+        // A gracefully cancelled action (the swim exit) keeps its result and gives no completion effects.
+        if (a.data.result !== 'cancelled') {
+          applyEffects(ctx, p, a, beh);
+          if (!stillHead(p, a)) return;
+          a.data.result = 'done';
+        }
         beginCleanup(ctx, p, a, beh);
         continue;
+      }
       case 'cleanup': {
         const need = typeof a.data.cleanupMin === 'number' ? a.data.cleanupMin : 0;
         if (ctx.now - a.phaseSince < need - EPS) return;

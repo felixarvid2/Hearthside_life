@@ -1,10 +1,10 @@
 # Continuation note
 
-State on 2026-11-04. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
-gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9 and 11 are
-complete and verified** (brief section 26, docs/ROADMAP.md). **Milestone 10 is in progress: the surface catalog is complete**
-(360 wall finishes, 200 floor designs); 560 furnishings and the full creator catalog are still open. The next work is the rest of
-Milestone 10 or Milestone 12 (environment and venues).
+State on 2026-11-05. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
+gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9, 11, 11.5
+and 12 are complete and verified** (brief section 26, docs/ROADMAP.md). **Milestone 10 is the only one still open: the surface
+catalog is complete** (360 wall finishes, 200 floor designs); 560 furnishings and the full creator catalog remain. The next work is
+the rest of Milestone 10, then Milestone 13 (release preparation).
 
 ## Milestone status
 
@@ -21,6 +21,51 @@ Milestone 10 or Milestone 12 (environment and venues).
 | 9 Multiple floors and exteriors (PR #4) | levels 0-2 (3 m apart, walls 2.8 m); upper floors need support, balconies up to 2 tiles out; stairs as objects with stairwell cut and undo; multi-level path search; HUD level selector; two-storey Hazelbank loft; 12 roof styles and 11 finishes, Roof camera toggle, auto roof; 24 fence designs (123 variants) and 12 gates (64 variants); 12 terrain paints; 16 garden objects and 10 crops (plant, water, weed, harvest at 75 % of value) | 3 floors, 12 roof styles, 24 fences, 12 gates, 12 staircases (catalogue has 9 straight and 4 spiral) | acceptance step 11 (`stepFloors`, `stepExterior`) in all viewports; `--steps=12` runs the exterior part alone |
 | 10 Complete catalogs | surfaces done: AI-sourced and code-painted wall and floor designs, palette tinting, on-demand maps (pipeline below) | 360 walls (360), 200 floors (200), 560 furnishings (open), full creator catalog (open) | surfaces complete; furnishings and creator catalog still open |
 | 11 Complete progression and social scope (own PR) | 13 careers (130 levels) with 17 on-the-job events; six ready skills with practice activities and effects (baking, wellness, creativity, photography, fishing, research); six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond); 40 traits in six categories; 13 three-stage, adult-only aspirations; 45 social interactions; once-only payouts through `transact` | 13 careers (12), 19 skills (16), 40 traits (40), 13 aspirations (12), 45 socials (40) | typecheck, 1746 tests, content check, build, `e2e:creator`; visual checks 25/25 careers, 45/45 skills, 39/39 photography/fishing/research, 19/19 traits |
+| 11.5 Animations and activity feedback (own PR) | moving parts and effects driven by the running action (21 descriptors: fridge/oven doors, hob rings and steam, wardrobe, toilet lid, shower/bath, taps, dishwasher); hand props on the rig (snacks, ingredients, plate and fork, books, phone, mug, tools); computer and TV screens (word processor, code, game, browser, TV); a stage-weighted progress pill above the head with Household/All/Off; all render-side, no save fields | no new content; the screen pictures are deterministic generators | acceptance step 13 (`--steps=13`) in all three viewports; `visual:m115:d` 24/24, `visual:m115:h` 27/27, `visual:m115:screens` 57/57, `visual:m115:b` 41/41 |
+| 12 Environment and venues (own PR) | seasons (3/7/14 days) and a two-half-day weather plan stored in the save (clear/cloudy/rain/snow, snow only in winter); seasonal lighting, grass, trees, terrain and snow cover; capped rain/snow particles with a Weather effects setting; weather moodlets, preferences and trait biases; weather/season/outdoor/day/night gates that grey out options and filter autonomy; nine outdoor activities and two socials; pools (build tool, ladders, blocked water, swimming, graceful Get Out); the seventh venue, Quayside Baths (6 x 10 pool, changing rooms, sun deck) | 7 venues (6), 108 activities (40), 47 socials (40), 3 pool styles | acceptance step 14 (`--steps=14`) in all three viewports; `visual:m12:{weather,outdoor,pools}` 29/29, 60/60, 33-36/36 |
+
+## How to check Milestones 11.5 and 12
+
+Acceptance steps 13 and 14 run in every viewport (step 13 is M11.5, step 14 is M12); run them alone with
+`npm run e2e:acceptance -- --only=portrait --steps=13,14 --fast-start` (portrait or landscape; the two steps alone
+take about 5-10 minutes per viewport, while the full desktop run takes about 68 minutes).
+
+- **Animations and feedback (step 13).** Pause the game, select a household member and queue Cook a Meal at the fridge.
+  Step 11 can leave the household upstairs, so the step first picks a member who is already on the kitchen floor, or
+  walks the chosen one down, so the step's timings stay those of a same-floor cook. (Cooking from another floor works:
+  use points carry their absolute level, the cook's own floor is preferred, and availability and the chain share
+  `stovesOn` in `src/sim/cooking.ts`; see `tests/unit/integration/cook-floors.test.ts`.)
+  During the 2-minute reach-in the fridge door is open (the probe reports `openness` above 0.5 once one sim tick has
+  advanced the game clock: at speed 0 frames alone do not move it) and an ingredients prop is in the right hand; at the
+  stove the door closes, the hob rings/pot/steam appear and the prop becomes a spatula; the served plate is carried, the
+  eater holds a fork with the plate placed on the table and the pill shows "Eat complete" at 100 %; writing at the
+  computer shows the document screen with progress that grows, then the screen turns off. The acceptance script injects
+  `window.__t` with read-only probes: `objectAnimState(objectId)` (parts, target, openness, interiorVisible),
+  `handProps(personId)` (right/left/carried/placed), `screenMode(objectId)` (mode, progress, title) and
+  `pill(personId)` (label, value, done, cancelled, fill width, box); `person(id, y)` gives screen coordinates and
+  `pick(x, y)` the pick under a point.
+- **Weather and seasons (step 14, part 1).** Use `window.hearthside.debug.setWeather(kind)` (`clear`, `cloudy`, `rain`,
+  `snow`) after moving the clock to an absolute day (`state.clock.minutes = day * 1440 + 600`; day 0 is spring, day 14
+  autumn 1, day 21 winter 1 with 7-day seasons) and step one tick. It pins the current day's plan and keeps settled
+  `snowCover`; `ensureWeather` keeps a same-day plan, so it lasts until midnight. Check the HUD `.clock-sky` text, title
+  and aria-label ("Autumn, day 1 - Rain") - it refreshes on a 250 ms timer, so poll it rather than read it once - and that
+  Rake Leaves is greyed with "It is raining." in rain and enabled in clear weather. In winter snow, Build a Snowman is
+  offered (the self menu is reached with a person pick: `game.options(m, { kind: 'person', personId: m })`) and leaves a
+  `snowman` object; the snow stays on the ground when the weather clears.
+- **Pools (step 14, part 2).** Build mode -> Build panel -> Pool tab -> a style card -> drag a 2 x 3 rectangle ->
+  Confirm. The preview shows the size and price; the pool keeps a ladder on a short side and charges the posted price.
+  Pick a water tile: Swim in the Pool / Relax in the Pool, and Get Out while swimming. The member changes into the swim
+  outfit, the `swim` anim plays with the body at the surface, and Get Out always ends on the ladder's deck tile (the
+  acceptance script records every tile visited and asserts none is water).
+- **Quayside Baths (step 14, part 3).** Open the map: the venue "Quayside Baths" (lot `lot_3a` in a new world) has
+  Go here. Travel, check the pool is 6 x 10 with two ladders, then Go home. Existing saves keep their lot list (the
+  venue only exists in worlds created after M12).
+- **Full scenarios.** `npm run visual:m115:d|h|screens|b` for the M11.5 screenshots and `npm run visual:m12:weather|outdoor|pools`
+  for M12; each self-locks the browser lock. The visual scripts and the acceptance steps pause the game and drive it
+  through `debug.step`/`debug.frame`, so `state()` is deterministic between steps.
+
+New debug hooks in `src/main.ts`: `setWeather(kind)` (above), plus the existing `step(n)`, `frame(dt)`, `state()`,
+`run(name, ...args)` and `stats()`. `window.__t` is injected only by `tests/e2e/acceptance.mjs`.
 
 Checks on the final state:
 
@@ -69,6 +114,25 @@ Checks on the M11 state (own PR):
 
 The M11 numbers above were rerun on the final tree after task E (2026-11-03): typecheck clean, 129 files / 1746 tests, content
 0/0, build passes with the existing 2.27 MB main-chunk warning.
+
+Checks on the M11.5 and M12 state (this PR, rerun on the final tree 2026-11-05):
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` | 160 files, 2074 tests |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | passes (main chunk 2.82 MB, warning only) |
+| `npm run e2e` | OK in desktop, landscape and portrait |
+| `npm run e2e:creator` | 288/288 in portrait, landscape and desktop |
+| `npm run e2e:acceptance`, portrait 390x844 | 358/358 (about 23 minutes) |
+| `npm run e2e:acceptance`, landscape 844x390 | 356/356 (about 25 minutes) |
+| `npm run e2e:acceptance`, desktop 1280x720 | 344/344 (about 68 minutes) |
+| Steps 13 and 14 alone (`--steps=13,14 --fast-start`) | 43/43 portrait and landscape, 42/42 desktop |
+
+The acceptance counts differ by viewport because the touch audits add target-size checks. The per-viewport totals and the
+six app/test causes found by the full runs are in `dev/ds-tasks/m12/A-progress.md`.
+
 Acceptance step 10 is `stepFamily` (M8); step 11 is `stepFloors`, then `stepExterior` (M9). `--steps=12` runs the exterior part alone.
 Fixed late in M9: stairs did not show their mesh after a lot change. The cause was a stale pending promise in `render/objectAssets.ts`
 together with a purge in `setLot`. Runtime models are no longer purged, and acceptance checks `view.objects.hasModel(id)`.
@@ -78,16 +142,17 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Next steps, in order
 
-1. Merge PR #6 (Milestone 11); standing approval: merge every PR once all checks pass.
+1. Merge PR #6 (Milestone 11) if it is still open, then this PR (Milestones 11.5 and 12); standing approval: merge every PR
+   once all checks pass.
 2. Milestone 10, complete catalogs: surfaces are done (360 walls, 200 floors). The remaining targets are 560 furnishings and the
-   full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`. Milestone 12 (seasons, weather, pools, venue
-   variety) is the other next choice.
-3. Polish of the M8, M9 and M11 gaps (listed under "Known issues").
-4. People: brow styles, the garment hem flare on the female body, real-device performance.
-5. Performance:
-   - Main chunk is about 1.8 MB. Lazy-load the build, creator and dev modules and split `content`.
+   full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
+3. Milestone 13, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
+4. Polish of the M8, M9, M11, M11.5 and M12 gaps (listed under "Known issues").
+5. People: brow styles, the garment hem flare on the female body, real-device performance.
+6. Performance:
+   - Main chunk is about 2.3 MB. Lazy-load the build, creator and dev modules and split `content`.
    - Measure on a real phone.
-6. Real-device runs. Record them in the device log in `docs/TEST_CHECKLIST.md`.
+7. Real-device runs. Record them in the device log in `docs/TEST_CHECKLIST.md`.
 
 ## Known issues
 
@@ -111,12 +176,53 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - The yoga mat is a rug: it can be placed under furniture and people walk over it, so it is not a blockage.
   - The fish item uses the normal meal portion path (spoilage and eating); it is not yet a fridge-storable raw ingredient.
   - No M11 acceptance step was added; the milestone is covered by the unit/integration suites and the four visual scripts.
+- M11.5 animations and feedback:
+  - The moving parts and hand props are render-side derivations: they need the action to be running and the object/person
+    visible on the active lot and level. Off-lot or hidden people keep no props (by design), and a paused game freezes
+    doors and effects.
+  - The screen pictures are illustrative (a deterministic word processor, editor, game, browser and TV), not real content;
+    progress comes from `elapsed / duration`.
+  - The progress pill is DOM inside the world overlay; its 10 Hz sampler only updates people on screen, and the completion
+    state lasts 700 ms (a screenshot needs to freeze `performance.now()`).
+- M12 seasons, weather, pools and venue:
+  - Weather is planned two days ahead only; there is no forecast beyond tomorrow. Shade from umbrellas and awnings does not
+    count as shelter (`outdoorsAt` only looks at rooms and roofs).
+  - Pools are ground level only; the water is not swimmable for toddlers (children and older), and an outdoor pool is
+    closed while it snows (a roofed pool stays open).
+  - Winter snow cover persists until the season turns or three snow-free winter days melt the snowman; rain does not melt it.
+  - The Quayside Baths lot exists only in worlds created after M12; old saves keep their 14 lots.
+  - Rain/snow particles are capped at 1500 desktop / 600 touch and hidden by reduced motion or Weather effects off.
 - Flakes in acceptance:
-  - Step 2 "neighbour visible to tap".
+  - Step 2 "neighbour visible to tap". The Welcome Wagon visit ends on a clock: a slow screenshot or a long wait for a
+    free social can outlast it, and the step then tapped a neighbour who had gone home (landscape and desktop,
+    2026-11-05). It now checks she is still on the lot and, if not, calls `game.inviteHome` and waits for her to
+    arrive again before tapping.
+  - Step 2 "the roommate (own shift) was paid exactly once" failed on desktop when the roommate stayed home all day:
+    the step assumed a scheduled shift was worked, while a wage pays only for time worked and an absent roommate has
+    no shift record. The check now requires `career.shift.workedMinutes > 0` as well.
   - Step 7 wall-paint side checks, seen in portrait.
   - Step 8 "computer: tap point picks the intended thing" hit wall `0:h:13:4` once in landscape and once in desktop; `tapAndOpenMenu` now turns the camera and looks again when a wall hides an object (desktop passed 302/0 after that).
-  - Desktop acceptance takes about 35-40 minutes.
-- Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
+  - Step 11 "Water the Bed" could be refused by rain; the garden section now calls `forceClearWeather(T)` (task F).
+  - Step 11's room preview drag in portrait could start on the floating floor selector: `framePair` accepted a
+    placement whose corner sat 12 px above the build sheet (free on the exact pixel, but covered by `.level-down` a
+    moment later), so the synthetic touch never reached the canvas and Confirm stayed disabled. `framePair` and
+    `framePairAt` now require a 16 px ring of canvas around both points, and the build step drags once more when the
+    sheet is still on its plain hint.
+  - Steps 13 and 14 read the HUD chip by polling (its 250 ms timer can lag), advance one sim tick before reading the
+    fridge door's openness (at speed 0 frames do not move the game clock), and fetch the self menu with a person pick
+    (`{ kind: 'person', personId: m }`; `PickResult` has no `'self'`). The carried plate is read at the first stage-2
+    tick of Cook a Meal, before the served item takes over in the world. The step-14 chip poll allows 20 s: a big
+    SwiftShader screenshot can starve the 250 ms HUD timer for several seconds.
+  - The Build tool tabs now wrap onto two rows in the side panel (eleven tools do not fit one 380 px row). Before
+    that, Fence, Garden and Pool sat outside the row and desktop Playwright could not click them (step 11's exterior
+    section and step 14).
+  - Step 11 Build tool tabs (desktop): a tap can time out after 30 s waiting for the tab to be "visible, enabled and
+    stable" although the tab has not moved. The software renderer holds the page for most of a minute on a first paint
+    (new shaders when Build or a tool opens), and Playwright gives up waiting for a stable frame. `T.tap` now retries
+    once with a 60 s timeout and logs `tap retry after …`; the retried step passes without a layout change.
+  - Acceptance run time on the final tree: about 23 minutes portrait, 25 landscape and 68 minutes desktop
+    (SwiftShader; the desktop run renders 1280x720 and spends most of its time in screenshots).
+- Main JS chunk about 2.82 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.
 - Boot progress bar is not driven.
 - M7 neighbourhood:

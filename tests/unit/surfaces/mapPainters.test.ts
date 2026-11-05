@@ -106,7 +106,7 @@ describe('map painters', () => {
     const oak = FLOOR_DESIGNS.find((d) => d.id === 'oak-wide-boards') as SurfaceDesign;
     const colours = (oak.palettes[1]?.colors ?? []).slice(0, 3).join(',');
     expect(asked).toContain(`grain-oak|${colours}`);
-  });
+  }, 30_000); // two 64 px map paints per design: about 1 s alone, over the 5 s default under parallel load
 
   it('keep the layout the same across palettes when images are available', () => {
     setSurfaceMapProvider((id) => ({ id }));
@@ -117,5 +117,5 @@ describe('map painters', () => {
       paintDesign(b, d, d.palettes[2]?.id ?? '', textureLayout(d, 64));
       expect(strip(a), d.id).toEqual(strip(b));
     }
-  });
+  }, 30_000); // two more 64 px map paints per design
 });

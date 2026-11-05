@@ -2,6 +2,7 @@
 // night), background/fog colour, optional shadows focused on the lot, and a night factor for lamp glow.
 
 import * as THREE from 'three';
+import type { Season, WeatherKind } from '../core/types';
 
 interface Key { h: number; sky: string; ground: string; hemi: number; sun: string; sunI: number; bg: string; exposure: number }
 
@@ -54,8 +55,8 @@ export class Lighting {
 
   setShadows(on: boolean): void { this.sun.castShadow = on; }
 
-  /** Updates colours and the sun position for an hour of day (0..24). */
-  update(hour: number): void {
+  /** Updates colours and the sun position for an hour of day (0..24), tinted by weather and season (Milestone 12). */
+  update(hour: number, weather: WeatherKind = 'clear', season: Season = 'summer'): void {
     const h = ((hour % 24) + 24) % 24;
     let i = 0;
     while (i < KEYS.length - 2 && KEYS[i + 1]!.h <= h) i++;
@@ -87,5 +88,36 @@ export class Lighting {
     // night factor for lamps: 0 in daylight, 1 at night, ramps at dusk and dawn
     this.night = h >= 20.5 || h < 5.5 ? 1 : h >= 18.5 ? (h - 18.5) / 2 : h < 7 ? (7 - h) / 1.5 : 0;
     this.night = Math.max(0, Math.min(1, this.night));
+    this.applyWeather(weather, season);
+  }
+
+  /** Weather and season tint on top of the hour keyframes. Kept subtle at night so rooms stay readable. */
+  private applyWeather(weather: WeatherKind, season: Season): void {
+    const mix = 1 - this.night * 0.45;
+    if (weather !== 'clear') {
+      const w = WEATHER_TINTS[weather];
+      this.hemi.color.lerp(cW.set(w.hemi), w.mix * mix);
+      this.hemi.intensity *= 1 + (w.hemiI - 1) * mix;
+      this.sun.color.lerp(cW.set(w.sun), w.mix * mix);
+      this.sun.intensity *= 1 + (w.sunI - 1) * mix;
+      this.background.lerp(cW.set(w.bg), w.mix * mix);
+      this.exposure *= 1 + (w.exposure - 1) * mix;
+    }
+    const s = SEASON_TINTS[season];
+    if (s && season !== 'summer') this.background.lerp(cW.set(s), 0.16 * mix);
   }
 }
+
+const cW = new THREE.Color();
+
+const WEATHER_TINTS: Record<Exclude<WeatherKind, 'clear'>, {
+  hemi: string; sun: string; bg: string; hemiI: number; sunI: number; exposure: number; mix: number;
+}> = {
+  cloudy: { hemi: '#c8ced6', sun: '#dfe3e6', bg: '#c4ccd4', hemiI: 0.86, sunI: 0.55, exposure: 0.98, mix: 0.55 },
+  rain: { hemi: '#9fb1c2', sun: '#b9c6d2', bg: '#92a4b6', hemiI: 0.72, sunI: 0.32, exposure: 0.93, mix: 0.65 },
+  snow: { hemi: '#dfeaf3', sun: '#eef4fa', bg: '#e4eef6', hemiI: 1.05, sunI: 0.78, exposure: 1.02, mix: 0.6 },
+};
+
+const SEASON_TINTS: Record<Season, string> = {
+  spring: '#eff4e2', summer: '#efe7da', autumn: '#ecd6b6', winter: '#dfe9f0',
+};

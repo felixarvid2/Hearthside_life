@@ -12,7 +12,7 @@ Run the relevant checks after each milestone; do not repeat unrelated tests just
 | `npm run content:check` | Registry validation and distinct-design counts (CONTENT_STATUS numbers) |
 | `npm run e2e` | Playwright (Chromium, SwiftShader) smoke and acceptance run with screenshots in desktop, portrait and landscape |
 | `npm run e2e:creator` | Milestone 3 creator acceptance through the real creator UI in 390x844 and 844x390 touch and 1280x720 desktop: live face and body sliders (preview must change), body and face presets, outfit slots with the new garments and thumbnails, hats / scarf / necklace / watch / bracelet, randomize with locks, undo/redo, household ties, appearance and household import/export (including substitutions), Move In and a comparison with the game; screenshots and `report.json` in `tests/e2e/out/creator-m3/` |
-| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation, M6 career panel / bill payment / freelance sale) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 10 minutes per touch viewport and up to 30 on desktop under SwiftShader; `--only=portrait` runs one) |
+| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation, M6 career panel / bill payment / freelance sale, M11.5 moving parts, hand props, screens and the progress pill, M12 seasons/weather, a built pool, swimming and the Quayside Baths venue) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 23-25 minutes per touch viewport and about 70 on desktop under SwiftShader; `--only=portrait` runs one, `--steps=13,14` just the new milestones) |
 
 Key automated areas (brief section 25):
 
@@ -137,3 +137,57 @@ Portrait 390x844, landscape 844x390 and desktop 1280x720:
 - Garden: plant seeds in the vegetable patch, water, weed, and harvest after growth; the harvest sells at 75 % of the market value
   once.
 - Camera bar: the 7 buttons fit and can be tapped at 390 px. Phones narrower than 390 px were not measured.
+
+## Manual browser checks, Milestone 11.5 (emulation only; no named device)
+
+Portrait 390x844, landscape 844x390 and desktop 1280x720:
+
+- Moving parts: queue Cook a Meal; the fridge door swings open during the reach-in, the lit interior is visible and
+  the door closes when the cook moves to the stove; the stove shows four lit hob rings, the pan and steam; a bake
+  opens the oven door. Change Outfit opens both wardrobe doors. The toilet lid lifts; the shower runs water; a sink
+  tap runs while washing hands; the dishwasher door opens at the start and end and its light stays on while running.
+- Hand props: an ingredients bag at the fridge, a spatula at the stove, a carried plate on the way to the counter; a
+  seated eater has a plate on the table and a fork in the right hand (standing: the plate is held in front); a snack
+  shrinks in bite steps; books, a lit phone, a mug and a watering can appear only while the action runs. All props
+  are put away when the action ends or is cancelled.
+- Screens: a computer shows a word processor with text that grows while writing, a code editor for programming and a
+  platformer for games; a TV shows a news/nature/cartoon/cooking/sport picture while watched. Both are dark when off.
+- Progress pill: the pill above the head fills while a multi-stage action (cook, eat, read, wash dishes, swim) runs
+  and shows the stage-weighted share; it turns green with a check for about 0.7 s on completion and grey when
+  cancelled. Display options: Household / Everyone / Off.
+- Reduced motion and low quality: the pill has no transition, props still attach, screen pictures freeze, doors snap
+  open and closed, and steam and haze are hidden.
+
+## Manual browser checks, Milestone 12 (emulation only; no named device)
+
+Portrait 390x844, landscape 844x390 and desktop 1280x720:
+
+- Seasons and weather: the HUD chip reads "Season, day N - Weather" (text, title and aria-label); the feed shows the
+  two-day forecast; Settings has Seasons, Weather, season length (3/7/14) and Weather effects. Clear, cloudy, rain
+  and snow change the light, the grass and trees and the particles; rain and snow stop with Weather effects off and
+  the light tint stays.
+- Gates: in rain an outdoor option (Rake Leaves, the grill, watering a bed) is greyed with "It is raining."; in
+  winter snow Build a Snowman and Make a Snow Angel are offered and leave a snowman that melts when winter ends;
+  stargazing only at night, sunbathing only in summer clear weather, puddles only after rain.
+- Pools in Build: the Pool tab lists the three styles with prices; a drag shows the size and cost; a pool that would
+  cut off the deck is refused with a reason. Confirm builds it, charges the posted price and keeps at least one
+  ladder; Move ladder / Add ladder / Remove ladder obey the deck rules; undo returns the money.
+- Swimming: on the water, Swim in the Pool and Relax in the Pool are offered; the member changes into swimwear,
+  climbs in from the ladder and swims (head above water). Get Out is offered while swimming and always puts them on
+  a deck tile, never in the water; cancelling does the same.
+- Quayside Baths: the map lists the pool venue; Go here travels there; the hall has the 6 x 10 pool with two
+  ladders, changing rooms, showers and a sun deck. Go home brings the household back and the lot is unchanged.
+
+## Acceptance totals
+
+`npm run e2e:acceptance` covers steps 1-14 (step 13 is Milestone 11.5, step 14 is Milestone 12). Each viewport
+checks every step; the totals below count the individual `T.check` assertions and the final page/console-error check.
+
+| Viewport | M11.5 + M12 steps (13, 14) | Full run (steps 1-14) |
+|---|---|---|
+| portrait 390x844 | 43/43 | 358/358 |
+| landscape 844x390 | 43/43 | 356/356 |
+| desktop 1280x720 | 42/42 | 344/344 |
+
+The milestone-by-milestone totals are in the device log below; step numbers are listed next to each milestone in
+CONTINUATION.md.

@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   info.objects = Object.keys(lot.objects).length;
 
   const canvas = document.getElementById('view') as HTMLCanvasElement;
-  const view = new GameView(canvas, db, null, { quality: 'high', shadows: false, reducedMotion: true }, '/assets/');
+  const view = new GameView(canvas, db, null, { quality: 'high', shadows: false, reducedMotion: true, weatherEffects: true }, '/assets/');
   await view.objectAssets.loadManifest();
   await view.objectAssets.preload(new Set(Object.values(lot.objects).map((o) => db.objects[o.defId]!.model.asset)));
   view.setWorld(state, true);

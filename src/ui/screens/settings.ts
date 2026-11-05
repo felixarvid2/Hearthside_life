@@ -44,6 +44,17 @@ export function openSettings(sh: Shell): void {
   const quality = segmented({ label: 'Graphics quality', value: cfg().quality, options: [{ id: 'low', label: 'Low (faster)' }, { id: 'high', label: 'High' }], onChange: (q) => { set({ quality: q }); sh.sound('toggle'); } });
   const style = segmented({ label: 'Character style', value: cfg().characterStyle, options: [{ id: 'mpfb', label: 'Natural' }, { id: 'detailed', label: 'Detailed' }, { id: 'classic', label: 'Classic (lighter)' }], onChange: (v) => { set({ characterStyle: v }); sh.sound('toggle'); } });
   const shadows = toggleSwitch({ label: 'Shadows', hint: 'Soft shadows under people and furniture.', value: cfg().shadows, onChange: (on) => { set({ shadows: on }); sh.sound('toggle'); } });
+  // Milestone 12: rain/snow particles are render-only and can be turned off on slow phones (the light tint stays).
+  const weatherEffects = toggleSwitch({
+    label: 'Weather effects', hint: 'Rain streaks and snowflakes. Off keeps the weather light and colour but draws no particles. Reduced motion also hides them.',
+    value: cfg().weatherEffects, onChange: (on) => { set({ weatherEffects: on }); sh.sound('toggle'); },
+  });
+  // Milestone 11.5: the small progress pill above a person's head while an action runs.
+  const progressPills = segmented<'household' | 'all' | 'off'>({
+    label: 'Action progress', value: cfg().actionProgress,
+    options: [{ id: 'household', label: 'Household' }, { id: 'all', label: 'Everyone' }, { id: 'off', label: 'Off' }],
+    onChange: (v) => { set({ actionProgress: v }); sh.sound('toggle'); },
+  });
 
   const noGame = 'Available while a game is running.';
   const autonomy = toggleSwitch({ label: 'Autonomy', hint: 'Household members look after themselves when idle.', value: sim?.autonomy ?? true, disabled: !sim, onChange: (on) => { setSim({ autonomy: on }); level.el.classList.toggle('is-disabled', !on); sh.sound('toggle'); } });
@@ -57,6 +68,26 @@ export function openSettings(sh: Shell): void {
   if (!sim) for (const b of level.el.querySelectorAll('button')) b.disabled = true;
   const visitors = toggleSwitch({ label: 'Neighbour visits', hint: 'Neighbours may drop by on their own.', value: sim?.visitors ?? true, disabled: !sim, onChange: (on) => { setSim({ visitors: on }); sh.sound('toggle'); } });
   if (!sim) visitors.setDisabled(true, noGame);
+  // Milestone 12: seasons and weather (world settings, stored in the save).
+  const seasons = toggleSwitch({
+    label: 'Seasons', hint: 'Spring, summer, autumn and winter colours and weather. Off is a permanent summer-like spring with no snow.',
+    value: sim?.seasons ?? true, disabled: !sim, onChange: (on) => { setSim({ seasons: on }); sh.sound('toggle'); },
+  });
+  const seasonLength = segmented<'3' | '7' | '14'>({
+    label: 'Days per season', value: String(sim?.seasonDays ?? 7) as '3' | '7' | '14',
+    options: [{ id: '3', label: '3 days' }, { id: '7', label: '7 days' }, { id: '14', label: '14 days' }],
+    onChange: (v) => { setSim({ seasonDays: Number(v) as 3 | 7 | 14 }); sh.sound('toggle'); },
+  });
+  const weather = toggleSwitch({
+    label: 'Weather', hint: 'Clear, cloudy, rain and winter snow. Off is always clear; the forecast stays in the event feed.',
+    value: sim?.weather ?? true, disabled: !sim, onChange: (on) => { setSim({ weather: on }); sh.sound('toggle'); },
+  });
+  if (!sim) {
+    seasons.setDisabled(true, noGame);
+    weather.setDisabled(true, noGame);
+    seasonLength.el.classList.add('is-disabled');
+    for (const b of seasonLength.el.querySelectorAll('button')) b.disabled = true;
+  }
 
   // ---- Aging and life stages (Milestone 8) ----
   type AgingMode = SimSettings['aging'];
@@ -103,8 +134,9 @@ export function openSettings(sh: Shell): void {
 
   m.body.append(
     section('Sound', 'sound', vol('Master volume', 'masterVolume').el, vol('Sound effects', 'soundVolume').el, vol('Music', 'musicVolume').el),
-    section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el),
-    section('Household life', 'people', autonomy.el, level.el, visitors.el, sim?.unlimitedFunds ? h('p', { class: 'muted-note' }, icon('build', 18), h('span', { text: 'This world has unlimited building funds (Build Sandbox).' })) : null),
+    section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el, weatherEffects.el, progressPills.el),
+    section('Household life', 'people', autonomy.el, level.el, visitors.el, seasons.el, seasonLength.el, weather.el,
+      sim?.unlimitedFunds ? h('p', { class: 'muted-note' }, icon('build', 18), h('span', { text: 'This world has unlimited building funds (Build Sandbox).' })) : null),
     section('Aging and family', 'family', aging.el, agingHint, customBox, endOfLife.el),
     section('Help', 'info', tutorial.el, stats.el,
       h('details', { class: 'shortcuts' }, h('summary', { text: 'Keyboard shortcuts' }),
@@ -117,7 +149,7 @@ export function openSettings(sh: Shell): void {
   const unsub = api.onChange((w) => {
     if (w !== 'settings') return;
     const c = cfg();
-    reduced.set(c.reducedMotion); shadows.set(c.shadows); stats.set(c.showStats); tutorial.set(c.tutorial);
-    quality.set(c.quality); style.set(c.characterStyle); text.set(nearestTextSize(c.textScale));
+    reduced.set(c.reducedMotion); shadows.set(c.shadows); weatherEffects.set(c.weatherEffects); stats.set(c.showStats); tutorial.set(c.tutorial);
+    quality.set(c.quality); style.set(c.characterStyle); text.set(nearestTextSize(c.textScale)); progressPills.set(c.actionProgress);
   });
 }

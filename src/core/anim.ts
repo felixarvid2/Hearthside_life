@@ -8,6 +8,7 @@ export const ANIM_IDS = [
   'interact', 'cook', 'openFridge', 'eat', 'pickUp', 'carry', 'kneelFix', 'clean',
   'lieDown', 'sleep', 'getUp',
   'water', 'plant', 'harvest', 'dance', 'exercise', 'shower', 'toilet', 'read', 'watchTv', 'computer',
+  'swim', 'float',
 ] as const;
 
 export type AnimId = (typeof ANIM_IDS)[number];
@@ -15,5 +16,5 @@ export type AnimId = (typeof ANIM_IDS)[number];
 /** Animations that loop while held; others play once then hold or return to idle. */
 export const LOOPING_ANIMS: ReadonlySet<AnimId> = new Set<AnimId>([
   'idle', 'walk', 'jog', 'sitIdle', 'sitTalk', 'talk', 'phone', 'foldArms', 'cook', 'carry', 'sleep',
-  'kneelFix', 'clean', 'water', 'dance', 'exercise', 'shower', 'read', 'watchTv', 'computer', 'eat',
+  'kneelFix', 'clean', 'water', 'dance', 'exercise', 'shower', 'read', 'watchTv', 'computer', 'eat', 'swim', 'float',
 ]);

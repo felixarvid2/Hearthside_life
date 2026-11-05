@@ -19,13 +19,16 @@ import { choreCandidates } from './chores';
 import { availableMeals, stovesOn } from './cooking';
 import { isBroken } from './housekeeping';
 import type { SimCtx } from './context';
-import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, venueRestriction } from './context';
+import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, tileOfLoc, venueRestriction } from './context';
+import { ladderDeckTile, poolCenter, poolsOf, usableLadders } from '../world/pools';
+import { poolIsOutdoors } from './pool';
 import { needUrgency } from './needs';
 import { insertAction, makeAction } from './queue';
 import { eventMealsFor, eventSocialBonus, onDateTogether } from './events';
 import { commitmentOf, familyTie, hasRecentMemory, peekRel } from './relationships';
 import { personKey } from './reservations';
 import { isVisitPending, neighbours } from './visitors';
+import { currentWeather, outdoorGateReason } from './weather';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
   EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
@@ -189,6 +192,32 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (score > 0) out.push({ req: { interactionId: def.id, target: { kind: 'self' }, ...(data ? { data } : {}) }, score, key: `${def.id}@self`, addresses });
     }
   }
+  // Milestone 12: a dip in the pool. Pools are not objects, so they have their own candidate loop.
+  if (!visitor) {
+    const lot = ctx.state.lots[loc.lotId];
+    const swim = ctx.content.interactions.swimInPool;
+    if (lot && swim && swim.autonomy.enabled && swim.status === 'ready' && stageAllows(swim, p.lifeStage)) {
+      const snow = currentWeather(ctx.state) === 'snow';
+      const from = tileOfLoc(loc);
+      for (const pool of poolsOf(lot)) {
+        if (snow && poolIsOutdoors(ctx, lot, pool)) continue;
+        const reachableLadder = usableLadders(lot, pool).some((l) => {
+          const d = ladderDeckTile(l);
+          return ctx.nav.isWalkable(lot.id, 0, d.x, d.z) && ctx.nav.findPath(lot.id, 0, from, [d]) !== null;
+        });
+        if (!reachableLadder) continue;
+        const c = poolCenter(pool);
+        const addresses: NeedId[] = [];
+        const score = interactionScore(ctx, p, swim, dist(loc.x, loc.z, c.x + 0.5, c.z + 0.5), `${c.x},${c.z}`, addresses);
+        if (score > 0) {
+          out.push({
+            req: { interactionId: swim.id, target: { kind: 'tile', x: c.x, z: c.z, level: 0 }, data: { poolId: pool.id } },
+            score, key: `${swim.id}@${c.x},${c.z}`, addresses,
+          });
+        }
+      }
+    }
+  }
   const social = socialCandidate(ctx, p);
   if (social) out.push(social);
   if (!visitor && !isDependentStage(p.lifeStage) && p.lifeStage !== 'child') { const inv = inviteCandidate(ctx, p); if (inv) out.push(inv); }
@@ -201,7 +230,11 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
     const hw = homeworkCandidate(ctx, p);
     if (hw) out.push(hw);
   }
-  return out;
+  // Weather, season and place gating (Milestone 12): autonomy never picks something the rules out.
+  return out.filter((c) => {
+    const def = ctx.content.interactions[c.req.interactionId] ?? ctx.content.socials[c.req.interactionId];
+    return !def || !outdoorGateReason(def.weather, ctx, p);
+  });
 }
 
 /** A pupil with homework due sits down at the nearest desk, table or computer in the afternoon and evening. */
@@ -324,6 +357,7 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     let pick: SocialDef | null = null, pickW = 0;
     for (const def of Object.values(ctx.content.socials)) {
       if (!def.autonomy.enabled || def.status !== 'ready') continue;
+      if (outdoorGateReason(def.weather, ctx, p)) continue;
       if (socialRequirementReason(ctx, p, other, def)) continue;
       const w = def.autonomy.weight * socialFit(ctx, p, other, def) * socialAcceptance(ctx, p, other, def) * cooldownMult(ctx, p, def.id, other.id);
       if (w > pickW) { pickW = w; pick = def; }

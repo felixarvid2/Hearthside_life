@@ -28,6 +28,25 @@ interface Template {
 /** Materials whose name marks a light-emitting part. */
 export const LAMP_MATERIAL = 'lamp';
 
+/**
+ * GLB sub-nodes that must stay separate because the renderer pivots them (Milestone 11.5, doors and lids).
+ * Keyed by asset. Every other node is merged by material as before; each listed node keeps its own origin
+ * (the hinge in these models) and becomes a group named `part:<node>` inside the template.
+ */
+export const PART_NODES: Record<string, readonly string[]> = {
+  kitchenFridge: ['doorFridge'],
+  kitchenFridgeLarge: ['doorLeft', 'doorRight'],
+  kitchenFridgeSmall: ['doorFridge'],
+  kitchenFridgeBuiltIn: ['doorFridge'],
+  kitchenStove: ['door'],
+  kitchenMicrowave: ['Group'],
+  washer: ['washerDoor'],
+  dryer: ['dryerDoor'],
+  toilet: ['cover'],
+  toiletSquare: ['Group'],
+  bookcaseClosedDoors: ['doorLeft', 'doorRight'],
+};
+
 export class ObjectAssets {
   private readonly loader = new GLTFLoader();
   private readonly templates = new Map<string, Template>();
@@ -72,7 +91,7 @@ export class ObjectAssets {
       if (isProceduralAsset(asset)) {
         const scene = proceduralModel(asset);
         if (!scene) { this.failed.add(asset); return null; }
-        const tpl = this.makeTemplate(scene);
+        const tpl = this.makeTemplate(scene, asset);
         this.templates.set(asset, tpl);
         return tpl;
       }
@@ -80,7 +99,7 @@ export class ObjectAssets {
       if (!entry) { this.failed.add(asset); return null; }
       try {
         const gltf = await this.loader.loadAsync(`${this.baseUrl}${entry.file}`);
-        const tpl = this.makeTemplate(gltf.scene);
+        const tpl = this.makeTemplate(gltf.scene, asset);
         this.templates.set(asset, tpl);
         return tpl;
       } catch (e) {
@@ -104,7 +123,7 @@ export class ObjectAssets {
     await Promise.all(list.map(async (a) => { await this.load(a); done++; onProgress?.(done, list.length); }));
   }
 
-  private makeTemplate(scene: THREE.Group): Template {
+  private makeTemplate(scene: THREE.Group, asset: string): Template {
     const base = new Map<string, THREE.MeshStandardMaterial>();
     const convert = (m: THREE.Material): THREE.MeshStandardMaterial => {
       let out = base.get(m.name);
@@ -125,7 +144,7 @@ export class ObjectAssets {
       if (!mesh.isMesh) return;
       mesh.material = Array.isArray(mesh.material) ? mesh.material.map(convert) : convert(mesh.material);
     });
-    return { scene: mergeByMaterial(scene), base, refs: 0, sets: new Map(), ghost: null };
+    return { scene: mergeByMaterial(scene, PART_NODES[asset] ?? []), base, refs: 0, sets: new Map(), ghost: null };
   }
 
   /** Material set for a definition's finishes (shared by every instance with the same choices). */
@@ -233,27 +252,51 @@ export class ObjectAssets {
 
 /**
  * Flattens a model into one mesh per material (geometry baked in the model's root space), so an instance costs
- * one draw call per material instead of one per node primitive. Falls back to the original hierarchy when the
- * primitives cannot be merged (different attribute sets).
+ * one draw call per material instead of one per node primitive. Named nodes in `keep` (doors/lids) are not
+ * flattened: each becomes a `part:<name>` group whose origin is the node origin and whose rotation/scale is the
+ * node's, so the renderer can swing it around its hinge. Falls back to the original hierarchy when the primitives
+ * cannot be merged (different attribute sets).
  */
-function mergeByMaterial(scene: THREE.Group): THREE.Group {
+function mergeByMaterial(scene: THREE.Group, keep: readonly string[] = []): THREE.Group {
   scene.updateMatrixWorld(true);
-  const groups = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  const parts: THREE.Object3D[] = [];
+  const partOf = new Map<THREE.Object3D, THREE.Object3D>();
+  for (const name of keep) {
+    const node = scene.getObjectByName(name);
+    if (!node || node === scene) continue;
+    parts.push(node);
+    node.traverse((o) => partOf.set(o, node));
+  }
+  type GeoGroups = Map<THREE.Material, THREE.BufferGeometry[]>;
+  const body: GeoGroups = new Map();
+  const partGeos = new Map<THREE.Object3D, GeoGroups>();
   let ok = true;
+  const add = (groups: GeoGroups, mat: THREE.Material, g: THREE.BufferGeometry) => {
+    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+    g.morphAttributes = {};
+    const list = groups.get(mat) ?? [];
+    list.push(g.index ? g.toNonIndexed() : g);
+    groups.set(mat, list);
+  };
   scene.traverse((o) => {
     const mesh = o as THREE.Mesh;
     if (!mesh.isMesh) return;
     if (Array.isArray(mesh.material)) { ok = false; return; }
+    const owner = partOf.get(mesh);
     const g = mesh.geometry.clone();
-    g.applyMatrix4(mesh.matrixWorld);
-    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
-    g.morphAttributes = {};
-    const list = groups.get(mesh.material) ?? [];
-    list.push(g.index ? g.toNonIndexed() : g);
-    groups.set(mesh.material, list);
+    if (owner) {
+      // geometry in the kept node's local frame, so the pivot can rotate around the node origin
+      g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(owner.matrixWorld.clone().invert(), mesh.matrixWorld));
+      let groups = partGeos.get(owner);
+      if (!groups) partGeos.set(owner, groups = new Map());
+      add(groups, mesh.material, g);
+    } else {
+      g.applyMatrix4(mesh.matrixWorld);
+      add(body, mesh.material, g);
+    }
   });
   const out = new THREE.Group();
-  if (ok) {
+  const build = (groups: GeoGroups, target: THREE.Group) => {
     for (const [mat, list] of groups) {
       const merged = list.length === 1 ? list[0]! : mergeGeometries(list, false);
       if (!merged) { ok = false; break; }
@@ -262,11 +305,26 @@ function mergeByMaterial(scene: THREE.Group): THREE.Group {
       const m = new THREE.Mesh(merged, mat);
       m.castShadow = true;
       m.receiveShadow = true;
-      out.add(m);
+      target.add(m);
+    }
+  };
+  if (ok) {
+    build(body, out);
+    for (const node of parts) {
+      const groups = partGeos.get(node);
+      if (!groups || groups.size === 0) continue;
+      const pivot = new THREE.Group();
+      pivot.name = `part:${node.name}`;
+      pivot.userData.partName = node.name;
+      node.matrixWorld.decompose(pivot.position, pivot.quaternion, pivot.scale);
+      // plain array: Object3D.clone() JSON-copies userData
+      pivot.userData.baseQuaternion = [pivot.quaternion.x, pivot.quaternion.y, pivot.quaternion.z, pivot.quaternion.w];
+      build(groups, pivot);
+      out.add(pivot);
     }
   }
   if (!ok) {
-    for (const c of [...out.children]) (c as THREE.Mesh).geometry.dispose();
+    out.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose(); });
     scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
     return scene;
   }

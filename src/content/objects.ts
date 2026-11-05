@@ -1516,11 +1516,55 @@ const M11_SKILLS_OBJECTS: ObjectDef[] = [
   }),
 ];
 
+// --- Milestone 12, task O: outdoor life ---------------------------------------------------------
+// Models are original low-poly meshes built at runtime (render/outdoorModels.ts), so their assets start with
+// 'proc:' and need no manifest entry. The snowman is created by Build a Snowman, never sold.
+const M12_OUTDOOR_OBJECTS: ObjectDef[] = [
+  {
+    id: 'picnic-blanket', name: 'Picnic Blanket', category: 'outdoor', subcategory: 'picnic', rooms: ['outdoor'], style: 'cottage',
+    description: 'A red-and-cream checked blanket with a wicker basket: spread it on the lawn and have a picnic in the sun.',
+    tags: ['picnic', 'blanket', 'rug', 'outdoor'], packs: ['garden-patio'], tier: 'budget', price: dollars(45), quality: 2, functional: true,
+    model: { asset: 'proc:picnic-blanket', scale: 1, offset: [0, 0, 0], yaw: 0 },
+    footprint: { w: 2, d: 2 }, layer: 'rug', blocksMovement: false, height: 0.12,
+    slots: [{ id: 'use', kind: 'use', pos: [1, 1], height: 0, facing: 0, approach: [1, 2], posture: 'standing' }],
+    interactions: ['havePicnic'], stats: { fun: 1.1, environment: 1 }, finishes: [], status: 'ready',
+  },
+  {
+    id: 'sun-lounger', name: 'Sun Lounger', category: 'outdoor', subcategory: 'lounger', rooms: ['outdoor'], style: 'coastal',
+    description: 'A folding lounger with a striped pad and an adjustable back. Sink into it, or sunbathe on a clear summer day.',
+    tags: ['lounger', 'seat', 'sun', 'outdoor'], packs: ['garden-patio', 'coastal-home'], tier: 'standard', price: dollars(190), quality: 3, functional: true,
+    model: { asset: 'proc:sun-lounger', scale: 1, offset: [0, 0, 0], yaw: 0 },
+    footprint: { w: 1, d: 2 }, layer: 'floor', blocksMovement: true, height: 0.62,
+    slots: [
+      { id: 'seat', kind: 'sit', pos: [0.5, 1], height: 0.42, facing: 0, approach: [0, 2], posture: 'seated' },
+      { id: 'lie', kind: 'use', pos: [0.5, 1], height: 0.42, facing: 0, approach: [0, 2], posture: 'lying' },
+    ],
+    interactions: ['sit', 'sunbathe'], stats: { comfort: 4, fun: 1, environment: 1 }, finishes: [], status: 'ready',
+  },
+  {
+    id: 'kite', name: 'Kite', category: 'outdoor', subcategory: 'toy', rooms: ['outdoor'], style: 'playful',
+    description: 'A diamond kite dancing on its line above a lawn peg. Fly it on a breezy spring or autumn day.',
+    tags: ['kite', 'toy', 'play', 'outdoor'], packs: ['garden-patio', 'kids-storybook'], tier: 'budget', price: dollars(30), quality: 2, functional: true,
+    model: { asset: 'proc:kite', scale: 1, offset: [0, 0, 0], yaw: 0 },
+    footprint: { w: 1, d: 1 }, layer: 'floor', blocksMovement: false, height: 3,
+    slots: [{ id: 'use', kind: 'use', pos: [0.5, 0.5], height: 0, facing: 0, approach: [0, 0], posture: 'standing' }],
+    interactions: ['flyKite'], stats: { fun: 1.2 }, finishes: [], status: 'ready',
+  },
+  {
+    id: 'snowman', name: 'Snowman', category: 'decor', subcategory: 'seasonal', rooms: ['outdoor'], style: 'playful',
+    description: 'Three snowballs, a carrot nose, coal eyes and a scarf. Built by hand; it melts when winter ends.',
+    tags: ['snowman', 'snow', 'seasonal', 'outdoor'], packs: ['garden-patio'], tier: 'budget', price: dollars(1), quality: 2, functional: false,
+    model: { asset: 'proc:snowman', scale: 1, offset: [0, 0, 0], yaw: 0 },
+    footprint: { w: 1, d: 1 }, layer: 'floor', blocksMovement: true, height: 1.7,
+    slots: [], interactions: [], stats: { environment: 1 }, finishes: [], status: 'dev',
+  },
+];
+
 /** Every buy-mode object definition (ready and in development). */
 export const OBJECTS: ObjectDef[] = [
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
   ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS, ...STAIR_OBJECTS, ...FAMILY_OBJECTS,
-  ...M11_OBJECTS, ...M11_SKILLS_OBJECTS,
+  ...M11_OBJECTS, ...M11_SKILLS_OBJECTS, ...M12_OUTDOOR_OBJECTS,
 ];
 

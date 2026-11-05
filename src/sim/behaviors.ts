@@ -21,6 +21,10 @@ import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
 import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
+import { getOutBehavior, poolSwimBehavior } from './pool';
+import { isOutdoors, nearestOutdoorTile } from './weather';
+import { makePlacedObject } from '../world/objects';
+import { validatePlacement } from '../world/placement';
 import { socialBehavior } from './social';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
@@ -221,7 +225,56 @@ export const genericBehavior: Behavior = {
 /** Need-restoring interactions that should not be interrupted for small talk. */
 const restoreBehavior: Behavior = { ...genericBehavior, interruptible: false };
 
-function switchOutfit(ctx: SimCtx, p: Person, category: OutfitCategory, index = 0): void {
+/**
+ * Milestone 12, task O: an activity that has to happen in the open air. If the person is indoors they walk to the
+ * nearest walkable outdoor tile on the lot first; everything else is the generic step.
+ */
+function outdoorStep(ctx: SimCtx, p: Person, a: ActionInstance): Step | string {
+  if (isOutdoors(ctx, p)) return primaryStep(ctx, p, a);
+  const def = defOf(ctx, a);
+  const tile = nearestOutdoorTile(ctx, p);
+  if (!tile) return 'There is nowhere outdoors to do this.';
+  const posture = def.posture === 'walking' ? 'standing' : def.posture;
+  return {
+    goal: { kind: 'tile', tile, label: 'outdoors' }, posture, performAnim: def.anims.perform,
+    ...(def.anims.prepare ? { prepareAnim: def.anims.prepare } : {}),
+    ...(def.anims.cleanup ? { cleanupAnim: def.anims.cleanup } : {}),
+    duration: defDuration(def), rates: performRates(ctx, p, def, null, null, posture), skill: skillRate(def, null),
+  };
+}
+
+const outdoorBehavior: Behavior = { ...genericBehavior, step: outdoorStep };
+
+/** Build a Snowman: an outdoor activity that leaves a snowman on a free tile next to the builder. */
+const buildSnowmanBehavior: Behavior = {
+  ...genericBehavior,
+  step: outdoorStep,
+  apply(ctx, p) {
+    const loc = lotLoc(p);
+    const def = ctx.content.objects.snowman;
+    if (!loc || !def) return;
+    const lot = ctx.state.lots[loc.lotId];
+    if (!lot) return;
+    const from = { x: Math.floor(loc.x), z: Math.floor(loc.z), level: loc.level };
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dz === 0) continue;
+        const x = from.x + dx, z = from.z + dz;
+        const v = validatePlacement(ctx.state, ctx.content, lot.id, { defId: def.id, x, z, rot: 0, level: from.level });
+        if (!v.ok) continue;
+        const obj = makePlacedObject(ctx.state, def, { x, z, rot: 0, level: from.level },
+          { ownerHouseholdId: lot.ownerHouseholdId, purchasePrice: 0, boughtAt: ctx.now });
+        obj.snowman = { madeAt: ctx.now, warmDays: 0 };
+        lot.objects[obj.id] = obj;
+        ctx.events.emit({ type: 'lot.changed', lotId: lot.id, what: 'objects' });
+        return;
+      }
+    }
+  },
+};
+
+/** Changes the outfit and notifies the renderer (swim uses this too, sim/pool.ts). */
+export function switchOutfit(ctx: SimCtx, p: Person, category: OutfitCategory, index = 0): void {
   const list = p.outfits.outfits[category];
   if (!list || list.length === 0) return;
   const i = Math.max(0, Math.min(index, list.length - 1));
@@ -698,6 +751,8 @@ let registry: Record<string, Behavior> | null = null;
 function buildRegistry(): Record<string, Behavior> {
   return {
     generic: genericBehavior,
+    outdoor: outdoorBehavior,
+    buildSnowman: buildSnowmanBehavior,
     sit: genericBehavior,
     rest: restoreBehavior,
     snack: restoreBehavior,
@@ -741,6 +796,8 @@ function buildRegistry(): Record<string, Behavior> {
     openCareers: openCareersBehavior,
     social: socialBehavior,
     garden: gardenBehavior,
+    poolSwim: poolSwimBehavior,
+    getOut: getOutBehavior,
   };
 }
 

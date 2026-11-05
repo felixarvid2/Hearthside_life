@@ -16,6 +16,15 @@ describe('player settings', () => {
     expect(mergeSettings(base, { characterStyle: 'fancy' as never }).characterStyle).toBe('mpfb');
     expect(mergeSettings({ ...base, characterStyle: 'classic' }, { characterStyle: 3 as never }).characterStyle).toBe('classic');
   });
+
+  it('shows action progress for the household by default and validates the three scopes', () => {
+    const base = { ...DEFAULT_SETTINGS };
+    expect(base.actionProgress).toBe('household');
+    expect(mergeSettings(base, { actionProgress: 'all' }).actionProgress).toBe('all');
+    expect(mergeSettings(base, { actionProgress: 'off' }).actionProgress).toBe('off');
+    expect(mergeSettings(base, { actionProgress: 'everyone' as never }).actionProgress).toBe('household');
+    expect(mergeSettings({ ...base, actionProgress: 'off' }, { actionProgress: 1 as never }).actionProgress).toBe('off');
+  });
 });
 
 describe('settings migration to the natural character style', () => {

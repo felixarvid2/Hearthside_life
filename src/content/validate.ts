@@ -31,7 +31,7 @@ const TRAIT_CATEGORIES: readonly TraitCategory[] = ['social', 'tidiness', 'energ
 const BOND_STATUSES: readonly BondStatus[] = ['acquaintance', 'friend', 'closeFriend', 'rival', 'partner', 'engaged', 'spouse', 'exPartner'];
 const LIFE_STAGE_IDS: readonly string[] = STAGE_ORDER;
 const SOCIAL_SECTIONS = ['friendly', 'romantic', 'mean', 'special'];
-const PREFERENCE_GROUPS = ['activity', 'music', 'decor', 'food', 'topic'];
+const PREFERENCE_GROUPS = ['activity', 'music', 'decor', 'food', 'topic', 'weather'];
 /** Source materials that are never recoloured (they carry light, glass or foliage). */
 const FIXED_MATERIALS = ['glass', 'lamp', 'plant'];
 /** Places an interaction can be restricted to (InteractionDef.venues): any residential lot or a venue type. */
