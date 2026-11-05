@@ -173,7 +173,13 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - The Quayside Baths lot exists only in worlds created after M12; old saves keep their 14 lots.
   - Rain/snow particles are capped at 1500 desktop / 600 touch and hidden by reduced motion or Weather effects off.
 - Flakes in acceptance:
-  - Step 2 "neighbour visible to tap".
+  - Step 2 "neighbour visible to tap". The Welcome Wagon visit ends on a clock: a slow screenshot or a long wait for a
+    free social can outlast it, and the step then tapped a neighbour who had gone home (landscape and desktop,
+    2026-11-05). It now checks she is still on the lot and, if not, calls `game.inviteHome` and waits for her to
+    arrive again before tapping.
+  - Step 2 "the roommate (own shift) was paid exactly once" failed on desktop when the roommate stayed home all day:
+    the step assumed a scheduled shift was worked, while a wage pays only for time worked and an absent roommate has
+    no shift record. The check now requires `career.shift.workedMinutes > 0` as well.
   - Step 7 wall-paint side checks, seen in portrait.
   - Step 8 "computer: tap point picks the intended thing" hit wall `0:h:13:4` once in landscape and once in desktop; `tapAndOpenMenu` now turns the camera and looks again when a wall hides an object (desktop passed 302/0 after that).
   - Step 11 "Water the Bed" could be refused by rain; the garden section now calls `forceClearWeather(T)` (task F).

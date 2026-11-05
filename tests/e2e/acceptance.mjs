@@ -1061,11 +1061,14 @@ async function stepLive(T) {
       const lvl = def?.levels.find((l) => l.level === p.career.level);
       return !!lvl && lvl.days.includes(Math.floor(st.clock.minutes / 1440) % 7);
     };
-    return { mira: count(m), sage: count(s), sageWorksToday: worksToday(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
+    // A shift pays by time worked, and only people who went to work have a shift record at all; the roommate may
+    // simply have stayed home (autonomy), which is not a missing wage.
+    const sc = st.people[s].career?.shift;
+    return { mira: count(m), sage: count(s), sageWorksToday: worksToday(s), sageWorked: !!sc && (sc.workedMinutes ?? 0) > 0, all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
   }, [mira, sage, day0, wageBefore.ids]);
   log('wages', JSON.stringify(wages));
   T.check(S, 'exactly one wage ledger entry for the first person\'s shift', wages.mira === 1, JSON.stringify(wages.all));
-  T.check(S, 'the roommate (own shift) was paid exactly once if they worked today', wages.sage === 1 || !wages.sageWorksToday, `sage entries ${wages.sage}; career ${startInfo.sageCareer}; works today ${wages.sageWorksToday}`);
+  T.check(S, 'the roommate (own shift) was paid exactly once if they worked today', wages.sage === 1 || !wages.sageWorksToday || !wages.sageWorked, `sage entries ${wages.sage}; career ${startInfo.sageCareer}; works today ${wages.sageWorksToday}; went to work ${wages.sageWorked}`);
   // Milestone 4 adds expenses during a shift (groceries, repairperson), so funds need not rise overall: check instead that the
   // wage was credited and that the funds change equals exactly the new ledger entries (no money appears or vanishes).
   const seen = new Set(wageBefore.ids);
@@ -1157,6 +1160,22 @@ async function stepLive(T) {
     // the neighbour may be mid-conversation with the roommate: wait until a social option is enabled for the first person
     const free = await runUntil(T, 4 * 120, `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social' && o.interactionId !== 'introduce')`);
     log('neighbour free for social after ticks', free.ticks, free.done);
+    // The first visit ends on a clock (a slow screenshot or a long wait can outlast it), which used to leave the step
+    // tapping a neighbour who had already gone home. Ask her over again, as a player would, and carry on.
+    const stillHere = await page.evaluate((id) => {
+      const st = window.hearthside.debug.state(), p = st.people[id];
+      return p.location.kind === 'lot' && p.location.lotId === st.activeLotId;
+    }, nb[0].id);
+    if (!stillHere) {
+      const invited = await page.evaluate(([host, guest]) => window.hearthside.game.inviteHome(host, guest), [mira, nb[0].id]);
+      const back = await runUntil(T, 4 * 100, `(() => { const p = st.people['${nb[0].id}']; return p.location.kind === 'lot' && p.location.lotId === st.activeLotId; })()`);
+      log('neighbour gone home; invited back', JSON.stringify({ invited, back: back.done, ticks: back.ticks }));
+      if (back.done) {
+        await selectMember(T, mira);
+        await T.frames(6);
+        await runUntil(T, 4 * 30, `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social' && o.interactionId !== 'introduce')`);
+      }
+    }
     await T.frames(3);
     await dismissMenu(T);
     const nm = await tapAndOpenMenu(T, 'person', nb[0].id, S, 'neighbour');

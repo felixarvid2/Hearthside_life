@@ -4,8 +4,15 @@ State: in progress (acceptance runs per viewport under way). Step 13 now picks a
 after step 11, or walks the chosen one down first: Cook a Meal's check only accepts a stove on the actor's own level,
 while the option is offered from any floor, so in the full run the action was cancelled on its first tick upstairs.
 
-Three causes found by the full runs and fixed in the app/script:
+Five causes found by the full runs and fixed in the app/script:
 
+- **Roommate wage check assumed she went to work.** The step required a wage for the roommate whenever her career
+  scheduled a shift that day, but a wage is paid for time worked and a roommate who stays home has no shift record
+  (desktop step 2 spent the day at home). The check now also asks for `career.shift.workedMinutes > 0`.
+- **Neighbour visit ends before the step taps her** (landscape and desktop, a known flake). The step waited up to
+  120 game minutes for a free social; if the Welcome Wagon visit ended first, it tapped a person who had gone home
+  and spent four long retries plus three camera turns on her. The step now checks that she is still on the lot and
+  calls `game.inviteHome` to ask her over again before tapping.
 - **Portrait room preview drag.** Step 11 occasionally failed with Confirm disabled ("Draw or tap something first."):
   `framePair` accepted a camera placement whose corner was 12 px above the build sheet. That point is canvas on the
   exact pixel but the floating floor selector (`.level-select`, 44 px tall) covers it a moment later, so the synthetic
@@ -54,8 +61,11 @@ Explicit, realistic timeouts instead of a global change:
 | Viewport | Steps 13, 14 (targeted `--steps=13,14 --fast-start`) | Full run (steps 1-14) |
 |---|---|---|
 | portrait 390x844 | 43/43 | 358/358 (rerun on the final tree, 26 min) |
-| landscape 844x390 | 43/43 | running |
+| landscape 844x390 | 43/43 | 349/350 (one failure: the known step-2 "neighbour: visible to tap" flake — the visitor had gone home; the step's retry skips its dependent checks, hence the lower total) |
 | desktop 1280x720 | running | running |
+
+Landscape step 13 (progress pill, fridge door, hand prop, eating) and step 14 (weather, snowman, pool, swim,
+Quayside Baths) all passed in this run. A rerun for a clean sample follows the desktop run.
 
 ## Other checks
 
