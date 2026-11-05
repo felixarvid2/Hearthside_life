@@ -64,10 +64,23 @@ export function chooseRecipe(ctx: SimCtx, p: Person, a: ActionInstance): RecipeD
   return list.find((r) => recipeCost(p, r) <= funds) ?? [...list].sort((x, y) => recipeCost(p, x) - recipeCost(p, y) || (x.id < y.id ? -1 : 1))[0]!;
 }
 
-/** Stoves on the person's level; broken ones only when `broken` is set. */
+/**
+ * Stoves the person can reach: on their own floor first, then on the other floors the staircase connects to
+ * (Milestone 12: cooking must work from whichever floor the cook is on). Broken ones only when `broken` is set.
+ * This is the single predicate availability (cookBehavior.check), autonomy and the chain all use.
+ */
 export function stovesOn(ctx: SimCtx, p: Person, broken = false): ObjRef[] {
   const loc = lotLoc(p);
-  return loc ? lotObjects(ctx, loc.lotId, loc.level).filter((r) => isStove(r.def) && (broken || !isBroken(r.obj))) : [];
+  if (!loc) return [];
+  const here = { x: loc.x, z: loc.z };
+  return lotObjects(ctx, loc.lotId, loc.level)
+    .filter((r) => isStove(r.def) && (broken || !isBroken(r.obj)))
+    .map((r) => {
+      const c = objectCenter(r);
+      return { r, own: r.obj.level === loc.level ? 0 : 1, d: dist(here.x, here.z, c.x, c.z) };
+    })
+    .sort((x, y) => x.own - y.own || x.d - y.d || (x.r.obj.id < y.r.obj.id ? -1 : 1))
+    .map((x) => x.r);
 }
 
 /** Footprint tiles of a surface object not covered by surface objects or items. */
@@ -179,11 +192,12 @@ export const cookBehavior: Behavior = {
     a.data.stage = 0;
     const r = reservePrimary(ctx, p, a);
     if (r) return r;
-    const fridge = targetObject(ctx, p, a);
     const loc = lotLoc(p);
-    if (!fridge || !loc) return 'It is gone.';
+    if (!targetObject(ctx, p, a) || !loc) return 'It is gone.';
     const cands: UseCandidate[] = stovesOn(ctx, p).flatMap((s) => objectCandidates(ctx, loc.lotId, s.obj.id, []));
-    return pickUsePoint(ctx, p, a, 'stove', cands, { plan: false, what: 'stove', from: objectCenter(fridge) });
+    // The person's own floor first, then the nearest stove on another reachable floor (never the fridge as origin:
+    // the cook is upstairs, and a downstairs stove should not win merely because it is near the fridge).
+    return pickUsePoint(ctx, p, a, 'stove', cands, { plan: false, what: 'stove', from: { x: loc.x, z: loc.z }, preferLevel: loc.level });
   },
   step(ctx, p, a): Step | string {
     const def = defOf(ctx, a);
@@ -240,7 +254,7 @@ export const cookBehavior: Behavior = {
         if (freeSurfaceTiles(ctx, loc.lotId, ref).length === 0) continue;
         cands.push(...standCandidates(ctx, loc.lotId, ref.obj.id));
       }
-      if (cands.length === 0 || pickUsePoint(ctx, p, a, 'surf', cands, { plan: true, what: 'counter', from })) {
+      if (cands.length === 0 || pickUsePoint(ctx, p, a, 'surf', cands, { plan: true, what: 'counter', from, preferLevel: loc.level })) {
         serveMeal(ctx, p, a, null);
         return false;
       }
@@ -303,7 +317,7 @@ export const eatMealBehavior: Behavior = {
     const surface = item.position.onObjectId ? objectRef(ctx, loc.lotId, item.position.onObjectId) : null;
     const cands: UseCandidate[] = surface
       ? standCandidates(ctx, loc.lotId, surface.obj.id)
-      : [{ objectId: item.id, tile: { x: Math.floor(item.position.x), z: Math.floor(item.position.z) } }];
+      : [{ objectId: item.id, tile: { x: Math.floor(item.position.x), z: Math.floor(item.position.z), level: item.position.level } }];
     return pickUsePoint(ctx, p, a, 'use', cands, { plan: true, what: 'food' });
   },
   step(ctx, p, a): Step | string {
