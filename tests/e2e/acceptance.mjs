@@ -808,6 +808,23 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
     log(`${label}: person is not tappable right now; waiting 3 game minutes`);
     await runUntil(T, 4 * 3, 'false');
   }
+  // A guest who walked inside can stand behind a wall from this camera yaw, so no tap point picks them (desktop
+  // has the narrowest view of the lot). Turn the camera and look again, as a player would; objects below already
+  // do this. Each retry is costly because waiting advances the clock, so rotate before giving up.
+  if (kind === 'person') {
+    const hitAt = async (q) => q && (await T.page.evaluate(([x, y]) => { const pk = window.__t.pick(x, y); return pk.kind === 'person' ? pk.personId : null; }, [q.x, q.y]));
+    let q = await pointFor(T, kind, id, personY);
+    let hit = await hitAt(q);
+    for (let turn = 0; turn < 3 && hit !== id; turn++) {
+      log(`${label}: person pick was ${JSON.stringify(hit)}; turning the camera`);
+      await T.page.evaluate(() => window.hearthside.game.view.rotate(1));
+      await T.frames(30);
+      await T.page.evaluate((pid) => window.hearthside.game.view.focusPerson(pid), id);
+      await settle(T);
+      q = await pointFor(T, kind, id, personY);
+      hit = await hitAt(q);
+    }
+  }
   let p = await pointFor(T, kind, id, kind === 'person' ? personY : undefined);
   if (!p?.free) { T.bad(S, `${label}: visible to tap`, `point ${JSON.stringify(p)} not on free canvas`); return null; }
   let pick = await T.page.evaluate(([x, y]) => window.__t.pick(x, y), [p.x, p.y]);
@@ -2711,7 +2728,35 @@ async function stepFloors(T) {
   await frameNorth(T, (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0 + Z1 - Z0);
   const c0 = await framePair(T, 'vertex', [X0, Z0], [X1, Z1]);
   T.check(S, 'both corners of the ground room are on screen, free of UI', !!c0.a?.free && !!c0.b?.free, JSON.stringify(c0));
+  if (flag('probe-room')) {
+    const probe0 = await page.evaluate(([ax, ay, bx, by]) => {
+      const c = document.getElementById('game-canvas'); const r = c.getBoundingClientRect();
+      const rig = window.hearthside.view.rig;
+      const at = (x, y) => { const e = document.elementFromPoint(x, y); return e ? `${e.tagName}#${e.id}.${String(e.className).slice(0, 40)}` : null; };
+      const gp = (x, y) => { try { return window.hearthside.game.view.groundPoint(x - r.left, y - r.top); } catch (e) { return 'err ' + e.message; } };
+      const p = document.querySelector('.bb-build-panel'); const b = p?.getBoundingClientRect();
+      return { canvas: [r.left, r.top, r.width, r.height], vp: [innerWidth, innerHeight], rig: { w: rig.width, h: rig.height, ppm: rig.ppm, yaw: rig.yaw, tx: rig.target?.x, tz: rig.target?.z, insets: JSON.parse(JSON.stringify(rig.insets)) }, panel: p ? [b.x, b.y, b.width, b.height, getComputedStyle(p).height, p.dataset.height, p.className] : null, aEl: at(ax, ay), bEl: at(bx, by), gpa: gp(ax, ay), gpb: gp(bx, by) };
+    }, [c0.a.x, c0.a.y, c0.b.x, c0.b.y]);
+    log(`probe room before ${JSON.stringify(probe0)}`);
+    await page.evaluate(() => {
+      window.__ptr = [];
+      const c = document.getElementById('game-canvas');
+      for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) c.addEventListener(t, (e) => { const q = window.__ptr; if (q.length < 200) q.push(`${t}:${Math.round(e.clientX)},${Math.round(e.clientY)}:${e.pointerType}`); });
+    });
+  }
   await drag(T, c0.a, c0.b);
+  if (flag('probe-room')) {
+    const probe1 = await page.evaluate(([ax, ay, bx, by]) => {
+      const c = document.getElementById('game-canvas'); const r = c.getBoundingClientRect();
+      const rig = window.hearthside.view.rig;
+      const at = (x, y) => { const e = document.elementFromPoint(x, y); return e ? `${e.tagName}#${e.id}.${String(e.className).slice(0, 40)}` : null; };
+      const gp = (x, y) => { try { return window.hearthside.game.view.groundPoint(x - r.left, y - r.top); } catch (e) { return 'err ' + e.message; } };
+      const handles = [...document.querySelectorAll('.bb-handles .bb-handle')].map((e) => { const b = e.getBoundingClientRect(); return [e.dataset.handle, Math.round(b.x), Math.round(b.y), b.width]; });
+      const tip = document.querySelector('.bb-build-tip');
+      return { ptr: (window.__ptr || []).slice(-40), aEl: at(ax, ay), bEl: at(bx, by), gpa: gp(ax, ay), gpb: gp(bx, by), handles, tip: tip ? [tip.hidden, tip.textContent, tip.getBoundingClientRect().x, tip.getBoundingClientRect().y] : null, footer: document.querySelector('.bb-build-status')?.textContent?.trim(), rig: { ppm: rig.ppm, insets: JSON.parse(JSON.stringify(rig.insets)) } };
+    }, [c0.a.x, c0.a.y, c0.b.x, c0.b.y]);
+    log(`probe room after ${JSON.stringify(probe1)}`);
+  }
   await T.frames(4);
   if (touch) { await T.shot('m9-room-preview'); await tapFooter(T, '.bb-confirm'); }
   await page.waitForTimeout(500);
@@ -3614,6 +3659,9 @@ async function stepAnimations(T) {
 
   // ---- Cook a Meal: the fridge reach-in (stage 0), the stove (stage 1), the plate (stage 2), then eatMeal
   const ready = await runUntil(T, 4 * 120, `g.options('${member}', { kind: 'object', objectId: '${info.fridge}' }).some((o) => o.interactionId === 'cookMeal' && o.enabled)`);
+  // The wait above ticks the sim while the member is idle, so autonomy can queue Sleep (likely late in the day): clear
+  // it so the player's Cook a Meal is the next action.
+  await clearQueue(member);
   const queued = await page.evaluate(([m, f]) => {
     const g = window.hearthside.game;
     const opt = g.options(m, { kind: 'object', objectId: f }).find((o) => o.interactionId === 'cookMeal');
@@ -3705,6 +3753,9 @@ async function stepAnimations(T) {
 
   // ---- a computer used for writing: the document screen, and its text grows with the action
   const writeReady = await runUntil(T, 4 * 300, `g.options('${member}', { kind: 'object', objectId: '${info.computer}' }).some((o) => (o.interactionId === 'writeArticle' || o.interactionId === 'writeBook') && o.enabled)`);
+  // Same as for the cook: a tired member can get an autonomy Sleep queued during the wait; clear it so the writing
+  // action runs next (the option is offered whether or not they are busy).
+  await clearQueue(member);
   const write = await page.evaluate(([m, c]) => {
     const g = window.hearthside.game;
     const opts = g.options(m, { kind: 'object', objectId: c });
@@ -3762,8 +3813,9 @@ async function stepWorldM12(T) {
     return { label: e.getAttribute('aria-label') ?? '', title: e.getAttribute('title') ?? '', text: e.querySelector('.clock-sky-text')?.textContent ?? '' };
   });
   // The HUD refreshes on a 250 ms timer (and skips while the page is hidden or off the game route), so poll for the
-  // chip to catch up instead of racing the timer with a fixed wait.
-  const waitSky = async (re, ms = 6000) => {
+  // chip to catch up instead of racing the timer with a fixed wait. The software renderer can hold the main thread
+  // for several seconds after a big screenshot, so allow a wide ceiling before calling the chip stale.
+  const waitSky = async (re, ms = 20000) => {
     const start = Date.now();
     let last = await hud();
     while (!re.test(`${last?.label ?? ''} ${last?.text ?? ''}`) && Date.now() - start < ms) {

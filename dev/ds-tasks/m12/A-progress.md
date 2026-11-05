@@ -4,6 +4,18 @@ State: in progress (acceptance runs per viewport under way). Step 13 now picks a
 after step 11, or walks the chosen one down first: Cook a Meal's check only accepts a stove on the actor's own level,
 while the option is offered from any floor, so in the full run the action was cancelled on its first tick upstairs.
 
+Two causes found by the desktop runs and fixed in the app/script:
+
+- **Build tool tabs.** Eleven tool tabs in one 380 px row meant Fence, Garden and Pool sat outside the panel, and the
+  last tabs could not be clicked (desktop step 11's exterior section failed on Fence, step 14 on Pool, even after
+  scrolling the strip).
+  `src/ui/build/build.css` now wraps `.bb-tool-tabs` onto two rows, so every tool is on screen and reachable.
+- **HUD chip poll.** The 250 ms HUD timer can be starved for several seconds by a big SwiftShader screenshot, so the
+  first step-14 chip check could read a stale label; `waitSky` now polls for up to 20 s instead of 6 s.
+
+After the fix, desktop step 14 passes end to end (weather, snowman, Build/Pool tab, pool built and paid for, swim,
+Get Out on the deck, Quayside Baths and back) in a targeted `--steps=14 --fast-start` run.
+
 ## What was added to `tests/e2e/acceptance.mjs`
 
 - **Step 13, Milestone 11.5** (`stepAnimations`): one household member cooks a meal and eats it. The step reads only
@@ -52,6 +64,7 @@ Explicit, realistic timeouts instead of a global change:
 ## Files changed
 
 - `tests/e2e/acceptance.mjs`
+- `src/ui/build/build.css` (tool tabs wrap onto two rows)
 - `tests/unit/surfaces/painters.test.ts`, `tests/unit/surfaces/mapPainters.test.ts`,
   `tests/unit/integration/floors.test.ts`
 - `src/main.ts` (debug `setWeather` keeps snow that has already settled)

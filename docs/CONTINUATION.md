@@ -180,7 +180,11 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - Steps 13 and 14 read the HUD chip by polling (its 250 ms timer can lag), advance one sim tick before reading the
     fridge door's openness (at speed 0 frames do not move the game clock), and fetch the self menu with a person pick
     (`{ kind: 'person', personId: m }`; `PickResult` has no `'self'`). The carried plate is read at the first stage-2
-    tick of Cook a Meal, before the served item takes over in the world.
+    tick of Cook a Meal, before the served item takes over in the world. The step-14 chip poll allows 20 s: a big
+    SwiftShader screenshot can starve the 250 ms HUD timer for several seconds.
+  - The Build tool tabs now wrap onto two rows in the side panel (eleven tools do not fit one 380 px row). Before
+    that, Fence, Garden and Pool sat outside the row and desktop Playwright could not click them (step 11's exterior
+    section and step 14).
   - Desktop acceptance takes about 35-40 minutes.
 - Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.
