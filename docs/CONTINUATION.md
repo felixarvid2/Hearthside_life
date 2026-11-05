@@ -32,8 +32,9 @@ take about 5-10 minutes per viewport, while the full desktop run takes about 68 
 
 - **Animations and feedback (step 13).** Pause the game, select a household member and queue Cook a Meal at the fridge.
   Step 11 can leave the household upstairs, so the step first picks a member who is already on the kitchen floor, or
-  walks the chosen one down (Cook a Meal's check only accepts a stove on the actor's own level; the option itself is
-  offered from any floor).
+  walks the chosen one down, so the step's timings stay those of a same-floor cook. (Cooking from another floor works:
+  use points carry their absolute level, the cook's own floor is preferred, and availability and the chain share
+  `stovesOn` in `src/sim/cooking.ts`; see `tests/unit/integration/cook-floors.test.ts`.)
   During the 2-minute reach-in the fridge door is open (the probe reports `openness` above 0.5 once one sim tick has
   advanced the game clock: at speed 0 frames alone do not move it) and an ingredients prop is in the right hand; at the
   stove the door closes, the hob rings/pot/steam appear and the prop becomes a spatula; the served plate is carried, the
