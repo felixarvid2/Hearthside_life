@@ -1,8 +1,39 @@
 # Task A: acceptance steps and documentation for Milestones 11.5 and 12
 
-State: in progress (acceptance runs per viewport under way). Step 13 now picks a member who is on the kitchen floor
+State: complete. All three full acceptance runs pass on the final tree (358/358 portrait, 356/356 landscape,
+344/344 desktop) and every other check is green; details below. Step 13 picks a member who is on the kitchen floor
 after step 11, or walks the chosen one down first: Cook a Meal's check only accepts a stove on the actor's own level,
 while the option is offered from any floor, so in the full run the action was cancelled on its first tick upstairs.
+
+Six causes found by the full runs and fixed in the app/script:
+
+- **Roommate wage check assumed she went to work.** The step required a wage for the roommate whenever her career
+  scheduled a shift that day, but a wage is paid for time worked and a roommate who stays home has no shift record
+  (desktop step 2 spent the day at home). The check now also asks for `career.shift.workedMinutes > 0`.
+- **Neighbour visit ends before the step taps her** (landscape and desktop, a known flake). The step waited up to
+  120 game minutes for a free social; if the Welcome Wagon visit ended first, it tapped a person who had gone home
+  and spent four long retries plus three camera turns on her. The step now checks that she is still on the lot and
+  calls `game.inviteHome` to ask her over again before tapping.
+- **Portrait room preview drag.** Step 11 occasionally failed with Confirm disabled ("Draw or tap something first."):
+  `framePair` accepted a camera placement whose corner was 12 px above the build sheet. That point is canvas on the
+  exact pixel but the floating floor selector (`.level-select`, 44 px tall) covers it a moment later, so the synthetic
+  touch pressed a HUD button and no pointer event reached the canvas. `framePair` and `framePairAt` now accept only
+  placements with a 16 px ring of canvas around both points, and the portrait build step drags once more when the
+  sheet is still on its plain hint.
+- **Build tool tabs.** Eleven tool tabs in one 380 px row meant Fence, Garden and Pool sat outside the panel, and the
+  last tabs could not be clicked (desktop step 11's exterior section failed on Fence, step 14 on Pool, even after
+  scrolling the strip).
+  `src/ui/build/build.css` now wraps `.bb-tool-tabs` onto two rows, so every tool is on screen and reachable.
+- **HUD chip poll.** The 250 ms HUD timer can be starved for several seconds by a big SwiftShader screenshot, so the
+  first step-14 chip check could read a stale label; `waitSky` now polls for up to 20 s instead of 6 s.
+- **Build tool tab tap stall (desktop step 11).** Playwright waited 30 s for a `.tab[data-id=...]` click to become
+  "visible, enabled and stable" while the tab had not moved: instrumentation sampled the same box at `(1009,248,
+  103x44)` before and after, panel height 584 px, scrollTop 0, speed 0. The software renderer holds the page while it
+  compiles new shaders on a first paint (opening Build or a tool). `T.tap` now retries once with a 60 s timeout and
+  logs `tap retry after …`; the targeted step 11 passed 84/84 with one retry and the final full desktop run needed none.
+
+After the fix, desktop step 14 passes end to end (weather, snowman, Build/Pool tab, pool built and paid for, swim,
+Get Out on the deck, Quayside Baths and back) in a targeted `--steps=14 --fast-start` run.
 
 ## What was added to `tests/e2e/acceptance.mjs`
 
@@ -34,24 +65,34 @@ Explicit, realistic timeouts instead of a global change:
 
 | Viewport | Steps 13, 14 (targeted `--steps=13,14 --fast-start`) | Full run (steps 1-14) |
 |---|---|---|
-| portrait 390x844 | 43/43 | 358/358 |
-| landscape 844x390 | 43/43 | 356/356 |
-| desktop 1280x720 | running | running |
+| portrait 390x844 | 43/43 | 358/358 (final tree, 23 min) |
+| landscape 844x390 | 43/43 | 356/356 (final tree, 25 min) |
+| desktop 1280x720 | 42/42 | 344/344 (final tree, 68 min; step 11's tab tap needed the one-shot retry in an earlier targeted run) |
+
+All three full runs finished with 0 failures on the final tree (portrait 358/358, landscape 356/356, desktop
+344/344), and step 13 (progress pill, fridge door, hand prop, eating) and step 14 (weather, snowman, pool, swim,
+Quayside Baths) passed in each. The touch viewports count a few more checks than desktop because their audits add
+touch-target checks (43 versus 42 for steps 13 and 14 alone). Total wall time: about 2 hours for the three full runs.
 
 ## Other checks
 
 | Check | Result |
 |---|---|
-| `npm run typecheck` | pass (on the tree with the parallel M11.5 review fixes; re-run before the final commit) |
+| `npm run typecheck` | pass (final tree) |
 | `npm test` | pass: 160 files / 2074 tests |
 | `npm run content:check` | pass: 0 errors, 0 warnings |
-| `npm run build` | pass (12.25 s) |
-| `npm run e2e` | pending |
-| `npm run e2e:creator` | pending |
+| `npm run build` | pass (11.66 s; main chunk 2.82 MB, warning only) |
+| `npm run e2e` | pass (desktop, landscape and portrait; screenshots in `tests/e2e/out/screenshots`) |
+| `npm run e2e:creator` | pass: 288/288 in portrait, landscape and desktop |
+
+`bash tools/te-save.sh` could not be run in this sandbox (Bash approval), so the supervisor should run it and include
+`.tokeneconomizer/` in the last commit, as CLAUDE.md asks. The API-key scan of the tree was clean (the only matches
+were environment-variable names in `tools/ds-agent.sh` and task logs, never a key value).
 
 ## Files changed
 
 - `tests/e2e/acceptance.mjs`
+- `src/ui/build/build.css` (tool tabs wrap onto two rows)
 - `tests/unit/surfaces/painters.test.ts`, `tests/unit/surfaces/mapPainters.test.ts`,
   `tests/unit/integration/floors.test.ts`
 - `src/main.ts` (debug `setWeather` keeps snow that has already settled)

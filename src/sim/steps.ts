@@ -87,6 +87,16 @@ function approachOf(c: UseCandidate): Tile | null {
   return c.slot ? c.slot.approach : c.tile ?? null;
 }
 
+/**
+ * Floor of a use point's object (Milestone 12: use points are absolute, never relative to the person).
+ * Slots and stand tiles from the nav provider carry their level above the ground floor; absent means level 0.
+ * Planning a route with a level-less goal would search the person's own floor instead, so a fridge downstairs
+ * was "unreachable" from upstairs (or, worse, the tile above it was used).
+ */
+function candidateLevel(c: UseCandidate): number {
+  return c.slot ? c.slot.level ?? c.slot.approach.level ?? 0 : c.tile?.level ?? 0;
+}
+
 /** Clears a use point from an action's data. */
 export function clearUsePoint(a: ActionInstance, prefix: UsePointPrefix): void {
   delete a.data[`${prefix}Obj`];
@@ -143,23 +153,26 @@ export function candidateFree(ctx: SimCtx, lotId: Id, level: number, c: UseCandi
 
 /**
  * Picks the first free and (optionally) reachable candidate, ordered by distance from `from`.
- * Stores it under `prefix` in the action's data and, when `plan` is set, stores the route.
+ * `preferLevel` puts candidates on that floor first (a stove upstairs is preferred over one downstairs even
+ * when the latter is closer in plan view). Stores the choice under `prefix` in the action's data and, when
+ * `plan` is set, stores the route.
  * Returns null on success or a readable reason.
  */
 export function pickUsePoint(
   ctx: SimCtx, p: Person, a: ActionInstance, prefix: UsePointPrefix, candidates: UseCandidate[],
-  opts: { plan: boolean; what: string; from?: { x: number; z: number } },
+  opts: { plan: boolean; what: string; from?: { x: number; z: number }; preferLevel?: number },
 ): string | null {
   const loc = lotLoc(p);
   if (!loc) return `${p.firstName} isn't here.`;
   const from = opts.from ?? loc;
+  const rank = (c: UseCandidate) => (opts.preferLevel === undefined || candidateLevel(c) === opts.preferLevel ? 0 : 1);
   const scored = candidates
     .map((c, i) => {
       const ap = approachOf(c);
       return { c, i, d: ap ? dist(from.x, from.z, ap.x + 0.5, ap.z + 0.5) : Infinity };
     })
     .filter((s) => Number.isFinite(s.d))
-    .sort((x, y) => x.d - y.d || x.i - y.i);
+    .sort((x, y) => rank(x.c) - rank(y.c) || x.d - y.d || x.i - y.i);
   let sawFree = false;
   for (const { c } of scored) {
     if (!candidateFree(ctx, loc.lotId, loc.level, c, a.id)) continue;
@@ -169,7 +182,7 @@ export function pickUsePoint(
       const goal = approachOf(c);
       if (!goal) continue;
       const cur = tileOfLoc(loc);
-      const path = planRoute(ctx, p, [goal]);
+      const path = planRoute(ctx, p, [{ ...goal, level: candidateLevel(c) }]);
       if (!path) continue;
       a.route = routeFromPath(loc, cur, path);
     }

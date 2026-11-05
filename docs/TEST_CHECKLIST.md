@@ -12,7 +12,7 @@ Run the relevant checks after each milestone; do not repeat unrelated tests just
 | `npm run content:check` | Registry validation and distinct-design counts (CONTENT_STATUS numbers) |
 | `npm run e2e` | Playwright (Chromium, SwiftShader) smoke and acceptance run with screenshots in desktop, portrait and landscape |
 | `npm run e2e:creator` | Milestone 3 creator acceptance through the real creator UI in 390x844 and 844x390 touch and 1280x720 desktop: live face and body sliders (preview must change), body and face presets, outfit slots with the new garments and thumbnails, hats / scarf / necklace / watch / bracelet, randomize with locks, undo/redo, household ties, appearance and household import/export (including substitutions), Move In and a comparison with the game; screenshots and `report.json` in `tests/e2e/out/creator-m3/` |
-| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation, M6 career panel / bill payment / freelance sale, M11.5 moving parts, hand props, screens and the progress pill, M12 seasons/weather, a built pool, swimming and the Quayside Baths venue) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 10 minutes per touch viewport and 35-40 on desktop under SwiftShader; `--only=portrait` runs one, `--steps=13,14` just the new milestones) |
+| `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation, M6 career panel / bill payment / freelance sale, M11.5 moving parts, hand props, screens and the progress pill, M12 seasons/weather, a built pool, swimming and the Quayside Baths venue) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 23-25 minutes per touch viewport and about 70 on desktop under SwiftShader; `--only=portrait` runs one, `--steps=13,14` just the new milestones) |
 
 Key automated areas (brief section 25):
 
@@ -185,9 +185,9 @@ checks every step; the totals below count the individual `T.check` assertions an
 
 | Viewport | M11.5 + M12 steps (13, 14) | Full run (steps 1-14) |
 |---|---|---|
-| portrait 390x844 | see `dev/ds-tasks/m12/A-progress.md` | see `dev/ds-tasks/m12/A-progress.md` |
-| landscape 844x390 | see `dev/ds-tasks/m12/A-progress.md` | see `dev/ds-tasks/m12/A-progress.md` |
-| desktop 1280x720 | see `dev/ds-tasks/m12/A-progress.md` | see `dev/ds-tasks/m12/A-progress.md` |
+| portrait 390x844 | 43/43 | 358/358 |
+| landscape 844x390 | 43/43 | 356/356 |
+| desktop 1280x720 | 42/42 | 344/344 |
 
 The milestone-by-milestone totals are in the device log below; step numbers are listed next to each milestone in
 CONTINUATION.md.

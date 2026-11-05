@@ -27,13 +27,14 @@ the rest of Milestone 10, then Milestone 13 (release preparation).
 ## How to check Milestones 11.5 and 12
 
 Acceptance steps 13 and 14 run in every viewport (step 13 is M11.5, step 14 is M12); run them alone with
-`npm run e2e:acceptance -- --only=portrait --steps=13,14 --fast-start` (portrait or landscape; the desktop viewport
-takes about 40 minutes for the full run).
+`npm run e2e:acceptance -- --only=portrait --steps=13,14 --fast-start` (portrait or landscape; the two steps alone
+take about 5-10 minutes per viewport, while the full desktop run takes about 68 minutes).
 
 - **Animations and feedback (step 13).** Pause the game, select a household member and queue Cook a Meal at the fridge.
   Step 11 can leave the household upstairs, so the step first picks a member who is already on the kitchen floor, or
-  walks the chosen one down (Cook a Meal's check only accepts a stove on the actor's own level; the option itself is
-  offered from any floor).
+  walks the chosen one down, so the step's timings stay those of a same-floor cook. (Cooking from another floor works:
+  use points carry their absolute level, the cook's own floor is preferred, and availability and the chain share
+  `stovesOn` in `src/sim/cooking.ts`; see `tests/unit/integration/cook-floors.test.ts`.)
   During the 2-minute reach-in the fridge door is open (the probe reports `openness` above 0.5 once one sim tick has
   advanced the game clock: at speed 0 frames alone do not move it) and an ingredients prop is in the right hand; at the
   stove the door closes, the hob rings/pot/steam appear and the prop becomes a spatula; the served plate is carried, the
@@ -113,6 +114,25 @@ Checks on the M11 state (own PR):
 
 The M11 numbers above were rerun on the final tree after task E (2026-11-03): typecheck clean, 129 files / 1746 tests, content
 0/0, build passes with the existing 2.27 MB main-chunk warning.
+
+Checks on the M11.5 and M12 state (this PR, rerun on the final tree 2026-11-05):
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` | 160 files, 2074 tests |
+| `npm run content:check` | 0 errors, 0 warnings |
+| `npm run build` | passes (main chunk 2.82 MB, warning only) |
+| `npm run e2e` | OK in desktop, landscape and portrait |
+| `npm run e2e:creator` | 288/288 in portrait, landscape and desktop |
+| `npm run e2e:acceptance`, portrait 390x844 | 358/358 (about 23 minutes) |
+| `npm run e2e:acceptance`, landscape 844x390 | 356/356 (about 25 minutes) |
+| `npm run e2e:acceptance`, desktop 1280x720 | 344/344 (about 68 minutes) |
+| Steps 13 and 14 alone (`--steps=13,14 --fast-start`) | 43/43 portrait and landscape, 42/42 desktop |
+
+The acceptance counts differ by viewport because the touch audits add target-size checks. The per-viewport totals and the
+six app/test causes found by the full runs are in `dev/ds-tasks/m12/A-progress.md`.
+
 Acceptance step 10 is `stepFamily` (M8); step 11 is `stepFloors`, then `stepExterior` (M9). `--steps=12` runs the exterior part alone.
 Fixed late in M9: stairs did not show their mesh after a lot change. The cause was a stale pending promise in `render/objectAssets.ts`
 together with a purge in `setLot`. Runtime models are no longer purged, and acceptance checks `view.objects.hasModel(id)`.
@@ -173,16 +193,36 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
   - The Quayside Baths lot exists only in worlds created after M12; old saves keep their 14 lots.
   - Rain/snow particles are capped at 1500 desktop / 600 touch and hidden by reduced motion or Weather effects off.
 - Flakes in acceptance:
-  - Step 2 "neighbour visible to tap".
+  - Step 2 "neighbour visible to tap". The Welcome Wagon visit ends on a clock: a slow screenshot or a long wait for a
+    free social can outlast it, and the step then tapped a neighbour who had gone home (landscape and desktop,
+    2026-11-05). It now checks she is still on the lot and, if not, calls `game.inviteHome` and waits for her to
+    arrive again before tapping.
+  - Step 2 "the roommate (own shift) was paid exactly once" failed on desktop when the roommate stayed home all day:
+    the step assumed a scheduled shift was worked, while a wage pays only for time worked and an absent roommate has
+    no shift record. The check now requires `career.shift.workedMinutes > 0` as well.
   - Step 7 wall-paint side checks, seen in portrait.
   - Step 8 "computer: tap point picks the intended thing" hit wall `0:h:13:4` once in landscape and once in desktop; `tapAndOpenMenu` now turns the camera and looks again when a wall hides an object (desktop passed 302/0 after that).
   - Step 11 "Water the Bed" could be refused by rain; the garden section now calls `forceClearWeather(T)` (task F).
+  - Step 11's room preview drag in portrait could start on the floating floor selector: `framePair` accepted a
+    placement whose corner sat 12 px above the build sheet (free on the exact pixel, but covered by `.level-down` a
+    moment later), so the synthetic touch never reached the canvas and Confirm stayed disabled. `framePair` and
+    `framePairAt` now require a 16 px ring of canvas around both points, and the build step drags once more when the
+    sheet is still on its plain hint.
   - Steps 13 and 14 read the HUD chip by polling (its 250 ms timer can lag), advance one sim tick before reading the
     fridge door's openness (at speed 0 frames do not move the game clock), and fetch the self menu with a person pick
     (`{ kind: 'person', personId: m }`; `PickResult` has no `'self'`). The carried plate is read at the first stage-2
-    tick of Cook a Meal, before the served item takes over in the world.
-  - Desktop acceptance takes about 35-40 minutes.
-- Main JS chunk about 1.65 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
+    tick of Cook a Meal, before the served item takes over in the world. The step-14 chip poll allows 20 s: a big
+    SwiftShader screenshot can starve the 250 ms HUD timer for several seconds.
+  - The Build tool tabs now wrap onto two rows in the side panel (eleven tools do not fit one 380 px row). Before
+    that, Fence, Garden and Pool sat outside the row and desktop Playwright could not click them (step 11's exterior
+    section and step 14).
+  - Step 11 Build tool tabs (desktop): a tap can time out after 30 s waiting for the tab to be "visible, enabled and
+    stable" although the tab has not moved. The software renderer holds the page for most of a minute on a first paint
+    (new shaders when Build or a tool opens), and Playwright gives up waiting for a stable frame. `T.tap` now retries
+    once with a 60 s timeout and logs `tap retry after …`; the retried step passes without a layout change.
+  - Acceptance run time on the final tree: about 23 minutes portrait, 25 landscape and 68 minutes desktop
+    (SwiftShader; the desktop run renders 1280x720 and spends most of its time in screenshots).
+- Main JS chunk about 2.82 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
   build/creator-only modules.
 - Boot progress bar is not driven.
 - M7 neighbourhood:

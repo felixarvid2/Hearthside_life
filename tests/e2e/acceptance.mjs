@@ -223,7 +223,15 @@ async function runViewport(browser, vpName, vp) {
       if (total) { auditFindings.push({ viewport: vpName, label, ...r }); log(`AUDIT ${label}: ${r.small.length} small targets, ${r.tiny.length} tiny texts, ${r.over.length} overlaps${r.overflowX ? ', horizontal overflow' : ''}`); }
     },
     async frames(n = 3, dt = 1 / 30) { await page.evaluate(([n2, dt2]) => { for (let i = 0; i < n2; i++) window.hearthside.debug.frame(dt2); }, [n, dt]); },
-    async tap(loc, opts = {}) { if (vp.touch) await loc.tap({ timeout: 30000, ...opts }); else await loc.click({ timeout: 30000, ...opts }); },
+    async tap(loc, opts = {}) {
+      const o = { timeout: 30000, ...opts };
+      // The software renderer can hold the page for most of a minute on a first paint (new shaders when Build or a new
+      // tool opens). Playwright then gives up waiting for a stable frame although the element has not moved; retry once.
+      try { if (vp.touch) await loc.tap(o); else await loc.click(o); } catch (e) {
+        log(`tap retry after ${String(e?.message ?? e).split('\n')[0]}`);
+        if (vp.touch) await loc.tap({ ...o, timeout: 60000 }); else await loc.click({ ...o, timeout: 60000 });
+      }
+    },
     async tapAt(x, y) { if (vp.touch) await page.touchscreen.tap(x, y); else await page.mouse.click(x, y); },
     st: () => page.evaluate(() => JSON.parse(JSON.stringify({ clock: window.hearthside.debug.state()?.clock ?? null }))),
   };
@@ -385,7 +393,8 @@ async function stepCreator(T) {
   if (!patterned) {
     // the random starting garment has no patterns (e.g. overalls): try other garments until one offers a pattern
     T.ok(S, 'clothing: the starting garments offer no pattern; switching garment', 'looking for a patterned garment');
-    outer: for (const layerName of ['top', 'full', 'bottom']) {
+    // A full outfit first: switching a full outfit to a top alone leaves no bottom, and Move In is then refused.
+    outer: for (const layerName of ['full', 'top', 'bottom']) {
       const nG = await page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).count();
       for (let j = 0; j < nG; j++) {
         const chip = page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).nth(j);
@@ -398,6 +407,23 @@ async function stepCreator(T) {
           const label = (await pc.nth(k).innerText()).trim();
           if (!/^\W*solid/i.test(label)) { patterned = { layer: page.locator(`.cr-layer[data-layer="${layerName}"]`), chip: pc.nth(k), label, layerName }; break outer; }
         }
+      }
+    }
+    // A top or bottom chosen in place of a full outfit: make sure the other half is worn too.
+    const other = patterned?.layerName === 'top' ? 'bottom' : patterned?.layerName === 'bottom' ? 'top' : null;
+    if (other) {
+      const og = page.locator(`.cr-layer[data-layer="${other}"] [aria-label$=" garments"] .chip`);
+      const nO = await og.count();
+      let worn = false;
+      for (let j = 0; j < nO && !worn; j++) {
+        worn = (await og.nth(j).getAttribute('aria-checked')) === 'true' && !/^\W*none/i.test((await og.nth(j).innerText()).trim());
+      }
+      for (let j = 0; j < nO && !worn; j++) {
+        if (/^\W*none/i.test((await og.nth(j).innerText()).trim())) continue;
+        await T.tap(og.nth(j));
+        await T.frames(3);
+        worn = true;
+        T.ok(S, `clothing: a ${other} added to go with the patterned ${patterned.layerName}`, (await og.nth(j).innerText()).trim());
       }
     }
   }
@@ -546,7 +572,10 @@ function PAGE_HELPERS() {
   const conv = (s) => { const r = canvas().getBoundingClientRect(); return { x: s.x + r.left, y: s.y + r.top, vis: s.visible }; };
   const isFree = (x, y) => { const el = document.elementFromPoint(x, y); return !!el && el.id === 'game-canvas'; };
   const inView = (x, y) => x > 4 && y > 4 && x < innerWidth - 4 && y < innerHeight - 4;
-  const finish = (s) => ({ ...s, free: s.vis && inView(s.x, s.y) && isFree(s.x, s.y) });
+  // A finger is wider than a pixel: a point 10 px from a panel or a HUD card is free on the exact pixel but is no place to
+  // start a drag (the sheet and the floating floor selector sit a few px away and move with the layout).
+  const isClear = (x, y, r = 16) => isFree(x, y) && isFree(x - r, y) && isFree(x + r, y) && isFree(x, y - r) && isFree(x, y + r);
+  const finish = (s) => { const ok = s.vis && inView(s.x, s.y) && isFree(s.x, s.y); return { ...s, free: ok, clear: ok && isClear(s.x, s.y) }; };
   const h = () => window.hearthside;
   window.__t = {
     person(id, y = 0.9) { const p = h().view.personPosition(id); if (!p) return null; return finish(conv(h().game.view.worldToScreen(p.x, y, p.z))); },
@@ -808,6 +837,23 @@ async function tapAndOpenMenu(T, kind, id, S, label) {
     log(`${label}: person is not tappable right now; waiting 3 game minutes`);
     await runUntil(T, 4 * 3, 'false');
   }
+  // A guest who walked inside can stand behind a wall from this camera yaw, so no tap point picks them (desktop
+  // has the narrowest view of the lot). Turn the camera and look again, as a player would; objects below already
+  // do this. Each retry is costly because waiting advances the clock, so rotate before giving up.
+  if (kind === 'person') {
+    const hitAt = async (q) => q && (await T.page.evaluate(([x, y]) => { const pk = window.__t.pick(x, y); return pk.kind === 'person' ? pk.personId : null; }, [q.x, q.y]));
+    let q = await pointFor(T, kind, id, personY);
+    let hit = await hitAt(q);
+    for (let turn = 0; turn < 3 && hit !== id; turn++) {
+      log(`${label}: person pick was ${JSON.stringify(hit)}; turning the camera`);
+      await T.page.evaluate(() => window.hearthside.game.view.rotate(1));
+      await T.frames(30);
+      await T.page.evaluate((pid) => window.hearthside.game.view.focusPerson(pid), id);
+      await settle(T);
+      q = await pointFor(T, kind, id, personY);
+      hit = await hitAt(q);
+    }
+  }
   let p = await pointFor(T, kind, id, kind === 'person' ? personY : undefined);
   if (!p?.free) { T.bad(S, `${label}: visible to tap`, `point ${JSON.stringify(p)} not on free canvas`); return null; }
   let pick = await T.page.evaluate(([x, y]) => window.__t.pick(x, y), [p.x, p.y]);
@@ -1041,11 +1087,14 @@ async function stepLive(T) {
       const lvl = def?.levels.find((l) => l.level === p.career.level);
       return !!lvl && lvl.days.includes(Math.floor(st.clock.minutes / 1440) % 7);
     };
-    return { mira: count(m), sage: count(s), sageWorksToday: worksToday(s), all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
+    // A shift pays by time worked, and only people who went to work have a shift record at all; the roommate may
+    // simply have stayed home (autonomy), which is not a missing wage.
+    const sc = st.people[s].career?.shift;
+    return { mira: count(m), sage: count(s), sageWorksToday: worksToday(s), sageWorked: !!sc && (sc.workedMinutes ?? 0) > 0, all: hh.ledger.filter((e) => e.kind === 'wage').map((e) => `${e.amount}:${e.label}:${e.occurrence}`), funds: hh.funds, entries: hh.ledger.map((e) => ({ id: e.id, kind: e.kind, amount: e.amount, label: e.label })) };
   }, [mira, sage, day0, wageBefore.ids]);
   log('wages', JSON.stringify(wages));
   T.check(S, 'exactly one wage ledger entry for the first person\'s shift', wages.mira === 1, JSON.stringify(wages.all));
-  T.check(S, 'the roommate (own shift) was paid exactly once if they worked today', wages.sage === 1 || !wages.sageWorksToday, `sage entries ${wages.sage}; career ${startInfo.sageCareer}; works today ${wages.sageWorksToday}`);
+  T.check(S, 'the roommate (own shift) was paid exactly once if they worked today', wages.sage === 1 || !wages.sageWorksToday || !wages.sageWorked, `sage entries ${wages.sage}; career ${startInfo.sageCareer}; works today ${wages.sageWorksToday}; went to work ${wages.sageWorked}`);
   // Milestone 4 adds expenses during a shift (groceries, repairperson), so funds need not rise overall: check instead that the
   // wage was credited and that the funds change equals exactly the new ledger entries (no money appears or vanishes).
   const seen = new Set(wageBefore.ids);
@@ -1137,6 +1186,22 @@ async function stepLive(T) {
     // the neighbour may be mid-conversation with the roommate: wait until a social option is enabled for the first person
     const free = await runUntil(T, 4 * 120, `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social' && o.interactionId !== 'introduce')`);
     log('neighbour free for social after ticks', free.ticks, free.done);
+    // The first visit ends on a clock (a slow screenshot or a long wait can outlast it), which used to leave the step
+    // tapping a neighbour who had already gone home. Ask her over again, as a player would, and carry on.
+    const stillHere = await page.evaluate((id) => {
+      const st = window.hearthside.debug.state(), p = st.people[id];
+      return p.location.kind === 'lot' && p.location.lotId === st.activeLotId;
+    }, nb[0].id);
+    if (!stillHere) {
+      const invited = await page.evaluate(([host, guest]) => window.hearthside.game.inviteHome(host, guest), [mira, nb[0].id]);
+      const back = await runUntil(T, 4 * 100, `(() => { const p = st.people['${nb[0].id}']; return p.location.kind === 'lot' && p.location.lotId === st.activeLotId; })()`);
+      log('neighbour gone home; invited back', JSON.stringify({ invited, back: back.done, ticks: back.ticks }));
+      if (back.done) {
+        await selectMember(T, mira);
+        await T.frames(6);
+        await runUntil(T, 4 * 30, `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social' && o.interactionId !== 'introduce')`);
+      }
+    }
     await T.frames(3);
     await dismissMenu(T);
     const nm = await tapAndOpenMenu(T, 'person', nb[0].id, S, 'neighbour');
@@ -1845,7 +1910,8 @@ async function frameNorth(T, cx, cz, tilesWide) {
  * Screen points for two ground points, measured under one camera. Measuring each point after recentring the camera
  * on it separately puts both in the middle of the free area, so a drag between them has zero length (this happened in
  * portrait once the room was wider than the uncovered strip). Here the camera glides to their midpoint and, if needed,
- * zooms out until both are free of UI and at least `minPx` apart, then both are measured under that single camera.
+ * zooms out until both are clear of UI (a 16 px ring is canvas too, see `isClear`) and at least `minPx` apart, then both
+ * are measured under that single camera.
  */
 async function framePair(T, kind, a, b, minPx = 24) {
   const off = kind === 'tile' ? 0.5 : 0;
@@ -1866,8 +1932,8 @@ async function framePair(T, kind, a, b, minPx = 24) {
     for (const [ox, oy] of offsets) {
       await place(ppm, ox, oy);
       const [pa, pb] = await measure();
-      const ok = !!(pa?.free && pb?.free && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx);
-      tried.push({ ppm, ox, oy, ok, a: pa && { x: Math.round(pa.x), y: Math.round(pa.y), free: pa.free }, b: pb && { x: Math.round(pb.x), y: Math.round(pb.y), free: pb.free } });
+      const ok = !!(pa?.clear && pb?.clear && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx);
+      tried.push({ ppm, ox, oy, ok, a: pa && { x: Math.round(pa.x), y: Math.round(pa.y), free: pa.free, clear: pa.clear }, b: pb && { x: Math.round(pb.x), y: Math.round(pb.y), free: pb.free, clear: pb.clear } });
       if (ok) return { a: pa, b: pb, ppm, tried };
     }
     if (ppm <= 20) { const [pa, pb] = await measure(); return { a: pa, b: pb, ppm, tried }; }
@@ -2608,7 +2674,7 @@ async function framePairAt(T, a, b, minPx = 24) {
     for (const [ox, oy] of offsets) {
       await place(ppm, ox, oy);
       const [pa, pb] = await measure();
-      if (pa?.free && pb?.free && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx) return { a: pa, b: pb, ppm };
+      if (pa?.clear && pb?.clear && Math.hypot(pa.x - pb.x, pa.y - pb.y) >= minPx) return { a: pa, b: pb, ppm };
     }
     if (ppm <= 20) { const [pa, pb] = await measure(); return { a: pa, b: pb, ppm }; }
   }
@@ -2713,7 +2779,13 @@ async function stepFloors(T) {
   T.check(S, 'both corners of the ground room are on screen, free of UI', !!c0.a?.free && !!c0.b?.free, JSON.stringify(c0));
   await drag(T, c0.a, c0.b);
   await T.frames(4);
-  if (touch) { await T.shot('m9-room-preview'); await tapFooter(T, '.bb-confirm'); }
+  if (touch) {
+    // A synthetic touch can land on a HUD control instead of the canvas (the floating floor selector sits a few px from
+    // the sheet), leaving the sheet on its plain hint: drag once more before giving up on the preview.
+    if (/^Drag a rectangle on the ground/.test((await footerText(T)).trim())) { await drag(T, c0.a, c0.b); await T.frames(4); }
+    await T.shot('m9-room-preview');
+    await tapFooter(T, '.bb-confirm');
+  }
   await page.waitForTimeout(500);
   await T.frames(6);
   const s1 = await floorsSnap(T);
@@ -3614,6 +3686,9 @@ async function stepAnimations(T) {
 
   // ---- Cook a Meal: the fridge reach-in (stage 0), the stove (stage 1), the plate (stage 2), then eatMeal
   const ready = await runUntil(T, 4 * 120, `g.options('${member}', { kind: 'object', objectId: '${info.fridge}' }).some((o) => o.interactionId === 'cookMeal' && o.enabled)`);
+  // The wait above ticks the sim while the member is idle, so autonomy can queue Sleep (likely late in the day): clear
+  // it so the player's Cook a Meal is the next action.
+  await clearQueue(member);
   const queued = await page.evaluate(([m, f]) => {
     const g = window.hearthside.game;
     const opt = g.options(m, { kind: 'object', objectId: f }).find((o) => o.interactionId === 'cookMeal');
@@ -3705,6 +3780,9 @@ async function stepAnimations(T) {
 
   // ---- a computer used for writing: the document screen, and its text grows with the action
   const writeReady = await runUntil(T, 4 * 300, `g.options('${member}', { kind: 'object', objectId: '${info.computer}' }).some((o) => (o.interactionId === 'writeArticle' || o.interactionId === 'writeBook') && o.enabled)`);
+  // Same as for the cook: a tired member can get an autonomy Sleep queued during the wait; clear it so the writing
+  // action runs next (the option is offered whether or not they are busy).
+  await clearQueue(member);
   const write = await page.evaluate(([m, c]) => {
     const g = window.hearthside.game;
     const opts = g.options(m, { kind: 'object', objectId: c });
@@ -3762,8 +3840,9 @@ async function stepWorldM12(T) {
     return { label: e.getAttribute('aria-label') ?? '', title: e.getAttribute('title') ?? '', text: e.querySelector('.clock-sky-text')?.textContent ?? '' };
   });
   // The HUD refreshes on a 250 ms timer (and skips while the page is hidden or off the game route), so poll for the
-  // chip to catch up instead of racing the timer with a fixed wait.
-  const waitSky = async (re, ms = 6000) => {
+  // chip to catch up instead of racing the timer with a fixed wait. The software renderer can hold the main thread
+  // for several seconds after a big screenshot, so allow a wide ceiling before calling the chip stale.
+  const waitSky = async (re, ms = 20000) => {
     const start = Date.now();
     let last = await hud();
     while (!re.test(`${last?.label ?? ''} ${last?.text ?? ''}`) && Date.now() - start < ms) {

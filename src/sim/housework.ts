@@ -95,7 +95,7 @@ function itemCandidates(ctx: SimCtx, lotId: Id, item: WorldItem): UseCandidate[]
   const surface = item.position.onObjectId ? objectRef(ctx, lotId, item.position.onObjectId) : null;
   return surface
     ? standCandidates(ctx, lotId, surface.obj.id)
-    : [{ objectId: item.id, tile: { x: Math.floor(item.position.x), z: Math.floor(item.position.z) } }];
+    : [{ objectId: item.id, tile: { x: Math.floor(item.position.x), z: Math.floor(item.position.z), level: item.position.level } }];
 }
 
 /** Goal for the item's stored use point (a surface object, or its floor tile). */
