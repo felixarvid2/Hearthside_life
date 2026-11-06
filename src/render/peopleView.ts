@@ -6,11 +6,12 @@
 import * as THREE from 'three';
 import { ANIM_IDS, type AnimId } from '../core/anim';
 import type { CharacterAssets } from '../characters/assets';
-import { CharacterView } from '../characters/CharacterView';
+import type { PersonView } from '../characters/personView';
+import { createPersonView, wantsModular } from '../characters/personView';
 import { currentOutfit } from '../characters/outfits';
 import type { ContentDB } from '../content/types';
 import type { WorldSlot } from '../core/nav';
-import type { Id, Lot, Person, Posture, WorldState } from '../core/types';
+import type { Appearance, Id, LifeStage, Lot, Outfit, OutfitCategory, Person, Posture, WorldState } from '../core/types';
 import { iconSvg } from '../ui/kit/icons';
 import { levelY } from '../world/levels';
 import { resolveSlots } from '../world/slots';
@@ -27,7 +28,9 @@ const SPEECH_SECONDS = 4.5;
 
 interface Entry {
   id: Id;
-  view: CharacterView;
+  view: PersonView;
+  /** What the view was built from, to rebuild it when the implementation changes (style switch, coming of age). */
+  shown: { appearance: Appearance; outfit: Outfit; category: OutfitCategory; stage: LifeStage };
   /** Milestone 11.5: the props in this person's hands (and the plate put down in front). */
   props: HandProps;
   prevX: number; prevZ: number; curX: number; curZ: number;
@@ -188,7 +191,24 @@ export class PeopleView {
 
   /** Rebuilds every person on the assets' current character style. */
   refreshStyle(): void {
-    for (const e of this.entries.values()) e.view.refreshStyle();
+    for (const e of this.entries.values()) {
+      if (wantsModular(this.assets, e.shown.stage) !== e.view.modular) this.swapView(e);
+      else e.view.refreshStyle();
+    }
+  }
+
+  /** Replaces a person's view with the implementation the current style and life stage call for. */
+  private swapView(e: Entry): void {
+    e.props.dispose();
+    e.view.dispose();
+    const { appearance, outfit, category, stage } = e.shown;
+    const view = createPersonView(this.assets, this.content, appearance, outfit, stage, category);
+    view.root.traverse((o) => { o.frustumCulled = false; });
+    this.group.add(view.root);
+    e.view = view;
+    e.props = new HandProps(view);
+    e.animKey = '';
+    if (this.selected === e.id) view.setSelected(true);
   }
 
   clear(): void {
@@ -208,7 +228,8 @@ export class PeopleView {
 
   private create(p: Person): Entry {
     const outfit = currentOutfit(p);
-    const view = new CharacterView(this.assets, this.content, p.appearance, outfit, p.lifeStage);
+    const category = p.outfits.current.category;
+    const view = createPersonView(this.assets, this.content, p.appearance, outfit, p.lifeStage, category);
     const props = new HandProps(view);
     view.root.traverse((o) => { o.frustumCulled = false; });
     this.group.add(view.root);
@@ -225,8 +246,8 @@ export class PeopleView {
     this.overlay?.appendChild(el);
     const loc = p.location.kind === 'lot' ? p.location : null;
     const e: Entry = {
-      id: p.id, view, props, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
-      facing: loc?.facing ?? 0, animKey: '', appearanceKey: stageKey(p), outfitKey: JSON.stringify(outfit),
+      id: p.id, view, props, shown: { appearance: structuredClone(p.appearance), outfit, category, stage: p.lifeStage }, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
+      facing: loc?.facing ?? 0, animKey: '', appearanceKey: stageKey(p), outfitKey: `${category}|${JSON.stringify(outfit)}`,
       align: loc && (loc.posture === 'seated' || loc.posture === 'lying') ? 1 : 0, slot: null, posture: loc?.posture ?? 'standing',
       shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0, baby: p.lifeStage === 'baby',
     };
@@ -263,10 +284,18 @@ export class PeopleView {
     const p = state.people[id];
     if (!e || !p) return;
     const ak = stageKey(p);
-    if (ak !== e.appearanceKey) { e.appearanceKey = ak; e.baby = p.lifeStage === 'baby'; e.view.setAppearance(p.appearance, p.lifeStage); }
     const outfit = currentOutfit(p);
-    const ok = JSON.stringify(outfit);
-    if (ok !== e.outfitKey) { e.outfitKey = ok; e.view.setOutfit(outfit); }
+    const category = p.outfits.current.category;
+    e.shown = { appearance: structuredClone(p.appearance), outfit, category, stage: p.lifeStage };
+    const ok = `${category}|${JSON.stringify(outfit)}`;
+    if (wantsModular(this.assets, p.lifeStage) !== e.view.modular) {
+      // coming of age (or the reverse) changes which implementation draws the person
+      e.appearanceKey = ak; e.outfitKey = ok; e.baby = p.lifeStage === 'baby';
+      this.swapView(e);
+    } else {
+      if (ak !== e.appearanceKey) { e.appearanceKey = ak; e.baby = p.lifeStage === 'baby'; e.view.setAppearance(p.appearance, p.lifeStage); }
+      if (ok !== e.outfitKey) { e.outfitKey = ok; e.view.setOutfit(outfit, category); }
+    }
     e.name.textContent = p.firstName;
   }
 

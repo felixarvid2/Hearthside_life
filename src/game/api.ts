@@ -282,8 +282,8 @@ export interface GameSettings {
   reducedMotion: boolean;
   textScale: number; // 0.9..1.3
   quality: 'low' | 'high';
-  /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter). */
-  characterStyle: 'mpfb' | 'detailed' | 'classic';
+  /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter); 'quaternius': modular GLB-part adults on top of the classic bodies (preview). */
+  characterStyle: 'mpfb' | 'detailed' | 'classic' | 'quaternius';
   shadows: boolean;
   /** Milestone 12: rain/snow particles (render-only; the weather light tint stays when this is off). */
   weatherEffects: boolean;

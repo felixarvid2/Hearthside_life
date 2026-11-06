@@ -9,6 +9,8 @@
 //   +x is east, +z is south, +y is up. Tile (x, z) covers [x, x+1] x [z, z+1].
 // - Stable ids are strings created by core/ids.ts (`<prefix>_<base36 counter>`), never reused.
 
+import type { ModularLook } from '../characters/modular/types';
+
 export type Id = string;
 export type Cents = number;
 export type GameMinutes = number;
@@ -654,6 +656,11 @@ export interface Appearance {
     lipColor: Hex;
   };
   hair: { styleId: string; color: Hex; highlight: Hex | null; facialHairId: string | null };
+  /**
+   * Look of the modular (GLB-part) character style. Only used by the 'quaternius' character style; absent = derived on the fly
+   * from the fields above (characters/modular/look.ts), never written back implicitly.
+   */
+  modular?: ModularLook;
 }
 
 export type OutfitCategory = 'everyday' | 'formal' | 'work' | 'athletic' | 'sleep' | 'swim';

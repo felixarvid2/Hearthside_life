@@ -17,12 +17,19 @@ import type { RawBody, Vec3 } from './rig';
 import type { BodyTemplate } from './template';
 import { buildBodyTemplate } from './template';
 import { toGeometry } from './geometry';
+import type { ModularRuntime } from './modular/runtime';
 
 /**
  * 'mpfb': the natural MakeHuman bodies (public/assets/characters/mpfb_*.glb, labelled "Natural" in Settings); 'detailed': the
  * scanned Meshy bodies (meshy_*.glb); 'classic': the procedural bodies.
  */
 export type CharacterStyle = 'mpfb' | 'detailed' | 'classic';
+
+/**
+ * The style the player picks in Settings: one of the above, or 'quaternius' (preview): the modular GLB-part characters for adults, on top
+ * of the 'classic' assets (clips, and the bodies of everybody who is not an adult yet).
+ */
+export type CharacterStyleSetting = CharacterStyle | 'quaternius';
 
 // Life stages (heights, which stages have a body of their own, file names): the pure part is in stages.ts
 export { ADULT_HEIGHT, STAGE_BODIES, STAGE_HEIGHTS, stageBodyAvailable, stageBodyFile, stageBodyOf, stageFallbackScale } from './stages';
@@ -79,6 +86,12 @@ export interface CharacterAssets {
   /** The frames of the active style. */
   frames: Record<BodyFrame, FrameAssets>;
   style: CharacterStyle;
+  /** The style in effect as the player chose it ('quaternius' only while `modular` is loaded; otherwise equal to `style`). */
+  setting: CharacterStyleSetting;
+  /** Manifest and GLB cache of the modular characters while the 'quaternius' style is active, else null (`createPersonView`). */
+  modular: ModularRuntime | null;
+  /** The runtime once loaded, kept when the style is switched away so switching back is instant. */
+  modularLoaded?: ModularRuntime;
   /** Frame sets loaded so far (a style is loaded on first use). */
   sets: Partial<Record<CharacterStyle, Record<BodyFrame, FrameAssets>>>;
   /** Life-stage bodies loaded so far (natural style only, loaded on first use: `requestStageBody`). */
@@ -106,13 +119,13 @@ export interface AiHairAsset {
  * Loads the animation clips and the bodies of `style` from `${baseUrl}characters/...` and fits their templates. When the
  * detailed bodies cannot be loaded the classic ones are used (`assets.style` says which).
  */
-export async function loadCharacterAssets(baseUrl = './assets/', style: CharacterStyle = 'detailed'): Promise<CharacterAssets> {
+export async function loadCharacterAssets(baseUrl = './assets/', style: CharacterStyleSetting = 'detailed'): Promise<CharacterAssets> {
   const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
   const loader = new GLTFLoader();
   const [an1, an2] = await Promise.all(['anims_1', 'anims_2'].map((n) => loader.loadAsync(`${base}characters/${n}.glb`)));
   const clips = new Map<string, THREE.AnimationClip>();
   for (const g of [an1!, an2!]) for (const clip of g.animations) clips.set(clip.name, clip);
-  const assets: CharacterAssets = { frames: null as unknown as Record<BodyFrame, FrameAssets>, style, sets: {}, stages: {}, baseUrl: base, clips, cache: new Map() };
+  const assets: CharacterAssets = { frames: null as unknown as Record<BodyFrame, FrameAssets>, style: style === 'quaternius' ? 'classic' : style, setting: style, modular: null, sets: {}, stages: {}, baseUrl: base, clips, cache: new Map() };
   await setCharacterStyle(assets, style);
   return assets;
 }
@@ -121,7 +134,17 @@ export async function loadCharacterAssets(baseUrl = './assets/', style: Characte
  * Switches the active frame set, loading it first when needed. Returns the style in effect: a failed load of the
  * detailed bodies keeps (or loads) the classic ones. Views must be rebuilt after a change (CharacterView.refreshStyle).
  */
-export async function setCharacterStyle(assets: CharacterAssets, style: CharacterStyle): Promise<CharacterStyle> {
+export async function setCharacterStyle(assets: CharacterAssets, setting: CharacterStyleSetting): Promise<CharacterStyleSetting> {
+  // 'quaternius' draws children, teens, elders and babies with the classic bodies; adults come from the modular runtime
+  const style: CharacterStyle = setting === 'quaternius' ? 'classic' : setting;
+  let modular: ModularRuntime | null = null;
+  if (setting === 'quaternius') {
+    try {
+      modular = assets.modularLoaded ??= await (await import('./modular/runtime')).loadModularRuntime(assets.baseUrl);
+    } catch (e) {
+      console.warn('[characters] modular characters unavailable, using the classic ones', e);
+    }
+  }
   let want = style;
   // a style that cannot be loaded falls back to the next simpler one: mpfb -> detailed -> classic
   const chain: CharacterStyle[] = style === 'mpfb' ? ['mpfb', 'detailed', 'classic'] : style === 'detailed' ? ['detailed', 'classic'] : ['classic'];
@@ -138,7 +161,9 @@ export async function setCharacterStyle(assets: CharacterAssets, style: Characte
   }
   assets.style = want;
   assets.frames = assets.sets[want]!;
-  return want;
+  assets.modular = modular;
+  assets.setting = modular ? 'quaternius' : want;
+  return assets.setting;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -473,6 +498,9 @@ export function cachedGeometry(assets: CharacterAssets, key: string, build: () =
 
 /** Frees every shared GPU resource (call when no CharacterView remains). */
 export function disposeCharacterAssets(assets: CharacterAssets): void {
+  assets.modularLoaded?.cache.dispose();
+  assets.modularLoaded = undefined;
+  assets.modular = null;
   for (const g of assets.cache.values()) g.dispose();
   assets.cache.clear();
   for (const a of assets.aiHair?.values() ?? []) a.map.dispose();

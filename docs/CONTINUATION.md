@@ -142,8 +142,10 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Next steps, in order
 
-1. Merge PR #6 (Milestone 11) if it is still open, then this PR (Milestones 11.5 and 12); standing approval: merge every PR
-   once all checks pass.
+1. Modular Quaternius characters (opt-in style "Quaternius (preview)"; see "Modular characters" below). Stages A
+   and B are done on stand-in bodies. Next: get the Universal Base Characters files, rebuild the bodies, T-shirt and
+   hair on them, then Stage C (trousers, hoodie, bob, ponytail, colour variants, the mobile creator) and Stage D
+   (verified face and body morphs).
 2. Milestone 10, complete catalogs: surfaces (360 walls, 200 floors) and furnishings (573 designs, target 560) are done. The
    remaining target is the full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
 3. Milestone 13, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
@@ -153,6 +155,41 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
    - Main chunk is about 2.3 MB. Lazy-load the build, creator and dev modules and split `content`.
    - Measure on a real phone.
 7. Real-device runs. Record them in the device log in `docs/TEST_CHECKLIST.md`.
+
+## Modular characters (Quaternius)
+
+Opt in with Settings > Character style > "Quaternius (preview)". The default stays "Natural" (MPFB), and nothing
+changes for existing saves or styles.
+
+- **Runtime.** `src/characters/modular/`:
+  - `types.ts` is the contract: manifest, the `ModularLook` appearance block (own version `v`), cover masks.
+  - `ModularCharacter.ts`: one `SkeletonUtils.clone` per person, one mixer each (the existing `Animator`), cloned
+    materials, ref-counted shared GLBs (`cache.ts`), a rig check on inverse bind matrices, per-vertex cover masks.
+  - `ModularCharacterView.ts`: the `PersonView` adapter. `src/characters/personView.ts` is the factory the people
+    view, creator scene and portraits use.
+  - `Appearance.modular` is optional. People without it get a look derived from their frame, skin, hair and eye
+    colours (`deriveModularLook`); it is never written back implicitly. Only `youngAdult` and `adult` use modular
+    bodies; other stages keep the classic bodies.
+- **Assets.** `public/assets/characters/modular/` (manifest, bodies, garments, hair). Sources are in
+  `authoring/characters/`; the pipeline and tool versions are in `tools/characters/README.md` (Blender 4.5.15,
+  OpenSew-2 86b4322, GBH Tool 2.2.3, isolated add-on profile).
+- **Done.**
+  - Stage A: a Quaternius rig body in the game, idle/walk, independent people.
+  - Stage B: `tshirt_crew` (OpenSew-2) and `short_crop` (GBH Tool) built by script and verified in the game on two
+    people, idle and walking. Unit tests in `tests/unit/characters3d/modular/` cover the real assets.
+- **Missing files.** The Quaternius **Universal Base Characters** (Standard,
+  https://quaternius.itch.io/universal-base-characters; bodies with heads and hair, glTF exports and textures) are not
+  in `/home/user/test/assets/3d-models/`. The bodies are therefore the UAL mannequins, marked `temporary`. Their rig
+  has the same joint names and order, but a different rest pose (neck 17°, spine_03 14°, clavicles 11°), so every
+  garment and hairstyle must be rebuilt on the real bodies. The scripts take the body id, so this is a re-run.
+- **Known gaps.**
+  - The T-shirt on the curvy stand-in fails: twisted sleeves and a bare shoulder, so it is not shipped.
+  - No trousers, so the legs show the mannequin.
+  - Under this style people's classic clothes, hair and accessories are not drawn.
+  - No creator UI for modular looks yet (Stage C).
+  - Seat and bed anchors use the classic values.
+  - Garment UVs come from a smart projection (fine for solid colours).
+  - Hair clumps are spiky: the taper curve still needs tuning.
 
 ## Known issues
 

@@ -2,6 +2,7 @@
 // English with a path, never throw, and know nothing about content (see references.ts for that).
 
 import { NEED_IDS, OUTFIT_CATEGORIES } from '../core/types';
+import { migrateModularLook } from '../characters/modular/look';
 
 export type Obj = Record<string, unknown>;
 
@@ -60,6 +61,8 @@ export function checkAppearance(v: unknown, path: string, list: string[]): void 
     expect(list, h.highlight === null || isHex(h.highlight), `${path}.hair.highlight`, 'must be a colour or null');
     expect(list, h.facialHairId === null || isStr(h.facialHairId), `${path}.hair.facialHairId`, 'must be text or null');
   }
+  // optional: only people drawn in the 'quaternius' style have one (saves from before it simply lack the field)
+  if (a.modular !== undefined) expect(list, migrateModularLook(a.modular) !== null, `${path}.modular`, 'must be a modular look (version 1) or absent');
 }
 
 export function checkWardrobe(v: unknown, path: string, list: string[]): void {
