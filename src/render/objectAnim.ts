@@ -294,6 +294,9 @@ function setPart(out: ActiveParts, flag: PartFlag, u: ObjectUse | null): void {
   a.since = u ? u.animSince : 0;
 }
 
+/** Game minutes at each end of a shower's perform phase during which its glass door stands open. */
+export const SHOWER_DOOR_MINUTES = 2;
+
 /**
  * The parts of `desc` that should be open/running right now. `uses` are the ObjectUse entries recorded for this
  * placed object (target or station). Pure: unit-tested without a renderer. Pass `out` to reuse a record.
@@ -339,8 +342,11 @@ export function activeParts(
     }
     case 'shower': {
       setPart(out, 'shower', first(uses, (x) => x.interactionId === 'takeShower' && x.phase === 'perform'));
-      // a glass door (if the model has one) stands open while the person steps in and out, shut while the water runs
-      setPart(out, 'door', first(uses, (x) => x.interactionId === 'takeShower' && x.phase !== 'perform'));
+      // A glass door (if the model has one) stands open while the person steps in and out, shut while the water runs.
+      // The prepare/apply phases pass in under a tick, so the door also stays open for the first and last
+      // `SHOWER_DOOR_MINUTES` of the perform phase; otherwise it would barely move in play.
+      setPart(out, 'door', first(uses, (x) => x.interactionId === 'takeShower' && (x.phase !== 'perform'
+        || x.elapsed < SHOWER_DOOR_MINUTES || (x.duration !== null && x.elapsed > x.duration - SHOWER_DOOR_MINUTES))));
       break;
     }
     case 'bath': {

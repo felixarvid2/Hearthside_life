@@ -273,9 +273,13 @@ describe('objectAnim: content-declared animation (Milestone 10)', () => {
 
   it('opens a shower door while the person steps in and out, and a top-loader lid while it is used', () => {
     const shower = descriptorForDef(OBJECTS.find((o) => o.id === 'shower-walk-in')!)!;
-    const at = (phase: 'prepare' | 'perform' | 'apply') => activeParts(shower, [use({ interactionId: 'takeShower', phase })], CONTENT);
+    const at = (phase: 'prepare' | 'perform' | 'apply', elapsed = 7) =>
+      activeParts(shower, [use({ interactionId: 'takeShower', phase, elapsed, duration: 15 })], CONTENT);
     expect([at('prepare').door.on, at('perform').door.on, at('apply').door.on]).toEqual([true, false, true]);
     expect([at('prepare').shower.on, at('perform').shower.on]).toEqual([false, true]);
+    // stepping in and out: the door stays open for the first and last SHOWER_DOOR_MINUTES of the shower itself
+    expect([at('perform', 0.5).door.on, at('perform', 14).door.on, at('perform', 0.5).shower.on]).toEqual([true, true, true]);
+    expect(activeParts(shower, [use({ interactionId: 'takeShower', elapsed: 20, duration: null })], CONTENT).door.on).toBe(false);
     expect(activeParts(shower, [], CONTENT).door.on).toBe(false);
     const washer = descriptorForDef(OBJECTS.find((o) => o.id === 'washer-top-load')!)!;
     expect(activeParts(washer, [use({ interactionId: 'doLaundry' })], CONTENT).lid.on).toBe(true);

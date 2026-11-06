@@ -442,22 +442,15 @@ async function main() {
     await runCase('shower', {
       A: { local: [0.5, 0.9, 0.5], yawDeg: 35, ppm: 170 }, B: { local: [0.5, 0.9, 0.5], yawDeg: 55, ppm: 190 },
       closedOk: (s) => cls(['door'])(s) && none(s),
-      what: { closed: 'door shut, no water', drive: 'takeShower reaches its perform phase', open: 'water streaks falling while the glass door is shut' },
+      what: { closed: 'door shut, no water', drive: 'takeShower reaches its perform phase', open: 'glass door swung open as the person steps in' },
       drive: (id) => startInteraction(page, id, 'takeShower'),
-      until: ({ parts, fx }) => cls(['door'])({ parts }) && fx.group && fx.visible >= 5,
+      // in play: the door stands open for the first SHOWER_DOOR_MINUTES of the shower (src/render/objectAnim.ts), then shuts
+      until: ({ parts }) => turned(parts, 'door', 1.4),
       extra: async (id) => {
-        // The glass door stands open only in the prepare and apply phases, and the sim passes through both in less than a tick
-        // (a sim/renderer finding: in play the door barely moves), so the open state is shown with a forced prepare phase.
-        await clearActions(page);
-        const q = await forceUse(page, setup.chest, id, 'takeShower', { phase: 'prepare' });
-        check('shower: a prepare phase (stepping in) is forced onto the stall', q.ok, q.reason ?? `elapsed ${q.elapsed}`);
-        if (q.ok) {
-          await settle(page, 250);
-          const r = await stepUntil(page, id, ({ parts }) => turned(parts, 'door', 1.4), 6);
-          check('shower: glass door swung open while stepping in', r.ok, brief(r));
-          await aim(page, id, { local: [0.5, 0.9, 0.5], yawDeg: 35, ppm: 170 });
-          await shot(page, 'shower-door-open');
-        }
+        const r = await stepUntil(page, id, ({ parts, fx }) => cls(['door'])({ parts }) && fx.group && fx.visible >= 5, 14);
+        check('shower: door shut again while the water runs', r.ok, brief(r));
+        await aim(page, id, { local: [0.5, 0.9, 0.5], yawDeg: 35, ppm: 170 });
+        await shot(page, 'shower-water');
       },
     });
 
