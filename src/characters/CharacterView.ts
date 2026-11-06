@@ -102,7 +102,7 @@ export function aiHairGeometry(assets: CharacterAssets, frame: FrameAssets, data
 
 let ringShared: { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } | null = null;
 /** Shared selection ring under the feet (one geometry and material for all characters). */
-function selectionRing(): { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } {
+export function selectionRing(): { geometry: THREE.BufferGeometry; material: THREE.MeshBasicMaterial } {
   return (ringShared ??= {
     geometry: new THREE.RingGeometry(0.36, 0.44, 48),
     material: new THREE.MeshBasicMaterial({ color: '#ffcf6b', transparent: true, opacity: 0.85, depthWrite: false }),
@@ -115,6 +115,9 @@ export function accessoryGeometry(assets: CharacterAssets, frame: FrameAssets, d
 }
 
 export class CharacterView {
+  readonly modular = false;
+  /** Always false: this view builds synchronously. */
+  readonly busy = false;
   /** Add this to the scene; position/rotate it to place the person (feet at origin, facing +z). */
   readonly root = new THREE.Group();
   private frame!: FrameAssets;

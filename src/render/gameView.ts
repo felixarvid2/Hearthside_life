@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { BASE_MAP_IDS, designMaps } from './textures/mapKit';
 import { onSurfaceMapArrived, preloadSurfaceMaps, setSurfaceMapBase } from './textures/surfaceMaps';
-import type { CharacterAssets, CharacterStyle } from '../characters/assets';
+import type { CharacterAssets, CharacterStyleSetting } from '../characters/assets';
 import { setCharacterStyle } from '../characters/assets';
 import type { ContentDB, SurfaceDesign } from '../content/types';
 import { hourOfDay } from '../core/clock';
@@ -156,9 +156,9 @@ export class GameView {
   get characterAssets(): CharacterAssets | null { return this.charAssets; }
 
   /** Switches the character style (loading the other bodies on first use) and rebuilds everyone. Resolves to the style in effect. */
-  async setCharacterStyle(style: CharacterStyle): Promise<CharacterStyle> {
+  async setCharacterStyle(style: CharacterStyleSetting): Promise<CharacterStyleSetting> {
     const assets = this.charAssets;
-    if (!assets || assets.style === style) return assets?.style ?? style;
+    if (!assets || assets.setting === style) return assets?.setting ?? style;
     const now = await setCharacterStyle(assets, style);
     this.people?.refreshStyle();
     this.creator?.refreshStyle();

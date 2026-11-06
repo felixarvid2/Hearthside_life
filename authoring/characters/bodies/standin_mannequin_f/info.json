@@ -1,0 +1,69 @@
+{
+ "bone_count": 65,
+ "bone_names_sha1": "9bcce97225d0670ffda689866af1d4bd51e5a443",
+ "bones": {
+  "Head": [
+   0.0,
+   -0.0051,
+   1.5687
+  ],
+  "foot_l": [
+   0.089,
+   0.0358,
+   0.1037
+  ],
+  "hand_l": [
+   0.6455,
+   0.0654,
+   1.4408
+  ],
+  "neck_01": [
+   0.0,
+   0.0105,
+   1.4876
+  ],
+  "pelvis": [
+   0.0,
+   0.0501,
+   0.9167
+  ],
+  "thigh_l": [
+   0.089,
+   -0.0014,
+   0.9321
+  ],
+  "upperarm_l": [
+   0.1515,
+   0.0654,
+   1.4408
+  ]
+ },
+ "height": 1.8062,
+ "id": "standin_mannequin_f",
+ "materials": [
+  "M_Main",
+  "M_Joints"
+ ],
+ "regions": {
+  "belly": 330,
+  "calf_l": 351,
+  "calf_r": 351,
+  "chest": 947,
+  "foot_l": 252,
+  "foot_r": 252,
+  "forearm_l": 188,
+  "forearm_r": 188,
+  "hand_l": 4901,
+  "hand_r": 4901,
+  "head": 428,
+  "hips": 148,
+  "neck": 87,
+  "thigh_l": 396,
+  "thigh_r": 396,
+  "upperarm_l": 248,
+  "upperarm_r": 248
+ },
+ "source": "Mannequin_F.glb",
+ "tris": 14612,
+ "verts": 25636
+}

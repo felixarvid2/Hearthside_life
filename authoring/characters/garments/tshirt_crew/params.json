@@ -1,0 +1,43 @@
+{
+ "id": "tshirt_crew",
+ "label": "Crew T-shirt",
+ "preset": "TSHIRT",
+ "category": "top",
+ "slot": "top",
+ "fit": 0.1,
+ "sleeve_len": null,
+ "fabric": "CRISP",
+ "take_in": 0.08,
+ "settle_frames": 60,
+ "target_tris": 2600,
+ "hides": [
+  "chest",
+  "belly"
+ ],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Shirt",
+   "materials": [
+    "M_Tshirt"
+   ],
+   "default": "#3f6fa8"
+  }
+ ],
+ "relax": true,
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "per_body": {
+  "standin_mannequin_f": {
+   "fit_pose": {
+    "arms_down_deg": 30
+   },
+   "fit": 0.14
+  }
+ }
+}

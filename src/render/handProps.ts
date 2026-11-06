@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import type { ActionPhase, WorldItem } from '../core/types';
-import type { CharacterView } from '../characters/CharacterView';
+import type { PersonView } from '../characters/personView';
 
 export type PropKind =
   | 'sandwich' | 'apple' | 'yoghurt' | 'spoon' | 'ingredients' | 'plate' | 'fork'
@@ -593,7 +593,7 @@ export class HandProps {
   ]);
   private disposed = false;
 
-  constructor(private readonly view: CharacterView) {}
+  constructor(private readonly view: PersonView) {}
 
   update(result: HandPropsResult, env: HandEnv): void {
     if (this.disposed) return;

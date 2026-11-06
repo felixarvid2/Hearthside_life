@@ -6,14 +6,15 @@ import * as THREE from 'three';
 import { isMeshHair } from '../characters/aiHair';
 import type { CharacterAssets } from '../characters/assets';
 import { STAGE_HEIGHTS, loadAiHair } from '../characters/assets';
-import { CharacterView } from '../characters/CharacterView';
+import type { PersonView } from '../characters/personView';
+import { createPersonView } from '../characters/personView';
 import type { ContentDB } from '../content/types';
 import type { Appearance, LifeStage, Outfit } from '../core/types';
 
 const SIZE = 128;
 const CACHE_LIMIT = 200;
 
-interface Job { key: string; appearance: Appearance; outfit: Outfit; lifeStage: LifeStage; resolve: (url: string) => void }
+interface Job { key: string; appearance: Appearance; outfit: Outfit; lifeStage: LifeStage; resolve: (url: string) => void; /** Frames spent waiting for a modular look to load. */ waits?: number }
 
 /** `lifeStage` is part of the key for the stages that have their own body (adults keep the keys they always had). */
 export function portraitKey(appearance: Appearance, outfit: Outfit, lifeStage: LifeStage = 'adult'): string {
@@ -27,7 +28,7 @@ export class PortraitRenderer {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(24, 1, 0.1, 20);
   private readonly target: THREE.WebGLRenderTarget;
-  private readonly views = new Map<string, CharacterView>();
+  private readonly views = new Map<string, PersonView>();
   private readonly cache = new Map<string, string>();
   private readonly queue: Job[] = [];
   private readonly pixels = new Uint8Array(SIZE * SIZE * 4);
@@ -72,12 +73,17 @@ export class PortraitRenderer {
 
   /** Renders at most one queued portrait. Returns true when one was produced. */
   process(renderer: THREE.WebGLRenderer): boolean {
-    const job = this.queue.shift();
+    const job = this.queue[0];
     if (!job) return false;
     let url = '';
     try {
-      url = this.render(renderer, job.appearance, job.outfit, job.lifeStage);
+      const v = this.viewFor(job.appearance, job.outfit, job.lifeStage);
+      // a modular person's parts load asynchronously: leave the job queued until the look is on (or give up after a while)
+      if (v.busy && (job.waits = (job.waits ?? 0) + 1) < 900) return false;
+      this.queue.shift();
+      url = this.render(renderer, v, job.lifeStage);
     } catch (e) {
+      if (this.queue[0] === job) this.queue.shift();
       console.warn('[render] portrait failed', e);
     }
     if (url) {
@@ -88,12 +94,12 @@ export class PortraitRenderer {
     return !!url;
   }
 
-  private viewFor(appearance: Appearance, outfit: Outfit, lifeStage: LifeStage): CharacterView {
+  private viewFor(appearance: Appearance, outfit: Outfit, lifeStage: LifeStage): PersonView {
     // one reusable view per body frame and life stage (a stage body is another skeleton and mesh)
     const id = `${appearance.frame}:${lifeStage}`;
     let v = this.views.get(id);
     if (!v) {
-      v = new CharacterView(this.assets, this.content, appearance, outfit, lifeStage);
+      v = createPersonView(this.assets, this.content, appearance, outfit, lifeStage);
       v.setBabyUpright(true);
       v.root.traverse((o) => { o.frustumCulled = false; });
       this.views.set(id, v);
@@ -108,8 +114,7 @@ export class PortraitRenderer {
     return v;
   }
 
-  private render(renderer: THREE.WebGLRenderer, appearance: Appearance, outfit: Outfit, lifeStage: LifeStage): string {
-    const v = this.viewFor(appearance, outfit, lifeStage);
+  private render(renderer: THREE.WebGLRenderer, v: PersonView, lifeStage: LifeStage): string {
     v.root.position.set(0, -v.floorDrop, 0);
     v.root.rotation.y = 0.25;
     v.root.updateMatrixWorld(true);

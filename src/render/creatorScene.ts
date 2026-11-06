@@ -6,7 +6,8 @@ import * as THREE from 'three';
 import type { AnimId } from '../core/anim';
 import type { CharacterAssets } from '../characters/assets';
 import { STAGE_HEIGHTS } from '../characters/assets';
-import { CharacterView } from '../characters/CharacterView';
+import type { PersonView } from '../characters/personView';
+import { createPersonView, wantsModular } from '../characters/personView';
 import { outfitFor } from '../characters/outfits';
 import type { ContentDB } from '../content/types';
 import type { PersonDraft } from '../core/drafts';
@@ -35,7 +36,8 @@ function backdropTexture(): THREE.CanvasTexture {
 export class CreatorScene {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(28, 1, 0.1, 60);
-  private view: CharacterView | null = null;
+  private view: PersonView | null = null;
+  private last: { person: PersonDraft; opts: CreatorPreviewOptions } | null = null;
   private frameKey = '';
   private appearanceKey = '';
   private outfitKey = '';
@@ -93,12 +95,15 @@ export class CreatorScene {
   setInsets(i: Insets): void { this.insets = { ...i }; }
 
   show(person: PersonDraft, opts: CreatorPreviewOptions): void {
+    this.last = { person, opts };
     const outfit = outfitFor(person, opts.category);
     const stage = person.lifeStage ?? 'adult';
     const ak = `${stage}|${JSON.stringify(person.appearance)}`;
-    const ok = JSON.stringify(outfit);
+    const ok = `${opts.category}|${JSON.stringify(outfit)}`;
+    // the implementation can change with the life stage (modular adults, classic children)
+    if (this.view && wantsModular(this.assets, stage) !== this.view.modular) this.hide();
     if (!this.view) {
-      this.view = new CharacterView(this.assets, this.content, person.appearance, outfit, stage);
+      this.view = createPersonView(this.assets, this.content, person.appearance, outfit, stage, opts.category);
       this.view.setBabyUpright(true);
       this.view.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
       this.scene.add(this.view.root);
@@ -107,7 +112,7 @@ export class CreatorScene {
       this.frameKey = person.appearance.frame;
     } else {
       if (ak !== this.appearanceKey) { this.view.setAppearance(person.appearance, stage); this.view.setBabyUpright(true); this.appearanceKey = ak; }
-      if (ok !== this.outfitKey) { this.view.setOutfit(outfit); this.outfitKey = ok; }
+      if (ok !== this.outfitKey) { this.view.setOutfit(outfit, opts.category); this.outfitKey = ok; }
       if (person.appearance.frame !== this.frameKey) { this.frameKey = person.appearance.frame; this.view.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; }); }
     }
     const k = (stage === 'baby' ? 0.5 : STAGE_HEIGHTS[stage]) / STAGE_HEIGHTS.adult;
@@ -130,6 +135,12 @@ export class CreatorScene {
 
   /** Rebuilds the shown person on the assets' current character style. */
   refreshStyle(): void {
+    if (this.view && wantsModular(this.assets, this.view.lifeStage) !== this.view.modular && this.last) {
+      const { person, opts } = this.last;
+      this.hide();
+      this.show(person, opts);
+      return;
+    }
     this.view?.refreshStyle();
     this.view?.root.traverse((o) => { o.castShadow = true; o.frustumCulled = false; });
   }

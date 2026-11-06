@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   reducedMotion: false,
   textScale: 1,
   quality: 'high',
-  characterStyle: 'mpfb', // 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback)
+  characterStyle: 'mpfb', // 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback), 'quaternius' = modular GLB-part adults (preview)
   shadows: true,
   weatherEffects: true,
   actionProgress: 'household',
@@ -50,7 +50,7 @@ export function mergeSettings(base: GameSettings, patch: Partial<GameSettings> |
   const ts = num(patch.textScale);
   if (ts !== null) out.textScale = clamp(ts, 0.9, 1.3);
   if (patch.quality === 'low' || patch.quality === 'high') out.quality = patch.quality;
-  if (patch.characterStyle === 'mpfb' || patch.characterStyle === 'detailed' || patch.characterStyle === 'classic') out.characterStyle = patch.characterStyle;
+  if (patch.characterStyle === 'mpfb' || patch.characterStyle === 'detailed' || patch.characterStyle === 'classic' || patch.characterStyle === 'quaternius') out.characterStyle = patch.characterStyle;
   if (patch.actionProgress === 'household' || patch.actionProgress === 'all' || patch.actionProgress === 'off') out.actionProgress = patch.actionProgress;
   for (const k of ['reducedMotion', 'shadows', 'weatherEffects', 'showStats', 'tutorial'] as const) {
     if (typeof patch[k] === 'boolean') out[k] = patch[k] as boolean;

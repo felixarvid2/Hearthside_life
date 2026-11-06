@@ -1,0 +1,189 @@
+{
+ "version": 1,
+ "rigs": [
+  {
+   "id": "ual-standard",
+   "label": "Quaternius UAL / Universal Base Characters rig (65 joints)",
+   "joints": [
+    "root",
+    "pelvis",
+    "spine_01",
+    "spine_02",
+    "spine_03",
+    "neck_01",
+    "Head",
+    "clavicle_l",
+    "upperarm_l",
+    "lowerarm_l",
+    "hand_l",
+    "index_01_l",
+    "index_02_l",
+    "index_03_l",
+    "index_04_leaf_l",
+    "middle_01_l",
+    "middle_02_l",
+    "middle_03_l",
+    "middle_04_leaf_l",
+    "pinky_01_l",
+    "pinky_02_l",
+    "pinky_03_l",
+    "pinky_04_leaf_l",
+    "ring_01_l",
+    "ring_02_l",
+    "ring_03_l",
+    "ring_04_leaf_l",
+    "thumb_01_l",
+    "thumb_02_l",
+    "thumb_03_l",
+    "thumb_04_leaf_l",
+    "clavicle_r",
+    "upperarm_r",
+    "lowerarm_r",
+    "hand_r",
+    "index_01_r",
+    "index_02_r",
+    "index_03_r",
+    "index_04_leaf_r",
+    "middle_01_r",
+    "middle_02_r",
+    "middle_03_r",
+    "middle_04_leaf_r",
+    "pinky_01_r",
+    "pinky_02_r",
+    "pinky_03_r",
+    "pinky_04_leaf_r",
+    "ring_01_r",
+    "ring_02_r",
+    "ring_03_r",
+    "ring_04_leaf_r",
+    "thumb_01_r",
+    "thumb_02_r",
+    "thumb_03_r",
+    "thumb_04_leaf_r",
+    "thigh_l",
+    "calf_l",
+    "foot_l",
+    "ball_l",
+    "ball_leaf_l",
+    "thigh_r",
+    "calf_r",
+    "foot_r",
+    "ball_r",
+    "ball_leaf_r"
+   ],
+   "bindTolerance": 0.002,
+   "bindToleranceDeg": 0.5
+  }
+ ],
+ "bodies": [
+  {
+   "id": "standin_mannequin_m",
+   "label": "Mannequin (broad, stand-in)",
+   "rig": "ual-standard",
+   "file": "bodies/standin_mannequin_m.glb",
+   "skinMaterials": [
+    "M_Main",
+    "M_Joints"
+   ],
+   "morphs": [],
+   "height": 1.8287,
+   "temporary": true,
+   "license": "CC0 1.0 - Quaternius, Universal Animation Library (Standard)",
+   "source": "authoring/characters/bodies/standin_mannequin_m"
+  },
+  {
+   "id": "standin_mannequin_f",
+   "label": "Mannequin (curvy, stand-in)",
+   "rig": "ual-standard",
+   "file": "bodies/standin_mannequin_f.glb",
+   "skinMaterials": [
+    "M_Main",
+    "M_Joints"
+   ],
+   "morphs": [],
+   "height": 1.8062,
+   "temporary": true,
+   "license": "CC0 1.0 - Quaternius, Universal Animation Library (Standard)",
+   "source": "authoring/characters/bodies/standin_mannequin_f"
+  }
+ ],
+ "garments": [
+  {
+   "id": "tshirt_crew",
+   "label": "Crew T-shirt",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "standin_mannequin_m": "garments/tshirt_crew__standin_mannequin_m.glb"
+   },
+   "covers": {
+    "standin_mannequin_m": "garments/tshirt_crew__standin_mannequin_m.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Shirt",
+     "materials": [
+      "M_Tshirt"
+     ],
+     "default": "#3f6fa8",
+     "palette": [
+      "#3f6fa8",
+      "#c94f4f",
+      "#f2efe6",
+      "#2f2f33",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tshirt_crew/params.json",
+   "license": "Hearthside original (made with OpenSew-2 in Blender on Quaternius CC0 bodies)"
+  }
+ ],
+ "hairstyles": [
+  {
+   "id": "short_crop",
+   "label": "Short crop",
+   "files": {
+    "standin_mannequin_m": "hair/short_crop__standin_mannequin_m.glb",
+    "standin_mannequin_f": "hair/short_crop__standin_mannequin_f.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/short_crop/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 6584,
+    "textureBytes": 0
+   }
+  }
+ ],
+ "defaults": {
+  "bodyByFrame": {
+   "a": "standin_mannequin_m",
+   "b": "standin_mannequin_f"
+  },
+  "hairstyle": "short_crop",
+  "outfit": {
+   "top": "tshirt_crew"
+  },
+  "eyeColor": "#5b4636"
+ }
+}

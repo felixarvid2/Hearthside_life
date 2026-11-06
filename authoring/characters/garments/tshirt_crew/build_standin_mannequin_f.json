@@ -1,0 +1,62 @@
+{
+ "body": "standin_mannequin_f",
+ "coverage": {
+  "belly": 0.891,
+  "calf_l": 0.0,
+  "calf_r": 0.0,
+  "chest": 0.838,
+  "foot_l": 0.0,
+  "foot_r": 0.0,
+  "forearm_l": 0.085,
+  "forearm_r": 0.0,
+  "hand_l": 0.0,
+  "hand_r": 0.0,
+  "head": 0.006,
+  "hips": 0.436,
+  "neck": 0.431,
+  "thigh_l": 0.117,
+  "thigh_r": 0.055,
+  "upperarm_l": 0.522,
+  "upperarm_r": 0.616
+ },
+ "facing": "-Y",
+ "figure": "WOMAN",
+ "fit_pose": {
+  "arms_down_deg": 30
+ },
+ "garment": "tshirt_crew",
+ "girth": {
+  "chest": 0.9498,
+  "hip": 0.9665,
+  "waist": 0.6397
+ },
+ "glb": "public/assets/characters/modular/garments/tshirt_crew__standin_mannequin_f.glb",
+ "height": 1.8062,
+ "hides": [],
+ "kw": {},
+ "landmarks": {
+  "chest": 1.3867,
+  "crotch": 0.9321,
+  "hip": 0.9521,
+  "knee": 0.5318,
+  "neck": 1.4876,
+  "shoulder": 1.4408,
+  "waist": 1.1967
+ },
+ "limbs": [
+  "arm_l",
+  "arm_r",
+  "calf_l",
+  "calf_r",
+  "farm_l",
+  "farm_r",
+  "thigh_l",
+  "thigh_r"
+ ],
+ "secs": 94.5,
+ "src_tris": 4808,
+ "tris": 2596,
+ "unposed_max_move": 0.1255,
+ "unweighted": 0,
+ "verts": 1346
+}
