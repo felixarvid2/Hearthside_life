@@ -62,9 +62,9 @@ describe('Milestone 11 task B content', () => {
       expect(offered('bakeTreat'), stove).toContain(stove);
       expect(offered('sellBakes'), stove).toContain(stove);
     }
-    expect(offered('doYoga')).toEqual(['yoga-mat']);
-    expect(offered('stretch')).toEqual(['yoga-mat']);
-    expect(offered('sketchIdeas')).toEqual(['sketchbook']);
+    expect(offered('doYoga')).toContain('yoga-mat');
+    expect(offered('stretch')).toContain('yoga-mat');
+    expect(offered('sketchIdeas')).toContain('sketchbook');
     const mat = db.objects['yoga-mat']!;
     expect(mat.layer).toBe('rug');
     expect(mat.blocksMovement).toBe(false);

@@ -8,9 +8,9 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 **Milestones 1-9, 11, 11.5 and 12 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see
 CONTINUATION.md; M11 on PR #6; M11.5 and M12 verified 2026-11-05). **Milestone 10 - Complete catalogs is the only
-milestone still open: the surface catalog is complete** (360 wall finishes, 200 floor designs). The 560 furnishings
-and the full creator catalog are still open. Next: the rest of Milestone 10, then **Milestone 13 - Release
-preparation**.
+milestone still open: the surface catalog and the furnishings are complete** (360 wall finishes, 200 floor designs,
+573 furniture designs against 560). The full creator catalog is still open. Next: the rest of Milestone 10, then
+**Milestone 13 - Release preparation**.
 
 ## Completed-project targets (brief section 2)
 
@@ -120,7 +120,32 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   `dev/surfaces-ai/sources/<group>.mjs`, budget cap and ledger), `npm run assets:surfaces -- --group <group>`, and
   `npm run visual:surfaces -- --group <group> [--ids a,b] [--palettes]`; per-group painters in
   `src/render/textures/packs/<group>.ts`, content in `src/content/surfaces3/<group>.ts`.
-- **Still open.** 560 furnishings and the full creator catalog target.
+- **Furnishings (complete).** 573 ready furniture designs, every Buy category at its full target: seating 64, beds 40,
+  tables 48, storage 48, kitchen 56, bathroom 36, lighting 64, electronics 28, hobby 36, decor 64, outdoor 40, kids 36
+  (plus 13 staircases). 395 are new in this step; 443 original models in the furniture-extra output, at most 1372
+  triangles per model. All are own Kenney-style low-poly designs built by code (no downloaded or AI models); nothing
+  existing was replaced. Content validation: 0 errors, 0 warnings. Pipeline: `tools/furniture-extra/` (kit primitives
+  box, rod, slab, lathe, cylY, cyl, poly and hexa, in metres, front at +z, bottom at y=0), per-group design files in
+  `tools/furniture-extra/m10/<group>.mjs` (seating-beds, tables-storage, kitchen-bath-electronics,
+  lighting-outdoor-kids, decor-hobby), `node tools/build-extra-furniture.mjs [--only=<group>]` (GLBs into
+  `public/assets/furniture`, `src/content/objectsM10/<group>.models.ts` with bounds and screen quads), review sheets with
+  `node tools/furniture-extra/contact-sheet.mjs --only=<group>`; authoring guide `dev/ds-tasks/m10f/AUTHORING.md`.
+  Content is in `src/content/objectsM10/<group>.ts`.
+  - Moving parts are real named GLB nodes (`anim:door`, `anim:drawer1`, `anim:lid`, `anim:interior`, ...) built with
+    `m.part(name, pivot)`. The content `anim` field describes them (fridge, oven, microwave, dishwasher, toilet,
+    laundry, shower, bath, sink, wardrobe, openWhileUsed; roles door, door2, drawer, drawer2, lid, interior, screen;
+    `tap` for sink streams, `hob` for stove rings, `screen: true` for derived TV and computer screen quads).
+    `descriptorFromContent` in `src/render/objectAnim.ts` turns them into animation descriptors; ObjectAssets keeps
+    every `anim:*` node as a pivot. Shower glass doors stay open for the first and last 2 game minutes of a shower
+    (`SHOWER_DOOR_MINUTES`) so they visibly open in play.
+  - In-game proof: `node dev/ds-tasks/m10f/shoot-exemplars.mjs [--only=fridge,chest,laptop,oven,microwave,dishwasher,sink,toilet,shower,bath,washer,washertop,wardrobe,tv]`
+    swaps M10 designs into the starter house, runs the real interaction (or forces a use where the sim has none:
+    microwave, washers, dishwasher), steps the game clock until each part settles, and writes PNGs and `log.json` to
+    `tests/e2e/out/m10f-shots/` (git-ignored). 58/58 checks pass.
+  - Not implemented: the pool table, darts, foosball, table tennis and pottery wheel are decorative; the drum kit, harp
+    and cello are display-only; recliners, storage beds and sofa beds are static; the microwave and washing machines
+    have no sim interaction yet (their parts animate only when forced).
+- **Still open.** The full creator catalog target.
 
 ## Unfinished systems after M1 (by dependency)
 

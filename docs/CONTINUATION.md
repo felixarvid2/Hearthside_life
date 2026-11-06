@@ -1,10 +1,10 @@
 # Continuation note
 
-State on 2026-11-05. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
+State on 2026-11-06. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
 gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9, 11, 11.5
 and 12 are complete and verified** (brief section 26, docs/ROADMAP.md). **Milestone 10 is the only one still open: the surface
-catalog is complete** (360 wall finishes, 200 floor designs); 560 furnishings and the full creator catalog remain. The next work is
-the rest of Milestone 10, then Milestone 13 (release preparation).
+catalog (360 wall finishes, 200 floor designs) and the furnishings (573 designs, target 560) are complete**; the full creator
+catalog remains. The next work is the rest of Milestone 10, then Milestone 13 (release preparation).
 
 ## Milestone status
 
@@ -19,7 +19,7 @@ the rest of Milestone 10, then Milestone 13 (release preparation).
 | 7 Neighbourhood and venues | Lot travel (20-40 game minutes, free), one active lot, 4 NPC households generated once from the world seed with jobs and cross-household relationships, light off-lot schedule (work, home, venue visits), NPC pay once and NPC bill auto-pay, invite home, household switching, rent/buy and moving (owned home sells at 80%), lazy venue/home layouts validated for reachability, 15 venue interactions with once-only costs, library quiet rule, no sleeping in public venues; Map/List modal, lot detail sheet, trip chip, away card; phone landscape HUD (funds drop cents from $1,000 up, icon-only Map/Menu) | 14 lots (12), 6 usable venues (3), 121 furniture (10 new models) | acceptance step 9 (map, travel to park, venue activity, go home, switch preview) in all viewports |
 | 8 Family and life stages (PR #4) | seven life stages (baby to elder) with per-stage MPFB bodies, lazy-loaded; aging off / long / normal / custom, optional elder end of life; birthdays; school with performance, homework and report cards; babysitter; adoption; moving out (household split); age-gated interactions and family socials; family view and dialogs; 6 family furniture models | 7 life stages | acceptance step 10 (`stepFamily`) in all viewports; `npm run e2e:acceptance` |
 | 9 Multiple floors and exteriors (PR #4) | levels 0-2 (3 m apart, walls 2.8 m); upper floors need support, balconies up to 2 tiles out; stairs as objects with stairwell cut and undo; multi-level path search; HUD level selector; two-storey Hazelbank loft; 12 roof styles and 11 finishes, Roof camera toggle, auto roof; 24 fence designs (123 variants) and 12 gates (64 variants); 12 terrain paints; 16 garden objects and 10 crops (plant, water, weed, harvest at 75 % of value) | 3 floors, 12 roof styles, 24 fences, 12 gates, 12 staircases (catalogue has 9 straight and 4 spiral) | acceptance step 11 (`stepFloors`, `stepExterior`) in all viewports; `--steps=12` runs the exterior part alone |
-| 10 Complete catalogs | surfaces done: AI-sourced and code-painted wall and floor designs, palette tinting, on-demand maps (pipeline below) | 360 walls (360), 200 floors (200), 560 furnishings (open), full creator catalog (open) | surfaces complete; furnishings and creator catalog still open |
+| 10 Complete catalogs | surfaces done: AI-sourced and code-painted wall and floor designs, palette tinting, on-demand maps (pipeline below); furnishings done: 573 own low-poly designs from `tools/furniture-extra` (pipeline below) | 360 walls (360), 200 floors (200), 573 furnishings (560), full creator catalog (open) | surfaces and furnishings complete; creator catalog still open |
 | 11 Complete progression and social scope (own PR) | 13 careers (130 levels) with 17 on-the-job events; six ready skills with practice activities and effects (baking, wellness, creativity, photography, fishing, research); six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond); 40 traits in six categories; 13 three-stage, adult-only aspirations; 45 social interactions; once-only payouts through `transact` | 13 careers (12), 19 skills (16), 40 traits (40), 13 aspirations (12), 45 socials (40) | typecheck, 1746 tests, content check, build, `e2e:creator`; visual checks 25/25 careers, 45/45 skills, 39/39 photography/fishing/research, 19/19 traits |
 | 11.5 Animations and activity feedback (own PR) | moving parts and effects driven by the running action (21 descriptors: fridge/oven doors, hob rings and steam, wardrobe, toilet lid, shower/bath, taps, dishwasher); hand props on the rig (snacks, ingredients, plate and fork, books, phone, mug, tools); computer and TV screens (word processor, code, game, browser, TV); a stage-weighted progress pill above the head with Household/All/Off; all render-side, no save fields | no new content; the screen pictures are deterministic generators | acceptance step 13 (`--steps=13`) in all three viewports; `visual:m115:d` 24/24, `visual:m115:h` 27/27, `visual:m115:screens` 57/57, `visual:m115:b` 41/41 |
 | 12 Environment and venues (own PR) | seasons (3/7/14 days) and a two-half-day weather plan stored in the save (clear/cloudy/rain/snow, snow only in winter); seasonal lighting, grass, trees, terrain and snow cover; capped rain/snow particles with a Weather effects setting; weather moodlets, preferences and trait biases; weather/season/outdoor/day/night gates that grey out options and filter autonomy; nine outdoor activities and two socials; pools (build tool, ladders, blocked water, swimming, graceful Get Out); the seventh venue, Quayside Baths (6 x 10 pool, changing rooms, sun deck) | 7 venues (6), 108 activities (40), 47 socials (40), 3 pool styles | acceptance step 14 (`--steps=14`) in all three viewports; `visual:m12:{weather,outdoor,pools}` 29/29, 60/60, 33-36/36 |
@@ -144,8 +144,8 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 1. Merge PR #6 (Milestone 11) if it is still open, then this PR (Milestones 11.5 and 12); standing approval: merge every PR
    once all checks pass.
-2. Milestone 10, complete catalogs: surfaces are done (360 walls, 200 floors). The remaining targets are 560 furnishings and the
-   full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
+2. Milestone 10, complete catalogs: surfaces (360 walls, 200 floors) and furnishings (573 designs, target 560) are done. The
+   remaining target is the full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
 3. Milestone 13, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
 4. Polish of the M8, M9, M11, M11.5 and M12 gaps (listed under "Known issues").
 5. People: brow styles, the garment hem flare on the female body, real-device performance.
@@ -279,6 +279,30 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
     angle) use the old displacement fields. `MPFB_SLIDERS` gains are lower than the GLB's `sliderGain` (a full creator slider moves the
     surface 3-4 cm like the other styles; the GLB gain of 3 / 2 for weight / muscle is for the viewer's full macro).
   - Not supported on the MPFB bodies: the eight brow styles (one brow mesh), the height slider (none exists).
+
+### Milestone 10 furniture pipeline
+
+- **Sources.** `tools/furniture-extra/` holds the kit (`kit.mjs` primitives box, rod, slab, lathe, cylY, cyl, poly and hexa; metres,
+  front at +z, bottom at y=0) and one design file per group in `tools/furniture-extra/m10/<group>.mjs` (`seating-beds`,
+  `tables-storage`, `kitchen-bath-electronics`, `lighting-outdoor-kids`, `decor-hobby`). The authoring guide is
+  `dev/ds-tasks/m10f/AUTHORING.md`.
+- **Build.** `node tools/build-extra-furniture.mjs [--only=<group>]` writes the GLBs to `public/assets/furniture` and
+  `src/content/objectsM10/<group>.models.ts` (bounds and screen quads). Review with
+  `node tools/furniture-extra/contact-sheet.mjs --only=<group>`. Content is in `src/content/objectsM10/<group>.ts`.
+  Output: 443 original models, at most 1372 triangles each.
+- **Moving parts.** Named GLB nodes (`anim:door`, `anim:drawer1`, `anim:lid`, `anim:interior`, ...) are built with
+  `m.part(name, pivot)`. The content `anim` field names the kind (fridge, oven, microwave, dishwasher, toilet, laundry, shower,
+  bath, sink, wardrobe, openWhileUsed) and the roles (door, door2, drawer, drawer2, lid, interior, screen); `tap` marks sink
+  streams, `hob` the stove rings and `screen: true` the derived TV and computer screen quads. `descriptorFromContent` in
+  `src/render/objectAnim.ts` turns them into animation descriptors, and ObjectAssets keeps every `anim:*` node as a pivot.
+  Shower glass doors stay open for the first and last 2 game minutes of a shower (`SHOWER_DOOR_MINUTES`).
+- **Shots.** `node dev/ds-tasks/m10f/shoot-exemplars.mjs [--only=fridge,chest,laptop,oven,microwave,dishwasher,sink,toilet,shower,bath,washer,washertop,wardrobe,tv]`
+  swaps the designs into the starter house, runs the interaction (or forces it where the sim has none), steps the clock until the
+  parts settle, and writes PNGs and `log.json` to `tests/e2e/out/m10f-shots/` (git-ignored). It takes
+  `/tmp/hearthside-browser.lock` itself (do not wrap it in `flock`). 58/58 checks pass.
+- **Not implemented.** Pool table, darts, foosball, table tennis and pottery wheel are decorative; drum kit, harp and cello are
+  display-only; recliners, storage beds and sofa beds are static; the microwave and washing machines have no sim interaction
+  (their parts animate only when forced).
 
 ## Running agents on DeepSeek (saves the Claude quota)
 

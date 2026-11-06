@@ -37,15 +37,15 @@
 import type { FinishRegion, ObjectDef, ObjectSlot, ObjectStats, Swatch } from './types';
 import { dollars } from '../core/money';
 import { STAIR_OBJECTS } from './stairBasic';
+import { M10_BUILDERS, M10_MODELS } from './objectsM10';
 
 type Vec3 = [number, number, number];
 
 /** Wall faces sit 0.06 m inside a tile (half the 0.12 m wall thickness). */
 export const WALL_GAP = 0.06;
 
-/** Measured bounds (manifest min/max, before scaling) of every model this catalog uses. A unit test checks
- *  these against public/assets/manifest.json. */
-export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
+/** Measured bounds (manifest min/max, before scaling) of the models up to Milestone 12, typed by hand. */
+const BASE_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   bedDouble: [[0, 0, -1.125], [0.956, 0.375, 0]],
   bedSingle: [[0.385, 0, -1.125], [0.956, 0.375, 0]],
   bedBunk: [[0, 0, -1.095], [0.571, 0.85, 0]],
@@ -186,6 +186,15 @@ export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = {
   sketchbook: [[0.14, 0, 0.14], [0.36, 0.0245, 0.36]],
   breadOven: [[0.01, 0, 0.02], [0.49, 0.69, 0.4988]],
 };
+
+/** Measured bounds (manifest min/max, before scaling) of every model this catalog uses. The Milestone 10 models come from the
+ *  build (objectsM10/<group>.models.ts, written by tools/build-extra-furniture.mjs). A unit test checks these against
+ *  public/assets/manifest.json. */
+export const MODEL_BOUNDS: Record<string, [min: Vec3, max: Vec3]> = { ...BASE_BOUNDS };
+for (const [name, info] of Object.entries(M10_MODELS)) {
+  if (name in BASE_BOUNDS) throw new Error(`objectsM10: model '${name}' is already in MODEL_BOUNDS`);
+  MODEL_BOUNDS[name] = info.bounds;
+}
 
 /** Axis-aligned bounds in rot-0 local space. */
 export interface LocalBox { x0: number; x1: number; y0: number; y1: number; z0: number; z1: number }
@@ -1560,11 +1569,25 @@ const M12_OUTDOOR_OBJECTS: ObjectDef[] = [
   },
 ];
 
+/**
+ * Everything a Milestone 10 group file (objectsM10/<group>.ts) needs from this module, passed in as `k` so those files
+ * import nothing from here at run time (no import cycle). Add to it if a group needs another helper; do not copy helpers.
+ */
+export const KIT = {
+  fit, obj, sit, sleep, useFront, sw, region, woodR, fabricR, metalR, applianceR, darkMetalR, counterR,
+  WOOD, FABRIC, FABRIC_BLUE, METAL, METAL_MEDIUM, METAL_DARK, FABRIC_BRICK, APPLIANCE, COUNTERTOP,
+  FP11, FP21, FP12, FP22, KITCHEN_SCALE, WORKTOP, WALL_GAP, MODEL_BOUNDS, r3, r4, dollars,
+};
+export type ObjectKit = typeof KIT;
+
+const M10_OBJECTS: ObjectDef[] = Object.values(M10_BUILDERS).flatMap((build) => build(KIT));
+
 /** Every buy-mode object definition (ready and in development). */
 export const OBJECTS: ObjectDef[] = [
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
   ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS, ...STAIR_OBJECTS, ...FAMILY_OBJECTS,
   ...M11_OBJECTS, ...M11_SKILLS_OBJECTS, ...M12_OUTDOOR_OBJECTS,
+  ...M10_OBJECTS,
 ];
 

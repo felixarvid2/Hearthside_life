@@ -12,18 +12,16 @@
 // clock, so at 3x the same tween is over three times faster in real time. Reduced motion snaps instead of tweening.
 
 import * as THREE from 'three';
-import { fittedBounds, type LocalBox } from '../content/objects';
-import type { ContentDB, ObjectDef } from '../content/types';
+import { OBJECTS, fittedBounds, type LocalBox } from '../content/objects';
+import type { AnimHobSpec, AnimKind, ContentDB, InteriorKind, ObjectDef, PartAxis, PartRole } from '../content/types';
 import type { ObjectUse } from './objectUse';
 
 // ---------------------------------------------------------------------------------------------
 // Descriptors
 // ---------------------------------------------------------------------------------------------
 
-export type PartAxis = 'x' | 'y' | 'z';
-export type PartRole = 'door' | 'door2' | 'lid' | 'oven';
-export type AnimKind = 'fridge' | 'oven' | 'wardrobe' | 'toilet' | 'shower' | 'bath' | 'sink' | 'dishwasher' | 'laundry' | 'microwave';
-export type InteriorKind = 'fridge' | 'oven' | 'wardrobe' | 'dishwasher' | 'washer';
+// The vocabulary lives in content/types.ts (ObjectDef.anim uses it); re-exported here for the renderer.
+export type { AnimKind, InteriorKind, PartAxis, PartRole };
 
 export interface PartTiming {
   /** Game minutes for a full opening / closing tween. */
@@ -38,10 +36,15 @@ interface PartBase extends PartTiming {
   angle: number;
 }
 
-/** A separate GLB node, kept as a pivot by ObjectAssets (`PART_NODES`). */
+/**
+ * A separate GLB node, kept as a pivot by ObjectAssets (`PART_NODES`, or any `anim:*` node). It turns by `angle` around
+ * `axis` through its node origin and/or slides by `slide` (fitted metres, rot-0 local space) when fully open. The static
+ * roles 'interior' (shown while something is open) and 'screen' do neither.
+ */
 export interface NodePart extends PartBase {
   kind: 'node';
   node: string;
+  slide?: [number, number, number];
 }
 
 /**
@@ -74,10 +77,14 @@ export interface AnimDescriptor {
   interiorBox?: InteriorBox;
   /** Cooking surface on top (stoves): four rings and a pot. */
   hob?: boolean;
+  /** Where the rings and the pot are (content-declared hobs); absent = the default four rings in a 2 x 2 grid. */
+  hobLayout?: AnimHobSpec;
   /** Tap stream anchor as fractions: x across, z from back, top/bottom heights of the fitted box. */
   tap?: { x: number; z: number; top: number; bottom: number };
   /** Minutes at the start and end of a run in which a fold-down door is open (dishwashers). */
   pulseMinutes?: number;
+  /** openWhileUsed: interaction ids that open the parts (any interaction when absent). */
+  on?: readonly string[];
 }
 
 const T = 0.4;
@@ -180,8 +187,48 @@ export const DESCRIPTORS: readonly AnimDescriptor[] = [
 
 const BY_DEF = new Map(DESCRIPTORS.map((d) => [d.defId, d]));
 
+const FROM_CONTENT = new WeakMap<ObjectDef, AnimDescriptor>();
+
+/** The descriptor of a design that declares its animation in content (`ObjectDef.anim`), or null. */
+function descriptorFromContent(def: ObjectDef): AnimDescriptor | null {
+  const a = def.anim;
+  if (!a) return null;
+  let d = FROM_CONTENT.get(def);
+  if (!d) {
+    d = {
+      defId: def.id, asset: def.model.asset, kind: a.kind, interior: a.interior, interiorBox: a.interiorBox, on: a.on,
+      ...(a.tap ? { tap: a.tap } : {}), ...(a.hob ? { hob: true, hobLayout: a.hob } : {}),
+      parts: a.parts.map((p): NodePart => ({
+        kind: 'node', role: p.role, node: p.node, axis: p.axis ?? 'y', angle: p.angle ?? 0, slide: p.slide,
+        openMinutes: p.openMinutes ?? T, closeMinutes: p.closeMinutes ?? T,
+      })),
+    };
+    FROM_CONTENT.set(def, d);
+  }
+  return d;
+}
+
+/** The descriptor of a design: the table above first, then the design's own `anim` field. */
+export function descriptorForDef(def: ObjectDef): AnimDescriptor | null {
+  return BY_DEF.get(def.id) ?? descriptorFromContent(def);
+}
+
+let contentById: Map<string, ObjectDef> | null = null;
+
+/** By id: the table first, then the catalog's content-declared animations. */
 export function descriptorFor(defId: string): AnimDescriptor | null {
-  return BY_DEF.get(defId) ?? null;
+  const t = BY_DEF.get(defId);
+  if (t) return t;
+  if (!contentById) contentById = new Map(OBJECTS.map((o) => [o.id, o]));
+  const def = contentById.get(defId);
+  return def ? descriptorFromContent(def) : null;
+}
+
+/** Descriptors of every animated design in `objects` (the table's, then the content-declared ones). */
+export function allDescriptors(objects: readonly ObjectDef[] = OBJECTS): AnimDescriptor[] {
+  const out = [...DESCRIPTORS];
+  for (const o of objects) if (!BY_DEF.has(o.id)) { const d = descriptorFromContent(o); if (d) out.push(d); }
+  return out;
 }
 
 /** Every def this module knows how to animate (used by the unit test that checks the catalog). */
@@ -191,7 +238,7 @@ export const ANIMATED_DEF_IDS: readonly string[] = DESCRIPTORS.map((d) => d.defI
 // Pure: which parts are wanted open / running at this instant
 // ---------------------------------------------------------------------------------------------
 
-export type PartFlag = 'door' | 'door2' | 'lid' | 'ovenDoor' | 'burners' | 'pan' | 'steam' | 'shower' | 'bath' | 'tap' | 'light' | 'drum';
+export type PartFlag = 'door' | 'door2' | 'lid' | 'ovenDoor' | 'drawer' | 'drawer2' | 'burners' | 'pan' | 'steam' | 'shower' | 'bath' | 'tap' | 'light' | 'drum';
 
 export interface Activation {
   on: boolean;
@@ -205,12 +252,15 @@ function off(): Activation { return { on: false, since: 0 }; }
 
 export function blankParts(): ActiveParts {
   return {
-    door: off(), door2: off(), lid: off(), ovenDoor: off(), burners: off(), pan: off(), steam: off(),
+    door: off(), door2: off(), lid: off(), ovenDoor: off(), drawer: off(), drawer2: off(), burners: off(), pan: off(), steam: off(),
     shower: off(), bath: off(), tap: off(), light: off(), drum: off(),
   };
 }
 
-const FLAG_FOR_ROLE: Record<PartRole, PartFlag> = { door: 'door', door2: 'door2', lid: 'lid', oven: 'ovenDoor' };
+/** Which switch drives a role; the static roles ('interior', 'screen') have none. */
+const FLAG_FOR_ROLE: Record<PartRole, PartFlag | null> = {
+  door: 'door', door2: 'door2', lid: 'lid', oven: 'ovenDoor', drawer: 'drawer', drawer2: 'drawer2', interior: null, screen: null,
+};
 
 /** Recipe data marks a bake (`skill: 'baking'`); cookMeal only accepts non-baking recipes. */
 export function isBakedRecipe(content: ContentDB, use: ObjectUse | null): boolean {
@@ -224,8 +274,10 @@ function first(uses: readonly ObjectUse[], pred: (u: ObjectUse) => boolean): Obj
 }
 
 const PART_FLAGS: readonly PartFlag[] = [
-  'door', 'door2', 'lid', 'ovenDoor', 'burners', 'pan', 'steam', 'shower', 'bath', 'tap', 'light', 'drum',
+  'door', 'door2', 'lid', 'ovenDoor', 'drawer', 'drawer2', 'burners', 'pan', 'steam', 'shower', 'bath', 'tap', 'light', 'drum',
 ];
+
+const OPEN_WHILE_USED: readonly PartFlag[] = ['door', 'door2', 'lid', 'drawer', 'drawer2'];
 
 /** Clears a reusable record in place, so the runtime can keep one record per object instead of allocating per frame. */
 function resetParts(p: ActiveParts): void {
@@ -242,6 +294,9 @@ function setPart(out: ActiveParts, flag: PartFlag, u: ObjectUse | null): void {
   a.since = u ? u.animSince : 0;
 }
 
+/** Game minutes at each end of a shower's perform phase during which its glass door stands open. */
+export const SHOWER_DOOR_MINUTES = 2;
+
 /**
  * The parts of `desc` that should be open/running right now. `uses` are the ObjectUse entries recorded for this
  * placed object (target or station). Pure: unit-tested without a renderer. Pass `out` to reuse a record.
@@ -257,6 +312,8 @@ export function activeParts(
       setPart(out, 'door', u);
       // Side-by-side/wardrobe style second leaf: open together when the descriptor has one.
       setPart(out, 'door2', desc.parts.some((p) => p.role === 'door2') ? u : null);
+      setPart(out, 'drawer', u); // freezer drawers open with the door (no drawer part: nothing moves)
+      setPart(out, 'drawer2', u);
       setPart(out, 'light', u);
       break;
     }
@@ -275,6 +332,8 @@ export function activeParts(
       const u = first(uses, (x) => x.interactionId === 'changeOutfit' || x.interactionId === 'editOutfits');
       setPart(out, 'door', u);
       setPart(out, 'door2', desc.parts.some((p) => p.role === 'door2') ? u : null);
+      setPart(out, 'drawer', u);
+      setPart(out, 'drawer2', u);
       break;
     }
     case 'toilet': {
@@ -283,10 +342,16 @@ export function activeParts(
     }
     case 'shower': {
       setPart(out, 'shower', first(uses, (x) => x.interactionId === 'takeShower' && x.phase === 'perform'));
+      // A glass door (if the model has one) stands open while the person steps in and out, shut while the water runs.
+      // The prepare/apply phases pass in under a tick, so the door also stays open for the first and last
+      // `SHOWER_DOOR_MINUTES` of the perform phase; otherwise it would barely move in play.
+      setPart(out, 'door', first(uses, (x) => x.interactionId === 'takeShower' && (x.phase !== 'perform'
+        || x.elapsed < SHOWER_DOOR_MINUTES || (x.duration !== null && x.elapsed > x.duration - SHOWER_DOOR_MINUTES))));
       break;
     }
     case 'bath': {
       setPart(out, 'bath', first(uses, (x) => x.interactionId === 'takeBath' && x.phase === 'perform'));
+      setPart(out, 'door', first(uses, (x) => x.interactionId === 'takeBath' && x.phase !== 'perform'));
       break;
     }
     case 'sink': {
@@ -311,7 +376,16 @@ export function activeParts(
     case 'laundry': {
       const u = first(uses, () => true);
       setPart(out, 'door', u);
+      setPart(out, 'lid', u); // top-loaders: a hinged lid instead of a front door
       setPart(out, 'drum', u);
+      setPart(out, 'light', u);
+      break;
+    }
+    case 'openWhileUsed': {
+      // Cabinets, chests of drawers, lidded boxes: every door, lid and drawer is open while someone uses the object.
+      const on = desc.on;
+      const u = first(uses, (x) => !on || on.includes(x.interactionId));
+      for (const flag of OPEN_WHILE_USED) setPart(out, flag, u);
       setPart(out, 'light', u);
       break;
     }
@@ -455,6 +529,9 @@ interface PartRuntime {
   motion: OpenMotion;
   /** Node parts store their rest rotation; overlays start at identity. */
   base: THREE.Quaternion;
+  /** Sliding parts: rest position and the pivot-local translation when fully open. */
+  basePos: THREE.Vector3;
+  slide: THREE.Vector3 | null;
 }
 
 interface InteriorRuntime {
@@ -489,6 +566,8 @@ export class ObjectAnim {
   private readonly box: LocalBox | null;
   private readonly parts: PartRuntime[] = [];
   private interior: InteriorRuntime | null = null;
+  /** `anim:interior` nodes of the model: visible only while something is open. */
+  private readonly interiorNodes: THREE.Object3D[] = [];
   private effects: EffectRuntime | null = null;
   private glowLevel = 0;
   private elapsed = 0;
@@ -503,20 +582,28 @@ export class ObjectAnim {
 
   constructor(def: ObjectDef, model: THREE.Object3D | null, private readonly content: ContentDB) {
     this.root.name = 'object-anim';
-    this.desc = descriptorFor(def.id) ?? { defId: def.id, asset: def.model.asset, kind: 'microwave', parts: [] };
+    this.desc = descriptorForDef(def) ?? { defId: def.id, asset: def.model.asset, kind: 'microwave', parts: [] };
     this.box = fittedBounds(def.model);
     for (const spec of this.desc.parts) {
       if (spec.kind === 'node') {
         const pivot = model?.getObjectByName(`part:${spec.node}`);
         if (!pivot) continue;
+        const flag = FLAG_FOR_ROLE[spec.role];
+        if (!flag) {
+          if (spec.role === 'interior') { pivot.visible = false; this.interiorNodes.push(pivot); }
+          continue; // 'screen' is static
+        }
+        // slide is in fitted metres; the pivot lives in model space (scale, then yaw, applied by ObjectAssets.instance)
+        const slide = spec.slide ? new THREE.Vector3(...spec.slide).applyAxisAngle(AXES.y, -def.model.yaw).multiplyScalar(1 / def.model.scale) : null;
         const baseArr = pivot.userData.baseQuaternion as number[] | undefined;
         const base = baseArr && baseArr.length === 4
           ? new THREE.Quaternion(baseArr[0]!, baseArr[1]!, baseArr[2]!, baseArr[3]!)
           : pivot.quaternion.clone();
-        this.parts.push({ flag: FLAG_FOR_ROLE[spec.role], pivot, axis: spec.axis, angle: spec.angle, timing: spec, motion: CLOSED_MOTION, base });
+        this.parts.push({ flag, pivot, axis: spec.axis, angle: spec.angle, timing: spec, motion: CLOSED_MOTION, base, basePos: pivot.position.clone(), slide });
       } else {
         const pivot = this.buildOverlay(spec, model);
-        if (pivot) this.parts.push({ flag: FLAG_FOR_ROLE[spec.role], pivot, axis: spec.axis, angle: spec.angle, timing: spec, motion: CLOSED_MOTION, base: new THREE.Quaternion() });
+        const flag = FLAG_FOR_ROLE[spec.role];
+        if (pivot && flag) this.parts.push({ flag, pivot, axis: spec.axis, angle: spec.angle, timing: spec, motion: CLOSED_MOTION, base: new THREE.Quaternion(), basePos: pivot.position.clone(), slide: null });
       }
     }
   }
@@ -568,7 +655,9 @@ export class ObjectAnim {
       if (p.flag !== 'burners' && p.flag !== 'pan' && p.flag !== 'steam') doorOpen = Math.max(doorOpen, v);
       this.turn.setFromAxisAngle(AXES[p.axis], p.angle * v);
       p.pivot.quaternion.copy(p.base).premultiply(this.turn);
+      if (p.slide) p.pivot.position.copy(p.basePos).addScaledVector(p.slide, v);
     }
+    for (const n of this.interiorNodes) n.visible = doorOpen > 0.02;
 
     // Interiors are built lazily and only drawn while a door is actually open (closed appliances cost nothing).
     const wantsInterior = doorOpen > 0.02;
@@ -667,12 +756,13 @@ export class ObjectAnim {
     };
     this.ownMaterials.push(e.ringMat);
     if (kind === 'oven' && this.desc.hob) {
-      const hobY = box.y1 + 0.004;
-      const xs = [0.28, 0.72], zs = [0.30, 0.64];
-      for (const fx of xs) for (const fz of zs) {
+      const layout = this.desc.hobLayout;
+      const hobY = (layout?.y !== undefined ? box.y0 + layout.y * (box.y1 - box.y0) : box.y1) + 0.004;
+      const spots: [number, number][] = layout ? layout.rings : [[0.28, 0.30], [0.28, 0.64], [0.72, 0.30], [0.72, 0.64]];
+      for (const [fx, fz] of spots) {
         const ring = new THREE.Mesh(RING_GEO, e.ringMat);
         ring.position.set(box.x0 + fx * (box.x1 - box.x0), hobY, box.z0 + fz * (box.z1 - box.z0));
-        ring.scale.setScalar(0.06); // ~12 cm across: any larger and the two columns of rings touch
+        ring.scale.setScalar(layout?.ringSize !== undefined ? layout.ringSize / 2 : 0.06); // default ~12 cm across: any larger and the two columns of rings touch
         g.add(ring);
         e.rings.push(ring);
       }
@@ -686,7 +776,8 @@ export class ObjectAnim {
       handle.scale.set(0.02, 0.016, 0.16);
       handle.position.set(0.14, 0.06, 0);
       pan.add(handle);
-      pan.position.set(box.x0 + xs[0]! * (box.x1 - box.x0), hobY, box.z0 + zs[0]! * (box.z1 - box.z0));
+      const [pfx, pfz] = layout ? (layout.pan ?? layout.rings[0]!) : [0.28, 0.30];
+      pan.position.set(box.x0 + pfx * (box.x1 - box.x0), hobY, box.z0 + pfz * (box.z1 - box.z0));
       g.add(pan);
       e.pan = pan;
       e.steamAnchor.copy(pan.position).add(new THREE.Vector3(0, 0.08, 0));
@@ -829,6 +920,6 @@ export class ObjectAnim {
 
 /** Convenience for ObjectsView: build the animation for a placed def (null when nothing is animated). */
 export function createObjectAnim(def: ObjectDef, model: THREE.Object3D | null, content: ContentDB): ObjectAnim | null {
-  if (!descriptorFor(def.id)) return null;
+  if (!descriptorForDef(def)) return null;
   return new ObjectAnim(def, model, content);
 }
