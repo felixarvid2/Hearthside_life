@@ -266,6 +266,74 @@ def conform(ob, offset=0.006, smooth=3):
     return pushed
 
 
+def shell_finish(ob, lo=0.006, hi=0.025, k=0.015, smooth=3):
+    """Hybrid finish (`finish: {"mode": "shell"}`): OpenSew-2 designs the garment - cut, neckline, hem, sleeve
+    length, ease and folds - and this pass makes it behave like a game garment. At the bind pose every vertex is set
+    over the skin point nearest to it, at a height mapped from its own height d: lo + (hi - lo) * (1 - exp(-d / k)).
+    The map keeps the order of stacked folds but never lets cloth sink into the skin or flap more than `hi` away.
+    Weights are the body's, blended barycentrically at that skin point: with the arms out (T-pose) a sleeve is nearest
+    to the arm, so it follows the arm exactly. `smooth` passes then iron out the sewn seams, re-projecting each time.
+    Returns (max height before, mean height after)."""
+    import math as _m
+    from mathutils.bvhtree import BVHTree
+    from mathutils.geometry import barycentric_transform
+    dg = bpy.context.evaluated_depsgraph_get()
+    be = body.evaluated_get(dg); me = be.to_mesh(); bw = body.matrix_world
+    pts = [bw @ v.co for v in me.vertices]
+    me.calc_loop_triangles(); tris = [tuple(t.vertices) for t in me.loop_triangles]
+    be.to_mesh_clear()
+    bvh = BVHTree.FromPolygons(pts, tris)
+    bnames = {vg.index: vg.name for vg in body.vertex_groups}
+    bwts = [{bnames[x.group]: x.weight for x in v.groups if x.weight > 0 and bnames.get(x.group) in bones} for v in body.data.vertices]
+    ow = ob.matrix_world; owi = ow.inverted()
+    P_ = [ow @ v.co for v in ob.data.vertices]
+    nbr = [[] for _ in P_]
+    for e in ob.data.edges:
+        i, j = e.vertices; nbr[i].append(j); nbr[j].append(i)
+    hmap = lambda d: lo + (hi - lo) * (1.0 - _m.exp(-max(d, 0.0) / k))
+    heights = [0.0] * len(P_)
+    hits = [None] * len(P_)
+    def project(first):
+        for i, p in enumerate(P_):
+            loc, nrm, ti, _ = bvh.find_nearest(p)
+            d = (p - loc).dot(nrm)
+            if first:
+                heights[i] = hmap(d)
+            P_[i] = loc + nrm * heights[i]
+            hits[i] = (loc, ti)
+    worst = max(((ow @ v.co) - bvh.find_nearest(ow @ v.co)[0]).length for v in ob.data.vertices)
+    project(True)
+    for _ in range(smooth):
+        P_[:] = [p * 0.5 + sum((P_[j] for j in nb), Vector()) * (0.5 / len(nb)) if nb else p for p, nb in zip(P_, nbr)]
+        heights[:] = [h * 0.5 + sum(heights[j] for j in nb) * (0.5 / len(nb)) if nb else h for h, nb in zip(heights, nbr)]
+        project(False)
+    for vg in list(ob.vertex_groups):
+        ob.vertex_groups.remove(vg)
+    groups = {}
+    for i, (loc, ti) in enumerate(hits):
+        a_, b_, c_ = tris[ti]
+        w = barycentric_transform(loc, pts[a_], pts[b_], pts[c_], Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+        wa, wb, wc = (max(0.0, x) for x in w); t = (wa + wb + wc) or 1.0
+        acc = {}
+        for kk, f in ((a_, wa / t), (b_, wb / t), (c_, wc / t)):
+            for name, x in bwts[kk].items():
+                acc[name] = acc.get(name, 0.0) + x * f
+        for name, x in acc.items():
+            if x <= 1e-4:
+                continue
+            if name not in groups:
+                groups[name] = ob.vertex_groups.new(name=name)
+            groups[name].add([i], x, 'REPLACE')
+    for v, p in zip(ob.data.vertices, P_):
+        v.co = owi @ p
+    ob.data.update()
+    C.limit_and_normalize(ob)
+    return round(worst, 4), round(sum(heights) / max(1, len(heights)), 4)
+
+
+fin = P.get("finish") or {}
+if fin.get("mode") == "shell":
+    report["shell"] = shell_finish(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015), fin.get("smooth", 3))
 if P.get("conform"):
     report["conform_pushed"] = conform(g, P["conform"].get("offset", 0.006), P["conform"].get("smooth", 3))
 mw = g.matrix_world.copy(); g.parent = arm; g.matrix_world = mw
