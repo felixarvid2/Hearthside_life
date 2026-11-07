@@ -33,11 +33,27 @@
   "arms_down_deg": 45
  },
  "per_body": {
-  "standin_mannequin_f": {
-   "fit_pose": {
-    "arms_down_deg": 30
-   },
-   "fit": 0.14
+  "ubc_male": {
+   "armhole": {
+    "depth_extra": 0.1,
+    "scye_max": 0.2
+   }
   }
+ },
+ "finish": {
+  "mode": "body",
+  "close": 5,
+  "min": 0.006,
+  "max": 0.025,
+  "k": 0.015,
+  "smooth": 3,
+  "exclude_regions": [
+   "head",
+   "neck",
+   "forearm_l",
+   "forearm_r",
+   "hand_l",
+   "hand_r"
+  ]
  }
 }

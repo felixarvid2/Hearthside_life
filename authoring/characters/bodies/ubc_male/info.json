@@ -1,0 +1,70 @@
+{
+ "bone_count": 65,
+ "bone_names_sha1": "9bcce97225d0670ffda689866af1d4bd51e5a443",
+ "bones": {
+  "Head": [
+   0.0,
+   0.0174,
+   1.5998
+  ],
+  "foot_l": [
+   0.1143,
+   0.0875,
+   0.0865
+  ],
+  "hand_l": [
+   0.7065,
+   0.0654,
+   1.4555
+  ],
+  "neck_01": [
+   0.0,
+   0.0414,
+   1.5205
+  ],
+  "pelvis": [
+   0.0,
+   0.043,
+   0.9491
+  ],
+  "thigh_l": [
+   0.1143,
+   0.036,
+   0.9712
+  ],
+  "upperarm_l": [
+   0.212,
+   0.0654,
+   1.4555
+  ]
+ },
+ "height": 1.8196,
+ "id": "ubc_male",
+ "materials": [
+  "M_Brows",
+  "M_Eyes",
+  "M_Skin"
+ ],
+ "regions": {
+  "belly": 256,
+  "calf_l": 555,
+  "calf_r": 555,
+  "chest": 1118,
+  "foot_l": 664,
+  "foot_r": 664,
+  "forearm_l": 344,
+  "forearm_r": 344,
+  "hand_l": 1669,
+  "hand_r": 1669,
+  "head": 4278,
+  "hips": 392,
+  "neck": 372,
+  "thigh_l": 425,
+  "thigh_r": 425,
+  "upperarm_l": 294,
+  "upperarm_r": 294
+ },
+ "source": "Superhero_Male_FullBody.gltf",
+ "tris": 14318,
+ "verts": 8483
+}

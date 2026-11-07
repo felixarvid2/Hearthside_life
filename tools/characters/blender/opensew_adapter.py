@@ -33,3 +33,37 @@ def install():
         avatar.LIMB_GROUPS[k] = tuple(v) + tuple(avatar.LIMB_GROUPS[k])
     avatar.EXCLUDE_TORSO = tuple(avatar.EXCLUDE_TORSO) + ("lowerarm",)
     return avatar
+
+
+def widen_armhole(library, depth_extra=0.0, scye_max=0.05):
+    """Lets the top drafts reach a larger armhole on a muscular arm.
+
+    OpenSew-2 sizes the armhole to 1.35 x the arm's girth near the shoulder, but limits the solve: at most 10 cm
+    deeper than the armpit and at most 5 cm wider at the scye. On the Quaternius male (58 cm around the deltoid)
+    that stops at 50 of the 78 cm needed, and the sleeve - never wider than 82 % of the armhole - ends up narrower
+    than the arm it must close around, so the cloth bunches at the shoulder. This raises the two limits
+    (`depth_extra` metres more depth, scye up to `scye_max`) for the duration of one draft; the solve itself and the
+    add-on's files are unchanged.
+    """
+    if getattr(library, "_hs_widened", None) == (depth_extra, scye_max):
+        return
+    orig_draft = getattr(library, "_hs_orig_draft_top", library._draft_top)
+    orig_solve = library._solve
+    library._hs_orig_draft_top = orig_draft
+
+    def draft(m, fit, *args, **kw):
+        def solve(fn, target, lo, hi, iters=40):
+            # recognised by their bounds: depth (max(0.10, anat), anat + 0.10), scye (0, 0.05); the neckline solve
+            # (0.02, 0.30) and any other call pass through unchanged
+            if lo >= 0.10 and abs((hi - lo) - 0.10) < 1e-6:
+                hi = hi + depth_extra
+            elif lo == 0.0 and abs(hi - 0.05) < 1e-9:
+                hi = max(hi, scye_max)
+            return orig_solve(fn, target, lo, hi, iters)
+        library._solve = solve
+        try:
+            return orig_draft(m, fit, *args, **kw)
+        finally:
+            library._solve = orig_solve
+    library._draft_top = draft
+    library._hs_widened = (depth_extra, scye_max)

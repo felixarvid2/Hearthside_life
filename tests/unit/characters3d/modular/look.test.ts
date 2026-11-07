@@ -26,7 +26,7 @@ describe('manifest', () => {
     // testManifest() = the real manifest plus the test-only shell top
     expect(garmentsFor(m, BODY, 'top').map((g) => g.id).sort()).toEqual(['shell_top', 'tshirt_crew']);
     expect(garmentsFor(m, BODY, 'bottom')).toEqual([]);
-    expect(garmentsFor(m, 'standin_mannequin_f').map((g) => g.id)).not.toContain('shell_top');
+    expect(garmentsFor(m, 'ubc_female').map((g) => g.id)).not.toContain('shell_top');
     expect(hairFor(m, BODY).map((h) => h.id)).toEqual(['short_crop']);
   });
 });
@@ -50,8 +50,8 @@ describe('deriveModularLook', () => {
     const m = testManifest();
     m.defaults.outfit = { top: 'shell_top' };
     const l = deriveModularLook(appearance('b'), m);
-    expect(l).toMatchObject({ v: 1, bodyId: 'standin_mannequin_f', hairId: m.defaults.hairstyle, morphs: {}, colors: { skin: '#b07a55', hair: '#774411', eyes: '#336655' } });
-    expect(l.outfits.everyday).toEqual({}); // shell_top is only fitted to the male stand-in
+    expect(l).toMatchObject({ v: 1, bodyId: 'ubc_female', hairId: m.defaults.hairstyle, morphs: {}, colors: { skin: '#b07a55', hair: '#774411', eyes: '#336655' } });
+    expect(l.outfits.everyday).toEqual({}); // shell_top is only fitted to the male body
     expect(deriveModularLook(appearance('a'), m).outfits.everyday).toEqual({ top: 'shell_top' });
   });
   it('lookFor prefers a readable stored look', () => {
@@ -70,7 +70,7 @@ describe('resolveLook', () => {
     expect(resolveLook(l, m())).toEqual({ look: l, issues: [] });
   });
   it('drops unknown and unfitted things', () => {
-    const l = look({ bodyId: 'standin_mannequin_f', hairId: 'nope', outfits: { everyday: { top: 'shell_top', bottom: 'ghost' } } });
+    const l = look({ bodyId: 'ubc_female', hairId: 'nope', outfits: { everyday: { top: 'shell_top', bottom: 'ghost' } } });
     const r = resolveLook(l, m());
     expect(r.look.outfits.everyday).toEqual({});
     expect(r.look.hairId).toBeNull();

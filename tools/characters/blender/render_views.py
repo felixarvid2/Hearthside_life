@@ -1,6 +1,6 @@
 """Renders inspection views (front, left, back, right; optional pose) of a .blend with a body and parts.
   blender -b --factory-startup --python render_views.py -- --blend X.blend --out out_prefix [--size 512]
-         [--pose A_TPose|arms_down|arms_up] [--focus head]
+         [--pose fit|arms_down|arms_up|stride] [--focus head|torso] [--hide <name prefix>,...]
 Workbench renderer; Z-up scene, the character faces -Y.
 """
 import bpy, os, sys, math
@@ -26,6 +26,10 @@ for o in bpy.data.objects:
         o.hide_render = o.hide_get() if o.name.startswith(("Collider",)) else False
         if getattr(o, "cd", None) is not None and getattr(o.cd, "is_pattern", False):
             o.hide_render = True
+hide = [h for h in str(a.get("hide", "")).split(",") if h]
+for o in bpy.data.objects:
+    if o.type == 'MESH' and any(o.name.startswith(h) for h in hide):
+        o.hide_render = True
 pose = a.get("pose")
 if pose:
     def rot(b, axis, deg):

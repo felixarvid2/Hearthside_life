@@ -32,7 +32,7 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
 
 ## Steps (all scripts: `blender -b --factory-startup --python <script> -- <args>`)
 
-1. **Body**: `blender/prepare_body.py --src <quaternius.glb> --id <body-id> --out-glb public/assets/characters/modular/bodies/<id>.glb --out-blend authoring/characters/bodies/<id>/fitting.blend --out-json authoring/characters/bodies/<id>/info.json`
+1. **Body**: `blender/prepare_body.py --src <quaternius.gltf> --id <body-id> --out-glb public/assets/characters/modular/bodies/<id>.glb --out-blend authoring/characters/bodies/<id>/fitting.blend --out-json authoring/characters/bodies/<id>/info.json --materials authoring/characters/bodies/<id>/materials.json`
    - Imports with `bone_heuristic='BLENDER'`, so glTF joint frames survive the round trip. Measured on the UAL
      mannequins: rest rotations within 0.06°, positions and inverse bind matrices within 1e-6 m.
    - Drops animations, limits weights to 4 and normalizes them.
@@ -48,6 +48,14 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
      The arms are lowered 45° in *pose mode only*. After sewing, relaxing and finalizing (weights transferred from
      the body), every garment vertex is moved back by the inverse of its own skinning matrix at that pose
      (`unpose`). So the GLB is in the body's bind pose, and the rest pose of the armature is never changed.
+   - Weights: `rebind` replaces OpenSew's nearest-surface transfer with a ray along each vertex's normal into the
+     posed body (a loose sleeve's underside otherwise takes the torso's weights).
+   - `armhole` (`depth_extra`, `scye_max`): `opensew_adapter.widen_armhole` raises OpenSew's armhole limits for a
+     muscular arm (the Quaternius male needs 78 cm; the add-on stopped at 50 and drafted a sleeve narrower than the arm).
+   - `finish: {"mode": "body"}` (used by the catalog): the shipped surface is the skin under the sewn garment,
+     raised by the garment's own height (mapped to `min`..`max`), with the body's weights; `close` rings fill seam
+     gaps, `exclude_regions` are never covered, the boundary is tucked to the skin. `"mode": "shell"` (project the
+     sewn mesh itself) and `conform` (push-out only) are kept for comparison.
    - Then: decimate to `target_tris`, smart-UV, weights limited to 4 and normalized, region coverage measured,
      parented to the armature. Writes the GLB, `authoring/.../<id>__<body>.blend` (source) and `build_<body>.json`
      (measurements, coverage, counts).
@@ -67,32 +75,37 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
      The preset's Surface Deform is skipped. The result is converted to a mesh, with a hair-coloured scalp cap
      (`cap`) so no scalp shows between clumps.
    - Weighted to `Head`, blending to `neck_01`/`spine_03` below the skull base. Exported with the armature.
-5. **Inspect**: `blender/render_views.py --blend <source.blend> --out <prefix> [--focus head|torso] [--pose fit]`
-   renders front/left/back/right views with Cycles on the CPU.
+5. **Inspect**: `dev/wardrobe.html` (`npm run dev`) shows every part on every body in the game's renderer, posed
+   (`pose=idle|walk|sit`). `blender/render_views.py --blend <source.blend> --out <prefix> [--focus head|torso]
+   [--pose fit] [--hide <prefix>]` renders the Blender sources (front/left/back/right, Cycles on the CPU).
 6. **Audit**: `node tools/characters/audit-glb.mjs <files...>` prints hierarchy, skins (joint rest transforms,
    inverse bind translations), meshes, morph targets, materials, textures and clips as JSON.
 
-## Status (2026-11-06)
+## Status (2026-11-07)
 
-- **Bodies.** The Quaternius Universal Base Characters are not in the asset library. `standin_mannequin_m`/`_f` are
-  the UAL 1/2 mannequins (CC0), marked `temporary`.
-  - They share all 65 joint names and their order with the base-character rig (checked against the rig in Quaternius'
-    Modular Character Outfits – Fantasy pack).
-  - The rest poses differ: neck 17°, spine_03 14°, clavicles 11°. Garments and hair must be rebuilt on the real
-    bodies. The runtime's rig check would reject parts fitted to the mannequins.
-- **tshirt_crew.** Good on `standin_mannequin_m` (2,598 triangles, every vertex weighted, cover mask). On `_f` the
-  sleeves twist and the back of one shoulder stays bare, even with `per_body` (30° pose, ease 0.14), so it is not in
-  the manifest for `_f`.
-- **short_crop.** Built on both stand-ins: about 6,500 triangles, skinned to the head.
+- **Bodies.** `ubc_male` / `ubc_female`: Quaternius Universal Base Characters (Standard, CC0), from the pack's
+  `Base Characters/Godot - UE/*.gltf`. `authoring/characters/bodies/<id>/materials.json` renames the materials to
+  `M_Skin` / `M_Eyes` / `M_Brows`, swaps in the neutral skin texture (`skin_base.png`, from
+  `tools/characters/bake_skin.py --src T_Superhero_<M|F>_Dark*.png`; the printed gain is the manifest's `skinGain`),
+  drops the roughness and missing normal maps and writes 1024 px JPEGs. The stand-in mannequins are gone.
+- **tshirt_crew.** Both bodies, hybrid body finish, about 2,500 / 2,800 triangles, every vertex weighted, cover mask.
+- **short_crop.** Both bodies, about 6,700 / 7,000 triangles, skinned to the head.
 
 ## CharacterStudio
 
-It is VRM-based (`@pixiv/three-vrm`, three 0.183); its CharacterManager expects VRM and cannot load our GLB parts
-unchanged. Candidates for the creator (Stage C):
+CharacterStudio (MIT, git `293182b`) is a React app built on VRM: it loads every trait through `VRMLoaderPlugin`,
+renames bones through the VRM humanoid map and skips a file without VRM data, keeps a skeleton and an animation mixer
+per trait, and hides the body under clothing by raycasting (three-mesh-bvh) after every trait change. It cannot load our
+GLB parts, so its logic was ported instead (MIT header in each file, row in `public/assets/LICENSES.md`):
 
-- `src/library/cameraFrameManager.js`: face and full-body framing.
-- `manifestRestrictions.js`: trait and type exclusions. Our `conflicts` are the simple form.
-- `thumbnailsGenerator.js`.
+| Ours | From | Notes |
+|---|---|---|
+| `src/characters/modular/creator/framing.ts` | `src/library/cameraFrameManager.js` | Shots `face` / `upper` / `full` between named bones; the distance is solved for the frustum, so portrait and landscape both fit. |
+| `src/characters/modular/restrictions.ts` | `src/library/manifestRestrictions.js` | `manifest.restrictions.slots` / `.parts` (symmetric) plus each garment's `conflicts`; `equipWith` removes what a new part conflicts with. Used by `resolveLook`. |
+| `tools/characters/thumbnails.mjs` | `src/library/thumbnailsGenerator.js` | Renders each part on a body with Playwright, writes `thumbs/<id>.webp`; `--write-manifest` sets `thumbnail`. |
+| `dev/wardrobe.html` | (the app's trait preview) | Dev-only QA grid: every body x every hairstyle and garment, `pose=idle|walk|sit`, `shot=`, `body=`, `part=`. `npm run dev`, then open `/dev/wardrobe.html`. Not in the production build. |
 
-`cull-mesh.js` hides the body under clothing with runtime raycasts (three-mesh-bvh); our cover masks do the same job
-precomputed at build time. If code is adapted later, keep its MIT notice in the file header and add a row here.
+Not ported: the VRM loader, expressions, look-at, spring bones and VRM export. `cull-mesh.js` (runtime raycast culling)
+is the fallback to consider once body morphs (Stage D) make precomputed cover masks stale. `merge-geometry.js` /
+`create-texture-atlas.js` (one mesh and one atlas per finished character) are tied to VRM and MToon; only the idea is
+kept for a later draw-call optimisation.

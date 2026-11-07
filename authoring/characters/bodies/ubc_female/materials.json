@@ -1,0 +1,5 @@
+{
+ "MI_Superhero_Female": {"name": "M_Skin", "base": "skin_base.png", "size": 1024, "roughness": 0.62},
+ "MI_Eyes": {"name": "M_Eyes", "normal": false},
+ "MI_Hair_2": {"name": "M_Brows", "normal": false, "size": 512}
+}

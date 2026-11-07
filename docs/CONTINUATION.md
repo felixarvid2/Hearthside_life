@@ -143,9 +143,9 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 ## Next steps, in order
 
 1. Modular Quaternius characters (opt-in style "Quaternius (preview)"; see "Modular characters" below). Stages A
-   and B are done on stand-in bodies. Next: get the Universal Base Characters files, rebuild the bodies, T-shirt and
-   hair on them, then Stage C (trousers, hoodie, bob, ponytail, colour variants, the mobile creator) and Stage D
-   (verified face and body morphs).
+   and B run on the real Universal Base Characters (`ubc_male`, `ubc_female`). Next: Stage C (trousers, hoodie, bob,
+   ponytail, colour variants, two outfit combos, the mobile creator using `creator/framing.ts`, `restrictions.ts` and
+   thumbnails from `tools/characters/thumbnails.mjs`), then Stage D (verified face and body morphs).
 2. Milestone 10, complete catalogs: surfaces (360 walls, 200 floors) and furnishings (573 designs, target 560) are done. The
    remaining target is the full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
 3. Milestone 13, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
@@ -174,22 +174,29 @@ changes for existing saves or styles.
   `authoring/characters/`; the pipeline and tool versions are in `tools/characters/README.md` (Blender 4.5.15,
   OpenSew-2 86b4322, GBH Tool 2.2.3, isolated add-on profile).
 - **Done.**
-  - Stage A: a Quaternius rig body in the game, idle/walk, independent people.
-  - Stage B: `tshirt_crew` (OpenSew-2) and `short_crop` (GBH Tool) built by script and verified in the game on two
-    people, idle and walking. Unit tests in `tests/unit/characters3d/modular/` cover the real assets.
-- **Missing files.** The Quaternius **Universal Base Characters** (Standard,
-  https://quaternius.itch.io/universal-base-characters; bodies with heads and hair, glTF exports and textures) are not
-  in `/home/user/test/assets/3d-models/`. The bodies are therefore the UAL mannequins, marked `temporary`. Their rig
-  has the same joint names and order, but a different rest pose (neck 17°, spine_03 14°, clavicles 11°), so every
-  garment and hairstyle must be rebuilt on the real bodies. The scripts take the body id, so this is a re-run.
+  - Bodies: Quaternius Universal Base Characters (Standard, CC0; `Superhero_Male_FullBody` / `_Female_`), prepared
+    with `prepare_body.py --materials`. The skin texture is baked neutral (`tools/characters/bake_skin.py`), so any
+    skin tone works (`skinGain`); eye colour tints only the iris (shader), brows follow the hair colour.
+  - Animations: the shared UAL clips play on the real bodies; root/pelvis position tracks are scaled per body by its
+    hip height (`retarget.ts`, shared cached clips), so feet stay on the floor.
+  - `tshirt_crew` on both bodies, `short_crop` on both, cover masks. Unit tests in `tests/unit/characters3d/modular/`.
+  - CharacterStudio ports (MIT): `creator/framing.ts`, `restrictions.ts` (used by `resolveLook`),
+    `tools/characters/thumbnails.mjs`, and the dev-only wardrobe grid `dev/wardrobe.html` (`npm run dev`).
+- **Garment method (decided with the user).** OpenSew-2 alone gave bunched sleeves, bare shoulders and poke-through
+  on these muscular bodies, even with wider armholes (`opensew_adapter.widen_armhole`) and a ray-based weight rebind.
+  Garments therefore use the hybrid `finish: {"mode": "body"}` in `build_garment.py`: OpenSew-2 sews the design
+  (where it covers, how loose); the shipped mesh is the skin under it, raised 0.6-2.5 cm with the body's own weights,
+  seam gaps closed, excluded regions (`exclude_regions`) dropped, edges tucked to the skin. It cannot open holes and
+  deforms exactly like the body; it reads tighter than sewn cloth (folds mostly flattened).
 - **Known gaps.**
-  - The T-shirt on the curvy stand-in fails: twisted sleeves and a bare shoulder, so it is not shipped.
-  - No trousers, so the legs show the mannequin.
+  - No trousers yet, so the legs show the body's underwear.
   - Under this style people's classic clothes, hair and accessories are not drawn.
   - No creator UI for modular looks yet (Stage C).
   - Seat and bed anchors use the classic values.
   - Garment UVs come from a smart projection (fine for solid colours).
   - Hair clumps are spiky: the taper curve still needs tuning.
+  - Saved modular looks that name the removed stand-in bodies fall back to the default body (logged by
+    `resolveLook`).
 
 ## Known issues
 

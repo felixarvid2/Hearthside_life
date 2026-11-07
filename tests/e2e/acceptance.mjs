@@ -1193,8 +1193,18 @@ async function stepLive(T) {
       return p.location.kind === 'lot' && p.location.lotId === st.activeLotId;
     }, nb[0].id);
     if (!stillHere) {
-      const invited = await page.evaluate(([host, guest]) => window.hearthside.game.inviteHome(host, guest), [mira, nb[0].id]);
-      const back = await runUntil(T, 4 * 100, `(() => { const p = st.people['${nb[0].id}']; return p.location.kind === 'lot' && p.location.lotId === st.activeLotId; })()`);
+      // In person needs both on this lot; once she has left, ring her and ask her over (a visit about an hour later).
+      const invited = await page.evaluate(([host, guest]) => {
+        const g = window.hearthside.game;
+        const r = g.inviteHome(host, guest);
+        if (r.ok) return { ...r, via: 'in person' };
+        const name = window.hearthside.debug.state().people[guest].firstName;
+        const opt = g.options(host, { kind: 'person', personId: host }).find((o) => o.section === 'phone' && o.label === `Invite ${name} Over`);
+        if (!opt) return { ok: false, reason: `${r.reason} / no phone invite offered` };
+        if (!opt.enabled) return { ok: false, reason: `${r.reason} / phone: ${opt.reason}` };
+        return { ...g.queue(host, opt), via: 'phone' };
+      }, [mira, nb[0].id]);
+      const back = await runUntil(T, 4 * 150,`(() => { const p = st.people['${nb[0].id}']; return p.location.kind === 'lot' && p.location.lotId === st.activeLotId; })()`);
       log('neighbour gone home; invited back', JSON.stringify({ invited, back: back.done, ticks: back.ticks }));
       if (back.done) {
         await selectMember(T, mira);

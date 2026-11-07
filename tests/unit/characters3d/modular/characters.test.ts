@@ -58,7 +58,7 @@ describe('ModularCharacter', () => {
     const children = c.root.children.length;
     let steady = base;
     for (let i = 0; i < 50; i++) {
-      const bodyId = i % 10 === 9 ? 'standin_mannequin_f' : BODY;
+      const bodyId = i % 10 === 9 ? 'ubc_female' : BODY;
       await c.apply(i % 2 ? look({ bodyId }) : shellLook({ bodyId, colors: { skin: `#${(i * 5000 + 100000).toString(16).slice(0, 6).padStart(6, '0')}`, eyes: '#000000', hair: '#000000', garments: {} } }));
       if (i === 49) steady = cache.stats();
     }
@@ -152,12 +152,12 @@ describe('cover masks', () => {
     for (let i = 0; i < n; i++) if (on(i)) bytes[i >> 3]! |= 1 << (i & 7);
     return Buffer.from(bytes).toString('base64');
   };
-  const counts = { 'Body_chest/0': 418, 'Body_chest/1': 60, 'Body_belly/0': 135, 'Body_belly/1': 44 };
+  const counts = { 'Body_chest/0': 684, 'Body_belly/0': 194 };
   const mask = (over: Partial<CoverMaskFile> = {}): CoverMaskFile => ({
     v: 1, body: BODY, garment: 'shell_top', coverDist: 0.06, vertexCounts: counts,
     meshes: {
-      'Body_chest/0': bits(418, () => true), 'Body_chest/1': bits(60, () => true),
-      'Body_belly/0': bits(135, (i) => i < 67),
+      'Body_chest/0': bits(684, () => true),
+      'Body_belly/0': bits(194, (i) => i < 97),
     }, ...over,
   });
   const hiddenOf = (c: ModularCharacter, key: string) => {
@@ -178,10 +178,10 @@ describe('cover masks', () => {
     const ca = hiddenOf(a, 'Body_chest/0'), ba = hiddenOf(a, 'Body_belly/0');
     expect(ca.arr.every((v) => v === 1)).toBe(true);
     expect(ca.mesh.visible).toBe(false);
-    expect(ba.arr.slice(0, 67).every((v) => v === 1)).toBe(true);
-    expect(ba.arr.slice(67).every((v) => v === 0)).toBe(true);
+    expect(ba.arr.slice(0, 97).every((v) => v === 1)).toBe(true);
+    expect(ba.arr.slice(97).every((v) => v === 0)).toBe(true);
     expect(ba.mesh.visible).toBe(true);
-    expect(regionVisible(a, 'chest')).toBe(true); // no whole-region hide: the mask decides
+    expect(regionVisible(a, 'belly')).toBe(true); // no whole-region hide: the mask decides (chest is now a single mesh, so its node is the fully masked mesh itself)
     const cb = hiddenOf(b, 'Body_chest/0');
     expect(cb.arr.every((v) => v === 0)).toBe(true);
     expect(cb.arr).not.toBe(ca.arr);
