@@ -1,0 +1,77 @@
+{
+ "mouth_at": 0.35,
+ "morphs": [
+  {
+   "id": "nose_width",
+   "label": "Nose width",
+   "group": "face",
+   "range": [
+    -1,
+    1
+   ],
+   "radius": 0.028,
+   "amount": 0.45
+  },
+  {
+   "id": "mouth_width",
+   "label": "Mouth width",
+   "group": "face",
+   "range": [
+    -1,
+    1
+   ],
+   "radius": 0.03,
+   "amount": 0.4
+  },
+  {
+   "id": "jaw_width",
+   "label": "Jaw width",
+   "group": "face",
+   "range": [
+    -1,
+    1
+   ],
+   "band": 0.035,
+   "amount": 0.012
+  },
+  {
+   "id": "chin_length",
+   "label": "Chin length",
+   "group": "face",
+   "range": [
+    -1,
+    1
+   ],
+   "radius": 0.03,
+   "move": [
+    0.0,
+    -0.004,
+    -0.012
+   ]
+  },
+  {
+   "id": "weight",
+   "label": "Weight",
+   "group": "body",
+   "range": [
+    -0.5,
+    1
+   ],
+   "smooth": 6,
+   "regions": {
+    "belly": 0.03,
+    "hips": 0.022,
+    "chest": 0.014,
+    "thigh_l": 0.016,
+    "thigh_r": 0.016,
+    "upperarm_l": 0.01,
+    "upperarm_r": 0.01,
+    "calf_l": 0.006,
+    "calf_r": 0.006,
+    "forearm_l": 0.004,
+    "forearm_r": 0.004,
+    "neck": 0.006
+   }
+  }
+ ]
+}

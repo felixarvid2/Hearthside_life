@@ -102,7 +102,58 @@
    "browMaterials": [
     "M_Brows"
    ],
-   "morphs": [],
+   "morphs": [
+    {
+     "id": "nose_width",
+     "label": "Nose width",
+     "target": "nose_width",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "mouth_width",
+     "label": "Mouth width",
+     "target": "mouth_width",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "jaw_width",
+     "label": "Jaw width",
+     "target": "jaw_width",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "chin_length",
+     "label": "Chin length",
+     "target": "chin_length",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "weight",
+     "label": "Weight",
+     "target": "weight",
+     "range": [
+      -0.5,
+      1
+     ],
+     "group": "body"
+    }
+   ],
    "height": 1.8196,
    "license": "CC0 1.0 - Quaternius, Universal Base Characters (Standard)",
    "source": "authoring/characters/bodies/ubc_male"
@@ -132,7 +183,58 @@
    "browMaterials": [
     "M_Brows"
    ],
-   "morphs": [],
+   "morphs": [
+    {
+     "id": "nose_width",
+     "label": "Nose width",
+     "target": "nose_width",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "mouth_width",
+     "label": "Mouth width",
+     "target": "mouth_width",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "jaw_width",
+     "label": "Jaw width",
+     "target": "jaw_width",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "chin_length",
+     "label": "Chin length",
+     "target": "chin_length",
+     "range": [
+      -1,
+      1
+     ],
+     "group": "face"
+    },
+    {
+     "id": "weight",
+     "label": "Weight",
+     "target": "weight",
+     "range": [
+      -0.5,
+      1
+     ],
+     "group": "body"
+    }
+   ],
    "height": 1.7751,
    "license": "CC0 1.0 - Quaternius, Universal Base Characters (Standard)",
    "source": "authoring/characters/bodies/ubc_female"
@@ -178,7 +280,98 @@
    ],
    "source": "authoring/characters/garments/tshirt_crew/params.json",
    "license": "CC0 1.0 - Hearthside original (designed with OpenSew-2, body-shell finish, in Blender on Quaternius CC0 bodies)",
-   "thumbnail": "thumbs/tshirt_crew.webp"
+   "thumbnail": "thumbs/tshirt_crew.webp",
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "trousers_straight",
+   "label": "Straight trousers",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/trousers_straight__ubc_male.glb",
+    "ubc_female": "garments/trousers_straight__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/trousers_straight__ubc_male.cover.json",
+    "ubc_female": "garments/trousers_straight__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Trousers",
+     "materials": [
+      "M_Trousers"
+     ],
+     "default": "#3b4252",
+     "palette": [
+      "#3b4252",
+      "#2f2f33",
+      "#6b5a45",
+      "#8c9aa8",
+      "#5d6b4f",
+      "#a8473f"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/trousers_straight/params.json",
+   "license": "CC0 1.0 - Hearthside original (designed with OpenSew-2, body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "thumbnail": "thumbs/trousers_straight.webp",
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "hoodie_pullover",
+   "label": "Pullover hoodie",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/hoodie_pullover__ubc_male.glb",
+    "ubc_female": "garments/hoodie_pullover__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/hoodie_pullover__ubc_male.cover.json",
+    "ubc_female": "garments/hoodie_pullover__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Hoodie",
+     "materials": [
+      "M_Hoodie"
+     ],
+     "default": "#7a8b6f",
+     "palette": [
+      "#7a8b6f",
+      "#4a5a7a",
+      "#b9b4aa",
+      "#2f2f33",
+      "#a8473f",
+      "#d9a441"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/hoodie_pullover/params.json",
+   "license": "CC0 1.0 - Hearthside original (designed with OpenSew-2, body-shell finish, measured hood, in Blender on Quaternius CC0 bodies)",
+   "thumbnail": "thumbs/hoodie_pullover.webp",
+   "followsMorphs": [
+    "weight"
+   ]
   }
  ],
  "hairstyles": [
@@ -204,10 +397,64 @@
    "source": "authoring/characters/hair/short_crop/params.json",
    "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
    "stats": {
-    "triangles": 6584,
+    "triangles": 6964,
     "textureBytes": 0
    },
    "thumbnail": "thumbs/short_crop.webp"
+  },
+  {
+   "id": "bob_chin",
+   "label": "Chin bob",
+   "files": {
+    "ubc_male": "hair/bob_chin__ubc_male.glb",
+    "ubc_female": "hair/bob_chin__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#5a3a24"
+    }
+   ],
+   "source": "authoring/characters/hair/bob_chin/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 12557,
+    "textureBytes": 0
+   },
+   "thumbnail": "thumbs/bob_chin.webp"
+  },
+  {
+   "id": "ponytail_mid",
+   "label": "Ponytail",
+   "files": {
+    "ubc_male": "hair/ponytail_mid__ubc_male.glb",
+    "ubc_female": "hair/ponytail_mid__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#6b4428"
+    }
+   ],
+   "source": "authoring/characters/hair/ponytail_mid/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14528,
+    "textureBytes": 0
+   },
+   "thumbnail": "thumbs/ponytail_mid.webp"
   }
  ],
  "defaults": {
@@ -217,8 +464,50 @@
   },
   "hairstyle": "short_crop",
   "outfit": {
-   "top": "tshirt_crew"
+   "top": "tshirt_crew",
+   "bottom": "trousers_straight"
   },
   "eyeColor": "#5b4636"
- }
+ },
+ "restrictions": {
+  "parts": {
+   "hoodie_pullover": [
+    "ponytail_mid"
+   ]
+  }
+ },
+ "outfitPresets": [
+  {
+   "id": "tee_trousers",
+   "label": "Tee and trousers",
+   "outfit": {
+    "top": "tshirt_crew",
+    "bottom": "trousers_straight"
+   },
+   "colors": {
+    "tshirt_crew": {
+     "main": "#f2efe6"
+    },
+    "trousers_straight": {
+     "main": "#3b4252"
+    }
+   }
+  },
+  {
+   "id": "hoodie_trousers",
+   "label": "Hoodie and trousers",
+   "outfit": {
+    "top": "hoodie_pullover",
+    "bottom": "trousers_straight"
+   },
+   "colors": {
+    "hoodie_pullover": {
+     "main": "#7a8b6f"
+    },
+    "trousers_straight": {
+     "main": "#2f2f33"
+    }
+   }
+  }
+ ]
 }

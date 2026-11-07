@@ -331,7 +331,7 @@ def shell_finish(ob, lo=0.006, hi=0.025, k=0.015, smooth=3):
     return round(worst, 4), round(sum(heights) / max(1, len(heights)), 4)
 
 
-def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002, keep=0.05, exclude=()):
+def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002, keep=0.05, exclude=(), force=(), force_h=0.012):
     """Hybrid finish (`finish: {"mode": "body"}`): the garment's surface is taken from the body itself.
 
     OpenSew-2's sewn garment (at the bind pose) decides *where* the garment is and *how loose* it is: a skin vertex
@@ -384,6 +384,14 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
             for vi in me.polygons[pi].vertices:
                 reg_.setdefault(vi, C.region_of_bone(bone))
         sel = {i for i in sel if reg_.get(i) not in exclude}
+    # regions the design always covers (long sleeves to the wrist), even where the sewn cloth rode up
+    if force:
+        dom_f = C.dominant_bone_per_face(body)
+        for pi, bone in enumerate(dom_f):
+            if C.region_of_bone(bone) in force and me.polygons[pi].material_index in skin:
+                for vi in me.polygons[pi].vertices:
+                    sel.add(vi)
+                    h.setdefault(vi, force_h)
     # connected pieces: keep those with at least `keep` x the largest one's vertices (sleeves the sewing left
     # detached at the shoulder stay; specks go)
     seen, comps = set(), []
@@ -451,11 +459,89 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
     return new, rep
 
 
+def add_hood(ob, spec):
+    """A hood, worn down, for the body-shell finish (`finish.hood`). The sewn OpenSew-2 hood crumples on these
+    bodies, and the shell cannot make one (it only lifts skin), so the hood is built from measurements instead: a
+    rolled pouch around the back of the neck, thin at the collarbones and fullest between the shoulder blades,
+    pressed onto the back where it would sink in. Weights are copied from the nearest shell vertex, so it moves
+    with the neck, collarbones and upper spine like the rest of the garment.
+      spec: {"reach_deg": 150, "collar": 0.012, "thick": 0.035, "drop": 0.14, "rise": 0.02, "segments": 28, "ring": 12}"""
+    import math as _m
+    import bmesh as _bm
+    from mathutils.bvhtree import BVHTree
+    from mathutils.kdtree import KDTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    bb = _bm.new(); bb.from_mesh(body.data); bb.transform(body.matrix_world)
+    bvh = BVHTree.FromBMesh(bb)
+    ow = ob.matrix_world; owi = ow.inverted()
+    neck = arm.matrix_world @ arm.data.bones["neck_01"].head_local
+    head = arm.matrix_world @ arm.data.bones["Head"].head_local
+    base = neck + (head - neck) * spec.get("collar_at", 0.25)          # collar height on the neck
+    phimax = _m.radians(spec.get("reach_deg", 150))
+    nseg, nring = int(spec.get("segments", 28)), int(spec.get("ring", 12))
+    collar, thick, drop, rise = spec.get("collar", 0.012), spec.get("thick", 0.035), spec.get("drop", 0.14), spec.get("rise", 0.02)
+    off = spec.get("offset", 0.008)
+    kd = KDTree(len(ob.data.vertices))
+    for v in ob.data.vertices:
+        kd.insert(ow @ v.co, v.index)
+    kd.balance()
+    names = {vg.index: vg.name for vg in ob.vertex_groups}
+    bm = _bm.new(); bm.from_mesh(ob.data)
+    deform = bm.verts.layers.deform.verify()
+    uv = bm.loops.layers.uv.verify()
+    rings = []
+    for si in range(nseg + 1):
+        phi = -phimax + 2 * phimax * si / nseg                       # 0 = straight back (+Y), +-reach towards the front
+        d = Vector((_m.sin(phi), _m.cos(phi), 0.0))
+        hit = bvh.ray_cast(base - d * 0.0, d, 0.3)
+        r_c = (hit[0] - base).length if hit[0] is not None else 0.06
+        c = base + d * (r_c + collar)
+        w = max(0.0, _m.cos(phi / phimax * _m.pi / 2)) ** 1.5         # 1 at the back, 0 at the ends
+        a = collar + thick * w                                       # radial half-thickness of the roll
+        b = collar + (drop * 0.5 + rise) * w                         # vertical half-height
+        ctr = c + d * (a * 0.8) + Vector((0, 0, rise - b + collar))
+        ring = []
+        for ri in range(nring):
+            t = 2 * _m.pi * ri / nring
+            p = ctr + d * (a * _m.cos(t)) + Vector((0, 0, b * _m.sin(t)))
+            # never inside the body: press onto the skin
+            loc, nrm, _i, _dist = bvh.find_nearest(p)
+            if loc is not None and (p - loc).dot(nrm) < off:
+                p = loc + nrm * off
+            v = bm.verts.new(owi @ p)
+            _co, idx, _dd = kd.find(p)
+            src = ob.data.vertices[idx]
+            for g_ in src.groups:
+                v[deform][g_.group] = g_.weight
+            ring.append(v)
+        rings.append(ring)
+    faces = []
+    for si in range(nseg):
+        for ri in range(nring):
+            q = (rings[si][ri], rings[si + 1][ri], rings[si + 1][(ri + 1) % nring], rings[si][(ri + 1) % nring])
+            f = bm.faces.new(q); faces.append(f)
+            for li, lp in enumerate(f.loops):
+                s_ = si + (1 if li in (1, 2) else 0); r_ = ri + (1 if li in (2, 3) else 0)
+                lp[uv].uv = (s_ / nseg, r_ / nring)
+    for ring in (rings[0], rings[-1]):                               # cap the ends
+        faces.append(bm.faces.new(ring))
+    for f in faces:
+        f.material_index = 0
+    _bm.ops.recalc_face_normals(bm, faces=faces)
+    bm.to_mesh(ob.data); bm.free(); bb.free()
+    ob.data.update()
+    C.limit_and_normalize(ob)
+    return {"hood_verts": (nseg + 1) * nring, "hood_tris": nseg * nring * 2 + 2 * (nring - 2)}
+
+
 fin = P.get("finish") or {}
 if fin.get("mode") == "body":
     g, report["body_shell"] = body_shell(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015),
                                          fin.get("close", 3), fin.get("reach", 0.08), fin.get("smooth", 3),
-                                         keep=fin.get("keep", 0.05), exclude=tuple(fin.get("exclude_regions", ())))
+                                         keep=fin.get("keep", 0.05), exclude=tuple(fin.get("exclude_regions", ())),
+                                         force=tuple(fin.get("force_regions", ())), force_h=fin.get("force_h", 0.012))
+    if fin.get("hood"):
+        report["hood"] = add_hood(g, fin["hood"])
 if fin.get("mode") == "shell":
     report["shell"] = shell_finish(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015), fin.get("smooth", 3))
 if P.get("conform"):
@@ -502,7 +588,7 @@ out = os.path.join(repo, "public/assets/characters/modular/garments/%s__%s.glb" 
 for o in list(bpy.data.objects):
     if o not in (g, arm):
         o.hide_set(True)
-C.export_glb(out, [arm, g], morphs=False)
+C.export_glb(out, [arm, g], morphs=bool(g.data.shape_keys))   # body-shell garments carry the body's morphs
 report.update({"garment": gid, "src_tris": src_tris, "tris": tris, "verts": len(g.data.vertices), "unweighted": unweighted, "unposed_max_move": round(moved, 4), "coverage": coverage, "hides": hides, "fit_pose": fit_pose,
                "secs": round(time.time() - t0, 1), "glb": os.path.relpath(out, repo), "kw": kw})
 C.write_json(os.path.join(src_dir, "build_%s.json" % body_id), report)

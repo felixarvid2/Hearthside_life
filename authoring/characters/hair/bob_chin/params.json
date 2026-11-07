@@ -1,0 +1,36 @@
+{
+ "id": "bob_chin",
+ "label": "Chin bob",
+ "attachment": "skinned",
+ "clumps": 170,
+ "points": 10,
+ "length": 0.32,
+ "length_jitter": 0.04,
+ "volume": 0.014,
+ "part_offset": 0.03,
+ "back_flow": 0.35,
+ "gravity": 1.0,
+ "hairline_front": 0.78,
+ "hairline_back": 0.3,
+ "clump_width": 0.06,
+ "clump_flatness": 0.35,
+ "root_offset": 0.002,
+ "resolution_cm": 2.6,
+ "target_tris": 12000,
+ "color_regions": [
+  {
+   "id": "hair",
+   "label": "Hair",
+   "materials": [
+    "M_Hair"
+   ],
+   "default": "#5a3a24"
+  }
+ ],
+ "profile_resolution": 2,
+ "cap": true,
+ "cap_offset": 0.004,
+ "fall_below": 0.55,
+ "cut_at": -0.1,
+ "front_side": 2.5
+}
