@@ -331,14 +331,14 @@ def shell_finish(ob, lo=0.006, hi=0.025, k=0.015, smooth=3):
     return round(worst, 4), round(sum(heights) / max(1, len(heights)), 4)
 
 
-def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002):
+def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002, keep=0.05, exclude=()):
     """Hybrid finish (`finish: {"mode": "body"}`): the garment's surface is taken from the body itself.
 
     OpenSew-2's sewn garment (at the bind pose) decides *where* the garment is and *how loose* it is: a skin vertex
     belongs to the garment when a ray along its normal meets the sewn cloth within `reach` (or the cloth lies just
     under the skin there), and its height above the skin is the ray distance mapped to lo..hi as in shell_finish.
     The selection is closed morphologically (`close` rings grown, then shrunk), so seam gaps the sewing left open -
-    the top of the shoulder between sleeve cap and armhole - are filled, and only the largest piece is kept.
+    the top of the shoulder between sleeve cap and armhole - are filled; specks under `keep` x the largest piece go.
     Built from the skin's own triangles and weights, the garment deforms exactly like the body and cannot open
     holes. Its boundary is tucked back down to the skin (`tuck` above it), so no one sees under the hem.
     Returns the new object (the sewn one is removed) and a small report."""
@@ -375,8 +375,18 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
         sel |= {j for i in sel for j in adj[i] if j in skin_v}
     for _ in range(close):                      # ... and shrink: gaps narrower than 2 x close rings are filled
         sel = {i for i in sel if all(j in sel for j in adj[i] if j in skin_v)}
-    # largest connected piece only
-    seen, best = set(), set()
+    # regions the design never covers (a crew neck stops below the neck, short sleeves above the elbow), even where
+    # the sewn cloth slid or stood up
+    if exclude:
+        dom_ = C.dominant_bone_per_face(body)
+        reg_ = {}
+        for pi, bone in enumerate(dom_):
+            for vi in me.polygons[pi].vertices:
+                reg_.setdefault(vi, C.region_of_bone(bone))
+        sel = {i for i in sel if reg_.get(i) not in exclude}
+    # connected pieces: keep those with at least `keep` x the largest one's vertices (sleeves the sewing left
+    # detached at the shoulder stay; specks go)
+    seen, comps = set(), []
     for s0 in sel:
         if s0 in seen:
             continue
@@ -387,9 +397,9 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
                 continue
             comp.add(i); stack.extend(j for j in adj[i] if j in sel and j not in comp)
         seen |= comp
-        if len(comp) > len(best):
-            best = comp
-    sel = best
+        comps.append(comp)
+    big = max((len(c) for c in comps), default=0)
+    sel = set().union(*[c for c in comps if len(c) >= keep * big]) if comps else set()
     # heights for filled vertices: neighbour means, then a few smoothing passes
     for _ in range(close * 2 + 2):
         for i in sel:
@@ -444,7 +454,8 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
 fin = P.get("finish") or {}
 if fin.get("mode") == "body":
     g, report["body_shell"] = body_shell(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015),
-                                         fin.get("close", 3), fin.get("reach", 0.08), fin.get("smooth", 3))
+                                         fin.get("close", 3), fin.get("reach", 0.08), fin.get("smooth", 3),
+                                         keep=fin.get("keep", 0.05), exclude=tuple(fin.get("exclude_regions", ())))
 if fin.get("mode") == "shell":
     report["shell"] = shell_finish(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015), fin.get("smooth", 3))
 if P.get("conform"):

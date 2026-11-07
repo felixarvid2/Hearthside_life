@@ -136,36 +136,6 @@
    "height": 1.7751,
    "license": "CC0 1.0 - Quaternius, Universal Base Characters (Standard)",
    "source": "authoring/characters/bodies/ubc_female"
-  },
-  {
-   "id": "standin_mannequin_m",
-   "label": "Mannequin (broad, stand-in)",
-   "rig": "ual-standard",
-   "file": "bodies/standin_mannequin_m.glb",
-   "skinMaterials": [
-    "M_Main",
-    "M_Joints"
-   ],
-   "morphs": [],
-   "height": 1.8287,
-   "temporary": true,
-   "license": "CC0 1.0 - Quaternius, Universal Animation Library (Standard)",
-   "source": "authoring/characters/bodies/standin_mannequin_m"
-  },
-  {
-   "id": "standin_mannequin_f",
-   "label": "Mannequin (curvy, stand-in)",
-   "rig": "ual-standard",
-   "file": "bodies/standin_mannequin_f.glb",
-   "skinMaterials": [
-    "M_Main",
-    "M_Joints"
-   ],
-   "morphs": [],
-   "height": 1.8062,
-   "temporary": true,
-   "license": "CC0 1.0 - Quaternius, Universal Animation Library (Standard)",
-   "source": "authoring/characters/bodies/standin_mannequin_f"
   }
  ],
  "garments": [
@@ -175,10 +145,12 @@
    "category": "top",
    "slot": "top",
    "files": {
-    "standin_mannequin_m": "garments/tshirt_crew__standin_mannequin_m.glb"
+    "ubc_male": "garments/tshirt_crew__ubc_male.glb",
+    "ubc_female": "garments/tshirt_crew__ubc_female.glb"
    },
    "covers": {
-    "standin_mannequin_m": "garments/tshirt_crew__standin_mannequin_m.cover.json"
+    "ubc_male": "garments/tshirt_crew__ubc_male.cover.json",
+    "ubc_female": "garments/tshirt_crew__ubc_female.cover.json"
    },
    "rig": "ual-standard",
    "hides": [],
@@ -205,7 +177,8 @@
     }
    ],
    "source": "authoring/characters/garments/tshirt_crew/params.json",
-   "license": "Hearthside original (made with OpenSew-2 in Blender on Quaternius CC0 bodies)"
+   "license": "CC0 1.0 - Hearthside original (designed with OpenSew-2, body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "thumbnail": "thumbs/tshirt_crew.webp"
   }
  ],
  "hairstyles": [
@@ -213,8 +186,6 @@
    "id": "short_crop",
    "label": "Short crop",
    "files": {
-    "standin_mannequin_m": "hair/short_crop__standin_mannequin_m.glb",
-    "standin_mannequin_f": "hair/short_crop__standin_mannequin_f.glb",
     "ubc_male": "hair/short_crop__ubc_male.glb",
     "ubc_female": "hair/short_crop__ubc_female.glb"
    },
@@ -235,13 +206,14 @@
    "stats": {
     "triangles": 6584,
     "textureBytes": 0
-   }
+   },
+   "thumbnail": "thumbs/short_crop.webp"
   }
  ],
  "defaults": {
   "bodyByFrame": {
-   "a": "standin_mannequin_m",
-   "b": "standin_mannequin_f"
+   "a": "ubc_male",
+   "b": "ubc_female"
   },
   "hairstyle": "short_crop",
   "outfit": {
