@@ -1184,7 +1184,11 @@ async function stepLive(T) {
     await T.frames(2);
     await T.shot('live-neighbour-arrived');
     // the neighbour may be mid-conversation with the roommate: wait until a social option is enabled for the first person
-    const free = await runUntil(T, 4 * 120, `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social' && o.interactionId !== 'introduce')`);
+    // Any enabled social counts: before an introduction only "Introduce Yourself" can be enabled, so waiting for another
+    // one timed out whenever the two had not met, and the step then tapped a neighbour who was still busy.
+    const freeCond = `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social')`;
+    let free = await runUntil(T, 4 * 120, freeCond);
+    if (!free.done) free = await runUntil(T, 4 * 120, `${freeCond} || (() => { const p = st.people['${nb[0].id}']; return !(p.location.kind === 'lot' && p.location.lotId === st.activeLotId); })()`);
     log('neighbour free for social after ticks', free.ticks, free.done);
     // The first visit ends on a clock (a slow screenshot or a long wait can outlast it), which used to leave the step
     // tapping a neighbour who had already gone home. Ask her over again, as a player would, and carry on.
@@ -1209,7 +1213,7 @@ async function stepLive(T) {
       if (back.done) {
         await selectMember(T, mira);
         await T.frames(6);
-        await runUntil(T, 4 * 30, `g.options('${mira}', { kind: 'person', personId: '${nb[0].id}' }).some(o => o.enabled && o.group === 'social' && o.interactionId !== 'introduce')`);
+        await runUntil(T, 4 * 30, freeCond);
       }
     }
     await T.frames(3);
