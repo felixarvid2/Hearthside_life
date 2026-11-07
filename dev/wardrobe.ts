@@ -30,6 +30,10 @@ const POSE = q.get('pose') ?? 'idle';
 const POSE_ANIM: Record<string, AnimId> = { idle: 'idle', walk: 'walk', sit: 'sitIdle' };
 const T = Math.max(0, Number(q.get('t') ?? 0) || 0);
 const SKIN = hex('skin', '#c68642'), HAIR = hex('hair', '#4a3220'), EYES = hex('eyes', '#5b4636');
+// outfit=top:tshirt_crew,bottom:trousers_straight is worn in every column; morph=weight:1,jaw_width:-1 sets morphs
+const pairs = (k: string): Array<[string, string]> => (list(k) ?? []).map((x) => x.split(':') as [string, string]).filter((x) => x.length === 2);
+const EXTRA_OUTFIT = Object.fromEntries(pairs('outfit')) as ModularOutfit;
+const MORPHS = Object.fromEntries(pairs('morph').map(([k, v]) => [k, Number(v)]).filter(([, v]) => Number.isFinite(v)));
 const SIZE = Math.min(1024, Math.max(64, Number(q.get('size')) || 0));
 const CELL_W = q.get('size') ? SIZE : thumbPart ? 256 : 192, CELL_H = q.get('size') ? SIZE : 256;
 
@@ -94,7 +98,7 @@ async function main(): Promise<void> {
   }
 
   const look = (bodyId: string, hairId: string | null, outfit: ModularOutfit): ModularLook => ({
-    v: 1, bodyId, hairId, outfits: { everyday: outfit }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: {},
+    v: 1, bodyId, hairId, outfits: { everyday: { ...EXTRA_OUTFIT, ...outfit } }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: MORPHS,
   });
 
   let cells = 0;

@@ -11,12 +11,12 @@
  "glb": "public/assets/characters/modular/hair/bob_chin__ubc_male.glb",
  "hair": "bob_chin",
  "head_base_z": 1.6,
- "inside_head_verts": 796,
+ "inside_head_verts": 784,
  "roots": 170,
  "secs": 0.6,
- "src_tris": 20176,
+ "src_tris": 20112,
  "tris": 12434,
- "verts": 7074,
+ "verts": 7069,
  "z": [
   1.579,
   1.819

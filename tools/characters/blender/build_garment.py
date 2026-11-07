@@ -370,6 +370,14 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
         back = gb.ray_cast(o + n * 0.001, -n, 0.02)   # cloth slightly inside the skin (a deltoid poking through)
         if back[0] is not None:
             h[vi] = lo
+    # regions the design always covers (long sleeves to the wrist), even where the sewn cloth rode up; before the
+    # close below, so small holes next to them (the navel) are filled too
+    if force:
+        dom_f = C.dominant_bone_per_face(body)
+        for pi, bone in enumerate(dom_f):
+            if C.region_of_bone(bone) in force and me.polygons[pi].material_index in skin:
+                for vi in me.polygons[pi].vertices:
+                    h.setdefault(vi, force_h)
     sel = set(h)
     for _ in range(close):                      # grow ...
         sel |= {j for i in sel for j in adj[i] if j in skin_v}
@@ -384,14 +392,6 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
             for vi in me.polygons[pi].vertices:
                 reg_.setdefault(vi, C.region_of_bone(bone))
         sel = {i for i in sel if reg_.get(i) not in exclude}
-    # regions the design always covers (long sleeves to the wrist), even where the sewn cloth rode up
-    if force:
-        dom_f = C.dominant_bone_per_face(body)
-        for pi, bone in enumerate(dom_f):
-            if C.region_of_bone(bone) in force and me.polygons[pi].material_index in skin:
-                for vi in me.polygons[pi].vertices:
-                    sel.add(vi)
-                    h.setdefault(vi, force_h)
     # connected pieces: keep those with at least `keep` x the largest one's vertices (sleeves the sewing left
     # detached at the shoulder stay; specks go)
     seen, comps = set(), []
@@ -496,7 +496,7 @@ def add_hood(ob, spec):
         hit = bvh.ray_cast(base - d * 0.0, d, 0.3)
         r_c = (hit[0] - base).length if hit[0] is not None else 0.06
         c = base + d * (r_c + collar)
-        w = max(0.0, _m.cos(phi / phimax * _m.pi / 2)) ** 1.5         # 1 at the back, 0 at the ends
+        w = max(0.0, _m.cos(phi / phimax * _m.pi / 2)) ** 2.0         # 1 at the back, 0 at the ends
         a = collar + thick * w                                       # radial half-thickness of the roll
         b = collar + (drop * 0.5 + rise) * w                         # vertical half-height
         ctr = c + d * (a * 0.8) + Vector((0, 0, rise - b + collar))

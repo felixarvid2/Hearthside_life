@@ -11,14 +11,14 @@
  "glb": "public/assets/characters/modular/hair/bob_chin__ubc_female.glb",
  "hair": "bob_chin",
  "head_base_z": 1.55,
- "inside_head_verts": 824,
+ "inside_head_verts": 816,
  "roots": 170,
  "secs": 0.7,
- "src_tris": 20704,
+ "src_tris": 20624,
  "tris": 12557,
- "verts": 7171,
+ "verts": 7170,
  "z": [
-  1.528,
+  1.527,
   1.776
  ]
 }

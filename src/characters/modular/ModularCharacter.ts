@@ -115,6 +115,16 @@ export function applyMorphInfluences(meshes: readonly THREE.Mesh[], declared: Bo
   }
 }
 
+/**
+ * A mesh built anew from a loaded one's geometry only knows its morph targets by index; GLTFLoader puts the glTF target
+ * names on the loaded mesh. Copy them, or a garment never follows the body's named morphs.
+ */
+export function copyMorphNames(src: THREE.Mesh, dst: THREE.Mesh): void {
+  if (!src.morphTargetDictionary || !src.morphTargetInfluences) return;
+  dst.morphTargetDictionary = { ...src.morphTargetDictionary };
+  dst.morphTargetInfluences = src.morphTargetInfluences.map(() => 0);
+}
+
 /** Bit i of a base64 bitset (LSB first) per vertex, as 0/1 bytes. */
 export function decodeBitset(b64: string, count: number): Uint8Array {
   const bin = atob(b64);
@@ -533,6 +543,7 @@ export class ModularCharacter {
       for (const src of sources) {
         const mesh = new THREE.Mesh(src.geometry, Array.isArray(src.material) ? src.material.map(ownMat) : ownMat(src.material));
         mesh.name = src.name; mesh.frustumCulled = false; mesh.castShadow = cast;
+        copyMorphNames(src, mesh);
         container.add(mesh); meshes.push(mesh);
       }
       if (def.offset) { container.position.fromArray(def.offset.position); container.rotation.set(...def.offset.rotation); }
@@ -555,6 +566,7 @@ export class ModularCharacter {
       }
       const mesh = new THREE.SkinnedMesh(src.geometry, Array.isArray(src.material) ? src.material.map(ownMat) : ownMat(src.material));
       mesh.name = src.name; mesh.frustumCulled = false; mesh.castShadow = cast;
+      copyMorphNames(src, mesh);
       mesh.bind(sk, src.bindMatrix);
       container.add(mesh); meshes.push(mesh);
     }
