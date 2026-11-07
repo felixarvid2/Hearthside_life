@@ -2,7 +2,7 @@
 // by the real ModularCharacter and framed with framing.ts. One WebGLRenderer renders every cell in turn and copies it to the
 // cell's 2D canvas; one character per row is reused for all its columns.
 // Open /dev/wardrobe.html with `npm run dev`. It is not part of the production build (only index.html is).
-// Query: pose=idle|walk|sit  t=<seconds into the clip>  shot=face|upper|full  body=a,b  part=x,y ('bare' is a part)  skin=rrggbb  hair=rrggbb
+// Query: pose=idle|walk|sit  t=<seconds into the clip>  shot=face|upper|full  body=a,b  part=x,y ('bare' is a part)  skin=rrggbb  hair=rrggbb  eyes=rrggbb  size=<cell px>
 //   thumb=<partId>&body=<bodyId>[&shot=]  renders just that one cell, 256x256 on a transparent background (tools/characters/thumbnails.mjs).
 // window.wardrobeReady = true when every cell has been rendered once; window.wardrobeError holds a fatal error message.
 
@@ -29,8 +29,9 @@ const SHOT = shotOf(q.get('shot'));
 const POSE = q.get('pose') ?? 'idle';
 const POSE_ANIM: Record<string, AnimId> = { idle: 'idle', walk: 'walk', sit: 'sitIdle' };
 const T = Math.max(0, Number(q.get('t') ?? 0) || 0);
-const SKIN = hex('skin', '#c68642'), HAIR = hex('hair', '#4a3220');
-const CELL_W = thumbPart ? 256 : 192, CELL_H = thumbPart ? 256 : 256;
+const SKIN = hex('skin', '#c68642'), HAIR = hex('hair', '#4a3220'), EYES = hex('eyes', '#5b4636');
+const SIZE = Math.min(1024, Math.max(64, Number(q.get('size')) || 0));
+const CELL_W = q.get('size') ? SIZE : thumbPart ? 256 : 192, CELL_H = q.get('size') ? SIZE : 256;
 
 const bar = document.getElementById('bar') as HTMLElement;
 const grid = document.getElementById('grid') as HTMLElement;
@@ -93,7 +94,7 @@ async function main(): Promise<void> {
   }
 
   const look = (bodyId: string, hairId: string | null, outfit: ModularOutfit): ModularLook => ({
-    v: 1, bodyId, hairId, outfits: { everyday: outfit }, colors: { skin: SKIN, eyes: '#5b4636', hair: HAIR, garments: {} }, morphs: {},
+    v: 1, bodyId, hairId, outfits: { everyday: outfit }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: {},
   });
 
   let cells = 0;
