@@ -1,4 +1,4 @@
-// The real authored assets (OpenSew-2 T-shirt, GBH Tool short hair, cover mask) on the stand-in body: they pass the
+// The real authored assets (OpenSew-2 T-shirt, GBH Tool short hair, cover mask) on the ubc_male body: they pass the
 // rig check, the mask matches the body export, and two people wearing them stay independent.
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
@@ -20,7 +20,7 @@ function hiddenCount(root: THREE.Object3D): number {
   return n;
 }
 
-describe('authored assets on the stand-in body', () => {
+describe('authored assets on the ubc_male body', () => {
   const m = realManifest();
   const tee = m.garments.find((g) => g.id === 'tshirt_crew')!;
   const maskPath = tee.covers![BODY]!;

@@ -55,8 +55,19 @@ describe.each(['ubc_male', 'ubc_female'])('%s', (id) => {
 });
 
 describe('hip retargeting', () => {
-  const pelvisY = async (bodyId: string, clips: THREE.AnimationClip[]) => {
+  /** A copy of the real manifest whose rig's clipPelvisHeight is the body's own pelvis length, so its ratio is exactly 1. */
+  const unitRatio = async (bodyId: string, clips: THREE.AnimationClip[]) => {
     const c = new ModularCharacter(testCache(), m, clips);
+    await c.apply(bare(bodyId));
+    const len = c.bone('pelvis')!.position.length();
+    c.dispose();
+    const copy = structuredClone(m);
+    copy.rigs.find((r) => r.id === m.bodies.find((b) => b.id === bodyId)!.rig)!.clipPelvisHeight = len;
+    return copy;
+  };
+
+  const pelvisY = async (bodyId: string, clips: THREE.AnimationClip[], manifest = m) => {
+    const c = new ModularCharacter(testCache(), manifest, clips);
     await c.apply(bare(bodyId));
     c.play('walk', { fade: 0 });
     c.update(0);
@@ -80,8 +91,8 @@ describe('hip retargeting', () => {
     expect(c.bone('pelvis')!.position.y).toBeCloseTo(track.values[1]! * ratio, 3);
     c.dispose();
 
-    // a stand-in with the same clips is not scaled
-    const s = await pelvisY(BODY, clips);
+    // a body whose pelvis equals the rig's clipPelvisHeight (ratio 1) plays the clips unscaled
+    const s = await pelvisY(BODY, clips, await unitRatio(BODY, clips));
     expect(s.c.bone('pelvis')!.position.y).toBeCloseTo(track.values[1]!, 3);
     s.c.dispose();
   });
@@ -103,17 +114,18 @@ describe('hip retargeting', () => {
     expect(scaledClipsFor(map, 1).get('Walk_Loop')).toBe(src);
   });
 
-  it('two ubc_male characters use the same scaled clip objects; stand-ins keep the originals', async () => {
+  it('two ubc_male characters use the same scaled clip objects; a body with ratio 1 keeps the originals', async () => {
     const clips = await loadClips();
-    const used = async (bodyId: string) => {
-      const c = new ModularCharacter(testCache(), m, clips);
+    const unit = await unitRatio(BODY, clips);
+    const used = async (bodyId: string, manifest = m) => {
+      const c = new ModularCharacter(testCache(), manifest, clips);
       await c.apply(bare(bodyId));
       c.play('walk', { fade: 0 });
       const clip = (c as unknown as { animator: { mixer: THREE.AnimationMixer; current: { main: THREE.AnimationAction } } }).animator.current.main.getClip();
       c.dispose();
       return clip;
     };
-    const [a, b, s] = [await used('ubc_male'), await used('ubc_male'), await used(BODY)];
+    const [a, b, s] = [await used('ubc_male'), await used('ubc_male'), await used(BODY, unit)];
     expect(a).toBe(b);
     expect(a).not.toBe(clips.find((x) => x.name === a.name));
     expect(s).toBe(clips.find((x) => x.name === 'Walk_Loop'));

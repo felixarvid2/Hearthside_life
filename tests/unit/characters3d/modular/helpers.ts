@@ -19,7 +19,7 @@ export function parseGlb(file: string): Promise<GLTF> {
 
 export const realManifest = (): ModularManifest => JSON.parse(readFileSync(repo('public/assets/characters/modular/manifest.json'), 'utf8')) as ModularManifest;
 
-export const BODY = 'standin_mannequin_m';
+export const BODY = 'ubc_male';
 
 export function shellGarment(extra: Partial<GarmentDef> = {}): GarmentDef {
   return {
