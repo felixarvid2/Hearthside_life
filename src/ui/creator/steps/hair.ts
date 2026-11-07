@@ -4,6 +4,7 @@ import type { HairDef } from '../../../content/types';
 import { toggleSwitch } from '../../kit/controls';
 import { h } from '../../kit/dom';
 import type { StepDef } from '../context';
+import { modularHairSection, lookOf } from './modularParts';
 import { Binder, card, choiceChips, colorField, hint, section, shade, smallButton } from '../widgets';
 
 const LENGTHS: ReadonlyArray<{ id: HairDef['length']; label: string }> = [
@@ -15,13 +16,28 @@ const TEXTURE_NAMES: Record<HairDef['texture'], string> = {
 const LENGTH_NAMES: Record<HairDef['length'], string> = { shaved: 'Shaved', short: 'Short', medium: 'Medium', long: 'Long' };
 
 export const hairStep: StepDef = {
-  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.hairLength}|${ctx.session.current.appearance.hair.highlight !== null}`,
+  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.hairLength}|${ctx.session.current.appearance.hair.highlight !== null}|${ctx.modular() ? `m:${lookOf(ctx.session).bodyId}` : ''}`,
   build(ctx) {
     const s = () => ctx.session;
     const hair = () => ctx.session.current.appearance.hair;
     const content = ctx.api.content;
     const b = new Binder();
     const commit = () => s().endEdit();
+
+    const modular = ctx.modular();
+    if (modular) {
+      // Quaternius style: the manifest's hairstyles (thumbnails); the colour is the shared hair colour. Highlights and facial hair are classic-only.
+      const color = b.add(colorField({
+        label: 'Hair colour', swatches: content.hairColors ?? [], value: () => hair().color,
+        onPick: (c) => ctx.report(s().setHairColor(c)), onCommit: commit,
+      }));
+      const el = h('div', { class: 'cr-step cr-step-hair cr-step-modular' },
+        modularHairSection(ctx, modular, b),
+        section('Colour', color, hint('Highlights and facial hair belong to the classic style and do not show here.')),
+        h('div', { class: 'cr-actions' }, smallButton('Reset hair', 'undo', () => ctx.report(s().resetCategory('hair')))),
+      );
+      return { el, sync: () => b.sync() };
+    }
 
     const styles = Object.values(content.hair ?? {}).filter((x) => x.status === 'ready');
     const lengths = LENGTHS.filter((l) => styles.some((x) => x.length === l.id));

@@ -7,6 +7,7 @@ import type { ParamDef, Swatch } from '../../../content/types';
 import { segmented, tabs } from '../../kit/components';
 import { h } from '../../kit/dom';
 import type { FaceBodySection, StepDef } from '../context';
+import { lookOf, modularBodySection } from './modularParts';
 import { Binder, choiceChips, colorField, hint, percentFormat, section, signedFormat, sliderField, smallButton } from '../widgets';
 
 const SECTIONS: ReadonlyArray<{ id: FaceBodySection; label: string; icon: string }> = [
@@ -50,7 +51,7 @@ function groupParams(defs: readonly ParamDef[]): Array<{ group: string; params: 
 const isFaceSection = (s: FaceBodySection) => FACE_SECTIONS.includes(s);
 
 export const faceBodyStep: StepDef = {
-  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.faceBodySection}|${ctx.session.current.appearance.frame}`,
+  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.faceBodySection}|${ctx.session.current.appearance.frame}|${ctx.modular() ? `m:${lookOf(ctx.session).bodyId}` : ''}`,
   enter(ctx) { if (isFaceSection(ctx.ui.faceBodySection)) ctx.preview.enterFace(); },
   leave(ctx) { ctx.preview.leaveFace(); },
   build(ctx) {
@@ -60,9 +61,13 @@ export const faceBodyStep: StepDef = {
     const b = new Binder();
     const commit = () => s().endEdit();
 
+    const modular = ctx.modular();
+    // Quaternius bodies have no makeup layer: that section is classic-only
+    const sections = modular ? SECTIONS.filter((x) => x.id !== 'details') : SECTIONS;
+    if (modular && ctx.ui.faceBodySection === 'details') ctx.ui.faceBodySection = 'body';
     const sub = tabs({
       label: 'Face and body sections',
-      items: SECTIONS.map((x) => ({ id: x.id, label: x.label, icon: x.icon })),
+      items: sections.map((x) => ({ id: x.id, label: x.label, icon: x.icon })),
       value: ctx.ui.faceBodySection,
       onChange: (id) => {
         const next = id as FaceBodySection;
@@ -83,8 +88,14 @@ export const faceBodyStep: StepDef = {
     }));
 
     const parts: HTMLElement[] = [];
+    const classicNote = (what: string) => hint(`${what} apply to the classic character style. The Quaternius style uses the body above.`);
     switch (ctx.ui.faceBodySection) {
       case 'body': {
+        if (modular) {
+          parts.push(...modularBodySection(ctx, modular, b, 'body'), classicNote('The classic body sliders and presets'));
+          parts.push(h('div', { class: 'cr-actions' }, smallButton('Reset body', 'undo', () => ctx.report(s().resetCategory('body')))));
+          break;
+        }
         const frame = segmented<'a' | 'b'>({
           label: 'Body frame',
           options: [{ id: 'a', label: 'Frame A (broader)' }, { id: 'b', label: 'Frame B (curvier)' }],
@@ -118,6 +129,11 @@ export const faceBodyStep: StepDef = {
         break;
       }
       case 'face': {
+        if (modular) {
+          const morphs = modularBodySection(ctx, modular, b, 'face');
+          parts.push(...(morphs.length > 0 ? morphs : [hint('Face shape controls for this style are coming soon.')]), classicNote('The classic face sliders and presets'));
+          break;
+        }
         const presets = Object.values(content.facePresets ?? {});
         if (presets.length > 0) {
           parts.push(section('Face presets', b.add(choiceChips({
@@ -141,6 +157,13 @@ export const faceBodyStep: StepDef = {
         break;
       }
       case 'eyes': {
+        if (modular) {
+          parts.push(section('Eyes', b.add(colorField({
+            label: 'Eye colour', swatches: content.eyeColors ?? [], value: () => a().face.eyeColor,
+            onPick: (c) => ctx.report(s().setEyeColor(c)), onCommit: commit,
+          })), hint('Eyebrows follow the hair colour in this style.')));
+          break;
+        }
         parts.push(section('Eyes', b.add(colorField({
           label: 'Eye colour', swatches: content.eyeColors ?? [], value: () => a().face.eyeColor,
           onPick: (c) => ctx.report(s().setEyeColor(c)), onCommit: commit,

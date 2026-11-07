@@ -353,6 +353,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   };
 
   let wardrobeLoading = false;
+  let wardrobeMounting = false;
   const openWardrobe = async (personId: Id) => {
     if (wardrobe || wardrobeLoading || !api.state()?.people[personId]) return;
     wardrobeLoading = true;
@@ -367,18 +368,23 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     }
     wardrobeLoading = false;
     if (destroyed || !api.state()?.people[personId]) return;
-    const ui = mod.mountWardrobe(root, api, {
-      personId,
-      onClose: () => {
-        const w = wardrobe;
-        wardrobe = null;
-        try { w?.destroy(); } catch { /* ignore */ }
-        if (api.mode() === 'creator') { try { api.creator.hide(); } catch { /* ignore */ } }
-        routeNow();
-      },
-    });
-    wardrobe = ui;
-    ui.show();
+    // wardrobeMounting is set until `wardrobe` is assigned: mounting drives the preview, which switches the game to
+    // creator mode and re-enters routeNow() before this function returns (it would open a second, hidden creator).
+    wardrobeMounting = true;
+    try {
+      const ui = mod.mountWardrobe(root, api, {
+        personId,
+        onClose: () => {
+          const w = wardrobe;
+          wardrobe = null;
+          try { w?.destroy(); } catch { /* ignore */ }
+          if (api.mode() === 'creator') { try { api.creator.hide(); } catch { /* ignore */ } }
+          routeNow();
+        },
+      });
+      wardrobe = ui;
+    } finally { wardrobeMounting = false; }
+    wardrobe?.show();
     routeNow();
   };
 
@@ -391,7 +397,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
 
   const routeNow = () => {
     const m = api.mode();
-    const next: Route = wardrobe ? 'wardrobe' : creator || m === 'creator' ? 'creator' : m === 'boot' ? 'boot' : m === 'menu' ? 'menu' : 'game';
+    const next: Route = wardrobe || wardrobeMounting ? 'wardrobe' : creator || m === 'creator' ? 'creator' : m === 'boot' ? 'boot' : m === 'menu' ? 'menu' : 'game';
     // creator finished elsewhere (e.g. the game moved to live): drop it
     if (creator && (m === 'live' || m === 'buy' || m === 'build') && !wardrobe) { destroyCreator(); return routeNow(); }
     const prevRoute = route;

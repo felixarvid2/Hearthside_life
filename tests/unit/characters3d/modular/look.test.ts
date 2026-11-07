@@ -24,10 +24,10 @@ describe('manifest', () => {
     const m = testManifest();
     expect(findBody(m, BODY)?.id).toBe(BODY);
     // testManifest() = the real manifest plus the test-only shell top
-    expect(garmentsFor(m, BODY, 'top').map((g) => g.id).sort()).toEqual(['shell_top', 'tshirt_crew']);
-    expect(garmentsFor(m, BODY, 'bottom')).toEqual([]);
+    expect(garmentsFor(m, BODY, 'top').map((g) => g.id).sort()).toEqual(['hoodie_pullover', 'shell_top', 'tshirt_crew']);
+    expect(garmentsFor(m, BODY, 'bottom').map((g) => g.id)).toEqual(['trousers_straight']);
     expect(garmentsFor(m, 'ubc_female').map((g) => g.id)).not.toContain('shell_top');
-    expect(hairFor(m, BODY).map((h) => h.id)).toEqual(['short_crop']);
+    expect(hairFor(m, BODY).map((h) => h.id)).toEqual(['short_crop', 'bob_chin', 'ponytail_mid']);
   });
 });
 

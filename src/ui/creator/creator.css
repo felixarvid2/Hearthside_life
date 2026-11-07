@@ -332,3 +332,28 @@ body.is-portrait .cr-pv-right { right: calc(8px + var(--safe-r)); }
   body.is-landscape .cr-sec { padding: 0 0 8px; }
   body.is-landscape .cr-sec-title { margin: 6px 0 4px; }
 }
+
+/* ---------- Modular (Quaternius) looks: thumbnail cards ---------- */
+.cr-thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 8px; margin: 4px 0 8px; }
+.cr-thumb-card {
+  position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-height: 48px; min-width: 0; padding: 6px;
+  text-align: center; font: inherit; color: var(--ink); cursor: pointer;
+  border-radius: 12px; border: 2px solid var(--line); background: var(--paper); touch-action: manipulation;
+}
+.cr-thumb-card:hover { background: #fffdf8; }
+.cr-thumb-card.is-selected { border-color: var(--accent); background: #fff3ea; box-shadow: inset 0 0 0 1px var(--accent); }
+.cr-thumb-pic {
+  display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 1; max-height: 92px; overflow: hidden;
+  border-radius: 8px; background: var(--paper-2);
+}
+.cr-thumb-img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.cr-thumb-ph { display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-weight: 800; font-size: 1.6rem; color: var(--ink-3); }
+.cr-thumb-label { font-weight: 800; font-size: 0.88rem; line-height: 1.2; overflow-wrap: anywhere; }
+.cr-thumb-meta { font-size: 0.74rem; color: var(--ink-2); font-weight: 600; line-height: 1.25; }
+.cr-thumb-meta[hidden] { display: none; }
+.cr-thumb-card .cr-check { display: none; position: absolute; top: 4px; right: 4px; color: #fff; background: var(--accent); border-radius: 999px; padding: 2px; }
+.cr-thumb-card.is-selected .cr-check { display: inline-flex; }
+.cr-thumb-card.is-text { justify-content: center; min-height: 52px; padding: 8px; }
+.cr-thumb-card.is-text .cr-thumb-pic { display: none; }
+.cr-preset-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+.cr-slot-colors { margin-top: 2px; }

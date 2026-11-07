@@ -10,7 +10,7 @@
   "belly": 0.789,
   "calf_l": 0.0,
   "calf_r": 0.0,
-  "chest": 0.932,
+  "chest": 0.929,
   "foot_l": 0.0,
   "foot_r": 0.0,
   "forearm_l": 0.725,
@@ -19,11 +19,11 @@
   "hand_r": 0.0,
   "head": 0.0,
   "hips": 0.078,
-  "neck": 0.165,
+  "neck": 0.119,
   "thigh_l": 0.0,
   "thigh_r": 0.0,
-  "upperarm_l": 0.891,
-  "upperarm_r": 0.882
+  "upperarm_l": 0.885,
+  "upperarm_r": 0.876
  },
  "facing": "-Y",
  "figure": "WOMAN",
@@ -65,11 +65,11 @@
   "thigh_l",
   "thigh_r"
  ],
- "rebind_ray_hits": 1581,
- "secs": 172.1,
+ "rebind_ray_hits": 1512,
+ "secs": 263.6,
  "src_tris": 6563,
  "tris": 4329,
- "unposed_max_move": 0.2791,
+ "unposed_max_move": 0.2564,
  "unweighted": 0,
  "verts": 2347
 }

@@ -182,6 +182,23 @@ changes for existing saves or styles.
   - `tshirt_crew` on both bodies, `short_crop` on both, cover masks. Unit tests in `tests/unit/characters3d/modular/`.
   - CharacterStudio ports (MIT): `creator/framing.ts`, `restrictions.ts` (used by `resolveLook`),
     `tools/characters/thumbnails.mjs`, and the dev-only wardrobe grid `dev/wardrobe.html` (`npm run dev`).
+- **Creator (Stage C).** While Settings > Character style is "Quaternius (preview)" and the member is youngAdult/adult
+  (`CreatorSession.isModular()`), the Face & Body, Hair and Clothing steps edit `appearance.modular` instead of the classic
+  looks (UI in `src/ui/creator/steps/modularParts.ts`; the steps branch on `ctx.modular()`).
+  - Session API (`src/characters/creator.ts`, all one undoable `mutateMember` each): `setModularBody`, `setModularHair`,
+    `setModularGarment(category, slot, id|null)`, `setModularGarmentColor`, `setModularMorph`, `applyOutfitPreset`. The first
+    edit materializes the stored look from `lookFor`; untouched people and old saves keep the derived look.
+  - Source of truth for skin, eye and hair colour is the classic appearance: every edit copies them into the stored look
+    (`mirrorModularColors`). The body follows the frame (`defaults.bodyByFrame`) and the frame follows the body.
+  - Restrictions: `src/characters/modular/equip.ts` (uses `restrictions.ts`). A conflicting part is swapped out and the status
+    line says so ("Ponytail doesn't fit with Hoodie - switched to Short crop."); cards show "Replaces ...". A one-piece
+    replaces top/bottom. Hair is shared by all categories, garments are per category.
+  - Outfit presets: `ModularManifest.outfitPresets` (validated in `validateManifest`), shown as an "Outfits" row.
+  - `GameAPI.creator.modular()` gives the creator the manifest and asset URLs; `updateWardrobe(id, wardrobe, modular?)` also
+    stores the look when the wardrobe was edited in modular mode.
+  - Resource check: `hearthside.debug.stats()` has `geometries` and `textures` (renderer.info.memory). Tests:
+    `tests/unit/characters3d/modular/creatorModular.test.ts`, `npm run e2e:creator-modular` (serves the manifest with extra
+    `e2e_` parts).
 - **Garment method (decided with the user).** OpenSew-2 alone gave bunched sleeves, bare shoulders and poke-through
   on these muscular bodies, even with wider armholes (`opensew_adapter.widen_armhole`) and a ray-based weight rebind.
   Garments therefore use the hybrid `finish: {"mode": "body"}` in `build_garment.py`: OpenSew-2 sews the design
@@ -191,7 +208,6 @@ changes for existing saves or styles.
 - **Known gaps.**
   - No trousers yet, so the legs show the body's underwear.
   - Under this style people's classic clothes, hair and accessories are not drawn.
-  - No creator UI for modular looks yet (Stage C).
   - Seat and bed anchors use the classic values.
   - Garment UVs come from a smart projection (fine for solid colours).
   - Hair clumps are spiky: the taper curve still needs tuning.

@@ -245,6 +245,24 @@ describe('live mode', () => {
     expect(core.updateWardrobe(neighbour.id, neighbour.outfits).ok).toBe(false);
   });
 
+  it('updateWardrobe can also replace or remove the stored modular look, and refuses an unreadable one', () => {
+    const core = started();
+    const p = members(core.state()!)[0]!;
+    const look = { v: 1, bodyId: 'ubc_male', hairId: null, outfits: { everyday: {} }, colors: { skin: '#aa7755', eyes: '#228855', hair: '#112233', garments: {} }, morphs: {} } as const;
+    const events: string[] = [];
+    core.events.on('person.changed', (e) => events.push(`${e.personId}:${e.what}`));
+    expect(core.updateWardrobe(p.id, p.outfits).ok).toBe(true);
+    expect(p.appearance.modular).toBeUndefined();
+    expect(core.updateWardrobe(p.id, p.outfits, look).ok).toBe(true);
+    expect(p.appearance.modular).toEqual(look);
+    expect(p.appearance.modular).not.toBe(look);
+    expect(events).toContain(`${p.id}:appearance`);
+    expect(core.updateWardrobe(p.id, p.outfits, { v: 7 } as never)).toMatchObject({ ok: false });
+    expect(p.appearance.modular).toEqual(look);
+    expect(core.updateWardrobe(p.id, p.outfits, null).ok).toBe(true);
+    expect(p.appearance.modular).toBeUndefined();
+  });
+
   it('setSimSettings changes world settings; unlimited funds only in a sandbox', () => {
     const core = started();
     core.setSimSettings({ autonomy: false, autonomyLevel: 2, visitors: false, unlimitedFunds: true });

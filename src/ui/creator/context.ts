@@ -4,7 +4,7 @@ import type { CreatorResult, CreatorSession, CreatorStep } from '../../character
 import type { HairDef } from '../../content/types';
 import type { HouseholdDraft } from '../../core/drafts';
 import type { OutfitCategory, StartMode } from '../../core/types';
-import type { GameAPI, SoundId } from '../../game/api';
+import type { GameAPI, ModularInfo, SoundId } from '../../game/api';
 import type { PreviewController } from './preview';
 
 export type FaceBodySection = 'body' | 'skin' | 'face' | 'eyes' | 'details';
@@ -49,6 +49,8 @@ export interface CreatorContext {
   /** 'creator' for new households, 'wardrobe' for one existing person's outfits. */
   readonly kind: 'creator' | 'wardrobe';
   readonly startMode: StartMode | null;
+  /** Manifest and asset URLs while the current member is edited as a modular (Quaternius) person; null for classic looks. */
+  modular(): ModularInfo | null;
   /** Shows the outcome of an edit: the reason on failure, the note on success. Returns ok. */
   report(r: AnyResult): boolean;
   /** Shows a message in the panel's status line. */

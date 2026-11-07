@@ -104,6 +104,7 @@ export class CreatorScreen implements ModeUI {
       preview: this.preview,
       kind: opts.kind,
       startMode: opts.startMode,
+      modular: () => (this.session.isModular() ? this.api.creator.modular() : null),
       report: (r) => this.report(r),
       status: (t, k) => this.status(t, k),
       refresh: () => { this.viewKey = ''; this.renderBody(); },
@@ -225,6 +226,7 @@ export class CreatorScreen implements ModeUI {
 
   private attachSession(s: CreatorSession): void {
     this.unsubSession();
+    s.setModularManifest(this.api.creator.modular()?.manifest ?? null);
     this.session = s;
     this.unsubSession = s.onChange(() => this.onSessionChange());
     this.viewKey = '';

@@ -72,6 +72,7 @@
 //    'household.moved'; UiChange 'lot' and 'neighbourhood' tell the UI to re-read neighbourhood().
 // ---------------------------------------------------------------------------------------------------------
 
+import type { ModularLook, ModularManifest } from '../characters/modular/types';
 import type { ContentDB } from '../content/types';
 import type { Speed } from '../core/clock';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
@@ -330,6 +331,9 @@ export type UiChange =
   /** Something the neighbourhood map shows changed: a trip started or ended, a household switched or moved. */
   | 'neighbourhood';
 
+/** What the creator needs to edit modular looks: the manifest and the URL of one of its asset paths (thumbnails). */
+export interface ModularInfo { manifest: ModularManifest; url(path: string): string }
+
 export interface CreatorPreviewOptions {
   /** Outfit category shown in the preview. */
   category: OutfitCategory;
@@ -357,6 +361,8 @@ export interface GameAPI {
 
   // ---- creator preview (the UI owns the CreatorSession; the game only renders) ----
   creator: {
+    /** The modular (Quaternius) manifest while that character style is active, else null: the creator then edits modular looks. */
+    modular(): ModularInfo | null;
     /** Enters creator mode (renderer shows the preview scene) or updates the shown person. */
     show(person: PersonDraft, opts: CreatorPreviewOptions): void;
     setView(view: 'front' | 'side' | 'back' | 'face'): void;
@@ -394,7 +400,8 @@ export interface GameAPI {
   reorder(personId: Id, actionId: Id, toIndex: number): void;
   mood(personId: Id): { value: number; label: string; reasons: string[] };
   /** Replaces a household member's wardrobe (wardrobe editor). */
-  updateWardrobe(personId: Id, wardrobe: Wardrobe): Result;
+  /** Replaces a household member's wardrobe; `modular` (when given) also replaces the stored modular look (null removes it). */
+  updateWardrobe(personId: Id, wardrobe: Wardrobe, modular?: ModularLook | null): Result;
 
   // ---- social events (Milestone 5; sim/events.ts) ----
   // The planner lists known people and event types from state()/content (content.events). `startAt` is an absolute

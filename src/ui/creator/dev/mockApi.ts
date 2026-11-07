@@ -100,6 +100,7 @@ export class MockCreatorApi implements GameAPI {
   premadeHouseholds(): HouseholdDraft[] { return premadeHouseholdList(this.content).map((p) => p.draft); }
 
   creator = {
+    modular: (): null => null,
     show: (person: PersonDraft, opts: CreatorPreviewOptions): void => {
       this.showCount++;
       this.log('creator.show', opts);

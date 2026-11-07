@@ -10,6 +10,8 @@ import { h, setText, toggleClass } from '../../kit/dom';
 import { icon } from '../../kit/icons';
 import type { CreatorContext, StepDef } from '../context';
 import { accessoryIconSvg, garmentIconSvg } from '../garmentIcon';
+import { lookOf, modularClothingSections } from './modularParts';
+import { outfitFor as modularOutfitFor } from '../../../characters/modular/look';
 import { Binder, choiceChips, colorField, hint, issueList, noteBox, section, smallButton } from '../widgets';
 
 const LAYERS: readonly GarmentLayer[] = ['top', 'bottom', 'full', 'outer', 'shoes'];
@@ -70,6 +72,10 @@ function outfitAt(ctx: CreatorContext): Outfit | undefined {
 export const clothingStep: StepDef = {
   key(ctx) {
     const cat = ctx.ui.clothingCategory;
+    if (ctx.modular()) {
+      const look = lookOf(ctx.session);
+      return `m|${ctx.session.currentIndex}|${cat}|${look.bodyId}|${JSON.stringify(modularOutfitFor(look, cat))}`;
+    }
     const list = ctx.session.current.outfits.outfits[cat] ?? [];
     const o = outfitAt(ctx);
     const layers = LAYERS.map((l) => { const c = o?.layers[l]; return c ? `${c.garmentId}:${c.pattern === 'solid' ? 's' : 'p'}` : '-'; }).join(',');
@@ -116,6 +122,22 @@ export const clothingStep: StepDef = {
         btn.setAttribute('aria-label', n > 0 ? `${catName(c)}, ${n} issue${n > 1 ? 's' : ''}` : catName(c));
       }
     });
+
+    // ---- Quaternius style: one modular outfit per category (slots with thumbnails, colours, presets)
+    const modular = ctx.modular();
+    if (modular) {
+      const wearM = smallButton('Wear this', 'check', () => { if (ctx.report(s().setWornOutfit(cat, 0))) ctx.status(`${catName(cat)}: ${wornLabel.toLowerCase()}.`, 'success'); });
+      b.fn(() => {
+        const isWorn = p().outfits.current.category === cat;
+        wearM.disabled = isWorn;
+        setText(wearM.querySelector('.btn-label') as HTMLElement, isWorn ? wornLabel : (ctx.kind === 'wardrobe' ? 'Wear now' : 'Wear when moving in'));
+      });
+      const elM = h('div', { class: 'cr-step cr-step-clothing cr-step-modular' },
+        catTabs.el,
+        ...modularClothingSections(ctx, modular, b, cat),
+        h('div', { class: 'cr-actions' }, wearM));
+      return { el: elM, sync: () => b.sync() };
+    }
 
     // ---- outfits in the category
     const list = p().outfits.outfits[cat] ?? [];

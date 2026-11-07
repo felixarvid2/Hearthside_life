@@ -54,7 +54,7 @@
    "thigh_r"
   ],
   "hood": {
-   "reach_deg": 125,
+   "reach_deg": 110,
    "collar_at": 0.0,
    "collar": 0.012,
    "thick": 0.045,
@@ -64,6 +64,7 @@
    "ring": 12
   },
   "force_regions": [
+   "belly",
    "upperarm_l",
    "upperarm_r",
    "forearm_l",
