@@ -72,10 +72,71 @@
     "ball_leaf_r"
    ],
    "bindTolerance": 0.002,
-   "bindToleranceDeg": 0.5
+   "bindToleranceDeg": 0.5,
+   "clipPelvisHeight": 0.9181
   }
  ],
  "bodies": [
+  {
+   "id": "ubc_male",
+   "label": "Broad",
+   "rig": "ual-standard",
+   "file": "bodies/ubc_male.glb",
+   "skinMaterials": [
+    "M_Skin"
+   ],
+   "skinGain": 1.3961,
+   "eyeMaterials": [
+    "M_Eyes"
+   ],
+   "iris": {
+    "center": [
+     0.5,
+     0.5
+    ],
+    "radius": 0.1,
+    "feather": 0.008,
+    "pupil": 0.03,
+    "refLuminance": 0.0242
+   },
+   "browMaterials": [
+    "M_Brows"
+   ],
+   "morphs": [],
+   "height": 1.8196,
+   "license": "CC0 1.0 - Quaternius, Universal Base Characters (Standard)",
+   "source": "authoring/characters/bodies/ubc_male"
+  },
+  {
+   "id": "ubc_female",
+   "label": "Curvy",
+   "rig": "ual-standard",
+   "file": "bodies/ubc_female.glb",
+   "skinMaterials": [
+    "M_Skin"
+   ],
+   "skinGain": 1.3313,
+   "eyeMaterials": [
+    "M_Eyes"
+   ],
+   "iris": {
+    "center": [
+     0.5,
+     0.5
+    ],
+    "radius": 0.1,
+    "feather": 0.008,
+    "pupil": 0.03,
+    "refLuminance": 0.0242
+   },
+   "browMaterials": [
+    "M_Brows"
+   ],
+   "morphs": [],
+   "height": 1.7751,
+   "license": "CC0 1.0 - Quaternius, Universal Base Characters (Standard)",
+   "source": "authoring/characters/bodies/ubc_female"
+  },
   {
    "id": "standin_mannequin_m",
    "label": "Mannequin (broad, stand-in)",
@@ -153,7 +214,9 @@
    "label": "Short crop",
    "files": {
     "standin_mannequin_m": "hair/short_crop__standin_mannequin_m.glb",
-    "standin_mannequin_f": "hair/short_crop__standin_mannequin_f.glb"
+    "standin_mannequin_f": "hair/short_crop__standin_mannequin_f.glb",
+    "ubc_male": "hair/short_crop__ubc_male.glb",
+    "ubc_female": "hair/short_crop__ubc_female.glb"
    },
    "rig": "ual-standard",
    "attachment": "skinned",

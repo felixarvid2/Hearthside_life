@@ -70,7 +70,7 @@ def write_json(path, data):
         json.dump(data, f, indent=1, sort_keys=True)
 
 
-def export_glb(path, objects, *, animations=False, morphs=True):
+def export_glb(path, objects, *, animations=False, morphs=True, image_format='AUTO', jpeg_quality=88):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     bpy.ops.object.select_all(action='DESELECT')
     for o in objects:
@@ -79,7 +79,8 @@ def export_glb(path, objects, *, animations=False, morphs=True):
         filepath=path, export_format='GLB', use_selection=True, export_skins=True,
         export_animations=animations, export_morph=morphs, export_morph_normal=False,
         export_yup=True, export_apply=False, export_texcoords=True, export_normals=True,
-        export_materials='EXPORT', export_image_format='AUTO', export_def_bones=False,
+        export_materials='EXPORT', export_image_format=image_format, export_jpeg_quality=jpeg_quality,
+        export_def_bones=False,
         export_rest_position_armature=True, export_optimize_animation_size=True,
     )
 

@@ -12,7 +12,9 @@ const repo = (p: string) => fileURLToPath(new URL(`../../../../${p}`, import.met
 
 export function parseGlb(file: string): Promise<GLTF> {
   const b = readFileSync(file);
-  return new Promise((res, rej) => new GLTFLoader().parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer, '', res, rej));
+  // Node has no image decoding: textured materials get an empty Texture so `material.map` still exists.
+  const loader = new GLTFLoader().register(() => ({ name: 'TestEmptyTextures', loadTexture: () => Promise.resolve(new THREE.Texture()) }));
+  return new Promise((res, rej) => loader.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer, '', res, rej));
 }
 
 export const realManifest = (): ModularManifest => JSON.parse(readFileSync(repo('public/assets/characters/modular/manifest.json'), 'utf8')) as ModularManifest;

@@ -66,6 +66,10 @@ missing = [k for k in ("arm_l", "farm_l", "thigh_l", "calf_l") if k not in m.get
 if missing:
     raise SystemExit("measurement adapter failed, limbs missing: %s" % missing)
 
+# Larger armholes for muscular arms (see opensew_adapter.widen_armhole); `armhole` in params / per_body.
+if P.get("armhole"):
+    opensew_adapter.widen_armhole(library, P["armhole"].get("depth_extra", 0.0), P["armhole"].get("scye_max", 0.05))
+    report["draft"] = {k: (round(v, 4) if isinstance(v, float) else v) for k, v in library._draft_top(m, P["fit"]).items()}
 # Parametric preset: pass the design parameters the preset supports.
 label, fn = library.PRESETS[P["preset"]]
 import inspect
@@ -138,11 +142,132 @@ bones = {b.name for b in arm.data.bones}
 for vg in list(g.vertex_groups):
     if vg.name not in bones:
         g.vertex_groups.remove(vg)
+
+
+def rebind(ob, reach=0.25, smooth=2):
+    """Weights from the body under each garment vertex, replacing OpenSew's nearest-surface transfer.
+
+    Nearest-surface picks the torso for the underside of a loose sleeve (with the arms lowered, the side of the chest
+    is closer than the arm the sleeve is around), so the sleeve stays behind when the arm moves. Here a ray goes from
+    the vertex inward - along its normal, oriented away from the nearest body point - and the weights are the
+    barycentric blend of the body triangle it hits (posed body, fitting pose). No hit within `reach`: nearest point.
+    """
+    from mathutils.bvhtree import BVHTree
+    from mathutils.geometry import barycentric_transform
+    dg = bpy.context.evaluated_depsgraph_get()
+    be = body.evaluated_get(dg)
+    me = be.to_mesh()
+    bw = body.matrix_world
+    pts = [bw @ v.co for v in me.vertices]
+    me.calc_loop_triangles()
+    tris = [tuple(t.vertices) for t in me.loop_triangles]
+    be.to_mesh_clear()
+    bvh = BVHTree.FromPolygons(pts, tris)
+    bnames = {vg.index: vg.name for vg in body.vertex_groups}
+    bw_ = [{bnames[x.group]: x.weight for x in v.groups if x.weight > 0 and bnames.get(x.group) in bones} for v in body.data.vertices]
+    ow = ob.matrix_world; on = ow.to_3x3().inverted().transposed()
+    out = []
+    rays = 0
+    for v in ob.data.vertices:
+        p = ow @ v.co
+        n = (on @ v.normal).normalized()
+        loc, _, ti, dist = bvh.find_nearest(p)
+        if n.dot(p - loc) < 0:
+            n = -n
+        hit = bvh.ray_cast(p, -n, reach)
+        if hit[0] is not None:
+            loc, ti = hit[0], hit[2]
+            rays += 1
+        a, b, c = tris[ti]
+        # barycentric coordinates of loc in triangle (a, b, c)
+        w = barycentric_transform(loc, pts[a], pts[b], pts[c], Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+        wa, wb, wc = (max(0.0, x) for x in w)
+        t = (wa + wb + wc) or 1.0
+        acc = {}
+        for k, f in ((a, wa / t), (b, wb / t), (c, wc / t)):
+            for name, x in bw_[k].items():
+                acc[name] = acc.get(name, 0.0) + x * f
+        out.append(acc)
+    # Smooth across mesh edges (`smooth` passes, half way to the neighbours' mean), so triangles that hit different
+    # body parts blend instead of tearing.
+    nbr = [[] for _ in ob.data.vertices]
+    for e in ob.data.edges:
+        i, j = e.vertices
+        nbr[i].append(j); nbr[j].append(i)
+    for _ in range(smooth):
+        nxt = []
+        for i, acc in enumerate(out):
+            if not nbr[i]:
+                nxt.append(acc); continue
+            mean = {}
+            for j in nbr[i]:
+                for name, x in out[j].items():
+                    mean[name] = mean.get(name, 0.0) + x / len(nbr[i])
+            keys = set(acc) | set(mean)
+            nxt.append({k: 0.5 * acc.get(k, 0.0) + 0.5 * mean.get(k, 0.0) for k in keys})
+        out = nxt
+    for vg in list(ob.vertex_groups):
+        ob.vertex_groups.remove(vg)
+    groups = {}
+    for i, acc in enumerate(out):
+        for name, x in acc.items():
+            if x <= 1e-4:
+                continue
+            if name not in groups:
+                groups[name] = ob.vertex_groups.new(name=name)
+            groups[name].add([i], x, 'REPLACE')
+    return rays
+
+
+if P.get("rebind", True):
+    ray_hits = rebind(g, smooth=P.get("weight_smooth", 2))
+    report["rebind_ray_hits"] = ray_hits
 C.limit_and_normalize(g)
 moved = unpose(g) if fit_pose.get("arms_down_deg") else 0.0
 for pb in arm.pose.bones:
     pb.matrix_basis = Matrix.Identity(4)
 bpy.context.view_layer.update()
+
+
+def conform(ob, offset=0.006, smooth=3):
+    """Bind pose: no garment vertex inside or within `offset` of the skin. Each pass smooths the shell half way to
+    its neighbours' mean (irons out bunched seams) and then pushes every vertex that ended up too close back out
+    along the skin normal. Fixes a deltoid or chest poking through a sleeve cap. Returns the vertices pushed out."""
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    be = body.evaluated_get(dg); me = be.to_mesh(); bw = body.matrix_world
+    pts = [bw @ v.co for v in me.vertices]
+    me.calc_loop_triangles(); tris = [tuple(t.vertices) for t in me.loop_triangles]
+    be.to_mesh_clear()
+    bvh = BVHTree.FromPolygons(pts, tris)
+    ow = ob.matrix_world; owi = ow.inverted()
+    P_ = [ow @ v.co for v in ob.data.vertices]
+    nbr = [[] for _ in P_]
+    for e in ob.data.edges:
+        i, j = e.vertices; nbr[i].append(j); nbr[j].append(i)
+    def push():
+        n_pushed = 0
+        for i, p in enumerate(P_):
+            loc, nrm, _, _ = bvh.find_nearest(p)
+            if loc is None:
+                continue
+            d = (p - loc).dot(nrm)
+            if d < offset:
+                P_[i] = loc + nrm * offset + (p - loc - nrm * (p - loc).dot(nrm))
+                n_pushed += 1
+        return n_pushed
+    pushed = push()
+    for _ in range(smooth):
+        P_[:] = [p * 0.5 + sum((P_[j] for j in nb), Vector()) * (0.5 / len(nb)) if nb else p for p, nb in zip(P_, nbr)]
+        pushed = max(pushed, push())
+    for v, p in zip(ob.data.vertices, P_):
+        v.co = owi @ p
+    ob.data.update()
+    return pushed
+
+
+if P.get("conform"):
+    report["conform_pushed"] = conform(g, P["conform"].get("offset", 0.006), P["conform"].get("smooth", 3))
 mw = g.matrix_world.copy(); g.parent = arm; g.matrix_world = mw
 # Coverage per body region at the bind pose: a body vertex is covered when a ray along its normal hits the garment
 # within `cover_dist`. Only regions covered almost entirely are hidden in the game (no skin can show through a hole).

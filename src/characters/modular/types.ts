@@ -41,6 +41,11 @@ export interface RigProfile {
   bindTolerance: number;
   /** Max rotation difference (degrees) between a part's inverse bind rotation and the body's. */
   bindToleranceDeg: number;
+  /**
+   * Length (metres) of the pelvis bone's rest local translation in the rig the shared clips were authored on. A body whose
+   * own pelvis differs gets the clips' `.position` tracks scaled by the ratio (retarget.ts); absent = clips used unchanged.
+   */
+  clipPelvisHeight?: number;
 }
 
 export interface BodyPresetDef {
@@ -54,6 +59,20 @@ export interface BodyPresetDef {
   /** Morph targets the creator may drive (continuous 0..1 unless `range` says otherwise). Empty until authored. */
   morphs: Array<{ id: string; label: string; target: string; range: [number, number]; group: 'face' | 'body' }>;
   height: number;
+  /**
+   * Skin materials' color = skin color x tone x skinGain (default 1). The skin texture is normalised
+   * (tools/characters/bake_skin.py) so that this gain makes a reference texel exactly the chosen skin colour.
+   */
+  skinGain?: number;
+  /** Materials (in the body GLB) of the eyes: `look.colors.eyes` tints their iris only (see `iris`). */
+  eyeMaterials?: string[];
+  /**
+   * Iris region of the eye material's map, in UV space: `center`, outer `radius`, edge `feather`, `pupil` radius (kept
+   * untinted) and `refLuminance` (linear luminance of the iris texture that maps to the exact eye colour).
+   */
+  iris?: { center: [number, number]; radius: number; feather: number; pupil: number; refLuminance: number };
+  /** Materials (in the body GLB) of the eyebrows: colored with `look.colors.hair`. */
+  browMaterials?: string[];
   /** True for stand-ins used until the real Quaternius base characters are supplied. */
   temporary?: boolean;
   thumbnail?: string;

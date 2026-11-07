@@ -12,6 +12,7 @@ import type { Hex, OutfitCategory, Posture } from '../../core/types';
 import { Animator } from '../animation';
 import type { ModularAssetCache } from './cache';
 import { outfitFor, resolveLook } from './look';
+import { hipRatio, scaledClipsFor } from './retarget';
 import { findBody, findGarment, findHair } from './manifest';
 import { BODY_REGIONS, MODULAR_LOOK_VERSION } from './types';
 import type { BodyPresetDef, BodyRegion, ColorRegionDef, CoverMaskFile, GarmentDef, HairstyleDef, ModularLook, ModularManifest, ModularSlot, RigProfile } from './types';
@@ -33,6 +34,10 @@ interface BodyInstance {
   materials: THREE.Material[];
   /** Cloned skin materials; `tone` scales the skin color (joints are a little darker). */
   skin: Array<{ mat: THREE.Material; tone: number }>;
+  /** Cloned eye materials with their iris tint uniform (kept so recoloring after compile works). */
+  eyes: Array<{ mat: THREE.Material; uniform: { value: THREE.Color } }>;
+  /** Cloned eyebrow materials (colored like the hair). */
+  brows: THREE.Material[];
   masked: MaskedMesh[];
   /** Height of the crown above the Head bone at rest. */
   crownAboveHead: number;
@@ -146,6 +151,29 @@ function patchCoverDiscard(mat: THREE.Material): void {
       .replace('void main() {', 'varying float vHidden;\nvoid main() {\n  if (vHidden > 0.999) discard;');
   };
   mat.customProgramCacheKey = () => 'modular-cover-discard';
+  mat.needsUpdate = true;
+}
+
+/** Tints the iris of a textured eye material with `uniform.value` (linear): the texel's luminance sets the brightness. */
+function patchIris(mat: THREE.Material, iris: NonNullable<BodyPresetDef['iris']>, uniform: { value: THREE.Color }): void {
+  const f = (n: number) => n.toFixed(5);
+  const [cx, cy] = iris.center;
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uIrisColor = uniform;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('void main() {', 'uniform vec3 uIrisColor;\nvoid main() {')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+  #ifdef USE_MAP
+  {
+    float irisD = distance(vMapUv, vec2(${f(cx)}, ${f(cy)}));
+    float irisMask = (1.0 - smoothstep(${f(iris.radius - iris.feather)}, ${f(iris.radius + iris.feather)}, irisD))
+      * smoothstep(${f(iris.pupil - iris.feather)}, ${f(iris.pupil + iris.feather)}, irisD);
+    float irisLum = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    diffuseColor.rgb = mix(diffuseColor.rgb, uIrisColor * (irisLum / ${f(iris.refLuminance)}), irisMask);
+  }
+  #endif`);
+  };
+  mat.customProgramCacheKey = () => `modular-iris:${cx},${cy},${iris.radius},${iris.feather},${iris.pupil},${iris.refLuminance}`;
   mat.needsUpdate = true;
 }
 
@@ -384,7 +412,11 @@ export class ModularCharacter {
     }
 
     const skin = hexColor(this.look.colors.skin);
-    for (const s of body.skin) (s.mat as THREE.MeshStandardMaterial).color?.copy(skin).multiplyScalar(s.tone);
+    const gain = body.def.skinGain ?? 1;
+    for (const s of body.skin) (s.mat as THREE.MeshStandardMaterial).color?.copy(skin).multiplyScalar(s.tone * gain);
+    for (const e of body.eyes) hexColor(this.look.colors.eyes, e.uniform.value);
+    const hairColor = hexColor(this.look.colors.hair);
+    for (const m of body.brows) (m as THREE.MeshStandardMaterial).color?.copy(hairColor);
 
     for (const p of this.garments.values()) {
       const g = p.def as GarmentDef;
@@ -451,15 +483,31 @@ export class ModularCharacter {
       return { mesh, key, region, geometry, hidden };
     });
     for (const s of skin) patchCoverDiscard(s.mat);
+    const eyes: BodyInstance['eyes'] = [];
+    if (def.iris) {
+      for (const name of def.eyeMaterials ?? []) {
+        for (const c of cloned.values()) {
+          if (c.name !== name || !(c as THREE.MeshStandardMaterial).map) continue;
+          const uniform = { value: new THREE.Color() };
+          patchIris(c, def.iris, uniform);
+          eyes.push({ mat: c, uniform });
+        }
+      }
+    }
+    const brows: THREE.Material[] = [];
+    for (const name of def.browMaterials ?? []) for (const c of cloned.values()) if (c.name === name) brows.push(c);
     this.root.add(scene);
     scene.updateMatrixWorld(true);
     const head = bones.get('Head');
     const headY = head ? head.getWorldPosition(new THREE.Vector3()).y : def.height - 0.2;
     this.body = {
       def, rig: this.manifest.rigs.find((r) => r.id === def.rig) as RigProfile, url, scene, bones, inverses, regions, meshes, skeletons,
-      materials: [...cloned.values()], skin, masked, crownAboveHead: Math.max(0.1, def.height - headY),
+      materials: [...cloned.values()], skin, eyes, brows, masked, crownAboveHead: Math.max(0.1, def.height - headY),
     };
-    this.animator = new Animator(this.root, this.clips);
+    // clips authored for another hip height get their position tracks scaled for this body (shared between characters)
+    const pelvis = bones.get('pelvis');
+    const ratio = pelvis ? hipRatio(pelvis.position.length(), this.body.rig?.clipPelvisHeight) : 1;
+    this.animator = new Animator(this.root, ratio === 1 ? this.clips : scaledClipsFor(this.clips, ratio));
     this.animator.play(this.lastAnim.id, { ...this.lastAnim.opts, fade: 0 });
   }
 
