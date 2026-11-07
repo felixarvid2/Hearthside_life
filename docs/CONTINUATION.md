@@ -142,10 +142,9 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 
 ## Next steps, in order
 
-1. Modular Quaternius characters (opt-in style "Quaternius (preview)"; see "Modular characters" below). Stages A
-   and B run on the real Universal Base Characters (`ubc_male`, `ubc_female`). Next: Stage C (trousers, hoodie, bob,
-   ponytail, colour variants, two outfit combos, the mobile creator using `creator/framing.ts`, `restrictions.ts` and
-   thumbnails from `tools/characters/thumbnails.mjs`), then Stage D (verified face and body morphs).
+1. Modular Quaternius characters (opt-in style "Quaternius (preview)"; see "Modular characters" below). Stages A to D
+   are done on the Universal Base Characters (`ubc_male`, `ubc_female`). Next: the known gaps listed there (garment
+   folds, hood up, hair spikes at the hairline, ponytail thumbnail, real-device performance).
 2. Milestone 10, complete catalogs: surfaces (360 walls, 200 floors) and furnishings (573 designs, target 560) are done. The
    remaining target is the full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
 3. Milestone 13, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
@@ -179,7 +178,19 @@ changes for existing saves or styles.
     skin tone works (`skinGain`); eye colour tints only the iris (shader), brows follow the hair colour.
   - Animations: the shared UAL clips play on the real bodies; root/pelvis position tracks are scaled per body by its
     hip height (`retarget.ts`, shared cached clips), so feet stay on the floor.
-  - `tshirt_crew` on both bodies, `short_crop` on both, cover masks. Unit tests in `tests/unit/characters3d/modular/`.
+  - Stage C garments on both bodies: `tshirt_crew` (top), `trousers_straight` (bottom), `hoodie_pullover` (top), with
+    cover masks. Colour variants come from each garment's `colorRegions` palette (6 colours each); a colour is a variant,
+    not a new model. Hair on both bodies: `short_crop`, `bob_chin`, `ponytail_mid`. Triangles (male/female): tshirt
+    2,459/2,814, trousers 2,672/2,932, hoodie ~3,800/4,300; hair short_crop ~6,700, bob ~12,500, ponytail ~14,400.
+    Unit tests in `tests/unit/characters3d/modular/`.
+  - Outfit presets "Tee and trousers" and "Hoodie and trousers" are tested in walk and sit. Thumbnails exist for every
+    part (`tools/characters/thumbnails.mjs`; bottoms, shoes and one-pieces are framed full-body).
+  - Stage D morphs: `blender/morphs.py` adds shape keys from mesh landmarks (nose tip, chin, mouth on the centre-line
+    profile). Face: `nose_width`, `mouth_width`, `jaw_width`, `chin_length` (-1..1). Body: `weight` (-0.5..1; per-region
+    normal offset blended by skin weights, smoothed). Body-shell garments copy the body's shape keys, so they follow
+    `weight` exactly (manifest `followsMorphs`). Hair does not follow morphs. The runtime fix `copyMorphNames` in
+    `ModularCharacter.ts` restores the named morph targets on part meshes rebuilt from a GLB.
+  - Dev check: `dev/wardrobe.html` takes `outfit=top:id,bottom:id` and `morph=weight:1,...`.
   - CharacterStudio ports (MIT): `creator/framing.ts`, `restrictions.ts` (used by `resolveLook`),
     `tools/characters/thumbnails.mjs`, and the dev-only wardrobe grid `dev/wardrobe.html` (`npm run dev`).
 - **Creator (Stage C).** While Settings > Character style is "Quaternius (preview)" and the member is youngAdult/adult
@@ -205,12 +216,26 @@ changes for existing saves or styles.
   (where it covers, how loose); the shipped mesh is the skin under it, raised 0.6-2.5 cm with the body's own weights,
   seam gaps closed, excluded regions (`exclude_regions`) dropped, edges tucked to the skin. It cannot open holes and
   deforms exactly like the body; it reads tighter than sewn cloth (folds mostly flattened).
+  - `build_garment.py` finish options: `force_regions` (regions the design always covers, such as long sleeves and the
+    hoodie belly; applied before the morphological close, so small holes such as the navel fill) and `force_h`. `hood`
+    (`add_hood`) is a measured rolled hood worn down the back of the neck, thin at the collarbones, fullest between the
+    shoulder blades and pressed onto the back; weights come from the nearest shell vertex. OpenSew-2's own sewn hood
+    crumples on these bodies.
+  - `build_hair.py` options: `cut_at` (blunt cut height in head space, for the bob), `front_side` (roots in front of the
+    ears swept aside so the face stays clear) and `ponytail` (roots walk over the skull to a gather point, the tail falls
+    in a fan). Heavy decimation of GBH ribbons makes spiky clumps; lower `resolution_cm` instead (ponytail 3.0 cm,
+    target 14,000 tris; bob 2.6 cm, 12,000).
 - **Known gaps.**
-  - No trousers yet, so the legs show the body's underwear.
+  - Garments read tight: the body-shell method flattens most folds.
+  - The hoodie hood is a simple measured roll; there is no hood up.
+  - Hair clumps are still a little spiky at the hairline.
+  - The ponytail thumbnail is a front view, so the tail barely shows.
+  - Very light skin looks golden (skin gain).
   - Under this style people's classic clothes, hair and accessories are not drawn.
   - Seat and bed anchors use the classic values.
   - Garment UVs come from a smart projection (fine for solid colours).
-  - Hair clumps are spiky: the taper curve still needs tuning.
+  - Morphs are one shape key each: no corrective shapes, and hair is not adjusted for jaw width.
+  - Real-device performance is not measured.
   - Saved modular looks that name the removed stand-in bodies fall back to the default body (logged by
     `resolveLook`).
 
