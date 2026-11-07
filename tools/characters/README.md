@@ -87,12 +87,19 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
 
 ## CharacterStudio
 
-It is VRM-based (`@pixiv/three-vrm`, three 0.183); its CharacterManager expects VRM and cannot load our GLB parts
-unchanged. Candidates for the creator (Stage C):
+CharacterStudio (MIT, git `293182b`) is a React app built on VRM: it loads every trait through `VRMLoaderPlugin`,
+renames bones through the VRM humanoid map and skips a file without VRM data, keeps a skeleton and an animation mixer
+per trait, and hides the body under clothing by raycasting (three-mesh-bvh) after every trait change. It cannot load our
+GLB parts, so its logic was ported instead (MIT header in each file, row in `public/assets/LICENSES.md`):
 
-- `src/library/cameraFrameManager.js`: face and full-body framing.
-- `manifestRestrictions.js`: trait and type exclusions. Our `conflicts` are the simple form.
-- `thumbnailsGenerator.js`.
+| Ours | From | Notes |
+|---|---|---|
+| `src/characters/modular/creator/framing.ts` | `src/library/cameraFrameManager.js` | Shots `face` / `upper` / `full` between named bones; the distance is solved for the frustum, so portrait and landscape both fit. |
+| `src/characters/modular/restrictions.ts` | `src/library/manifestRestrictions.js` | `manifest.restrictions.slots` / `.parts` (symmetric) plus each garment's `conflicts`; `equipWith` removes what a new part conflicts with. Used by `resolveLook`. |
+| `tools/characters/thumbnails.mjs` | `src/library/thumbnailsGenerator.js` | Renders each part on a body with Playwright, writes `thumbs/<id>.webp`; `--write-manifest` sets `thumbnail`. |
+| `dev/wardrobe.html` | (the app's trait preview) | Dev-only QA grid: every body x every hairstyle and garment, `pose=idle|walk|sit`, `shot=`, `body=`, `part=`. `npm run dev`, then open `/dev/wardrobe.html`. Not in the production build. |
 
-`cull-mesh.js` hides the body under clothing with runtime raycasts (three-mesh-bvh); our cover masks do the same job
-precomputed at build time. If code is adapted later, keep its MIT notice in the file header and add a row here.
+Not ported: the VRM loader, expressions, look-at, spring bones and VRM export. `cull-mesh.js` (runtime raycast culling)
+is the fallback to consider once body morphs (Stage D) make precomputed cover masks stale. `merge-geometry.js` /
+`create-texture-atlas.js` (one mesh and one atlas per finished character) are tied to VRM and MToon; only the idea is
+kept for a later draw-call optimisation.

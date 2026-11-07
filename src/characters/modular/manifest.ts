@@ -52,6 +52,15 @@ export function validateManifest(m: ModularManifest): string[] {
     files('Hairstyle', h.id, h.files);
     colors('Hairstyle', h.id, h.colorRegions);
   }
+  const partIds = new Set([...m.garments.map((g) => g.id), ...m.hairstyles.map((h) => h.id)]);
+  for (const [slot, list] of Object.entries(m.restrictions?.slots ?? {})) {
+    if (!slots.includes(slot)) out.push(`Restriction on unknown slot '${slot}'.`);
+    for (const s of list ?? []) if (!slots.includes(s)) out.push(`Slot '${slot}' is restricted against unknown slot '${s}'.`);
+  }
+  for (const [id, list] of Object.entries(m.restrictions?.parts ?? {})) {
+    if (!partIds.has(id)) out.push(`Restriction on unknown part '${id}'.`);
+    for (const o of list) if (!partIds.has(o)) out.push(`Part '${id}' is restricted against unknown part '${o}'.`);
+  }
   for (const f of ['a', 'b'] as const) {
     const id = m.defaults.bodyByFrame[f];
     if (!bodyIds.includes(id)) out.push(`Default body for frame ${f} ('${id}') does not exist.`);

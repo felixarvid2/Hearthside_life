@@ -5,6 +5,7 @@ import type { Appearance, Hex, OutfitCategory } from '../../core/types';
 import { OUTFIT_CATEGORIES } from '../../core/types';
 import type { ContentDB } from '../../content/types';
 import { findBody, findGarment, findHair } from './manifest';
+import { conflicts } from './restrictions';
 import { MODULAR_LOOK_VERSION, MODULAR_SLOTS } from './types';
 import type { ModularLook, ModularManifest, ModularOutfit, ModularSlot } from './types';
 
@@ -132,7 +133,8 @@ export function resolveLook(look: ModularLook, manifest: ModularManifest): { loo
       if (!g) { issues.push(`Unknown garment '${id}' dropped from the ${where}.`); continue; }
       if (g.slot !== slot) { issues.push(`Garment '${id}' is a ${g.slot}, not a ${slot}; dropped from the ${where}.`); continue; }
       if (!g.files[bodyId]) { issues.push(`Garment '${id}' does not fit body '${bodyId}' and was dropped from the ${where}.`); continue; }
-      const clash = [...keptDefs.entries()].find(([s, k]) => g.conflicts.includes(s) || k.conflicts.includes(slot)
+      if (out.hairId !== null && conflicts(manifest, id, out.hairId)) { issues.push(`Garment '${id}' cannot be worn with hairstyle '${out.hairId}'; dropped from the ${where}.`); continue; }
+      const clash = [...keptDefs.entries()].find(([s, k]) => conflicts(manifest, id, k.id)
         || (slot === 'full' && (s === 'top' || s === 'bottom')) || (s === 'full' && (slot === 'top' || slot === 'bottom')));
       if (clash) { issues.push(`Garment '${id}' cannot be worn with '${clash[1].id}'; dropped from the ${where}.`); continue; }
       kept[slot] = id;

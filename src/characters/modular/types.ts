@@ -131,6 +131,16 @@ export interface ModularManifest {
   bodies: BodyPresetDef[];
   garments: GarmentDef[];
   hairstyles: HairstyleDef[];
+  /**
+   * Optional exclusion rules beyond each garment's own `conflicts` (see restrictions.ts). Both kinds are symmetric: naming
+   * the pair on one side is enough.
+   */
+  restrictions?: {
+    /** Slot-type exclusions: `{ outer: ['full'] }` = no garment in 'outer' together with one in 'full' (and vice versa). */
+    slots?: Partial<Record<ModularSlot, ModularSlot[]>>;
+    /** Part-id exclusions (garment or hairstyle ids): `{ hood: ['short_crop'] }` = the hood and that hairstyle never go together. */
+    parts?: Record<string, string[]>;
+  };
   /** Defaults used for people without a modular look (see deriveModularLook). */
   defaults: {
     bodyByFrame: Record<'a' | 'b', string>;

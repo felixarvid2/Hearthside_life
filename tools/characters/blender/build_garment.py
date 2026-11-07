@@ -331,7 +331,120 @@ def shell_finish(ob, lo=0.006, hi=0.025, k=0.015, smooth=3):
     return round(worst, 4), round(sum(heights) / max(1, len(heights)), 4)
 
 
+def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002):
+    """Hybrid finish (`finish: {"mode": "body"}`): the garment's surface is taken from the body itself.
+
+    OpenSew-2's sewn garment (at the bind pose) decides *where* the garment is and *how loose* it is: a skin vertex
+    belongs to the garment when a ray along its normal meets the sewn cloth within `reach` (or the cloth lies just
+    under the skin there), and its height above the skin is the ray distance mapped to lo..hi as in shell_finish.
+    The selection is closed morphologically (`close` rings grown, then shrunk), so seam gaps the sewing left open -
+    the top of the shoulder between sleeve cap and armhole - are filled, and only the largest piece is kept.
+    Built from the skin's own triangles and weights, the garment deforms exactly like the body and cannot open
+    holes. Its boundary is tucked back down to the skin (`tuck` above it), so no one sees under the hem.
+    Returns the new object (the sewn one is removed) and a small report."""
+    import math as _m
+    import bmesh as _bm
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    gb = BVHTree.FromObject(ob.evaluated_get(dg), dg)
+    gw = ob.matrix_world; gwi = gw.inverted()
+    bw = body.matrix_world
+    skin = {i for i, m in enumerate(body.data.materials) if m and m.name == "M_Skin"} or set(range(len(body.data.materials)))
+    me = body.data
+    nv = len(me.vertices)
+    adj = [[] for _ in range(nv)]
+    for e in me.edges:
+        a_, b_ = e.vertices; adj[a_].append(b_); adj[b_].append(a_)
+    skin_v = set()
+    for poly in me.polygons:
+        if poly.material_index in skin:
+            skin_v.update(poly.vertices)
+    hmap = lambda d: lo + (hi - lo) * (1.0 - _m.exp(-max(d, 0.0) / k))
+    h = {}
+    for vi in skin_v:
+        v = me.vertices[vi]
+        o = gwi @ (bw @ v.co); n = (gwi.to_3x3() @ (bw.to_3x3() @ v.normal)).normalized()
+        hit = gb.ray_cast(o + n * 0.001, n, reach)
+        if hit[0] is not None:
+            h[vi] = hmap(hit[3]); continue
+        back = gb.ray_cast(o + n * 0.001, -n, 0.02)   # cloth slightly inside the skin (a deltoid poking through)
+        if back[0] is not None:
+            h[vi] = lo
+    sel = set(h)
+    for _ in range(close):                      # grow ...
+        sel |= {j for i in sel for j in adj[i] if j in skin_v}
+    for _ in range(close):                      # ... and shrink: gaps narrower than 2 x close rings are filled
+        sel = {i for i in sel if all(j in sel for j in adj[i] if j in skin_v)}
+    # largest connected piece only
+    seen, best = set(), set()
+    for s0 in sel:
+        if s0 in seen:
+            continue
+        comp, stack = set(), [s0]
+        while stack:
+            i = stack.pop()
+            if i in comp:
+                continue
+            comp.add(i); stack.extend(j for j in adj[i] if j in sel and j not in comp)
+        seen |= comp
+        if len(comp) > len(best):
+            best = comp
+    sel = best
+    # heights for filled vertices: neighbour means, then a few smoothing passes
+    for _ in range(close * 2 + 2):
+        for i in sel:
+            if i not in h:
+                hs = [h[j] for j in adj[i] if j in h]
+                if hs:
+                    h[i] = sum(hs) / len(hs)
+    for i in sel:
+        h.setdefault(i, lo)
+    for _ in range(smooth):
+        h = {i: 0.5 * h[i] + 0.5 * (sum(h[j] for j in adj[i] if j in sel) / max(1, sum(1 for j in adj[i] if j in sel))) for i in sel}
+    new = body.copy(); new.data = body.data.copy(); new.name = ob.name
+    bpy.context.collection.objects.link(new)
+    for md in list(new.modifiers):
+        if md.type != 'ARMATURE':
+            new.modifiers.remove(md)
+    bm = _bm.new(); bm.from_mesh(new.data)
+    bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table()
+    drop = [f for f in bm.faces if f.material_index not in skin or not all(v.index in sel for v in f.verts)]
+    _bm.ops.delete(bm, geom=drop, context='FACES')
+    base = {}
+    for v in bm.verts:
+        base[v] = (v.co.copy(), v.normal.copy())
+        v.co = v.co + v.normal * h.get(v.index, lo)
+    # tuck the boundary back to the skin
+    bedges = [e for e in bm.edges if e.is_boundary]
+    ret = _bm.ops.extrude_edge_only(bm, edges=bedges)
+    new_verts = [x for x in ret["geom"] if isinstance(x, _bm.types.BMVert)]
+    # each extruded vertex sits on an edge to the boundary vertex it came from
+    for nvx in new_verts:
+        src = next((e.other_vert(nvx) for e in nvx.link_edges if e.other_vert(nvx) in base), None)
+        if src is not None:
+            co, n = base[src]
+            nvx.co = co + n * tuck
+    bm.normal_update()
+    bm.to_mesh(new.data); bm.free()
+    for p in new.data.polygons:
+        p.material_index = 0
+    rep = {"skin_verts_hit": len(h), "verts": len(new.data.vertices), "tris": sum(len(p.vertices) - 2 for p in new.data.polygons),
+           "boundary_edges": len(bedges)}
+    bpy.data.objects.remove(ob)
+    # UVs for the new surface
+    for o in bpy.context.selected_objects:
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = new; new.select_set(True)
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.01); bpy.ops.object.mode_set(mode='OBJECT')
+    C.limit_and_normalize(new)
+    return new, rep
+
+
 fin = P.get("finish") or {}
+if fin.get("mode") == "body":
+    g, report["body_shell"] = body_shell(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015),
+                                         fin.get("close", 3), fin.get("reach", 0.08), fin.get("smooth", 3))
 if fin.get("mode") == "shell":
     report["shell"] = shell_finish(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015), fin.get("smooth", 3))
 if P.get("conform"):

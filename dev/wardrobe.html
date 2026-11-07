@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hearthside Life - wardrobe preview</title>
+  <style>
+    html, body { margin: 0; background: #e9e2d6; font-family: system-ui, sans-serif; color: #3b3125; }
+    #bar { padding: 8px 12px; font: 12px ui-monospace, monospace; }
+    #grid { display: grid; gap: 6px; padding: 0 12px 12px; align-items: start; }
+    .head, .row { font: 12px ui-monospace, monospace; padding: 4px; }
+    .row { align-self: center; font-weight: 600; }
+    .cell { background: #f6f1e6; border-radius: 6px; overflow: hidden; }
+    .cell canvas { display: block; width: 100%; height: auto; }
+    .label { padding: 3px 6px; font: 11px ui-monospace, monospace; word-break: break-word; }
+    .label.bad { background: #f3c9c4; color: #6b1810; }
+    .label.nofit { color: #8a7b66; }
+    .nofit .box { aspect-ratio: 3 / 4; display: grid; place-items: center; color: #8a7b66; font: 12px ui-monospace, monospace; }
+    body.thumb { background: transparent; }
+    body.thumb canvas { display: block; }
+    body.thumb .cell { width: 256px; background: transparent; border-radius: 0; }
+  </style>
+</head>
+<body>
+  <div id="bar">loading...</div>
+  <div id="grid"></div>
+  <script type="module" src="./wardrobe.ts"></script>
+</body>
+</html>
