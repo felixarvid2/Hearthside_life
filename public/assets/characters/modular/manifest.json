@@ -2300,6 +2300,5786 @@
    "tags": [
     "watch"
    ]
+  },
+  {
+   "id": "ankle_boots",
+   "label": "Ankle boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/ankle_boots__ubc_male.glb",
+    "ubc_female": "garments/ankle_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/ankle_boots__ubc_male.cover.json",
+    "ubc_female": "garments/ankle_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_AnkleBoots"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_AnkleBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/ankle_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "ballet_flats",
+   "label": "Ballet flats",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/ballet_flats__ubc_male.glb",
+    "ubc_female": "garments/ballet_flats__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/ballet_flats__ubc_male.cover.json",
+    "ubc_female": "garments/ballet_flats__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BalletFlats"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_BalletFlatsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/ballet_flats/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "flats"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "bermuda",
+   "label": "Bermuda shorts",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/bermuda__ubc_male.glb",
+    "ubc_female": "garments/bermuda__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/bermuda__ubc_male.cover.json",
+    "ubc_female": "garments/bermuda__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Bermuda"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/bermuda/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "shorts"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "bike_shorts",
+   "label": "Bike shorts",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/bike_shorts__ubc_male.glb",
+    "ubc_female": "garments/bike_shorts__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/bike_shorts__ubc_male.cover.json",
+    "ubc_female": "garments/bike_shorts__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BikeShorts"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/bike_shorts/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "shorts",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "blazer",
+   "label": "Blazer",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/blazer__ubc_male.glb",
+    "ubc_female": "garments/blazer__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/blazer__ubc_male.cover.json",
+    "ubc_female": "garments/blazer__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Blazer"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/blazer/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket",
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "blouse_long",
+   "label": "Long-sleeve blouse",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/blouse_long__ubc_male.glb",
+    "ubc_female": "garments/blouse_long__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/blouse_long__ubc_male.cover.json",
+    "ubc_female": "garments/blouse_long__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BlouseLong"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/blouse_long/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "blouse_square",
+   "label": "Square-neck blouse",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/blouse_square__ubc_male.glb",
+    "ubc_female": "garments/blouse_square__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/blouse_square__ubc_male.cover.json",
+    "ubc_female": "garments/blouse_square__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BlouseSquare"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/blouse_square/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "blouse_v",
+   "label": "V-neck blouse",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/blouse_v__ubc_male.glb",
+    "ubc_female": "garments/blouse_v__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/blouse_v__ubc_male.cover.json",
+    "ubc_female": "garments/blouse_v__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BlouseV"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/blouse_v/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "bodysuit",
+   "label": "Bodysuit",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/bodysuit__ubc_male.glb",
+    "ubc_female": "garments/bodysuit__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/bodysuit__ubc_male.cover.json",
+    "ubc_female": "garments/bodysuit__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Bodysuit"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/bodysuit/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "boilersuit",
+   "label": "Boilersuit",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/boilersuit__ubc_male.glb",
+    "ubc_female": "garments/boilersuit__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/boilersuit__ubc_male.cover.json",
+    "ubc_female": "garments/boilersuit__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Boilersuit"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/boilersuit/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jumpsuit"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "bomber",
+   "label": "Bomber jacket",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/bomber__ubc_male.glb",
+    "ubc_female": "garments/bomber__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/bomber__ubc_male.cover.json",
+    "ubc_female": "garments/bomber__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Bomber"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/bomber/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "camisole",
+   "label": "Camisole",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/camisole__ubc_male.glb",
+    "ubc_female": "garments/camisole__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/camisole__ubc_male.cover.json",
+    "ubc_female": "garments/camisole__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Camisole"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/camisole/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "capri",
+   "label": "Capri trousers",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/capri__ubc_male.glb",
+    "ubc_female": "garments/capri__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/capri__ubc_male.cover.json",
+    "ubc_female": "garments/capri__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Capri"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/capri/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "cardigan",
+   "label": "Cardigan",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/cardigan__ubc_male.glb",
+    "ubc_female": "garments/cardigan__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/cardigan__ubc_male.cover.json",
+    "ubc_female": "garments/cardigan__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Cardigan"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/cardigan/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "knit"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "cardigan_long",
+   "label": "Long cardigan",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/cardigan_long__ubc_male.glb",
+    "ubc_female": "garments/cardigan_long__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/cardigan_long__ubc_male.cover.json",
+    "ubc_female": "garments/cardigan_long__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CardiganLong"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/cardigan_long/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "knit",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "cargo_shorts",
+   "label": "Cargo shorts",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/cargo_shorts__ubc_male.glb",
+    "ubc_female": "garments/cargo_shorts__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/cargo_shorts__ubc_male.cover.json",
+    "ubc_female": "garments/cargo_shorts__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CargoShorts"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/cargo_shorts/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "shorts"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "chelsea_boots",
+   "label": "Chelsea boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/chelsea_boots__ubc_male.glb",
+    "ubc_female": "garments/chelsea_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/chelsea_boots__ubc_male.cover.json",
+    "ubc_female": "garments/chelsea_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_ChelseaBoots"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_ChelseaBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/chelsea_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "chinos",
+   "label": "Chinos",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/chinos__ubc_male.glb",
+    "ubc_female": "garments/chinos__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/chinos__ubc_male.cover.json",
+    "ubc_female": "garments/chinos__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Chinos"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/chinos/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "clogs",
+   "label": "Clogs",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/clogs__ubc_male.glb",
+    "ubc_female": "garments/clogs__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/clogs__ubc_male.cover.json",
+    "ubc_female": "garments/clogs__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Clogs"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_ClogsSole"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/clogs/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "flats"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "cocktail_dress",
+   "label": "Cocktail dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/cocktail_dress__ubc_male.glb",
+    "ubc_female": "garments/cocktail_dress__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/cocktail_dress__ubc_male.cover.json",
+    "ubc_female": "garments/cocktail_dress__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CocktailDress"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/cocktail_dress/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress",
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "court_shoes",
+   "label": "Court shoes",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/court_shoes__ubc_male.glb",
+    "ubc_female": "garments/court_shoes__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/court_shoes__ubc_male.cover.json",
+    "ubc_female": "garments/court_shoes__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CourtShoes"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_CourtShoesSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/court_shoes/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "formal",
+    "flats"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "cowboy_boots",
+   "label": "Western boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/cowboy_boots__ubc_male.glb",
+    "ubc_female": "garments/cowboy_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/cowboy_boots__ubc_male.cover.json",
+    "ubc_female": "garments/cowboy_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CowboyBoots"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_CowboyBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/cowboy_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "culottes",
+   "label": "Culottes",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/culottes__ubc_male.glb",
+    "ubc_female": "garments/culottes__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/culottes__ubc_male.cover.json",
+    "ubc_female": "garments/culottes__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Culottes"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/culottes/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "denim_jacket",
+   "label": "Denim jacket",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/denim_jacket__ubc_male.glb",
+    "ubc_female": "garments/denim_jacket__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/denim_jacket__ubc_male.cover.json",
+    "ubc_female": "garments/denim_jacket__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DenimJacket"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/denim_jacket/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_long_sleeve",
+   "label": "Long-sleeve dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_long_sleeve__ubc_male.glb",
+    "ubc_female": "garments/dress_long_sleeve__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_long_sleeve__ubc_male.cover.json",
+    "ubc_female": "garments/dress_long_sleeve__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressLongSleeve"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_long_sleeve/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_maxi",
+   "label": "Maxi dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_maxi__ubc_male.glb",
+    "ubc_female": "garments/dress_maxi__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_maxi__ubc_male.cover.json",
+    "ubc_female": "garments/dress_maxi__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressMaxi"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_maxi/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_mini",
+   "label": "Mini dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_mini__ubc_male.glb",
+    "ubc_female": "garments/dress_mini__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_mini__ubc_male.cover.json",
+    "ubc_female": "garments/dress_mini__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressMini"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_mini/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_off_shoulder",
+   "label": "Off-shoulder dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_off_shoulder__ubc_male.glb",
+    "ubc_female": "garments/dress_off_shoulder__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_off_shoulder__ubc_male.cover.json",
+    "ubc_female": "garments/dress_off_shoulder__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressOffShoulder"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_off_shoulder/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_sheath",
+   "label": "Sheath dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_sheath__ubc_male.glb",
+    "ubc_female": "garments/dress_sheath__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_sheath__ubc_male.cover.json",
+    "ubc_female": "garments/dress_sheath__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressSheath"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_sheath/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_shirt",
+   "label": "Shirt dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_shirt__ubc_male.glb",
+    "ubc_female": "garments/dress_shirt__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_shirt__ubc_male.cover.json",
+    "ubc_female": "garments/dress_shirt__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressShirt"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_shirt/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_slip",
+   "label": "Slip dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_slip__ubc_male.glb",
+    "ubc_female": "garments/dress_slip__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_slip__ubc_male.cover.json",
+    "ubc_female": "garments/dress_slip__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressSlip"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_slip/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_tshirt",
+   "label": "T-shirt dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_tshirt__ubc_male.glb",
+    "ubc_female": "garments/dress_tshirt__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_tshirt__ubc_male.cover.json",
+    "ubc_female": "garments/dress_tshirt__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressTshirt"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_tshirt/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_wrap",
+   "label": "Wrap dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_wrap__ubc_male.glb",
+    "ubc_female": "garments/dress_wrap__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_wrap__ubc_male.cover.json",
+    "ubc_female": "garments/dress_wrap__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressWrap"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_wrap/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dungaree_shorts",
+   "label": "Dungaree shorts",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dungaree_shorts__ubc_male.glb",
+    "ubc_female": "garments/dungaree_shorts__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dungaree_shorts__ubc_male.cover.json",
+    "ubc_female": "garments/dungaree_shorts__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DungareeShorts"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dungaree_shorts/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "overalls",
+    "shorts"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "espadrilles",
+   "label": "Espadrilles",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/espadrilles__ubc_male.glb",
+    "ubc_female": "garments/espadrilles__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/espadrilles__ubc_male.cover.json",
+    "ubc_female": "garments/espadrilles__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Espadrilles"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_EspadrillesSole"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/espadrilles/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "flats"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "flip_flops",
+   "label": "Flip-flops",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/flip_flops__ubc_male.glb",
+    "ubc_female": "garments/flip_flops__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/flip_flops__ubc_male.cover.json",
+    "ubc_female": "garments/flip_flops__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_FlipFlops"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_FlipFlopsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/flip_flops/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sandals"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "gown",
+   "label": "Evening gown",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/gown__ubc_male.glb",
+    "ubc_female": "garments/gown__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/gown__ubc_male.cover.json",
+    "ubc_female": "garments/gown__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Gown"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/gown/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress",
+    "formal",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "halter_top",
+   "label": "Halter top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/halter_top__ubc_male.glb",
+    "ubc_female": "garments/halter_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/halter_top__ubc_male.cover.json",
+    "ubc_female": "garments/halter_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_HalterTop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/halter_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "henley",
+   "label": "Henley",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/henley__ubc_male.glb",
+    "ubc_female": "garments/henley__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/henley__ubc_male.cover.json",
+    "ubc_female": "garments/henley__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Henley"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/henley/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "hiking_boots",
+   "label": "Hiking boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/hiking_boots__ubc_male.glb",
+    "ubc_female": "garments/hiking_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/hiking_boots__ubc_male.cover.json",
+    "ubc_female": "garments/hiking_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_HikingBoots"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_HikingBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/hiking_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "hoodie_crop",
+   "label": "Cropped hoodie",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/hoodie_crop__ubc_male.glb",
+    "ubc_female": "garments/hoodie_crop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/hoodie_crop__ubc_male.cover.json",
+    "ubc_female": "garments/hoodie_crop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_HoodieCrop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/hoodie_crop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "hoodie",
+    "crop"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "hot_pants",
+   "label": "Hot pants",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/hot_pants__ubc_male.glb",
+    "ubc_female": "garments/hot_pants__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/hot_pants__ubc_male.cover.json",
+    "ubc_female": "garments/hot_pants__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_HotPants"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/hot_pants/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "shorts"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jeans_low_rise",
+   "label": "Low-rise jeans",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/jeans_low_rise__ubc_male.glb",
+    "ubc_female": "garments/jeans_low_rise__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jeans_low_rise__ubc_male.cover.json",
+    "ubc_female": "garments/jeans_low_rise__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_JeansLowRise"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jeans_low_rise/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jeans"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jeans_slim",
+   "label": "Slim jeans",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/jeans_slim__ubc_male.glb",
+    "ubc_female": "garments/jeans_slim__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jeans_slim__ubc_male.cover.json",
+    "ubc_female": "garments/jeans_slim__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_JeansSlim"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jeans_slim/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jeans"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jeans_straight",
+   "label": "Straight jeans",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/jeans_straight__ubc_male.glb",
+    "ubc_female": "garments/jeans_straight__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jeans_straight__ubc_male.cover.json",
+    "ubc_female": "garments/jeans_straight__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_JeansStraight"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jeans_straight/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jeans"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "joggers",
+   "label": "Joggers",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/joggers__ubc_male.glb",
+    "ubc_female": "garments/joggers__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/joggers__ubc_male.cover.json",
+    "ubc_female": "garments/joggers__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Joggers"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/joggers/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport",
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jumpsuit",
+   "label": "Jumpsuit",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/jumpsuit__ubc_male.glb",
+    "ubc_female": "garments/jumpsuit__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jumpsuit__ubc_male.cover.json",
+    "ubc_female": "garments/jumpsuit__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Jumpsuit"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jumpsuit/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jumpsuit"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jumpsuit_sleeve",
+   "label": "Short-sleeve jumpsuit",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/jumpsuit_sleeve__ubc_male.glb",
+    "ubc_female": "garments/jumpsuit_sleeve__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jumpsuit_sleeve__ubc_male.cover.json",
+    "ubc_female": "garments/jumpsuit_sleeve__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_JumpsuitSleeve"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jumpsuit_sleeve/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jumpsuit"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "kaftan",
+   "label": "Kaftan",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/kaftan__ubc_male.glb",
+    "ubc_female": "garments/kaftan__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/kaftan__ubc_male.cover.json",
+    "ubc_female": "garments/kaftan__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Kaftan"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/kaftan/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "kimono_jacket",
+   "label": "Kimono jacket",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/kimono_jacket__ubc_male.glb",
+    "ubc_female": "garments/kimono_jacket__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/kimono_jacket__ubc_male.cover.json",
+    "ubc_female": "garments/kimono_jacket__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_KimonoJacket"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/kimono_jacket/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "knee_boots",
+   "label": "Knee boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/knee_boots__ubc_male.glb",
+    "ubc_female": "garments/knee_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/knee_boots__ubc_male.cover.json",
+    "ubc_female": "garments/knee_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_KneeBoots"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_KneeBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/knee_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "leggings",
+   "label": "Leggings",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/leggings__ubc_male.glb",
+    "ubc_female": "garments/leggings__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/leggings__ubc_male.cover.json",
+    "ubc_female": "garments/leggings__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Leggings"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/leggings/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "loafers",
+   "label": "Loafers",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/loafers__ubc_male.glb",
+    "ubc_female": "garments/loafers__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/loafers__ubc_male.cover.json",
+    "ubc_female": "garments/loafers__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Loafers"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_LoafersSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/loafers/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "longsleeve_scoop",
+   "label": "Long-sleeve scoop",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/longsleeve_scoop__ubc_male.glb",
+    "ubc_female": "garments/longsleeve_scoop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/longsleeve_scoop__ubc_male.cover.json",
+    "ubc_female": "garments/longsleeve_scoop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_LongsleeveScoop"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/longsleeve_scoop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "longsleeve_v",
+   "label": "Long-sleeve V-neck",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/longsleeve_v__ubc_male.glb",
+    "ubc_female": "garments/longsleeve_v__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/longsleeve_v__ubc_male.cover.json",
+    "ubc_female": "garments/longsleeve_v__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_LongsleeveV"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/longsleeve_v/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "moccasins",
+   "label": "Moccasins",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/moccasins__ubc_male.glb",
+    "ubc_female": "garments/moccasins__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/moccasins__ubc_male.cover.json",
+    "ubc_female": "garments/moccasins__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Moccasins"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_MoccasinsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/moccasins/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "flats"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "mock_neck",
+   "label": "Mock-neck top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/mock_neck__ubc_male.glb",
+    "ubc_female": "garments/mock_neck__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/mock_neck__ubc_male.cover.json",
+    "ubc_female": "garments/mock_neck__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_MockNeck"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/mock_neck/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "mules",
+   "label": "Mules",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/mules__ubc_male.glb",
+    "ubc_female": "garments/mules__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/mules__ubc_male.cover.json",
+    "ubc_female": "garments/mules__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Mules"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_MulesSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/mules/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "flats"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "nightgown",
+   "label": "Nightgown",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/nightgown__ubc_male.glb",
+    "ubc_female": "garments/nightgown__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/nightgown__ubc_male.cover.json",
+    "ubc_female": "garments/nightgown__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Nightgown"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/nightgown/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress",
+    "sleep",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "off_shoulder_long",
+   "label": "Off-shoulder sweater",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/off_shoulder_long__ubc_male.glb",
+    "ubc_female": "garments/off_shoulder_long__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/off_shoulder_long__ubc_male.cover.json",
+    "ubc_female": "garments/off_shoulder_long__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_OffShoulderLong"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/off_shoulder_long/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "off_shoulder_top",
+   "label": "Off-shoulder top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/off_shoulder_top__ubc_male.glb",
+    "ubc_female": "garments/off_shoulder_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/off_shoulder_top__ubc_male.cover.json",
+    "ubc_female": "garments/off_shoulder_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_OffShoulderTop"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/off_shoulder_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "oxfords",
+   "label": "Oxfords",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/oxfords__ubc_male.glb",
+    "ubc_female": "garments/oxfords__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/oxfords__ubc_male.cover.json",
+    "ubc_female": "garments/oxfords__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Oxfords"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_OxfordsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/oxfords/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "peplum_top",
+   "label": "Peplum top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/peplum_top__ubc_male.glb",
+    "ubc_female": "garments/peplum_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/peplum_top__ubc_male.cover.json",
+    "ubc_female": "garments/peplum_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_PeplumTop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/peplum_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "pinafore_dress",
+   "label": "Pinafore dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/pinafore_dress__ubc_male.glb",
+    "ubc_female": "garments/pinafore_dress__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/pinafore_dress__ubc_male.cover.json",
+    "ubc_female": "garments/pinafore_dress__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_PinaforeDress"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/pinafore_dress/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "platform_sneakers",
+   "label": "Platform sneakers",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/platform_sneakers__ubc_male.glb",
+    "ubc_female": "garments/platform_sneakers__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/platform_sneakers__ubc_male.cover.json",
+    "ubc_female": "garments/platform_sneakers__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_PlatformSneakers"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_PlatformSneakersSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/platform_sneakers/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sneakers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "polo_like",
+   "label": "Collar tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/polo_like__ubc_male.glb",
+    "ubc_female": "garments/polo_like__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/polo_like__ubc_male.cover.json",
+    "ubc_female": "garments/polo_like__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_PoloLike"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/polo_like/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "puffer",
+   "label": "Puffer jacket",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/puffer__ubc_male.glb",
+    "ubc_female": "garments/puffer__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/puffer__ubc_male.cover.json",
+    "ubc_female": "garments/puffer__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Puffer"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/puffer/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "coat",
+    "warm"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "puffer_vest",
+   "label": "Puffer vest",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/puffer_vest__ubc_male.glb",
+    "ubc_female": "garments/puffer_vest__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/puffer_vest__ubc_male.cover.json",
+    "ubc_female": "garments/puffer_vest__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_PufferVest"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/puffer_vest/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "vest",
+    "warm"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "raglan_tee",
+   "label": "Raglan tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/raglan_tee__ubc_male.glb",
+    "ubc_female": "garments/raglan_tee__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/raglan_tee__ubc_male.cover.json",
+    "ubc_female": "garments/raglan_tee__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_RaglanTee"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/raglan_tee/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "rain_boots",
+   "label": "Rain boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/rain_boots__ubc_male.glb",
+    "ubc_female": "garments/rain_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/rain_boots__ubc_male.cover.json",
+    "ubc_female": "garments/rain_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_RainBoots"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_RainBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/rain_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "raincoat",
+   "label": "Raincoat",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/raincoat__ubc_male.glb",
+    "ubc_female": "garments/raincoat__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/raincoat__ubc_male.cover.json",
+    "ubc_female": "garments/raincoat__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Raincoat"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/raincoat/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "coat"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "romper",
+   "label": "Romper",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/romper__ubc_male.glb",
+    "ubc_female": "garments/romper__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/romper__ubc_male.cover.json",
+    "ubc_female": "garments/romper__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Romper"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/romper/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jumpsuit"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "rugby_top",
+   "label": "Rugby top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/rugby_top__ubc_male.glb",
+    "ubc_female": "garments/rugby_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/rugby_top__ubc_male.cover.json",
+    "ubc_female": "garments/rugby_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_RugbyTop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/rugby_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "sport",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "running_shoes",
+   "label": "Running shoes",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/running_shoes__ubc_male.glb",
+    "ubc_female": "garments/running_shoes__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/running_shoes__ubc_male.cover.json",
+    "ubc_female": "garments/running_shoes__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_RunningShoes"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_RunningShoesSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/running_shoes/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sneakers",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sandals",
+   "label": "Sandals",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/sandals__ubc_male.glb",
+    "ubc_female": "garments/sandals__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sandals__ubc_male.cover.json",
+    "ubc_female": "garments/sandals__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Sandals"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_SandalsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sandals/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sandals"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "shacket",
+   "label": "Overshirt",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/shacket__ubc_male.glb",
+    "ubc_female": "garments/shacket__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/shacket__ubc_male.cover.json",
+    "ubc_female": "garments/shacket__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Shacket"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/shacket/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "shorts_short",
+   "label": "Short shorts",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/shorts_short__ubc_male.glb",
+    "ubc_female": "garments/shorts_short__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/shorts_short__ubc_male.cover.json",
+    "ubc_female": "garments/shorts_short__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_ShortsShort"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/shorts_short/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "shorts"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_flared",
+   "label": "Flared skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_flared__ubc_male.glb",
+    "ubc_female": "garments/skirt_flared__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_flared__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_flared__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtFlared"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_flared/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_maxi",
+   "label": "Maxi skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_maxi__ubc_male.glb",
+    "ubc_female": "garments/skirt_maxi__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_maxi__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_maxi__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtMaxi"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_maxi/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_midi",
+   "label": "Midi skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_midi__ubc_male.glb",
+    "ubc_female": "garments/skirt_midi__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_midi__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_midi__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtMidi"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_midi/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_mini",
+   "label": "Mini skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_mini__ubc_male.glb",
+    "ubc_female": "garments/skirt_mini__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_mini__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_mini__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtMini"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_mini/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_pencil",
+   "label": "Pencil skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_pencil__ubc_male.glb",
+    "ubc_female": "garments/skirt_pencil__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_pencil__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_pencil__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtPencil"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_pencil/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt",
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_tiered",
+   "label": "Tiered skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_tiered__ubc_male.glb",
+    "ubc_female": "garments/skirt_tiered__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_tiered__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_tiered__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtTiered"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_tiered/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skort",
+   "label": "Skort",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skort__ubc_male.glb",
+    "ubc_female": "garments/skort__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skort__ubc_male.cover.json",
+    "ubc_female": "garments/skort__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Skort"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skort/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt",
+    "shorts",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "slides",
+   "label": "Slides",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/slides__ubc_male.glb",
+    "ubc_female": "garments/slides__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/slides__ubc_male.cover.json",
+    "ubc_female": "garments/slides__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Slides"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_SlidesSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/slides/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sandals"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "slippers",
+   "label": "Slippers",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/slippers__ubc_male.glb",
+    "ubc_female": "garments/slippers__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/slippers__ubc_male.cover.json",
+    "ubc_female": "garments/slippers__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Slippers"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_SlippersSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/slippers/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "home"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "snow_boots",
+   "label": "Snow boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/snow_boots__ubc_male.glb",
+    "ubc_female": "garments/snow_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/snow_boots__ubc_male.cover.json",
+    "ubc_female": "garments/snow_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SnowBoots"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_SnowBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/snow_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots",
+    "warm"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sport_bra_top",
+   "label": "Sports top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/sport_bra_top__ubc_male.glb",
+    "ubc_female": "garments/sport_bra_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sport_bra_top__ubc_male.cover.json",
+    "ubc_female": "garments/sport_bra_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SportBraTop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sport_bra_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport",
+    "crop"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sundress",
+   "label": "Sundress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/sundress__ubc_male.glb",
+    "ubc_female": "garments/sundress__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sundress__ubc_male.cover.json",
+    "ubc_female": "garments/sundress__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Sundress"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sundress/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sweater_crew",
+   "label": "Crew sweater",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/sweater_crew__ubc_male.glb",
+    "ubc_female": "garments/sweater_crew__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sweater_crew__ubc_male.cover.json",
+    "ubc_female": "garments/sweater_crew__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SweaterCrew"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sweater_crew/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sweater_crop",
+   "label": "Cropped sweater",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/sweater_crop__ubc_male.glb",
+    "ubc_female": "garments/sweater_crop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sweater_crop__ubc_male.cover.json",
+    "ubc_female": "garments/sweater_crop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SweaterCrop"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sweater_crop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "crop"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sweater_v",
+   "label": "V-neck sweater",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/sweater_v__ubc_male.glb",
+    "ubc_female": "garments/sweater_v__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sweater_v__ubc_male.cover.json",
+    "ubc_female": "garments/sweater_v__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SweaterV"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sweater_v/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sweatpants",
+   "label": "Sweatpants",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/sweatpants__ubc_male.glb",
+    "ubc_female": "garments/sweatpants__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sweatpants__ubc_male.cover.json",
+    "ubc_female": "garments/sweatpants__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Sweatpants"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sweatpants/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport",
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sweatshirt",
+   "label": "Sweatshirt",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/sweatshirt__ubc_male.glb",
+    "ubc_female": "garments/sweatshirt__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sweatshirt__ubc_male.cover.json",
+    "ubc_female": "garments/sweatshirt__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Sweatshirt"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sweatshirt/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tank_crew",
+   "label": "Crew tank",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tank_crew__ubc_male.glb",
+    "ubc_female": "garments/tank_crew__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tank_crew__ubc_male.cover.json",
+    "ubc_female": "garments/tank_crew__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TankCrew"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tank_crew/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tank_crop",
+   "label": "Cropped tank",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tank_crop__ubc_male.glb",
+    "ubc_female": "garments/tank_crop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tank_crop__ubc_male.cover.json",
+    "ubc_female": "garments/tank_crop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TankCrop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tank_crop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank",
+    "crop"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tank_racer",
+   "label": "Racerback tank",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tank_racer__ubc_male.glb",
+    "ubc_female": "garments/tank_racer__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tank_racer__ubc_male.cover.json",
+    "ubc_female": "garments/tank_racer__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TankRacer"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tank_racer/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tank_v",
+   "label": "V-neck tank",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tank_v__ubc_male.glb",
+    "ubc_female": "garments/tank_v__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tank_v__ubc_male.cover.json",
+    "ubc_female": "garments/tank_v__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TankV"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tank_v/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tee_cap",
+   "label": "Cap-sleeve tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_cap__ubc_male.glb",
+    "ubc_female": "garments/tee_cap__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_cap__ubc_male.cover.json",
+    "ubc_female": "garments/tee_cap__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeCap"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_cap/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tee_crop",
+   "label": "Cropped tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_crop__ubc_male.glb",
+    "ubc_female": "garments/tee_crop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_crop__ubc_male.cover.json",
+    "ubc_female": "garments/tee_crop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeCrop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_crop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee",
+    "crop"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tee_elbow",
+   "label": "Elbow-sleeve tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_elbow__ubc_male.glb",
+    "ubc_female": "garments/tee_elbow__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_elbow__ubc_male.cover.json",
+    "ubc_female": "garments/tee_elbow__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeElbow"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_elbow/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tee_long",
+   "label": "Long-sleeve tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_long__ubc_male.glb",
+    "ubc_female": "garments/tee_long__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_long__ubc_male.cover.json",
+    "ubc_female": "garments/tee_long__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeLong"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_long/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tee_scoop",
+   "label": "Scoop tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_scoop__ubc_male.glb",
+    "ubc_female": "garments/tee_scoop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_scoop__ubc_male.cover.json",
+    "ubc_female": "garments/tee_scoop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeScoop"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_scoop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tee_square",
+   "label": "Square-neck tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_square__ubc_male.glb",
+    "ubc_female": "garments/tee_square__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_square__ubc_male.cover.json",
+    "ubc_female": "garments/tee_square__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeSquare"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_square/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "three_quarter_top",
+   "label": "Three-quarter top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/three_quarter_top__ubc_male.glb",
+    "ubc_female": "garments/three_quarter_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/three_quarter_top__ubc_male.cover.json",
+    "ubc_female": "garments/three_quarter_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_ThreeQuarterTop"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/three_quarter_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "track_pants",
+   "label": "Track pants",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/track_pants__ubc_male.glb",
+    "ubc_female": "garments/track_pants__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/track_pants__ubc_male.cover.json",
+    "ubc_female": "garments/track_pants__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TrackPants"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/track_pants/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport",
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tracksuit",
+   "label": "Tracksuit",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/tracksuit__ubc_male.glb",
+    "ubc_female": "garments/tracksuit__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tracksuit__ubc_male.cover.json",
+    "ubc_female": "garments/tracksuit__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Tracksuit"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tracksuit/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sport",
+    "jumpsuit"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "trench_coat",
+   "label": "Trench coat",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/trench_coat__ubc_male.glb",
+    "ubc_female": "garments/trench_coat__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/trench_coat__ubc_male.cover.json",
+    "ubc_female": "garments/trench_coat__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TrenchCoat"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/trench_coat/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "coat",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "trousers_high",
+   "label": "High-waist trousers",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/trousers_high__ubc_male.glb",
+    "ubc_female": "garments/trousers_high__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/trousers_high__ubc_male.cover.json",
+    "ubc_female": "garments/trousers_high__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TrousersHigh"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/trousers_high/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "trousers",
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "trousers_wide",
+   "label": "Wide trousers",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/trousers_wide__ubc_male.glb",
+    "ubc_female": "garments/trousers_wide__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/trousers_wide__ubc_male.cover.json",
+    "ubc_female": "garments/trousers_wide__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TrousersWide"
+     ],
+     "default": "#b9b4aa",
+     "palette": [
+      "#b9b4aa",
+      "#7a7a7a",
+      "#e8e2d6",
+      "#4a4a4a",
+      "#8a7560",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/trousers_wide/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "trousers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tube_top",
+   "label": "Tube top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tube_top__ubc_male.glb",
+    "ubc_female": "garments/tube_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tube_top__ubc_male.cover.json",
+    "ubc_female": "garments/tube_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TubeTop"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tube_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank",
+    "crop"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tunic",
+   "label": "Tunic",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tunic__ubc_male.glb",
+    "ubc_female": "garments/tunic__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tunic__ubc_male.cover.json",
+    "ubc_female": "garments/tunic__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Tunic"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tunic/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "turtleneck",
+   "label": "Turtleneck",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/turtleneck__ubc_male.glb",
+    "ubc_female": "garments/turtleneck__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/turtleneck__ubc_male.cover.json",
+    "ubc_female": "garments/turtleneck__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Turtleneck"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/turtleneck/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sweater",
+    "long"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "vest_open",
+   "label": "Open vest",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/vest_open__ubc_male.glb",
+    "ubc_female": "garments/vest_open__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/vest_open__ubc_male.cover.json",
+    "ubc_female": "garments/vest_open__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_VestOpen"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/vest_open/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "vest"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "waistcoat",
+   "label": "Waistcoat",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/waistcoat__ubc_male.glb",
+    "ubc_female": "garments/waistcoat__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/waistcoat__ubc_male.cover.json",
+    "ubc_female": "garments/waistcoat__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Waistcoat"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/waistcoat/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "vest",
+    "formal"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "windbreaker",
+   "label": "Windbreaker",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/windbreaker__ubc_male.glb",
+    "ubc_female": "garments/windbreaker__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/windbreaker__ubc_male.cover.json",
+    "ubc_female": "garments/windbreaker__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Windbreaker"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/windbreaker/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket",
+    "sport"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "work_boots",
+   "label": "Work boots",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/work_boots__ubc_male.glb",
+    "ubc_female": "garments/work_boots__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/work_boots__ubc_male.cover.json",
+    "ubc_female": "garments/work_boots__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_WorkBoots"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_WorkBootsSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/work_boots/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "boots"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "wrap_top",
+   "label": "Wrap top",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/wrap_top__ubc_male.glb",
+    "ubc_female": "garments/wrap_top__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/wrap_top__ubc_male.cover.json",
+    "ubc_female": "garments/wrap_top__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_WrapTop"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/wrap_top/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "blouse"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
   }
  ],
  "hairstyles": [
