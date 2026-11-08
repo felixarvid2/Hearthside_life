@@ -25,31 +25,29 @@ export function nearbyObjectWithTag(ctx: SimCtx, p: Person, tag: string): boolea
  * the potter. Its recorded price is its value at the potter's Creativity level, so selling it in Build mode returns 80% of it.
  */
 export function placePot(ctx: SimCtx, p: Person): void {
-  {
-    const loc = lotLoc(p);
-    const def = ctx.content.objects['pot-handmade'];
-    const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
-    if (!loc || !def || !lot) return;
-    const level = p.skills.creativity?.level ?? 1;
-    const from = { x: Math.floor(loc.x), z: Math.floor(loc.z) };
-    for (let r = 1; r <= 2; r++) {
-      for (let dz = -r; dz <= r; dz++) {
-        for (let dx = -r; dx <= r; dx++) {
-          if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
-          const at = { x: from.x + dx, z: from.z + dz, rot: 0 as const, level: loc.level };
-          if (!validatePlacement(ctx.state, ctx.content, lot.id, { defId: def.id, ...at }).ok) continue;
-          const obj = makePlacedObject(ctx.state, def, at, {
-            ownerHouseholdId: lot.ownerHouseholdId, purchasePrice: potValue(level), boughtAt: ctx.now - 1440,
-          });
-          lot.objects[obj.id] = obj;
-          ctx.events.emit({ type: 'lot.changed', lotId: lot.id, what: 'objects' });
-          addFeed(ctx.state, ctx.events, 'info', `${p.firstName} threw a pot.`, p.id);
-          return;
-        }
+  const loc = lotLoc(p);
+  const def = ctx.content.objects['pot-handmade'];
+  const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+  if (!loc || !def || !lot) return;
+  const level = p.skills.creativity?.level ?? 1;
+  const from = { x: Math.floor(loc.x), z: Math.floor(loc.z) };
+  for (let r = 1; r <= 2; r++) {
+    for (let dz = -r; dz <= r; dz++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+        const at = { x: from.x + dx, z: from.z + dz, rot: 0 as const, level: loc.level };
+        if (!validatePlacement(ctx.state, ctx.content, lot.id, { defId: def.id, ...at }).ok) continue;
+        const obj = makePlacedObject(ctx.state, def, at, {
+          ownerHouseholdId: lot.ownerHouseholdId, purchasePrice: potValue(level), boughtAt: ctx.now - 1440,
+        });
+        lot.objects[obj.id] = obj;
+        ctx.events.emit({ type: 'lot.changed', lotId: lot.id, what: 'objects' });
+        addFeed(ctx.state, ctx.events, 'info', `${p.firstName} threw a pot.`, p.id);
+        return;
       }
     }
-    addFeed(ctx.state, ctx.events, 'info', `${p.firstName} threw a pot, but there was no room to put it down.`, p.id);
   }
+  addFeed(ctx.state, ctx.events, 'info', `${p.firstName} threw a pot, but there was no room to put it down.`, p.id);
 }
 
 // ---------------------------------------------------------------------------------------------

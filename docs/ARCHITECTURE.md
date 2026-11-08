@@ -162,7 +162,7 @@ The UI talks to it only through the build section of `GameAPI` (documented at th
   walls, hatched demolition/conflicts, floor tiles, ghost door/window, room outline), fed by `Game.refreshBuildPreview` from
   `buildHighlight()`; `GameAPI.highlightRoom(uid)` outlines a room; `thumbnails.opening(defId)` renders door/window pictures
   (`render/openingThumbs.ts`, one per frame). `render/lotView.ts` cuts a hole in every edge a wide opening spans (and in the posts between).
-- Not done yet: move/resize/duplicate whole rooms (delete room exists), wall height change on existing walls, diagonal walls, upper floors.
+- Milestone 13 added move, resize and duplicate for whole rectangular rooms (next section). Not done yet: wall height change on existing walls, diagonal walls.
 
 ### Venue and home layouts (Milestone 7)
 
@@ -872,6 +872,14 @@ settings screen has Seasons, Weather, season length and Weather effects. All new
 schema 1: `WorldState.weather`, `SimSettings.seasons/seasonDays/weather` and `GameSettings.weatherEffects`;
 `fillWeatherDefaults` repairs malformed plans and drops them without rerolling a valid one.
 
+**Milestone 13 additions.** Shade counts as shelter (`ObjectDef.shelter`, `shadedAt`, `isSheltered`; see "Furnishings that work").
+Rain melts snow: `WeatherState.melt` (optional) collects the minutes of rain that fall on a settled `snowCover` (`meltSnowCover`, called
+once per tick after `ensureWeather`); at `RAIN_MELT_MINUTES` (180, one rainy half-day) the cover is gone and does not come back that
+day; snowfall resets the counter, a midnight re-plan keeps it, and a rainy day counts as two warm days for a snowman. The forecast
+(`forecastDays`, `forecastLines`, `FORECAST_DAYS` = 5) is pure: today and tomorrow are the stored plan, later days come from the same
+`planFor(seed, day, half, season)` the daily re-plan uses, so a day's forecast never changes and equals what the plan stores when the
+day arrives; the feed panel lists the five days ("Today", "Tomorrow", then weekday names). Tests: `tests/unit/sim/weather-m13.test.ts`.
+
 **Debug.** `window.hearthside.debug.setWeather(kind)` pins the current day's stored plan (current, today, tomorrow,
 day/since) and keeps settled `snowCover`, so acceptance steps are independent of the world seed; `ensureWeather`
 keeps a same-day plan, so it lasts until midnight.
@@ -909,6 +917,13 @@ cancel request use the new `cancelGraceful` hook: the action moves into `exit`, 
 ends on the ladder deck (`backX/backZ` point at the deck, so even `failNow` cannot leave a swimmer in the water). An
 outdoor pool refuses swimming while it snows ("It is snowing."); a roofed pool stays open. Autonomy adds pool
 candidates with the fun utility. Everyone has a `swim` outfit through `defaultWardrobe`, so no new garments.
+
+**Toddlers (Milestone 13).** Toddlers cannot swim: the water menu shows `swimInPool` greyed with "too little to swim. Toddlers can paddle
+at the pool edge with a grown-up watching." Instead `paddleAtEdge` (tile interaction, toddlers only, behavior `paddle` in `sim/pool.ts`)
+puts the toddler on the dry deck tile beside the water (`poolBesideTile`, `nearestPoolEdgeTile`); it needs an awake teen or older within
+`SUPERVISION_RADIUS` (8 tiles) on the same level when it starts, and the action ends the moment nobody watches. The toddler never enters
+the water. Tests: `tests/unit/sim/toddlerPool.test.ts`. The yoga mat stays a rug (walkable): people walk over it and use it from its
+use slot, so it is not a blockage by design.
 
 **Rendering.** The basin is a recessed floor with inner walls and a coping ring in the style colours; water is one
 plane per pool with a small texture-free `ShaderMaterial` (two scrolling ripples and a caustic pattern, transparent,
@@ -977,3 +992,76 @@ clamps the fraction per action id, writes at most 10 times a second, shows a gre
 (or grey at the stop point when cancelled/failed), and follows the `actionProgress: 'household' | 'all' | 'off'`
 setting (default Household). The pill is the first child of the existing `.wo-p` column, so it stacks above the name
 tag/thought bubble and never blocks the world.
+
+## Room operations: move, resize, duplicate (Milestone 13)
+
+Files: `building/roomOps.ts` (pure plan and diff), `building/roomCommands.ts` (undoable `roomCommand`, factories `moveRoom`,
+`resizeRoom`, `duplicateRoom`), `game/core/build.ts` (`roomEdit` tool -> `RoomOp`, preview, apply), `ui/build/roomEditTools.ts`
+(controls), `ui/build/buildSession.ts` (`startRoomEdit`, `adjustRoomEdit`). Tests: `tests/unit/building/roomOps.test.ts`,
+`tests/unit/ui/buildSession.test.ts` ("room edit"), acceptance step 15.
+
+- **Scope.** An enclosed, rectangular room (`rectangularRoomAt`: its tiles fill their bounding rectangle). L-shaped and
+  other rooms are refused with a reason. Works on every level; the structure rules of upper floors come from `validateDiff`.
+- **Plan.** `planRoomOp(state, content, lotId, householdId, op) -> RoomOpPlan` (`ok, reasons, cost, charge, refund, from, to, counts,
+  diff: RoomDiff, highlight, measure`). `RoomDiff` is a `BuildDiff` (walls, openings, floors) plus `moves` (furniture), `adds`
+  (copied furniture, ids `pending:obj:n`) and `items` (food on moved furniture). Nothing mutates state or allocates ids.
+- **Move** shifts walls, doors and windows in them, floor, furniture and the food on it by (dx, dz); the net cost is 0 (the walls keep
+  their paid prices). A wall shared with the next room stays where it is (the neighbour keeps it) and the moved room gets a new wall on
+  that side; doors in shared walls stay with them. **Resize** moves one side by `delta` tiles: new walls and floor are priced like
+  building, removed ones refunded like demolition; doors and windows on the moving side move with it, those on removed stubs are
+  refunded. **Duplicate** copies the shell at today's prices (walls, floor, openings); `copyObjects` buys the furniture again, with
+  surface items attached to their copied support. The copy may not overlap the original.
+- **Validation.** Destination on the lot and outside every other indoor room; no wall through the new interior; people in the room or
+  its destination block a move, people in a removed strip block a shrink (nobody is pushed); furniture in a removed strip blocks a
+  shrink ("Clear the X out of the strip first"); the structural part runs through `validateDiff` (walls through furniture, wall items
+  losing their wall, doors without walls, walled-in people, unreachable furniture, upper-floor support) with the moving furniture
+  taken out first; every moved or copied object is then placed again through `validatePlacement` in the new structure (collisions,
+  wall items on solid wall, access), supports before the items on them.
+- **Command.** One transaction like every build command: apply = plan, one `transact` for the net cost, real ids, write the diff,
+  `lot.changed` (what `all`); a rejected apply changes nothing (not even `nextId`); revert restores the captured records and reverses the
+  money that moved; reapply re-checks `roomDiffMatches` and the structure rules and re-charges the captured amount.
+- **UI.** With no tool, tapping a room selects it; the Paint tab then shows Move, Resize, Copy and Demolish (44 px buttons). Move and
+  Copy show an arrow pad (one tile per press, touch or mouse), Resize a side selector with Smaller and Bigger, Copy a "copy the
+  furniture too" switch. The footer shows the live preview (measure, walls, cost or Free, or the reason) and Apply; Esc or Cancel
+  clears. A mouse click only re-aims the preview (a room edit never applies without Apply); hover previews are off for this tool.
+
+## Furnishings that work (Milestone 13)
+
+Files: `content/interactionsFurnishings.ts` (the interactions), `content/furnishingUse.ts` (patches older designs, the handmade pot),
+`sim/furnishings.ts` (pot, fish in the fridge, the object test of the two-player games), `objectsM10/decor-hobby.ts` and
+`tools/furniture-extra/m10/decor-hobby.mjs` (five new designs), `render/objectAnim.ts` (door timing), `characters/stagePose.ts`
+(recline, curl). Tests: `tests/unit/integration/furnishings-m13.test.ts`.
+
+- **Games.** New designs `pool-table-classic`, `dartboard-cabinet`, `foosball-table`, `table-tennis-table` (interactions `playPool`,
+  `throwDarts`, `playFoosball`, `playTableTennis`: fun, a moodlet, table tennis also trains Fitness). With two people: socials
+  `playPoolTogether`, `playDartsTogether`, `playFoosballTogether`, `playTableTennisTogether` carry `requires.objectTag` (the actor's lot
+  and level needs a working object with that tag); the pair chat as usual, there is no walk to the table.
+- **Pottery.** `pottery-wheel`: `throwPottery` (Creativity xp, fun) places a Handmade Pot (`pot-handmade`, status dev, `proc:pot` mesh) on a
+  free tile near the potter; its recorded price is `potValue(creativity level)` and it was "bought yesterday", so Build mode sells it
+  for 80 % of that. `sellPottery` pays a freelance fee once through `transact`.
+- **Instruments.** `drum-kit-display`, `harp-concert`, `cello-stand` gained a use slot and `playDrums`, `playHarp`, `playCello`
+  (behavior `computer`: sit at a chair in front when there is one; Music xp, Creativity as secondary skill, fun).
+- **Recliners.** `reclineBack` (seated, +12 energy per hour): `peopleView` calls `PersonView.setRecline` while the action performs and
+  `CharacterView` leans the spine back (`RECLINE_LEAN`, a negative stoop) while seated. The modular view shows the plain seated pose.
+  **Sofa bed** `sofa-bed-convertible` has a `sleep` slot along its length (sleep, nap, sit). Storage beds already offered Sleep.
+- **Microwave, laundry.** `microwaveMeal` (6 min, $4, +35 hunger, behavior `snack`) and `doLaundry` (40 min, +14 hygiene on completion,
+  `freshLaundry` moodlet, a little Handiness). The microwave and the washers and dryers are now `functional`: they wear out and can be
+  repaired like any appliance. Door and drum are driven by the running action: the microwave door is open the first and last
+  `MICROWAVE_DOOR_MINUTES` (1), the washer door or lid the first and last `LAUNDRY_DOOR_MINUTES` (3), the drum and light turn throughout.
+- **Fish in the fridge.** `WorldItem.stored` (optional). The item interaction `storeFish` (walk to the fish, pick it up, walk to a
+  fridge, put it in) sets `stored`, moves it to the fridge and multiplies the remaining shelf life by `FRIDGE_SPOIL_FACTOR` (3). Stored
+  items are not drawn, not eaten (`eatMeal` and `availableMeals` refuse them) and not sold. The recipe `pan-fried-fish`
+  (`RecipeDef.ingredient: 'fish'`, $4 of butter and lemon) is never chosen automatically; the fridge menu offers "Cook the Catch" when a
+  stored fish exists, `cookMeal` takes the oldest stored fish when cooking starts and serves one portion per fish portion.
+- **Shade.** `ObjectDef.shelter` (tiles around the footprint): `parasol-standing`, `table-patio`, `garden-arbour` have 1.
+  `sim/weather.ts` `shadedAt` / `isSheltered`: a person in the shade counts as sheltered (the rain and snow moodlets, the `sheltered`
+  gate). Shade does not make a tile indoors (`outdoorsAt` is unchanged).
+
+## Babies and walking (Milestone 13)
+
+- **Curled pose.** A lying baby that nobody holds draws its knees up and folds its forearms (`CURL_BONES`, `applyCurl`, eased in and out
+  by `CharacterView`); a held baby keeps the carrier's cradle pose.
+- **Walk cycle speed.** `peopleView` measures each person's ground speed (tiles per real second, smoothed) and passes
+  `speed / WALK_TILES_PER_MINUTE` to `PersonView.setWalkRate`; `Animator.setWalkRate` multiplies the locomotion clips' speed by it (on top of
+  the stage's cadence). At normal game speed nothing changes; at Fast and Very fast the legs no longer skate, and a slow route no longer
+  runs the clip at full speed.

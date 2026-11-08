@@ -241,15 +241,26 @@ changes for existing saves or styles.
 
 ## Known issues
 
+- Milestone 13 (furnishings, rooms, babies; this branch):
+  - The game socials (`playPoolTogether` and the others) only need the object somewhere on the lot and level; the pair do not walk to it.
+  - The sofa bed's `sleep` slot and its two sit slots can be used at the same time (a sleeper and a sitter overlap).
+  - Room edits work on rectangular rooms only; moving a room never moves people (anyone inside blocks it). Moving is free, copying and
+    resizing are priced like building. There is no drag handle on the room: the arrow pad moves one tile per press.
+  - The recliner lean and the baby curl are bone poses measured by eye (no render check ran in CI); look at them in the browser
+    (select a person at a recliner, open the baby's crib).
+
 - M8 family and life stages:
   - Town children are only generated for new worlds; older saves keep their childless town households.
   - The sitter only serves the household you play.
   - The move-out dialog scrolls in phone landscape.
-  - Babies have no curled pose. Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry).
-  - Feet slide a little when walking.
+  - Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry). Babies now lie curled (Milestone 13;
+    the modular adult view has no spine effects, so its recliner pose is the plain seated one).
+  - Feet slid when walking at Fast and Very fast speed; the walk cycle now follows the measured ground speed (Milestone 13). A little
+    sliding remains on turns and when a path changes speed within a tick.
   - The sim does not mark carrying explicitly (`peopleView` uses a heuristic).
 - M9 floors and exteriors:
-  - Only straight stairs are tested in acceptance. The spiral and length-4 stairs are in the catalogue but less tested.
+  - The spiral and length-4 stairs are covered by `tests/unit/integration/stairKinds-m13.test.ts` and acceptance step 15 (a spiral and
+    the grand stair are built, climbed up and down; Floor 2 stairwell checked).
   - The camera bar now has 7 buttons and was not measured on phones narrower than 390 px.
   - Roofs only draw at or below the active level, and only with the Roof toggle on.
 - M11 progression and social:
@@ -258,8 +269,10 @@ changes for existing saves or styles.
   - The six new objects have no breakage or plumbing behaviour (they are hobby/outdoor objects, not appliances); the bread
     oven is cleanable like a stove.
   - Fishing and photo walks at venues depend on the venue interaction lists; the park is the only fishing venue.
-  - The yoga mat is a rug: it can be placed under furniture and people walk over it, so it is not a blockage.
-  - The fish item uses the normal meal portion path (spoilage and eating); it is not yet a fridge-storable raw ingredient.
+  - The yoga mat is a rug: it can be placed under furniture and people walk over it, so it is not a blockage. This is by design (rugs are
+    walkable in the object model); it is not changed.
+  - A caught fish can be put in the fridge (`storeFish`, `WorldItem.stored`) and cooked with "Cook the Catch" (Milestone 13). Stored fish
+    spoil three times slower, are not shown and cannot be eaten or sold until cooked; autonomy never cooks or eats them by itself.
   - No M11 acceptance step was added; the milestone is covered by the unit/integration suites and the four visual scripts.
 - M11.5 animations and feedback:
   - The moving parts and hand props are render-side derivations: they need the action to be running and the object/person
@@ -270,11 +283,13 @@ changes for existing saves or styles.
   - The progress pill is DOM inside the world overlay; its 10 Hz sampler only updates people on screen, and the completion
     state lasts 700 ms (a screenshot needs to freeze `performance.now()`).
 - M12 seasons, weather, pools and venue:
-  - Weather is planned two days ahead only; there is no forecast beyond tomorrow. Shade from umbrellas and awnings does not
-    count as shelter (`outdoorsAt` only looks at rooms and roofs).
-  - Pools are ground level only; the water is not swimmable for toddlers (children and older), and an outdoor pool is
+  - The stored weather plan covers today and tomorrow; the five-day forecast in the feed is computed from the same deterministic planner
+    (Milestone 13), so days 3 to 5 are not stored. Shade (`ObjectDef.shelter`: parasols, the patio set, the arbour) counts as shelter from
+    rain and snow; there is no awning or patio-cover design yet, and window awnings give no shade.
+  - Pools are ground level only; toddlers cannot swim but may paddle at the deck edge with a grown-up near (Milestone 13); an outdoor pool is
     closed while it snows (a roofed pool stays open).
-  - Winter snow cover persists until the season turns or three snow-free winter days melt the snowman; rain does not melt it.
+  - Winter snow cover persists until the season turns, but three hours of rain melt it (`WeatherState.melt`); three snow-free winter days
+    (two per rainy day) melt a snowman.
   - The Quayside Baths lot exists only in worlds created after M12; old saves keep their 14 lots.
   - Rain/snow particles are capped at 1500 desktop / 600 touch and hidden by reduced motion or Weather effects off.
 - Flakes in acceptance:
