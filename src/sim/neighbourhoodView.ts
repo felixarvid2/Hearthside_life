@@ -115,6 +115,16 @@ export function peopleAt(state: WorldState, lotId: Id): Person[] {
   });
 }
 
+/**
+ * Whether a place has things to do. A built home is usable; a built venue needs objects. A lot whose layout has not been made yet
+ * is laid out on the first visit (world/lotBuilders.ts), and every layout has furniture and venue equipment, so it counts as
+ * usable now: the map no longer shows an unvisited venue as having nothing to do.
+ */
+export function lotUsable(lot: Pick<Lot, 'kind' | 'built' | 'objects'>): boolean {
+  if (lot.built === false) return true;
+  return lot.kind === 'residential' || Object.keys(lot.objects).length > 0;
+}
+
 export function neighbourhoodInfo(ctx: SimCtx): NeighbourhoodInfo {
   const state = ctx.state;
   const hh = state.households[state.activeHouseholdId];
@@ -138,7 +148,7 @@ export function neighbourhoodInfo(ctx: SimCtx): NeighbourhoodInfo {
       id: lot.id, name: lot.name, address: lot.address, kind: lot.kind, venueType: lot.venueType ?? null,
       label: venue?.label ?? 'Home', blurb: lot.blurb ?? '', map: lot.map ? { ...lot.map } : { x: 50, y: 50 },
       size: { width: lot.width, depth: lot.depth }, active: lot.id === state.activeLotId, isHome: lot.id === hh?.homeLotId,
-      built, objects, usable: lot.kind === 'residential' ? built : built && objects > 0,
+      built, objects, usable: lotUsable(lot),
       open: lotIsOpen(lot, minuteOfDay(ctx.now)), hours: venue ? hoursText(venue) : null,
       householdId: household?.id ?? null, householdName: household?.name ?? null, tenure,
       rent: lot.rent ?? null, price: lot.price ?? null,

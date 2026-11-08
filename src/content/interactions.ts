@@ -466,6 +466,13 @@ const SELF: InteractionDef[] = [
     autonomy: { enabled: false, ads: {}, tags: ['social', 'phone'] },
   }),
   def({
+    id: 'phoneMap', name: 'Neighbourhood Map', description: 'Open the street map on the phone: see what is on at the venues, who is where, and set off for a place.',
+    icon: 'map', kind: 'self', behavior: 'openMap', posture: 'standing',
+    anims: { perform: 'phone' },
+    duration: { kind: 'fixed', minutes: 1 },
+    autonomy: { enabled: false, ads: {}, tags: ['phone', 'map'] },
+  }),
+  def({
     id: 'phoneBills', name: 'Bills and Payments', description: 'Open the household bills on the phone: see what is due, pay a bill or turn automatic payment on or off.',
     icon: 'money', kind: 'self', behavior: 'openBills', posture: 'standing',
     anims: { perform: 'phone' },

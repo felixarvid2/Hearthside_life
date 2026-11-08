@@ -497,6 +497,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
         if (e.what === 'editOutfits') void openWardrobe(e.personId);
         else if (e.what === 'planEvent') openEventPlanner(sh, e.personId);
         else if (e.what === 'adopt') openAdoptDialog(sh, e.personId);
+        else if (e.what === 'map') { if (api.mode() === 'live') { closePanels(); openNeighbourhood(sh); } else toast('Return to Live mode to use the map.', 'info'); }
         else if (e.what === 'giveGift' && e.targetId) openGiftPicker(sh, e.personId, e.targetId);
         else if (e.what === 'bills') { api.select(e.personId); openPanel('bills'); }
         else if (e.what === 'careers') { api.select(e.personId); openPanel('person', { personId: e.personId, tab: 'career' }); }

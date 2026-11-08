@@ -593,6 +593,14 @@ const openBillsBehavior: Behavior = {
   apply(ctx, p) { ctx.events.emit({ type: 'ui.request', what: 'bills', personId: p.id }); },
 };
 
+/** Phone shortcut that opens the neighbourhood map (a UI request). */
+const openMapBehavior: Behavior = {
+  check: interactionCheck,
+  reserve: () => null,
+  step: primaryStep,
+  apply(ctx, p) { ctx.events.emit({ type: 'ui.request', what: 'map', personId: p.id }); },
+};
+
 /** Phone or computer job search: opens the career panel, where a new job can be taken or the current one quit. */
 const openCareersBehavior: Behavior = {
   check: interactionCheck,
@@ -795,6 +803,7 @@ function buildRegistry(): Record<string, Behavior> {
     fish: fishBehavior,
     sellCatch: sellCatchBehavior,
     openBills: openBillsBehavior,
+    openMap: openMapBehavior,
     openCareers: openCareersBehavior,
     social: socialBehavior,
     garden: gardenBehavior,
