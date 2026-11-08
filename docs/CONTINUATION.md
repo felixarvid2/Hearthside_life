@@ -11,6 +11,15 @@ gifts as objects, dates and events at venues, group chat, community events, town
 the sitter for other households, the jog track, explicit baby carrying, the phone map entry and `LotInfo.usable`. See ARCHITECTURE.md
 ("Relationships and events", "Neighbourhood", "Family and life stages") and the known issues below for what stays simple.
 
+Milestone 13 part A (branch `wt/m13a`: guidance and accessibility) is done; part B (balance, save recovery, perf harness, release
+e2e) is `wt/m13b`. Part A added: contextual hints (`ui/hud/hintState.ts`, `hints.ts`; Settings > Help: Hints, Reset hints), a Help screen
+(`screens/help.ts`), UI scale 90-150 %, High contrast, focus trap/return and roving tabs (`ui/kit/focus.ts`), WCAG AA tokens
+(`tests/unit/ui/contrast.test.ts`), a keyboard route to world objects (Queue tab > Choose an object), a room-edit panel that fits phones, and
+`npm run e2e:a11y` (`tests/e2e/a11y.mjs`, screenshots in `dev/shots/m13a/`). Test harnesses seed `hints: false` next to `tutorial: false`.
+Known and left: picking things in the 3D world still needs a pointer (the object picker is the keyboard route; people other than the
+selected one and floor/wall picks have no keyboard route); the three `tests/unit/characters3d/modular` failures (manifest count 42 vs 41,
+ubcBodies colour clamp) pre-date this work.
+
 ## Milestone status
 
 | Milestone | Systems | Content (target) | Verified |
