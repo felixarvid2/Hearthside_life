@@ -3861,6 +3861,11 @@ async function stepStairKinds(T) {
       for (const t of tiles) { if (outdoor) owner.set(t, o.id); else busy.add(t); }
     }
     for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) busy.add(`${x},${z}`);
+    // people standing on the ground floor (and the tiles around them): a room drawn around someone is refused ("would be trapped")
+    for (const pp of Object.values(st.people)) {
+      const l = pp.location; if (l.kind !== 'lot' || l.lotId !== st.activeLotId || l.level !== 0) continue;
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) busy.add(`${Math.floor(l.x) + dx},${Math.floor(l.z) + dz}`);
+    }
     const fenced = (dir, x, z) => !!lot.fences?.[`0:${dir}:${x}:${z}`];
     // with `loose`, fences do not block either: the spot lists the fence edges in the block so they can be taken down first
     const wall = (dir, x, z) => !!lot.walls[`0:${dir}:${x}:${z}`] || (!looseOk && fenced(dir, x, z));
@@ -3890,6 +3895,7 @@ async function stepStairKinds(T) {
       spot = await findSpot(used, true);
       if (spot) spot.sold = await page.evaluate(([ids, fences]) => {
         const g = window.hearthside.game;
+        if (ids.length) { g.setMode('buy'); }
         const sold = ids.map((id) => { const o = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId].objects[id]; const r = g.sell(id); return r.ok || `${o?.defId}: ${r.reason}`; });
         if (fences.length) {
           g.setMode('build');
@@ -3901,6 +3907,7 @@ async function stepStairKinds(T) {
           const lot = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId];
           for (const f of fences) sold.push(!lot.fences?.[`0:${f.dir}:${f.x}:${f.z}`]);
         }
+        g.setMode('live');
         return sold;
       }, [spot.clear, spot.fences]);
     }
