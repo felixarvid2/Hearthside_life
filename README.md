@@ -75,7 +75,7 @@ Shortcuts are ignored while a text field has focus.
 
 ## Saving
 
-Saves are stored in IndexedDB in the browser. There are 5 named slots, plus an autosave and a last-known-good backup.
+Saves are stored in IndexedDB in the browser. There are 5 named slots, plus an autosave and a last-known-good backup. Every save carries a checksum, and each slot keeps its last three good versions: a damaged slot loads the newest good one and says so. If something unexpected goes wrong while playing, a recovery dialog offers Keep playing, Reload last autosave and Export diagnostic file.
 
 Browsers on phones can clear site storage, which removes saves. Use **Export** in the game menu to keep a copy of a save as JSON, and **Import** to restore it.
 

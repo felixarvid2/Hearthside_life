@@ -24,6 +24,8 @@ export const BILL_UTILITIES_BASE: Cents = 2200;
 export const BILL_UTILITY_ELECTRONICS: Cents = 500;
 export const BILL_UTILITY_APPLIANCE: Cents = 900;
 export const BILL_LIMIT = 16;
+/** Weekly pension of an elder without a job (balance audit, docs/BALANCE.md: retired elders had no income at all). */
+export const ELDER_PENSION: Cents = 30000;
 
 const DAY_MINUTES = 1440;
 
@@ -147,6 +149,22 @@ function trimBills(state: WorldState): void {
   state.bills = bills.filter((b) => !drop.has(b.id));
 }
 
+/** Pays each retired elder (no career) of a playable household the weekly pension, once per week (occurrence `pension:<personId>:<week>`). */
+function payPensions(ctx: SimCtx, week: number): void {
+  const state = ctx.state;
+  for (const hh of Object.values(state.households)) {
+    if (!hh.isPlayable || !hh.homeLotId) continue;
+    for (const id of hh.memberIds) {
+      const p = state.people[id];
+      if (!p || p.lifeStage !== 'elder' || p.career || p.location.kind !== 'lot') continue;
+      const occurrence = `pension:${p.id}:${week}`;
+      if (isProcessed(state, occurrence)) continue;
+      const r = transact(state, ctx.events, hh.id, ELDER_PENSION, 'wage', `Pension (${p.firstName})`, { occurrence });
+      if (r.ok) addFeed(state, ctx.events, 'money', `${p.firstName} received the weekly pension: $${(ELDER_PENSION / 100).toFixed(2)}.`, p.id);
+    }
+  }
+}
+
 /** Per-tick bill processing: issue this week's bill, apply late fees and cut utilities off after the grace period. */
 export function updateBills(ctx: SimCtx): void {
   const state = ctx.state;
@@ -156,6 +174,7 @@ export function updateBills(ctx: SimCtx): void {
     if (!hh.isPlayable || !hh.homeLotId) continue;
     if (!currentWeekBill(state, hh.id, week)) issueBill(ctx, hh, week);
   }
+  payPensions(ctx, week);
   for (const bill of state.bills) {
     if (bill.status === 'paid') continue;
     if (bill.status !== 'cutoff' && bill.status !== 'overdue' && ctx.now >= bill.dueAt && bill.amount > 0) {

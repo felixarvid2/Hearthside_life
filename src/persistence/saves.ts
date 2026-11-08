@@ -1,5 +1,10 @@
 // Save slots on top of IndexedDB: five manual slots, a rolling autosave and a last-known-good backup.
 //
+// Rotating backups: before a slot is overwritten, the record it holds is copied to `<slot>#1` (older ones shift to
+// `#2` and `#3`) - but only when that record is itself intact (checksum, JSON, migration, structure), so a damaged
+// or failing save never displaces the last good copies. Loading a slot that is damaged falls back to the newest
+// good backup and says so (`recovered`). The extra keys are not listed as slots; deleting a slot deletes them.
+//
 // Every save is verified before it is written (the state must survive a JSON round trip unchanged and pass the
 // structure checks) and written as one record { meta, data, checksum } in one transaction, so a failed save never
 // damages the previous one. `data` is the world as a JSON string; the checksum exposes truncated or altered data.
@@ -16,6 +21,10 @@ import {
   SLOT_IDS, defaultSlotName, emptyMeta, isManualSlot, isSlotId, slotKind, systemClock,
   type Clock, type SaveMeta, type SlotId, type WorldReport,
 } from './types';
+
+/** Backups kept per slot, newest first (`<slot>#1` is the most recent). */
+export const BACKUPS_PER_SLOT = 3;
+export function backupKey(slotId: SlotId, n: number): string { return `${slotId}#${n}`; }
 
 /** What is stored under a slot key. */
 interface StoredSave { meta: SaveMeta; data: string; checksum: string }
@@ -35,8 +44,17 @@ export type SaveResult = { ok: true; meta: SaveMeta } | { ok: false; error: stri
 export type AutosaveResult = { ok: true; meta: SaveMeta; rotatedBackup: boolean } | { ok: false; error: string };
 export type OpResult = { ok: true } | { ok: false; error: string };
 export type LoadErrorCode = 'unavailable' | 'empty' | 'damaged' | 'invalid' | 'newer' | 'tooOld' | 'failed';
+/** Set when the slot itself was damaged and an older good copy was loaded instead. */
+export interface Recovery {
+  /** Where the loaded data came from, e.g. 'slot-1#1' or 'backup'. */
+  from: string;
+  /** When the recovered copy was saved (ISO), '' when unknown. */
+  savedAt: string;
+  /** Player-facing explanation. */
+  message: string;
+}
 export type LoadResult =
-  | { ok: true; state: WorldState; report: WorldReport; meta: SaveMeta }
+  | { ok: true; state: WorldState; report: WorldReport; meta: SaveMeta; recovered?: Recovery }
   | { ok: false; error: string; code: LoadErrorCode };
 export type ImportToSlotResult =
   | { ok: true; meta: SaveMeta; report: WorldReport }
@@ -108,6 +126,29 @@ function summarize(errors: readonly string[]): string {
   return errors.length > 1 ? `${first} (and ${errors.length - 1} more problems)` : first;
 }
 
+/** True when a stored record decodes and passes the structure checks (fit to become a backup). */
+function isIntact(slotId: SlotId, raw: unknown): raw is StoredSave {
+  if (!isRecord(raw)) return false;
+  const d = decodeStored(slotId, raw);
+  return d.ok && validateWorldStructure(d.world).errors.length === 0;
+}
+
+/**
+ * Inside a transaction: pushes `prev` (the record about to be replaced) onto the slot's backup chain when it is
+ * intact and differs from the newest backup. Returns whether it was copied.
+ */
+async function rotateChain(tx: Tx, slotId: SlotId, prev: unknown): Promise<boolean> {
+  if (!isIntact(slotId, prev)) return false;
+  const first = await tx.get<unknown>('saves', backupKey(slotId, 1));
+  if (isRecord(first) && first.checksum === prev.checksum) return false;
+  for (let n = BACKUPS_PER_SLOT; n >= 2; n--) {
+    const older = await tx.get<unknown>('saves', backupKey(slotId, n - 1));
+    if (older !== undefined) await tx.put('saves', backupKey(slotId, n), older);
+  }
+  await tx.put('saves', backupKey(slotId, 1), prev);
+  return true;
+}
+
 export class SaveStore {
   private constructor(
     private readonly db: HearthDb | null,
@@ -174,7 +215,10 @@ export class SaveStore {
     if (!isManualSlot(slotId)) return { ok: false, error: `"${String(slotId)}" is not a manual save slot. Use slot-1 to slot-5; the autosave has its own call.` };
     const p = this.prepare(slotId, name, state);
     if (!p.ok) return p;
-    const w = await this.run('readwrite', (tx) => tx.put('saves', slotId, p.record), 'save the game');
+    const w = await this.run('readwrite', async (tx) => {
+      await rotateChain(tx, slotId, await tx.get<unknown>('saves', slotId));
+      await tx.put('saves', slotId, p.record);
+    }, 'save the game');
     return w.ok ? { ok: true, meta: p.record.meta } : { ok: false, error: `Not saved. ${w.error}` };
   }
 
@@ -198,6 +242,7 @@ export class SaveStore {
           rotated = true;
         }
       }
+      await rotateChain(tx, 'autosave', prev);
       await tx.put('saves', 'autosave', p.record);
       return rotated;
     }, 'autosave');
@@ -208,10 +253,31 @@ export class SaveStore {
    * Loads a slot: parse -> migrate -> validate. Nothing in storage changes, even when the data was migrated.
    * Unknown content ids are listed in `report.missing` and stay in the state.
    */
-  async load(slotId: SlotId, content?: ContentDB): Promise<LoadResult> {
+  async load(slotId: SlotId, content?: ContentDB, opts: { recover?: boolean } = {}): Promise<LoadResult> {
+    const first = await this.loadOne(slotId, slotId, content);
+    if (first.ok || opts.recover === false || ['empty', 'unavailable', 'invalid', 'newer', 'tooOld'].includes(first.code)) return first;
+    // Damaged (or unreadable): fall back to the newest good copy and say so.
+    const keys: string[] = [];
+    if (slotId !== 'backup') {
+      for (let n = 1; n <= BACKUPS_PER_SLOT; n++) keys.push(backupKey(slotId, n));
+      if (slotId === 'autosave') keys.push('backup');
+    }
+    for (const key of keys) {
+      const r = await this.loadOne(slotId, key, content);
+      if (!r.ok) continue;
+      const label = slotLabel(slotId);
+      const when = r.meta.savedAt ? ` from ${r.meta.savedAt.replace('T', ' ').slice(0, 16)}` : '';
+      const message = `${label} was damaged and could not be opened, so the newest good backup${when} was loaded instead. The damaged data stays in storage until you save over it.`;
+      return { ...r, meta: { ...r.meta, slotId }, recovered: { from: key, savedAt: r.meta.savedAt, message } };
+    }
+    return first;
+  }
+
+  /** Reads and checks one stored key; `slotId` is the slot it is presented as. */
+  private async loadOne(slotId: SlotId, key: string, content?: ContentDB): Promise<LoadResult> {
     if (!isSlotId(slotId)) return { ok: false, code: 'invalid', error: `"${String(slotId)}" is not a save slot.` };
     const label = slotLabel(slotId);
-    const r = await this.run('readonly', (tx) => tx.get<unknown>('saves', slotId), 'read the save');
+    const r = await this.run('readonly', (tx) => tx.get<unknown>('saves', key), 'read the save');
     if (!r.ok) return { ok: false, code: r.code === 'unavailable' ? 'unavailable' : 'failed', error: r.error };
     if (r.value === undefined) return { ok: false, code: 'empty', error: `${label} is empty.` };
     const hint = slotId === 'autosave' ? ' The backup slot may still hold the previous autosave.' : '';
@@ -230,7 +296,10 @@ export class SaveStore {
   /** Deletes a slot (any of the seven). Removing an empty slot succeeds. */
   async remove(slotId: SlotId): Promise<OpResult> {
     if (!isSlotId(slotId)) return { ok: false, error: `"${String(slotId)}" is not a save slot.` };
-    const r = await this.run('readwrite', (tx) => tx.delete('saves', slotId), 'delete the save');
+    const r = await this.run('readwrite', async (tx) => {
+      await tx.delete('saves', slotId);
+      for (let n = 1; n <= BACKUPS_PER_SLOT; n++) await tx.delete('saves', backupKey(slotId, n));
+    }, 'delete the save');
     return r.ok ? { ok: true } : { ok: false, error: r.error };
   }
 

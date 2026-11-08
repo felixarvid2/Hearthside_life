@@ -37,10 +37,20 @@ export const COOKING_SKILL = 'cooking';
 export const PANTRY_MOODLET = 'stockedPantry';
 export const PANTRY_DISCOUNT = 0.4;
 
-/** Grocery cost of a recipe for this person (gardeners save on groceries). */
-export function recipeCost(p: Person, recipe: RecipeDef): number {
+/** Portions a cooked meal serves: one per household member (at least one). */
+export function mealPortions(ctx: Pick<SimCtx, 'state'>, p: Person): number {
+  return Math.max(1, ctx.state.households[p.householdId]?.memberIds.length ?? 1);
+}
+
+/**
+ * Grocery cost of a recipe for this person (gardeners save on groceries). `portions` is how many plates the cook serves: a recipe's
+ * `cost` buys all of its `servings`, so a household pays for the portions it makes (balance audit, docs/BALANCE.md: a single adult
+ * paid for four to eight servings and threw three to seven away). Without `portions` the whole dish is priced.
+ */
+export function recipeCost(p: Person, recipe: RecipeDef, portions: number = recipe.servings): number {
   const pantry = p.moodlets.some((m) => m.id === PANTRY_MOODLET) ? 1 - PANTRY_DISCOUNT : 1;
-  return Math.round(recipe.cost * (1 - gardeningGroceries(p.skills.gardening?.level ?? 1)) * pantry);
+  const share = Math.max(1, portions) / Math.max(1, recipe.servings);
+  return Math.max(1, Math.round(recipe.cost * share * (1 - gardeningGroceries(p.skills.gardening?.level ?? 1)) * pantry));
 }
 
 /** Recipes the person can cook, best first (higher level requirement, then cheaper). Baking recipes have their
@@ -66,7 +76,8 @@ export function chooseRecipe(ctx: SimCtx, p: Person, a: ActionInstance): RecipeD
   if (list.length === 0) return 'No recipes known.';
   const funds = ctx.state.households[p.householdId]?.funds ?? 0;
   // Nothing affordable: report the cheapest recipe so the reason names the smallest amount needed.
-  return list.find((r) => recipeCost(p, r) <= funds) ?? [...list].sort((x, y) => recipeCost(p, x) - recipeCost(p, y) || (x.id < y.id ? -1 : 1))[0]!;
+  const n = mealPortions(ctx, p);
+  return list.find((r) => recipeCost(p, r, n) <= funds) ?? [...list].sort((x, y) => recipeCost(p, x, n) - recipeCost(p, y, n) || (x.id < y.id ? -1 : 1))[0]!;
 }
 
 /**
@@ -185,7 +196,8 @@ export const cookBehavior: Behavior = {
       const recipe = chooseRecipe(ctx, p, a);
       if (typeof recipe === 'string') return recipe;
       const funds = ctx.state.households[p.householdId]?.funds ?? 0;
-      if (funds < recipeCost(p, recipe)) return `Not enough money for groceries ($${(recipeCost(p, recipe) / 100).toFixed(2)}).`;
+      const need = recipeCost(p, recipe, mealPortions(ctx, p));
+      if (funds < need) return `Not enough money for groceries ($${(need / 100).toFixed(2)}).`;
     }
     if (stageOf(a) <= 1 && stovesOn(ctx, p).length === 0) return stovesOn(ctx, p, true).length > 0 ? 'The stove is broken.' : 'Needs a stove.';
     return null;
@@ -232,7 +244,7 @@ export const cookBehavior: Behavior = {
     if (stageOf(a) !== 1 || a.data.charged === true) return null;
     const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
     if (!recipe) return 'Unknown recipe.';
-    const cost = recipeCost(p, recipe);
+    const cost = recipeCost(p, recipe, mealPortions(ctx, p));
     const here = lotLoc(p);
     if (recipe.ingredient === 'fish' && (!here || storedFish(ctx, here.lotId, p.householdId).length === 0)) return 'The fish is gone.';
     const r = transact(ctx.state, ctx.events, p.householdId, -cost, 'groceries', `Groceries: ${recipe.name}`, { occurrence: `cook:${a.id}` });

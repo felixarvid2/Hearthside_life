@@ -29,12 +29,39 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-/** Default quality for this device: phones and small screens start on 'low'. */
+/** What the device reports; any field may be unknown. */
+export interface DeviceSignals {
+  /** Primary pointer is coarse (a finger). */
+  coarse: boolean;
+  /** Shorter side of the screen in CSS px. */
+  minScreen: number;
+  /** navigator.deviceMemory in GB (Chromium; capped at 8 by the browser). */
+  memoryGb?: number;
+  /** navigator.hardwareConcurrency. */
+  cores?: number;
+}
+
+/**
+ * Default quality for a device: phones and small touch screens start on 'low' (their pixel budget and the lighter lighting keep the
+ * frame time down, see docs/TEST_CHECKLIST.md), and so does any device that reports little memory (2 GB or less) or a touch device
+ * with at most 4 cores and 3 GB. Large tablets, laptops and desktops start on 'high'. The player can change it in Settings.
+ */
+export function qualityFor(d: DeviceSignals): 'low' | 'high' {
+  if (d.coarse && d.minScreen < 600) return 'low';
+  if (d.memoryGb !== undefined && d.memoryGb <= 2) return 'low';
+  if (d.coarse && d.memoryGb !== undefined && d.memoryGb <= 3 && d.cores !== undefined && d.cores <= 4) return 'low';
+  return 'high';
+}
+
 export function defaultQuality(): 'low' | 'high' {
   try {
-    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-    const small = Math.min(screen.width, screen.height) < 600;
-    return coarse && small ? 'low' : 'high';
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    return qualityFor({
+      coarse: typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches,
+      minScreen: Math.min(screen.width, screen.height),
+      ...(typeof nav.deviceMemory === 'number' ? { memoryGb: nav.deviceMemory } : {}),
+      ...(typeof nav.hardwareConcurrency === 'number' ? { cores: nav.hardwareConcurrency } : {}),
+    });
   } catch {
     return 'high';
   }

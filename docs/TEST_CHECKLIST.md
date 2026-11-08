@@ -11,6 +11,9 @@ Run the relevant checks after each milestone; do not repeat unrelated tests just
 | `npm run build` | Typecheck + production Vite build |
 | `npm run content:check` | Registry validation and distinct-design counts (CONTENT_STATUS numbers) |
 | `npm run e2e` | Playwright (Chromium, SwiftShader) smoke and acceptance run with screenshots in desktop, portrait and landscape |
+| `npm run balance:audit` | Headless balance audit of five households (docs/BALANCE.md): weekly money, needs, time, careers, relationships, stuck or failed actions, and findings against the targets |
+| `npm run e2e:perf` | Frame time, draw calls, triangles, geometries, textures, JS heap and load time with seven animated people, phone portrait and landscape and desktop, classic and Quaternius (SwiftShader emulation; results below) |
+| `npm run e2e:release` | Release scenario in portrait and landscape: creator, a second floor with stairs, weeks at fast speed, job and promotion, relationships, a venue, save and reload, and the social dialogs (screenshots in `dev/shots/release/`) |
 | `npm run e2e:creator` | Milestone 3 creator acceptance through the real creator UI in 390x844 and 844x390 touch and 1280x720 desktop: live face and body sliders (preview must change), body and face presets, outfit slots with the new garments and thumbnails, hats / scarf / necklace / watch / bracelet, randomize with locks, undo/redo, household ties, appearance and household import/export (including substitutions), Move In and a comparison with the game; screenshots and `report.json` in `tests/e2e/out/creator-m3/` |
 | `npm run e2e:acceptance` | Brief section 26 acceptance scenario driven through the real interface (creator, live mode, buy, build, save/reload/load, device rotation, M6 career panel / bill payment / freelance sale, M11.5 moving parts, hand props, screens and the progress pill, M12 seasons/weather, a built pool, swimming and the Quayside Baths venue) in 390x844 and 844x390 touch and 1280x720 desktop; screenshots and `report.json` in `tests/e2e/out/acceptance/` (about 23-25 minutes per touch viewport and about 70 on desktop under SwiftShader; `--only=portrait` runs one, `--steps=13,14` just the new milestones) |
 
@@ -73,6 +76,83 @@ Record real devices separately from emulation:
 | 2026-11-03 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | Post-M9 gaps (teen part-time jobs, town children, kids' clothes, elder wrinkles, L/rectangle fences): acceptance 315/315 portrait, 313/313 landscape, 300/300 desktop; creator 288/288; e2e OK; typecheck clean, npm test 120 files / 1676 tests, content:check 0 errors 0 warnings, build passes |
 | 2026-11-03 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M11 (13 careers, 19 ready skills, 40 traits, 13 aspirations, 45 socials): acceptance 315/315 portrait, 313/313 landscape, 302/302 desktop; creator 288/288; e2e OK; typecheck clean, npm test 129 files / 1746 tests, content:check 0 errors 0 warnings, build passes |
 | 2026-11-04 | Chromium headless (SwiftShader) emulation 1280x720, 390x844, 844x390 | both | M10 surfaces (360 wall finishes, 200 floor designs): typecheck, test, content:check, build, e2e, e2e:creator, acceptance portrait/landscape/desktop - all pass (acceptance portrait 315/315, landscape 313/313, desktop 302/302) |
+
+## Measured performance, Milestone 13 (SwiftShader EMULATION, not real devices)
+
+`npm run e2e:perf` (2026-11-08, Chromium headless with SwiftShader on a shared 4-core container, no GPU). The scene is the starter lot with
+**seven animated adults** (four premade households merged, autonomy on, speed 2), measured after six seconds of settling. Phone profiles are
+390x844 and 844x390 with device scale factor 3, touch and a mobile user agent; "auto" is the quality the game chose by itself, "forced" is
+High set in Settings before loading (`--extra`). **frame p50 / p95** are the steady cost of one frame (90 synchronous frames of
+simulation and render, each ended by a pixel read-back so the software GPU has to finish); **loop fps and loop p95** come from
+`requestAnimationFrame` over 10 seconds, which under SwiftShader arrives in bursts, so read the fps and the p95 and not a p50. Load is the time from
+the page request to the main menu with a warm HTTP cache on localhost.
+
+| profile | viewport | style | quality | load s | frame p50 ms | p95 ms | loop fps | loop p95 ms | draw calls | triangles | geometries | textures | JS heap MB | people |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| portrait | 390x844 | classic | low (auto) | 3.5 | 220.8 | 247.8 | 4.8 | 900 | 205 | 203,052 | 152 | 67 | 60.1 | 7 |
+| portrait | 390x844 | quaternius | low (auto) | 2.1 | 194.1 | 211 | 6.4 | 416.6 | 333 | 226,352 | 298 | 240 | 50.5 | 7 |
+| landscape | 844x390 | classic | low (auto) | 3.1 | 205.2 | 227.7 | 5.7 | 633.3 | 210 | 203,480 | 153 | 70 | 62.1 | 7 |
+| landscape | 844x390 | quaternius | low (auto) | 2 | 182.8 | 204.4 | 6.9 | 550 | 344 | 225,484 | 297 | 242 | 44.4 | 7 |
+| desktop | 1280x720 | classic | high (auto) | 3.8 | 569.4 | 614 | 2.7 | 1950 | 386 | 399,994 | 149 | 70 | 49 | 7 |
+| desktop | 1280x720 | quaternius | high (auto) | 2.6 | 461.3 | 487.2 | 3.6 | 1000 | 452 | 260,520 | 294 | 242 | 39.6 | 7 |
+| portrait | 390x844 | classic | high (forced) | 3.2 | 615.2 | 659.7 | 3.2 | 1466.6 | 384 | 399,414 | 146 | 70 | 56.6 | 7 |
+| portrait | 390x844 | quaternius | high (forced) | 2.3 | 489.4 | 537 | 3.3 | 1033.2 | 465 | 261,160 | 292 | 241 | 73.5 | 7 |
+| landscape | 844x390 | classic | high (forced) | 3.7 | 575.2 | 606.6 | 3.1 | 2983.2 | 384 | 399,992 | 148 | 69 | 42.9 | 7 |
+| landscape | 844x390 | quaternius | high (forced) | 2.8 | 450.6 | 486.2 | 3.9 | 899.9 | 456 | 261,102 | 296 | 241 | 39.2 | 7 |
+
+What the numbers say, and what they do not:
+
+- They compare profiles with each other, not with a phone: a real GPU draws these 200,000 to 400,000 triangles in a few milliseconds, the CPU
+  does the rest. Treat the **ratios** as the finding: **Low costs about a third of High** at 390x844 (about 200 ms against 600 ms of software
+  rendering per frame), which is what the auto-detect buys phones. The pixel budget (1.2 against 2.2 million) and the missing shadows and
+  antialiasing account for it.
+- The auto-detect chose **Low on both phone profiles and High on the desktop**, as intended (`qualityFor` in `src/game/settings.ts`, unit tested).
+- **Quaternius** is cheaper to draw than the classic bodies in this scene (triangles 226,000 against 203,000 on Low, 261,000 against
+  400,000 on High; why the classic scene doubles on High was not investigated) but needs more draw calls (333 to 486 against 205 to 386) and more textures (about 240 against 68);
+  that is the figure to watch on a phone with little GPU memory.
+- JS heap stays at 40 to 75 MB in every profile; geometries 150 (classic) and about 295 (Quaternius).
+- Load to menu is 2 to 4 seconds locally (the chunks are cached); a cold phone connection will take longer. Not measured here.
+
+### How to measure on a real phone
+
+SwiftShader numbers say nothing about a phone's GPU. To measure a real device (log it in the Device log above):
+
+1. Build and serve on the local network: `npm run build:dist && npm run preview -- --host`, then open `http://<computer-ip>:4173/` on the phone
+   (same Wi-Fi). Add `?debug` to the address to show the performance overlay (fps, frame ms, draw calls, triangles, geometries, textures).
+2. Remote debugging: on Android open `chrome://inspect` on a computer with the phone attached over USB (iOS: Safari > Develop). In the
+   DevTools **Performance** panel record 10 seconds of normal play; read the frame times and the main-thread long tasks. The **Memory**
+   panel gives the JS heap.
+3. Use the same scene as `npm run e2e:perf`: Menu > New game > Guided Start, then add people until seven are on the lot (adopt, roommates
+   or a visit), speed Normal, camera framed on the house. Record portrait and landscape, Natural/Classic and Quaternius (Settings >
+   Character style), and graphics quality Low and High.
+4. Write down: the device and browser version, quality setting (the auto-detected one first), p50 and p95 frame time, draw calls,
+   triangles, heap size, time from tapping the link to the main menu (cold cache, then warm), and whether the phone got hot or the
+   browser reloaded the tab (memory pressure).
+5. A phone that cannot hold 30 fps on Low with seven people is a bug to report with the numbers; the budgets are in the brief
+   (section 22).
+
+## Release readiness: placeholder audit (Milestone 13)
+
+Audit of what reaches the production build (`npm run build`, one Vite entry: `index.html` -> `src/main.ts`):
+
+| Check | Result |
+|---|---|
+| Dev pages (`dev/*.html`, creator and wardrobe sheets) | Not part of the build: only `index.html` is an entry. The build output holds `index.html` and `assets/` only. |
+| Mock APIs and mock games (`src/ui/dev/mockGame.ts`, `src/ui/buy/dev/mockApi.ts`, `src/ui/creator/dev/mockApi.ts`) | Imported only by dev pages. No shipped module imports from a `dev/` folder (unit test `tests/unit/tools/productionClean.test.ts`); no mock class appears in the built JavaScript. |
+| "TODO", "FIXME", "coming soon", "lorem ipsum", "not implemented" in player-facing text | None left. One line in the creator said "Face shape controls for this style are coming soon." (shown only when a modular style has no face morphs); it now says "This style has no face shape controls." The unit test guards the wording. The in-game computer and TV screens show deterministic pseudo text on purpose (`src/render/screenPrograms.ts`). |
+| Placeholder or temporary assets | None found: no `e2e_`, test, tmp or placeholder files in `public/`; `public/assets/manifest.json` and the modular manifest hold no test parts (the e2e script adds its own parts to a served copy only). `render/objectAssets.ts` can draw a labelled box for an object whose model fails to load; the e2e and release runs saw none. The "mock neck" garment is a real garment. |
+| Content with status `dev` | One object, `snowman` (made by the Build a Snowman activity, not for sale); the buy catalogue lists `ready` designs only. |
+| Source maps | `build.sourcemap` is on: nine `.map` files (about 10 MB) ship next to the chunks. Left on deliberately (readable crash reports, open source code); switch `sourcemap` off in `vite.config.ts` to drop them. |
+| Debug hooks | `window.hearthside` (game, core, view, `debug.step/frame/state/run/stats/setWeather/crash`) and `?debug` (performance overlay) are live in production; they are single-player and local. Remove or gate them behind a build flag if that is unwanted. |
+| "(preview)" labels | Settings > Character style > "Quaternius (preview)" is a deliberate opt-in label. |
+| Credits | `assets/LICENSES.md` is shipped. |
+
+## Release scenario results (`npm run e2e:release`)
+
+See the commands above. Last run: 2026-11-08, portrait 390x844 and landscape 844x390, 54/54 checks passed (27 per viewport). The extension
+(8 x 4 m room with a door, a staircase, an upper room) and three pieces of furniture cost $3,616 of the $12,000 Create-mode funds. Screenshots:
+`dev/shots/release/` (main menu, creator, review, move-in, second floor in Build, furnished, after the weeks, venue, reload, load, event planner
+with the Where? select, gift picker, map with What's on, venue sheet, move dialog with the furniture choice).
 
 ## Manual browser checks, Milestone 5 (emulation only; no named device)
 

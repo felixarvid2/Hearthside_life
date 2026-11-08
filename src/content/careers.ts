@@ -22,13 +22,19 @@ const TUE_SAT = [1, 2, 3, 4, 5];
 const MON_THU = [0, 1, 2, 3];
 const h = (hours: number, minutes = 0) => hours * 60 + minutes;
 
+/**
+ * Days worked in the career (cumulative) before a promotion from level `n`: 4, 8, 14, 20, 28, 36, 46, 56, 68. Performance and skills
+ * still have to be met; the days keep a ten-level ladder from being climbed in two game months (docs/BALANCE.md).
+ */
+export const promotionDays = (n: number): number => Math.ceil(3 * n + (n * n) / 2);
+
 const level = (
   n: number, title: string, wage: number, days: number[], start: number, end: number, performance: number,
   skills: Record<string, number>, perks?: string[], relationship?: { minFriendship: number; label: string },
 ): CareerLevelDef => ({
   level: n, title, hourlyWage: dollars(wage), days, start, end,
   // Every promotion needs the level's number of days worked in the career as well as performance and skills.
-  promotion: { performance, skills, days: n, ...(relationship ? { relationship } : {}) },
+  promotion: { performance, skills, days: promotionDays(n), ...(relationship ? { relationship } : {}) },
   ...(perks && perks.length ? { perks } : {}),
 });
 

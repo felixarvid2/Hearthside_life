@@ -195,3 +195,7 @@ body.is-portrait .sheet-handle::after { content: ''; position: absolute; left: 5
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Recovery dialog (error boundary) */
+.crash-dialog .crash-detail { font-family: ui-monospace, monospace; font-size: 0.85em; word-break: break-word; opacity: 0.8; }
+.crash-dialog .modal-footer { flex-wrap: wrap; }

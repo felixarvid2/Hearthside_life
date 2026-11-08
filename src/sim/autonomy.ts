@@ -16,7 +16,7 @@ import { stageAllows } from './gating';
 import { homeworkDueDay } from './school';
 import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
 import { choreCandidates } from './chores';
-import { availableMeals, stovesOn } from './cooking';
+import { availableMeals, mealPortions, recipeCost, stovesOn } from './cooking';
 import { isBroken } from './housekeeping';
 import type { SimCtx } from './context';
 import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, tileOfLoc, venueRestriction } from './context';
@@ -31,7 +31,7 @@ import { isVisitPending, neighbours } from './visitors';
 import { currentWeather, outdoorGateReason } from './weather';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
-  EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
+  EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_DESPERATE, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
 } from './tuning';
 import type { ActionRequest } from './types';
 
@@ -138,7 +138,8 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (def.cost && def.cost > funds) continue;
       if (beh === 'cook') {
         if (!hasStove || meals.length > 0 || householdCooking(ctx, p)) continue;
-        const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready' && !r.skill).reduce((m, r) => Math.min(m, r.cost), Infinity);
+        const portions = mealPortions(ctx, p);
+        const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready' && !r.skill).reduce((m, r) => Math.min(m, recipeCost(p, r, portions)), Infinity);
         if (!(cheapest <= funds)) continue;
       }
       // Skill books: study the skill the person knows least (up to the level books can teach).
@@ -353,7 +354,7 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     // if the other person does not already feel socially fulfilled.
     const busy = other.queue.length > 0;
     if (busy && !(p.needs.social < SOCIAL_INTERRUPT_BELOW || isVisitor(ctx, p) || isVisitor(ctx, other))) continue;
-    if (busy && other.needs.social > 80) continue;
+    if (busy && other.needs.social > 80 && p.needs.social >= SOCIAL_DESPERATE) continue;
     let pick: SocialDef | null = null, pickW = 0;
     for (const def of Object.values(ctx.content.socials)) {
       if (!def.autonomy.enabled || def.status !== 'ready') continue;

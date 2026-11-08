@@ -11,6 +11,7 @@
 // costs the first week as a deposit and replaces the property tax on the weekly bill; buying costs the asking price. An
 // owned home that is left is sold for 80 % of its value (the furniture stays with the house).
 
+import { formatMoney } from '../core/money';
 import { addFeed, isProcessed, transact } from '../core/state';
 import type { Cents, Household, Id, Lot, Person, PlacedObject, WorldState } from '../core/types';
 import { ensureLotBuilt } from '../world/lotBuilders';
@@ -79,7 +80,7 @@ export function switchPreview(ctx: SimCtx, householdId: Id): SwitchPreview {
   const fromBrief = householdBrief(state, from);
   if (!to) return { ok: false, reason: reason ?? 'There is no such household.', from: fromBrief, to: null, consequences: [] };
   const toBrief = householdBrief(state, to);
-  const money = (c: Cents) => `$${(c / 100).toFixed(2)}`;
+  const money = formatMoney;
   const consequences = [
     `You will play the ${to.name} household (${toBrief.memberNames.join(', ')}). They are ${toBrief.where.toLowerCase()}; you start at ${toBrief.homeLotName ?? 'their home'}, and anyone away at work or elsewhere in town is called home unless a shift is running.`,
     `The ${from.name} household (${fromBrief.memberNames.join(', ')}) will no longer take your orders. They are simulated lightly: they follow a daily plan between home, work and the public venues, their jobs pay once per shift and their weekly bills are paid automatically from their own funds. They only do detailed things, such as cooking or chatting, while you are on the same lot.`,
@@ -217,7 +218,7 @@ export function movePreview(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): Mov
   const proceeds = sells ? Math.round(Math.max(0, homeLotValue(state, hh.id) - leaves) * SALE_RATE) : 0;
   const furnitureCash = choice === 'sell' ? furniture.saleValue : 0;
   const cost = mode === 'rent' ? lot.rent! : lot.price!;
-  const money = (c: Cents) => `$${(c / 100).toFixed(2)}`;
+  const money = formatMoney;
   const lines = [
     mode === 'rent'
       ? `${lot.name} costs ${money(cost)} a week in rent. The first week is paid now and the rent replaces the property tax on the weekly bill.`

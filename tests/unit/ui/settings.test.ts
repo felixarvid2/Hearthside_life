@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, SETTINGS_VERSION, mergeSettings, migrateSettings } from '../../../src/game/settings';
+import { DEFAULT_SETTINGS, SETTINGS_VERSION, mergeSettings, migrateSettings, qualityFor } from '../../../src/game/settings';
 
 describe('player settings', () => {
   it('defaults to the natural (MPFB) character style and keeps it across old saves', () => {
@@ -44,5 +44,24 @@ describe('settings migration to the natural character style', () => {
     expect(once.characterStyle).toBe('mpfb');
     const chosen = migrateSettings({ ...once, characterStyle: 'detailed' });
     expect(chosen.characterStyle).toBe('detailed');
+  });
+});
+
+describe('quality auto-detect (qualityFor)', () => {
+  it('phones start on low, in both orientations', () => {
+    expect(qualityFor({ coarse: true, minScreen: 390 })).toBe('low');
+    expect(qualityFor({ coarse: true, minScreen: 390, memoryGb: 8, cores: 8 })).toBe('low');
+  });
+  it('desktops, laptops and big tablets start on high', () => {
+    expect(qualityFor({ coarse: false, minScreen: 720 })).toBe('high');
+    expect(qualityFor({ coarse: false, minScreen: 360 })).toBe('high'); // a small desktop window is still a desktop
+    expect(qualityFor({ coarse: true, minScreen: 768, memoryGb: 4, cores: 8 })).toBe('high');
+    expect(qualityFor({ coarse: true, minScreen: 768 })).toBe('high'); // unknown memory: no guess
+  });
+  it('little memory or a weak touch device starts on low whatever the screen', () => {
+    expect(qualityFor({ coarse: false, minScreen: 1080, memoryGb: 2 })).toBe('low');
+    expect(qualityFor({ coarse: true, minScreen: 800, memoryGb: 2 })).toBe('low');
+    expect(qualityFor({ coarse: true, minScreen: 800, memoryGb: 3, cores: 4 })).toBe('low');
+    expect(qualityFor({ coarse: false, minScreen: 1080, memoryGb: 4, cores: 2 })).toBe('high');
   });
 });

@@ -16,6 +16,7 @@ import { GameCore } from './game/GameCore';
 import { requestPersistentStorage, SaveStore } from './persistence/index';
 import { createUI, showCompatibilityScreen } from './ui/app';
 import { bootProgress } from './ui/bootProgress';
+import { installCrashRecovery } from './ui/screens/crash';
 
 declare global {
   interface Window {
@@ -33,6 +34,8 @@ declare global {
         /** Pins the stored plan for the current day so an end-to-end run does not depend on the random world seed. */
         setWeather(kind: WeatherKind): boolean;
         stats(): ReturnType<Game['devStats']>;
+        /** Tests: reports a fault as if the loop had thrown it (shows the recovery dialog). */
+        crash(message?: string): void;
       };
     };
   }
@@ -89,10 +92,12 @@ async function boot(): Promise<void> {
         return true;
       },
       stats: () => game.devStats(),
+      crash: (message = 'Test fault') => { game.crashGuard.report('simulation', new Error(message)); },
     },
   };
 
   createUI(game, root);
+  installCrashRecovery(game);
   try {
     await game.load((p, label) => {
       bootProgress.set(0.12 + 0.88 * p, label);

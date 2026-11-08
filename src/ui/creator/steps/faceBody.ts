@@ -131,7 +131,7 @@ export const faceBodyStep: StepDef = {
       case 'face': {
         if (modular) {
           const morphs = modularBodySection(ctx, modular, b, 'face');
-          parts.push(...(morphs.length > 0 ? morphs : [hint('Face shape controls for this style are coming soon.')]), classicNote('The classic face sliders and presets'));
+          parts.push(...(morphs.length > 0 ? morphs : [hint('This style has no face shape controls.')]), classicNote('The classic face sliders and presets'));
           break;
         }
         const presets = Object.values(content.facePresets ?? {});

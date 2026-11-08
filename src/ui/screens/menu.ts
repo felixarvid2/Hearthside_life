@@ -11,6 +11,7 @@ import { formatGameTime, relativeTime } from '../hud/format';
 import type { Shell } from '../hud/shell';
 import { logoMark } from './boot';
 import { openLoadDialog } from './saves';
+import { reportDialog } from './common';
 
 export interface MainMenu { el: HTMLElement; card: HTMLElement; destroy(): void }
 
@@ -101,7 +102,8 @@ export function createMainMenu(sh: Shell, handlers: MainMenuHandlers): MainMenu 
         try { r = await api.loadFrom(latest.slotId); } catch (err) { r = { ok: false, reason: err instanceof Error ? err.message : 'Something went wrong.' }; }
         if (destroyed) return;
         setBusy(null);
-        if (!r.ok) { showError(`Could not load the save: ${r.reason}`); sh.sound('error'); }
+        if (!r.ok) { showError(`Could not load the save: ${r.reason}`); sh.sound('error'); return; }
+        if (r.report?.length) void reportDialog({ title: 'Loaded with notes', intro: 'The save loaded. A few things were adjusted:', lines: r.report });
       });
       cont.replaceChildren(btn);
     };
