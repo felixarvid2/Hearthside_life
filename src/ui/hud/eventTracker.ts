@@ -40,10 +40,10 @@ export function createEventTracker(sh: Shell): EventTracker {
     const arrived = ev.arrivedIds.filter((id) => ev.guestIds.includes(id)).length;
     let sub: string;
     if (ev.status === 'invited') sub = `Starts ${now >= ev.startAt - 1 ? 'now' : `in ${formatDuration(ev.startAt - now)}`} (${formatDay(ev.startAt).slice(0, 3)} ${formatClock(ev.startAt)})`;
-    else if (ev.status === 'running') sub = `${formatDuration(Math.max(0, ev.endAt - now))} left · ${arrived} of ${ev.guestIds.length} here`;
+    else if (ev.status === 'running') sub = `${ev.stage ? `${ev.stage === 'ceremony' ? 'Ceremony' : 'Celebration'} · ` : ''}${formatDuration(Math.max(0, ev.endAt - now))} left · ${arrived} of ${ev.guestIds.length} here`;
     else sub = ev.rating ? RATING_TEXT[ev.rating] : 'Finished';
     const guests = names(st, ev.guestIds);
-    const title = ev.type === 'date' ? `Date with ${guests}` : ev.guestIds.length === 1 && (ev.type === 'visit' || ev.type === 'dropIn' || ev.type === 'reconciliation' || ev.type === 'welcomeWagon') ? `${ev.title}: ${guests}` : ev.title;
+    const title = ev.type === 'wedding' && ev.partnerId ? `Wedding: ${st.people[ev.hostId]?.firstName ?? '?'} and ${st.people[ev.partnerId]?.firstName ?? '?'}` : ev.type === 'date' ? `Date with ${guests}` : ev.guestIds.length === 1 && (ev.type === 'visit' || ev.type === 'dropIn' || ev.type === 'reconciliation' || ev.type === 'welcomeWagon') ? `${ev.title}: ${guests}` : ev.title;
     const collapseBtn = button({ icon: collapsed ? 'down' : 'up', iconOnly: true, label: collapsed ? 'Show goals' : 'Hide goals', small: true, variant: 'ghost', onClick: () => { collapsed = !collapsed; userChose = true; sig = ''; sh.sound('click'); refresh(); } });
     const head = h('div', { class: 'ev-head' }, icon(def?.icon ?? 'star', 22),
       h('div', { class: 'ev-titles' }, h('span', { class: 'ev-title', text: title }), h('span', { class: 'ev-sub', text: sub })), collapseBtn);

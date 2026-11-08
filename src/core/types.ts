@@ -778,7 +778,7 @@ export interface ScheduledEvent {
   /** Unique occurrence id, e.g. `visit:<personId>:<day>`; also used in WorldState.processed. */
   occurrence: string;
   at: GameMinutes;
-  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'careerEvent' | 'travelArrive';
+  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'eventStage' | 'careerEvent' | 'travelArrive';
   personId?: Id;
   householdId?: Id;
   data?: Record<string, string | number | boolean | null>;
@@ -797,9 +797,9 @@ export interface FeedEntry {
 // ---------------------------------------------------------------------------------------------
 
 export type HomeEventType =
-  | 'date' | 'dinnerParty' | 'houseParty' | 'celebration' | 'visit' | 'welcomeWagon' | 'dropIn' | 'reconciliation';
+  | 'date' | 'dinnerParty' | 'houseParty' | 'celebration' | 'wedding' | 'visit' | 'welcomeWagon' | 'dropIn' | 'reconciliation';
 export type HomeEventStatus = 'invited' | 'running' | 'done' | 'cancelled';
-export type EventGoalKind = 'chat' | 'eat' | 'romantic' | 'laugh' | 'mingle' | 'reconcile';
+export type EventGoalKind = 'chat' | 'eat' | 'romantic' | 'laugh' | 'mingle' | 'reconcile' | 'ceremony';
 export type EventRating = 'poor' | 'fair' | 'good' | 'great';
 
 export interface EventGoal {
@@ -840,4 +840,12 @@ export interface HomeEvent {
   rating?: EventRating;
   /** Catering charged (cents), 0 when none was served. */
   catered?: Cents;
+  /**
+   * Weddings (sim/events.ts): the other half of the couple (the host marries them at the ceremony), the stage the event is
+   * in, the ceremony time and how the ceremony went. Optional in saves; absent = not a wedding.
+   */
+  partnerId?: Id;
+  stage?: 'ceremony' | 'celebration';
+  ceremonyAt?: GameMinutes;
+  ceremony?: 'done' | 'missed';
 }

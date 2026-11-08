@@ -472,7 +472,7 @@ const ROMANTIC_PLUS: SocialDef[] = [
     topics: ['romance'], autonomy: { enabled: false, weight: 0 },
   }),
   social({
-    id: 'marry', name: 'Get Married', description: 'Marry your fiance(e). A small ceremony at home.', icon: 'star', category: 'romantic',
+    id: 'marry', name: 'Get Married', description: 'Marry your fiance(e) on the spot with a few quiet words. For a wedding with guests, plan one from the phone (Plan an Event).', icon: 'star', category: 'romantic',
     minutes: 6, anim: 'agree', requires: { romantic: true, status: ['engaged'], minRomance: 60, minTrust: 40 }, acceptance: 0.9,
     success: out({
       actor: { romance: 10, friendship: 5, trust: 6 }, target: { romance: 10, friendship: 5, trust: 6 }, social: 25, fun: 10, actorMoodlet: 'newlywed', targetMoodlet: 'newlywed',

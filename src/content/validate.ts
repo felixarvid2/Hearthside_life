@@ -435,7 +435,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
   }
 
   // ---- Events ----
-  const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile'];
+  const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile', 'ceremony'];
   for (const e of Object.values(db.events ?? {})) {
     const w = `event '${e.id}'`;
     if (e.status === 'ready' && (blank(e.name) || blank(e.description) || blank(e.icon))) err(`${w}: missing name, description or icon`);

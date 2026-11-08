@@ -57,9 +57,9 @@ export function fillDailyLifeDefaults(raw: Record<string, unknown>): void {
 }
 
 const REL_LABELS = ['stranger', 'acquaintance', 'friend', 'closeFriend', 'bestFriend', 'rival', 'enemy', 'crush', 'partner', 'engaged', 'spouse', 'exPartner'];
-const EVENT_TYPES = ['date', 'dinnerParty', 'houseParty', 'celebration', 'visit', 'welcomeWagon', 'dropIn', 'reconciliation'];
+const EVENT_TYPES = ['date', 'dinnerParty', 'houseParty', 'celebration', 'wedding', 'visit', 'welcomeWagon', 'dropIn', 'reconciliation'];
 const EVENT_STATUSES = ['invited', 'running', 'done', 'cancelled'];
-const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile'];
+const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile', 'ceremony'];
 
 /**
  * Defaults for fields added to schema 1 by Milestone 5 (relationships and events): a relationship may carry a derived

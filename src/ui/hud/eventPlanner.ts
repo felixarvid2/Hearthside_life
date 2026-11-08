@@ -11,7 +11,7 @@ import { h } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { formatMoney, initials } from './format';
 import type { Shell } from './shell';
-import { guestAvailability, guestCandidates, shownLabel, startOptions } from './socialModel';
+import { fianceOf, guestAvailability, guestCandidates, shownLabel, startOptions } from './socialModel';
 
 export function openEventPlanner(sh: Shell, hostId: Id): void {
   const { api } = sh;
@@ -62,7 +62,13 @@ export function openEventPlanner(sh: Shell, hostId: Id): void {
       const b = h('button', { type: 'button', class: ['evp-type', d.id === type && 'is-selected'], role: 'radio', attrs: { 'aria-checked': d.id === type } },
         h('span', { class: 'evp-type-name' }, icon(d.icon, 18), h('span', { text: d.name })),
         h('span', { class: 'evp-type-sub', text: `${d.minGuests === d.maxGuests ? `${d.minGuests} guest` : `${d.minGuests}-${d.maxGuests} guests`} · ${d.cateringPerPerson ? `${formatMoney(d.cateringPerPerson)} a head` : 'no food'}` }));
-      b.addEventListener('click', () => { if (type !== d.id) { type = d.id; chosen.clear(); sh.sound('click'); renderAll(); } });
+      b.addEventListener('click', () => {
+        if (type === d.id) return;
+        type = d.id; chosen.clear();
+        const fiance = d.wedding ? fianceOf(api.state()!, api.state()!.people[hostId]!) : undefined;
+        if (fiance) chosen.add(fiance.id);
+        sh.sound('click'); renderAll();
+      });
       return b;
     }));
     desc.textContent = def().description;
@@ -80,9 +86,9 @@ export function openEventPlanner(sh: Shell, hostId: Id): void {
   const renderGuests = () => {
     const st = api.state()!, host = st.people[hostId]!, d = def();
     const people = guestCandidates(st, host, d);
-    guestHint.textContent = `Guests (${chosen.size} of ${d.minGuests === d.maxGuests ? d.minGuests : `${d.minGuests}-${d.maxGuests}`})`;
+    guestHint.textContent = `${d.wedding ? 'Fiance(e) and guests' : 'Guests'} (${chosen.size} of ${d.minGuests === d.maxGuests ? d.minGuests : `${d.minGuests}-${d.maxGuests}`})`;
     if (people.length === 0) {
-      guestBox.replaceChildren(h('p', { class: 'evp-desc', text: d.romantic ? `${host.firstName} does not know anyone they could invite on a date yet.` : `${host.firstName} does not know anyone to invite yet. Meet the neighbours first.` }));
+      guestBox.replaceChildren(h('p', { class: 'evp-desc', text: d.wedding ? `${host.firstName} is not engaged to anyone yet. Propose first, then plan the wedding.` : d.romantic ? `${host.firstName} does not know anyone they could invite on a date yet.` : `${host.firstName} does not know anyone to invite yet. Meet the neighbours first.` }));
       return;
     }
     guestBox.replaceChildren(...people.map((g) => {
@@ -107,7 +113,12 @@ export function openEventPlanner(sh: Shell, hostId: Id): void {
     }));
   };
 
-  const request = () => ({ type, hostId, guestIds: [...chosen], startAt });
+  /** A wedding marries the first guest, so the fiance(e) always goes first. */
+  const request = () => {
+    const fiance = def().wedding ? fianceOf(api.state()!, api.state()!.people[hostId]!)?.id : undefined;
+    const ids = [...chosen].sort((a, b) => Number(b === fiance) - Number(a === fiance));
+    return { type, hostId, guestIds: ids, startAt };
+  };
 
   const renderSummary = () => {
     const problem = chosen.size === 0 ? 'Choose who to invite.' : startAt === 0 ? 'No start time is available.' : api.eventProblem?.(request()) ?? null;

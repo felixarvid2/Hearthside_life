@@ -689,6 +689,9 @@ export interface EventDef {
   cateringPerPerson: Cents;
   /** Adults who are attracted to each other only. */
   romantic: boolean;
+  /** A wedding: the first guest is the host's fiance(e), who they marry at the ceremony `ceremonyMinutes` after the start. */
+  wedding?: boolean;
+  ceremonyMinutes?: number;
   goals: EventGoalDef[];
   reward: EventRewardDef;
   status: ContentStatus;

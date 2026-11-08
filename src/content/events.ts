@@ -6,7 +6,8 @@
 // Planned types are offered on the phone; visits, welcome wagons, drop-ins and reconciliations start by themselves.
 // Goal kinds: chat (accepted friendly/support/deep talk between participants), eat (people eating the shared
 // food), romantic (an accepted romantic social), laugh (an accepted joke or tease), mingle (distinct pairs of
-// participants talking), reconcile (an accepted apology or make-up).
+// participants talking), reconcile (an accepted apology or make-up), ceremony (the wedding vows were exchanged).
+// A wedding runs in two stages: the ceremony (the couple marries `ceremonyMinutes` after the start) and the celebration.
 
 import type { EventDef, EventGoalDef, EventRewardDef } from './types';
 
@@ -57,6 +58,16 @@ export const EVENTS: EventDef[] = [
     reward: reward({
       friendship: 9, trust: 3, social: 35, fun: 18, moodlet: 'partyGlow', badMoodlet: 'flatParty',
       memory: { kind: 'party', text: 'A cheerful celebration at home.', badText: 'The celebration did not go to plan.', importance: 2 },
+    }),
+  }),
+  event({
+    id: 'wedding', name: 'Wedding', icon: 'heart', planned: true, minGuests: 1, maxGuests: 9, minutes: 240, leadMinutes: 240,
+    description: 'Marry your fiance(e) in a ceremony, then celebrate with the guests. The first person you invite is the one you marry, so you must be engaged. Everyone eats cake and dances afterwards.',
+    cateringPerPerson: 1800, wedding: true, ceremonyMinutes: 30,
+    goals: [goal('ceremony', 'Exchange vows', 1, 2.2), goal('eat', 'Cake for everyone', 3, 1, 1), goal('mingle', 'Get the guests mingling', 1, 0.8, 0.5), goal('laugh', 'Share some laughs', 2, 0.7, 0.4), goal('chat', 'Congratulate the couple', 2, 0.9, 0.8)],
+    reward: reward({
+      friendship: 8, trust: 3, social: 40, fun: 25, moodlet: 'partyGlow', badMoodlet: 'flatParty',
+      memory: { kind: 'party', text: 'The wedding of {a} and {b}.', badText: 'The wedding was a bit of a letdown.', importance: 3 },
     }),
   }),
   event({

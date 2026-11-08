@@ -64,7 +64,17 @@ export function startOptions(now: number, leadMinutes: number): StartOption[] {
   return out;
 }
 
-/** Known people who could be invited: not in the host's household (dates also allow a partner at home), best liked first. */
+/** Whom `host` is engaged to, if anybody (the one a wedding marries). */
+export function fianceOf(st: WorldState, host: Person): Person | undefined {
+  for (const b of Object.values(st.bonds)) {
+    if (b.status !== 'engaged' || (b.a !== host.id && b.b !== host.id)) continue;
+    const p = st.people[b.a === host.id ? b.b : b.a];
+    if (p) return p;
+  }
+  return undefined;
+}
+
+/** Known people who could be invited: not in the host's household (dates and weddings also allow a partner at home), best liked first. */
 export function guestCandidates(st: WorldState, host: Person, def: EventDef): Person[] {
   const out: Person[] = [];
   for (const r of Object.values(st.relationships)) {
@@ -72,11 +82,12 @@ export function guestCandidates(st: WorldState, host: Person, def: EventDef): Pe
     const g = st.people[r.to];
     if (!g || g.id === host.id) continue;
     const sameHome = g.householdId === host.householdId;
-    if (sameHome && !def.romantic) continue;
+    if (sameHome && !def.romantic && !(def.wedding && fianceOf(st, host)?.id === g.id)) continue;
     if (def.romantic && (!romanceInterest(host, g) || r.romanceBlocked)) continue;
     out.push(g);
   }
-  return out.sort((a, b) => (st.relationships[`${host.id}>${b.id}`]?.friendship ?? 0) - (st.relationships[`${host.id}>${a.id}`]?.friendship ?? 0) || a.firstName.localeCompare(b.firstName));
+  const fiance = def.wedding ? fianceOf(st, host)?.id : undefined;
+  return out.sort((a, b) => Number(b.id === fiance) - Number(a.id === fiance) || (st.relationships[`${host.id}>${b.id}`]?.friendship ?? 0) - (st.relationships[`${host.id}>${a.id}`]?.friendship ?? 0) || a.firstName.localeCompare(b.firstName));
 }
 
 /** Where a guest is, in a few words, and whether an invitation can reach them. */

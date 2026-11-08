@@ -27,7 +27,7 @@ import { freeSurfaceTiles } from './cooking';
 import { isBroken } from './housekeeping';
 import { addMoodlet, computeMood } from './mood';
 import { changeNeed } from './needs';
-import { addMemory, applyRelDelta, ensureRel, hasRecentMemory, peekRel } from './relationships';
+import { addMemory, applyRelDelta, ensureRel, hasRecentMemory, peekRel, setBondStatus } from './relationships';
 import {
   EVENT_ARRIVE_EARLY, EVENT_ARRIVE_SPREAD, EVENT_GOAL_SHARE, EVENT_HISTORY, EVENT_LEAVE_SPREAD, EVENT_MAX_LEAD_DAYS, EVENT_RATING,
   EVENT_SOCIAL_BONUS, MEAL_SPOIL_MINUTES, RECONCILE_CHANCE, RECONCILE_COOLDOWN_DAYS, RECONCILE_WINDOW_DAYS,
@@ -90,6 +90,16 @@ export function cateringCost(ctx: SimCtx, def: EventDef, host: Person, guestCoun
   return def.cateringPerPerson * (members + guestCount);
 }
 
+/** Why `host` cannot marry `partner` in a wedding, or null: they must be engaged, adults, and still in love. */
+export function weddingProblem(ctx: SimCtx, host: Person, partner: Person): string | null {
+  const bond = ctx.state.bonds[pairKey(host.id, partner.id)];
+  if (bond?.status === 'spouse') return `${host.firstName} and ${partner.firstName} are already married.`;
+  if (bond?.status !== 'engaged') return `${host.firstName} and ${partner.firstName} must be engaged first. The first guest is the one you marry.`;
+  const mine = peekRel(ctx.state, host.id, partner.id), theirs = peekRel(ctx.state, partner.id, host.id);
+  if (mine.romance < 50 || theirs.romance < 50 || theirs.trust < 30) return `${partner.firstName} isn't quite ready for the wedding yet.`;
+  return null;
+}
+
 /** Why this event cannot be planned (host, guests, notice, money), or null when it can. */
 export function canPlanEvent(ctx: SimCtx, host: Person, guestIds: Id[], type: HomeEventType, startAt?: GameMinutes): string | null {
   const def = ctx.content.events?.[type];
@@ -107,7 +117,12 @@ export function canPlanEvent(ctx: SimCtx, host: Person, guestIds: Id[], type: Ho
     if (!g || g.id === host.id) return 'Unknown guest.';
     const gh = ctx.state.households[g.householdId];
     const isDate = def.romantic;
-    if (g.householdId === host.householdId && !isDate) return `${g.firstName} lives here.`;
+    const spouseToBe = def.wedding === true && id === unique[0];
+    if (g.householdId === host.householdId && !isDate && !spouseToBe) return `${g.firstName} lives here.`;
+    if (spouseToBe) {
+      const why = weddingProblem(ctx, host, g);
+      if (why) return why;
+    }
     if (eventsOf(ctx.state).some((e) => isActive(e) && (e.guestIds.includes(g.id) || e.arrivedIds.includes(g.id)))) return `${g.firstName} is already invited somewhere.`;
     if (def.planned && peekRel(ctx.state, host.id, g.id).familiarity <= 0 && g.householdId !== host.householdId) return `Hasn't met ${g.firstName} yet.`;
     if (peekRel(ctx.state, g.id, host.id).friendship < -30) return `${g.firstName} wouldn't come.`;
@@ -201,13 +216,14 @@ export function planEvent(ctx: SimCtx, req: PlanRequest, opts: { skipConsent?: b
     lotId: lotLoc(host)?.lotId ?? ctx.state.activeLotId, guestIds: guests.map((g) => g.id), arrivedIds: [], createdAt: ctx.now,
     startAt, endAt: startAt + def.minutes, goals: makeGoals(def, guests.length), pairs: [], ate: [],
   };
+  if (def.wedding) { ev.partnerId = guests[0]!.id; ev.ceremonyAt = startAt + (def.ceremonyMinutes ?? 30); }
   pushEvent(ctx.state, ev);
   for (const g of guests) {
     applyRelDelta(ctx.state, host.id, g.id, { familiarity: 1 }, ctx.now);
     applyRelDelta(ctx.state, g.id, host.id, { familiarity: 1, friendship: 1 }, ctx.now);
     if (lotLoc(g)) {
       ev.arrivedIds.push(g.id);
-      holdVisitor(ctx, g.id, ev.endAt + (hashString(g.id + ev.id) % EVENT_LEAVE_SPREAD));
+      if (g.householdId !== host.householdId) holdVisitor(ctx, g.id, ev.endAt + (hashString(g.id + ev.id) % EVENT_LEAVE_SPREAD));
     } else {
       const at = Math.max(ctx.now + 1, startAt - EVENT_ARRIVE_EARLY + (hashString(g.id + ev.id) % EVENT_ARRIVE_SPREAD));
       ctx.state.schedule.push({
@@ -217,6 +233,7 @@ export function planEvent(ctx: SimCtx, req: PlanRequest, opts: { skipConsent?: b
   }
   ctx.state.schedule.push({ occurrence: `eventstart:${ev.id}`, at: startAt, kind: 'eventStart', data: { eventId: ev.id } });
   ctx.state.schedule.push({ occurrence: `eventend:${ev.id}`, at: ev.endAt, kind: 'eventEnd', data: { eventId: ev.id } });
+  if (ev.ceremonyAt !== undefined) ctx.state.schedule.push({ occurrence: `eventstage:${ev.id}`, at: ev.ceremonyAt, kind: 'eventStage', data: { eventId: ev.id } });
   if (playableHost(ctx, ev)) {
     addFeed(ctx.state, ctx.events, 'social', `${host.firstName} planned a ${def.name.toLowerCase()} for ${DAY_NAMES[weekday(startAt)]} at ${formatClock(startAt)} with ${names(ctx.state, ev.guestIds)}.`, host.id);
   }
@@ -238,7 +255,7 @@ export function cancelEvent(ctx: SimCtx, id: Id): { ok: boolean; reason?: string
   if (!ev) return { ok: false, reason: 'No such event.' };
   if (ev.status !== 'invited') return { ok: false, reason: 'It has already started.' };
   ev.status = 'cancelled';
-  ctx.state.schedule = ctx.state.schedule.filter((e) => !(e.data?.eventId === id && (e.kind === 'eventStart' || e.kind === 'eventEnd' || e.kind === 'visitArrive')));
+  ctx.state.schedule = ctx.state.schedule.filter((e) => !(e.data?.eventId === id && (e.kind === 'eventStart' || e.kind === 'eventEnd' || e.kind === 'eventStage' || e.kind === 'visitArrive')));
   for (const gid of ev.guestIds) {
     const g = ctx.state.people[gid];
     if (!g) continue;
@@ -293,6 +310,7 @@ export function startEvent(ctx: SimCtx, id: Id): void {
   const def = eventDef(ctx, ev);
   if (!def) return;
   ev.status = 'running';
+  if (ev.ceremonyAt !== undefined) ev.stage = 'ceremony';
   serveCatering(ctx, ev, def);
   if (playableHost(ctx, ev)) addFeed(ctx.state, ctx.events, 'social', `The ${ev.title.toLowerCase()} has begun.`, ev.hostId);
   emit(ctx, ev, 'started');
@@ -329,6 +347,56 @@ export function startAmbientEvent(ctx: SimCtx, type: HomeEventType, visitor: Per
   ctx.state.schedule.push({ occurrence: `eventend:${ev.id}`, at: ev.endAt, kind: 'eventEnd', data: { eventId: ev.id } });
   emit(ctx, ev, 'started');
   return ev;
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Weddings: ceremony and celebration
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The ceremony of a wedding (eventStage entry, once): when the couple are together on the lot and still engaged, the
+ * bond becomes `spouse` with the outcome of the "Get Married" social (relationship gains, Just Married moodlet, a
+ * permanent memory), the 'ceremony' goal is done and the event moves on to the celebration. Otherwise the vows are
+ * postponed ("missed"): the party still goes on, with a lower score.
+ */
+export function performCeremony(ctx: SimCtx, id: Id): void {
+  const ev = findEvent(ctx.state, id);
+  if (!ev || ev.status === 'cancelled' || ev.ceremony || ev.partnerId === undefined) return;
+  if (ev.status === 'invited') return; // the start entry comes first; ensureEventEnds repairs a lost one
+  const occurrence = `wedding:${ev.id}:ceremony`;
+  if (isProcessed(ctx.state, occurrence)) return;
+  markProcessed(ctx.state, occurrence);
+  const a = ctx.state.people[ev.hostId], b = ctx.state.people[ev.partnerId];
+  const la = a ? lotLoc(a) : null, lb = b ? lotLoc(b) : null;
+  const engaged = !!a && !!b && ctx.state.bonds[pairKey(a.id, b.id)]?.status === 'engaged';
+  ev.stage = 'celebration';
+  if (!a || !b || !engaged || !la || !lb || la.lotId !== lb.lotId) {
+    ev.ceremony = 'missed';
+    if (playableHost(ctx, ev)) addFeed(ctx.state, ctx.events, 'warning', `The vows had to wait: ${a?.firstName ?? 'the host'} and ${b?.firstName ?? 'their partner'} were not together for the ceremony.`, ev.hostId);
+    emit(ctx, ev, 'goal');
+    return;
+  }
+  const out = ctx.content.socials.marry?.success;
+  const gain = out?.actor ?? { romance: 10, friendship: 5, trust: 6 };
+  applyRelDelta(ctx.state, a.id, b.id, gain, ctx.now);
+  applyRelDelta(ctx.state, b.id, a.id, out?.target ?? gain, ctx.now);
+  if (out?.social) { changeNeed(ctx, a, 'social', out.social); changeNeed(ctx, b, 'social', out.social); }
+  if (out?.fun) { changeNeed(ctx, a, 'fun', out.fun); changeNeed(ctx, b, 'fun', out.fun); }
+  addMoodlet(ctx.content, a, 'newlywed', ctx.now, 'wedding');
+  addMoodlet(ctx.content, b, 'newlywed', ctx.now, 'wedding');
+  setBondStatus(ctx.state, ctx.events, a.id, b.id, 'spouse', ctx.now);
+  addMemory(ctx.state, a, { kind: 'married', importance: 3, withId: b.id, text: `${a.firstName} and ${b.firstName} got married at their wedding.` });
+  addMemory(ctx.state, b, { kind: 'married', importance: 3, withId: a.id, text: `${b.firstName} and ${a.firstName} got married at their wedding.` });
+  // Everybody who came to see it remembers it a little.
+  for (const gid of ev.arrivedIds) {
+    const g = ctx.state.people[gid];
+    if (g && g.id !== a.id && g.id !== b.id) addMemory(ctx.state, g, { kind: 'party', importance: 2, withId: a.id, text: `Was at the wedding of ${a.firstName} and ${b.firstName}.` });
+  }
+  ev.ceremony = 'done';
+  bump(ctx, ev, 'ceremony', 1);
+  if (playableHost(ctx, ev)) addFeed(ctx.state, ctx.events, 'social', `${a.firstName} and ${b.firstName} said their vows. The celebration begins!`, a.id);
+  emit(ctx, ev, 'goal');
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -481,6 +549,7 @@ export function runEventEntry(ctx: SimCtx, e: ScheduledEvent): void {
   const id = e.data?.eventId;
   if (typeof id !== 'string') return;
   if (e.kind === 'eventStart') startEvent(ctx, id);
+  else if (e.kind === 'eventStage') performCeremony(ctx, id);
   else if (e.kind === 'eventEnd') endEvent(ctx, id);
 }
 
@@ -489,6 +558,8 @@ export function ensureEventEnds(ctx: SimCtx): void {
   for (const ev of eventsOf(ctx.state)) {
     if (!isActive(ev)) continue;
     if (ctx.now >= ev.endAt + 5 && !ctx.state.schedule.some((e) => e.kind === 'eventEnd' && e.data?.eventId === ev.id)) endEvent(ctx, ev.id);
+    else if (ev.status === 'running' && ev.ceremonyAt !== undefined && !ev.ceremony && ctx.now >= ev.ceremonyAt + 5
+      && !ctx.state.schedule.some((e) => e.kind === 'eventStage' && e.data?.eventId === ev.id)) performCeremony(ctx, ev.id);
     else if (ev.status === 'invited' && ctx.now >= ev.startAt + 5 && !ctx.state.schedule.some((e) => e.kind === 'eventStart' && e.data?.eventId === ev.id)) startEvent(ctx, ev.id);
   }
 }
