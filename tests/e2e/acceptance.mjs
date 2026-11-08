@@ -3846,12 +3846,20 @@ async function stepStairKinds(T) {
 
   // an empty stretch of the lot for a room of 7 x 4 tiles (room for a 4-long stair with a tile at each end, or a spiral with its entry and
   // its arrival tile) and the column east of it (the door's tile): no floor or object on the 8 x 4 tiles, no wall on the edges of the block
-  const findSpot = (avoid) => page.evaluate((av) => {
+  // `loose`: objects standing outdoors (no floor under them) do not block the stretch; the spot then lists them so they can be sold
+  // first (after steps 1-14 a full run's lot has no fully empty 8 x 4 stretch left, only garden objects and crops in the way)
+  const findSpot = (avoid, loose = false) => page.evaluate(([av, looseOk]) => {
     const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
     const defs = window.hearthside.game.content.objects;
-    const busy = new Set(av);
-    for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) busy.add(`${x},${z}`); }
-    for (const o of Object.values(lot.objects)) { const d = defs[o.defId]; if (o.level !== 0) continue; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) busy.add(`${o.x + i},${o.z + j}`); }
+    const busy = new Set(av), floored = new Set(), owner = new Map();
+    for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) { busy.add(`${x},${z}`); floored.add(`${x},${z}`); } }
+    for (const o of Object.values(lot.objects)) {
+      const d = defs[o.defId]; if (o.level !== 0) continue;
+      const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d;
+      const tiles = []; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) tiles.push(`${o.x + i},${o.z + j}`);
+      const outdoor = looseOk && !d.stair && tiles.every((t) => !floored.has(t));
+      for (const t of tiles) { if (outdoor) owner.set(t, o.id); else busy.add(t); }
+    }
     for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) busy.add(`${x},${z}`);
     const fenced = (dir, x, z) => !!lot.fences?.[`0:${dir}:${x}:${z}`];
     const wall = (dir, x, z) => !!lot.walls[`0:${dir}:${x}:${z}`] || fenced(dir, x, z);
@@ -3860,17 +3868,25 @@ async function stepStairKinds(T) {
       for (let j = 0; j < 4 && free; j++) for (let i = 0; i <= 7 && free; i++) if (busy.has(`${x + i},${z + j}`)) free = false;
       for (let i = 0; i < 7 && free; i++) for (let j = 0; j <= 4 && free; j++) if (wall('h', x + i, z + j)) free = false;
       for (let j = 0; j < 4 && free; j++) for (let i = 0; i <= 8 && free; i++) if (wall('v', x + i, z + j)) free = false;
-      if (free) return { x, z };
+      if (free) {
+        const clear = new Set();
+        for (let j = 0; j < 4; j++) for (let i = 0; i <= 7; i++) { const id = owner.get(`${x + i},${z + j}`); if (id) clear.add(id); }
+        return { x, z, clear: [...clear] };
+      }
     }
     return null;
-  }, avoid);
+  }, [avoid, loose]);
 
   const used = [];
   const kinds = [['stair-spiral-wood', 'spiral (4 tiles)'], ['stair-grand', 'straight, 4 tiles, two wide']];
   let first = null;
   for (const [defId, label] of kinds) {
-    const spot = await findSpot(used);
-    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot, JSON.stringify(spot));
+    let spot = await findSpot(used);
+    if (!spot) {
+      spot = await findSpot(used, true);
+      if (spot) spot.sold = await page.evaluate((ids) => ids.map((id) => window.hearthside.game.sell(id).ok), spot.clear);
+    }
+    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every(Boolean), JSON.stringify(spot));
     if (!spot) return;
     const { x: X0, z: Z0 } = spot;
     for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${X0 + i},${Z0 + j}`);
