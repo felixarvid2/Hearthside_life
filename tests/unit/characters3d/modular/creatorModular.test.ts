@@ -6,6 +6,7 @@ import { normalizeAppearance } from '../../../../src/characters/names';
 import { applyPreset, equipGarment, equipHair, fallbackHair, hairWouldReplace, randomizeLook, wouldReplace } from '../../../../src/characters/modular/equip';
 import { deriveModularLook, lookFor, migrateModularLook, resolveLook } from '../../../../src/characters/modular/look';
 import { validateManifest } from '../../../../src/characters/modular/manifest';
+import { categoryOfSlot } from '../../../../src/characters/modular/types';
 import type { GarmentDef, HairstyleDef, ModularLook, ModularManifest, ModularSlot } from '../../../../src/characters/modular/types';
 import { Rng, seedRng } from '../../../../src/core/rng';
 import { fixtureContent } from '../../characters/fixtures';
@@ -15,7 +16,7 @@ const rng = (seed = 1) => new Rng(seedRng(seed));
 const BOTH = { b_a: 'x.glb', b_b: 'x.glb' };
 
 const garment = (id: string, label: string, slot: ModularSlot, over: Partial<GarmentDef> = {}): GarmentDef => ({
-  id, label, category: slot, slot, files: { ...BOTH }, rig: 'r', hides: [], layer: 1, conflicts: [], source: 't', license: 't',
+  id, label, category: categoryOfSlot(slot), slot, files: { ...BOTH }, rig: 'r', hides: [], layer: 1, conflicts: [], source: 't', license: 't',
   colorRegions: [{ id: 'main', label: 'Fabric', materials: ['M'], default: '#3f6fa8', palette: ['#3f6fa8', '#c94f4f', '#f2efe6'] }], ...over,
 });
 const hair = (id: string, label: string, files: Record<string, string> = { ...BOTH }): HairstyleDef => ({
@@ -65,10 +66,10 @@ describe('manifest outfit presets', () => {
       { id: 'p2', label: 'B', outfit: { top: 'trousers' } },
       { id: 'p3', label: 'C', outfit: { top: 'tee' }, colors: { ghost: { main: '#ffffff' }, tee: { sleeve: '#ffffff' } } },
       { id: 'p3', label: 'D', outfit: {} },
-      { id: 'p4', label: 'E', outfit: { hat: 'tee' } as never },
+      { id: 'p4', label: 'E', outfit: { cape: 'tee' } as never },
     ];
     const issues = validateManifest(m).join('\n');
-    for (const s of ["unknown garment 'nope'", "puts 'trousers' (a bottom) in the top slot", "colours unknown garment 'ghost'", "unknown region 'sleeve'", "Duplicate outfit preset id 'p3'", "'p3' is empty", "unknown slot 'hat'"]) expect(issues).toContain(s);
+    for (const s of ["unknown garment 'nope'", "puts 'trousers' (a bottom) in the top slot", "colours unknown garment 'ghost'", "unknown region 'sleeve'", "Duplicate outfit preset id 'p3'", "'p3' is empty", "unknown slot 'cape'"]) expect(issues).toContain(s);
   });
   it('a manifest without presets stays valid', () => {
     const m = manifest();
@@ -97,7 +98,7 @@ describe('CreatorSession modular setters', () => {
     const derived = s.modularLook()!;
     expect(s.setModularHair('pony').ok).toBe(true);
     const l = stored(s)!;
-    expect(l.v).toBe(1);
+    expect(l.v).toBe(2);
     expect(l.hairId).toBe('pony');
     expect(l.bodyId).toBe(derived.bodyId);
     expect(l.outfits.everyday).toEqual(derived.outfits.everyday);
@@ -419,7 +420,7 @@ describe('old saves and templates', () => {
     const l = s.modularLook()!;
     expect(l.bodyId).toBe(manifest().defaults.bodyByFrame[s.current.appearance.frame]);
     expect(s.setModularHair('pony').ok).toBe(true);
-    expect(stored(s)!.v).toBe(1);
+    expect(stored(s)!.v).toBe(2);
   });
   it('a stored look that names things the manifest no longer has is repaired by the next edit', () => {
     const s = session();

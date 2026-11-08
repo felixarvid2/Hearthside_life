@@ -31,7 +31,7 @@ describe('authored assets on the ubc_male body', () => {
     const c = new ModularCharacter(cache, m, clips);
     await c.apply(look({ hairId: 'short_crop', outfits: { everyday: { top: 'tshirt_crew' } } }));
     expect(c.issues).toEqual([]);
-    expect(c.equipped()).toEqual({ bodyId: BODY, hairId: 'short_crop', garments: { top: 'tshirt_crew' } });
+    expect(c.equipped()).toEqual({ bodyId: BODY, hairId: 'short_crop', facialHairId: null, garments: { top: 'tshirt_crew' } });
     const covered = Object.values(mask(maskPath).meshes).length;
     expect(covered).toBeGreaterThan(0);
     const hidden = hiddenCount(c.root);

@@ -210,6 +210,27 @@ changes for existing saves or styles.
   - Resource check: `hearthside.debug.stats()` has `geometries` and `textures` (renderer.info.memory). Tests:
     `tests/unit/characters3d/modular/creatorModular.test.ts`, `npm run e2e:creator-modular` (serves the manifest with extra
     `e2e_` parts).
+- **Catalog extension (runtime and creator, for the large catalog).** Contract changes, all in `src/characters/modular/types.ts`:
+  - `ModularLook` is **v2**: new `facialHairId: string | null`. `migrateModularLook` reads v1 (adds `null`) and v2; `resolveLook`
+    drops unknown / unfitted / conflicting facial hair.
+  - Manifest: optional `facialHair: FacialHairDef[]` (a `HairstyleDef` plus optional `followsMorphs: string[]`, applied with
+    `copyMorphNames` + morph influences like garments). It takes the classic hair colour, loads through the ref-counted cache
+    like hair (`ModularCharacter` part key `facialHair`), default none. `facialHairFor(m, bodyId)` lists per body.
+  - Slots: `MODULAR_SLOTS` = top, bottom, outer, full, shoes + accessories `hat, eyewear, earrings, neck, wrist, waist, bag`
+    (`ACCESSORY_SLOTS`). Accessory garments have `category: 'accessory'` (`categoryOfSlot`; `validateManifest` checks it), one
+    item per slot, per outfit category like garments, no cover masks needed.
+  - `GarmentDef.tags?: string[]` (e.g. `["tee","shirt","sweater"]`): a slot with more than 12 items (`tags.ts`) gets filter chips.
+  - Layering: `outer` is worn over `top` and may go with `full`; `full` still excludes `top`/`bottom` (via the garments'
+    `conflicts` / `fullClash`). Do not put `outer` in a garment's `conflicts` unless it really cannot be worn together.
+  - Restrictions: `restrictions.parts` accepts garment, hairstyle and facial hair ids (e.g. `{"hat_beanie": ["ponytail_mid"]}`).
+    Notes: hat then hair "Ponytail doesn't fit with Beanie - switched to Short crop."; hair then hat "Beanie doesn't fit with Bun -
+    taken off."; facial hair vs hair/garments likewise (`equipFacialHair`, `facialHairWouldReplace`).
+  - Session API: `setModularFacialHair(id|null)`; `setModularGarment(category, slot, id)` takes the accessory slots.
+    `randomizeLook`: facial hair in about 30% of hair rolls, accessories sparse per slot, never a conflicting combination.
+  - Creator UI (`modularParts.ts`): Hair step has a "Facial hair" grid; Clothing step sections Top, Outer, Bottom, One-piece,
+    Shoes, then an "Accessories" group (Hat ... Bag, only slots with items for the body); tag chips (`[aria-label="<Slot> type"]`),
+    lazy thumbnails, tap targets >= 40 px. Tests: `tests/unit/characters3d/modular/catalog.test.ts`; e2e `creator-modular.mjs`
+    step `catalog` (synthetic `e2e_` facial hair, accessories, jacket, filler tops).
 - **Garment method (decided with the user).** OpenSew-2 alone gave bunched sleeves, bare shoulders and poke-through
   on these muscular bodies, even with wider armholes (`opensew_adapter.widen_armhole`) and a ray-based weight rebind.
   Garments therefore use the hybrid `finish: {"mode": "body"}` in `build_garment.py`: OpenSew-2 sews the design
