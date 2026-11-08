@@ -3890,7 +3890,7 @@ async function stepStairKinds(T) {
       spot = await findSpot(used, true);
       if (spot) spot.sold = await page.evaluate(([ids, fences]) => {
         const g = window.hearthside.game;
-        const sold = ids.map((id) => g.sell(id).ok);
+        const sold = ids.map((id) => { const o = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId].objects[id]; const r = g.sell(id); return r.ok || `${o?.defId}: ${r.reason}`; });
         if (fences.length) {
           g.setMode('build');
           g.view.setLevel?.(0);
@@ -3914,7 +3914,7 @@ async function stepStairKinds(T) {
       for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) put(x, z, 'P');
       return { lot: st.activeLotId, w: lot.width, d: lot.depth, walls: Object.keys(lot.walls).filter((k) => k.startsWith('0:')).length, fences: Object.keys(lot.fences ?? {}).length, map: rows.map((r) => r.join('')).join('/') };
     });
-    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every(Boolean), JSON.stringify(spot ?? lotMap));
+    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every((v) => v === true), JSON.stringify(spot ?? lotMap));
     if (!spot) return;
     const { x: X0, z: Z0 } = spot;
     for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${X0 + i},${Z0 + j}`);
@@ -3933,14 +3933,14 @@ async function stepStairKinds(T) {
       const upper = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 1 });
       g.setBuildTool(null);
       g.setMode('live');
-      return { ground: ground.ok, upper: upper.ok ? true : upper.reason };
+      return { ground: ground.ok ? true : ground.reason, upper: upper.ok ? true : upper.reason };
     }, [X0, Z0]);
     T.check(S, `the ${label} staircase: ground room and Floor 2 room built`, built.ground === true && built.upper === true, JSON.stringify(built));
     const memberOnLot = () => page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; });
     let walker = await memberOnLot();
     if (!walker) { await runUntil(T, 2400, `Object.values(st.people).some(p => p.householdId === st.activeHouseholdId && p.location.kind === 'lot')`); walker = await memberOnLot(); }
     T.check(S, 'a household member is home to climb the staircase', !!walker, String(walker));
-    if (!walker || !built.ground || built.upper !== true) continue;
+    if (!walker || built.ground !== true || built.upper !== true) continue;
     // Go here on a level: queued through the real options, run until the action ends, true when the member stands on the tile
     const climb = async (level, tx, tz) => {
       const queued = await page.evaluate(([id, lv, x, z]) => {
