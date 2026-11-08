@@ -406,7 +406,8 @@ freelance jobs train them. Milestone 11 adds baking, wellness, creativity, photo
 - `kit/focus.ts`: `trapTab`, `currentOpener` / `restoreFocus` (modals and panels return focus to the opener; panels take
   focus when opened from the keyboard) and `rovingGroup` (one Tab stop and arrow keys for tabs, radio groups and swatches).
   World keys (pan, turn, zoom, delete, rotate) do nothing when focus was put on a control with the keyboard (`input.ts`).
-- `hud/objectPicker.ts` is the keyboard and screen-reader route to world objects (also reachable from the Queue tab).
+- `hud/objectPicker.ts`, `hud/placePicker.ts` (people, and "Go somewhere" with rooms named from their contents by `hud/pickerModel.ts`) are the keyboard and
+  screen-reader routes to the world, reachable from the Queue tab; they reuse the pointer's action menu and `goTo`. Wall picks have no live-mode actions.
 - Contrast: tokens in `styles/base.css` are checked against WCAG AA by `tests/unit/ui/contrast.test.ts`; `meter()` adds the words
   Low / Critical and `aria-valuetext`.
 

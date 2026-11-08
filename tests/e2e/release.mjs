@@ -397,8 +397,21 @@ async function runViewport(browser, url, name) {
   check('7', "the map's \"What's on this week\" list shows events", hasWhatsOn >= 1 && eventRows >= 1, `${eventRows} events`);
   await page.locator('.nbm-events').first().scrollIntoViewIfNeeded().catch(() => undefined);
   await page.waitForTimeout(200);
+  // the list is on screen without choosing a pin (portrait: a sheet below the map) and its rows are 44 px tall
+  const wo = await page.evaluate(() => {
+    const ul = document.querySelector('.nbm-detail .nbm-events');
+    const rows = [...document.querySelectorAll('.nbm-detail .nbm-events .nbm-event')];
+    const r = ul ? ul.getBoundingClientRect() : null;
+    const mapR = document.querySelector('.nbm-map-scroll, .nbm-list')?.getBoundingClientRect();
+    return {
+      visible: !!r && r.width > 0 && r.top >= 0 && r.top < innerHeight && r.left >= 0 && r.right <= innerWidth + 1,
+      small: rows.map((e) => e.getBoundingClientRect().height).filter((hh) => hh < 43.5).length,
+      belowMap: !!r && !!mapR && r.top >= mapR.bottom - 1 || (!!r && !!mapR && r.left >= mapR.right - 1),
+    };
+  });
+  check('7', "the \"What's on this week\" list is visible without choosing a pin, with 44 px rows", wo.visible && wo.small === 0, JSON.stringify(wo));
   await shot('14-map-whats-on');
-  // a venue's own sheet lists what is on there (in portrait the list of the whole week sits behind the map until a pin is chosen)
+  // a venue's own sheet lists what is on there (it covers the map in portrait)
   const eventVenue = await page.evaluate(() => { const g = window.hearthside.game; const ev = g.neighbourhood().events ?? []; const l = ev[0] && g.neighbourhood().lots.find((x) => x.id === ev[0].lotId); return l ? l.name : null; });
   if (eventVenue) {
     await tap(page.locator('.nbm-pin', { hasText: eventVenue }).first());

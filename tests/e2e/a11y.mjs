@@ -8,7 +8,8 @@
 //  - the hint card shows for a new player, Esc and "Got it" mark it seen, "Skip hints" turns hints off, Settings > Help turns
 //    them on and "Reset hints" empties the seen list;
 //  - panels open from the keyboard, move focus in, close on Esc and give focus back; dialogs trap Tab; tabs use arrow keys;
-//  - the keyboard route to the world (person panel > Choose an object) opens an object's action menu;
+//  - the keyboard route to the world (person panel > Choose an object / Choose a person / Go somewhere) opens an object's or
+//    a person's action menu and queues a walk to a named room or spot;
 //  - focus is visible on every stop; every visible button/tab/switch/input has an accessible name on the main screens;
 //  - on touch viewports every tap target of those screens is at least 44 x 44 px;
 //  - UI scale 150 % and high contrast apply (and the HUD still fits); reduced motion follows the OS setting;
@@ -298,6 +299,44 @@ async function runViewport(browser, name, vp) {
   await key('Escape');
   await page.waitForTimeout(300);
   check(name, 'Esc closes the action menu and focus returns to Choose an object', (await page.locator('.ctx-menu:not([hidden])').count()) === 0 && /Choose an object/.test((await focus()).name || ''), JSON.stringify(await focus()));
+  // keyboard route to people: Choose a person lists the others on the lot and opens the same action menu as a tap
+  await page.evaluate(() => {
+    const st = window.hearthside.debug.state(), me = window.hearthside.game.selected();
+    const onLot = (p) => p.id !== me && p.location.kind === 'lot' && p.location.lotId === st.activeLotId;
+    if (Object.values(st.people).some(onLot)) return;
+    const lot = st.lots[st.activeLotId];
+    const other = Object.values(st.people).find((p) => p.id !== me && p.householdId !== st.people[me].householdId) ?? Object.values(st.people).find((p) => p.id !== me);
+    if (other) other.location = { kind: 'lot', lotId: st.activeLotId, level: 0, x: lot.entry.x + 0.5, z: lot.entry.z + 0.5, facing: 0, posture: 'standing' };
+  });
+  await page.getByRole('button', { name: 'Choose a person' }).focus();
+  await key('Enter');
+  await page.waitForSelector('.modal', { timeout: 5000 });
+  const peopleRows = await page.locator('.modal .row-btn').count();
+  check(name, 'Choose a person lists the other people on the lot', peopleRows > 0, String(peopleRows));
+  await audit('person picker');
+  await key('Enter');
+  await page.waitForTimeout(600);
+  const socialMenu = await page.evaluate(() => { const m = document.querySelector('.ctx-menu:not([hidden])'); return m ? m.innerText.slice(0, 120) : null; });
+  check(name, 'choosing a person opens their action menu (socials)', !!socialMenu, String(socialMenu));
+  await S('ctx-menu-person-keyboard');
+  await key('Escape');
+  await page.waitForTimeout(300);
+  check(name, 'Esc closes the person menu and focus returns to Choose a person', (await page.locator('.ctx-menu:not([hidden])').count()) === 0 && /Choose a person/.test((await focus()).name || ''), JSON.stringify(await focus()));
+  // keyboard route to places: Go somewhere queues a walk (the floor tap's "Go here")
+  const queueBefore = await page.evaluate(() => window.hearthside.debug.state().people[window.hearthside.game.selected()].queue.length);
+  await page.getByRole('button', { name: 'Go somewhere' }).focus();
+  await key('Enter');
+  await page.waitForSelector('.modal', { timeout: 5000 });
+  const placeRows = await page.evaluate(() => [...document.querySelectorAll('.modal .row-btn-title')].map((e) => e.textContent));
+  check(name, 'Go somewhere lists rooms and spots by name', placeRows.length >= 2 && placeRows.includes('Front door'), JSON.stringify(placeRows));
+  await audit('go somewhere picker');
+  await S('go-somewhere');
+  await key('Enter');
+  await page.waitForTimeout(600);
+  const walk = await page.evaluate(() => { const p = window.hearthside.debug.state().people[window.hearthside.game.selected()]; return { n: p.queue.length, go: p.queue.some((a) => a.interactionId === 'goHere') }; });
+  check(name, 'choosing a place queues a walk there and closes the dialog', (await page.locator('.modal').count()) === 0 && walk.go && walk.n > queueBefore, JSON.stringify({ queueBefore, ...walk }));
+  await page.waitForTimeout(1000);
+  check(name, 'focus returns to Go somewhere', /Go somewhere/.test((await focus()).name || ''), JSON.stringify(await focus()));
   // needs tab: words for low needs
   await page.locator('.person-panel [role=tab]').first().click();
   await page.evaluate(() => { const st = window.hearthside.debug.state(); const id = window.hearthside.game.selected(); st.people[id].needs.hunger = 8; st.people[id].needs.energy = 30; });

@@ -18,8 +18,11 @@ harness, release e2e) are both merged into this branch. Part A added: contextual
 (`screens/help.ts`), UI scale 90-150 %, High contrast, focus trap/return and roving tabs (`ui/kit/focus.ts`), WCAG AA tokens
 (`tests/unit/ui/contrast.test.ts`), a keyboard route to world objects (Queue tab > Choose an object), a room-edit panel that fits phones, and
 `npm run e2e:a11y` (`tests/e2e/a11y.mjs`, screenshots in `dev/shots/m13a/`). Test harnesses seed `hints: false` next to `tutorial: false`.
-Known and left: picking things in the 3D world still needs a pointer (the object picker is the keyboard route; people other than the
-selected one and floor/wall picks have no keyboard route).
+The keyboard routes to the world are the Queue tab buttons Choose an object, Choose a person (opens the person's action menu) and
+Go somewhere (rooms by name, the yard and the front door; `hud/placePicker.ts`, `hud/pickerModel.ts`). Wall picks have no player
+actions in live mode, so they need no route. The portrait map lists "What's on this week" in a sheet below the map. Production builds
+ship no source maps (`HEARTHSIDE_SOURCEMAP=1` turns them on); the `window.hearthside` debug hooks and `?debug` stay on purpose
+(single-player, local saves; every e2e script uses them).
 
 ## Milestone status
 
@@ -388,7 +391,7 @@ changes for existing saves or styles.
   deferred. Measure on a real phone.
 - M7 neighbourhood:
   - One trip at a time; a split household cannot be watched on two lots.
-  - The portrait map is wider than the screen: pan, or use List. The phone's Neighbourhood Map entry opens the same modal.
+  - The portrait map is wider than the screen: pan, or use List. "What's on this week" sits below it. The phone's Neighbourhood Map entry opens the same modal.
   - Gaps closed in social gaps pass (see ARCHITECTURE.md): weddings, gifts as objects, venue events, group chat, community events,
     town life (job changes, moving households), furniture choice when moving, town children for old saves, the sitter for
     other households, the jog track, `Person.carriedBy`, the phone map entry and `LotInfo.usable`. What is still simple:
