@@ -11,6 +11,7 @@ import { isAdult, romanceInterest } from '../core/relations';
 import { addFeed, transact } from '../core/state';
 import type { ActionInstance, Person, Relationship } from '../core/types';
 import { endAction } from './actions';
+import { nearbyObjectWithTag } from './furnishings';
 import { behaviorFor } from './behaviors';
 import type { SimCtx } from './context';
 import { clamp, householdOf, lotLoc, setThought, socialDef, venueTypeOf } from './context';
@@ -88,6 +89,7 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
   const r = def.requires;
   const stageReason = socialStageReason(def, actor, target);
   if (stageReason) return stageReason;
+  if (r.objectTag && !nearbyObjectWithTag(ctx, actor, r.objectTag)) return `Needs a ${r.objectTag.replace(/-/g, ' ')}.`;
   if (r.otherHousehold && actor.householdId === target.householdId) return `${target.firstName} already lives here.`;
   if (r.sameHousehold && actor.householdId !== target.householdId) return `${target.firstName} doesn't live here.`;
   if (r.notStatus && bond && r.notStatus.includes(bond.status)) return `Already ${statusLabel(bond.status, true)}.`;

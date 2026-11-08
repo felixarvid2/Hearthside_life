@@ -16,13 +16,14 @@ import { NEED_LABELS } from './needs';
 import { CARE_IDS, careProblem } from './care';
 import { interactionStageReason, socialStageReason, stageAllows } from './gating';
 import { outdoorGateReason } from './weather';
+import { storedFish } from './furnishings';
 import { isDependentStage } from '../core/lifeStages';
 import { schoolDayOn } from './school';
 import { socialFit } from './autonomy';
 import { hasRecentMemory, knownPeople, peekRel } from './relationships';
 import { socialAcceptance } from './social';
 import { QUEUE_MAX, SERVICE_MIN_WEAR } from './tuning';
-import { poolAt } from '../world/pools';
+import { nearestPoolEdgeTile, poolAt, poolBesideTile } from '../world/pools';
 import type { ActionData, ActionRequest, InteractionOption } from './types';
 
 const OUTFIT_LABELS: Record<OutfitCategory, string> = {
@@ -117,6 +118,10 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
           continue;
         }
         out.push(option(ctx, p, iid, def.name, def.icon, 'object', t));
+        // Milestone 13: a caught fish kept in the fridge can be cooked on request.
+        if (def.id === 'cookMeal' && storedFish(ctx, loc.lotId, p.householdId).length > 0) {
+          out.push(option(ctx, p, iid, 'Cook the Catch', def.icon, 'object', t, { recipeId: 'pan-fried-fish' }));
+        }
       }
       return out;
     }
@@ -142,10 +147,21 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
           out.push(option(ctx, p, id, def.name, def.icon, 'move', target, { poolId: pool.id }));
         }
         if (isSwimming(p)) out.push(option(ctx, p, 'getOutOfPool', 'Get Out', 'move', 'move', target));
+        // Milestone 13: a toddler cannot swim (the entries above say why) but may paddle at the nearest bit of deck.
+        if (p.lifeStage === 'toddler' && lot) {
+          const edge = nearestPoolEdgeTile(lot, pool, target.x, target.z);
+          const def = interactionDef(ctx, 'paddleAtEdge');
+          if (edge && def && def.status === 'ready') out.push(option(ctx, p, def.id, def.name, def.icon, 'move', { kind: 'tile', x: edge.x, z: edge.z, level: 0 }));
+        }
         return out;
       }
+      // A toddler pointing at the dry deck beside the water can paddle there.
+      if (p.lifeStage === 'toddler' && lot && poolBesideTile(lot, target.level ?? 0, target.x, target.z)) {
+        const def = interactionDef(ctx, 'paddleAtEdge');
+        if (def && def.status === 'ready') out.push(option(ctx, p, def.id, def.name, def.icon, 'move', target));
+      }
       const def = interactionDef(ctx, 'goHere')!;
-      return [option(ctx, p, def.id, def.name, def.icon, 'move', target)];
+      return [option(ctx, p, def.id, def.name, def.icon, 'move', target), ...out];
     }
     case 'person': {
       if (target.personId === p.id) return selfOptions(ctx, p);

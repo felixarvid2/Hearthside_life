@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { OBJECTS, fittedBounds, type LocalBox } from '../content/objects';
 import type { AnimHobSpec, AnimKind, ContentDB, InteriorKind, ObjectDef, PartAxis, PartRole } from '../content/types';
 import type { ObjectUse } from './objectUse';
+import { LAUNDRY_DOOR_MINUTES, MICROWAVE_DOOR_MINUTES } from '../content/interactionsFurnishings';
 
 // ---------------------------------------------------------------------------------------------
 // Descriptors
@@ -294,6 +295,11 @@ function setPart(out: ActiveParts, flag: PartFlag, u: ObjectUse | null): void {
   a.since = u ? u.animSince : 0;
 }
 
+/** True in the first and last `minutes` of a run (and outside perform), when a door stands open. */
+function endsOpen(u: ObjectUse, minutes: number): boolean {
+  return u.phase !== 'perform' || u.elapsed < minutes || (u.duration !== null && u.elapsed > u.duration - minutes);
+}
+
 /** Game minutes at each end of a shower's perform phase during which its glass door stands open. */
 export const SHOWER_DOOR_MINUTES = 2;
 
@@ -368,15 +374,19 @@ export function activeParts(
       break;
     }
     case 'microwave': {
+      // The door is open while the food goes in and comes out, shut while it heats (light on). Forced uses by anything
+      // else than the real interaction (the dev shoot script) keep the door open throughout.
       const u = first(uses, () => true);
-      setPart(out, 'door', u);
+      setPart(out, 'door', u && (u.interactionId !== 'microwaveMeal' || endsOpen(u, MICROWAVE_DOOR_MINUTES)) ? u : null);
       setPart(out, 'light', u);
       break;
     }
     case 'laundry': {
+      // Loading and unloading with the door (or the top-loader's lid) open; the drum turns and the light is on the whole run.
       const u = first(uses, () => true);
-      setPart(out, 'door', u);
-      setPart(out, 'lid', u); // top-loaders: a hinged lid instead of a front door
+      const open = u && (u.interactionId !== 'doLaundry' || endsOpen(u, LAUNDRY_DOOR_MINUTES)) ? u : null;
+      setPart(out, 'door', open);
+      setPart(out, 'lid', open); // top-loaders: a hinged lid instead of a front door
       setPart(out, 'drum', u);
       setPart(out, 'light', u);
       break;

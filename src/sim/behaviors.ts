@@ -22,7 +22,8 @@ import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
 import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
-import { getOutBehavior, poolSwimBehavior } from './pool';
+import { getOutBehavior, paddleBehavior, poolSwimBehavior } from './pool';
+import { placePot, storeFishBehavior } from './furnishings';
 import { isOutdoors, nearestOutdoorTile } from './weather';
 import { makePlacedObject } from '../world/objects';
 import { validatePlacement } from '../world/placement';
@@ -417,11 +418,11 @@ const computerBehavior: Behavior = {
  */
 const FREELANCE_BASE: Record<string, number> = {
   writeArticle: 1800, writeBook: 9000, programGig: 3200, paintToSell: 2400, busk: 600, sellPhotos: 2400, writePaper: 4200,
-  sellBakes: 2600,
+  sellBakes: 2600, sellPottery: 2200,
 };
 
 /** Freelance work whose fee also grows with the Creativity skill (paintings, writing, music and baking). */
-const CREATIVE_FREELANCE = new Set(['writeArticle', 'writeBook', 'paintToSell', 'busk', 'sellBakes']);
+const CREATIVE_FREELANCE = new Set(['writeArticle', 'writeBook', 'paintToSell', 'busk', 'sellBakes', 'sellPottery']);
 
 /** The skill level needed for a freelance action that is gated (photography sales at 2, research papers at 5). */
 const FREELANCE_LEVEL: Record<string, number> = { sellPhotos: 2, writePaper: 5 };
@@ -584,6 +585,12 @@ const sellCatchBehavior: Behavior = {
   },
   interruptible: false,
 };
+
+/** Throw a Pot (Milestone 13): a timed activity at the wheel that leaves a handmade pot on a free tile. */
+const potteryBehavior: Behavior = { ...genericBehavior, apply: (ctx, p) => placePot(ctx, p) };
+
+/** Do the Laundry (Milestone 13): a timed chore at a washer or dryer; its door and drum follow the running action (render). */
+const laundryBehavior: Behavior = { ...genericBehavior };
 
 /** Phone or mailbox shortcuts that open the household bills panel. */
 const openBillsBehavior: Behavior = {
@@ -809,6 +816,10 @@ function buildRegistry(): Record<string, Behavior> {
     garden: gardenBehavior,
     poolSwim: poolSwimBehavior,
     getOut: getOutBehavior,
+    paddle: paddleBehavior,
+    pottery: potteryBehavior,
+    storeFish: storeFishBehavior,
+    laundry: laundryBehavior,
   };
 }
 

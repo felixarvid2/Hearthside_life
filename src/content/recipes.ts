@@ -33,6 +33,12 @@ export const RECIPES: RecipeDef[] = [
     id: 'lemon-salmon', name: 'Lemon Salmon with Greens', minutes: 40, cost: dollars(32), servings: 4, hunger: 60, minCookingLevel: 6,
     description: 'Pan-seared salmon with lemon butter and green beans.', status: 'ready',
   },
+  // Milestone 13: a dish made from a caught fish kept in the fridge. Cooked only on request ("Cook the Catch"): the fish is the
+  // ingredient, so the groceries are just butter and lemon, and one fish makes as many servings as it has portions.
+  {
+    id: 'pan-fried-fish', name: 'Pan-Fried Fish with Lemon', minutes: 30, cost: dollars(4), servings: 2, hunger: 54, minCookingLevel: 1, ingredient: 'fish',
+    description: 'Your own catch, fried in butter with lemon and herbs. Needs a caught fish in the fridge.', status: 'ready',
+  },
   // Milestone 11: baked goods. `skill: 'baking'` gates them by Baking level instead of Cooking, and the bake
   // interaction (sim/baking.ts) uses them; the cookMeal chain ignores them.
   {
@@ -65,6 +71,7 @@ export const RECIPE_FOOD_TAGS: Record<string, string[]> = {
   spaghetti: ['food:pasta', 'food:comfort-food'],
   'roast-chicken': ['food:roasts'],
   'lemon-salmon': ['food:seafood'],
+  'pan-fried-fish': ['food:seafood'],
   'rustic-bread': ['food:breakfast', 'food:comfort-food'],
   'berry-muffins': ['food:breakfast'],
   'buttermilk-scones': ['food:breakfast', 'food:comfort-food'],

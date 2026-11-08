@@ -214,6 +214,7 @@ export class ModularCharacter {
   private readonly garments = new Map<ModularSlot, PartInstance>();
   private look: ModularLook = emptyLook();
   private animator: Animator | null = null;
+  private walkRate = 1;
   private lastAnim: { id: AnimId; opts: { fade?: number; posture?: Posture } } = { id: 'idle', opts: { fade: 0 } };
   private chain: Promise<void> = Promise.resolve();
   private target: { look: ModularLook; category: OutfitCategory } | null = null;
@@ -298,6 +299,12 @@ export class ModularCharacter {
     if (this.disposed) return;
     this.lastAnim = { id, opts };
     this.animator?.play(id, opts);
+  }
+
+  /** Walk-cycle speed factor from the ground speed (see Animator.setWalkRate); remembered across body rebuilds. */
+  setWalkRate(rate: number): void {
+    this.walkRate = rate;
+    this.animator?.setWalkRate(rate);
   }
 
   update(dt: number): void {
@@ -539,6 +546,7 @@ export class ModularCharacter {
     const pelvis = bones.get('pelvis');
     const ratio = pelvis ? hipRatio(pelvis.position.length(), this.body.rig?.clipPelvisHeight) : 1;
     this.animator = new Animator(this.root, ratio === 1 ? this.clips : scaledClipsFor(this.clips, ratio));
+    this.animator.setWalkRate(this.walkRate);
     this.animator.play(this.lastAnim.id, { ...this.lastAnim.opts, fade: 0 });
   }
 

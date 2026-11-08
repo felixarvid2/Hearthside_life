@@ -167,6 +167,11 @@ export interface ObjectDef {
    * SCREENS win.
    */
   screen?: boolean;
+  /**
+   * Milestone 13: shade. Tiles within this many tiles of the footprint (an umbrella, awning or patio cover) count as
+   * sheltered from rain and snow (sim/weather.ts `shelteredAt`). Absent = no shade.
+   */
+  shelter?: number;
   status: ContentStatus;
 }
 
@@ -358,6 +363,8 @@ export interface SocialDef {
     /** Milestone 8: the target must live in another household / in the actor's own household. */
     otherHousehold?: boolean;
     sameHousehold?: boolean;
+    /** Milestone 13: the actor's lot (and level) needs a working object with this tag (a pool table for "Play Pool Together"). */
+    objectTag?: string;
   };
   /** Menu section; default from the category (status -> special, romantic -> romantic, mean -> mean, else friendly). */
   section?: SocialSection;
@@ -536,6 +543,8 @@ export interface RecipeDef {
   /** Skill that gates the recipe and sets its quality (absent = cooking). Milestone 11: baking recipes. */
   skill?: string;
   minCookingLevel: number;
+  /** Milestone 13: the dish needs this raw ingredient from the fridge ('fish': a caught fish stored there); one fish makes the dish. */
+  ingredient?: 'fish';
   status: ContentStatus;
 }
 

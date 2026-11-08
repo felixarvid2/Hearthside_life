@@ -11,6 +11,12 @@ import { currentWeather } from './weather';
 
 export const SNOWMAN_WARM_DAYS = 3;
 
+/** True when it rains now or rain was planned in either half of today (rain melts a snowman twice as fast). */
+function rainToday(ctx: Pick<SimCtx, 'state'>): boolean {
+  if (currentWeather(ctx.state) === 'rain') return true;
+  return ctx.state.weather?.today.includes('rain') ?? false;
+}
+
 /** True when snow is falling now or was planned in either half of today. */
 function snowToday(ctx: Pick<SimCtx, 'state'>): boolean {
   if (currentWeather(ctx.state) === 'snow') return true;
@@ -36,7 +42,7 @@ export function updateSnowmen(ctx: Pick<SimCtx, 'state' | 'now' | 'events' | 'co
         continue;
       }
       if (obj.snowman.lastWarmDay === day) continue;
-      obj.snowman.warmDays += 1;
+      obj.snowman.warmDays += rainToday(ctx) ? 2 : 1;
       obj.snowman.lastWarmDay = day;
       if (obj.snowman.warmDays >= SNOWMAN_WARM_DAYS) { delete lot.objects[id]; changed = true; }
     }

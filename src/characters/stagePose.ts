@@ -111,6 +111,34 @@ export function applyStoop(bones: Map<string, THREE.Bone>, amount: number): void
 }
 
 // ---------------------------------------------------------------------------------------------
+// Curled baby and reclined sitter
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * A lying baby draws its knees up and folds its forearms over the chest (Milestone 13): every bone turns about the model x axis
+ * by its share of `amount` (hips raise the knees toward +y while the baby lies on its back along +z, knees fold the shins back,
+ * elbows lift the hands toward the chest).
+ */
+export const CURL_BONES: ReadonlyArray<[string, number]> = [
+  ['thigh_l', -1.05], ['thigh_r', -1.05], ['calf_l', 1.7], ['calf_r', 1.7], ['lowerarm_l', -1.9], ['lowerarm_r', -1.9], ['spine_01', -0.12],
+];
+
+/** Draws the curl in by `amount` (0..1). */
+export function applyCurl(bones: Map<string, THREE.Bone>, amount: number): void {
+  if (amount <= 0) return;
+  for (const [name, angle] of CURL_BONES) {
+    const b = bones.get(name);
+    if (b) rotateInModel(b, X_AXIS, angle * amount);
+  }
+}
+
+/** Total lean back of a seated person who reclines, in radians (a negative stoop spread over the spine). */
+export const RECLINE_LEAN = 0.55;
+
+/** The bones the recline turns (the stoop bones). */
+export const RECLINE_BONES: readonly string[] = STOOP_BONES;
+
+// ---------------------------------------------------------------------------------------------
 // Holding a baby
 // ---------------------------------------------------------------------------------------------
 

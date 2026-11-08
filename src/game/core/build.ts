@@ -5,6 +5,8 @@
 // never touch the state.
 
 import { buildCommand, type BuildCommand } from '../../building/buildCommands';
+import { roomCommand } from '../../building/roomCommands';
+import { planRoomOp, type RoomOp, type RoomOpPlan } from '../../building/roomOps';
 import { buyObject, sellObject } from '../../building/commands';
 import { exteriorCommand, type ExteriorCommand } from '../../building/exteriorCommands';
 import {
@@ -100,7 +102,9 @@ export type Resolved =
   /** Milestone 9 exterior: fences, gates, roofs and terrain paint (building/exteriorPlans.ts). */
   | { ok: true; exterior: ExteriorRequest }
   /** Milestone 12: a pool, its removal, or a ladder edit (building/poolPlans.ts). */
-  | { ok: true; pool: PoolRequest };
+  | { ok: true; pool: PoolRequest }
+  /** Milestone 13: move, resize or duplicate a room (building/roomOps.ts). */
+  | { ok: true; roomOp: RoomOp };
 
 const bad = (reason: string): Resolved => ({ ok: false, reason });
 
@@ -193,6 +197,12 @@ export function resolveBuild(content: ContentDB, lot: Lot, tool: BuildTool, targ
       return { ok: true, build: { kind: 'eraseFloor', level, tiles } };
     }
     case 'deleteRoom': return { ok: true, build: { kind: 'deleteRoom', level, tile: snapTile(from) } };
+    case 'roomEdit': {
+      const tile = snapTile(from);
+      if (tool.edit === 'resize') return { ok: true, roomOp: { kind: 'resizeRoom', level, tile, side: tool.side ?? 'e', delta: Math.trunc(tool.delta ?? 0) } };
+      const dx = Math.trunc(tool.dx ?? 0), dz = Math.trunc(tool.dz ?? 0);
+      return { ok: true, roomOp: tool.edit === 'move' ? { kind: 'moveRoom', level, tile, dx, dz } : { kind: 'duplicateRoom', level, tile, dx, dz, copyObjects: tool.copyObjects === true } };
+    }
     case 'stairs': {
       const def = content.objects[tool.defId];
       if (!def?.stair) return bad('Choose a staircase first.');
@@ -392,6 +402,7 @@ export class BuildTools {
     if ('object' in resolved) return { resolved, preview: this.objectPreview(state, lot, hh.id, resolved.object, target.level ?? 0) };
     if ('exterior' in resolved) return { resolved, preview: this.exteriorPreview(planExterior(state, this.d.content, lot.id, hh.id, resolved.exterior)) };
     if ('pool' in resolved) return { resolved, preview: this.poolPreview(planPool(state, this.d.content, lot.id, hh.id, resolved.pool)) };
+    if ('roomOp' in resolved) return { resolved, preview: this.roomPreview(planRoomOp(state, this.d.content, lot.id, hh.id, resolved.roomOp)) };
     const plan = planBuild(state, this.d.content, lot.id, hh.id, resolved.build);
     return { resolved, preview: this.fromPlan(plan) };
   }
@@ -442,6 +453,21 @@ export class BuildTools {
       highlight: {
         level: h.level, newWalls: h.newEdges, existingWalls: h.existingEdges, removedWalls: h.removedEdges, openingEdges: [], removedOpeningEdges: [],
         tiles: h.tiles, blocked: h.blocked,
+      },
+    };
+  }
+
+  /** Preview of a room move, resize or duplicate (Milestone 13): the destination tiles ride in the usual highlight. */
+  private roomPreview(plan: RoomOpPlan): BuildPreview {
+    return {
+      ok: plan.ok, ...(plan.ok ? {} : { reason: plan.reasons[0] ?? 'That cannot be done.' }), reasons: plan.reasons, label: plan.label, cost: plan.cost, charge: plan.charge, refund: plan.refund,
+      counts: { ...KINDLESS_COUNTS, wallsNew: plan.diff.walls.filter((w) => w.after && !w.before).length, wallsRemoved: plan.diff.walls.filter((w) => w.before && !w.after).length,
+        openingsAdded: plan.diff.openings.filter((o) => o.after && !o.before).length, openingsMoved: plan.diff.openings.filter((o) => o.before && o.after).length,
+        openingsRemoved: plan.diff.openings.filter((o) => o.before && !o.after).length, floorsPlaced: plan.diff.floors.filter((f) => f.after).length, floorsErased: plan.diff.floors.filter((f) => !f.after).length },
+      measure: { lengthM: 0, text: plan.measure }, rooms: { before: 0, after: 0 },
+      highlight: {
+        level: plan.highlight.level, newWalls: plan.diff.walls.filter((w) => w.after && !w.before).map((w) => w.key), existingWalls: [],
+        removedWalls: plan.diff.walls.filter((w) => w.before && !w.after).map((w) => w.key), openingEdges: [], removedOpeningEdges: [], tiles: plan.highlight.tiles, blocked: plan.highlight.blocked,
       },
     };
   }
@@ -504,14 +530,15 @@ export class BuildTools {
       : 'object' in r ? ('place' in r.object ? buyObject(lot.id, hh.id, r.object.place) : sellObject(lot.id, hh.id, r.object.remove))
         : 'exterior' in r ? exteriorCommand(lot.id, hh.id, r.exterior)
           : 'pool' in r ? this.poolCommand(lot, hh.id, r.pool)
-            : buildCommand(lot.id, hh.id, r.build);
+            : 'roomOp' in r ? roomCommand(lot.id, hh.id, r.roomOp)
+              : buildCommand(lot.id, hh.id, r.build);
     const before0 = new Set(Object.keys(lot.openings));
     const res = this.d.run(cmd);
     if (!res.ok) return res;
     this.setHighlight(null);
     const plan = (cmd as BuildCommand | ExteriorCommand).plan;
     const exterior = 'exterior' in r;
-    const pool = 'pool' in r;
+    const pool = 'pool' in r || 'roomOp' in r;
     const after = this.tracker.current(lot.id, lvl);
     const placedId = Object.keys(lot.openings).find((id) => !before0.has(id));
     const openingId = placedId ?? ('extra' in r ? r.extra?.openingId : undefined);

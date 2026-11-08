@@ -21,6 +21,7 @@ import { CRADLE } from '../characters/stagePose';
 import { HandProps, propsFor } from './handProps';
 import { ProgressPills, type ProgressScope } from './progressPills';
 import { WATER_Y } from './poolView';
+import { WALK_TILES_PER_MINUTE } from '../sim/tuning';
 
 const ANIMS = new Set<string>(ANIM_IDS);
 const TWO_PI = Math.PI * 2;
@@ -34,6 +35,8 @@ interface Entry {
   /** Milestone 11.5: the props in this person's hands (and the plate put down in front). */
   props: HandProps;
   prevX: number; prevZ: number; curX: number; curZ: number;
+  /** Last drawn position and the smoothed ground speed (tiles per real second), to match the walk cycle to it. */
+  gx: number; gz: number; gv: number;
   facing: number;
   animKey: string;
   appearanceKey: string;
@@ -236,7 +239,7 @@ export class PeopleView {
     this.overlay?.appendChild(el);
     const loc = p.location.kind === 'lot' ? p.location : null;
     const e: Entry = {
-      id: p.id, view, props, shown: { appearance: structuredClone(p.appearance), outfit, category, stage: p.lifeStage }, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
+      id: p.id, view, props, shown: { appearance: structuredClone(p.appearance), outfit, category, stage: p.lifeStage }, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0, gx: loc?.x ?? 0, gz: loc?.z ?? 0, gv: 0,
       facing: loc?.facing ?? 0, animKey: '', appearanceKey: stageKey(p), outfitKey: `${category}|${JSON.stringify(outfit)}`,
       align: loc && (loc.posture === 'seated' || loc.posture === 'lying') ? 1 : 0, slot: null, posture: loc?.posture ?? 'standing',
       shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0, baby: p.lifeStage === 'baby',
@@ -344,6 +347,14 @@ export class PeopleView {
         e.posture = posture;
         e.view.play(id, { fade: first || reducedMotion ? 0 : 0.25, posture });
       }
+      // Milestone 13: the walk cycle follows the real ground speed (fast game speeds no longer skate), and a recliner leans back.
+      if (dt > 0) {
+        e.gv += (Math.min(Math.hypot(x - e.gx, z - e.gz) / dt, 14) - e.gv) * Math.min(1, dt * 8);
+        e.view.setWalkRate(e.gv / WALK_TILES_PER_MINUTE);
+      }
+      e.gx = x; e.gz = z;
+      const head = p.queue[0];
+      e.view.setRecline(head?.interactionId === 'reclineBack' && head.phase === 'perform');
       e.view.update(dt);
       if (e.baby) {
         const holder = this.holderOf(state, e);

@@ -23,9 +23,9 @@ describe('age gating of interactions', () => {
     }
   });
 
-  it('toddlers only do what lists toddler: toys, naps, sleeping, sitting, meals, TV, the potty, babbling, toddling and being walked somewhere', () => {
+  it('toddlers only do what lists toddler: toys, naps, sleeping, sitting, meals, TV, the potty, babbling, toddling, paddling at the pool edge and being walked somewhere', () => {
     const toddler = ALL.filter((d) => stageAllows(d, 'toddler')).map((d) => d.id).sort();
-    expect(toddler).toEqual(['babble', 'eatMeal', 'goHere', 'nap', 'playWithToys', 'sit', 'sleep', 'toddleAround', 'usePotty', 'watchTv']);
+    expect(toddler).toEqual(['babble', 'eatMeal', 'goHere', 'nap', 'paddleAtEdge', 'playWithToys', 'sit', 'sleep', 'toddleAround', 'usePotty', 'watchTv']);
   });
 
   it('a toddler can be walked to a spot but a baby cannot', () => {

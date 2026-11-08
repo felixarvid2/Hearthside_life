@@ -22,6 +22,7 @@
 import type { InteractionDef } from './types';
 import { dollars } from '../core/money';
 import { POOL_INTERACTIONS } from './poolInteractions';
+import { FURNISHING_INTERACTIONS } from './interactionsFurnishings';
 
 type Def = Omit<InteractionDef, 'needsPerHour' | 'needsOnComplete' | 'status' | 'allowVisitors' | 'slotKinds'> &
   Partial<Pick<InteractionDef, 'needsPerHour' | 'needsOnComplete' | 'status' | 'allowVisitors' | 'slotKinds'>>;
@@ -835,4 +836,4 @@ const M12_OUTDOOR: InteractionDef[] = [
 ];
 
 /** Every object, item, tile and self interaction. Social interactions live in socials.ts. */
-export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS, ...POOL_INTERACTIONS, ...M12_OUTDOOR];
+export const INTERACTIONS: InteractionDef[] = [...REST, ...FOOD, ...BATHROOM, ...LEISURE, ...HOBBY, ...HOUSEWORK, ...WARDROBE, ...SELF, ...VENUE, ...M11_SKILLS, ...M11_B_SKILLS, ...POOL_INTERACTIONS, ...M12_OUTDOOR, ...FURNISHING_INTERACTIONS];

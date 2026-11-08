@@ -252,6 +252,7 @@ async function runViewport(browser, vpName, vp) {
     ['12', 'Milestone 9 exterior: roofs, fences, a gate, terrain paint, a garden bed (standalone)', stepExterior],
     ['13', 'Milestone 11.5: cooking and eating - progress pill, fridge door, hand props, a writing screen', stepAnimations],
     ['14', 'Milestone 12: seasons and weather, a pool built and swum, the Quayside Baths venue', stepWorldM12],
+    ['15', 'Milestone 13: a spiral and a length-4 staircase built and climbed, a room moved and undone', stepStairKinds],
   ];
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });
@@ -3827,6 +3828,190 @@ async function stepAnimations(T) {
   }
   await page.evaluate(() => window.hearthside.game.view.setLevel?.(0));
   await T.shot('m115-end');
+}
+
+// ===============================================================================================================
+// Milestone 13: the less common staircases (a spiral and a length-4 straight one) built in a two-floor structure and climbed (so the
+// stairwell, the stair links and the climb animation are used by more than the basic straight stair), then the room tools: a room is
+// moved with the Build panel's Move button, checked, applied and undone. Everything is driven through the game API except the room
+// panel buttons, which are tapped.
+// ===============================================================================================================
+
+async function stepStairKinds(T) {
+  const S = '15';
+  const { page } = T;
+  await page.evaluate(() => { window.hearthside.game.setSpeed(0); document.querySelectorAll('.toast').forEach((t) => t.remove()); });
+  if ((await page.evaluate(() => window.hearthside.game.mode())) !== 'live') { await T.tap(page.locator('.mode-btn[data-mode="live"]')); await page.waitForTimeout(400); }
+  await page.evaluate(() => { const st = window.hearthside.debug.state(); st.households[st.activeHouseholdId].funds += 900000; });
+
+  // an empty stretch of the lot for a room of 7 x 4 tiles (room for a 4-long stair with a tile at each end, or a spiral with its entry and
+  // its arrival tile) and the column east of it (the door's tile): no floor or object on the 8 x 4 tiles, no wall on the edges of the block
+  const findSpot = (avoid) => page.evaluate((av) => {
+    const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+    const defs = window.hearthside.game.content.objects;
+    const busy = new Set(av);
+    for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) busy.add(`${x},${z}`); }
+    for (const o of Object.values(lot.objects)) { const d = defs[o.defId]; if (o.level !== 0) continue; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) busy.add(`${o.x + i},${o.z + j}`); }
+    for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) busy.add(`${x},${z}`);
+    const fenced = (dir, x, z) => !!lot.fences?.[`0:${dir}:${x}:${z}`];
+    const wall = (dir, x, z) => !!lot.walls[`0:${dir}:${x}:${z}`] || fenced(dir, x, z);
+    for (let z = 0; z + 3 < lot.depth; z++) for (let x = 1; x + 8 < lot.width; x++) {
+      let free = true;
+      for (let j = 0; j < 4 && free; j++) for (let i = 0; i <= 7 && free; i++) if (busy.has(`${x + i},${z + j}`)) free = false;
+      for (let i = 0; i < 7 && free; i++) for (let j = 0; j <= 4 && free; j++) if (wall('h', x + i, z + j)) free = false;
+      for (let j = 0; j < 4 && free; j++) for (let i = 0; i <= 8 && free; i++) if (wall('v', x + i, z + j)) free = false;
+      if (free) return { x, z };
+    }
+    return null;
+  }, avoid);
+
+  const used = [];
+  const kinds = [['stair-spiral-wood', 'spiral (4 tiles)'], ['stair-grand', 'straight, 4 tiles, two wide']];
+  let first = null;
+  for (const [defId, label] of kinds) {
+    const spot = await findSpot(used);
+    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot, JSON.stringify(spot));
+    if (!spot) return;
+    const { x: X0, z: Z0 } = spot;
+    for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${X0 + i},${Z0 + j}`);
+    if (!first) first = spot;
+    // ---- a ground room with a floor and a door, a room over it on Floor 2
+    const built = await page.evaluate(([x0, z0]) => {
+      const g = window.hearthside.game;
+      const fd = Object.values(g.content.floorDesigns).find((d) => d.status === 'ready');
+      const floor = { designId: fd.id, paletteId: fd.palettes[0].id };
+      const door = Object.values(g.content.openings).find((d) => d.kind === 'door' && d.status === 'ready' && d.width === 1);
+      g.setMode('build');
+      g.view.setLevel?.(0);
+      g.setBuildTool({ kind: 'room', floor, doors: [{ defId: door.id, side: 'e' }] });
+      const ground = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 0 });
+      g.setBuildTool({ kind: 'room', floor, doors: [] });
+      const upper = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 1 });
+      g.setBuildTool(null);
+      g.setMode('live');
+      return { ground: ground.ok, upper: upper.ok ? true : upper.reason };
+    }, [X0, Z0]);
+    T.check(S, `the ${label} staircase: ground room and Floor 2 room built`, built.ground === true && built.upper === true, JSON.stringify(built));
+    const memberOnLot = () => page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; });
+    let walker = await memberOnLot();
+    if (!walker) { await runUntil(T, 2400, `Object.values(st.people).some(p => p.householdId === st.activeHouseholdId && p.location.kind === 'lot')`); walker = await memberOnLot(); }
+    T.check(S, 'a household member is home to climb the staircase', !!walker, String(walker));
+    if (!walker || !built.ground || built.upper !== true) continue;
+    // Go here on a level: queued through the real options, run until the action ends, true when the member stands on the tile
+    const climb = async (level, tx, tz) => {
+      const queued = await page.evaluate(([id, lv, x, z]) => {
+        const g = window.hearthside.game;
+        const opt = g.options(id, { kind: 'floor', tile: { x, z }, level: lv }).find((o) => o.interactionId === 'goHere' && o.enabled);
+        return opt ? g.queue(id, opt).ok : false;
+      }, [walker, level, tx, tz]);
+      if (!queued) return { queued: false, done: false };
+      await page.evaluate(() => { globalThis.__maxRise = 0; globalThis.__levels = new Set(); });
+      const ended = `(() => { const p = st.people['${walker}']; const l = p.location; globalThis.__maxRise = Math.max(globalThis.__maxRise, l.rise || 0); if (l.kind === 'lot') globalThis.__levels.add(l.level); return p.queue.length === 0 || (l.kind === 'lot' && l.level === ${level} && !l.rise && Math.floor(l.x) === ${tx} && Math.floor(l.z) === ${tz}); })()`;
+      const walk = await runUntil(T, 9600, ended);
+      const there = await page.evaluate(([id, lv, x, z]) => { const l = window.hearthside.debug.state().people[id].location; return l.kind === 'lot' && l.level === lv && !l.rise && Math.floor(l.x) === x && Math.floor(l.z) === z; }, [walker, level, tx, tz]);
+      const seen = await page.evaluate(() => ({ maxRise: globalThis.__maxRise, levels: [...globalThis.__levels] }));
+      return { queued: true, ...walk, done: walk.done && there, ...seen };
+    };
+    // ---- the staircase: the first turn and tile in the room where the game accepts it AND the walk upstairs works (the stairs need a
+    // floor tile beyond their head on Floor 2, which not every spot has), the others are taken out again
+    let found = null;
+    let up = null;
+    const tried = [];
+    for (let rot = 0; rot < 4 && !found; rot++) for (let z = Z0; z < Z0 + 4 && !found; z++) for (let x = X0; x < X0 + 7 && !found; x++) {
+      const placed = await page.evaluate(([id, px, pz, r, x0, z0]) => {
+        const g = window.hearthside.game;
+        g.setMode('build');
+        g.setBuildTool({ kind: 'stairs', defId: id, rot: r });
+        const res = g.buildApply({ from: { x: px + 0.5, z: pz + 0.5 }, level: 0 });
+        g.setBuildTool(null);
+        g.setMode('live');
+        if (!res.ok) return null;
+        const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId];
+        const stair = Object.values(lot.objects).find((o) => o.defId === id && o.x >= x0 && o.x < x0 + 7 && o.z >= z0 && o.z < z0 + 4);
+        const d = g.content.objects[id];
+        const w = stair.rot % 2 ? d.footprint.d : d.footprint.w, dd = stair.rot % 2 ? d.footprint.w : d.footprint.d;
+        const holes = [];
+        for (let j = 0; j < dd; j++) for (let i = 0; i < w; i++) if (!lot.floors[`1:${stair.x + i}:${stair.z + j}`]) holes.push([stair.x + i, stair.z + j]);
+        let far = null, fd = -1;
+        for (let zz = z0; zz < z0 + 4; zz++) for (let xx = x0; xx < x0 + 7; xx++) {
+          if (!lot.floors[`1:${xx}:${zz}`] || holes.some(([hx, hz]) => hx === xx && hz === zz)) continue;
+          const dist = Math.hypot(xx - stair.x, zz - stair.z);
+          if (dist > fd) { fd = dist; far = { x: xx, z: zz }; }
+        }
+        return { id: stair.id, x: stair.x, z: stair.z, rot: stair.rot, holes: holes.length, far, kind: d.stair };
+      }, [defId, x, z, rot, X0, Z0]);
+      if (!placed) continue;
+      if (!placed.far || placed.holes < 1) { tried.push(`${x},${z}/${rot}: no stairwell or no upper tile`); }
+      else {
+        const attempt = await climb(1, placed.far.x, placed.far.z);
+        if (attempt.done) { found = placed; up = attempt; break; }
+        tried.push(`${x},${z}/${rot}: did not arrive`);
+      }
+      // take this one out again (the member goes back to the ground floor first if they got up)
+      await page.evaluate(([oid, px, pz]) => {
+        const g = window.hearthside.game;
+        g.setMode('build');
+        g.setBuildTool({ kind: 'eraseStairs' });
+        g.buildApply({ from: { x: px + 0.5, z: pz + 0.5 }, level: 0 });
+        g.setBuildTool(null);
+        g.setMode('live');
+      }, [placed.id, placed.x, placed.z]);
+    }
+    T.check(S, `the ${label} staircase (${defId}) has a spot in the room where the stairs are usable`, !!found, found ? JSON.stringify(found) : `tried ${tried.slice(0, 5).join(' | ')}`);
+    if (!found) continue;
+    T.check(S, `the stairwell is cut into Floor 2 above the ${label} staircase (${found.holes} tiles open)`, found.holes >= 1, JSON.stringify(found));
+    T.check(S, `the member climbed the ${label} staircase to Floor 2 (rise above 2 m, levels 0 and 1)`, up.done && up.maxRise > 2 && up.levels.includes(0) && up.levels.includes(1), JSON.stringify({ ...up, viol: up.viol?.length }));
+    T.check(S, `the climb never crossed a wall outside a doorway (${label})`, (up.viol ?? []).length === 0, JSON.stringify((up.viol ?? []).slice(0, 3)));
+    await T.frames(12);
+    await T.shot(`m13-stairs-${defId}`);
+    const down = await climb(0, X0 + 7, Z0 + 1);
+    T.check(S, `and back down the ${label} staircase to the ground floor`, down.queued && down.done, JSON.stringify({ ...down, viol: down.viol?.length }));
+  }
+
+  // ---- the room tools on the first room: select it, Move, check the preview, apply, undo
+  if (!first) return;
+  await page.evaluate(() => { const g = window.hearthside.game; g.view.setLevel?.(0); g.setSpeed(0); });
+  await T.tap(page.locator('.mode-btn[data-mode="build"]'));
+  await page.waitForSelector('.bb-build-panel:not([hidden])', { timeout: 30000 });
+  await page.waitForTimeout(600);
+  await T.frames(20);
+  const tile = { x: first.x + 1, z: first.z + 1 };
+  const sel = await page.evaluate(([x, z]) => { const r = window.hearthside.game.roomAt({ x, z }, 0); return r && !r.outdoor ? { uid: r.uid, area: r.area } : null; }, [tile.x, tile.z]);
+  T.check(S, 'the built room is an indoor room the Build panel can select', !!sel, JSON.stringify(sel));
+  const snap = () => page.evaluate(() => { const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId]; return { floors: Object.keys(lot.floors).length, funds: st.households[st.activeHouseholdId].funds, keys: Object.keys(lot.walls).filter((k) => k.startsWith('0:')).sort().join(',') }; });
+  const before = await snap();
+  const pt = await pointFor(T, 'tile', tile.x, tile.z);
+  T.check(S, 'a tile of the room is on screen and free of UI', !!pt?.free, JSON.stringify(pt));
+  if (!pt?.free) return;
+  await T.tapAt(pt.x, pt.y);
+  await page.waitForTimeout(300);
+  const moveBtn = page.locator('.bb-room-actions [data-room-action="move"]');
+  T.check(S, 'the selected room offers Move, Resize, Copy and Demolish (touch sized buttons)', (await moveBtn.count()) === 1 && (await page.locator('.bb-room-actions .btn').count()) === 4 && ((await moveBtn.boundingBox())?.height ?? 0) >= 43.5, '');
+  await T.tap(moveBtn);
+  await page.waitForTimeout(300);
+  T.check(S, 'Move shows the arrow pad and an Apply button that is off until the room is nudged', (await page.locator('.bb-roomedit-pad .btn').count()) === 4 && await page.locator('.bb-build-footer .bb-confirm').isDisabled(), '');
+  let ok = false;
+  for (const dir of ['e', 'e', 'w', 'w', 'w', 'w', 's', 's']) {
+    await T.tap(page.locator(`.bb-roomedit-pad [data-nudge="${dir}"]`));
+    await page.waitForTimeout(150);
+    if (!(await page.locator('.bb-build-footer .bb-confirm').isDisabled())) { ok = true; break; }
+  }
+  const footer = (await page.locator('.bb-build-footer').innerText()).replace(/\s+/g, ' ');
+  T.check(S, 'nudging the room gives a valid preview that says moving is free', ok && /Free/.test(footer), footer);
+  await T.shot('m13-room-move-preview');
+  const same = await snap();
+  T.check(S, 'nothing changed before Apply', same.keys === before.keys && same.funds === before.funds, '');
+  await T.tap(page.locator('.bb-build-footer .bb-confirm'));
+  await page.waitForTimeout(400);
+  const moved = await snap();
+  T.check(S, 'Apply moved the room: its walls are elsewhere, the floor count and the funds are unchanged', moved.keys !== before.keys && moved.floors === before.floors && moved.funds === before.funds, '');
+  await T.shot('m13-room-moved');
+  await page.evaluate(() => window.hearthside.game.undo());
+  await page.waitForTimeout(300);
+  const undone = await snap();
+  T.check(S, 'undo puts the room back exactly', undone.keys === before.keys && undone.floors === before.floors, '');
+  await page.evaluate(() => window.hearthside.game.setBuildTool(null));
+  await T.audit('room tools: end');
 }
 
 // ===============================================================================================================

@@ -177,3 +177,63 @@ describe('BuildSession with a mouse', () => {
     expect(session.state().pending).toBe(false);
   });
 });
+
+describe('room edit (Milestone 13)', () => {
+  /** Builds a small room on the lot's first free spot and selects it with a tap, as a player would with no tool. */
+  function roomSetup() {
+    const s = setup();
+    s.core.setBuildTool({ kind: 'room', spec: { height: 2.8 } });
+    const spots = [[2, 2], [2, 14], [14, 2], [20, 14], [2, 20]] as const;
+    let at: readonly [number, number] | null = null;
+    for (const [x, z] of spots) {
+      if (s.core.buildApply({ from: { x, z }, to: { x: x + 4, z: z + 3 }, level: 0 }).ok) { at = [x, z]; break; }
+    }
+    expect(at, 'a free spot for a room').toBeTruthy();
+    s.core.setBuildTool(null);
+    const [x, z] = at!;
+    s.session.selectRoomAt((x + 1.5) * 10, (z + 1.5) * 10);
+    expect(s.session.selection()).toBeTruthy();
+    return { ...s, x, z };
+  }
+  const walls = (s: ReturnType<typeof roomSetup>) => Object.keys(s.core.state()!.lots[s.core.state()!.activeLotId]!.walls).sort();
+
+  it('Move previews at once, waits for Confirm even with a mouse, and the arrows change the offset', () => {
+    const s = roomSetup();
+    const before = walls(s);
+    s.session.startRoomEdit('move');
+    expect(s.session.state().tool).toMatchObject({ kind: 'roomEdit', edit: 'move' });
+    expect(s.session.state().canConfirm).toBe(false); // offset 0: nothing to do yet
+    // the arrows nudge the offset: some direction is always free on the open lot
+    let moved = false;
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+      s.session.adjustRoomEdit({ dx, dz });
+      if (s.session.state().preview?.ok) { moved = true; break; }
+    }
+    expect(moved).toBe(true);
+    expect(s.session.state().preview).toMatchObject({ ok: true, cost: 0 });
+    expect(s.session.state().canConfirm).toBe(true);
+    // a mouse click on the room only re-aims the preview: nothing is applied until Confirm
+    s.session.tap((s.x + 1.5) * 10, (s.z + 1.5) * 10, 'mouse', { kind: 'none' });
+    expect(walls(s)).toEqual(before);
+    expect(s.session.confirm()).toBeTruthy();
+    expect(walls(s)).not.toEqual(before);
+    // undo brings it back
+    expect(s.core.undo()).toBeTruthy();
+    expect(walls(s)).toEqual(before);
+  });
+
+  it('Resize and Copy start with a sensible preview; copy furniture is a switch', () => {
+    const s = roomSetup();
+    s.session.startRoomEdit('resize');
+    expect(s.session.state().preview?.ok).toBe(true);
+    expect(s.session.state().preview?.counts.wallsNew).toBeGreaterThan(0);
+    s.session.adjustRoomEdit({ side: 'w', delta: -1 });
+    expect(s.session.state().tool).toMatchObject({ edit: 'resize', side: 'w', delta: -1 });
+    s.session.cancel();
+    s.session.selectRoomAt((s.x + 1.5) * 10, (s.z + 1.5) * 10);
+    s.session.startRoomEdit('duplicate');
+    expect(s.session.state().preview?.ok).toBe(true);
+    s.session.adjustRoomEdit({ copyObjects: true });
+    expect(s.session.state().tool).toMatchObject({ edit: 'duplicate', copyObjects: true });
+  });
+});

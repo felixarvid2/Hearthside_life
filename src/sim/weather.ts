@@ -4,7 +4,7 @@
 // weather moodlets; everything here is pure simulation (no three.js, no DOM).
 
 import type { ContentDB } from '../content/types';
-import { MINUTES_PER_DAY, dayIndex, hourOfDay, minuteOfDay } from '../core/clock';
+import { DAY_NAMES, MINUTES_PER_DAY, dayIndex, hourOfDay, minuteOfDay } from '../core/clock';
 import type { Tile } from '../core/nav';
 import { SEASON_NAMES, seasonDays, seasonFor, seasonForDay, seasonsOn } from '../core/season';
 import type {
@@ -114,6 +114,7 @@ export function ensureWeather(ctx: Pick<SimCtx, 'state' | 'now'>, force = false)
   let w = state.weather;
   if (force || !w || !validPlan(w.today) || !validPlan(w.tomorrow) || w.day !== day || !WEATHER_KINDS.includes(w.current)) {
     const snowCover = !!w?.snowCover && seasonsOn(state.settings) && season === 'winter';
+    const melt = snowCover ? w?.melt : undefined;
     w = state.weather = {
       current: enabled ? today[half] : 'clear',
       today: enabled ? today : ['clear', 'clear'],
@@ -121,17 +122,37 @@ export function ensureWeather(ctx: Pick<SimCtx, 'state' | 'now'>, force = false)
       day,
       since,
       ...(snowCover ? { snowCover: true } : {}),
+      ...(melt ? { melt } : {}),
     };
   } else {
     w.current = enabled ? w.today[half] : 'clear';
     if (!enabled) { w.today = ['clear', 'clear']; w.tomorrow = ['clear', 'clear']; }
-    if (w.current === 'snow' || (w.today[0] === 'snow' && half === 1)) w.snowCover = true;
+    if (w.current === 'snow' || (w.today[0] === 'snow' && half === 1 && w.current !== 'rain')) w.snowCover = true;
     if (!seasonsOn(state.settings) || season !== 'winter') delete w.snowCover;
     w.since = since;
   }
   if (!enabled || !seasonsOn(state.settings) || season !== 'winter') delete w.snowCover;
   if (enabled && season === 'winter' && w.current === 'snow') w.snowCover = true;
+  if (!w.snowCover || w.current === 'snow') delete w.melt;
   return w;
+}
+
+/** Game minutes of rain that wash away a settled snow cover (rain melts snow much faster than mild dry weather). */
+export const RAIN_MELT_MINUTES = 180;
+
+/**
+ * Milestone 13: rain on a settled snow cover melts it. Called once per tick after ensureWeather: while it rains the stored
+ * `melt` counter grows by the tick, and at RAIN_MELT_MINUTES (three hours of rain, so one rainy half-day) the cover is gone.
+ * Snow resets the counter. Returns true on the tick the cover melts.
+ */
+export function meltSnowCover(ctx: Pick<SimCtx, 'state'>, minutes: number): boolean {
+  const w = ctx.state.weather;
+  if (!w || !w.snowCover || w.current !== 'rain') return false;
+  w.melt = (w.melt ?? 0) + minutes;
+  if (w.melt < RAIN_MELT_MINUTES) return false;
+  delete w.snowCover;
+  delete w.melt;
+  return true;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -191,7 +212,7 @@ export function outdoorGateReason(
   const base = weatherGateReason(rule, currentWeather(ctx.state), currentSeason(ctx.state));
   if (base || !rule) return base;
   if (rule.outdoor === true && !isOutdoors(ctx, p) && !nearestOutdoorTile(ctx, p)) return 'This has to be done outdoors.';
-  if (rule.sheltered === true && isOutdoors(ctx, p)) return 'Better done under a roof.';
+  if (rule.sheltered === true && !isSheltered(ctx as Pick<SimCtx, 'state' | 'content'>, p)) return 'Better done under a roof.';
   if (rule.night === true && !isNight(ctx.now)) return 'Only at night.';
   if (rule.day === true && isNight(ctx.now)) return 'Only during the day.';
   if (rule.snowCover === true && !snowLies(ctx.state, ctx.now)) return 'There is no snow on the ground.';
@@ -215,6 +236,34 @@ export function outdoorsAt(
     if (r.level === level && x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1) return false;
   }
   return true;
+}
+
+/**
+ * Milestone 13: whether a tile is covered from rain and snow by shade: an umbrella, awning or patio cover (an object with
+ * `ObjectDef.shelter`) within its radius of the footprint, on the same level. A roof is handled by outdoorsAt; shade
+ * shelters the tile without making it "indoors" (rooms, sun and night rules are unchanged).
+ */
+export function shadedAt(
+  state: Pick<WorldState, 'lots'>, content: Pick<ContentDB, 'objects'>, lotId: string, level: number, x: number, z: number,
+): boolean {
+  const lot = state.lots[lotId];
+  if (!lot) return false;
+  for (const o of Object.values(lot.objects)) {
+    if (o.level !== level) continue;
+    const def = content?.objects?.[o.defId];
+    const r = def?.shelter;
+    if (!def || !r || o.condition.broken) continue;
+    const w = o.rot % 2 === 0 ? def.footprint.w : def.footprint.d, d = o.rot % 2 === 0 ? def.footprint.d : def.footprint.w;
+    if (x >= o.x - r && x < o.x + w + r && z >= o.z - r && z < o.z + d + r) return true;
+  }
+  return false;
+}
+
+/** The person is out of the rain: under a roof or indoors, or standing in the shade of an umbrella, awning or patio cover. */
+export function isSheltered(ctx: Pick<SimCtx, 'state' | 'content'>, p: Person): boolean {
+  const loc = lotLoc(p);
+  if (!loc) return false;
+  return !outdoorsAt(ctx.state, loc.lotId, loc.level, loc.x, loc.z) || shadedAt(ctx.state, ctx.content, loc.lotId, loc.level, loc.x, loc.z);
 }
 
 /** Whether the person is in the open air (see outdoorsAt). */
@@ -341,7 +390,7 @@ export function updateWeatherMoods(ctx: Pick<SimCtx, 'state' | 'now' | 'content'
   for (const p of Object.values(state.people)) {
     if (!lotLoc(p)) continue;
     const sentiment = weatherSentiment(p, ctx.content, weather);
-    const desired = desiredWeatherMoodlet(weather, isOutdoors(ctx, p), daytime, sentiment, hasWinterOutfit(p, ctx.content));
+    const desired = desiredWeatherMoodlet(weather, !isSheltered(ctx, p), daytime, sentiment, hasWinterOutfit(p, ctx.content));
     // A condition change replaces the old weather moodlet immediately.
     if (p.moodlets.some((m) => WEATHER_MOODLET_IDS.has(m.id) && m.id !== desired?.id)) {
       p.moodlets = p.moodlets.filter((m) => !WEATHER_MOODLET_IDS.has(m.id) || m.id === desired?.id);
@@ -362,6 +411,45 @@ export function updateWeatherMoods(ctx: Pick<SimCtx, 'state' | 'now' | 'content'
 export function weatherHudLabel(state: Pick<WorldState, 'clock' | 'settings' | 'weather'>): string {
   if (state.settings.weather === false) return 'Weather off';
   return `${WEATHER_NAMES[currentWeather(state)]}`;
+}
+
+/** How many days the forecast shows, today included. */
+export const FORECAST_DAYS = 5;
+
+export interface ForecastDay {
+  /** Absolute game day. */
+  day: number;
+  /** 'Today', 'Tomorrow' or the weekday name. */
+  label: string;
+  halves: [WeatherKind, WeatherKind];
+  season: Season;
+}
+
+/**
+ * The next `days` days of weather (today first). Today and tomorrow are the stored plan; later days are planned from the
+ * same deterministic function the daily re-plan uses (seed, day, half, season), so the forecast for a day never changes
+ * and always matches what the plan stores when that day arrives (except for a pinned debug plan).
+ */
+export function forecastDays(state: Pick<WorldState, 'seed' | 'settings' | 'weather' | 'clock'>, days = FORECAST_DAYS): ForecastDay[] {
+  const today = dayIndex(state.clock.minutes);
+  const enabled = state.settings.weather !== false;
+  const out: ForecastDay[] = [];
+  for (let i = 0; i < days; i++) {
+    const day = today + i;
+    const stored = state.weather && state.weather.day === today ? (i === 0 ? state.weather.today : i === 1 ? state.weather.tomorrow : null) : null;
+    const halves: [WeatherKind, WeatherKind] = !enabled ? ['clear', 'clear'] : stored && validPlan(stored) ? stored : planFor(state, day);
+    out.push({
+      day, halves, season: seasonForDay(day, seasonDays(state.settings), seasonsOn(state.settings)),
+      label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : DAY_NAMES[day % 7]!,
+    });
+  }
+  return out;
+}
+
+/** One line per forecast day: "Wednesday: Rain then Clear". */
+export function forecastLines(state: Pick<WorldState, 'seed' | 'settings' | 'weather' | 'clock'>, days = FORECAST_DAYS): string[] {
+  if (state.settings.weather === false) return ['Weather is turned off: every day is clear.'];
+  return forecastDays(state, days).map((d) => `${d.label}: ${d.halves[0] === d.halves[1] ? WEATHER_NAMES[d.halves[0]] : `${WEATHER_NAMES[d.halves[0]]} then ${WEATHER_NAMES[d.halves[1]]}`}`);
 }
 
 /** "Forecast: today Rain then Cloudy · tomorrow Clear then Clear." for the info panel. */

@@ -25,7 +25,7 @@ import type { ClothUniforms, HairUniforms, MeshySkinUniforms, MpfbEyeUniforms, M
 import { FABRIC_FX, FABRIC_IDS, FABRIC_ROUGHNESS, PATTERN_IDS, createAiHairMaterial, createClothMaterial, createHairMaterial, createMeshySkinMaterial, createMpfbEyeMaterial, createMpfbHairlineMaterial, createMpfbIrisMaterial, createMpfbSkinMaterial, createMpfbUnderwearMaterial, createSkinMaterial, wrinkleMapForStage } from './materials';
 import { mpfbFaceInfluences, mpfbInfluences } from './mpfbBody';
 import type { BindBone } from './stagePose';
-import { CRADLE, CRADLE_PAIRS, STOOP_BONES, applyCradle, applyStoop, bindBones, stageLook } from './stagePose';
+import { CRADLE, CRADLE_PAIRS, CURL_BONES, RECLINE_LEAN, STOOP_BONES, applyCradle, applyCurl, applyStoop, bindBones, stageLook } from './stagePose';
 import { resolveOutfit } from './outfits';
 import { seatedPlacement } from './posture';
 import { clamp } from './rig';
@@ -155,6 +155,10 @@ export class CharacterView {
   private cradleWeight = 0;
   /** How far the stoop is blended in (the posture decides the target). */
   private stoopWeight = 0;
+  /** Seated person leaning right back (a recliner) and a lying baby drawing its limbs in: targets and eased weights. */
+  private reclineOn = false;
+  private reclineWeight = 0;
+  private curlWeight = 0;
   private appearance: Appearance;
   private outfit: Outfit;
   private selected = false;
@@ -224,6 +228,12 @@ export class CharacterView {
   setCarrying(on: boolean): void { this.cradleOn = on; }
   get carrying(): boolean { return this.cradleOn; }
 
+  /** Lean back in the seat (the Recline interaction); blended in and out while seated. */
+  setRecline(on: boolean): void { this.reclineOn = on; }
+
+  /** Walk-cycle speed factor from the ground speed (see Animator.setWalkRate). */
+  setWalkRate(rate: number): void { this.animator.setWalkRate(rate); }
+
   /** World position of the middle of a baby cradled in this person's arms (the baby's yaw is this root's yaw plus `CRADLE.yaw`). */
   cradlePoint(target: THREE.Vector3): THREE.Vector3 {
     const k = STAGE_HEIGHTS[this.stage] / 1.8;
@@ -278,13 +288,20 @@ export class CharacterView {
   private applyPoseFx(dt: number): void {
     const look = stageLook(this.stage);
     this.fxSaved.clear();
-    const needStoop = look.stoop > 0, needCradle = this.cradleOn || this.cradleWeight > 0;
+    const needStoop = look.stoop > 0 || this.reclineOn || this.reclineWeight > 0, needCradle = this.cradleOn || this.cradleWeight > 0;
+    const babyLying = this.stage === 'baby' && !this.babyUpright && !this.cradleOn && this.animator.posture === 'lying';
+    const needCurl = babyLying || this.curlWeight > 0;
     if (needStoop) for (const n of STOOP_BONES) { const b = this.bones.get(n); if (b) this.fxSaved.set(b, b.quaternion.clone()); }
+    if (needCurl) for (const [n] of CURL_BONES) { const b = this.bones.get(n); if (b) this.fxSaved.set(b, b.quaternion.clone()); }
     if (needCradle) for (const n of Object.keys(CRADLE_PAIRS)) { const b = this.bones.get(n); if (b) this.fxSaved.set(b, b.quaternion.clone()); }
     const ease = (v: number, target: number, rate: number) => v + Math.sign(target - v) * Math.min(Math.abs(target - v), dt * rate);
     const posture = this.animator.posture;
     this.stoopWeight = ease(this.stoopWeight, posture === 'standing' ? 1 : posture === 'seated' ? 0.4 : 0, 2.5);
+    this.reclineWeight = ease(this.reclineWeight, this.reclineOn && posture === 'seated' ? 1 : 0, 1.6);
     if (look.stoop && this.stoopWeight > 0) applyStoop(this.bones, look.stoop * this.stoopWeight);
+    if (this.reclineWeight > 0) applyStoop(this.bones, -RECLINE_LEAN * this.reclineWeight);
+    this.curlWeight = ease(this.curlWeight, babyLying ? 1 : 0, 2);
+    if (this.curlWeight > 0) applyCurl(this.bones, this.curlWeight);
     this.cradleWeight = ease(this.cradleWeight, this.cradleOn ? 1 : 0, 4);
     if (this.cradleWeight > 0) {
       this.cradleBind ??= bindBones(this.frame.rootBone, CRADLE_PAIRS);

@@ -187,6 +187,7 @@ export interface RoomDoorSpec {
  * - eraseOpening: remove the door/window under the pointer (the wall stays).
  * - floor / eraseFloor: tile, dragged rectangle, or the whole room under the pointer.
  * - deleteRoom: remove the room under the pointer (outer walls, their openings and the floor).
+ * - roomEdit: move, resize or duplicate the rectangular room under the pointer (Milestone 13).
  */
 export type BuildTool =
   | { kind: 'wall'; shape: 'segment' | 'run'; spec?: WallSpec }
@@ -198,6 +199,9 @@ export type BuildTool =
   | { kind: 'floor'; finish: FinishRef; shape: 'tile' | 'rect' | 'room' }
   | { kind: 'eraseFloor'; shape: 'tile' | 'rect' | 'room' }
   | { kind: 'deleteRoom' }
+  // Milestone 13: move, resize or duplicate the room under the pointer (building/roomOps.ts). `move` and `duplicate` shift it by (dx, dz)
+  // tiles; `resize` moves one `side` by `delta` tiles; `copyObjects` also buys the furniture again for a duplicate.
+  | { kind: 'roomEdit'; edit: 'move' | 'resize' | 'duplicate'; dx?: number; dz?: number; side?: 'n' | 'e' | 's' | 'w'; delta?: number; copyObjects?: boolean }
   // Milestone 9: staircases. `stairs` places the ObjectDef `defId` (a stair) on the active level at the tapped tile, turned `rot` quarter
   // turns (a rise toward the back of the object); `eraseStairs` sells the staircase under the pointer (from either floor it joins).
   | { kind: 'stairs'; defId: string; rot?: number }
