@@ -119,9 +119,11 @@ export function routeTick(ctx: SimCtx, p: Person, a: ActionInstance, goal: Goal)
     }
   }
 
-  let budget = WALK_TILES_PER_MINUTE * TICK_MINUTES;
+  // An action can ask for another gait (a jog along the park track): `moveAnim` and `pace` in its data.
+  const pace = typeof a.data.pace === 'number' && a.data.pace > 0 ? a.data.pace : 1;
+  let budget = WALK_TILES_PER_MINUTE * TICK_MINUTES * pace;
   loc.posture = 'walking';
-  setAnim(p, 'walk', ctx.now);
+  setAnim(p, a.data.moveAnim === 'jog' ? 'jog' : 'walk', ctx.now);
   while (budget > EPS && a.route.length > 0) {
     const wp = a.route[0]!;
     const d = dist(loc.x, loc.z, wp.x, wp.z);
@@ -167,7 +169,7 @@ export function routeTick(ctx: SimCtx, p: Person, a: ActionInstance, goal: Goal)
 function stopWalking(p: Person, ctx: SimCtx): void {
   const loc = lotLoc(p);
   if (loc && loc.posture === 'walking') loc.posture = 'standing';
-  if (p.anim.id === 'walk') setAnim(p, 'idle', ctx.now);
+  if (p.anim.id === 'walk' || p.anim.id === 'jog') setAnim(p, 'idle', ctx.now);
 }
 
 /**

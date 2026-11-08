@@ -327,3 +327,6 @@ export const TOWN_JOB_CHANCE = 0.18;
 export const TOWN_MOVE_CHANCE = 0.4;
 /** Day of the week (0 = Monday) the town's moving day falls on. */
 export const TOWN_MOVE_WEEKDAY = 3;
+
+/** Jogging along the park track is this many times faster than walking. */
+export const JOG_PACE = 1.8;

@@ -501,6 +501,11 @@ export interface Person {
   school?: SchoolState | null;
   /** Milestone 8: game minute since which a baby's or toddler's need has been empty (the emergency sitter comes after 3 hours). */
   careSince?: Partial<Record<NeedId, GameMinutes>>;
+  /**
+   * Milestone 13: the person who is carrying this baby right now (set by the care behaviour while it holds the baby, cleared when it
+   * puts them down). The renderer cradles the baby in that person's arms; absent = not carried.
+   */
+  carriedBy?: Id;
 }
 
 /** Milestone 8: school attendance and performance (children and teens). */

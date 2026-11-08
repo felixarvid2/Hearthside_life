@@ -136,6 +136,48 @@ describe('autonomous caregivers', () => {
   });
 });
 
+describe('carrying a baby is marked in the simulation', () => {
+  it('sets carriedBy while the caregiver holds the baby and clears it when they put the baby down', () => {
+    const { fw, s, baby } = nursery();
+    const b = s.people[baby]!;
+    b.needs.hunger = 20;
+    expect(b.carriedBy).toBeUndefined();
+    const q = fw.h.sim.queue(fw.w.mira, { interactionId: 'careFeed', target: { kind: 'person', personId: baby } });
+    expect(q.ok).toBe(true);
+    runUntil(fw.h, () => b.carriedBy !== undefined, 4 * 60);
+    expect(b.carriedBy).toBe(fw.w.mira);
+    const m = s.people[fw.w.mira]!.location as { x: number; z: number };
+    const bl = b.location as { x: number; z: number };
+    expect(Math.hypot(m.x - bl.x, m.z - bl.z)).toBeLessThan(0.5);
+    runUntil(fw.h, () => s.people[fw.w.mira]!.queue.length === 0, 4 * 60);
+    expect(b.carriedBy).toBeUndefined();
+    expect((b.location as { posture: string }).posture).toBe('lying'); // back in the crib
+  });
+
+  it('a cuddle (not a feed in the crib) also carries; cancelling releases the baby', () => {
+    const { fw, s, baby } = nursery();
+    const b = s.people[baby]!;
+    b.needs.social = 10;
+    const q = fw.h.sim.queue(fw.w.mira, { interactionId: 'careCuddle', target: { kind: 'person', personId: baby } });
+    if (!q.ok) throw new Error(q.reason);
+    runUntil(fw.h, () => b.carriedBy !== undefined, 4 * 60);
+    fw.h.sim.cancel(fw.w.mira, q.actionId);
+    runTicks(fw.h, 8);
+    expect(b.carriedBy).toBeUndefined();
+  });
+
+  it('drops a stale mark (the carrier is not holding anybody) when the nursery is tidied', () => {
+    const { fw, s, baby } = nursery();
+    const b = s.people[baby]!;
+    b.carriedBy = fw.w.theo;
+    settleDependents(pureCtx(fw.h));
+    expect(b.carriedBy).toBeUndefined();
+    b.carriedBy = 'per_gone';
+    settleDependents(pureCtx(fw.h));
+    expect(b.carriedBy).toBeUndefined();
+  });
+});
+
 describe('toddlers', () => {
   it('play with toys, nap and eat on their own, but cannot cook or work', () => {
     const fw = familyWorld({ startMinute: SATURDAY_NOON, autonomy: true });

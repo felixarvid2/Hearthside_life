@@ -246,6 +246,7 @@ export function fillFamilyDefaults(raw: Record<string, unknown>): void {
         if (s.reportWeek !== undefined && !whole(s.reportWeek)) delete s.reportWeek;
       }
     }
+    if (p.carriedBy !== undefined && !(typeof p.carriedBy === 'string' && p.carriedBy !== id && isRecord(people[p.carriedBy]))) delete p.carriedBy;
     if (p.careSince !== undefined) {
       if (!isRecord(p.careSince)) delete p.careSince;
       else {

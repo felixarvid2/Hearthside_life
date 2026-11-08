@@ -90,9 +90,18 @@ export function settleBaby(ctx: SimCtx, baby: Person): void {
   setAnim(baby, 'sleep', ctx.now);
 }
 
+/** True when `carrierId` is on the lot and has a running care action that holds `baby`. */
+export function isCarriedBy(ctx: Pick<SimCtx, 'state'>, baby: Person, carrierId: Id): boolean {
+  const carrier = ctx.state.people[carrierId];
+  if (!carrier || !lotLoc(carrier) || !lotLoc(baby)) return false;
+  return carrier.queue.some((x) => isCareId(x.interactionId) && x.target.kind === 'person' && x.target.personId === baby.id && x.data.carried === true);
+}
+
 /** Keeps every baby on a lot in a crib unless somebody is caring for it. Runs every 15 game minutes. */
 export function settleDependents(ctx: SimCtx): void {
   for (const p of Object.values(ctx.state.people)) {
+    // A carry mark whose carrier is gone, off the lot or no longer caring (an edited or interrupted save) is dropped.
+    if (p.carriedBy && !isCarriedBy(ctx, p, p.carriedBy)) delete p.carriedBy;
     if (p.lifeStage !== 'baby' || !lotLoc(p) || beingCaredFor(ctx, p.id)) continue;
     settleBaby(ctx, p);
   }
@@ -170,6 +179,7 @@ export const careBehavior: Behavior = {
     const fx = isCareId(a.interactionId) && a.interactionId !== 'careBirthday' ? CARE_EFFECTS[a.interactionId] : null;
     if (t.lifeStage === 'baby' && (fx?.carry ?? false)) {
       a.data.carried = true;
+      t.carriedBy = p.id;
       carryTo(t, p);
       setAnim(t, 'idle', ctx.now);
       ctx.events.emit({ type: 'person.changed', personId: t.id, what: 'location' });
@@ -206,6 +216,7 @@ export const careBehavior: Behavior = {
   },
   end(ctx, _p, a) {
     const t = targetOf(ctx, a);
+    if (t) delete t.carriedBy;
     if (t && t.lifeStage === 'baby' && lotLoc(t)) settleBaby(ctx, t);
     else if (t && a.data.carried === true && lotLoc(t)) lotLoc(t)!.posture = 'standing';
     ctx.events.emit({ type: 'person.changed', personId: a.actorId, what: 'queue' });

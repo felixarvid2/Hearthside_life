@@ -16,6 +16,7 @@ import {
   behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
 import { bakeBehavior } from './baking';
+import { jogLoopBehavior } from './jog';
 import { cookBehavior, eatMealBehavior } from './cooking';
 import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
@@ -751,6 +752,7 @@ let registry: Record<string, Behavior> | null = null;
 function buildRegistry(): Record<string, Behavior> {
   return {
     generic: genericBehavior,
+    jogLoop: jogLoopBehavior,
     outdoor: outdoorBehavior,
     buildSnowman: buildSnowmanBehavior,
     sit: genericBehavior,

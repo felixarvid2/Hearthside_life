@@ -114,8 +114,6 @@ export class PeopleView {
   private slotsLot: Lot | null = null;
   private selected: Id | null = null;
   hovered: Id | null = null;
-  /** Babies held in somebody's arms: baby id -> carrier id (`setHeld`). */
-  private readonly held = new Map<Id, Id>();
   /** Ground height under a point (grass is slightly below floors). */
   groundAt: (x: number, z: number) => number = () => 0;
   /** Milestone 9: people on floors above this one are not drawn. */
@@ -179,14 +177,6 @@ export class PeopleView {
       if (d < bd) { bd = d; best = s; }
     }
     return best;
-  }
-
-  /**
-   * Puts a baby in a carrier's arms (the carrier cradles, the baby lies across the forearms) or back down (null). Without a call, a
-   * baby that is not on a bed slot and stands within arm's reach of somebody playing the 'carry' animation is taken as held by them.
-   */
-  setHeld(babyId: Id, carrierId: Id | null): void {
-    if (carrierId) this.held.set(babyId, carrierId); else this.held.delete(babyId);
   }
 
   /** Rebuilds every person on the assets' current character style. */
@@ -448,16 +438,12 @@ export class PeopleView {
     for (const e of this.entries.values()) if (e.view.carrying !== carriers.has(e.id)) e.view.setCarrying(carriers.has(e.id));
   }
 
-  /** Who holds this baby: the carrier set with `setHeld`, else somebody within reach who is playing the 'carry' animation. */
+  /** Who holds this baby: the person the simulation marked as carrying them (`Person.carriedBy`), if they are on the lot. */
   private holderOf(state: WorldState, baby: Entry): Entry | null {
-    const set = this.held.get(baby.id);
-    if (set) { const h = this.entries.get(set); if (h && state.people[h.id]?.location.kind === 'lot') return h; }
-    if (baby.slot) return null;
-    for (const o of this.entries.values()) {
-      if (o.baby || o === baby || state.people[o.id]?.anim.id !== 'carry') continue;
-      if (Math.hypot(o.curX - baby.curX, o.curZ - baby.curZ) < 0.9) return o;
-    }
-    return null;
+    const by = state.people[baby.id]?.carriedBy;
+    if (!by) return null;
+    const h = this.entries.get(by);
+    return h && state.people[h.id]?.location.kind === 'lot' ? h : null;
   }
 
   /** Positions overlay elements (call after matrices are updated). */

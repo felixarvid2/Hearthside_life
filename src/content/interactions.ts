@@ -555,8 +555,8 @@ const VENUE: InteractionDef[] = [
   }),
   // Park and playground
   def({
-    id: 'goForJog', venues: ['park'], name: 'Go for a Jog', description: 'Jog laps of the park paths: trains Fitness but costs energy and hygiene, and it clears the head.',
-    icon: 'energy', kind: 'self', behavior: 'generic', posture: 'standing',
+    id: 'goForJog', venues: ['park'], name: 'Go for a Jog', description: 'Jog laps of the red track round the park: trains Fitness but costs energy and hygiene, and it clears the head.',
+    icon: 'energy', kind: 'self', behavior: 'jogLoop', posture: 'standing',
     anims: { perform: 'jog' },
     duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { energy: -9, hygiene: -6, fun: 9 }, skill: { id: 'fitness', xpPerHour: 55 },
     moodletOnComplete: 'energized', weather: { not: ['rain', 'snow'] },
