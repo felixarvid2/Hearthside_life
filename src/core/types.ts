@@ -81,6 +81,8 @@ export interface NeighbourhoodState {
   nextDoorHouseholdId?: Id;
   /** Number of household moves so far (keeps move occurrence ids unique). */
   moves?: number;
+  /** True once the town households have had their children generated (new worlds have them from the start; older saves get them on load). */
+  townChildren?: boolean;
 }
 
 export type StartMode = 'guided' | 'create' | 'sandbox';
@@ -118,6 +120,8 @@ export interface SimSettings {
   seasonDays?: number;
   /** Milestone 12: weather on (default). Off = always clear. */
   weather?: boolean;
+  /** Milestone 13: townspeople change jobs and households move to empty homes over time (default on). */
+  townLife?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------

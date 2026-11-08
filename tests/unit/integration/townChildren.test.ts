@@ -9,6 +9,11 @@ import { NORMAL_STAGE_DAYS, isGrownStage, isSchoolStage } from '../../../src/cor
 import { romanceInterest } from '../../../src/core/relations';
 import type { Person, WorldState } from '../../../src/core/types';
 import { createNewWorld } from '../../../src/game/newWorld';
+import { ensureTownChildren } from '../../../src/game/neighbourhood';
+import { removePerson } from '../../../src/sim/aging';
+import { Rng } from '../../../src/core/rng';
+import { Reservations } from '../../../src/sim/reservations';
+import type { SimCtx } from '../../../src/sim/context';
 import { validateWorld } from '../../../src/persistence/index';
 import { socialStageReason } from '../../../src/sim/gating';
 import { coreWithoutSaves, db } from './harness';
@@ -110,5 +115,83 @@ describe('children in town households', () => {
       if (!p) continue;
       for (const parentId of p.parentIds ?? []) expect(after.people[parentId]).toBeDefined();
     }
+  });
+});
+
+describe('town children for older saves', () => {
+  /** A world as an older save has it: the same town, but without the generated children and the migration marker. */
+  function oldSave(seed: number): WorldState {
+    const s = make(seed);
+    const ctx = { state: s, content: db, nav: { invalidate: () => undefined }, events: { emit: () => undefined }, rng: new Rng(s.rng), res: new Reservations(), now: s.clock.minutes, counters: { routeRequests: 0 } } as unknown as SimCtx;
+    for (const p of children(s)) removePerson(ctx, p.id);
+    delete s.neighbourhood!.townChildren;
+    return s;
+  }
+
+  it('adds children on load, keeps every existing id, job and relationship, and runs once', () => {
+    const s = oldSave(11);
+    expect(children(s)).toHaveLength(0);
+    const peopleBefore = JSON.stringify(Object.values(s.people).map((p) => [p.id, p.firstName, p.career?.careerId ?? null, p.traits, p.parentIds ?? null]));
+    const relsBefore = Object.keys(s.relationships).length;
+    const nextId = s.nextId;
+    const rng = [...s.rng];
+    const n = ensureTownChildren(s, db);
+    expect(n).toBeGreaterThan(0);
+    expect(children(s)).toHaveLength(n);
+    expect(s.neighbourhood!.townChildren).toBe(true);
+    expect([...s.rng]).toEqual(rng); // the world's random future is untouched
+    expect(s.nextId).toBeGreaterThan(nextId); // new ids come after all the old ones
+    const old = JSON.parse(peopleBefore) as Array<[string, string, string | null, string[], string[] | null]>;
+    for (const [id, first, career, traits, parents] of old) {
+      const p = s.people[id]!;
+      expect([p.firstName, p.career?.careerId ?? null, p.traits, p.parentIds ?? null]).toEqual([first, career, traits, parents]);
+    }
+    expect(Object.keys(s.relationships).length).toBeGreaterThanOrEqual(relsBefore);
+    for (const kid of children(s)) {
+      expect(CHILD_STAGES).toContain(kid.lifeStage);
+      expect(kid.parentIds!.length).toBeGreaterThanOrEqual(1);
+      for (const pid of kid.parentIds!) {
+        expect(s.people[pid]!.householdId).toBe(kid.householdId);
+        expect(isGrownStage(s.people[pid]!.lifeStage)).toBe(true);
+      }
+      expect(s.households[kid.householdId]!.memberIds).toContain(kid.id);
+      expect(kid.location).toMatchObject({ kind: 'offlot', place: 'home', lotId: s.households[kid.householdId]!.homeLotId });
+      if (isSchoolStage(kid.lifeStage)) expect(kid.school).toBeTruthy();
+    }
+    expect(ensureTownChildren(s, db)).toBe(0);
+    expect(children(s)).toHaveLength(n);
+  });
+
+  it('is deterministic per save and differs between worlds; households with children already are left alone', () => {
+    const a = oldSave(11), b = oldSave(11), c = oldSave(23);
+    ensureTownChildren(a, db); ensureTownChildren(b, db); ensureTownChildren(c, db);
+    const print = (s: WorldState) => JSON.stringify(children(s).map((p) => [p.id, p.firstName, p.lifeStage, p.householdId, p.stageDays]));
+    expect(print(a)).toBe(print(b));
+    expect(print(a)).not.toBe(print(c));
+    const full = make(11); // a new world already has them and the marker
+    const kids = print(full);
+    expect(ensureTownChildren(full, db)).toBe(0);
+    expect(print(full)).toBe(kids);
+    const partial = oldSave(11);
+    delete partial.neighbourhood!.townChildren;
+    const kept = npcHouseholds(partial).find((h) => h.memberIds.length > 0)!;
+    // a home that already has a child gets no more
+    ensureTownChildren(a, db);
+    delete a.neighbourhood!.townChildren;
+    const before = children(a).length;
+    expect(ensureTownChildren(a, db)).toBe(0);
+    expect(children(a)).toHaveLength(before);
+    void kept;
+  });
+
+  it('the loaded game runs a day with the new children and the save stays valid', () => {
+    const s = oldSave(11);
+    const core = coreWithoutSaves();
+    core.replaceState(s);
+    expect(children(core.state()!).length).toBeGreaterThan(0);
+    core.advanceTicks(Math.ceil(MINUTES_PER_DAY / 0.25));
+    const copy = JSON.parse(JSON.stringify(core.state()!)) as WorldState;
+    expect(validateWorld(copy, db).errors).toEqual([]);
+    expect(children(core.state()!).every((p) => core.state()!.households[p.householdId]!.memberIds.includes(p.id))).toBe(true);
   });
 });

@@ -95,6 +95,20 @@ describe('the daily roll', () => {
   });
 });
 
+describe('the Town life setting', () => {
+  it('switched off, the town stays exactly as it is', () => {
+    const c = game();
+    const s = c.state()!;
+    s.settings.townLife = false;
+    const ctx = ctxOf(c);
+    const start = townPrint(s);
+    const rng = [...s.rng];
+    for (let d = 2; d < 60; d++) { ctx.now = atDayMinute(d, 0); dailyTownChange(ctx, d); }
+    expect(townPrint(s)).toBe(start);
+    expect([...s.rng]).toEqual(rng);
+  });
+});
+
 describe('moving house in town', () => {
   it('moves an NPC household into an empty home they can afford: money, ownership, locations and the old home', () => {
     const c = game();

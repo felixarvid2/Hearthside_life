@@ -6,6 +6,8 @@
 //   carried (it follows the caregiver) while it is fed, changed, cuddled or played with, and goes back to its crib afterwards.
 // - Toddlers walk and play on their own within the toddler list (toys, naps, the potty, the high chair) and are looked
 //   after with the same care interactions; socials teach them to talk, walk and use the potty.
+// - The sitter also serves little ones of households the player is not playing while they are on the lot being simulated (a
+//   visit to their home); off the lot a dependent is looked after by their family and the neglect timer is dropped.
 // - Caregivers in the player's household notice a dependent's need by themselves (autonomy), like any need of their own.
 // - Neglect is not punished harshly: a need of a baby or toddler of the player's household that stays at zero for
 //   CARE_NEGLECT_MINUTES calls an emergency sitter. The sitter fixes the need and charges SITTER_FEE through transact, once per
@@ -251,15 +253,17 @@ export function careWishes(ctx: SimCtx, p: Person): CareWish[] {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Every 15 game minutes: tracks how long each need of the player's babies and toddlers has been empty and calls the
- * emergency sitter after CARE_NEGLECT_MINUTES. Everybody outside the player's household is looked after by their own family.
+ * Every 15 game minutes: tracks how long each need of the babies and toddlers on the lot has been empty and calls the
+ * emergency sitter after CARE_NEGLECT_MINUTES (the household you play, or the family whose home you are visiting).
  */
 export function updateCare(ctx: SimCtx): void {
-  if (Math.round(minuteOfDay(ctx.now)) % 15 !== 0) return;
+  if (Math.round(minuteOfDay(ctx.now) % 15) !== 0) return;
   settleDependents(ctx);
   for (const p of Object.values(ctx.state.people)) {
-    if (p.isNpc || !isDependentStage(p.lifeStage)) continue;
-    if (!householdOf(ctx, p)?.isPlayable) continue;
+    if (!isDependentStage(p.lifeStage)) continue;
+    // Off-lot reconciliation: somebody who is not on the lot being simulated is looked after by their family (their needs drift
+    // to comfortable values, sim/needs.ts), so a stale neglect timer is dropped instead of firing when they are next seen.
+    if (!lotLoc(p)) { if (p.careSince) delete p.careSince; continue; }
     for (const need of NEED_IDS) {
       const since = p.careSince?.[need];
       if (p.needs[need] > CARE_EMPTY_NEED) {
@@ -279,12 +283,15 @@ export function callSitter(ctx: SimCtx, p: Person, need: NeedId): boolean {
   while (isProcessed(ctx.state, `sitter:${p.id}:${day}:${n}`)) n++;
   const occ = `sitter:${p.id}:${day}:${n}`;
   markProcessed(ctx.state, occ);
-  const paid = transact(ctx.state, ctx.events, p.householdId, -SITTER_FEE, 'family', `Emergency sitter for ${p.firstName}`, { occurrence: occ, allowDebt: true });
+  // The household you play can go into debt for the sitter; another household pays only what it has.
+  const playable = householdOf(ctx, p)?.isPlayable === true;
+  const paid = transact(ctx.state, ctx.events, p.householdId, -SITTER_FEE, 'family', `Emergency sitter for ${p.firstName}`, { occurrence: occ, allowDebt: playable });
   for (const id of NEED_IDS) if (p.needs[id] <= CARE_EMPTY_NEED || id === need) p.needs[id] = clamp(Math.max(p.needs[id], SITTER_RESTORE), 0, 100);
   delete p.careSince;
   addMoodlet(ctx.content, p, 'sitterCalled', ctx.now, 'care');
   ctx.events.emit({ type: 'care', personId: p.id, what: 'sitter' });
   const fee = `$${(SITTER_FEE / 100).toFixed(2)}`;
-  addFeed(ctx.state, ctx.events, 'warning', `${p.firstName} was left alone too long, so an emergency sitter stepped in (${paid.ok ? fee : 'no charge'}). Look after little ones before they run out of everything.`, p.id);
+  if (playable) addFeed(ctx.state, ctx.events, 'warning', `${p.firstName} was left alone too long, so an emergency sitter stepped in (${paid.ok ? fee : 'no charge'}). Look after little ones before they run out of everything.`, p.id);
+  else addFeed(ctx.state, ctx.events, 'info', `${p.firstName} ${p.lastName} was left alone for a long while here, so a sitter stepped in.`, p.id);
   return paid.ok;
 }

@@ -187,6 +187,7 @@ export function fillNeighbourhoodDefaults(raw: Record<string, unknown>): void {
   };
   if (typeof m.nextDoorHouseholdId === 'string' && isRecord(households[m.nextDoorHouseholdId])) fixed.nextDoorHouseholdId = m.nextDoorHouseholdId;
   if (whole(m.moves)) fixed.moves = m.moves;
+  if (m.townChildren === true) fixed.townChildren = true;
   raw.neighbourhood = fixed;
 }
 
@@ -372,6 +373,7 @@ export function fillWeatherDefaults(raw: Record<string, unknown>): void {
     const s = raw.settings;
     if (s.seasons !== undefined && typeof s.seasons !== 'boolean') delete s.seasons;
     if (s.weather !== undefined && typeof s.weather !== 'boolean') delete s.weather;
+    if (s.townLife !== undefined && typeof s.townLife !== 'boolean') delete s.townLife;
     if (s.seasonDays !== undefined && !(typeof s.seasonDays === 'number' && SEASON_DAY_OPTIONS.includes(s.seasonDays))) delete s.seasonDays;
   }
   if (raw.weather === undefined) return;

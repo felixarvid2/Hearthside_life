@@ -82,7 +82,12 @@ export function openSettings(sh: Shell): void {
     label: 'Weather', hint: 'Clear, cloudy, rain and winter snow. Off is always clear; the forecast stays in the event feed.',
     value: sim?.weather ?? true, disabled: !sim, onChange: (on) => { setSim({ weather: on }); sh.sound('toggle'); },
   });
+  const townLife = toggleSwitch({
+    label: 'Town life', hint: 'Townspeople find new jobs and families move to empty homes over time. Off keeps the town as it is.',
+    value: sim?.townLife ?? true, disabled: !sim, onChange: (on) => { setSim({ townLife: on }); sh.sound('toggle'); },
+  });
   if (!sim) {
+    townLife.setDisabled(true, noGame);
     seasons.setDisabled(true, noGame);
     weather.setDisabled(true, noGame);
     seasonLength.el.classList.add('is-disabled');
@@ -135,7 +140,7 @@ export function openSettings(sh: Shell): void {
   m.body.append(
     section('Sound', 'sound', vol('Master volume', 'masterVolume').el, vol('Sound effects', 'soundVolume').el, vol('Music', 'musicVolume').el),
     section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el, weatherEffects.el, progressPills.el),
-    section('Household life', 'people', autonomy.el, level.el, visitors.el, seasons.el, seasonLength.el, weather.el,
+    section('Household life', 'people', autonomy.el, level.el, visitors.el, seasons.el, seasonLength.el, weather.el, townLife.el,
       sim?.unlimitedFunds ? h('p', { class: 'muted-note' }, icon('build', 18), h('span', { text: 'This world has unlimited building funds (Build Sandbox).' })) : null),
     section('Aging and family', 'family', aging.el, agingHint, customBox, endOfLife.el),
     section('Help', 'info', tutorial.el, stats.el,

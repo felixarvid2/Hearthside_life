@@ -224,3 +224,51 @@ describe('the emergency sitter', () => {
     expect(s.households[nh]!.ledger.filter((l) => l.kind === 'family')).toHaveLength(0);
   });
 });
+
+describe('the sitter for households you are not playing', () => {
+  /** A neighbour family's baby, on the lot (a visit to their home), with the neighbour household not playable. */
+  function visitedBaby() {
+    const { fw, s } = nursery();
+    const nb = fw.w.neighbour!;
+    const hhN = s.people[nb]!.householdId;
+    const baby = addMember(fw, hhN, 'Neo', { lifeStage: 'baby' }, { x: 9, z: 9 });
+    s.people[baby.id]!.isNpc = true;
+    return { fw, s, hhN, baby: baby.id };
+  }
+
+  it('steps in for a neglected baby on the lot, charging that household only what it has, with a quiet note', () => {
+    const { fw, s, hhN, baby } = visitedBaby();
+    const b = s.people[baby]!;
+    const funds = s.households[hhN]!.funds;
+    const ctx = pureCtx(fw.h);
+    b.needs.hunger = 0;
+    updateCare(ctx);
+    expect(b.careSince?.hunger).toBe(ctx.now);
+    b.careSince = { hunger: ctx.now - 180 };
+    updateCare(ctx);
+    expect(s.households[hhN]!.funds).toBe(funds - SITTER_FEE);
+    expect(b.needs.hunger).toBeGreaterThanOrEqual(70);
+    expect(s.households[hhN]!.ledger.filter((l) => l.kind === 'family')).toHaveLength(1);
+    expect(s.feed.some((f) => f.kind === 'warning' && /emergency sitter/.test(f.text))).toBe(false);
+    expect(s.feed.some((f) => f.kind === 'info' && /a sitter stepped in/.test(f.text))).toBe(true);
+    // a household with nothing in the bank is never put into debt
+    const funds0 = (s.households[hhN]!.funds = 0);
+    s.households[hhN]!.ledger = [];
+    b.needs.energy = 0;
+    callSitter(ctx, b, 'energy');
+    expect(s.households[hhN]!.funds).toBe(funds0);
+  });
+
+  it('drops the neglect timer of a little one who is off the lot (reconciliation), so it never fires later', () => {
+    const { fw, s, hhN, baby } = visitedBaby();
+    const b = s.people[baby]!;
+    const ctx = pureCtx(fw.h);
+    b.needs.hunger = 0;
+    b.careSince = { hunger: ctx.now - 500 };
+    b.location = { kind: 'offlot', place: 'home', since: ctx.now, until: null };
+    const funds = s.households[hhN]!.funds;
+    updateCare(ctx);
+    expect(b.careSince).toBeUndefined();
+    expect(s.households[hhN]!.funds).toBe(funds);
+  });
+});

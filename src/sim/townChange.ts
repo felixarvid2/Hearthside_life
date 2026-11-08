@@ -159,7 +159,7 @@ export function moveTownHousehold(ctx: SimCtx, householdId: Id, lotId: Id): bool
 
 /** Called from the daily rollover: maybe one job change, and on moving day maybe one household moves. */
 export function dailyTownChange(ctx: SimCtx, day: number): void {
-  if (day < 2 || !ctx.state.neighbourhood) return;
+  if (day < 2 || !ctx.state.neighbourhood || ctx.state.settings.townLife === false) return;
   if (ctx.rng.chance(TOWN_JOB_CHANCE)) {
     const who = jobChangeCandidates(ctx);
     if (who.length > 0) changeJob(ctx, ctx.rng.pick(who));

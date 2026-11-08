@@ -46,7 +46,7 @@ import { evaluatePaint, finishAt, paintCommand, paintTargetFor, sameFinish, type
 import { evaluatePlacement, isUnchangedMove, placementCommand } from './core/placement';
 import { emptySlots, NO_STORAGE, toSlotInfo } from './core/saves';
 import { createNewWorld } from './newWorld';
-import { ensureNeighbourhood } from './neighbourhood';
+import { ensureNeighbourhood, ensureTownChildren } from './neighbourhood';
 
 export type { PaintHighlight } from './core/paint';
 
@@ -222,6 +222,8 @@ export class GameCore {
   replaceState(state: WorldState): void {
     // Saves from before Milestone 7 have no neighbourhood: generate it (deterministically, once) around what exists.
     ensureNeighbourhood(state, this.content);
+    // Saves from before the town had children: the households that should have some get them now (ids of everyone else stay).
+    ensureTownChildren(state, this.content);
     this.world = state;
     this.place = null;
     this.tool = null;
@@ -1005,6 +1007,7 @@ export class GameCore {
     if (typeof patch.seasons === 'boolean') set('seasons', patch.seasons);
     if (patch.seasonDays === 3 || patch.seasonDays === 7 || patch.seasonDays === 14) set('seasonDays', patch.seasonDays);
     if (typeof patch.weather === 'boolean') set('weather', patch.weather);
+    if (typeof patch.townLife === 'boolean') set('townLife', patch.townLife);
     if (changed) {
       if (patch.seasons !== undefined || patch.seasonDays !== undefined || patch.weather !== undefined) this.sim.refreshWeather();
       this.notify('state');
