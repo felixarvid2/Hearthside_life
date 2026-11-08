@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/locs_long__ubc_female.glb",
+ "hair": "locs_long",
+ "head_base_z": 1.55,
+ "inside_head_verts": 488,
+ "roots": 100,
+ "secs": 4.5,
+ "src_tris": 24336,
+ "tris": 14548,
+ "verts": 7844,
+ "z": [
+  1.083,
+  1.777
+ ]
+}

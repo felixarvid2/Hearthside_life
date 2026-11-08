@@ -1,0 +1,17 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [],
+ "glb": "public/assets/characters/modular/hair/buzz_cut__ubc_male.glb",
+ "hair": "buzz_cut",
+ "head_base_z": 1.6,
+ "inside_head_verts": 0,
+ "roots": 0,
+ "secs": 1.2,
+ "src_tris": 0,
+ "tris": 426,
+ "verts": 267,
+ "z": [
+  1.66,
+  1.814
+ ]
+}

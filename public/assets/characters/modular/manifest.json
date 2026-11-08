@@ -8433,6 +8433,1422 @@
     "gathered",
     "bun"
    ]
+  },
+  {
+   "id": "afro_short",
+   "label": "Short afro",
+   "files": {
+    "ubc_male": "hair/afro_short__ubc_male.glb",
+    "ubc_female": "hair/afro_short__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/afro_short/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 9156,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short",
+    "curly"
+   ]
+  },
+  {
+   "id": "bob_long",
+   "label": "Long bob",
+   "files": {
+    "ubc_male": "hair/bob_long__ubc_male.glb",
+    "ubc_female": "hair/bob_long__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/bob_long/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "bob_side",
+   "label": "Side-part bob",
+   "files": {
+    "ubc_male": "hair/bob_side__ubc_male.glb",
+    "ubc_female": "hair/bob_side__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/bob_side/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14546,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "box_braids",
+   "label": "Box braids",
+   "files": {
+    "ubc_male": "hair/box_braids__ubc_male.glb",
+    "ubc_female": "hair/box_braids__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/box_braids/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14543,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long",
+    "textured"
+   ]
+  },
+  {
+   "id": "braided_ponytail",
+   "label": "Braided ponytail",
+   "files": {
+    "ubc_male": "hair/braided_ponytail__ubc_male.glb",
+    "ubc_female": "hair/braided_ponytail__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/braided_ponytail/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 16934,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "braid"
+   ]
+  },
+  {
+   "id": "braids_two",
+   "label": "Two braids",
+   "files": {
+    "ubc_male": "hair/braids_two__ubc_male.glb",
+    "ubc_female": "hair/braids_two__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/braids_two/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14347,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "braid"
+   ]
+  },
+  {
+   "id": "caesar",
+   "label": "Caesar cut",
+   "files": {
+    "ubc_male": "hair/caesar__ubc_male.glb",
+    "ubc_female": "hair/caesar__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/caesar/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 3196,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short",
+    "fringe"
+   ]
+  },
+  {
+   "id": "cornrows",
+   "label": "Cornrows",
+   "files": {
+    "ubc_male": "hair/cornrows__ubc_male.glb",
+    "ubc_female": "hair/cornrows__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/cornrows/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 21471,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "braid",
+    "textured"
+   ]
+  },
+  {
+   "id": "crew_cut",
+   "label": "Crew cut",
+   "files": {
+    "ubc_male": "hair/crew_cut__ubc_male.glb",
+    "ubc_female": "hair/crew_cut__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/crew_cut/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 1884,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "curly_bob",
+   "label": "Curly bob",
+   "files": {
+    "ubc_male": "hair/curly_bob__ubc_male.glb",
+    "ubc_female": "hair/curly_bob__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/curly_bob/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "curly"
+   ]
+  },
+  {
+   "id": "curly_short",
+   "label": "Short curls",
+   "files": {
+    "ubc_male": "hair/curly_short__ubc_male.glb",
+    "ubc_female": "hair/curly_short__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/curly_short/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 8068,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short",
+    "curly"
+   ]
+  },
+  {
+   "id": "curtain_bangs",
+   "label": "Curtain bangs",
+   "files": {
+    "ubc_male": "hair/curtain_bangs__ubc_male.glb",
+    "ubc_female": "hair/curtain_bangs__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/curtain_bangs/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14546,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "fringe"
+   ]
+  },
+  {
+   "id": "dreads_short",
+   "label": "Short locs",
+   "files": {
+    "ubc_male": "hair/dreads_short__ubc_male.glb",
+    "ubc_female": "hair/dreads_short__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/dreads_short/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 8436,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "textured"
+   ]
+  },
+  {
+   "id": "faux_hawk",
+   "label": "Faux hawk",
+   "files": {
+    "ubc_male": "hair/faux_hawk__ubc_male.glb",
+    "ubc_female": "hair/faux_hawk__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/faux_hawk/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 4004,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "half_up",
+   "label": "Half up",
+   "files": {
+    "ubc_male": "hair/half_up__ubc_male.glb",
+    "ubc_female": "hair/half_up__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/half_up/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14543,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long"
+   ]
+  },
+  {
+   "id": "ivy_league",
+   "label": "Ivy League",
+   "files": {
+    "ubc_male": "hair/ivy_league__ubc_male.glb",
+    "ubc_female": "hair/ivy_league__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/ivy_league/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 4260,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "layered_medium",
+   "label": "Layered cut",
+   "files": {
+    "ubc_male": "hair/layered_medium__ubc_male.glb",
+    "ubc_female": "hair/layered_medium__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/layered_medium/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "locs_long",
+   "label": "Long locs",
+   "files": {
+    "ubc_male": "hair/locs_long__ubc_male.glb",
+    "ubc_female": "hair/locs_long__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/locs_long/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long",
+    "textured"
+   ]
+  },
+  {
+   "id": "long_bangs",
+   "label": "Long with bangs",
+   "files": {
+    "ubc_male": "hair/long_bangs__ubc_male.glb",
+    "ubc_female": "hair/long_bangs__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_bangs/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long",
+    "fringe"
+   ]
+  },
+  {
+   "id": "long_beach",
+   "label": "Beach waves",
+   "files": {
+    "ubc_male": "hair/long_beach__ubc_male.glb",
+    "ubc_female": "hair/long_beach__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_beach/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14539,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long",
+    "wavy"
+   ]
+  },
+  {
+   "id": "long_center",
+   "label": "Long centre part",
+   "files": {
+    "ubc_male": "hair/long_center__ubc_male.glb",
+    "ubc_female": "hair/long_center__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_center/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long"
+   ]
+  },
+  {
+   "id": "long_curly",
+   "label": "Long curls",
+   "files": {
+    "ubc_male": "hair/long_curly__ubc_male.glb",
+    "ubc_female": "hair/long_curly__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_curly/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14547,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long",
+    "curly"
+   ]
+  },
+  {
+   "id": "long_layered",
+   "label": "Long layers",
+   "files": {
+    "ubc_male": "hair/long_layered__ubc_male.glb",
+    "ubc_female": "hair/long_layered__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_layered/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14543,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long"
+   ]
+  },
+  {
+   "id": "long_side_part",
+   "label": "Long side part",
+   "files": {
+    "ubc_male": "hair/long_side_part__ubc_male.glb",
+    "ubc_female": "hair/long_side_part__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_side_part/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long"
+   ]
+  },
+  {
+   "id": "long_straight",
+   "label": "Long straight",
+   "files": {
+    "ubc_male": "hair/long_straight__ubc_male.glb",
+    "ubc_female": "hair/long_straight__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_straight/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14547,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long"
+   ]
+  },
+  {
+   "id": "low_bun",
+   "label": "Low bun",
+   "files": {
+    "ubc_male": "hair/low_bun__ubc_male.glb",
+    "ubc_female": "hair/low_bun__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/low_bun/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14522,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "bun"
+   ]
+  },
+  {
+   "id": "messy_bun",
+   "label": "Messy bun",
+   "files": {
+    "ubc_male": "hair/messy_bun__ubc_male.glb",
+    "ubc_female": "hair/messy_bun__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/messy_bun/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14510,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "bun"
+   ]
+  },
+  {
+   "id": "middle_part",
+   "label": "Middle part",
+   "files": {
+    "ubc_male": "hair/middle_part__ubc_male.glb",
+    "ubc_female": "hair/middle_part__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/middle_part/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "mullet",
+   "label": "Mullet",
+   "files": {
+    "ubc_male": "hair/mullet__ubc_male.glb",
+    "ubc_female": "hair/mullet__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/mullet/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14696,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "bold"
+   ]
+  },
+  {
+   "id": "ponytail_high",
+   "label": "High ponytail",
+   "files": {
+    "ubc_male": "hair/ponytail_high__ubc_male.glb",
+    "ubc_female": "hair/ponytail_high__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/ponytail_high/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14520,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered"
+   ]
+  },
+  {
+   "id": "ponytail_low",
+   "label": "Low ponytail",
+   "files": {
+    "ubc_male": "hair/ponytail_low__ubc_male.glb",
+    "ubc_female": "hair/ponytail_low__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/ponytail_low/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14503,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered"
+   ]
+  },
+  {
+   "id": "ponytail_side",
+   "label": "Side ponytail",
+   "files": {
+    "ubc_male": "hair/ponytail_side__ubc_male.glb",
+    "ubc_female": "hair/ponytail_side__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/ponytail_side/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14529,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered"
+   ]
+  },
+  {
+   "id": "receding",
+   "label": "Receding crop",
+   "files": {
+    "ubc_male": "hair/receding__ubc_male.glb",
+    "ubc_female": "hair/receding__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/receding/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 2102,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "shag",
+   "label": "Shag",
+   "files": {
+    "ubc_male": "hair/shag__ubc_male.glb",
+    "ubc_female": "hair/shag__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/shag/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14530,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "short_textured",
+   "label": "Textured crop",
+   "files": {
+    "ubc_male": "hair/short_textured__ubc_male.glb",
+    "ubc_female": "hair/short_textured__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/short_textured/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 4100,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "shoulder_straight",
+   "label": "Shoulder length",
+   "files": {
+    "ubc_male": "hair/shoulder_straight__ubc_male.glb",
+    "ubc_female": "hair/shoulder_straight__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/shoulder_straight/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "side_part_short",
+   "label": "Side part",
+   "files": {
+    "ubc_male": "hair/side_part_short__ubc_male.glb",
+    "ubc_female": "hair/side_part_short__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/side_part_short/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 4836,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "side_swept",
+   "label": "Side-swept",
+   "files": {
+    "ubc_male": "hair/side_swept__ubc_male.glb",
+    "ubc_female": "hair/side_swept__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/side_swept/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium"
+   ]
+  },
+  {
+   "id": "slick_back",
+   "label": "Slicked back",
+   "files": {
+    "ubc_male": "hair/slick_back__ubc_male.glb",
+    "ubc_female": "hair/slick_back__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/slick_back/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 6170,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "space_buns",
+   "label": "Space buns",
+   "files": {
+    "ubc_male": "hair/space_buns__ubc_male.glb",
+    "ubc_female": "hair/space_buns__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/space_buns/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14533,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "bun"
+   ]
+  },
+  {
+   "id": "spiky",
+   "label": "Spiky",
+   "files": {
+    "ubc_male": "hair/spiky__ubc_male.glb",
+    "ubc_female": "hair/spiky__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/spiky/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 3940,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "top_knot",
+   "label": "Top knot",
+   "files": {
+    "ubc_male": "hair/top_knot__ubc_male.glb",
+    "ubc_female": "hair/top_knot__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/top_knot/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14520,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "bun",
+    "short"
+   ]
+  },
+  {
+   "id": "twists_short",
+   "label": "Short twists",
+   "files": {
+    "ubc_male": "hair/twists_short__ubc_male.glb",
+    "ubc_female": "hair/twists_short__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/twists_short/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 8692,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "textured"
+   ]
+  },
+  {
+   "id": "undercut",
+   "label": "Undercut",
+   "files": {
+    "ubc_male": "hair/undercut__ubc_male.glb",
+    "ubc_female": "hair/undercut__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/undercut/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 8884,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
+  },
+  {
+   "id": "waist_length",
+   "label": "Waist-length",
+   "files": {
+    "ubc_male": "hair/waist_length__ubc_male.glb",
+    "ubc_female": "hair/waist_length__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/waist_length/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14514,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long"
+   ]
+  },
+  {
+   "id": "wavy_medium",
+   "label": "Medium waves",
+   "files": {
+    "ubc_male": "hair/wavy_medium__ubc_male.glb",
+    "ubc_female": "hair/wavy_medium__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/wavy_medium/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14522,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "wavy"
+   ]
+  },
+  {
+   "id": "wolf_cut",
+   "label": "Wolf cut",
+   "files": {
+    "ubc_male": "hair/wolf_cut__ubc_male.glb",
+    "ubc_female": "hair/wolf_cut__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/wolf_cut/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14518,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "bold"
+   ]
+  },
+  {
+   "id": "buzz_cut",
+   "label": "Buzz cut",
+   "files": {
+    "ubc_male": "hair/buzz_cut__ubc_male.glb",
+    "ubc_female": "hair/buzz_cut__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/buzz_cut/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ]
   }
  ],
  "defaults": {
@@ -8449,8 +9865,122 @@
  },
  "restrictions": {
   "parts": {
+   "cap_baseball": [
+    "afro",
+    "faux_hawk",
+    "messy_bun",
+    "mohawk",
+    "ponytail_high",
+    "space_buns",
+    "spiky",
+    "top_bun",
+    "top_knot"
+   ],
+   "beanie": [
+    "afro",
+    "faux_hawk",
+    "messy_bun",
+    "mohawk",
+    "ponytail_high",
+    "space_buns",
+    "spiky",
+    "top_bun",
+    "top_knot"
+   ],
+   "fedora": [
+    "afro",
+    "faux_hawk",
+    "messy_bun",
+    "mohawk",
+    "ponytail_high",
+    "space_buns",
+    "spiky",
+    "top_bun",
+    "top_knot"
+   ],
+   "sun_hat": [
+    "afro",
+    "faux_hawk",
+    "messy_bun",
+    "mohawk",
+    "ponytail_high",
+    "space_buns",
+    "spiky",
+    "top_bun",
+    "top_knot"
+   ],
+   "bucket_hat": [
+    "afro",
+    "faux_hawk",
+    "messy_bun",
+    "mohawk",
+    "ponytail_high",
+    "space_buns",
+    "spiky",
+    "top_bun",
+    "top_knot"
+   ],
+   "beret": [
+    "afro",
+    "faux_hawk",
+    "messy_bun",
+    "mohawk",
+    "ponytail_high",
+    "space_buns",
+    "spiky",
+    "top_bun",
+    "top_knot"
+   ],
    "hoodie_pullover": [
+    "braid_single",
+    "braided_ponytail",
+    "cornrows",
+    "half_up",
+    "low_bun",
+    "ponytail_low",
     "ponytail_mid"
+   ],
+   "hoodie_crop": [
+    "braid_single",
+    "braided_ponytail",
+    "cornrows",
+    "half_up",
+    "low_bun",
+    "ponytail_low",
+    "ponytail_mid"
+   ],
+   "parka": [
+    "braid_single",
+    "braided_ponytail",
+    "cornrows",
+    "half_up",
+    "low_bun",
+    "ponytail_low",
+    "ponytail_mid"
+   ],
+   "raincoat": [
+    "braid_single",
+    "braided_ponytail",
+    "cornrows",
+    "half_up",
+    "low_bun",
+    "ponytail_low",
+    "ponytail_mid"
+   ],
+   "windbreaker": [
+    "braid_single",
+    "braided_ponytail",
+    "cornrows",
+    "half_up",
+    "low_bun",
+    "ponytail_low",
+    "ponytail_mid"
+   ],
+   "headband": [
+    "afro",
+    "faux_hawk",
+    "mohawk",
+    "spiky"
    ]
   }
  },
@@ -8657,6 +10187,391 @@
    "tags": [
     "beard",
     "long"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "anchor_beard",
+   "label": "Anchor beard",
+   "files": {
+    "ubc_male": "facial_hair/anchor_beard__ubc_male.glb",
+    "ubc_female": "facial_hair/anchor_beard__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/anchor_beard/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 2248,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "beard_short",
+   "label": "Short beard",
+   "files": {
+    "ubc_male": "facial_hair/beard_short__ubc_male.glb",
+    "ubc_female": "facial_hair/beard_short__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/beard_short/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 1774,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "chin_strap",
+   "label": "Chin strap",
+   "files": {
+    "ubc_male": "facial_hair/chin_strap__ubc_male.glb",
+    "ubc_female": "facial_hair/chin_strap__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/chin_strap/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 1132,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "circle_beard",
+   "label": "Circle beard",
+   "files": {
+    "ubc_male": "facial_hair/circle_beard__ubc_male.glb",
+    "ubc_female": "facial_hair/circle_beard__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/circle_beard/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 660,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "mustache",
+   "label": "Mustache",
+   "files": {
+    "ubc_male": "facial_hair/mustache__ubc_male.glb",
+    "ubc_female": "facial_hair/mustache__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/mustache/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 420,
+    "textureBytes": 0
+   },
+   "tags": [
+    "mustache"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "mustache_chevron",
+   "label": "Chevron mustache",
+   "files": {
+    "ubc_male": "facial_hair/mustache_chevron__ubc_male.glb",
+    "ubc_female": "facial_hair/mustache_chevron__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/mustache_chevron/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 1302,
+    "textureBytes": 0
+   },
+   "tags": [
+    "mustache"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "mutton_chops",
+   "label": "Mutton chops",
+   "files": {
+    "ubc_male": "facial_hair/mutton_chops__ubc_male.glb",
+    "ubc_female": "facial_hair/mutton_chops__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/mutton_chops/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 2478,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "sideburns",
+   "label": "Sideburns",
+   "files": {
+    "ubc_male": "facial_hair/sideburns__ubc_male.glb",
+    "ubc_female": "facial_hair/sideburns__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/sideburns/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 636,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "soul_patch",
+   "label": "Soul patch",
+   "files": {
+    "ubc_male": "facial_hair/soul_patch__ubc_male.glb",
+    "ubc_female": "facial_hair/soul_patch__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/soul_patch/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 248,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "stubble_heavy",
+   "label": "Heavy stubble",
+   "files": {
+    "ubc_male": "facial_hair/stubble_heavy__ubc_male.glb",
+    "ubc_female": "facial_hair/stubble_heavy__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/stubble_heavy/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 826,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "van_dyke",
+   "label": "Van Dyke",
+   "files": {
+    "ubc_male": "facial_hair/van_dyke__ubc_male.glb",
+    "ubc_female": "facial_hair/van_dyke__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/van_dyke/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 1186,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
    ],
    "followsMorphs": [
     "jaw_width",

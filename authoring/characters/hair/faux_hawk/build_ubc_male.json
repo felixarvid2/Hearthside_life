@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/faux_hawk__ubc_male.glb",
+ "hair": "faux_hawk",
+ "head_base_z": 1.6,
+ "inside_head_verts": 114,
+ "roots": 110,
+ "secs": 2.8,
+ "src_tris": 4336,
+ "tris": 3882,
+ "verts": 2544,
+ "z": [
+  1.66,
+  1.889
+ ]
+}

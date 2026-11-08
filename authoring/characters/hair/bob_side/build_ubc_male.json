@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/bob_side__ubc_male.glb",
+ "hair": "bob_side",
+ "head_base_z": 1.6,
+ "inside_head_verts": 770,
+ "roots": 170,
+ "secs": 3.6,
+ "src_tris": 18160,
+ "tris": 14426,
+ "verts": 8088,
+ "z": [
+  1.568,
+  1.819
+ ]
+}

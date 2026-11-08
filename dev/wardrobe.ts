@@ -27,8 +27,10 @@ const thumbPart = q.get('thumb');
 const shotOf = (v: string | null): Shot => (v === 'face' || v === 'upper' || v === 'full' ? v : 'full');
 const SHOT = shotOf(q.get('shot'));
 const POSE = q.get('pose') ?? 'idle';
-const POSE_ANIM: Record<string, AnimId> = { idle: 'idle', walk: 'walk', sit: 'sitIdle' };
+const POSE_ANIM: Record<string, AnimId> = { idle: 'idle', walk: 'walk', sit: 'sitIdle', lie: 'sleep' };
 const T = Math.max(0, Number(q.get('t') ?? 0) || 0);
+// yaw=<radians> turns the person (thumbnails of gathered hair show the tail from behind)
+const YAW = Number(q.get('yaw') ?? 0) || 0;
 const SKIN = hex('skin', '#c68642'), HAIR = hex('hair', '#4a3220'), EYES = hex('eyes', '#5b4636');
 // outfit=top:tshirt_crew,bottom:trousers_straight is worn in every column; morph=weight:1,jaw_width:-1 sets morphs
 const pairs = (k: string): Array<[string, string]> => (list(k) ?? []).map((x) => x.split(':') as [string, string]).filter((x) => x.length === 2);
@@ -85,6 +87,7 @@ async function main(): Promise<void> {
     renderer.forceContextLoss();
   };
   window.wardrobeDispose = dispose;
+  (window as unknown as { wardrobeChars: ModularCharacter[] }).wardrobeChars = characters;   // dev: posture measurements
   addEventListener('pagehide', dispose);
 
   if (!thumbPart) {
@@ -120,6 +123,7 @@ async function main(): Promise<void> {
     character.play(POSE_ANIM[POSE] ?? 'idle', { fade: 0 });
     character.update(0);
     for (let t = T; t > 1e-6; t -= 0.1) character.update(Math.min(0.1, t));
+    character.root.rotation.y = YAW;
     character.root.updateMatrixWorld(true);
     const headTop = character.headTop(new THREE.Vector3());
     const head = character.bone('Head');
@@ -152,6 +156,7 @@ async function main(): Promise<void> {
       cells++;
     }
     scene.remove(character.root);
+    if (q.get('keep')) continue;               // keep=1: characters stay (posed) for measurements
     character.dispose();
     characters.splice(characters.indexOf(character), 1);
   }

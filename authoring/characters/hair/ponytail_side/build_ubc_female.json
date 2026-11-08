@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/ponytail_side__ubc_female.glb",
+ "hair": "ponytail_side",
+ "head_base_z": 1.55,
+ "inside_head_verts": 964,
+ "roots": 180,
+ "secs": 4.6,
+ "src_tris": 41360,
+ "tris": 14529,
+ "verts": 6641,
+ "z": [
+  1.35,
+  1.775
+ ]
+}

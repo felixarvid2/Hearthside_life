@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/soul_patch__ubc_male.glb",
+ "hair": "soul_patch",
+ "head_base_z": 1.6,
+ "inside_head_verts": 36,
+ "roots": 20,
+ "secs": 4.0,
+ "src_tris": 336,
+ "tris": 248,
+ "verts": 248,
+ "z": [
+  1.598,
+  1.625
+ ]
+}

@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/sideburns__ubc_male.glb",
+ "hair": "sideburns",
+ "head_base_z": 1.6,
+ "inside_head_verts": 133,
+ "roots": 60,
+ "secs": 2.6,
+ "src_tris": 624,
+ "tris": 636,
+ "verts": 721,
+ "z": [
+  1.642,
+  1.706
+ ]
+}

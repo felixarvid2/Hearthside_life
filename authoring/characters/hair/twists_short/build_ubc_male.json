@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/twists_short__ubc_male.glb",
+ "hair": "twists_short",
+ "head_base_z": 1.6,
+ "inside_head_verts": 358,
+ "roots": 120,
+ "secs": 2.5,
+ "src_tris": 9088,
+ "tris": 8554,
+ "verts": 4931,
+ "z": [
+  1.498,
+  1.82
+ ]
+}

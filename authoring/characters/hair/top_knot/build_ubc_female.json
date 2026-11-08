@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/top_knot__ubc_female.glb",
+ "hair": "top_knot",
+ "head_base_z": 1.55,
+ "inside_head_verts": 471,
+ "roots": 180,
+ "secs": 4.3,
+ "src_tris": 27712,
+ "tris": 14520,
+ "verts": 6669,
+ "z": [
+  1.612,
+  1.791
+ ]
+}

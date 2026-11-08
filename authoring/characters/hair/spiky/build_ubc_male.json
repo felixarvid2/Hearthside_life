@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/spiky__ubc_male.glb",
+ "hair": "spiky",
+ "head_base_z": 1.6,
+ "inside_head_verts": 373,
+ "roots": 140,
+ "secs": 4.5,
+ "src_tris": 4544,
+ "tris": 3850,
+ "verts": 2678,
+ "z": [
+  1.66,
+  1.885
+ ]
+}

@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/long_layered__ubc_male.glb",
+ "hair": "long_layered",
+ "head_base_z": 1.6,
+ "inside_head_verts": 946,
+ "roots": 170,
+ "secs": 3.3,
+ "src_tris": 43408,
+ "tris": 14420,
+ "verts": 7989,
+ "z": [
+  1.023,
+  1.819
+ ]
+}

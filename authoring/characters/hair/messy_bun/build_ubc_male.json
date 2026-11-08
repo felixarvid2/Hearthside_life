@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/messy_bun__ubc_male.glb",
+ "hair": "messy_bun",
+ "head_base_z": 1.6,
+ "inside_head_verts": 190,
+ "roots": 180,
+ "secs": 7.5,
+ "src_tris": 54032,
+ "tris": 14387,
+ "verts": 5860,
+ "z": [
+  1.658,
+  1.831
+ ]
+}

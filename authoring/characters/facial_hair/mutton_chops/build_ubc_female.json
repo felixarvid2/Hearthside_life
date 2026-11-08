@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/mutton_chops__ubc_female.glb",
+ "hair": "mutton_chops",
+ "head_base_z": 1.55,
+ "inside_head_verts": 432,
+ "roots": 150,
+ "secs": 2.7,
+ "src_tris": 2848,
+ "tris": 2236,
+ "verts": 1975,
+ "z": [
+  1.513,
+  1.667
+ ]
+}

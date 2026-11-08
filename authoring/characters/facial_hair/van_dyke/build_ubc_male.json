@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/van_dyke__ubc_male.glb",
+ "hair": "van_dyke",
+ "head_base_z": 1.6,
+ "inside_head_verts": 157,
+ "roots": 80,
+ "secs": 3.0,
+ "src_tris": 1456,
+ "tris": 1186,
+ "verts": 1106,
+ "z": [
+  1.571,
+  1.648
+ ]
+}

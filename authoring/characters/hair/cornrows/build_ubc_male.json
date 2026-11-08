@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/cornrows__ubc_male.glb",
+ "hair": "cornrows",
+ "head_base_z": 1.6,
+ "inside_head_verts": 153,
+ "roots": 200,
+ "secs": 6.1,
+ "src_tris": 54096,
+ "tris": 20591,
+ "verts": 5800,
+ "z": [
+  1.352,
+  1.839
+ ]
+}

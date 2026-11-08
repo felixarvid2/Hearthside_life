@@ -33,7 +33,7 @@ def long_(**kw):
 
 
 # ---- short (15) ----------------------------------------------------------------------------------------------------
-h("buzz_cut", "Buzz cut", ["short"], length=0.012, points=3, clumps=220, clump_width=0.03, volume=0.003, cap_offset=0.003, target_tris=6000)
+h("buzz_cut", "Buzz cut", ["short"], clumps=0, cap_offset=0.0035)   # the raised scalp layer alone
 h("crew_cut", "Crew cut", ["short"], length=0.035, points=4, clumps=180, clump_width=0.035, volume=0.005)
 h("short_textured", "Textured crop", ["short"], length=0.07, length_jitter=0.35, clump_width=0.04)
 h("side_part_short", "Side part", ["short"], length=0.08, part_offset=0.045, front_side=1.5)

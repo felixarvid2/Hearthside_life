@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/braids_two__ubc_female.glb",
+ "hair": "braids_two",
+ "head_base_z": 1.55,
+ "inside_head_verts": 182,
+ "roots": 180,
+ "secs": 4.8,
+ "src_tris": 47488,
+ "tris": 14347,
+ "verts": 4968,
+ "z": [
+  1.306,
+  1.802
+ ]
+}

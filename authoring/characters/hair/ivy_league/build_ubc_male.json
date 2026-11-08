@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/ivy_league__ubc_male.glb",
+ "hair": "ivy_league",
+ "head_base_z": 1.6,
+ "inside_head_verts": 426,
+ "roots": 140,
+ "secs": 2.9,
+ "src_tris": 4736,
+ "tris": 4050,
+ "verts": 2779,
+ "z": [
+  1.613,
+  1.819
+ ]
+}

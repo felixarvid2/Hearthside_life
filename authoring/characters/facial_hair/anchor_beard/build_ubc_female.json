@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/anchor_beard__ubc_female.glb",
+ "hair": "anchor_beard",
+ "head_base_z": 1.55,
+ "inside_head_verts": 254,
+ "roots": 100,
+ "secs": 2.2,
+ "src_tris": 2560,
+ "tris": 2024,
+ "verts": 1581,
+ "z": [
+  1.536,
+  1.607
+ ]
+}
