@@ -75,6 +75,11 @@ export default function build(k: ObjectKit): ObjectDef[] {
   const chessMarble = f('chessTableMarble', FP11), gameTable = f('boardGameTable', FP21), telescope = f('telescopeBrass', FP11);
   const workbench = f('workbenchWoodworking', FP21, { back: WALL_GAP }), nook = f('readingNookShelf', FP21, { back: WALL_GAP }), potting = f('pottingBench', FP21, { back: WALL_GAP });
 
+  const FP32 = { w: 3, d: 2 };
+  const poolT = f('poolTable', FP32), dartB = f('dartBoard', FP11, { back: WALL_GAP, lift: 1.4 }), foos = f('foosballTable', FP21);
+  const ttTable = f('tableTennisTable', FP32), wheel = f('potteryWheel', FP11);
+  const game = (tags: string[]) => ({ tags: [...tags, 'game', 'fun'], functional: true as const });
+
   const music = (extra: { stats: ObjectDef['stats'] }) => ({
     tags: ['piano', 'instrument', 'music', 'creative'], interactions: ['playPiano', 'busk'], functional: true, ...extra,
   });
@@ -467,6 +472,43 @@ export default function build(k: ObjectKit): ObjectDef[] {
       description: 'A cello standing on a steel rest, its bow leaning beside it. A display piece in this version: nobody plays it yet.',
       tags: ['instrument', 'music', 'decor'], packs: ['classic-townhouse', 'creative-studio'], tier: 'standard', price: dollars(560), quality: 3, functional: false,
       footprint: FP11, ...floor, stats: { environment: 2 }, finishes: [wood2(), steelFrame('Stand')],
+    }),
+
+    // ===== Hobby: games and pottery (Milestone 13) ===============================================
+    obj(poolT, {
+      id: 'pool-table-classic', name: 'Pool Table', category: 'hobby', subcategory: 'games', rooms: ['living', 'study', 'dining'], style: 'classic',
+      description: 'A full-size pool table with green cloth, wooden cushions, six pockets and a racked set. Play alone, or challenge someone from the social menu.',
+      ...game(['pool-table', 'table']), packs: ['classic-townhouse', 'industrial-loft'], tier: 'premium', price: dollars(1850), quality: 4,
+      footprint: FP32, ...floor, slots: [useFront('use', 1.5, poolT, 2)], interactions: ['playPool'], stats: { fun: 1.15, environment: 3 },
+      finishes: [wood2()],
+    }),
+    obj(dartB, {
+      id: 'dartboard-cabinet', name: 'Dartboard Cabinet', category: 'hobby', subcategory: 'games', rooms: ['living', 'study', 'kids'], style: 'rustic',
+      description: 'A bristle dartboard in a wooden cabinet with three darts stuck in it. Stand back and aim; hang it on a wall with a clear tile in front.',
+      ...game(['dartboard', 'wall']), packs: ['cozy-cottage', 'industrial-loft'], tier: 'budget', price: dollars(95), quality: 2,
+      footprint: FP11, layer: 'wall' as const, needsWall: true, blocksMovement: false, slots: [useFront('use', 0.5, null, 1)], interactions: ['throwDarts'], stats: { fun: 1, environment: 1 },
+      finishes: [woodR(['wood'])],
+    }),
+    obj(foos, {
+      id: 'foosball-table', name: 'Foosball Table', category: 'hobby', subcategory: 'games', rooms: ['living', 'kids', 'study'], style: 'playful',
+      description: 'A wooden table football with four rods of red and blue players. Spin, slam and shout; a two-player favourite.',
+      ...game(['foosball', 'table']), packs: ['everyday-essentials', 'kids-storybook'], tier: 'standard', price: dollars(420), quality: 3,
+      footprint: FP21, ...floor, slots: [useFront('use', centreX(foos), foos, 1)], interactions: ['playFoosball'], stats: { fun: 1.1, environment: 2 },
+      finishes: [darkWood('Cabinet')],
+    }),
+    obj(ttTable, {
+      id: 'table-tennis-table', name: 'Table Tennis Table', category: 'hobby', subcategory: 'games', rooms: ['living', 'kids', 'study', 'outdoor'], style: 'modern',
+      description: 'A regulation blue table on folding steel legs with a net, two bats and a ball. A rally is good exercise and better with two.',
+      ...game(['table-tennis', 'table', 'active']), packs: ['everyday-essentials', 'modern-minimal'], tier: 'standard', price: dollars(520), quality: 3,
+      footprint: FP32, ...floor, slots: [useFront('use', 1.5, ttTable, 2)], interactions: ['playTableTennis'], stats: { fun: 1.1, environment: 1 },
+      finishes: [region('top', 'Top', ['carpetBlue'], FABRIC_BLUE), steelFrame('Legs')],
+    }),
+    obj(wheel, {
+      id: 'pottery-wheel', name: 'Pottery Wheel', category: 'hobby', subcategory: 'art', rooms: ['study', 'living', 'bedroom', 'outdoor'], style: 'rustic',
+      description: 'A kick wheel with a splash pan, a cone of clay and a bucket of water. Throw a pot: it trains Creativity and leaves a handmade pot to place or sell.',
+      tags: ['pottery', 'wheel', 'creative'], functional: true, packs: ['creative-studio', 'cozy-cottage'], tier: 'standard', price: dollars(480), quality: 3,
+      footprint: FP11, ...floor, slots: [useFront('use', 0.5, wheel, 1)], interactions: ['throwPottery', 'sellPottery'], stats: { fun: 1, skill: 1.1, environment: 1 },
+      finishes: [wood2(), steelFrame('Frame')],
     }),
 
     // ===== Hobby: art and craft ================================================================

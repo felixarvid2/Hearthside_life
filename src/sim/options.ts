@@ -16,6 +16,7 @@ import { NEED_LABELS } from './needs';
 import { CARE_IDS, careProblem } from './care';
 import { interactionStageReason, socialStageReason, stageAllows } from './gating';
 import { outdoorGateReason } from './weather';
+import { storedFish } from './furnishings';
 import { isDependentStage } from '../core/lifeStages';
 import { schoolDayOn } from './school';
 import { socialFit } from './autonomy';
@@ -117,6 +118,10 @@ export function optionsFor(ctx: SimCtx, p: Person, target: ActionInstance['targe
           continue;
         }
         out.push(option(ctx, p, iid, def.name, def.icon, 'object', t));
+        // Milestone 13: a caught fish kept in the fridge can be cooked on request.
+        if (def.id === 'cookMeal' && storedFish(ctx, loc.lotId, p.householdId).length > 0) {
+          out.push(option(ctx, p, iid, 'Cook the Catch', def.icon, 'object', t, { recipeId: 'pan-fried-fish' }));
+        }
       }
       return out;
     }

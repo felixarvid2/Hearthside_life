@@ -152,7 +152,26 @@ function snowman(): THREE.Group {
   return g;
 }
 
+/** A handmade clay pot: a lathed belly and neck with a darker glaze band and a few soil-free ripples (Milestone 13). */
+function handmadePot(): THREE.Group {
+  const g = new THREE.Group();
+  const clay = mat('clay', 0xc9824f, 0.9), glaze = mat('glaze', 0x5b84a8, 0.45), rim = mat('rim', 0xa8643a, 0.9);
+  const profile = [[0.0, 0.0], [0.2, 0.0], [0.27, 0.12], [0.3, 0.26], [0.24, 0.4], [0.17, 0.46], [0.19, 0.5]].map(([x, y]) => new THREE.Vector2(x!, y!));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 14), clay);
+  body.position.set(0.5, 0, 0.5);
+  g.add(body);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.287, 0.275, 0.08, 14, 1, true), glaze);
+  band.position.set(0.5, 0.2, 0.5);
+  g.add(band);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.018, 6, 14), rim);
+  lip.rotation.x = Math.PI / 2;
+  lip.position.set(0.5, 0.5, 0.5);
+  g.add(lip);
+  return g;
+}
+
 const BUILDERS: Record<string, Builder> = {
+  'proc:pot': handmadePot,
   'proc:picnic-blanket': picnicBlanket,
   'proc:sun-lounger': sunLounger,
   'proc:kite': kite,
@@ -174,6 +193,8 @@ export function outdoorThumb(asset: string): string | null {
       '<rect x="20" y="52" width="56" height="16" rx="4" fill="#e8e2d2"/><rect x="20" y="58" width="56" height="4" fill="#3f7f8c"/><rect x="20" y="30" width="20" height="26" rx="4" fill="#e8e2d2" transform="rotate(24 30 43)"/><path d="M22 68 L18 80 M74 68 L78 80 M36 68 L33 80 M60 68 L63 80" stroke="#b9b2a4" stroke-width="3"/>',
     'proc:kite':
       '<path d="M48 12 L72 46 L48 80 L24 46Z" fill="#e36a4a"/><path d="M48 12 L48 80 M24 46 L72 46" stroke="#f3d36b" stroke-width="2"/><path d="M48 80 q10 8 2 14 q-8 4 -2 10" stroke="#6b6459" stroke-width="2" fill="none"/><path d="M50 88 l8 3 M52 98 l8 3" stroke="#f3d36b" stroke-width="3"/>',
+    'proc:pot':
+      '<path d="M34 30 Q30 52 38 74 L58 74 Q66 52 62 30 Z" fill="#c9824f"/><path d="M33 44 L63 44 L62 54 L34 54Z" fill="#5b84a8"/><ellipse cx="48" cy="30" rx="14" ry="4" fill="#a8643a"/>',
     'proc:snowman':
       '<circle cx="48" cy="70" r="18" fill="#f4f7fb"/><circle cx="48" cy="46" r="14" fill="#f4f7fb"/><circle cx="48" cy="28" r="10" fill="#f4f7fb"/><circle cx="44" cy="26" r="1.6" fill="#25262b"/><circle cx="52" cy="26" r="1.6" fill="#25262b"/><path d="M48 29 L58 31 L48 33Z" fill="#e08a32"/><rect x="37" y="35" width="22" height="4" rx="2" fill="#b8443c"/><circle cx="48" cy="46" r="1.8" fill="#25262b"/><circle cx="48" cy="56" r="1.8" fill="#25262b"/><circle cx="48" cy="66" r="1.8" fill="#25262b"/><path d="M30 40 L38 44 M66 40 L58 44" stroke="#6a4a2f" stroke-width="2"/>',
   };

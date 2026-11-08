@@ -42,6 +42,9 @@ const ACTIVITY: MoodletDef[] = [
   // Milestone 11, task B: baking and wellness
   m('proudBake', 'Proud Baker', 8, 180, 'star', 'Baked something the whole household can share.'),
   m('calm', 'Calm', 10, 180, 'heart', 'A quiet mind and a steady breath.'),
+  // Milestone 13: games, laundry
+  m('wellPlayed', 'Well Played', 7, 120, 'fun', 'A good game, win or lose.'),
+  m('freshLaundry', 'Fresh Laundry', 5, 240, 'hygiene', 'Clean clothes that smell of soap.'),
   // Milestone 12, task O: outdoor life
   m('snowmanBuilt', 'Snowman Builder', 10, 240, 'snow', 'Built a snowman out of the fresh snow.'),
   m('snowAngel', 'Snow Angel', 8, 180, 'snow', 'Flapped about in the snow and left an angel behind.'),

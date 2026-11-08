@@ -410,7 +410,7 @@ export class ObjectsView {
   syncItems(state: WorldState, lotId: Id): void {
     const seen = new Set<Id>();
     for (const it of Object.values(state.items)) {
-      if (it.lotId !== lotId) continue;
+      if (it.lotId !== lotId || it.stored) continue; // stored items are in a fridge
       seen.add(it.id);
       const sig = `${it.kind}|${it.position.level}|${it.position.x}|${it.position.z}|${it.position.onObjectId ?? ''}|${it.recipeId}|${it.portions}|${it.quality}`;
       const cur = this.items.get(it.id);

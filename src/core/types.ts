@@ -140,6 +140,8 @@ export interface WeatherState {
   since: GameMinutes;
   /** Snow has settled on the ground this winter (drives the renderer's snow cover until spring). */
   snowCover?: boolean;
+  /** Milestone 13: game minutes of rain that fell on the snow cover since it last snowed (it melts at RAIN_MELT_MINUTES). Absent = 0. */
+  melt?: number;
 }
 
 /** Milestone 12: what an interaction needs from the weather/season. Absent = no restriction. */
@@ -437,6 +439,11 @@ export interface WorldItem {
   createdAt: GameMinutes;
   spoilsAt: GameMinutes;
   ownerHouseholdId: Id | null;
+  /**
+   * Milestone 13: kept in a fridge (`position.onObjectId` is the fridge). A stored item is not drawn, cannot be eaten or sold
+   * and spoils three times more slowly; cooking a fish dish takes it out. Absent = lying where it is.
+   */
+  stored?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------

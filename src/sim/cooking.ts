@@ -14,6 +14,7 @@ import type { ObjRef, SimCtx } from './context';
 import {
   clamp, insideFootprint, isStove, isTable, lotLoc, lotObjects, objectCenter, objectRef, tileOfLoc, dist,
 } from './context';
+import { storedFish, takeStoredFish } from './furnishings';
 import { defOf, interactionCheckNoCost, reservePrimary, seatCandidates, targetObject } from './behaviors';
 import { addDirtyDishes, breakObject, dirtOf, housekeepingOn, isBroken, spawnMess, useObject } from './housekeeping';
 import { addMoodlet } from './mood';
@@ -47,7 +48,7 @@ export function recipeCost(p: Person, recipe: RecipeDef): number {
 function cookableRecipes(ctx: SimCtx, p: Person): RecipeDef[] {
   const level = p.skills[COOKING_SKILL]?.level ?? 1;
   return Object.values(ctx.content.recipes)
-    .filter((r) => r.status === 'ready' && !r.skill && r.minCookingLevel <= level)
+    .filter((r) => r.status === 'ready' && !r.skill && !r.ingredient && r.minCookingLevel <= level)
     .sort((x, y) => y.minCookingLevel - x.minCookingLevel || x.cost - y.cost || (x.id < y.id ? -1 : 1));
 }
 
@@ -56,6 +57,10 @@ export function chooseRecipe(ctx: SimCtx, p: Person, a: ActionInstance): RecipeD
   const level = p.skills[COOKING_SKILL]?.level ?? 1;
   const wanted = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
   if (wanted?.skill) return 'That recipe is baked, not cooked.';
+  if (wanted?.ingredient === 'fish' && a.data.charged !== true) {
+    const loc = lotLoc(p);
+    if (!loc || storedFish(ctx, loc.lotId, p.householdId).length === 0) return 'Needs a caught fish in the fridge.';
+  }
   if (wanted) return wanted.minCookingLevel <= level ? wanted : `Needs Cooking level ${wanted.minCookingLevel}.`;
   const list = cookableRecipes(ctx, p);
   if (list.length === 0) return 'No recipes known.';
@@ -158,7 +163,7 @@ export function serveMeal(ctx: SimCtx, p: Person, a: ActionInstance, surface: Ob
     lotId: loc.lotId,
     position: pos,
     recipeId: recipe?.id ?? 'meal',
-    portions: Math.max(1, size),
+    portions: typeof a.data.fishPortions === 'number' ? Math.max(1, Math.round(a.data.fishPortions)) : Math.max(1, size),
     quality: typeof a.data.quality === 'number' ? a.data.quality : 0.5,
     createdAt: ctx.now,
     spoilsAt: ctx.now + MEAL_SPOIL_MINUTES,
@@ -228,8 +233,17 @@ export const cookBehavior: Behavior = {
     const recipe = typeof a.data.recipeId === 'string' ? ctx.content.recipes[a.data.recipeId] : undefined;
     if (!recipe) return 'Unknown recipe.';
     const cost = recipeCost(p, recipe);
+    const here = lotLoc(p);
+    if (recipe.ingredient === 'fish' && (!here || storedFish(ctx, here.lotId, p.householdId).length === 0)) return 'The fish is gone.';
     const r = transact(ctx.state, ctx.events, p.householdId, -cost, 'groceries', `Groceries: ${recipe.name}`, { occurrence: `cook:${a.id}` });
     if (!r.ok) return `Not enough money for groceries ($${(cost / 100).toFixed(2)}).`;
+    if (recipe.ingredient === 'fish') {
+      const loc = lotLoc(p);
+      const fish = loc ? takeStoredFish(ctx, loc.lotId, p.householdId) : null;
+      if (!fish) return 'The fish is gone.';
+      a.data.fishPortions = Math.max(1, fish.portions);
+      a.data.fishSpecies = fish.recipeId;
+    }
     a.data.charged = true;
     return null;
   },
@@ -305,6 +319,7 @@ export const eatMealBehavior: Behavior = {
     const loc = lotLoc(p);
     const item = itemOf(ctx, a);
     if (!item || !loc || item.lotId !== loc.lotId) return 'The food is gone.';
+    if (item.stored) return 'It is in the fridge.';
     if (item.ownerHouseholdId && item.ownerHouseholdId !== p.householdId) return "That's someone else's food.";
     if (item.portions - ctx.res.itemReserved(item.id, a.id) <= 0) return 'No portions left.';
     return null;
@@ -419,6 +434,6 @@ export function spoilMeals(ctx: SimCtx): void {
 /** Meal and fish items on a lot with portions not yet reserved, for autonomy. */
 export function availableMeals(ctx: SimCtx, lotId: Id, householdId: Id): WorldItem[] {
   return Object.values(ctx.state.items).filter((it) =>
-    (it.kind === 'meal' || it.kind === 'fish') && it.lotId === lotId && (it.ownerHouseholdId === null || it.ownerHouseholdId === householdId) &&
+    (it.kind === 'meal' || it.kind === 'fish') && !it.stored && it.lotId === lotId && (it.ownerHouseholdId === null || it.ownerHouseholdId === householdId) &&
     it.portions - ctx.res.itemReserved(it.id) > 0);
 }

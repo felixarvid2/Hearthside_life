@@ -570,7 +570,34 @@ const M12_OUTDOOR: SocialDef[] = [
   }),
 ];
 
+
+/**
+ * Milestone 13: games for two. Each needs the matching object on the actor's lot (`requires.objectTag`, see sim/furnishings.ts):
+ * the pair play at it while the clock runs, the outcome is the usual accept-or-decline.
+ */
+const gameSocial = (id: string, name: string, description: string, tag: string, minutes: number, fun: number, lines: string[]): SocialDef => social({
+  id, name, description, icon: 'fun', category: 'funny', minutes, anim: 'interact', requires: { minFamiliarity: 10, objectTag: tag }, acceptance: 0.85,
+  success: out({
+    actor: { familiarity: 3, friendship: 4 }, target: { familiarity: 3, friendship: 4 }, social: 14, fun,
+    actorMoodlet: 'wellPlayed', targetMoodlet: 'wellPlayed',
+  }),
+  failure: out({ actor: { friendship: -1 }, target: { friendship: -1 }, social: 3, fun: 4 }),
+  lines: { success: lines, failure: ['{b} would rather not play right now.', '"Maybe later, {a}," says {b}.'] },
+  topics: ['play', 'games'], autonomy: { enabled: true, weight: 0.8 },
+});
+
+const M13_GAMES: SocialDef[] = [
+  gameSocial('playPoolTogether', 'Play Pool Together', 'Rack up and play a frame of pool against each other.', 'pool-table', 30, 20,
+    ['{a} breaks and {b} sinks the first ball.', '{a} and {b} trade shots and trash talk over the felt.', '{b} chalks the cue. "Eight ball, corner pocket."']),
+  gameSocial('playDartsTogether', 'Play Darts Together', 'Take turns at the dartboard, first to get down to zero.', 'dartboard', 20, 16,
+    ['{a} and {b} call out scores and groan at every miss.', '{b} lands a treble twenty. {a} demands a rematch.']),
+  gameSocial('playFoosballTogether', 'Play Foosball Together', 'Take a side each and spin for the win.', 'foosball', 20, 21,
+    ['{a} and {b} spin the rods so fast the ball is a blur.', '"Goal!" shouts {b}, arms in the air.']),
+  gameSocial('playTableTennisTogether', 'Play Table Tennis Together', 'Rally across the net, loser buys the next round.', 'table-tennis', 20, 18,
+    ['{a} and {b} keep a long rally going, then {a} smashes it into the net.', '{b} serves with a smirk. The ball is already past {a}.']),
+];
+
 /** Every social interaction. None of them is also counted as an activity (alsoActivity false). */
 export const SOCIALS: SocialDef[] = [
-  ...GREETING, ...FRIENDLY, ...FUNNY, ...DEEP_AND_SUPPORT, ...TRUST, ...MEAN, ...BETRAYAL, ...ROMANTIC, ...ROMANTIC_PLUS, ...STATUS, ...M12_OUTDOOR,
+  ...GREETING, ...FRIENDLY, ...FUNNY, ...DEEP_AND_SUPPORT, ...TRUST, ...MEAN, ...BETRAYAL, ...ROMANTIC, ...ROMANTIC_PLUS, ...STATUS, ...M12_OUTDOOR, ...M13_GAMES,
 ];

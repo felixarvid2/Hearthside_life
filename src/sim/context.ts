@@ -160,6 +160,11 @@ export function isStove(def: ObjectDef): boolean {
   return def.tags.includes('stove') || def.subcategory === 'stove' || def.id.startsWith('stove');
 }
 
+/** Fridges keep food: the 'fridge' tag. */
+export function isFridge(def: ObjectDef): boolean {
+  return def.tags.includes('fridge');
+}
+
 /** Tables (dining, coffee, desks) that meals can be eaten at. */
 export function isTable(def: ObjectDef): boolean {
   return def.surfaceHeight !== undefined && def.layer === 'floor' &&

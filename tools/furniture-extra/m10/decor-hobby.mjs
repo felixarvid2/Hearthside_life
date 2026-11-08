@@ -1285,5 +1285,86 @@ function pottingBench() {
   return m;
 }
 
+// ---- Milestone 13: games and pottery (interactions in src/content/interactionsFurnishings.ts) --------------------------------
+/** Pool table with cloth, cushions, pockets and a racked triangle of balls (3 x 2, 0.85 m). */
+function poolTable() {
+  const m = new Model('poolTable');
+  bx(m, 'woodDark', 0.3, 0.62, 0.3, 2.7, 0.82, 1.7); // slate box
+  bx(m, 'plant', 0.45, 0.82, 0.45, 2.55, 0.835, 1.55); // cloth
+  for (const [x0, z0, x1, z1] of [[0.3, 0.3, 2.7, 0.45], [0.3, 1.55, 2.7, 1.7], [0.3, 0.45, 0.45, 1.55], [2.55, 0.45, 2.7, 1.55]]) bx(m, 'wood', x0, 0.82, z0, x1, 0.9, z1);
+  for (const [x, z] of [[0.36, 0.36], [1.5, 0.33], [2.64, 0.36], [0.36, 1.64], [1.5, 1.67], [2.64, 1.64]]) m.cylY('metalDark', x, z, 0.82, 0.91, 0.07, 0.07, 6);
+  for (const x of [0.38, 2.5]) for (const z of [0.38, 1.5]) { bx(m, 'wood', x, 0, z, x + 0.12, 0.62, z + 0.12); bx(m, 'woodDark', x - 0.02, 0.5, z - 0.02, x + 0.14, 0.56, z + 0.14); }
+  bx(m, 'woodDark', 0.5, 0.56, 0.78, 2.5, 0.62, 0.9); // stretcher
+  const r = 0.028; // racked balls
+  let n = 0;
+  for (let row = 0; row < 4; row++) for (let i = 0; i <= row; i++) {
+    const mat = ['carpet', 'carpetBlue', 'carpetDarker', 'metalDark', 'wood', 'carpetWhite'][n++ % 6];
+    m.cylY(mat, 1.95 + row * 0.05, 1.0 + (i - row / 2) * 0.057, 0.835, 0.835 + 2 * r, r, r, 6);
+  }
+  m.cylY('carpetWhite', 0.95, 1.0, 0.835, 0.835 + 2 * r, r, r, 6); // cue ball
+  m.rod('wood', [0.2, 0.85, 1.95], [1.2, 1.2, 1.97], 0.026, 0.026); // cue resting on the cushion
+  return m;
+}
+/** Wall dartboard in a wooden cabinet (1 x 1, bottom at the mounting height, 0.6 m). */
+function dartBoard() {
+  const m = new Model('dartBoard');
+  bx(m, 'wood', 0.18, 0, 0.0, 0.82, 0.64, 0.05); // cabinet back
+  bx(m, 'wood', 0.18, 0, 0.05, 0.24, 0.64, 0.1); bx(m, 'wood', 0.76, 0, 0.05, 0.82, 0.64, 0.1);
+  bx(m, 'wood', 0.24, 0.58, 0.05, 0.76, 0.64, 0.1); bx(m, 'wood', 0.24, 0, 0.05, 0.76, 0.06, 0.1);
+  m.cyl('metalDark', [0.5, 0.32, 0.05], [0.5, 0.32, 0.085], 0.26, 12);
+  m.cyl('carpet', [0.5, 0.32, 0.085], [0.5, 0.32, 0.095], 0.22, 12);
+  m.cyl('carpetWhite', [0.5, 0.32, 0.095], [0.5, 0.32, 0.105], 0.17, 12);
+  m.cyl('plant', [0.5, 0.32, 0.105], [0.5, 0.32, 0.115], 0.11, 12);
+  m.cyl('carpet', [0.5, 0.32, 0.115], [0.5, 0.32, 0.125], 0.04, 8);
+  for (const [x, y] of [[0.56, 0.4], [0.44, 0.28], [0.5, 0.22]]) m.rod('metal', [x, y, 0.1], [x + 0.01, y - 0.01, 0.2], 0.012, 0.012);
+  return m;
+}
+/** Foosball table: rods across the width, handles on the long sides (2 x 1, 0.9 m). */
+function foosballTable() {
+  const m = new Model('foosballTable');
+  bx(m, 'woodDark', 0.15, 0.55, 0.15, 1.85, 0.9, 0.85); // cabinet
+  bx(m, 'plant', 0.25, 0.86, 0.25, 1.75, 0.875, 0.75); // pitch
+  bx(m, 'carpetWhite', 0.99, 0.875, 0.25, 1.01, 0.88, 0.75); // halfway line
+  for (const x of [0.17, 1.77]) for (const z of [0.17, 0.77]) bx(m, 'wood', x, 0, z, x + 0.06, 0.55, z + 0.06);
+  for (const [i, x] of [0.4, 0.7, 1.3, 1.6].entries()) {
+    m.rod('metal', [x, 0.99, 0.05], [x, 0.99, 0.95], 0.02, 0.02);
+    bx(m, 'woodDark', x - 0.04, 0.96, 0.9, x + 0.04, 1.02, 1.0); // handle
+    for (const z of [0.35, 0.5, 0.65]) bx(m, i < 2 ? 'carpet' : 'carpetBlue', x - 0.03, 0.89, z - 0.03, x + 0.03, 0.99, z + 0.03);
+  }
+  bx(m, 'metalLight', 1.46, 0.875, 0.48, 1.5, 0.9, 0.52);
+  return m;
+}
+/** Table tennis table with a net and two bats (3 x 2, 0.76 m). */
+function tableTennisTable() {
+  const m = new Model('tableTennisTable');
+  bx(m, 'carpetBlue', 0.13, 0.7, 0.2, 2.87, 0.76, 1.8); // top
+  bx(m, 'carpetWhite', 0.13, 0.76, 0.2, 2.87, 0.762, 0.215); bx(m, 'carpetWhite', 0.13, 0.76, 1.785, 2.87, 0.762, 1.8);
+  bx(m, 'carpetWhite', 0.13, 0.76, 0.2, 0.145, 0.762, 1.8); bx(m, 'carpetWhite', 2.855, 0.76, 0.2, 2.87, 0.762, 1.8);
+  bx(m, 'carpetWhite', 0.13, 0.76, 0.995, 2.87, 0.762, 1.005); // centre line
+  for (const x of [0.3, 2.62]) { bx(m, 'metalDark', x, 0, 0.3, x + 0.06, 0.7, 0.36); bx(m, 'metalDark', x, 0, 1.64, x + 0.06, 0.7, 1.7); bx(m, 'metalDark', x, 0.05, 0.3, x + 0.06, 0.1, 1.7); }
+  bx(m, 'metalDark', 0.3, 0.5, 0.97, 2.7, 0.55, 1.03);
+  bx(m, 'metalLight', 1.4, 0.76, 0.17, 1.6, 0.775, 0.2); // net posts
+  bx(m, 'metalLight', 1.4, 0.76, 1.8, 1.6, 0.775, 1.83);
+  bx(m, 'metalLight', 1.495, 0.76, 0.2, 1.505, 0.915, 1.8); // net
+  bx(m, 'metalLight', 1.49, 0.905, 0.2, 1.51, 0.915, 1.8);
+  for (const [x, z, mat] of [[0.45, 0.6, 'carpet'], [2.5, 1.4, 'carpetDarker']]) { m.cylY(mat, x, z, 0.762, 0.77, 0.08, 0.08, 8); bx(m, 'wood', x - 0.015, 0.762, z + 0.07, x + 0.015, 0.77, z + 0.17); }
+  m.cylY('carpetWhite', 1.2, 1.3, 0.762, 0.8, 0.02, 0.02, 6);
+  return m;
+}
+/** Pottery wheel: kick wheel with a clay cone, splash pan and a bucket of water (1 x 1, 0.8 m). */
+function potteryWheel() {
+  const m = new Model('potteryWheel');
+  bx(m, 'metalDark', 0.2, 0, 0.2, 0.8, 0.06, 0.8); // base
+  for (const [x, z] of [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]]) bx(m, 'metal', x - 0.025, 0.06, z - 0.025, x + 0.025, 0.58, z + 0.025);
+  m.cylY('woodDark', 0.5, 0.5, 0.58, 0.62, 0.34, 0.34, 10); // splash pan
+  m.cylY('metalLight', 0.5, 0.5, 0.62, 0.66, 0.3, 0.3, 10); // pan floor
+  m.cylY('metalDark', 0.5, 0.5, 0.66, 0.7, 0.14, 0.14, 10); // wheel head
+  m.cylY('wood', 0.5, 0.5, 0.7, 0.86, 0.1, 0.045, 8); // spinning clay
+  m.cylY('metalMedium', 0.5, 0.5, 0.06, 0.58, 0.02, 0.02, 6); // shaft
+  m.cylY('woodDark', 0.5, 0.5, 0.2, 0.26, 0.2, 0.2, 10); // kick wheel
+  m.cylY('carpetBlue', 0.9, 0.82, 0, 0.22, 0.09, 0.11, 8); // water bucket
+  return m;
+}
+
 //EXPORT
-export default { rugRunner, rugBraidedOval, rugHexGeo, rugPersian, rugShag, rugKilim, rugCowhide, rugChecker, rugSunburst, rugDoormatCoir, plantFiddleFig, plantMonstera, plantPalmAreca, plantBonsai, plantCactusTall, plantCactusTrio, plantFernStand, plantSucculentTray, plantOrchid, plantOliveTree, terrarium, plantHerbBox, vaseFloorTall, vaseRound, vaseFlowers, sculptureAbstract, sculptureBust, clockGrandfather, clockWallRound, clockCuckoo, mirrorCheval, mirrorWallRound, mirrorSunburst, pictureLandscape, pictureGallery, picturePortrait, globeFloor, globeDesk, aquarium, screenDivider, fireplaceBrick, fireplaceStove, candles, candelabraThreeArm, bowlFruit, bowlCeramicDuo, bookends, trophyCup, umbrellaStand, magazineRack, poufCushions, basketThrow, windChime, pianoGrand, pianoCottage, keyboardDigital, keyboardStage, harpsichord, organParlour, drumKit, harpConcert, celloStand, easelTabletop, easelGallery, easelFrench, craftTable, sewingTable, exerciseBike, rowingMachine, punchingBag, squatRack, ellipticalTrainer, yogaMatRound, chessTableMarble, boardGameTable, telescopeBrass, workbenchWoodworking, readingNookShelf, pottingBench };
+export default { rugRunner, rugBraidedOval, rugHexGeo, rugPersian, rugShag, rugKilim, rugCowhide, rugChecker, rugSunburst, rugDoormatCoir, plantFiddleFig, plantMonstera, plantPalmAreca, plantBonsai, plantCactusTall, plantCactusTrio, plantFernStand, plantSucculentTray, plantOrchid, plantOliveTree, terrarium, plantHerbBox, vaseFloorTall, vaseRound, vaseFlowers, sculptureAbstract, sculptureBust, clockGrandfather, clockWallRound, clockCuckoo, mirrorCheval, mirrorWallRound, mirrorSunburst, pictureLandscape, pictureGallery, picturePortrait, globeFloor, globeDesk, aquarium, screenDivider, fireplaceBrick, fireplaceStove, candles, candelabraThreeArm, bowlFruit, bowlCeramicDuo, bookends, trophyCup, umbrellaStand, magazineRack, poufCushions, basketThrow, windChime, pianoGrand, pianoCottage, keyboardDigital, keyboardStage, harpsichord, organParlour, drumKit, harpConcert, celloStand, easelTabletop, easelGallery, easelFrench, craftTable, sewingTable, exerciseBike, rowingMachine, punchingBag, squatRack, ellipticalTrainer, yogaMatRound, chessTableMarble, boardGameTable, telescopeBrass, workbenchWoodworking, readingNookShelf, pottingBench, poolTable, dartBoard, foosballTable, tableTennisTable, potteryWheel };
