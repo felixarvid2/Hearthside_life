@@ -269,6 +269,9 @@ body.shell-hud-on.is-landscape.shell-side-open .toasts { left: calc((100% - var(
 
 /* ---------- Feed and ledger ---------- */
 .feed-forecast { display: flex; align-items: center; gap: 6px; padding: 6px 10px; margin-bottom: 4px; border-radius: 8px; background: rgba(127, 148, 168, 0.12); color: var(--ink-2); font-size: 0.78rem; font-weight: 600; }
+.feed-forecast { align-items: flex-start; }
+.feed-forecast-days { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.feed-forecast-day { overflow-wrap: anywhere; }
 .feed-forecast .icon-wrap { flex: none; display: inline-flex; }
 .feed-forecast[hidden] { display: none; }
 .feed-list, .ledger-list { list-style: none; padding: 0; margin: 0; }

@@ -378,11 +378,12 @@ export function fillWeatherDefaults(raw: Record<string, unknown>): void {
   const w = raw.weather;
   const ok = isRecord(w) && typeof w.current === 'string' && WEATHER_KINDS.includes(w.current) &&
     isPlan(w.today) && isPlan(w.tomorrow) && num(w.day) && Number.isInteger(w.day) && num(w.since) &&
-    (w.snowCover === undefined || typeof w.snowCover === 'boolean');
+    (w.snowCover === undefined || typeof w.snowCover === 'boolean') && (w.melt === undefined || num(w.melt));
   if (!ok) { delete raw.weather; return; }
   w.day = Math.max(0, Math.floor(w.day as number));
   w.since = Math.max(0, Math.floor(w.since as number));
   if (w.snowCover !== true) delete w.snowCover;
+  if (w.snowCover !== true || (w.melt as number | undefined) === undefined || (w.melt as number) <= 0) delete w.melt;
 }
 // ===== end Milestone 12 seasons and weather ==========================================================================
 
