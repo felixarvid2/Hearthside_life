@@ -9,6 +9,7 @@ import './styles/hud.css';
 import './styles/social.css';
 import './styles/neighbourhood.css';
 import './styles/family.css';
+import './styles/a11y.css';
 import type { GameAPI, GameMode, SoundId } from '../game/api';
 import type { HouseholdDraft } from '../core/drafts';
 import type { GameEvent } from '../core/events';
@@ -35,12 +36,15 @@ import { ZERO_INSETS, computeInsets, sameInsets, type Insets, type Rect } from '
 import { createPersonPanel } from './hud/personPanel';
 import type { PersonTab, Shell, ShellPanelKind } from './hud/shell';
 import { createTutorial } from './hud/tutorial';
+import { createHints } from './hud/hints';
 import { attachWorldInput } from './input';
+import { TEXT_SCALE_MAX, TEXT_SCALE_MIN } from '../game/settings';
 import { createBootScreen, type BootScreen } from './screens/boot';
 import { busyOverlay, errorDialog } from './screens/common';
 import { openGameMenu } from './screens/gameMenu';
 import { createMainMenu, type MainMenu } from './screens/menu';
 import { openSettings } from './screens/settings';
+import { openHelp } from './screens/help';
 
 export { showCompatibilityScreen } from './screens/boot';
 
@@ -79,6 +83,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   let ledgerPanel: ReturnType<typeof createLedgerPanel> | null = null;
   let billsPanel: ReturnType<typeof createBillsPanel> | null = null;
   let tutorial: ReturnType<typeof createTutorial> | null = null;
+  let hints: ReturnType<typeof createHints> | null = null;
   let awayCard: ReturnType<typeof createAwayCard> | null = null;
 
   const buildSession = new BuildSession(api, { sound, toast });
@@ -89,10 +94,13 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     openPanel: (kind, opts) => openPanel(kind, opts),
     closePanels: () => closePanels(),
     isPanelOpen: (kind) => panelOf(kind)?.panel.isOpen() ?? false,
-    openGameMenu: () => { ctx.close(); openGameMenu(sh); },
+    openGameMenu: () => { ctx.close(); openGameMenu(sh); hints?.request('saving'); },
     openSettings: () => openSettings(sh),
+    openHelp: (topic) => openHelp(sh, topic ? { topic } : {}),
+    hint: (id) => hints?.request(id),
+    dismissHint: () => hints?.dismiss() ?? false,
     openEventPlanner: (hostId) => { ctx.close(); openEventPlanner(sh, hostId); },
-    openNeighbourhood: (opts) => { if (api.mode() !== 'live') { toast('Return to Live mode to use the map.', 'info'); return; } ctx.close(); closePanels(); awayCard?.hide(); openNeighbourhood(sh, opts); },
+    openNeighbourhood: (opts) => { if (api.mode() !== 'live') { toast('Return to Live mode to use the map.', 'info'); return; } ctx.close(); closePanels(); awayCard?.hide(); openNeighbourhood(sh, opts); hints?.request('travel'); },
     showAwayCard: (personId, anchor) => awayCard?.show(personId, anchor),
     hideAwayCard: () => awayCard?.hide() ?? false,
     openContextMenu: (personId, pick, at) => ctx.open(personId, pick, at),
@@ -227,8 +235,8 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       if (!id) return;
       personPanel?.open(id, opts?.tab);
     } else if (kind === 'feed') { feedPanel?.open(); hud.markFeedSeen(); }
-    else if (kind === 'bills') billsPanel?.open();
-    else ledgerPanel?.open();
+    else if (kind === 'bills') { billsPanel?.open(); hints?.request('jobs'); }
+    else { ledgerPanel?.open(); hints?.request('jobs'); }
     hud.setOpenPanel(openKind());
     scheduleMeasure();
   }
@@ -244,6 +252,10 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
   tutorial = createTutorial(sh);
   layer.appendChild(tutorial.el);
   cleanups.push(() => tutorial?.destroy());
+
+  hints = createHints(sh);
+  layer.appendChild(hints.el);
+  cleanups.push(() => hints?.destroy());
 
   const dev = createDevOverlay(api);
   layer.appendChild(dev.el);
@@ -336,6 +348,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     } finally { creatorLoading = false; }
     creator?.ui.show();
     routeNow();
+    hints?.request('household');
   };
 
   const finishCreator = async (mode: StartMode, draft: HouseholdDraft) => {
@@ -454,9 +467,10 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
 
   const applySettings = () => {
     const s = api.settings();
-    const scale = Math.max(0.9, Math.min(1.3, Number(s.textScale) || 1));
+    const scale = Math.max(TEXT_SCALE_MIN, Math.min(TEXT_SCALE_MAX, Number(s.textScale) || 1));
     docStyle.setProperty('--text-scale', String(scale));
     toggleClass(document.body, 'reduced-motion', !!s.reducedMotion);
+    toggleClass(document.documentElement, 'high-contrast', !!s.highContrast);
     dev.setVisible((debugParam || s.showStats) && route !== 'boot');
     scheduleMeasure();
   };

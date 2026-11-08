@@ -20,6 +20,8 @@ import { careersForStage } from '../../sim/careers';
 import { openAdoptDialog, openSplitDialog } from './familyDialogs';
 import { birthdayText, stageName, treeModel } from './familyModel';
 import type { PersonTab, Shell } from './shell';
+import type { HintId } from './hintState';
+import { openObjectPicker } from './objectPicker';
 
 const TABS: Array<{ id: PersonTab; label: string; icon: string }> = [
   { id: 'needs', label: 'Needs', icon: 'heart' },
@@ -94,6 +96,9 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     content.scrollTop = 0;
     p.body.scrollTop = 0;
     if (id === 'needs') sh.tutorialSignal({ type: 'needsChecked' });
+    const hintFor: Partial<Record<PersonTab, HintId>> = { needs: 'needs', queue: 'queue', relationships: 'relationships', career: 'jobs' };
+    const hf = hintFor[id];
+    if (hf) sh.hint(hf);
     refresh();
   };
 
@@ -114,7 +119,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
     }
     for (const n of needMeters) {
       const v = pr.needs[n.id];
-      n.m.set(v, v < 20 ? `${Math.round(v)} !` : `${Math.round(v)}`);
+      n.m.set(v);
     }
     void st;
   };
@@ -128,6 +133,12 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
       if (pr.location.kind !== 'lot') {
         const away = awayText(pr, st);
         items.push(empty(`${pr.firstName} is away${away ? ` (${away.label.toLowerCase()}${away.back ? `, ${away.back.toLowerCase()}` : ''})` : ''}. Orders can be given when ${pr.pronouns.subject} is home.`, 'briefcase'));
+      }
+      if (pr.location.kind === 'lot') {
+        // a route to the world without pointing at it (keyboard, screen reader, or just a shortcut)
+        items.push(h('div', { class: 'q-quick' },
+          button({ icon: 'live', label: `${pr.firstName}'s actions`, small: true, variant: 'secondary', onClick: () => { sh.sound('click'); sh.openContextMenu(pr.id, { kind: 'person', personId: pr.id }); } }),
+          button({ icon: 'box', label: 'Choose an object', small: true, variant: 'secondary', onClick: () => { sh.sound('open'); openObjectPicker(sh, pr.id); } })));
       }
       const [cur, ...rest] = pr.queue;
       if (cur) {
@@ -146,7 +157,7 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
             cancelBtn),
           prog));
       } else if (pr.location.kind === 'lot') {
-        items.push(empty('Nothing to do right now. Tap an object or a person in the world to give an order.', 'clock'));
+        items.push(empty('Nothing to do right now. Tap an object or a person in the world, or use the buttons above, to give an order.', 'clock'));
       }
       if (rest.length) {
         items.push(h('h3', { class: 'pp-subhead', text: `Up next (${rest.length})` }));

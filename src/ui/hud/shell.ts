@@ -3,6 +3,7 @@
 import type { GameAPI, PaintPreview, PickResult, SoundId } from '../../game/api';
 import type { Id } from '../../core/types';
 import type { BuildSession } from '../build/buildSession';
+import type { HintId } from './hintState';
 import type { TutorialSignal } from './tutorialSteps';
 
 export type ShellPanelKind = 'person' | 'feed' | 'ledger' | 'bills';
@@ -21,6 +22,12 @@ export interface Shell {
   isPanelOpen(kind: ShellPanelKind): boolean;
   openGameMenu(): void;
   openSettings(): void;
+  /** Opens the Help screen (a how-to per topic and the controls); `topic` is a hint id or 'controls'. */
+  openHelp(topic?: string): void;
+  /** Asks for a contextual hint (shown once, only while hints are on; src/ui/hud/hints.ts). */
+  hint(id: HintId): void;
+  /** Esc: closes the hint card when one is showing. */
+  dismissHint(): boolean;
   /** Opens the event planner (phone -> Plan an Event) for a household member. */
   openEventPlanner(hostId: Id): void;
   /** Opens the neighbourhood map (HUD Map button); `lotId` shows that place's sheet. */

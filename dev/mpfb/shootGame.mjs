@@ -54,7 +54,7 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
-  await page.addInitScript((style) => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0, characterStyle: style })); } catch { /* ignore */ } }, STYLE);
+  await page.addInitScript((style) => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0, characterStyle: style })); } catch { /* ignore */ } }, STYLE);
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 180000 });
   await page.waitForTimeout(800);

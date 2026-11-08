@@ -290,7 +290,9 @@ export interface GameSettings {
   soundVolume: number;
   musicVolume: number;
   reducedMotion: boolean;
-  textScale: number; // 0.9..1.3
+  textScale: number; // 0.9..1.5 (UI scale)
+  /** Milestone 13: stronger text and border contrast, no soft shadows on panels. */
+  highContrast: boolean;
   quality: 'low' | 'high';
   /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter); 'quaternius': modular GLB-part adults on top of the classic bodies (preview). */
   characterStyle: 'mpfb' | 'detailed' | 'classic' | 'quaternius';
@@ -301,6 +303,10 @@ export interface GameSettings {
   actionProgress: 'household' | 'all' | 'off';
   showStats: boolean;
   tutorial: boolean;
+  /** Milestone 13: contextual hints for new players (what has been seen is kept separately, see ui/hud/hintState.ts). */
+  hints: boolean;
+  /** Ids of the hints already shown on this device (a Settings > Help reset empties it). */
+  seenHints: string[];
 }
 
 export type SoundId =

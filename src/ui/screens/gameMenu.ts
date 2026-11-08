@@ -1,4 +1,4 @@
-// In-game menu: Save, Load, Download a backup, Import, Settings, Show tutorial, Quit to main menu.
+// In-game menu: Save, Load, Download a backup, Import, Settings, Help, Show tutorial, Quit to main menu.
 // The game pauses while the menu is open and resumes afterwards if nothing else changed.
 
 import { confirmDialog, modal } from '../kit/components';
@@ -31,6 +31,7 @@ export function openGameMenu(sh: Shell): void {
       rowButton({ icon: 'export', title: 'Download a backup of this world', subtitle: 'Saves a .json file to your device', onClick: () => { exportWorldFile(sh); } }),
       rowButton({ icon: 'import', title: 'Import a world file', subtitle: 'Your current game stays if the file has problems', onClick: then(() => { void importWorldFile(sh); }) }),
       rowButton({ icon: 'settings', title: 'Settings', onClick: then(() => sh.openSettings()) }),
+      rowButton({ icon: 'help', title: 'Help', subtitle: 'How to play, and the controls for touch and keyboard', onClick: then(() => sh.openHelp()) }),
       guided ? rowButton({ icon: 'review', title: 'Show tutorial', subtitle: 'The Guided Start checklist', onClick: then(() => sh.showTutorial()) }) : null,
       rowButton({
         icon: 'door', title: 'Quit to main menu', danger: true, onClick: () => {

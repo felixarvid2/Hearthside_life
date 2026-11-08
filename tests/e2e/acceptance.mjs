@@ -170,7 +170,7 @@ async function runViewport(browser, vpName, vp) {
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   // tutorial off: it is not part of the create flow and would cover the HUD; music off.
   await page.addInitScript(() => {
-    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0 })); } catch { /* ignore */ }
+    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ }
   });
 
   await context.addInitScript(PAGE_HELPERS);

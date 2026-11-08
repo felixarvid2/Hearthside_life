@@ -81,7 +81,8 @@ export function createMainMenu(sh: Shell, handlers: MainMenuHandlers): MainMenu 
       cont,
       newGame,
       button({ icon: 'load', label: 'Load Game', onClick: () => { sh.sound('open'); void openLoadDialog(sh, { fromMenu: true }); } }),
-      button({ icon: 'settings', label: 'Settings', onClick: () => { sh.sound('open'); sh.openSettings(); } }));
+      button({ icon: 'settings', label: 'Settings', onClick: () => { sh.sound('open'); sh.openSettings(); } }),
+      button({ icon: 'help', label: 'Help', onClick: () => { sh.sound('open'); sh.openHelp(); } }));
     setChildren(view, list);
     const fill = (latest: Latest) => {
       if (destroyed || !cont.isConnected) return;

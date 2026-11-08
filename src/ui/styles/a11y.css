@@ -1,0 +1,60 @@
+/* Hearthside Life - Milestone 13: hints, Help, focus, high contrast, reduced motion. */
+
+/* ---------- Focus ---------- */
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+#game-canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: -5px; }
+.panel :focus-visible, .modal :focus-visible, .tabs :focus-visible, .menu-card :focus-visible { outline-offset: -3px; }
+.tabs { padding: 4px; }
+.panel[tabindex='-1']:focus, .modal[tabindex='-1']:focus { outline: none; }
+.panel[tabindex='-1']:focus-visible, .modal[tabindex='-1']:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+
+/* ---------- Hint card ---------- */
+.hint-card {
+  position: absolute; z-index: 25; left: calc(12px + var(--safe-l)); right: calc(12px + var(--safe-r)); max-width: 440px; margin: 0 auto;
+  bottom: calc(var(--shell-bottom) + var(--sheet-h) + 10px); display: flex; flex-direction: column; gap: 4px; padding: 10px 14px 8px;
+  border: 2px solid var(--accent-2); animation: hint-in 0.2s ease;
+}
+body.shell-side-open .hint-card { right: calc(12px + var(--side-cover)); margin: 0; }
+body[data-shell-route='creator'] .hint-card { bottom: auto; top: calc(10px + var(--safe-t)); }
+.hint-head { display: flex; align-items: center; gap: 8px; color: var(--accent-2); }
+.hint-kicker { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.hint-title { font-size: 1.02rem; }
+.hint-text { margin: 0; font-size: 0.92rem; color: var(--ink); }
+.hint-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 2px; }
+@keyframes hint-in { from { opacity: 0; transform: translateY(8px); } }
+body.is-compact.is-landscape .hint-card { padding: 6px 12px 4px; gap: 2px; }
+body.is-compact.is-landscape .hint-text { font-size: 0.85rem; }
+body.is-compact.is-landscape .hint-title { font-size: 0.95rem; }
+
+/* ---------- Help ---------- */
+.help-modal .modal-body { display: flex; flex-direction: column; gap: 8px; }
+.help-topic { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.help-topic > summary { display: flex; align-items: center; min-height: var(--tap); padding: 0 14px; font-weight: 700; cursor: pointer; border-radius: 12px; }
+.help-topic[open] > summary { border-bottom: 1px solid var(--line); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.help-topic > p, .help-steps { margin: 8px 14px; }
+.help-steps { padding-left: 22px; line-height: 1.5; font-size: 0.92rem; }
+.help-topics { display: flex; flex-direction: column; gap: 8px; }
+.help-controls dt { margin-top: 4px; }
+.settings-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.q-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+kbd { font: inherit; font-weight: 700; font-size: 0.85em; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: var(--paper-2); }
+
+/* ---------- Reduced motion (the OS setting sets this class too, see loadSettings) ---------- */
+.reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+
+/* ---------- High contrast ---------- */
+:root.high-contrast {
+  --bg: #ffffff; --paper: #ffffff; --paper-2: #f0f0f0; --paper-3: #d9d9d9; --ink: #000000; --ink-2: #111111; --ink-3: #2b2b2b; --line: #000000;
+  --accent: #8a2c00; --accent-hover: #661f00; --accent-2: #00564b; --good: #17622a; --ok: #7a5f00; --low: #8f3f00; --critical: #9c130a; --focus: #0036b3;
+  --shadow: 0 0 0 2px #000;
+}
+.high-contrast .panel, .high-contrast .modal, .high-contrast .hud-box, .high-contrast .menu-card, .high-contrast .ctx-menu { box-shadow: 0 0 0 2px #000; }
+.high-contrast .btn, .high-contrast .chip, .high-contrast .row-btn, .high-contrast .switch, .high-contrast .funds-btn, .high-contrast .text-input, .high-contrast .slot { border-color: #000; border-width: 2px; }
+.high-contrast .btn-ghost { border-color: transparent; }
+.high-contrast .seg.is-selected, .high-contrast .tab.is-selected, .high-contrast .speed-btn.is-active { outline: 2px solid #000; outline-offset: -2px; }
+.high-contrast .card.is-selected { border-color: #000; border-width: 3px; }
+.high-contrast .meter-track { border: 2px solid #000; background: #fff; }
+.high-contrast .meter-value, .high-contrast .switch-hint, .high-contrast .card-meta { color: #1a1a1a; }
+.high-contrast .toast { border: 2px solid #fff; }
+.high-contrast .muted-note, .high-contrast .row-btn-sub, .high-contrast .slider-value { color: #1a1a1a; }
+.high-contrast .modal-backdrop { background: rgba(0, 0, 0, 0.6); }

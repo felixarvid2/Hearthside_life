@@ -1,18 +1,18 @@
-// Settings: volumes, reduced camera motion, text size, graphics quality and shadows, autonomy (on/off and
+// Settings: volumes, accessibility (UI scale, high contrast, reduced motion), graphics quality and shadows, hints, graphics quality and shadows, autonomy (on/off and
 // level), neighbour visits, performance overlay and tutorial. Device settings go through api.setSettings
 // (the game stores them in localStorage); world settings go through api.setSimSettings (stored in the save).
 
 import type { GameSettings } from '../../game/api';
 import type { LifeStage, SimSettings } from '../../core/types';
 import { MAX_STAGE_DAYS, MIN_STAGE_DAYS, NORMAL_STAGE_DAYS, STAGE_LABELS, STAGE_ORDER, stageLength } from '../../core/lifeStages';
-import { modal, segmented, slider } from '../kit/components';
+import { button, modal, segmented, slider, toast } from '../kit/components';
 import { h } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { toggleSwitch } from '../kit/controls';
 import type { Shell } from '../hud/shell';
 
 const TEXT_SIZES: Array<{ id: string; label: string; value: number }> = [
-  { id: '90', label: '90 %', value: 0.9 }, { id: '100', label: '100 %', value: 1 }, { id: '115', label: '115 %', value: 1.15 }, { id: '130', label: '130 %', value: 1.3 },
+  { id: '90', label: '90 %', value: 0.9 }, { id: '100', label: '100 %', value: 1 }, { id: '115', label: '115 %', value: 1.15 }, { id: '130', label: '130 %', value: 1.3 }, { id: '150', label: '150 %', value: 1.5 },
 ];
 
 function nearestTextSize(v: number): string {
@@ -39,8 +39,9 @@ export function openSettings(sh: Shell): void {
   const vol = (label: string, key: 'masterVolume' | 'soundVolume' | 'musicVolume') =>
     slider({ label, min: 0, max: 100, step: 5, value: Math.round(cfg()[key] * 100), format: pct, onInput: (v) => set({ [key]: v / 100 } as Partial<GameSettings>), onCommit: preview });
 
-  const reduced = toggleSwitch({ label: 'Reduced camera motion', hint: 'Snappier camera moves without smooth swings.', value: cfg().reducedMotion, onChange: (on) => { set({ reducedMotion: on }); sh.sound('toggle'); } });
-  const text = segmented({ label: 'Text size', value: nearestTextSize(cfg().textScale), options: TEXT_SIZES.map((t) => ({ id: t.id, label: t.label })), onChange: (id) => { const t = TEXT_SIZES.find((x) => x.id === id); if (t) set({ textScale: t.value }); sh.sound('toggle'); } });
+  const reduced = toggleSwitch({ label: 'Reduce motion', hint: 'Snappier camera moves, no smooth swings, no weather particles and no UI animation. Starts on when your device asks for reduced motion.', value: cfg().reducedMotion, onChange: (on) => { set({ reducedMotion: on }); sh.sound('toggle'); } });
+  const contrast = toggleSwitch({ label: 'High contrast', hint: 'Black text on white, strong borders and no soft shadows.', value: cfg().highContrast, onChange: (on) => { set({ highContrast: on }); sh.sound('toggle'); } });
+  const text = segmented({ label: 'UI scale (text size)', value: nearestTextSize(cfg().textScale), options: TEXT_SIZES.map((t) => ({ id: t.id, label: t.label })), onChange: (id) => { const t = TEXT_SIZES.find((x) => x.id === id); if (t) set({ textScale: t.value }); sh.sound('toggle'); } });
   const quality = segmented({ label: 'Graphics quality', value: cfg().quality, options: [{ id: 'low', label: 'Low (faster)' }, { id: 'high', label: 'High' }], onChange: (q) => { set({ quality: q }); sh.sound('toggle'); } });
   const style = segmented({ label: 'Character style', value: cfg().characterStyle, options: [{ id: 'mpfb', label: 'Natural' }, { id: 'detailed', label: 'Detailed' }, { id: 'classic', label: 'Classic (lighter)' }, { id: 'quaternius', label: 'Quaternius (preview)' }], onChange: (v) => { set({ characterStyle: v }); sh.sound('toggle'); } });
   const shadows = toggleSwitch({ label: 'Shadows', hint: 'Soft shadows under people and furniture.', value: cfg().shadows, onChange: (on) => { set({ shadows: on }); sh.sound('toggle'); } });
@@ -136,17 +137,27 @@ export function openSettings(sh: Shell): void {
 
   const stats = toggleSwitch({ label: 'Performance overlay', hint: 'Frame rate, draw calls and simulation timing.', value: cfg().showStats, onChange: (on) => { set({ showStats: on }); sh.sound('toggle'); } });
   const tutorial = toggleSwitch({ label: 'Tutorial', hint: 'Show the Guided Start checklist.', value: cfg().tutorial, onChange: (on) => { set({ tutorial: on }); sh.sound('toggle'); } });
+  const hints = toggleSwitch({ label: 'Hints', hint: 'A short tip the first time you reach something new. Each shows once.', value: cfg().hints, onChange: (on) => { set({ hints: on }); sh.sound('toggle'); } });
+  const resetHints = button({
+    icon: 'undo', label: 'Reset hints', variant: 'secondary', onClick: () => {
+      set({ seenHints: [], hints: true });
+      sh.sound('confirm');
+      toast('Hints are on and will show again as you meet each situation.', 'success', 3000);
+    },
+  });
+  const helpBtn = button({ icon: 'help', label: 'Open Help', variant: 'secondary', onClick: () => { sh.sound('open'); m.close(); sh.openHelp(); } });
 
   m.body.append(
     section('Sound', 'sound', vol('Master volume', 'masterVolume').el, vol('Sound effects', 'soundVolume').el, vol('Music', 'musicVolume').el),
-    section('Display', 'sun', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), reduced.el, quality.el, style.el, shadows.el, weatherEffects.el, progressPills.el),
+    section('Accessibility', 'contrast', text.el, h('p', { class: 'text-preview', text: 'The quick brown fox naps by the hearth.' }), contrast.el, reduced.el),
+    section('Display', 'sun', quality.el, style.el, shadows.el, weatherEffects.el, progressPills.el),
     section('Household life', 'people', autonomy.el, level.el, visitors.el, seasons.el, seasonLength.el, weather.el, townLife.el,
       sim?.unlimitedFunds ? h('p', { class: 'muted-note' }, icon('build', 18), h('span', { text: 'This world has unlimited building funds (Build Sandbox).' })) : null),
     section('Aging and family', 'family', aging.el, agingHint, customBox, endOfLife.el),
-    section('Help', 'info', tutorial.el, stats.el,
+    section('Help', 'info', hints.el, h('div', { class: 'settings-buttons' }, resetHints, helpBtn), tutorial.el, stats.el,
       h('details', { class: 'shortcuts' }, h('summary', { text: 'Keyboard shortcuts' }),
         h('dl', { class: 'facts' },
-          ...([['WASD / arrows', 'Move the camera'], ['Q / E', 'Turn the camera'], ['+ / -', 'Zoom'], ['Space', 'Pause or resume'], ['1 / 2 / 3', 'Game speed'], ['Esc', 'Cancel or close'], ['Ctrl+Z / Ctrl+Y', 'Undo / redo (Buy and Build)'], ['R', 'Rotate the object being placed'], ['Delete', 'Sell the selected object (Buy)']] as const)
+          ...([['Tab / Shift+Tab', 'Move between controls'], ['WASD / arrows', 'Move the camera'], ['Q / E', 'Turn the camera'], ['+ / -', 'Zoom'], ['Space', 'Pause or resume'], ['1 / 2 / 3', 'Game speed'], ['Esc', 'Cancel or close'], ['Ctrl+Z / Ctrl+Y', 'Undo / redo (Buy and Build)'], ['R', 'Rotate the object being placed'], ['Delete', 'Sell the selected object (Buy)']] as const)
             .flatMap(([k, v]) => [h('dt', {}, h('kbd', { text: k })), h('dd', { text: v })])))),
     h('p', { class: 'muted-note' }, icon('check', 18), h('span', { text: 'Changes apply right away and are remembered on this device. Household life settings are saved with the world.' })),
   );
@@ -154,7 +165,7 @@ export function openSettings(sh: Shell): void {
   const unsub = api.onChange((w) => {
     if (w !== 'settings') return;
     const c = cfg();
-    reduced.set(c.reducedMotion); shadows.set(c.shadows); weatherEffects.set(c.weatherEffects); stats.set(c.showStats); tutorial.set(c.tutorial);
+    reduced.set(c.reducedMotion); contrast.set(c.highContrast); hints.set(c.hints); shadows.set(c.shadows); weatherEffects.set(c.weatherEffects); stats.set(c.showStats); tutorial.set(c.tutorial);
     quality.set(c.quality); style.set(c.characterStyle); text.set(nearestTextSize(c.textScale)); progressPills.set(c.actionProgress);
   });
 }

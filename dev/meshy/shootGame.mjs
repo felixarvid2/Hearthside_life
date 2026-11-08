@@ -96,7 +96,7 @@ try {
   browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
   await ctx.addInitScript(HELPERS);
-  await ctx.addInitScript((style) => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0, characterStyle: style })); } catch { /* ignore */ } }, STYLE);
+  await ctx.addInitScript((style) => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0, characterStyle: style })); } catch { /* ignore */ } }, STYLE);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
