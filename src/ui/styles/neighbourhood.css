@@ -179,3 +179,8 @@ button.nbm-event { cursor: pointer; }
 .nbm-event-main { display: flex; flex-direction: column; min-width: 0; }
 .nbm-event-name { font-weight: 700; }
 .nbm-event-sub { font-size: 0.78rem; color: var(--ink-2, #5b564c); }
+
+/* Move dialog: what happens to the furniture */
+.nbm-furniture { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.nbm-furniture .field-label { flex-basis: 100%; }
+.nbm-furniture[hidden] { display: none; }

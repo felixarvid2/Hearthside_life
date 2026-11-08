@@ -40,6 +40,7 @@ import { RESERVING_PHASES, Reservations, reservationKeys } from './reservations'
 import { recentUses } from './social';
 import { dailyDropIn, ensureDepartures, ensureFirstVisit, processSchedule } from './visitors';
 import { moveHousehold, movePreview, switchHousehold, switchPreview } from './households';
+import type { MoveOptions } from './households';
 import type { MovePreview, SwitchPreview } from './households';
 import { startTrip, startTripHome, travelProblem } from './lotTravel';
 import type { TripResult } from './lotTravel';
@@ -452,12 +453,12 @@ export class Simulation {
     return switchHousehold(this.ctx(), householdId);
   }
 
-  movePreview(lotId: Id): MovePreview {
-    return movePreview(this.ctx(), lotId);
+  movePreview(lotId: Id, opts?: MoveOptions): MovePreview {
+    return movePreview(this.ctx(), lotId, opts);
   }
 
-  moveHousehold(lotId: Id): { ok: boolean; reason?: string } {
-    return moveHousehold(this.ctx(), lotId);
+  moveHousehold(lotId: Id, opts?: MoveOptions): { ok: boolean; reason?: string } {
+    return moveHousehold(this.ctx(), lotId, opts);
   }
 
   // ---------------------------------------------------------------------------------------------

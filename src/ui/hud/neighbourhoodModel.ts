@@ -242,6 +242,15 @@ export function moveSummary(pv: MovePreview, lotName: string): { title: string; 
   return { title: buy ? `Buy ${lotName}?` : `Move into ${lotName}?`, confirm: buy ? 'Buy and move' : 'Rent and move', lines };
 }
 
+/** The three things that can happen to the furniture of the old home, with what each one means in money. */
+export function furnitureChoices(f: { count: number; worth: number; saleValue: number }): Array<{ id: 'leave' | 'take' | 'sell'; label: string; note: string }> {
+  return [
+    { id: 'leave', label: 'Leave it', note: 'Stays in the house' },
+    { id: 'take', label: 'Take it', note: 'Into your inventory' },
+    { id: 'sell', label: 'Sell it', note: `Get ${formatMoney(f.saleValue)}` },
+  ];
+}
+
 // ---- off-lot household members ----
 
 export interface AwayInfo {

@@ -29,7 +29,7 @@ import { isManualSlot, isSlotId } from '../persistence/types';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
 import type { FamilyInfo } from '../sim/familyView';
 import type { GiftChoice } from '../sim/gifts';
-import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 import type { SplitPreview, SplitTarget } from '../sim/split';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
@@ -589,12 +589,12 @@ export class GameCore {
     return OK;
   }
 
-  movePreview(lotId: Id): MovePreview | null { return this.world ? this.sim.movePreview(lotId) : null; }
+  movePreview(lotId: Id, opts?: MoveOptions): MovePreview | null { return this.world ? this.sim.movePreview(lotId, opts) : null; }
 
-  moveHousehold(lotId: Id): Result {
+  moveHousehold(lotId: Id, opts?: MoveOptions): Result {
     const blocked = this.liveOnly();
     if (blocked) return fail(blocked);
-    const r = this.sim.moveHousehold(lotId);
+    const r = this.sim.moveHousehold(lotId, opts);
     if (!r.ok) return fail(r.reason ?? 'Could not move.');
     this.notify('neighbourhood');
     this.notify('state');

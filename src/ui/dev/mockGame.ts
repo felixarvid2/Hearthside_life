@@ -26,6 +26,7 @@ import { Rng, seedRng } from '../../core/rng';
 import type { MovePreview, NeighbourhoodInfo, PersonPlace, SwitchPreview } from '../../game/api';
 import { giftChoices as simGiftChoices } from '../../sim/gifts';
 import type { GiftChoice } from '../../sim/gifts';
+import type { MoveOptions } from '../../sim/households';
 import { movePreview as simMovePreview, switchPreview as simSwitchPreview } from '../../sim/households';
 import { travelProblem as simTravelProblem } from '../../sim/lotTravel';
 import { neighbourhoodInfo } from '../../sim/neighbourhoodView';
@@ -932,13 +933,13 @@ export class MockGame implements GameAPI {
     return { ok: true };
   }
 
-  movePreview(lotId: Id): MovePreview | null { const c = this.simCtx(); return c ? simMovePreview(c, lotId) : null; }
+  movePreview(lotId: Id, opts?: MoveOptions): MovePreview | null { const c = this.simCtx(); return c ? simMovePreview(c, lotId, opts) : null; }
 
-  moveHousehold(lotId: Id): Result {
+  moveHousehold(lotId: Id, opts?: MoveOptions): Result {
     this.log('moveHousehold', lotId);
     const c = this.simCtx(), w = this.world;
     if (!c || !w) return { ok: false, reason: 'No game is running.' };
-    const pv = simMovePreview(c, lotId);
+    const pv = simMovePreview(c, lotId, opts);
     if (!pv.ok) return { ok: false, reason: pv.reason ?? 'Not possible.' };
     const hh = w.households[w.activeHouseholdId]!;
     transact(w, this.events, hh.id, -pv.cost, 'bill', 'Moving in');

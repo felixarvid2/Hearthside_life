@@ -82,7 +82,7 @@ import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, HomeEventType, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 import type { RoomDelta, Vertex } from '../world/roomTracker';
-import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
@@ -93,7 +93,7 @@ import type { SplitPreview, SplitTarget } from '../sim/split';
 export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 export { WALL_HEIGHT_PRESETS } from '../building/buildPlans';
 export type { RoomDelta, Vertex } from '../world/roomTracker';
-export type { HouseholdBrief, MovePreview, SwitchPreview } from '../sim/households';
+export type { FurnitureChoice, FurnitureSummary, HouseholdBrief, MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 export type { HouseholdInfo, LotInfo, LotPerson, NeighbourhoodInfo, Tenure, TripInfo } from '../sim/neighbourhoodView';
 export type { PersonPlace, PlaceKind } from '../sim/places';
 export type { AdoptionPreview, AdoptionSpec, AdoptStage } from '../sim/adoption';
@@ -450,8 +450,9 @@ export interface GameAPI {
   inviteHome?(hostId: Id, guestId: Id): Result;
   switchPreview?(householdId: Id): SwitchPreview | null;
   switchHousehold?(householdId: Id): Result;
-  movePreview?(lotId: Id): MovePreview | null;
-  moveHousehold?(lotId: Id): Result;
+  /** `opts.furniture` ('leave' default, 'take' into the inventory, 'sell') chooses what happens to the furniture of the old home. */
+  movePreview?(lotId: Id, opts?: MoveOptions): MovePreview | null;
+  moveHousehold?(lotId: Id, opts?: MoveOptions): Result;
 
   // ---- family and life stages (Milestone 8; sim/aging.ts, school.ts, care.ts, adoption.ts, split.ts) ----
   // Optional like the other newer sections. Everything is plain data.

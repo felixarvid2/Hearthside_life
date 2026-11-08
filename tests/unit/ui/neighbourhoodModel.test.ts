@@ -192,7 +192,7 @@ describe('actions of a lot', () => {
   });
 
   it('writes the move confirmation with what is paid and received', () => {
-    const pv: MovePreview = { ok: true, lotId: 'e1', mode: 'rent', cost: 12500, proceeds: 0, lines: ['Rent line.'] };
+    const pv: MovePreview = { ok: true, lotId: 'e1', mode: 'rent', cost: 12500, proceeds: 0, lines: ['Rent line.'], furniture: { count: 0, worth: 0, saleValue: 0, choice: 'leave' } };
     expect(moveSummary(pv, 'Marigold Flat')).toEqual({ title: 'Move into Marigold Flat?', confirm: 'Rent and move', lines: ['Rent line.', 'Paid now: $125.'] });
     const buy = moveSummary({ ...pv, mode: 'buy', cost: 2100000, proceeds: 800000 }, 'Hazelbank House');
     expect(buy.title).toBe('Buy Hazelbank House?');
