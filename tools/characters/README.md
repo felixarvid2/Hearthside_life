@@ -30,12 +30,15 @@ Licences: the GPL add-ons run inside Blender only. The exported meshes, weights 
 are not covered by the add-ons' licences; no add-on code, node group or library asset is exported. The bodies are
 Quaternius CC0. Asset licences are recorded per part in the manifest and in `public/assets/LICENSES.md`.
 
-## Steps (all scripts: `blender -b --factory-startup --python <script> -- <args>`)
+## Steps (updated 2026-11-07; all scripts: `blender -b --factory-startup --python <script> -- <args>`)
 
 1. **Body**: `blender/prepare_body.py --src <quaternius.gltf> --id <body-id> --out-glb public/assets/characters/modular/bodies/<id>.glb --out-blend authoring/characters/bodies/<id>/fitting.blend --out-json authoring/characters/bodies/<id>/info.json --materials authoring/characters/bodies/<id>/materials.json`
    - Imports with `bone_heuristic='BLENDER'`, so glTF joint frames survive the round trip. Measured on the UAL
      mannequins: rest rotations within 0.06°, positions and inverse bind matrices within 1e-6 m.
    - Drops animations, limits weights to 4 and normalizes them.
+   - `--morphs authoring/characters/bodies/<id>/morphs.json` adds the shape keys (`blender/morphs.py`) before
+     `fitting.blend` is saved. Face keys: `nose_width`, `mouth_width`, `jaw_width`, `chin_length` (-1..1). Body key:
+     `weight` (-0.5..1). Body-shell garments copy the body's keys; hair does not follow them.
    - Splits the skin into 17 `Body_<region>` meshes by dominant bone, and keeps the whole body in `fitting.blend` for
      fitting.
 2. **Garment**: `blender/build_garment.py --params authoring/characters/garments/<id>/params.json --body <body-id> --repo .`
@@ -59,6 +62,9 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
    - Then: decimate to `target_tris`, smart-UV, weights limited to 4 and normalized, region coverage measured,
      parented to the armature. Writes the GLB, `authoring/.../<id>__<body>.blend` (source) and `build_<body>.json`
      (measurements, coverage, counts).
+   - `finish` options: `force_regions` (always covered; applied before the morphological close, so the navel fills),
+     `force_h`, and `hood` (`add_hood`, a measured rolled hood on the back of the neck; params `reach_deg`, `collar_at`,
+     `collar`, `thick`, `drop`, `rise`, `segments`, `ring`).
 3. **Cover mask**: `node tools/characters/cover-masks.mjs <body.glb> <garment.glb> <out.cover.json> --body <id> --garment <id>`
    - Marks the body vertices the garment covers: a ray along the vertex normal hits the garment within 6 cm.
    - The game hides only triangles whose three vertices are covered. A T-shirt that ends mid-belly hides the covered
@@ -75,6 +81,10 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
      The preset's Surface Deform is skipped. The result is converted to a mesh, with a hair-coloured scalp cap
      (`cap`) so no scalp shows between clumps.
    - Weighted to `Head`, blending to `neck_01`/`spine_03` below the skull base. Exported with the armature.
+   - Options: `cut_at` (blunt cut height in head space, bob), `front_side` (roots in front of the ears swept aside),
+     `ponytail` {`gather_h`, `gather_out`, `walk_seg`, `tail_points`, `tail_len`, `tail_spread`, `tail_out`}. Lower
+     `resolution_cm` rather than decimating GBH ribbons, which makes spiky clumps (ponytail 3.0 cm, 14,000 tris; bob
+     2.6 cm, 12,000 tris).
 5. **Inspect**: `dev/wardrobe.html` (`npm run dev`) shows every part on every body in the game's renderer, posed
    (`pose=idle|walk|sit`). `blender/render_views.py --blend <source.blend> --out <prefix> [--focus head|torso]
    [--pose fit] [--hide <prefix>]` renders the Blender sources (front/left/back/right, Cycles on the CPU).
@@ -88,8 +98,14 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
   `M_Skin` / `M_Eyes` / `M_Brows`, swaps in the neutral skin texture (`skin_base.png`, from
   `tools/characters/bake_skin.py --src T_Superhero_<M|F>_Dark*.png`; the printed gain is the manifest's `skinGain`),
   drops the roughness and missing normal maps and writes 1024 px JPEGs. The stand-in mannequins are gone.
-- **tshirt_crew.** Both bodies, hybrid body finish, about 2,500 / 2,800 triangles, every vertex weighted, cover mask.
+- **tshirt_crew.** Both bodies, hybrid body finish, about 2,459 / 2,814 triangles, every vertex weighted, cover mask.
+- **trousers_straight.** Both bodies, bottom, about 2,672 / 2,932 triangles, cover mask.
+- **hoodie_pullover.** Both bodies, top, with the measured hood, about 3,800 / 4,300 triangles, cover mask.
 - **short_crop.** Both bodies, about 6,700 / 7,000 triangles, skinned to the head.
+- **bob_chin** (about 12,500 triangles) and **ponytail_mid** (about 14,400), both bodies.
+- **Thumbnails.** Every part, rendered by `thumbnails.mjs`; bottoms, shoes and one-pieces are framed full-body.
+- **Morphs (Stage D).** Shape keys from `blender/morphs.py`, see Steps 1.
+- **Restriction.** `hoodie_pullover` and `ponytail_mid` conflict (`manifest.restrictions.parts`).
 
 ## CharacterStudio
 

@@ -44,7 +44,7 @@ export function mountWardrobe(root: HTMLElement, api: GameAPI, opts: WardrobeOpt
       const issues = s.validate().members[0]?.filter((i) => i.step === 'clothing') ?? [];
       if (issues.length > 0) return `Fix first: ${issues[0]!.message}`;
       let r: ReturnType<GameAPI['updateWardrobe']>;
-      try { r = api.updateWardrobe(opts.personId, s.current.outfits); } catch (err) { r = { ok: false, reason: err instanceof Error ? err.message : 'Something went wrong.' }; }
+      try { r = api.updateWardrobe(opts.personId, s.current.outfits, s.isModular() ? s.current.appearance.modular : undefined); } catch (err) { r = { ok: false, reason: err instanceof Error ? err.message : 'Something went wrong.' }; }
       if (!r.ok) return `Could not save: ${r.reason}`;
       toast(`${person.firstName}'s outfits were saved.`, 'success');
       opts.onClose();

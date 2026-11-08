@@ -8,6 +8,7 @@
 import type { ContentDB, HairDef, ParamDef, Swatch } from '../content/types';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { Rng, seedRng } from '../core/rng';
+import { migrateModularLook } from './modular/look';
 import type { Appearance, BodyFrame, FamilyTie, Hex, LifeStage, Person, Pronouns } from '../core/types';
 import {
   allowedAffinities, asArr, asNum, asObj, asStr, cleanText, defaultWardrobe, hexToHsl, isHex, mixHex, normalizeHex, normalizeWardrobe,
@@ -695,7 +696,11 @@ export function normalizeAppearance(raw: unknown, content: ContentDB, note: Note
   const skin = readColor(r.skin, def.skin, 'Skin', note);
   const hairColor = readColor(hair.color, def.hair.color, 'Hair', note);
   const presetBody = readOptionalId(r.bodyPresetId, content.bodyPresets, 'Body preset', note);
+  // the modular (Quaternius) look is kept when it reads; a damaged one is dropped and the look is derived again
+  const modular = r.modular === undefined ? null : migrateModularLook(r.modular);
+  if (r.modular !== undefined && !modular) note('The modular look could not be read and was dropped.');
   return {
+    ...(modular ? { modular } : {}),
     frame,
     skin,
     body: readParams(r.body, content.bodyParams ?? [], 'Body', note),

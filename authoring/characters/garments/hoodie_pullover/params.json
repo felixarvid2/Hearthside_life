@@ -1,0 +1,75 @@
+{
+ "id": "hoodie_pullover",
+ "label": "Pullover hoodie",
+ "preset": "HOODIE",
+ "category": "top",
+ "slot": "top",
+ "fit": 0.2,
+ "length_to": "crotch",
+ "sleeve_len": null,
+ "fabric": "SOFT",
+ "take_in": 0.06,
+ "settle_frames": 60,
+ "target_tris": 4000,
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Hoodie",
+   "materials": [
+    "M_Hoodie"
+   ],
+   "default": "#7a8b6f"
+  }
+ ],
+ "relax": true,
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "per_body": {
+  "ubc_male": {
+   "armhole": {
+    "depth_extra": 0.1,
+    "scye_max": 0.2
+   }
+  }
+ },
+ "finish": {
+  "mode": "body",
+  "close": 6,
+  "min": 0.008,
+  "max": 0.022,
+  "k": 0.015,
+  "smooth": 6,
+  "exclude_regions": [
+   "head",
+   "neck",
+   "hand_l",
+   "hand_r",
+   "thigh_l",
+   "thigh_r"
+  ],
+  "hood": {
+   "reach_deg": 110,
+   "collar_at": 0.0,
+   "collar": 0.012,
+   "thick": 0.045,
+   "drop": 0.17,
+   "rise": 0.025,
+   "segments": 28,
+   "ring": 12
+  },
+  "force_regions": [
+   "belly",
+   "upperarm_l",
+   "upperarm_r",
+   "forearm_l",
+   "forearm_r"
+  ],
+  "force_h": 0.012
+ }
+}

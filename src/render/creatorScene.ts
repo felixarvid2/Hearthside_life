@@ -8,6 +8,7 @@ import type { CharacterAssets } from '../characters/assets';
 import { STAGE_HEIGHTS } from '../characters/assets';
 import type { PersonView } from '../characters/personView';
 import { createPersonView, wantsModular } from '../characters/personView';
+import { ModularCharacterView } from '../characters/modular/ModularCharacterView';
 import { outfitFor } from '../characters/outfits';
 import type { ContentDB } from '../content/types';
 import type { PersonDraft } from '../core/drafts';
@@ -47,6 +48,8 @@ export class CreatorScene {
   private yaw = 0;
   private targetYaw = 0;
   private zoomF = 1;
+  /** Head height of the shown modular body (cached per body id): the face close-up is anchored to it. */
+  private headY: { key: string; y: number } | null = null;
   private viewName: View = 'front';
   /** Camera state eased between views: look-at height, distance factor. */
   private cam = { y: 0.95, h: 1.95, ty: 0.95, th: 1.95, t: 1 };
@@ -158,6 +161,27 @@ export class CreatorScene {
     this.zoomF = 1;
   }
 
+  /**
+   * Modular bodies are a little taller than the classic adult the face close-up was tuned for: anchor it to the Head joint
+   * (classic: 1.56 m for a Head at 1.585 m) on the face's centre. creator/framing.ts frameShot is
+   * not used here: it frames the whole viewport, while this camera frames the part the editing panel leaves free.
+   */
+  private anchorFace(v: PersonView): void {
+    if (!(v instanceof ModularCharacterView) || v.busy || this.viewName !== 'face') return;
+    const key = `${v.character.serialize().bodyId}`;
+    if (this.headY?.key !== key) {
+      const head = v.bone('Head');
+      if (!head) return;
+      v.root.updateWorldMatrix(true, true);
+      this.headY = { key, y: head.getWorldPosition(new THREE.Vector3()).y };
+    }
+    // the Universal Base Characters' Head joint sits at the skull base; the face's centre is ~8 cm above it
+    const ty = (this.headY.y + 0.08) * this.stageK;
+    if (Math.abs(ty - this.cam.ty) < 1e-4) return;
+    this.cam.ty = ty;
+    if (this.cam.t >= 1) this.cam.y = ty;
+  }
+
   rotate(d: number): void {
     if (!Number.isFinite(d)) return;
     this.targetYaw += d;
@@ -173,6 +197,7 @@ export class CreatorScene {
     const v = this.view;
     if (!v) return;
     v.update(dt);
+    this.anchorFace(v);
     this.yaw += (this.targetYaw - this.yaw) * Math.min(1, dt * 8);
     v.root.rotation.y = this.yaw;
     v.root.position.set(0, 0.06 - v.floorDrop, 0);

@@ -12,6 +12,7 @@ import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import type { EventBus } from '../core/events';
 import { rotatedSize } from '../core/geometry';
 import type { Tile } from '../core/nav';
+import type { ModularLook } from '../characters/modular/types';
 import type { Cents, FinishRef, Id, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import { DEFAULT_PPM } from '../render/cameraRig';
 import { GameView } from '../render/gameView';
@@ -380,6 +381,10 @@ export class Game implements GameAPI {
 
   private makeCreatorApi(): GameAPI['creator'] {
     return {
+      modular: () => {
+        const rt = this.gameView.characterAssets?.modular;
+        return rt ? { manifest: rt.manifest, url: (path: string) => rt.cache.urlFor(path) } : null;
+      },
       show: (person: PersonDraft, opts: CreatorPreviewOptions) => {
         const scene = this.gameView.creatorScene;
         if (this.core.mode() !== 'creator') {
@@ -441,7 +446,7 @@ export class Game implements GameAPI {
   cancel(personId: Id, actionId: Id): void { this.core.cancel(personId, actionId); }
   reorder(personId: Id, actionId: Id, toIndex: number): void { this.core.reorder(personId, actionId, toIndex); }
   mood(personId: Id): { value: number; label: string; reasons: string[] } { return this.core.mood(personId); }
-  updateWardrobe(personId: Id, wardrobe: Wardrobe): Result { return this.core.updateWardrobe(personId, wardrobe); }
+  updateWardrobe(personId: Id, wardrobe: Wardrobe, modular?: ModularLook | null): Result { return this.core.updateWardrobe(personId, wardrobe, modular); }
   eventProblem(req: PlanEventRequest): string | null { return this.core.eventProblem(req); }
   planEvent(req: PlanEventRequest): Result & { eventId?: Id } { return this.core.planEvent(req); }
   cancelEvent(eventId: Id): Result { return this.core.cancelEvent(eventId); }

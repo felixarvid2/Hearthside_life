@@ -12,6 +12,8 @@
 
 import { saleValue as saleValueOf, supportBlockReason } from '../building/plans';
 import { sellObject, setObjectFinish as setObjectFinishCommand, storeObject } from '../building/commands';
+import { migrateModularLook } from '../characters/modular/look';
+import type { ModularLook } from '../characters/modular/types';
 import { premadeHouseholds as buildPremades, NEIGHBOR_HOUSEHOLD, validateHousehold, validateWardrobe } from '../characters/creator';
 import type { ContentDB } from '../content/types';
 import { TickAccumulator, type Speed } from '../core/clock';
@@ -398,7 +400,7 @@ export class GameCore {
   mood(personId: Id): { value: number; label: string; reasons: string[] } { return this.sim.mood(personId); }
 
   /** Replaces a household member's wardrobe after checking it with the creator's outfit rules. */
-  updateWardrobe(personId: Id, wardrobe: Wardrobe): Result {
+  updateWardrobe(personId: Id, wardrobe: Wardrobe, modular?: ModularLook | null): Result {
     const state = this.world;
     const p = state?.people[personId];
     if (!state || !p) return fail('Unknown person.');
@@ -406,8 +408,15 @@ export class GameCore {
     if (!wardrobe || typeof wardrobe !== 'object') return fail('That wardrobe is not valid.');
     const issues = validateWardrobe(wardrobe, this.content);
     if (issues.length > 0) return fail(issues[0]!);
+    let look: ModularLook | null | undefined;
+    if (modular !== undefined) {
+      look = modular === null ? null : migrateModularLook(modular);
+      if (look === null && modular !== null) return fail('That modular look is not valid.');
+    }
     p.outfits = clone(wardrobe);
-    this.events.emit({ type: 'person.changed', personId, what: 'outfit' });
+    if (look === null) delete p.appearance.modular;
+    else if (look) p.appearance.modular = clone(look);
+    this.events.emit({ type: 'person.changed', personId, what: look === undefined ? 'outfit' : 'appearance' });
     this.notify('state');
     this.autosaves.request();
     return OK;

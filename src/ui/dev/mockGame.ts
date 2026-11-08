@@ -228,6 +228,7 @@ export class MockGame implements GameAPI {
   premadeHouseholds(): HouseholdDraft[] { return JSON.parse(JSON.stringify(PREMADES)) as HouseholdDraft[]; }
 
   creator = {
+    modular: (): null => null,
     show: () => { if (this.m !== 'creator') this.setModeInternal('creator'); },
     setView: () => undefined,
     rotate: () => undefined,

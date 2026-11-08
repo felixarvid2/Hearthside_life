@@ -109,7 +109,40 @@ roots = roots[::step][: P["clumps"]]
 
 part_x = H0.x + P["part_offset"]               # part line along the crown (x = const), offset toward the left (+x)
 guides = []
+PT = P.get("ponytail")
+if PT:
+    # Gather point at the back of the skull (`gather_h` in head space), just outside the hair volume.
+    gd = Vector((0.0, 1.0, 0.0))
+    ghit = head_bvh.ray_cast(Vector((H0.x, H0.y + 0.4, H0.z + hz * PT.get("gather_h", 0.55))), -gd, 0.6)
+    G = (ghit[0] if ghit[0] is not None else center + gd * 0.1) + gd * (P["volume"] + PT.get("gather_out", 0.01))
+def ponytail_guide(p, idx):
+    """Walks a root over the skull to the gather point, then down the tail (gravity, slight spread)."""
+    pts = [p.copy()]; q = p.copy()
+    seg = PT.get("walk_seg", 0.02)
+    for _ in range(40):
+        if (G - q).length < seg * 1.2:
+            break
+        q = on_skull(q + (G - q).normalized() * seg, P["volume"])
+        pts.append(q.copy())
+    pts.append(G.copy())
+    # tail: a few points falling from the gather point, curving away from the neck, fanned per clump
+    n_t = PT.get("tail_points", 6); L = PT.get("tail_len", 0.26)
+    a = idx * 2.399963
+    spread = PT.get("tail_spread", 0.018)
+    fan = Vector((math.cos(a), 0.0, math.sin(a) * 0.3)) * spread * (0.4 + 0.6 * ((idx * 0.618) % 1.0))
+    for k in range(1, n_t + 1):
+        t = k / n_t
+        out = PT.get("tail_out", 0.05) * math.sin(min(1.0, t * 1.6) * math.pi / 2)
+        q = G + Vector((0.0, out, -L * t)) + fan * (0.5 + t)
+        loc, nn, _, dd = head_bvh.find_nearest(q)
+        if loc is not None and dd < P["volume"]:
+            q = loc + (q - loc).normalized() * P["volume"]
+        pts.append(q.copy())
+    return pts
 for p, nrm in roots:
+    if PT:
+        guides.append([list(map(lambda v: round(v, 5), x)) for x in ponytail_guide(p, len(guides))])
+        continue
     side = 1.0 if p.x >= part_x else -1.0
     pts = [p.copy()]
     q = p.copy()
@@ -121,6 +154,8 @@ for p, nrm in roots:
         # Flow: away from the part and backward over the top; down over the sides and back.
         top = max(0.0, head_h(q) - 0.75) / 0.25
         flow = Vector((side * (0.55 + 0.45 * top), P.get("back_flow", 0.6), -(1 - top) * 1.0 - 0.15))
+        if p.y < H0.y - 0.02:                      # roots in front of the ears: swept aside so the face stays clear
+            flow.x *= P.get("front_side", 1.0)
         if q.z < H0.z + hz * P.get("fall_below", 0.0) and P.get("gravity", 0) > 0:
             flow = Vector((flow.x * 0.25, flow.y * 0.25, -P["gravity"]))
         q = q + flow.normalized() * seg
@@ -130,6 +165,10 @@ for p, nrm in roots:
             loc, nn, _, dd = head_bvh.find_nearest(q)
             if loc is not None and dd < off:
                 q = loc + (q - loc).normalized() * off
+        if P.get("cut_at") is not None and q.z < H0.z + hz * P["cut_at"]:
+            q.z = H0.z + hz * P["cut_at"]          # a blunt cut (bob): every clump ends at the same height
+            pts.append(q.copy())
+            break
         pts.append(q.copy())
     guides.append([list(map(lambda v: round(v, 5), x)) for x in pts])
 C.write_json(os.path.join(src_dir, "guides_%s.json" % body_id), {"body": body_id, "params": P, "guides": guides})

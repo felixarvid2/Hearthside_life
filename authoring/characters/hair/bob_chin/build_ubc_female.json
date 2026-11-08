@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/bob_chin__ubc_female.glb",
+ "hair": "bob_chin",
+ "head_base_z": 1.55,
+ "inside_head_verts": 816,
+ "roots": 170,
+ "secs": 0.7,
+ "src_tris": 20624,
+ "tris": 12557,
+ "verts": 7170,
+ "z": [
+  1.527,
+  1.776
+ ]
+}

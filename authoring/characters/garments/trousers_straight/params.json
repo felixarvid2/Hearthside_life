@@ -1,0 +1,30 @@
+{
+ "id": "trousers_straight",
+ "label": "Straight trousers",
+ "preset": "TROUSERS",
+ "category": "bottom",
+ "slot": "bottom",
+ "fit": 0.12,
+ "length_to": "ankle",
+ "fabric": "CRISP",
+ "take_in": 0.06,
+ "settle_frames": 60,
+ "target_tris": 2600,
+ "hides": [],
+ "layer": 1,
+ "conflicts": ["full"],
+ "color_regions": [
+  {"id": "main", "label": "Trousers", "materials": ["M_Trousers"], "default": "#3b4252"}
+ ],
+ "relax": true,
+ "fit_pose": {"arms_down_deg": 45},
+ "finish": {
+  "mode": "body",
+  "close": 5,
+  "min": 0.005,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "exclude_regions": ["head", "neck", "chest", "upperarm_l", "upperarm_r", "forearm_l", "forearm_r", "hand_l", "hand_r", "foot_l", "foot_r"]
+ }
+}

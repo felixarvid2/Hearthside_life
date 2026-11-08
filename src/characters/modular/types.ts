@@ -125,6 +125,14 @@ export interface HairstyleDef {
   stats?: { triangles: number; textureBytes: number };
 }
 
+/** A named outfit: slot -> garment id, optionally with garment colours (garment id -> color region id -> color). */
+export interface OutfitPresetDef {
+  id: string;
+  label: string;
+  outfit: Partial<Record<ModularSlot, string>>;
+  colors?: Record<string, Record<string, Hex>>;
+}
+
 export interface ModularManifest {
   version: 1;
   rigs: RigProfile[];
@@ -141,6 +149,8 @@ export interface ModularManifest {
     /** Part-id exclusions (garment or hairstyle ids): `{ hood: ['short_crop'] }` = the hood and that hairstyle never go together. */
     parts?: Record<string, string[]>;
   };
+  /** Ready-made outfits the creator offers (one tap sets a whole category outfit; see equip.ts applyPreset). */
+  outfitPresets?: OutfitPresetDef[];
   /** Defaults used for people without a modular look (see deriveModularLook). */
   defaults: {
     bodyByFrame: Record<'a' | 'b', string>;

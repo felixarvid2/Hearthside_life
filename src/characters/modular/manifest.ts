@@ -2,7 +2,7 @@
 // Pure data helpers: nothing here touches three.js.
 
 import { BODY_REGIONS, MODULAR_SLOTS } from './types';
-import type { BodyPresetDef, GarmentDef, HairstyleDef, ModularManifest, ModularSlot } from './types';
+import type { BodyPresetDef, GarmentDef, HairstyleDef, ModularManifest, ModularSlot, OutfitPresetDef } from './types';
 
 /** Fetches `${baseUrl}characters/modular/manifest.json`. Rejects when it cannot be read or is not a version 1 manifest. */
 export async function loadModularManifest(baseUrl = './assets/'): Promise<ModularManifest> {
@@ -61,6 +61,24 @@ export function validateManifest(m: ModularManifest): string[] {
     if (!partIds.has(id)) out.push(`Restriction on unknown part '${id}'.`);
     for (const o of list) if (!partIds.has(o)) out.push(`Part '${id}' is restricted against unknown part '${o}'.`);
   }
+  const presetIds = (m.outfitPresets ?? []).map((p) => p.id);
+  for (const id of new Set(dupes(presetIds))) out.push(`Duplicate outfit preset id '${id}'.`);
+  for (const p of m.outfitPresets ?? []) {
+    if (!p.label) out.push(`Outfit preset '${p.id}' has no label.`);
+    const entries = Object.entries(p.outfit ?? {});
+    if (entries.length === 0) out.push(`Outfit preset '${p.id}' is empty.`);
+    for (const [slot, gid] of entries) {
+      if (!slots.includes(slot)) { out.push(`Outfit preset '${p.id}' uses unknown slot '${slot}'.`); continue; }
+      const g = m.garments.find((x) => x.id === gid);
+      if (!g) out.push(`Outfit preset '${p.id}' names unknown garment '${String(gid)}'.`);
+      else if (g.slot !== slot) out.push(`Outfit preset '${p.id}' puts '${g.id}' (a ${g.slot}) in the ${slot} slot.`);
+    }
+    for (const [gid, regs] of Object.entries(p.colors ?? {})) {
+      const g = m.garments.find((x) => x.id === gid);
+      if (!g) { out.push(`Outfit preset '${p.id}' colours unknown garment '${gid}'.`); continue; }
+      for (const rid of Object.keys(regs)) if (!g.colorRegions.some((r) => r.id === rid)) out.push(`Outfit preset '${p.id}' colours unknown region '${rid}' of '${gid}'.`);
+    }
+  }
   for (const f of ['a', 'b'] as const) {
     const id = m.defaults.bodyByFrame[f];
     if (!bodyIds.includes(id)) out.push(`Default body for frame ${f} ('${id}') does not exist.`);
@@ -79,6 +97,8 @@ export function validateManifest(m: ModularManifest): string[] {
 export const findBody = (m: ModularManifest, id: string): BodyPresetDef | undefined => m.bodies.find((b) => b.id === id);
 export const findGarment = (m: ModularManifest, id: string): GarmentDef | undefined => m.garments.find((g) => g.id === id);
 export const findHair = (m: ModularManifest, id: string): HairstyleDef | undefined => m.hairstyles.find((h) => h.id === id);
+
+export const findPreset = (m: ModularManifest, id: string): OutfitPresetDef | undefined => m.outfitPresets?.find((p) => p.id === id);
 
 /** Garments that have a file for the body (optionally only one slot). */
 export function garmentsFor(m: ModularManifest, bodyId: string, slot?: ModularSlot): GarmentDef[] {

@@ -45,6 +45,42 @@
   "M_Eyes",
   "M_Skin"
  ],
+ "morphs": {
+  "keys": {
+   "chin_length": 0.0126,
+   "jaw_width": 0.012,
+   "mouth_width": 0.004,
+   "nose_width": 0.0035,
+   "weight": 0.0264
+  },
+  "landmarks": {
+   "chin": [
+    -0.0,
+    -0.0834,
+    1.558
+   ],
+   "menton": [
+    -0.0,
+    -0.0714,
+    1.5381
+   ],
+   "mouth": [
+    0.0038,
+    -0.0969,
+    1.5933
+   ],
+   "nose": [
+    -0.0,
+    -0.1119,
+    1.617
+   ],
+   "skull_base": [
+    -0.0,
+    0.0109,
+    1.5496
+   ]
+  }
+ },
  "regions": {
   "belly": 256,
   "calf_l": 510,

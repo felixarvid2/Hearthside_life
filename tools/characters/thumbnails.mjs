@@ -5,7 +5,7 @@
 //
 // Starts the Vite dev server (or reuses `--url`), opens dev/wardrobe.html in its single-cell mode
 // (?thumb=<partId>&body=<bodyId>&shot=...) with headless Chromium, screenshots the transparent canvas and writes
-// <out>/<partId>.webp (default public/assets/characters/modular/thumbs/). Garments are framed 'upper', hairstyles 'face'. The
+// <out>/<partId>.webp (default public/assets/characters/modular/thumbs/). Garments are framed 'upper' (bottoms, shoes and one-pieces 'full'), hairstyles 'face'. The
 // body is the manifest's default frame 'a' body if the part fits it, else the first body it fits. `--write-manifest` stores
 // each part's `thumbnail` (path relative to the modular asset root, e.g. "thumbs/short_crop.webp") in manifest.json.
 //
@@ -58,7 +58,7 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const preferred = manifest.defaults.bodyByFrame.a;
 const bodyFor = (part) => (part.files[preferred] ? preferred : manifest.bodies.map((b) => b.id).find((id) => part.files[id]));
 const jobs = [
-  ...manifest.garments.map((def) => ({ def, list: 'garments', shot: 'upper' })),
+  ...manifest.garments.map((def) => ({ def, list: 'garments', shot: def.slot === 'bottom' || def.slot === 'shoes' || def.slot === 'full' ? 'full' : 'upper' })),
   ...manifest.hairstyles.map((def) => ({ def, list: 'hairstyles', shot: 'face' })),
 ].filter((j) => only.length === 0 || only.includes(j.def.id));
 if (jobs.length === 0) { console.error('No matching parts.'); process.exit(1); }

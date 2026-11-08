@@ -428,7 +428,7 @@ export class MockGame {
       showMenu: () => { this.mode = 'menu'; this.emit('mode'); },
       startNewGame: async () => fail(notHere),
       premadeHouseholds: () => [],
-      creator: { show: () => {}, setView: () => {}, rotate: () => {}, zoom: () => {}, hide: () => {}, portrait: async () => '' },
+      creator: { modular: () => null, show: () => {}, setView: () => {}, rotate: () => {}, zoom: () => {}, hide: () => {}, portrait: async () => '' },
       listSaves: async (): Promise<SaveSlotInfo[]> => [],
       latestSave: async () => null,
       saveTo: async () => fail(notHere),

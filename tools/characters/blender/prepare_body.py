@@ -2,6 +2,7 @@
 
   blender -b --factory-startup --python prepare_body.py -- --src <body.glb|gltf> --id <body-id>
           --out-glb <runtime.glb> --out-blend <fitting.blend> --out-json <info.json> [--materials <materials.json>]
+          [--morphs <morphs.json>]
 
 - Imports the body with its skeleton unchanged (glTF node frames kept as bone frames).
 - Drops every animation; the rest pose in the file stays the bind pose (it is never re-applied from a clip).
@@ -10,6 +11,8 @@
 - Limits influences to 4 per vertex and normalizes them.
 - With `--materials`: renames, retextures and trims materials (see `apply_materials`), drops vertex colors and
   extra UV maps, and writes JPEG textures. Without it, materials are exported as imported.
+- With `--morphs`: adds face/body shape keys (see morphs.py) before the fitting .blend is saved, so garments built
+  on it inherit them.
 - Writes the fitting .blend (armature + whole body, for OpenSew-2 and GBH) and the runtime GLB (armature + regions).
 """
 import bpy, bmesh, os, sys, hashlib
@@ -111,6 +114,12 @@ if len(meshes) > 1:
 body = bpy.context.view_layer.objects.active
 body.name = "Body"
 C.limit_and_normalize(body)
+morph_report = None
+if a.get("morphs"):
+    import json as _json, morphs as _morphs
+    with open(a["morphs"]) as f:
+        morph_report = _morphs.add_morphs(body, arm, _json.load(f))
+    print("MORPHS", _json.dumps(morph_report))
 
 # Materials get stable names: skin regions are recoloured at runtime.
 mat_names = []
@@ -126,6 +135,8 @@ zs = [(body.matrix_world @ v.co).z for v in body.data.vertices]
 info["height"] = round(max(zs) - min(zs), 4)
 info["bones"] = {b.name: [round(x, 4) for x in (arm.matrix_world @ b.head_local)] for b in arm.data.bones if b.name in ("pelvis", "Head", "neck_01", "upperarm_l", "hand_l", "thigh_l", "foot_l")}
 info["bone_count"] = len(arm.data.bones)
+if morph_report:
+    info["morphs"] = morph_report
 info["bone_names_sha1"] = hashlib.sha1("|".join(b.name for b in arm.data.bones).encode()).hexdigest()
 
 # Save the fitting source before splitting.
