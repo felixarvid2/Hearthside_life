@@ -59,7 +59,7 @@ export class MockCreatorApi implements GameAPI {
     person: null, opts: { category: 'everyday', anim: 'idle' }, view: 'front', angle: 0, zoom: 1,
   };
   private portraitMs: number;
-  private settingsValue: GameSettings = { masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.5, reducedMotion: false, textScale: 1, quality: 'high', characterStyle: 'mpfb', shadows: true, weatherEffects: true, actionProgress: 'household', showStats: false, tutorial: true };
+  private settingsValue: GameSettings = { masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.5, reducedMotion: false, textScale: 1, highContrast: false, quality: 'high', characterStyle: 'mpfb', shadows: true, weatherEffects: true, actionProgress: 'household', showStats: false, tutorial: true, hints: false, seenHints: [] };
 
   constructor(o: MockOptions) {
     this.content = o.content;

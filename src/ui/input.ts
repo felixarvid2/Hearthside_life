@@ -322,6 +322,14 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
     }
     const cmd = mapKey(e);
     if (!cmd) return;
+    // A control focused with the keyboard (a slider, a tab bar, a list) keeps its own arrow keys and letters; the camera
+    // shortcuts apply when focus is on the world, on the page, or on a control the player reached with the mouse.
+    if (cmd.kind === 'pan' || cmd.kind === 'rotate' || cmd.kind === 'zoom' || cmd.kind === 'delete' || cmd.kind === 'rotatePlacement') {
+      const t = e.target as HTMLElement | null;
+      let onControl = false;
+      try { onControl = !!t && t !== canvas && t !== document.body && t.matches(':focus-visible'); } catch { /* old browser */ }
+      if (onControl) return;
+    }
     const m = api.mode();
     const editing = m === 'buy' || m === 'build';
     switch (cmd.kind) {
@@ -354,7 +362,8 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
           if (t?.kind === 'eyedropper') { const prev = lastTool[t.target]; api.setPaintTool(prev); sh.sound('close'); e.preventDefault(); return; }
           if (touchPreviewKey || !tip.hidden) { api.paintPreview(null); sh.paintPreviewShown(null); touchPreviewKey = null; hideTip(); e.preventDefault(); return; }
         }
-        if (sh.isPanelOpen('person') || sh.isPanelOpen('feed') || sh.isPanelOpen('ledger')) { sh.closePanels(); sh.sound('close'); e.preventDefault(); }
+        if (sh.isPanelOpen('person') || sh.isPanelOpen('feed') || sh.isPanelOpen('ledger') || sh.isPanelOpen('bills')) { sh.closePanels(); sh.sound('close'); e.preventDefault(); return; }
+        if (sh.dismissHint()) { sh.sound('close'); e.preventDefault(); }
         return;
       }
       case 'undo':

@@ -110,7 +110,7 @@ export function createStrip(sh: Shell): Strip {
       if (want !== v.badgeIcon) { v.badgeIcon = want; v.badge.replaceChildren(icon(want, 14)); }
       // away: the badge shows why, the name line shows the return time (the full text is in the label)
       setText(v.name, away?.at ? away.at : p.firstName);
-      const label = `${p.firstName} ${p.lastName}, mood ${mood.label}${away ? `, ${away.label.toLowerCase()}${away.back ? `, ${away.back.toLowerCase()}` : ''}` : ''}${selected ? ', selected. Tap again for details' : ''}`;
+      const label = `${p.firstName} ${p.lastName}, mood ${mood.label}${away ? `, ${away.label.toLowerCase()}${away.back ? `, ${away.back.toLowerCase()}` : ''}` : ''}${selected ? ', selected. Press again for details' : ''}`;
       v.btn.setAttribute('aria-label', label);
       v.btn.title = label;
     }

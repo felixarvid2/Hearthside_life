@@ -182,7 +182,7 @@ body.shell-hud-on.is-landscape.shell-side-open .toasts { left: calc((100% - var(
   .reason { flex: none; white-space: nowrap; }
 }
 .pp-needs { display: grid; gap: 6px; }
-.pp-needs .meter { grid-template-columns: auto 5.8em 1fr 2.6em; }
+.pp-needs .meter { grid-template-columns: auto 5.8em 1fr minmax(2.6em, auto); }
 .pp-note { display: flex; gap: 8px; align-items: flex-start; font-size: 0.85rem; color: var(--ink-2); background: var(--paper-2); padding: 8px 10px; border-radius: 10px; margin: 10px 0 0; }
 .pp-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 14px 8px; color: var(--ink-3); }
 .pp-empty p { margin: 0; font-size: 0.9rem; }

@@ -55,8 +55,8 @@ const HE: Pronouns = { subject: 'he', object: 'him', possessive: 'his' };
 const THEY: Pronouns = { subject: 'they', object: 'them', possessive: 'their' };
 
 const DEFAULT_SETTINGS: GameSettings = {
-  masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.5, reducedMotion: false, textScale: 1, quality: 'high', characterStyle: 'mpfb', shadows: true,
-  weatherEffects: true, actionProgress: 'household', showStats: false, tutorial: true,
+  masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.5, reducedMotion: false, textScale: 1, highContrast: false, quality: 'high', characterStyle: 'mpfb', shadows: true,
+  weatherEffects: true, actionProgress: 'household', showStats: false, tutorial: true, hints: false, seenHints: [],
 };
 
 function appearance(skin: string, hair: string): Appearance {

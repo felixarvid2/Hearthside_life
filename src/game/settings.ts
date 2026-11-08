@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   musicVolume: 0.35,
   reducedMotion: false,
   textScale: 1,
+  highContrast: false,
   quality: 'high',
   characterStyle: 'mpfb', // 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback), 'quaternius' = modular GLB-part adults (preview)
   shadows: true,
@@ -25,7 +26,13 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   actionProgress: 'household',
   showStats: false,
   tutorial: true,
+  hints: true,
+  seenHints: [] as string[],
 });
+
+/** UI scale limits (Settings > Display: 90 to 150 %). */
+export const TEXT_SCALE_MIN = 0.9;
+export const TEXT_SCALE_MAX = 1.5;
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -75,11 +82,12 @@ export function mergeSettings(base: GameSettings, patch: Partial<GameSettings> |
   const vol = (k: 'masterVolume' | 'soundVolume' | 'musicVolume') => { const v = num(patch[k]); if (v !== null) out[k] = clamp(v, 0, 1); };
   vol('masterVolume'); vol('soundVolume'); vol('musicVolume');
   const ts = num(patch.textScale);
-  if (ts !== null) out.textScale = clamp(ts, 0.9, 1.3);
+  if (ts !== null) out.textScale = clamp(ts, TEXT_SCALE_MIN, TEXT_SCALE_MAX);
   if (patch.quality === 'low' || patch.quality === 'high') out.quality = patch.quality;
   if (patch.characterStyle === 'mpfb' || patch.characterStyle === 'detailed' || patch.characterStyle === 'classic' || patch.characterStyle === 'quaternius') out.characterStyle = patch.characterStyle;
   if (patch.actionProgress === 'household' || patch.actionProgress === 'all' || patch.actionProgress === 'off') out.actionProgress = patch.actionProgress;
-  for (const k of ['reducedMotion', 'shadows', 'weatherEffects', 'showStats', 'tutorial'] as const) {
+  if (Array.isArray(patch.seenHints)) out.seenHints = [...new Set(patch.seenHints.filter((x): x is string => typeof x === 'string' && x.length > 0 && x.length <= 40))].slice(0, 64);
+  for (const k of ['reducedMotion', 'highContrast', 'shadows', 'weatherEffects', 'showStats', 'tutorial', 'hints'] as const) {
     if (typeof patch[k] === 'boolean') out[k] = patch[k] as boolean;
   }
   return out;
@@ -120,11 +128,12 @@ export function saveSettings(s: GameSettings): void {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...s, version: SETTINGS_VERSION })); } catch { /* storage unavailable: keep in memory */ }
 }
 
-/** Applies the settings that live in the document: text scale and reduced motion. */
+/** Applies the settings that live in the document: UI scale, reduced motion and high contrast. */
 export function applyDocumentSettings(s: GameSettings): void {
   try {
     const root = document.documentElement;
-    root.style.setProperty('--text-scale', String(clamp(s.textScale, 0.9, 1.3)));
+    root.style.setProperty('--text-scale', String(clamp(s.textScale, TEXT_SCALE_MIN, TEXT_SCALE_MAX)));
     root.classList.toggle('reduced-motion', s.reducedMotion);
+    root.classList.toggle('high-contrast', s.highContrast);
   } catch { /* no document (tests) */ }
 }

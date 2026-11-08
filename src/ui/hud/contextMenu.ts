@@ -12,6 +12,7 @@ import { layout } from '../kit/layout';
 import { humanize } from './format';
 import { placeAbove, type Rect } from './insets';
 import type { Shell } from './shell';
+import { currentOpener, restoreFocus } from '../kit/focus';
 import { sectionsOf } from './socialModel';
 
 const GROUPS: Array<{ id: MenuOption['group']; label: string }> = [
@@ -36,6 +37,7 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
   shieldWorld(el);
   sh.layer.appendChild(el);
   let current: { personId: Id; pick: PickResult; at?: { x: number; y: number } } | null = null;
+  let opener: HTMLElement | null = null;
   let armed = false;
   el.addEventListener('pointerdown', () => { armed = true; }, true);
 
@@ -109,6 +111,7 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
       toast(`Nothing ${actor?.firstName ?? 'they'} can do with that right now.`, 'info', 2500);
       return;
     }
+    if (!current) opener = currentOpener();
     current = { personId, pick, ...(at ? { at } : {}) };
     armed = false;
     if (pick.kind === 'person' || pick.kind === 'object' || pick.kind === 'item') api.view.reveal(pick); // small or off-screen: bring it into view
@@ -183,6 +186,9 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
     el.hidden = true;
     el.replaceChildren();
     avoidToasts(null);
+    const back = opener;
+    opener = null;
+    restoreFocus(back, el); // keyboard users land back on the control that opened the menu
     return true;
   };
 

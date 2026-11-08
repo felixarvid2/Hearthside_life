@@ -183,7 +183,7 @@ async function main() {
         viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1,
         ...(vp.mobile ? { isMobile: true, hasTouch: true } : {}),
       });
-      await context.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0 })); } catch { /* ignore */ } });
+      await context.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ } });
       const page = await context.newPage();
       page.setDefaultTimeout(120_000); // software rendering can be slow under load; screenshots alone can take 30 s
       const errors = [];

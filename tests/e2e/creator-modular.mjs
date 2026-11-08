@@ -161,7 +161,7 @@ async function runViewport(browser, vpName, vp) {
     await route.fulfill({ response: res, json: augment(await res.json()) });
   });
   await page.addInitScript(() => {
-    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0, characterStyle: 'quaternius' })); } catch { /* ignore */ }
+    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0, characterStyle: 'quaternius' })); } catch { /* ignore */ }
   });
   let shotN = 0;
   const T = {
