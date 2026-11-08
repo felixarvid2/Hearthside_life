@@ -1,16 +1,16 @@
 {
  "body": "ubc_male",
  "body_shell": {
-  "boundary_edges": 374,
-  "skin_verts_hit": 1452,
-  "tris": 3262,
-  "verts": 1824
+  "boundary_edges": 318,
+  "skin_verts_hit": 1449,
+  "tris": 3208,
+  "verts": 1765
  },
  "coverage": {
-  "belly": 0.817,
+  "belly": 0.8,
   "calf_l": 0.0,
   "calf_r": 0.0,
-  "chest": 0.727,
+  "chest": 0.842,
   "foot_l": 0.0,
   "foot_r": 0.0,
   "forearm_l": 0.8,
@@ -18,14 +18,14 @@
   "hand_l": 0.002,
   "hand_r": 0.002,
   "head": 0.0,
-  "hips": 0.213,
+  "hips": 0.166,
   "neck": 0.0,
   "thigh_l": 0.0,
   "thigh_r": 0.0,
-  "upperarm_l": 0.895,
-  "upperarm_r": 0.901
+  "upperarm_l": 0.901,
+  "upperarm_r": 0.906
  },
- "cut_allowed": 1475,
+ "cut_allowed": 1548,
  "facing": "-Y",
  "figure": "MAN",
  "fit_pose": {
@@ -60,10 +60,10 @@
   "thigh_l",
   "thigh_r"
  ],
- "secs": 13.0,
+ "secs": 7.6,
  "src_tris": 0,
- "tris": 3262,
+ "tris": 3208,
  "unposed_max_move": 0.0,
  "unweighted": 0,
- "verts": 1824
+ "verts": 1765
 }

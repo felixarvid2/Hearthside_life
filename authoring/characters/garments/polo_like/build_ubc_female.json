@@ -1,16 +1,16 @@
 {
  "body": "ubc_female",
  "body_shell": {
-  "boundary_edges": 340,
-  "skin_verts_hit": 1260,
-  "tris": 2852,
-  "verts": 1600
+  "boundary_edges": 334,
+  "skin_verts_hit": 1287,
+  "tris": 2900,
+  "verts": 1621
  },
  "coverage": {
   "belly": 0.812,
   "calf_l": 0.0,
   "calf_r": 0.0,
-  "chest": 0.807,
+  "chest": 0.887,
   "foot_l": 0.0,
   "foot_r": 0.0,
   "forearm_l": 0.0,
@@ -19,13 +19,13 @@
   "hand_r": 0.0,
   "head": 0.0,
   "hips": 0.254,
-  "neck": 0.0,
+  "neck": 0.011,
   "thigh_l": 0.0,
   "thigh_r": 0.0,
   "upperarm_l": 0.646,
   "upperarm_r": 0.651
  },
- "cut_allowed": 1268,
+ "cut_allowed": 1339,
  "facing": "-Y",
  "figure": "WOMAN",
  "fit_pose": {
@@ -60,10 +60,10 @@
   "thigh_l",
   "thigh_r"
  ],
- "secs": 6.8,
+ "secs": 4.5,
  "src_tris": 0,
- "tris": 2852,
+ "tris": 2900,
  "unposed_max_move": 0.0,
  "unweighted": 0,
- "verts": 1600
+ "verts": 1621
 }

@@ -8080,6 +8080,53 @@
    "followsMorphs": [
     "weight"
    ]
+  },
+  {
+   "id": "hoodie_up",
+   "label": "Hoodie, hood up",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/hoodie_up__ubc_male.glb",
+    "ubc_female": "garments/hoodie_up__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/hoodie_up__ubc_male.cover.json",
+    "ubc_female": "garments/hoodie_up__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_HoodieUp"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/hoodie_up/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "hoodie",
+    "warm"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
   }
  ],
  "hairstyles": [
