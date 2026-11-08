@@ -7,7 +7,8 @@
 //
 // Loads the starter lot with seven animated people (four premade households merged: all adults, so the Quaternius
 // style really uses its modular bodies) at normal speed and records, for each device profile x character style:
-// load time to the menu, frame time p50/p95/max from requestAnimationFrame over N seconds, the game's own CPU frame time,
+// load time to the menu, the steady cost of a frame (90 synchronous frames, each forced to finish: p50/p95/max), the real-time loop
+// (fps and p95 of requestAnimationFrame intervals over N seconds, bursty under SwiftShader),
 // draw calls, triangles, geometries, textures, the JS heap (CDP) and the quality the auto-detect chose.
 // Profiles: phone portrait 390x844 and phone landscape 844x390 (DPR 3, touch, mobile UA) and desktop 1280x720. With
 // --extra the phone profiles are repeated with quality forced to "high" to show what the auto-detect saves.
@@ -78,6 +79,22 @@ async function measure(browser, url, profile, style, forceQuality) {
     requestAnimationFrame(tick);
   }), SECONDS);
   const deltas = result.slice(1).sort((a, b) => a - b);
+  // Cost of one frame, measured synchronously: 90 frames of simulation + render, each followed by a 1-pixel read-back that forces the
+  // software GPU to finish. The real-time numbers above come in bursts under SwiftShader (the compositor queues frames), so p50 of
+  // the loop alone is misleading; this is the steady cost per frame.
+  const sync = await page.evaluate(() => {
+    const h = window.hearthside;
+    const gl = document.getElementById('game-canvas').getContext('webgl2');
+    const px = new Uint8Array(4);
+    const times = [];
+    for (let i = 0; i < 90; i++) {
+      const t = performance.now();
+      h.debug.frame(1 / 30);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      times.push(performance.now() - t);
+    }
+    return times.sort((a, b) => a - b);
+  });
   const metrics = Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]));
   const info = await page.evaluate(() => {
     const h = window.hearthside, g = h.game, st = g.state();
@@ -99,7 +116,8 @@ async function measure(browser, url, profile, style, forceQuality) {
     profile, style, quality: info.quality, forcedQuality: forceQuality ?? null, viewport: `${vp.viewport.width}x${vp.viewport.height}`,
     loadSeconds: +(loadMs / 1000).toFixed(1),
     frames: deltas.length, fps: +(1000 / mean).toFixed(1),
-    frameMsP50: +pct(deltas, 0.5).toFixed(1), frameMsP95: +pct(deltas, 0.95).toFixed(1), frameMsMax: +deltas[deltas.length - 1].toFixed(1),
+    loopMsP50: +pct(deltas, 0.5).toFixed(1), loopMsP95: +pct(deltas, 0.95).toFixed(1), loopMsMax: +deltas[deltas.length - 1].toFixed(1),
+    frameMsP50: +pct(sync, 0.5).toFixed(1), frameMsP95: +pct(sync, 0.95).toFixed(1), frameMsMax: +sync[sync.length - 1].toFixed(1),
     gameFrameMs: info.stats.frameMs, simTickMs: info.stats.simTickMs,
     drawCalls: info.stats.drawCalls, triangles: info.stats.triangles, geometries: info.stats.geometries, textures: info.stats.textures,
     jsHeapMB: +(metrics.JSHeapUsedSize / 1048576).toFixed(1), jsHeapTotalMB: +(metrics.JSHeapTotalSize / 1048576).toFixed(1),
@@ -124,10 +142,10 @@ async function main() {
     await rig.close();
   }
   writeFileSync(join(OUT, 'perf.json'), JSON.stringify(rows, null, 1));
-  console.log('\n| profile | viewport | style | quality | load s | fps | frame p50 ms | p95 ms | max ms | game ms | draw calls | triangles | geometries | textures | JS heap MB | people |');
-  console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+  console.log('\n| profile | viewport | style | quality | load s | frame p50 ms | p95 ms | loop fps | loop p95 ms | draw calls | triangles | geometries | textures | JS heap MB | people |');
+  console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   for (const r of rows) {
-    console.log(`| ${r.profile} | ${r.viewport} | ${r.style} | ${r.quality}${r.forcedQuality ? ' (forced)' : ' (auto)'} | ${r.loadSeconds} | ${r.fps} | ${r.frameMsP50} | ${r.frameMsP95} | ${r.frameMsMax} | ${r.gameFrameMs} | ${r.drawCalls} | ${r.triangles.toLocaleString('en-US')} | ${r.geometries} | ${r.textures} | ${r.jsHeapMB} | ${r.people} |`);
+    console.log(`| ${r.profile} | ${r.viewport} | ${r.style} | ${r.quality}${r.forcedQuality ? ' (forced)' : ' (auto)'} | ${r.loadSeconds} | ${r.frameMsP50} | ${r.frameMsP95} | ${r.fps} | ${r.loopMsP95} | ${r.drawCalls} | ${r.triangles.toLocaleString('en-US')} | ${r.geometries} | ${r.textures} | ${r.jsHeapMB} | ${r.people} |`);
   }
   const bad = rows.filter((r) => r.errors.length > 0);
   if (bad.length) { console.error('[perf] page errors:', bad.map((r) => `${r.profile}/${r.style}: ${r.errors[0]}`).join('; ')); process.exit(1); }
