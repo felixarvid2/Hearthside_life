@@ -466,6 +466,13 @@ const SELF: InteractionDef[] = [
     autonomy: { enabled: false, ads: {}, tags: ['social', 'phone'] },
   }),
   def({
+    id: 'phoneMap', name: 'Neighbourhood Map', description: 'Open the street map on the phone: see what is on at the venues, who is where, and set off for a place.',
+    icon: 'map', kind: 'self', behavior: 'openMap', posture: 'standing',
+    anims: { perform: 'phone' },
+    duration: { kind: 'fixed', minutes: 1 },
+    autonomy: { enabled: false, ads: {}, tags: ['phone', 'map'] },
+  }),
+  def({
     id: 'phoneBills', name: 'Bills and Payments', description: 'Open the household bills on the phone: see what is due, pay a bill or turn automatic payment on or off.',
     icon: 'money', kind: 'self', behavior: 'openBills', posture: 'standing',
     anims: { perform: 'phone' },
@@ -555,8 +562,8 @@ const VENUE: InteractionDef[] = [
   }),
   // Park and playground
   def({
-    id: 'goForJog', venues: ['park'], name: 'Go for a Jog', description: 'Jog laps of the park paths: trains Fitness but costs energy and hygiene, and it clears the head.',
-    icon: 'energy', kind: 'self', behavior: 'generic', posture: 'standing',
+    id: 'goForJog', venues: ['park'], name: 'Go for a Jog', description: 'Jog laps of the red track round the park: trains Fitness but costs energy and hygiene, and it clears the head.',
+    icon: 'energy', kind: 'self', behavior: 'jogLoop', posture: 'standing',
     anims: { perform: 'jog' },
     duration: { kind: 'fixed', minutes: 40 }, needsPerHour: { energy: -9, hygiene: -6, fun: 9 }, skill: { id: 'fitness', xpPerHour: 55 },
     moodletOnComplete: 'energized', weather: { not: ['rain', 'snow'] },

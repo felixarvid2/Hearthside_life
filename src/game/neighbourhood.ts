@@ -15,7 +15,7 @@ import { SURNAMES, randomPersonDraft } from '../characters/names';
 import type { ContentDB } from '../content/types';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { pairKey } from '../core/ids';
-import { NORMAL_STAGE_DAYS } from '../core/lifeStages';
+import { NORMAL_STAGE_DAYS, isGrownStage } from '../core/lifeStages';
 import { dollars } from '../core/money';
 import { Rng, seedRng } from '../core/rng';
 import { addHousehold, transact } from '../core/state';
@@ -190,7 +190,7 @@ function generate(state: WorldState, content: ContentDB): NeighbourhoodState {
     if (a && b) setLink(state, a, b, link, link.status);
   }
 
-  const marker: NeighbourhoodState = { version: 1, street, npcHouseholdIds, ...(next ? { nextDoorHouseholdId: next.id } : {}) };
+  const marker: NeighbourhoodState = { version: 1, street, npcHouseholdIds, ...(next ? { nextDoorHouseholdId: next.id } : {}), townChildren: true };
   state.neighbourhood = marker;
   return marker;
 }
@@ -205,4 +205,59 @@ export function ensureNeighbourhood(state: WorldState, content: ContentDB): bool
   if (!state.households[state.activeHouseholdId] || !state.lots[state.activeLotId]) return false;
   generateNeighbourhood(state, content);
   return true;
+}
+
+const CHILDREN_SEED_MIX = 0x0c41d5;
+
+/**
+ * Migration for saves made before the town households had children: once, the family-type homes get the same one to three
+ * children a new world would give them, drawn from a generator seeded by the world seed (so the same save always gets the
+ * same children). Nobody who exists changes: every id, job, trait and relationship stays; the new children take fresh ids from
+ * the id counter, and the world's own rng is put back where it was. Households that already have a child (or a pupil) are
+ * left alone. Returns the number of children added (0 when the migration already ran).
+ */
+export function ensureTownChildren(state: WorldState, content: ContentDB): number {
+  const marker = state.neighbourhood;
+  if (!marker || marker.townChildren) return 0;
+  const savedRng = [...state.rng] as WorldState['rng'];
+  const rng = new Rng(seedRng(((state.seed >>> 0) ^ CHILDREN_SEED_MIX) >>> 0));
+  const now = state.clock.minutes;
+  const taken = new Set<string>(Object.values(state.people).map((p) => p.firstName));
+  let added = 0;
+  marker.npcHouseholdIds.forEach((hid, index) => {
+    const plan = HOME_PLANS[index];
+    const hh = state.households[hid];
+    if (!plan || !hh || !plan.children || hh.isPlayable) return;
+    const members = hh.memberIds.map((id) => state.people[id]).filter((p): p is NonNullable<typeof p> => !!p);
+    // The draw happens for every eligible home, so the children of one home do not depend on the state of another.
+    const stages = childStages(rng, plan.children);
+    if (members.some((m) => !isGrownStage(m.lifeStage)) || stages.length === 0) return;
+    const grown = members.filter((m) => isGrownStage(m.lifeStage));
+    const lot = hh.homeLotId ? state.lots[hh.homeLotId] : undefined;
+    const familyName = grown[0]?.lastName ?? members[0]?.lastName ?? 'Family';
+    const parents = grown.slice(0, Math.min(2, plan.size));
+    if (parents.length === 0) return;
+    const kidIds: Id[] = [];
+    for (const stage of stages) {
+      const draft = randomPersonDraft(rng, content, { lifeStage: stage, lastName: familyName, avoidFirstNames: [...taken], careerChance: 0 });
+      draft.traits = draft.traits.slice(0, stage === 'baby' ? 1 : stage === 'teen' ? 3 : 2);
+      taken.add(draft.firstName);
+      const kid = createPerson(state, content, draft, hh.id, { kind: 'offlot', place: 'home', ...(lot ? { lotId: lot.id } : {}), since: now, until: null });
+      kid.stageDays = rng.int(0, Math.max(0, NORMAL_STAGE_DAYS[kid.lifeStage] - 1));
+      kidIds.push(kid.id);
+      added++;
+    }
+    // Ties by index into [parents..., kids...]: every parent of every child, and the children are siblings.
+    const ids = [...parents.map((p) => p.id), ...kidIds];
+    const ties: HouseholdDraft['ties'] = [];
+    for (let k = 0; k < kidIds.length; k++) {
+      const ki = parents.length + k;
+      for (let a = 0; a < parents.length; a++) ties.push({ a, b: ki, tie: 'child' });
+      for (let j = k + 1; j < kidIds.length; j++) ties.push({ a: ki, b: parents.length + j, tie: 'sibling' });
+    }
+    applyHouseholdTies(state, ids, ties);
+  });
+  state.rng = savedRng;
+  marker.townChildren = true;
+  return added;
 }

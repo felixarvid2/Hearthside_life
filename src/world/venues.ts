@@ -528,6 +528,17 @@ const TINTS: Record<VenueType, Tint[]> = {
 };
 
 /**
+ * The corners of the park's jogging track (the outer lane of the red loop, x 3..28 and z 3..28 in the plan), clockwise from the
+ * north-west, as tiles on the lot. A person jogging laps walks these in order and comes back to the first. Null on a lot that is
+ * not a park or is too small to hold the plan.
+ */
+export function parkTrack(lot: Pick<Lot, 'kind' | 'venueType' | 'width' | 'depth'>): Array<{ x: number; z: number }> | null {
+  if (lot.kind !== 'venue' || lot.venueType !== 'park' || lot.width < 32 || lot.depth < 32) return null;
+  const dx = Math.floor((lot.width - 32) / 2), dz = Math.floor((lot.depth - 32) / 2);
+  return [{ x: 3, z: 3 }, { x: 28, z: 3 }, { x: 28, z: 28 }, { x: 3, z: 28 }].map((t) => ({ x: t.x + dx, z: t.z + dz }));
+}
+
+/**
  * Lays out a public venue on an empty lot: walls, floors, doors, windows and furniture, with the same placement rules as the
  * starter house. The lot must be at least 24 x 24 (park, arts and market 32 x 32). Throws when the lot is not empty or too
  * small or any placement is invalid, and when the finished lot fails lotProblems().

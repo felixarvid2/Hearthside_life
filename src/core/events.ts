@@ -22,7 +22,7 @@ export type GameEvent =
   | { type: 'feed'; entryId: Id }
   | { type: 'notify'; text: string; kind: 'info' | 'warning' | 'error' }
   /** The simulation asks the UI to open a screen (e.g. the wardrobe editor after `editOutfits`). */
-  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent' | 'bills' | 'careers' | 'adopt'; personId: Id }
+  | { type: 'ui.request'; what: 'editOutfits' | 'focusPerson' | 'planEvent' | 'bills' | 'careers' | 'adopt' | 'giveGift' | 'map'; personId: Id; targetId?: Id }
   | { type: 'item.changed'; itemId: Id; lotId: Id }
   /** A home event was planned, started, progressed, ended or cancelled (the HUD tracker refreshes). */
   | { type: 'homeEvent'; eventId: Id; what: 'planned' | 'started' | 'goal' | 'ended' | 'cancelled' }

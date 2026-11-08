@@ -80,6 +80,7 @@ function webTitle(interactionId: string): string {
     case 'phoneJobs': return 'Careers';
     case 'phoneChat': case 'phoneInvite': case 'phoneDate': return 'Messages';
     case 'planEvent': return 'Plan an event';
+    case 'phoneMap': return 'Neighbourhood map';
     case 'callRepairperson': return 'Home services';
     default: return 'Home';
   }

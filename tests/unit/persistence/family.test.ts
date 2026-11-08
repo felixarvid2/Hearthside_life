@@ -86,3 +86,28 @@ describe('family fields in saves', () => {
     expect(validateWorld(world, makeContent()).errors.some((e) => /aging/.test(e))).toBe(true);
   });
 });
+
+describe('social gaps pass optional fields', () => {
+  it('keeps a good carriedBy and townChildren marker, drops bad ones, and an old save without them is untouched', () => {
+    const raw = { people: { a: { id: 'a', carriedBy: 'b' }, b: { id: 'b' }, c: { id: 'c', carriedBy: 'zzz' }, d: { id: 'd', carriedBy: 'd' }, e: { id: 'e', carriedBy: 7 } }, settings: {} } as unknown as Record<string, unknown>;
+    fillFamilyDefaults(raw);
+    const p = raw.people as Record<string, { carriedBy?: unknown }>;
+    expect(p.a!.carriedBy).toBe('b');
+    expect('carriedBy' in p.b!).toBe(false);
+    for (const k of ['c', 'd', 'e']) expect(k + ('carriedBy' in p[k]!)).toBe(`${k}false`);
+  });
+
+  it('the neighbourhood marker keeps townChildren and the settings keep townLife only when they are booleans', () => {
+    const w = makeWorld() as unknown as Record<string, unknown>;
+    w.neighbourhood = { version: 1, street: 'Lane', npcHouseholdIds: [], townChildren: true };
+    (w.settings as Record<string, unknown>).townLife = 'yes';
+    const r = migrate(JSON.parse(JSON.stringify(w)));
+    if (!r.ok) throw new Error('migrate failed');
+    expect(r.state.neighbourhood?.townChildren).toBe(true);
+    expect(r.state.settings.townLife).toBeUndefined();
+    (w.settings as Record<string, unknown>).townLife = false;
+    const r2 = migrate(JSON.parse(JSON.stringify(w)));
+    if (!r2.ok) throw new Error('migrate failed');
+    expect(r2.state.settings.townLife).toBe(false);
+  });
+});

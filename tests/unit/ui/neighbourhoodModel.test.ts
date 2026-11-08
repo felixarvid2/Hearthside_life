@@ -192,7 +192,7 @@ describe('actions of a lot', () => {
   });
 
   it('writes the move confirmation with what is paid and received', () => {
-    const pv: MovePreview = { ok: true, lotId: 'e1', mode: 'rent', cost: 12500, proceeds: 0, lines: ['Rent line.'] };
+    const pv: MovePreview = { ok: true, lotId: 'e1', mode: 'rent', cost: 12500, proceeds: 0, lines: ['Rent line.'], furniture: { count: 0, worth: 0, saleValue: 0, choice: 'leave' } };
     expect(moveSummary(pv, 'Marigold Flat')).toEqual({ title: 'Move into Marigold Flat?', confirm: 'Rent and move', lines: ['Rent line.', 'Paid now: $125.'] });
     const buy = moveSummary({ ...pv, mode: 'buy', cost: 2100000, proceeds: 800000 }, 'Hazelbank House');
     expect(buy.title).toBe('Buy Hazelbank House?');
@@ -225,5 +225,22 @@ describe('household members off the active lot', () => {
     expect(awayIconName('home')).toBe('home');
     expect(awayIconName('transit')).toBe('car');
     expect(awayIconName('venue')).toBe('pin');
+  });
+});
+
+describe('community events in the map', () => {
+  const ev = (key: string, lotId: string, startAt: number, endAt: number, running = false) =>
+    ({ key, defId: key, name: key, description: '', icon: 'star', lotId, lotName: lotId, venueType: 'arts', startAt, endAt, running });
+  it('words when an event is on and puts running ones first', async () => {
+    const { eventWhen, eventsAt } = await import('../../../src/ui/hud/neighbourhoodModel');
+    const day = 1440;
+    const now = 3 * day + 18 * 60 + 30;
+    expect(eventWhen(ev('a', 'l', 3 * day + 18 * 60, 3 * day + 20 * 60), now)).toBe('Now until 8:00 PM');
+    expect(eventWhen(ev('b', 'l', 3 * day + 21 * 60, 3 * day + 22 * 60), now)).toMatch(/^Today /);
+    expect(eventWhen(ev('c', 'l', 4 * day + 10 * 60, 4 * day + 11 * 60), now)).toMatch(/^Tomorrow /);
+    expect(eventWhen(ev('d', 'l', 6 * day + 10 * 60, 6 * day + 11 * 60), now)).toMatch(/^[A-Z][a-z]{2} /);
+    const list = [ev('late', 'x', 5 * day, 5 * day + 60), ev('now', 'x', now - 10, now + 60, true), ev('other', 'y', 4 * day, 4 * day + 60)];
+    expect(eventsAt(list, 'x').map((e) => e.key)).toEqual(['now', 'late']);
+    expect(eventsAt(list).map((e) => e.key)).toEqual(['now', 'other', 'late']);
   });
 });

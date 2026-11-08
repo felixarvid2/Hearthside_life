@@ -68,6 +68,18 @@ const FRIENDLY: SocialDef[] = [
     topics: ['smalltalk', 'topic:food', 'topic:movies'], autonomy: { enabled: true, weight: 1 },
   }),
   social({
+    id: 'groupChat', name: 'Chat With the Group', description: 'Bring everyone nearby into one conversation. Needs at least three people together; every pair in the circle warms up a little.',
+    icon: 'people', category: 'friendly', section: 'friendly',
+    minutes: 6, anim: 'talk', requires: { minFamiliarity: 10 }, acceptance: 0.85, targetTraits: { outgoing: 0.05 }, actorTraits: { outgoing: 0.05, charismatic: 0.05 },
+    success: out({ actor: { familiarity: 2, friendship: 3, trust: 1 }, target: { familiarity: 2, friendship: 3, trust: 1 }, social: 14, fun: 3, actorMoodlet: 'pleasantChat', targetMoodlet: 'pleasantChat' }),
+    failure: out({ actor: { familiarity: 1 }, target: { familiarity: 1 }, social: 4 }),
+    lines: {
+      success: ['{a} pulls {b} and the others into one lively conversation.', 'The group around {a} and {b} laughs together.', '{a}, {b} and the rest swap stories in a happy circle.'],
+      failure: ['The group conversation around {a} and {b} fizzles out.', '{a} tries to include everyone, but {b} is not in the mood.'],
+    },
+    topics: ['smalltalk', 'topic:food', 'topic:movies', 'topic:travel'], autonomy: { enabled: true, weight: 0.7 },
+  }),
+  social({
     id: 'askAboutDay', name: 'Ask About Their Day', description: 'Show some interest in how things are going.', icon: 'social', category: 'friendly',
     minutes: 4, anim: 'talk', requires: { minFamiliarity: 10 }, acceptance: 0.85, targetTraits: { 'family-oriented': 0.05 },
     success: out({ actor: { familiarity: 3, friendship: 2 }, target: { familiarity: 3, friendship: 4, trust: 1 }, social: 10, targetMoodlet: 'pleasantChat' }),
@@ -342,8 +354,8 @@ const TRUST: SocialDef[] = [
     topics: ['favour'], autonomy: { enabled: false, weight: 0 },
   }),
   social({
-    id: 'giveGift', name: 'Give a Gift', description: 'Bring a small present ($20). Charged to your household when accepted.', icon: 'star', category: 'friendly', section: 'special',
-    minutes: 2, anim: 'agree', requires: { minFamiliarity: 15 }, acceptance: 0.9, cost: 2000,
+    id: 'giveGift', name: 'Give a Gift...', description: 'Choose a present from a small catalog. It is paid for when accepted and left as a parcel at their home; what they like decides how much it means.', icon: 'star', category: 'friendly', section: 'special',
+    minutes: 2, anim: 'agree', requires: { minFamiliarity: 15 }, acceptance: 0.9, cost: 400,
     success: out({
       actor: { friendship: 2, trust: 1 }, target: { friendship: 6, trust: 2 }, social: 8, targetMoodlet: 'giftReceived', actorMoodlet: 'pleasantChat',
       memory: { kind: 'gift', importance: 1, text: '{a} gave {b} a thoughtful gift.' },
@@ -472,7 +484,7 @@ const ROMANTIC_PLUS: SocialDef[] = [
     topics: ['romance'], autonomy: { enabled: false, weight: 0 },
   }),
   social({
-    id: 'marry', name: 'Get Married', description: 'Marry your fiance(e). A small ceremony at home.', icon: 'star', category: 'romantic',
+    id: 'marry', name: 'Get Married', description: 'Marry your fiance(e) on the spot with a few quiet words. For a wedding with guests, plan one from the phone (Plan an Event).', icon: 'star', category: 'romantic',
     minutes: 6, anim: 'agree', requires: { romantic: true, status: ['engaged'], minRomance: 60, minTrust: 40 }, acceptance: 0.9,
     success: out({
       actor: { romance: 10, friendship: 5, trust: 6 }, target: { romance: 10, friendship: 5, trust: 6 }, social: 25, fun: 10, actorMoodlet: 'newlywed', targetMoodlet: 'newlywed',

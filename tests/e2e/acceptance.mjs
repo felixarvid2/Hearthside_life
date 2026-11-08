@@ -1225,7 +1225,7 @@ async function stepLive(T) {
       const social = nm.items.filter((i) => !i.disabled);
       // before an introduction only "Introduce Yourself" is enabled (correct game rule); afterwards several socials are
       T.check(S, 'neighbour menu offers social interactions', social.length >= 2 || (social.length === 1 && /Introduce/i.test(social[0].label ?? '')), nm.items.map((i) => i.label + (i.disabled ? `(x:${i.reason})` : '')).join(' | '));
-      const pickLabel = nm.items.find((i) => !i.disabled && /Chat|Talk|Introduce|Greet|Compliment|Joke/i.test(i.label ?? ''))?.label ?? social[0]?.label;
+      const pickLabel = nm.items.find((i) => !i.disabled && /Chat|Talk|Introduce|Greet|Compliment|Joke/i.test(i.label ?? '') && !/Group/i.test(i.label ?? ''))?.label ?? social[0]?.label;
       if (pickLabel) {
         await chooseMenu(T, new RegExp(pickLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
         T.ok(S, 'chose a social interaction', pickLabel);

@@ -262,7 +262,7 @@ function selfOptions(ctx: SimCtx, p: Person): InteractionOption[] {
       }
       continue;
     }
-    if (beh === 'openBills' || beh === 'openCareers') {
+    if (beh === 'openBills' || beh === 'openCareers' || beh === 'openMap') {
       out.push({ ...option(ctx, p, def.id, def.name, def.icon, 'self', self), section: 'phone' });
       continue;
     }

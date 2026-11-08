@@ -6,6 +6,11 @@ and 12 are complete and verified** (brief section 26, docs/ROADMAP.md). **Milest
 catalog (360 wall finishes, 200 floor designs) and the furnishings (573 designs, target 560) are complete**; the full creator
 catalog remains. The next work is the rest of Milestone 10, then Milestone 13 (release preparation).
 
+The social gaps pass (branch `wt/gaps-social`) closed the open social, neighbourhood and family gaps listed in the old known issues: weddings,
+gifts as objects, dates and events at venues, group chat, community events, town life, furniture when moving, town children for old saves,
+the sitter for other households, the jog track, explicit baby carrying, the phone map entry and `LotInfo.usable`. See ARCHITECTURE.md
+("Relationships and events", "Neighbourhood", "Family and life stages") and the known issues below for what stays simple.
+
 ## Milestone status
 
 | Milestone | Systems | Content (target) | Verified |
@@ -147,7 +152,7 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
    folds, hood up, hair spikes at the hairline, ponytail thumbnail, real-device performance).
 2. Milestone 10, complete catalogs: surfaces (360 walls, 200 floors) and furnishings (573 designs, target 560) are done. The
    remaining target is the full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
-3. Milestone 13, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
+3. social gaps pass, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
 4. Polish of the M8, M9, M11, M11.5 and M12 gaps (listed under "Known issues").
 5. People: brow styles, the garment hem flare on the female body, real-device performance.
 6. Performance:
@@ -262,12 +267,9 @@ changes for existing saves or styles.
 ## Known issues
 
 - M8 family and life stages:
-  - Town children are only generated for new worlds; older saves keep their childless town households.
-  - The sitter only serves the household you play.
   - The move-out dialog scrolls in phone landscape.
   - Babies have no curled pose. Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry).
   - Feet slide a little when walking.
-  - The sim does not mark carrying explicitly (`peopleView` uses a heuristic).
 - M9 floors and exteriors:
   - Only straight stairs are tested in acceptance. The spiral and length-4 stairs are in the catalogue but less tested.
   - The camera bar now has 7 buttons and was not measured on phones narrower than 390 px.
@@ -336,11 +338,20 @@ changes for existing saves or styles.
   unchanged, and `render/` still imports `content/objects` and `content/surfaces` eagerly, so content cannot be fully
   deferred. Measure on a real phone.
 - M7 neighbourhood:
-  - `goForJog` jogs in place (no track loop); no community event at the arts centre.
-  - Furniture does not move with the household. NPC households never move and townies never change jobs.
   - One trip at a time; a split household cannot be watched on two lots.
-  - `LotInfo.usable` is false until a venue is first built (layouts are lazy).
-  - The portrait map is wider than the screen: pan, or use List. The phone has no map entry.
+  - The portrait map is wider than the screen: pan, or use List. The phone's Neighbourhood Map entry opens the same modal.
+  - Gaps closed in social gaps pass (see ARCHITECTURE.md): weddings, gifts as objects, venue events, group chat, community events,
+    town life (job changes, moving households), furniture choice when moving, town children for old saves, the sitter for
+    other households, the jog track, `Person.carriedBy`, the phone map entry and `LotInfo.usable`. What is still simple:
+    - Taken furniture goes into the household inventory; it is not re-placed in the new home automatically.
+    - A wedding's ceremony is a stage with a feed line, a goal, a bond change and memories; the couple are not choreographed
+      (no walking to an altar, no officiant).
+    - Gifts are parcels at the recipient's lot (put away after two weeks); there is no unwrapping or re-gifting interaction.
+    - A venue event needs the host at home or on the way at the departure time; if a trip is already under way it is retried
+      every ten minutes until the start and then called off.
+    - NPC homes move only among the generated NPC households and the empty homes; the next-door neighbours stay put. They pay
+      the deposit or price from their own funds (`townmove:<household>:<day>`), never go into debt for it.
+    - Group chats pull in at most four more people within six tiles whom the speaker has met.
   - Acceptance step 8 once saw every computer option disabled ("Unavailable (6)") in landscape, for an unknown reason.
     The test now waits for an idle member with an enabled option and logs per-option reasons if it recurs.
   - In compact menus where every entry is disabled, the entries fold into a closed "Unavailable" group (UX to revisit).

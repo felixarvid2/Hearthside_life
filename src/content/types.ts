@@ -642,6 +642,10 @@ export interface ContentDB {
   eyeColors: Swatch[];
   /** Social event types (dates, parties, visits), content/events.ts. Optional so older content fixtures stay valid. */
   events?: Record<string, EventDef>;
+  /** Gift kinds a person can buy and give (content/gifts.ts). Optional so older content fixtures stay valid. */
+  gifts?: Record<string, GiftDef>;
+  /** Weekly happenings at the public venues (content/communityEvents.ts). Optional so older content fixtures stay valid. */
+  communityEvents?: Record<string, CommunityEventDef>;
   /** Milestone 9: fences and gates, roof styles and finishes, terrain paints and garden crops (content/exterior.ts). Optional so older fixtures stay valid. */
   exterior?: ExteriorContent;
   /** Likes/dislikes the creator offers, grouped: 'activity' | 'music' | 'decor' | 'food' | 'topic'. */
@@ -673,6 +677,47 @@ export interface EventRewardDef {
   memory: { kind: MemoryKind; badKind?: MemoryKind; text: string; badText: string; importance: 1 | 2 | 3 };
 }
 
+// ---------------------------------------------------------------------------------------------
+// Gifts (a small catalog, content/gifts.ts; sim/gifts.ts)
+// ---------------------------------------------------------------------------------------------
+
+export interface GiftDef {
+  id: string;
+  name: string;
+  /** Shown in the picker ("A bunch of seasonal flowers"). */
+  description: string;
+  icon: string;
+  price: Cents;
+  /** Preference ids (content/preferences.ts) the gift speaks to: a match with the recipient's likes delights them. */
+  appeals: string[];
+  /** Trait id -> fit (-1..1): added to the recipient's reaction. */
+  traitFit: Record<string, number>;
+  /** Life stages that can be given this (a baby cannot unwrap a video game). */
+  ages: LifeStage[];
+  /** Colour of the wrapped parcel in the world (hex). */
+  colour: Hex;
+  status: ContentStatus;
+}
+
+/** A weekly happening at a public venue (content/communityEvents.ts; sim/community.ts). */
+export interface CommunityEventDef {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  /** The kind of venue that hosts it (the first lot of that type). */
+  venueType: string;
+  /** 0 = Monday ... 6 = Sunday. */
+  weekday: number;
+  /** Minute of the day it starts, and its length. */
+  start: number;
+  minutes: number;
+  /** A household member who stays this long gets the reward, once. */
+  attendMinutes: number;
+  reward: { fun: number; social: number; friendship: number };
+  status: ContentStatus;
+}
+
 export interface EventDef {
   id: HomeEventType;
   name: string;
@@ -689,6 +734,11 @@ export interface EventDef {
   cateringPerPerson: Cents;
   /** Adults who are attracted to each other only. */
   romantic: boolean;
+  /** A wedding: the first guest is the host's fiance(e), who they marry at the ceremony `ceremonyMinutes` after the start. */
+  wedding?: boolean;
+  ceremonyMinutes?: number;
+  /** Can be held at a public venue (the household and the guests travel there); otherwise at home only. */
+  venueOk?: boolean;
   goals: EventGoalDef[];
   reward: EventRewardDef;
   status: ContentStatus;

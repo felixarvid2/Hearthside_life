@@ -2,10 +2,11 @@
 // tests/unit/ui/social.test.ts).
 
 import type { EventDef } from '../../content/types';
-import { DAY_NAMES, atDayMinute, dayIndex, formatClock, weekday } from '../../core/clock';
+import { DAY_NAMES, atDayMinute, dayIndex, formatClock, minuteOfDay, weekday } from '../../core/clock';
 import { pairKey } from '../../core/ids';
 import { relationshipLabel, romanceInterest } from '../../core/relations';
-import type { HomeEvent, Person, RelLabel, WorldState } from '../../core/types';
+import type { HomeEvent, Lot, Person, RelLabel, WorldState } from '../../core/types';
+import { lotIsOpen, venueInfo } from '../../world/neighbourhood';
 import type { MenuOption } from '../../game/api';
 
 // ---- social menu ----
@@ -44,6 +45,19 @@ export function trackedEvent(st: WorldState, dismissed: ReadonlySet<string>): Ho
 
 // ---- event planner ----
 
+/** True when a gathering of `minutes` starting at `at` fits the venue's opening hours (homes always fit). */
+export function fitsVenue(lot: Pick<Lot, 'kind' | 'venueType'>, at: number, minutes: number): boolean {
+  const v = venueInfo(lot);
+  if (!v) return true;
+  return lotIsOpen(lot, minuteOfDay(at)) && dayIndex(at + minutes - 1) === dayIndex(at) && minuteOfDay(at + minutes) <= v.close;
+}
+
+/** Public venues a gathering can be held at (the lot builders make the layout on arrival), by name. */
+export function venueChoices(st: WorldState): Lot[] {
+  return Object.values(st.lots).filter((l) => l.kind === 'venue').sort((a, b) => a.name.localeCompare(b.name));
+}
+
+
 /** Start times offered: these hours of the day, today and the next two days, that respect the notice. */
 const HOURS = [10, 12, 15, 18, 19, 20];
 
@@ -64,7 +78,17 @@ export function startOptions(now: number, leadMinutes: number): StartOption[] {
   return out;
 }
 
-/** Known people who could be invited: not in the host's household (dates also allow a partner at home), best liked first. */
+/** Whom `host` is engaged to, if anybody (the one a wedding marries). */
+export function fianceOf(st: WorldState, host: Person): Person | undefined {
+  for (const b of Object.values(st.bonds)) {
+    if (b.status !== 'engaged' || (b.a !== host.id && b.b !== host.id)) continue;
+    const p = st.people[b.a === host.id ? b.b : b.a];
+    if (p) return p;
+  }
+  return undefined;
+}
+
+/** Known people who could be invited: not in the host's household (dates and weddings also allow a partner at home), best liked first. */
 export function guestCandidates(st: WorldState, host: Person, def: EventDef): Person[] {
   const out: Person[] = [];
   for (const r of Object.values(st.relationships)) {
@@ -72,11 +96,12 @@ export function guestCandidates(st: WorldState, host: Person, def: EventDef): Pe
     const g = st.people[r.to];
     if (!g || g.id === host.id) continue;
     const sameHome = g.householdId === host.householdId;
-    if (sameHome && !def.romantic) continue;
+    if (sameHome && !def.romantic && !(def.wedding && fianceOf(st, host)?.id === g.id)) continue;
     if (def.romantic && (!romanceInterest(host, g) || r.romanceBlocked)) continue;
     out.push(g);
   }
-  return out.sort((a, b) => (st.relationships[`${host.id}>${b.id}`]?.friendship ?? 0) - (st.relationships[`${host.id}>${a.id}`]?.friendship ?? 0) || a.firstName.localeCompare(b.firstName));
+  const fiance = def.wedding ? fianceOf(st, host)?.id : undefined;
+  return out.sort((a, b) => Number(b.id === fiance) - Number(a.id === fiance) || (st.relationships[`${host.id}>${b.id}`]?.friendship ?? 0) - (st.relationships[`${host.id}>${a.id}`]?.friendship ?? 0) || a.firstName.localeCompare(b.firstName));
 }
 
 /** Where a guest is, in a few words, and whether an invitation can reach them. */

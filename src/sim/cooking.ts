@@ -406,10 +406,10 @@ export const eatMealBehavior: Behavior = {
   },
 };
 
-/** Removes spoiled meals and fish (called every tick; cheap). */
+/** Removes spoiled meals and fish, and gift parcels that have been put away (called every tick; cheap). */
 export function spoilMeals(ctx: SimCtx): void {
   for (const item of Object.values(ctx.state.items)) {
-    if ((item.kind === 'meal' || item.kind === 'fish') && item.spoilsAt <= ctx.now) {
+    if ((item.kind === 'meal' || item.kind === 'fish' || item.kind === 'gift') && item.spoilsAt <= ctx.now) {
       delete ctx.state.items[item.id];
       ctx.events.emit({ type: 'item.changed', itemId: item.id, lotId: item.lotId });
     }

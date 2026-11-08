@@ -81,6 +81,8 @@ export interface NeighbourhoodState {
   nextDoorHouseholdId?: Id;
   /** Number of household moves so far (keeps move occurrence ids unique). */
   moves?: number;
+  /** True once the town households have had their children generated (new worlds have them from the start; older saves get them on load). */
+  townChildren?: boolean;
 }
 
 export type StartMode = 'guided' | 'create' | 'sandbox';
@@ -118,6 +120,8 @@ export interface SimSettings {
   seasonDays?: number;
   /** Milestone 12: weather on (default). Off = always clear. */
   weather?: boolean;
+  /** social gaps pass: townspeople change jobs and households move to empty homes over time (default on). */
+  townLife?: boolean;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -416,13 +420,15 @@ export interface GardenState {
 }
 
 /** What a WorldItem is: a served meal, a caught fish, dirty dishes left after eating, or a floor mess (puddle, crumbs, spill). */
-export type WorldItemKind = 'meal' | 'fish' | 'dishes' | 'mess';
+export type WorldItemKind = 'meal' | 'fish' | 'dishes' | 'mess' | 'gift';
 
 /**
  * Transient items created by actions (e.g. a served meal or a landed fish). Saved, but never sold by the household.
  * `fish`: `recipeId` = the species id (content/fishing.ts), `portions` = number of fish, `quality` unused (1).
  * `dishes`: `portions` = number of dirty plates, `recipeId` = the dish they held, `quality` unused (1).
  * `mess`: `recipeId` = the variant ('puddle' | 'crumbs' | 'spill'), `quality` = severity 0..1, `portions` = 1.
+ * `gift` (social gaps pass): a wrapped parcel somebody gave; `recipeId` = the gift kind (content/gifts.ts), `ownerPersonId` = the
+ * recipient, `giftFromId` = the giver; it is put away when `spoilsAt` passes (sim/gifts.ts).
  * Only meals and fish spoil; dishes and messes stay until somebody cleans them.
  */
 export interface WorldItem {
@@ -437,6 +443,9 @@ export interface WorldItem {
   createdAt: GameMinutes;
   spoilsAt: GameMinutes;
   ownerHouseholdId: Id | null;
+  /** Gifts only: who it belongs to and who gave it. */
+  ownerPersonId?: Id;
+  giftFromId?: Id;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -492,6 +501,11 @@ export interface Person {
   school?: SchoolState | null;
   /** Milestone 8: game minute since which a baby's or toddler's need has been empty (the emergency sitter comes after 3 hours). */
   careSince?: Partial<Record<NeedId, GameMinutes>>;
+  /**
+   * social gaps pass: the person who is carrying this baby right now (set by the care behaviour while it holds the baby, cleared when it
+   * puts them down). The renderer cradles the baby in that person's arms; absent = not carried.
+   */
+  carriedBy?: Id;
 }
 
 /** Milestone 8: school attendance and performance (children and teens). */
@@ -778,7 +792,7 @@ export interface ScheduledEvent {
   /** Unique occurrence id, e.g. `visit:<personId>:<day>`; also used in WorldState.processed. */
   occurrence: string;
   at: GameMinutes;
-  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'careerEvent' | 'travelArrive';
+  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'eventStage' | 'eventTravel' | 'careerEvent' | 'travelArrive';
   personId?: Id;
   householdId?: Id;
   data?: Record<string, string | number | boolean | null>;
@@ -797,9 +811,9 @@ export interface FeedEntry {
 // ---------------------------------------------------------------------------------------------
 
 export type HomeEventType =
-  | 'date' | 'dinnerParty' | 'houseParty' | 'celebration' | 'visit' | 'welcomeWagon' | 'dropIn' | 'reconciliation';
+  | 'date' | 'dinnerParty' | 'houseParty' | 'celebration' | 'wedding' | 'visit' | 'welcomeWagon' | 'dropIn' | 'reconciliation';
 export type HomeEventStatus = 'invited' | 'running' | 'done' | 'cancelled';
-export type EventGoalKind = 'chat' | 'eat' | 'romantic' | 'laugh' | 'mingle' | 'reconcile';
+export type EventGoalKind = 'chat' | 'eat' | 'romantic' | 'laugh' | 'mingle' | 'reconcile' | 'ceremony';
 export type EventRating = 'poor' | 'fair' | 'good' | 'great';
 
 export interface EventGoal {
@@ -840,4 +854,14 @@ export interface HomeEvent {
   rating?: EventRating;
   /** Catering charged (cents), 0 when none was served. */
   catered?: Cents;
+  /**
+   * Weddings (sim/events.ts): the other half of the couple (the host marries them at the ceremony), the stage the event is
+   * in, the ceremony time and how the ceremony went. Optional in saves; absent = not a wedding.
+   */
+  partnerId?: Id;
+  stage?: 'ceremony' | 'celebration';
+  ceremonyAt?: GameMinutes;
+  ceremony?: 'done' | 'missed';
+  /** Events at a public venue (`lotId` is a venue): when the household and the guests set out. Absent = held at home. */
+  departAt?: GameMinutes;
 }

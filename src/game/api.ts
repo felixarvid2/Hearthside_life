@@ -82,22 +82,25 @@ import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, HomeEventType, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 import type { RoomDelta, Vertex } from '../world/roomTracker';
-import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
 import type { FamilyInfo } from '../sim/familyView';
+import type { GiftChoice } from '../sim/gifts';
 import type { SplitPreview, SplitTarget } from '../sim/split';
 
 export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 export { WALL_HEIGHT_PRESETS } from '../building/buildPlans';
 export type { RoomDelta, Vertex } from '../world/roomTracker';
-export type { HouseholdBrief, MovePreview, SwitchPreview } from '../sim/households';
+export type { FurnitureChoice, FurnitureSummary, HouseholdBrief, MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 export type { HouseholdInfo, LotInfo, LotPerson, NeighbourhoodInfo, Tenure, TripInfo } from '../sim/neighbourhoodView';
 export type { PersonPlace, PlaceKind } from '../sim/places';
 export type { AdoptionPreview, AdoptionSpec, AdoptStage } from '../sim/adoption';
 export type { FamilyInfo, RelativeInfo } from '../sim/familyView';
 export type { SplitPreview, SplitTarget } from '../sim/split';
+export type { GiftChoice, GiftVerdict } from '../sim/gifts';
+export type { CommunityEventInfo } from '../sim/community';
 export type { SchoolInfo } from '../sim/school';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
@@ -135,6 +138,8 @@ export interface PlanEventRequest {
   hostId: Id;
   guestIds: Id[];
   startAt: number;
+  /** A public venue to hold it at (the household and the guests travel there); absent = at home. */
+  lotId?: Id;
 }
 
 export interface PlacementState {
@@ -413,6 +418,11 @@ export interface GameAPI {
   planEvent?(req: PlanEventRequest): Result & { eventId?: Id };
   /** Calls off a planned event that has not started. */
   cancelEvent?(eventId: Id): Result;
+  // ---- gifts (social gaps pass; sim/gifts.ts) ----
+  // "Give a Gift..." in the social menu raises ui.request 'giveGift' (personId = giver, targetId = recipient); the picker lists
+  // giftChoices() and calls giveGift() with the chosen kind. The gift is paid for when accepted and left as a parcel at the recipient's lot.
+  giftChoices?(giverId: Id, recipientId: Id): GiftChoice[];
+  giveGift?(giverId: Id, recipientId: Id, giftId: string): Result;
 
   // ---- careers and household economy (Milestone 6) ----
   // Optional like the event planner: standalone dev mocks of other screens may omit them. Money always moves
@@ -440,8 +450,9 @@ export interface GameAPI {
   inviteHome?(hostId: Id, guestId: Id): Result;
   switchPreview?(householdId: Id): SwitchPreview | null;
   switchHousehold?(householdId: Id): Result;
-  movePreview?(lotId: Id): MovePreview | null;
-  moveHousehold?(lotId: Id): Result;
+  /** `opts.furniture` ('leave' default, 'take' into the inventory, 'sell') chooses what happens to the furniture of the old home. */
+  movePreview?(lotId: Id, opts?: MoveOptions): MovePreview | null;
+  moveHousehold?(lotId: Id, opts?: MoveOptions): Result;
 
   // ---- family and life stages (Milestone 8; sim/aging.ts, school.ts, care.ts, adoption.ts, split.ts) ----
   // Optional like the other newer sections. Everything is plain data.

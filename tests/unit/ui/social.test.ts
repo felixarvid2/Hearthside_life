@@ -5,7 +5,7 @@ import { createEmptyWorld } from '../../../src/core/state';
 import type { HomeEvent, Person, WorldState } from '../../../src/core/types';
 import type { MenuOption } from '../../../src/game/api';
 import { memoryEffects, relationshipRows } from '../../../src/ui/hud/format';
-import { guestAvailability, guestCandidates, sectionsOf, startOptions, trackedEvent } from '../../../src/ui/hud/socialModel';
+import { fianceOf, guestAvailability, guestCandidates, sectionsOf, startOptions, trackedEvent } from '../../../src/ui/hud/socialModel';
 
 const db = content();
 
@@ -122,5 +122,20 @@ describe('event planner model', () => {
     expect(guestAvailability(sam)).toEqual({ ok: false, text: 'At work' });
     expect(guestAvailability({ ...kid, location: { kind: 'lot', lotId: 'l', level: 0, x: 1, z: 1, facing: 0, posture: 'standing' } } as Person)).toEqual({ ok: true, text: 'Here already' });
     void theo;
+  });
+
+  it('a wedding offers the fiance(e) first, even at home, and nobody else from the household', () => {
+    const w = { people: {}, relationships: {}, bonds: {} } as unknown as WorldState;
+    const host = person(w, 'per_a', 'h1', 'Mira');
+    const theo = person(w, 'per_e', 'h1', 'Theo');
+    person(w, 'per_f', 'h1', 'Kid');
+    const june = person(w, 'per_c', 'h2', 'June');
+    for (const [id, f] of [['per_c', 80], ['per_e', 30], ['per_f', 90]] as const) w.relationships[`per_a>${id}`] = { from: 'per_a', to: id, familiarity: 20, friendship: f, trust: 0, romance: 0, lastInteractionAt: null, recent: {} };
+    expect(guestCandidates(w, host, db.events!.wedding!).map((p) => p.firstName)).toEqual(['June']);
+    expect(fianceOf(w, host)).toBeUndefined();
+    w.bonds['per_a|per_e'] = { a: 'per_a', b: 'per_e', status: 'engaged', familyAtoB: 'none', since: 0 };
+    expect(fianceOf(w, host)).toBe(theo);
+    expect(guestCandidates(w, host, db.events!.wedding!).map((p) => p.firstName)).toEqual(['Theo', 'June']);
+    void june;
   });
 });

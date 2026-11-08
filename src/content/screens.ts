@@ -179,6 +179,7 @@ export const SCREEN_MODE_BY_INTERACTION: Readonly<Record<string, ScreenMode>> = 
   phoneInvite: 'web',
   phoneDate: 'web',
   phoneBills: 'web',
+  phoneMap: 'web',
   phoneJobs: 'web',
   planEvent: 'web',
   callRepairperson: 'web',
