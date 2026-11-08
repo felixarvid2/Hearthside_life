@@ -340,6 +340,7 @@ body.is-portrait .cr-pv-right { right: calc(8px + var(--safe-r)); }
   text-align: center; font: inherit; color: var(--ink); cursor: pointer;
   border-radius: 12px; border: 2px solid var(--line); background: var(--paper); touch-action: manipulation;
 }
+.cr-thumb-card[hidden] { display: none; }
 .cr-thumb-card:hover { background: #fffdf8; }
 .cr-thumb-card.is-selected { border-color: var(--accent); background: #fff3ea; box-shadow: inset 0 0 0 1px var(--accent); }
 .cr-thumb-pic {
@@ -357,3 +358,6 @@ body.is-portrait .cr-pv-right { right: calc(8px + var(--safe-r)); }
 .cr-thumb-card.is-text .cr-thumb-pic { display: none; }
 .cr-preset-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
 .cr-slot-colors { margin-top: 2px; }
+.cr-tag-filter { margin: 2px 0 6px; gap: 6px; }
+.cr-subsec { margin: 6px 0 10px; }
+.cr-subsec-title { margin: 6px 0 2px; font-size: 0.92rem; font-weight: 800; color: var(--ink-2); }

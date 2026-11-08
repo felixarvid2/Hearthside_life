@@ -76,7 +76,7 @@ async function main() {
     browser = await chromium.launch({ ...launchOptions(chromium), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
     const context = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
     await context.addInitScript(() => {
-      try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: true, musicVolume: 0 })); } catch { /* ignore */ }
+      try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: true, hints: false, musicVolume: 0 })); } catch { /* ignore */ }
     });
     const page = await context.newPage();
     const errors = [];

@@ -1,0 +1,68 @@
+{
+ "id": "dress_shirt",
+ "label": "Shirt dress",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "dress"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_DressShirt"
+   ],
+   "default": "#b9b4aa",
+   "palette": [
+    "#b9b4aa",
+    "#7a7a7a",
+    "#e8e2d6",
+    "#4a4a4a",
+    "#8a7560",
+    "#f2efe6"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.011,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "v",
+    "depth": 0.06
+   },
+   "sleeve": 0.42,
+   "hem": {
+    "at": "hip",
+    "offset": -0.04
+   },
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.5,
+   "flare": 0.12,
+   "offset": 0.022
+  }
+ }
+}

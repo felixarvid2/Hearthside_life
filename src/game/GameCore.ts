@@ -28,7 +28,8 @@ import { describeReport, exportWorld as exportWorldJson, importWorld as importWo
 import { isManualSlot, isSlotId } from '../persistence/types';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
 import type { FamilyInfo } from '../sim/familyView';
-import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { GiftChoice } from '../sim/gifts';
+import type { MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 import type { SplitPreview, SplitTarget } from '../sim/split';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
@@ -45,7 +46,7 @@ import { evaluatePaint, finishAt, paintCommand, paintTargetFor, sameFinish, type
 import { evaluatePlacement, isUnchangedMove, placementCommand } from './core/placement';
 import { emptySlots, NO_STORAGE, toSlotInfo } from './core/saves';
 import { createNewWorld } from './newWorld';
-import { ensureNeighbourhood } from './neighbourhood';
+import { ensureNeighbourhood, ensureTownChildren } from './neighbourhood';
 
 export type { PaintHighlight } from './core/paint';
 
@@ -221,6 +222,8 @@ export class GameCore {
   replaceState(state: WorldState): void {
     // Saves from before Milestone 7 have no neighbourhood: generate it (deterministically, once) around what exists.
     ensureNeighbourhood(state, this.content);
+    // Saves from before the town had children: the households that should have some get them now (ids of everyone else stay).
+    ensureTownChildren(state, this.content);
     this.world = state;
     this.place = null;
     this.tool = null;
@@ -278,7 +281,7 @@ export class GameCore {
     const r = await this.saves.load(slotId, this.content);
     if (!r.ok) return fail(r.error);
     this.enterWorld(r.state, loadedSpeed(r.state));
-    const report = describeReport(r.report);
+    const report = [...(r.recovered ? [r.recovered.message] : []), ...describeReport(r.report)];
     return report.length > 0 ? { ok: true, report } : OK;
   }
 
@@ -382,7 +385,21 @@ export class GameCore {
     if (!this.world) return fail('No game is running.');
     const t = readToken(option?.token, option?.interactionId);
     if (!t) return fail('That choice is no longer available.');
+    // "Give a Gift..." opens the picker; the chosen gift comes back through giveGift().
+    if (t.interactionId === 'giveGift' && t.data?.gift === undefined && t.target.kind === 'person') {
+      this.events.emit({ type: 'ui.request', what: 'giveGift', personId, targetId: t.target.personId });
+      return OK;
+    }
     const r = this.sim.queue(personId, { ...t, source: 'player' });
+    return r.ok ? OK : fail(r.reason);
+  }
+
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] { return this.world ? this.sim.giftChoices(giverId, recipientId) : []; }
+
+  /** Queues giving the chosen gift: the giver walks over and offers it; it is paid for if accepted. */
+  giveGift(giverId: Id, recipientId: Id, giftId: string): Result {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.queue(giverId, { interactionId: 'giveGift', target: { kind: 'person', personId: recipientId }, data: { gift: giftId }, source: 'player' });
     return r.ok ? OK : fail(r.reason);
   }
 
@@ -574,12 +591,12 @@ export class GameCore {
     return OK;
   }
 
-  movePreview(lotId: Id): MovePreview | null { return this.world ? this.sim.movePreview(lotId) : null; }
+  movePreview(lotId: Id, opts?: MoveOptions): MovePreview | null { return this.world ? this.sim.movePreview(lotId, opts) : null; }
 
-  moveHousehold(lotId: Id): Result {
+  moveHousehold(lotId: Id, opts?: MoveOptions): Result {
     const blocked = this.liveOnly();
     if (blocked) return fail(blocked);
-    const r = this.sim.moveHousehold(lotId);
+    const r = this.sim.moveHousehold(lotId, opts);
     if (!r.ok) return fail(r.reason ?? 'Could not move.');
     this.notify('neighbourhood');
     this.notify('state');
@@ -990,6 +1007,7 @@ export class GameCore {
     if (typeof patch.seasons === 'boolean') set('seasons', patch.seasons);
     if (patch.seasonDays === 3 || patch.seasonDays === 7 || patch.seasonDays === 14) set('seasonDays', patch.seasonDays);
     if (typeof patch.weather === 'boolean') set('weather', patch.weather);
+    if (typeof patch.townLife === 'boolean') set('townLife', patch.townLife);
     if (changed) {
       if (patch.seasons !== undefined || patch.seasonDays !== undefined || patch.weather !== undefined) this.sim.refreshWeather();
       this.notify('state');

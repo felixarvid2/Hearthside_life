@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/caesar__ubc_male.glb",
+ "hair": "caesar",
+ "head_base_z": 1.6,
+ "inside_head_verts": 356,
+ "roots": 140,
+ "secs": 1.5,
+ "src_tris": 3504,
+ "tris": 2922,
+ "verts": 2254,
+ "z": [
+  1.615,
+  1.818
+ ]
+}

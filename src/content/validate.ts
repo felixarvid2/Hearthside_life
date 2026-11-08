@@ -16,6 +16,7 @@ import type {
 } from './types';
 import { fittedBounds } from './objects';
 import { capabilityInteractions } from './capabilities';
+import { VENUES, isVenueType } from '../world/neighbourhood';
 
 /** Furniture entry of public/assets/manifest.json (only the fields validation needs). */
 export interface ManifestModel {
@@ -434,8 +435,28 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     if (!(sc.start >= 0 && sc.end > sc.start && sc.end <= 24 * 60)) err(`${w}: bad school hours`);
   }
 
+  // ---- Gifts and community events (social gaps pass) ----
+  const prefIds = new Set(db.preferences.map((x) => x.id));
+  for (const g of Object.values(db.gifts ?? {})) {
+    const w = `gift '${g.id}'`;
+    if (g.status === 'ready' && (blank(g.name) || blank(g.description) || blank(g.icon))) err(`${w}: missing name, description or icon`);
+    if (!Number.isInteger(g.price) || g.price <= 0) err(`${w}: price must be whole cents above zero`);
+    if (g.ages.length === 0) err(`${w}: needs at least one life stage`);
+    for (const a of g.appeals) if (!prefIds.has(a)) err(`${w}: unknown preference '${a}'`);
+    for (const t of Object.keys(g.traitFit)) if (!db.traits[t]) err(`${w}: unknown trait '${t}'`);
+  }
+  for (const c of Object.values(db.communityEvents ?? {})) {
+    const w = `community event '${c.id}'`;
+    if (c.status === 'ready' && (blank(c.name) || blank(c.description) || blank(c.icon))) err(`${w}: missing name, description or icon`);
+    if (!Number.isInteger(c.weekday) || c.weekday < 0 || c.weekday > 6) err(`${w}: weekday must be 0..6`);
+    const v = isVenueType(c.venueType) ? VENUES[c.venueType] : undefined;
+    if (!v) err(`${w}: unknown venue type '${c.venueType}'`);
+    else if (c.start < v.open || c.start + c.minutes > v.close) err(`${w}: runs outside the opening hours of the ${v.label.toLowerCase()}`);
+    if (!(c.minutes >= 30) || !(c.attendMinutes > 0) || c.attendMinutes > c.minutes) err(`${w}: bad duration`);
+  }
+
   // ---- Events ----
-  const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile'];
+  const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile', 'ceremony'];
   for (const e of Object.values(db.events ?? {})) {
     const w = `event '${e.id}'`;
     if (e.status === 'ready' && (blank(e.name) || blank(e.description) || blank(e.icon))) err(`${w}: missing name, description or icon`);

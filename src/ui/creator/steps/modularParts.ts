@@ -4,9 +4,11 @@
 // setModular* methods, so undo, Cancel and the wardrobe's Cancel cover it.
 
 import type { CreatorSession } from '../../../characters/creator';
-import { garmentsFor, hairFor } from '../../../characters/modular/manifest';
-import { hairWouldReplace, wouldReplace } from '../../../characters/modular/equip';
+import { facialHairFor, garmentsFor, hairFor } from '../../../characters/modular/manifest';
+import { facialHairWouldReplace, hairWouldReplace, wouldReplace } from '../../../characters/modular/equip';
 import { outfitFor } from '../../../characters/modular/look';
+import { matchesTag, tagFilters } from '../../../characters/modular/tags';
+import { ACCESSORY_SLOTS } from '../../../characters/modular/types';
 import type { ColorRegionDef, GarmentDef, ModularLook, ModularManifest, ModularSlot, OutfitPresetDef } from '../../../characters/modular/types';
 import type { Swatch } from '../../../content/types';
 import type { OutfitCategory } from '../../../core/types';
@@ -14,12 +16,17 @@ import type { ModularInfo } from '../../../game/api';
 import { h, toggleClass } from '../../kit/dom';
 import { icon } from '../../kit/icons';
 import type { CreatorContext } from '../context';
-import { Binder, colorField, hint, percentFormat, section, signedFormat, sliderField } from '../widgets';
+import { Binder, choiceChips, colorField, hint, percentFormat, section, signedFormat, sliderField } from '../widgets';
 import { FABRIC_COLORS } from './clothing';
 
-export const SLOT_TITLES: Record<ModularSlot, string> = { top: 'Top', bottom: 'Bottom', full: 'One-piece', outer: 'Outer layer', shoes: 'Shoes' };
-/** Order of the slot sections. */
-const SLOT_ORDER: readonly ModularSlot[] = ['top', 'bottom', 'full', 'outer', 'shoes'];
+export const SLOT_TITLES: Record<ModularSlot, string> = {
+  top: 'Top', outer: 'Outer', bottom: 'Bottom', full: 'One-piece', shoes: 'Shoes',
+  hat: 'Hat', eyewear: 'Eyewear', earrings: 'Earrings', neck: 'Neck', wrist: 'Wrist', waist: 'Waist', bag: 'Bag',
+};
+/** Order of the clothing slot sections; the accessory slots follow in their own "Accessories" group. */
+const SLOT_ORDER: readonly ModularSlot[] = ['top', 'outer', 'bottom', 'full', 'shoes'];
+/** Chosen filter tag per slot; survives step rebuilds for the life of the session. */
+const chosenTags = new WeakMap<CreatorSession, Partial<Record<ModularSlot, string>>>();
 
 /** The current member's stored-or-derived look. Only called while the member is modular. */
 export function lookOf(session: CreatorSession): ModularLook {
@@ -110,6 +117,35 @@ export function modularHairSection(ctx: CreatorContext, info: ModularInfo, b: Bi
   return section('Hairstyle', styles.length > 0 ? grid : hint('No hairstyles are available for this body yet.'));
 }
 
+/** The facial hair grid (None, thumbnails, label fallback) for the current body; null when the catalog has none for it. */
+export function modularFacialHairSection(ctx: CreatorContext, info: ModularInfo, b: Binder): HTMLElement | null {
+  const s = () => ctx.session;
+  const m = info.manifest;
+  const styles = facialHairFor(m, lookOf(s()).bodyId);
+  if (styles.length === 0) return null;
+  const grid = h('div', { class: 'cr-thumb-grid cr-facial-thumbs', role: 'radiogroup', ariaLabel: 'Facial hair' });
+  const none = thumbCard({ label: 'None', none: true, onClick: () => { if (lookOf(s()).facialHairId !== null) ctx.report(s().setModularFacialHair(null)); } });
+  grid.appendChild(none.el);
+  const cards = styles.map((def) => {
+    const c = thumbCard({ label: def.label, thumb: thumbUrl(info, def.thumbnail), onClick: () => { if (lookOf(s()).facialHairId !== def.id) ctx.report(s().setModularFacialHair(def.id)); } });
+    const metaEl = h('span', { class: 'cr-thumb-meta' });
+    c.el.insertBefore(metaEl, c.el.querySelector('.cr-check'));
+    grid.appendChild(c.el);
+    return { def, c, metaEl };
+  });
+  b.fn(() => {
+    const l = lookOf(s());
+    none.set(l.facialHairId === null);
+    for (const x of cards) {
+      x.c.set(l.facialHairId === x.def.id);
+      const w = l.facialHairId === x.def.id ? [] : facialHairWouldReplace(m, l, x.def.id);
+      x.metaEl.textContent = w.length > 0 ? `Replaces ${w.join(', ')}` : '';
+      x.metaEl.hidden = w.length === 0;
+    }
+  });
+  return section('Facial hair', grid, hint('Facial hair takes the hair colour.'));
+}
+
 // ---- Clothing ----
 
 const nameOfHex = (hex: string, i: number): string => FABRIC_COLORS.find((f) => f.color.toLowerCase() === hex.toLowerCase())?.name ?? `Colour ${i + 1}`;
@@ -163,9 +199,10 @@ export function modularClothingSections(ctx: CreatorContext, info: ModularInfo, 
     out.push(section('Outfits', row, hint('A ready-made outfit for this category. Change any piece afterwards.')));
   }
 
-  for (const slot of SLOT_ORDER) {
+  /** One slot's cards, optional tag filter and colour controls (null when no garment fits the body). */
+  const slotBlock = (slot: ModularSlot): HTMLElement | null => {
     const list = garmentsFor(m, bodyId, slot);
-    if (list.length === 0) continue;
+    if (list.length === 0) return null;
     const grid = h('div', { class: 'cr-thumb-grid', role: 'radiogroup', ariaLabel: `${SLOT_TITLES[slot]} garments` });
     const none = thumbCard({ label: 'None', none: true, onClick: () => { if (outfitFor(lookOf(s()), category)[slot] !== undefined) ctx.report(s().setModularGarment(category, slot, null)); } });
     grid.appendChild(none.el);
@@ -176,6 +213,16 @@ export function modularClothingSections(ctx: CreatorContext, info: ModularInfo, 
       grid.appendChild(c.el);
       return { g, c, metaEl };
     });
+    // a long slot (tops) gets a compact row of tag chips; the worn garment always stays visible
+    const tags = tagFilters(list);
+    const chosen = (): string => chosenTags.get(s())?.[slot] ?? '';
+    const filter = tags.length > 0 ? choiceChips<string>({
+      label: `${SLOT_TITLES[slot]} type`, hideLabel: true,
+      options: [{ id: 'all', label: 'All' }, ...tags.map((t) => ({ id: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))],
+      value: () => chosen() || 'all',
+      onPick: (id) => { const o = chosenTags.get(s()) ?? {}; o[slot] = id === 'all' ? '' : id; chosenTags.set(s(), o); b.sync(); },
+    }) : null;
+    if (filter) { filter.el.classList.add('cr-tag-filter'); b.add(filter); }
     const colors = h('div', { class: 'cr-slot-colors' });
     let shown = '';
     let cb = new Binder();
@@ -183,8 +230,10 @@ export function modularClothingSections(ctx: CreatorContext, info: ModularInfo, 
       const l = lookOf(s());
       const worn = outfitFor(l, category)[slot];
       none.set(worn === undefined);
+      const tag = chosen();
       for (const x of cards) {
         x.c.set(worn === x.g.id);
+        x.c.el.hidden = !(matchesTag(x.g, tag) || worn === x.g.id);
         const w = worn === x.g.id ? [] : wouldReplace(m, l, category, x.g.id);
         x.metaEl.textContent = w.length > 0 ? `Replaces ${w.join(', ')}` : '';
         x.metaEl.hidden = w.length === 0;
@@ -199,8 +248,19 @@ export function modularClothingSections(ctx: CreatorContext, info: ModularInfo, 
       }
       cb.sync();
     });
-    out.push(section(SLOT_TITLES[slot], grid, colors));
+    return h('div', { class: 'cr-slot-block', dataset: { slot } }, ...(filter ? [filter.el] : []), grid, colors);
+  };
+
+  for (const slot of SLOT_ORDER) {
+    const block = slotBlock(slot);
+    if (block) out.push(section(SLOT_TITLES[slot], block));
   }
+  // accessories: one group, one sub-section per slot that has items for this body
+  const subs = ACCESSORY_SLOTS.flatMap((slot) => {
+    const block = slotBlock(slot);
+    return block ? [h('div', { class: 'cr-subsec', dataset: { slot } }, h('h4', { class: 'cr-subsec-title', text: SLOT_TITLES[slot] }), block)] : [];
+  });
+  if (subs.length > 0) out.push(section('Accessories', ...subs));
   if (out.length === 0) out.push(hint('No garments are available for this body yet.'));
   return out;
 }

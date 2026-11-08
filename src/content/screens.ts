@@ -170,6 +170,9 @@ export const SCREEN_MODE_BY_INTERACTION: Readonly<Record<string, ScreenMode>> = 
   // they are listed so the mapping covers every 'computer' animation in the content.
   playPiano: 'desktop',
   busk: 'desktop',
+  playDrums: 'desktop',
+  playHarp: 'desktop',
+  playCello: 'desktop',
   // Web pages and menus: job listings, adoption, research, phone/bill screens.
   jobSearch: 'web',
   adoptOnline: 'web',
@@ -179,6 +182,7 @@ export const SCREEN_MODE_BY_INTERACTION: Readonly<Record<string, ScreenMode>> = 
   phoneInvite: 'web',
   phoneDate: 'web',
   phoneBills: 'web',
+  phoneMap: 'web',
   phoneJobs: 'web',
   planEvent: 'web',
   callRepairperson: 'web',

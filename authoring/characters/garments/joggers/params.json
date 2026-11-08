@@ -1,0 +1,55 @@
+{
+ "id": "joggers",
+ "label": "Joggers",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "sport",
+  "trousers"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Joggers"
+   ],
+   "default": "#f2efe6",
+   "palette": [
+    "#f2efe6",
+    "#2f2f33",
+    "#3f6fa8",
+    "#c94f4f",
+    "#5c8a5a",
+    "#e0b341"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.018000000000000002,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.014,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "leg": 0.95,
+   "force": true
+  }
+ }
+}

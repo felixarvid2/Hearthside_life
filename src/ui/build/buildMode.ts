@@ -16,6 +16,7 @@ import { h, setChildren, setText, toggleClass } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { BuildSession } from './buildSession';
 import { createExteriorTools, type ExteriorId } from './exteriorTools';
+import { createRoomEditTools } from './roomEditTools';
 import { createStructureTools, type StructureId } from './structureTools';
 import {
   affordReason, editorStatus, fundsInfo, formatMoney, humanize, matchesQuery, panelInsets, play, Refresher, reopenButton,
@@ -120,7 +121,13 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
   // ---- a room selected in the world (tap with no tool) ----
   const roomText = h('span', { class: 'bb-room-text' });
   const roomDelete = button({ icon: 'trash', label: 'Demolish room', variant: 'secondary', onClick: () => { session.deleteSelectedRoom(); } });
-  const roomInfo = h('div', { class: 'bb-room-info', role: 'status' }, icon('home', 20), roomText, roomDelete);
+  // Milestone 13: move, resize and duplicate (building/roomOps.ts); the arrows live in roomEdit (ui/build/roomEditTools.ts)
+  const roomMove = button({ icon: 'move', label: 'Move', variant: 'secondary', onClick: () => { session.startRoomEdit('move'); } });
+  const roomResize = button({ icon: 'box', label: 'Resize', variant: 'secondary', onClick: () => { session.startRoomEdit('resize'); } });
+  const roomCopy = button({ icon: 'duplicate', label: 'Copy', variant: 'secondary', onClick: () => { session.startRoomEdit('duplicate'); } });
+  for (const [b, k] of [[roomMove, 'move'], [roomResize, 'resize'], [roomCopy, 'duplicate'], [roomDelete, 'delete']] as const) b.dataset.roomAction = k;
+  const roomEdit = createRoomEditTools(session);
+  const roomInfo = h('div', { class: 'bb-room-info', role: 'status' }, icon('home', 20), roomText, h('div', { class: 'bb-room-actions' }, roomMove, roomResize, roomCopy, roomDelete));
   roomInfo.hidden = true;
 
   // ---- current finish card (eyedropper lives here) ----
@@ -189,7 +196,7 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     designName: (k, ref) => design(k, ref.designId)?.name ?? humanize(ref.designId),
   });
   const exterior = createExteriorTools({ api, session });
-  const paintSection = h('div', { class: 'bb-paint-section', dataset: { section: 'paint' } }, kindBar, roomInfo, current, recentSec, browse);
+  const paintSection = h('div', { class: 'bb-paint-section', dataset: { section: 'paint' } }, kindBar, roomInfo, roomEdit.el, current, recentSec, browse);
   p.body.append(subbar, paintSection, structure.sections.wall, structure.sections.room, structure.sections.stairs, structure.sections.door, structure.sections.window, structure.sections.erase,
     exterior.sections.roof, exterior.sections.fence, exterior.sections.garden, exterior.sections.pool, cutaway.el);
   p.el.append(structure.footer);
@@ -594,6 +601,9 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     const sel = section === 'paint' && !api.buildTool() ? session.selection() : null;
     setHidden(roomInfo, !sel);
     if (sel) setText(roomText, `Room selected: ${sel.area} m2`);
+    roomEdit.refresh();
+    // while a room is being moved, resized or copied the tool tabs give way to its controls (phones: the arrows must not hide behind the footer)
+    p.el.dataset.roomedit = api.buildTool()?.kind === 'roomEdit' ? 'true' : 'false';
   }
 
   structure.onDone = () => {

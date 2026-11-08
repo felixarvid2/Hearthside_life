@@ -1,0 +1,49 @@
+{
+ "id": "cap_baseball",
+ "label": "Baseball cap",
+ "slot": "hat",
+ "category": "accessory",
+ "kind": "cap",
+ "tags": [
+  "cap"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_CapBaseball"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#c94f4f",
+    "#3f6fa8",
+    "#e0b341",
+    "#5c8a5a",
+    "#f2efe6"
+   ],
+   "metallic": 0.0,
+   "roughness": 0.6
+  },
+  {
+   "id": "detail",
+   "label": "Brim",
+   "materials": [
+    "M_CapBaseballDetail"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#c94f4f",
+    "#3f6fa8",
+    "#e0b341",
+    "#5c8a5a",
+    "#f2efe6"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": []
+}

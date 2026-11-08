@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { blockersOf, conflicts, equipWith } from '../../../../src/characters/modular/restrictions';
 import { resolveLook } from '../../../../src/characters/modular/look';
 import { validateManifest } from '../../../../src/characters/modular/manifest';
+import { categoryOfSlot } from '../../../../src/characters/modular/types';
 import type { GarmentDef, ModularManifest } from '../../../../src/characters/modular/types';
 import { BODY, look, realManifest, shellGarment } from './helpers';
 
 const garment = (id: string, slot: GarmentDef['slot'], conflictsWith: GarmentDef['slot'][] = []): GarmentDef =>
-  shellGarment({ id, slot, category: slot, conflicts: conflictsWith });
+  shellGarment({ id, slot, category: categoryOfSlot(slot), conflicts: conflictsWith });
 
 function manifest(extra: Partial<ModularManifest> = {}): ModularManifest {
   const m = realManifest();
@@ -48,8 +49,8 @@ describe('restrictions', () => {
     expect(conflicts(m, 'short_crop', 'hood')).toBe(true);
     expect(blockersOf(m, { outer: 'hood' }, null, 'short_crop')).toEqual(['hood']);
     expect(blockersOf(m, {}, 'short_crop', 'hood')).toEqual(['short_crop']);
-    expect(equipWith(m, { top: 'tee' }, 'short_crop', 'hood')).toEqual({ outfit: { top: 'tee', outer: 'hood' }, hairId: null });
-    expect(equipWith(m, { outer: 'hood', top: 'tee' }, null, 'short_crop')).toEqual({ outfit: { top: 'tee' }, hairId: 'short_crop' });
+    expect(equipWith(m, { top: 'tee' }, 'short_crop', 'hood')).toEqual({ outfit: { top: 'tee', outer: 'hood' }, hairId: null, facialHairId: null });
+    expect(equipWith(m, { outer: 'hood', top: 'tee' }, null, 'short_crop')).toEqual({ outfit: { top: 'tee' }, hairId: 'short_crop', facialHairId: null });
     // 'coat' and 'hood' share a slot: replaced, not a blocker
     expect(blockersOf(m, { outer: 'coat' }, null, 'hood')).toEqual([]);
     expect(equipWith(m, { outer: 'coat' }, null, 'hood').outfit).toEqual({ outer: 'hood' });
@@ -60,7 +61,7 @@ describe('restrictions', () => {
     const outfit = { top: 'tee' };
     equipWith(m, outfit, null, 'dress');
     expect(outfit).toEqual({ top: 'tee' });
-    expect(equipWith(m, outfit, 'short_crop', 'nope')).toEqual({ outfit: { top: 'tee' }, hairId: 'short_crop' });
+    expect(equipWith(m, outfit, 'short_crop', 'nope')).toEqual({ outfit: { top: 'tee' }, hairId: 'short_crop', facialHairId: null });
     expect(blockersOf(m, outfit, null, 'nope')).toEqual([]);
     expect(conflicts(m, 'tee', 'tee')).toBe(false);
   });
@@ -75,8 +76,8 @@ describe('restrictions', () => {
   });
 
   it('validateManifest flags unknown restriction targets', () => {
-    const m = manifest({ restrictions: { slots: { hat: ['top'] } as never, parts: { ghost: ['tee'], tee: ['phantom'] } } });
+    const m = manifest({ restrictions: { slots: { cape: ['top'] } as never, parts: { ghost: ['tee'], tee: ['phantom'] } } });
     const issues = validateManifest(m).join('\n');
-    for (const s of ["unknown slot 'hat'", "unknown part 'ghost'", "unknown part 'phantom'"]) expect(issues).toContain(s);
+    for (const s of ["unknown slot 'cape'", "unknown part 'ghost'", "unknown part 'phantom'"]) expect(issues).toContain(s);
   });
 });

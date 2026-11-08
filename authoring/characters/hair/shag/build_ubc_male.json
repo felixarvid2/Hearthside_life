@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/shag__ubc_male.glb",
+ "hair": "shag",
+ "head_base_z": 1.6,
+ "inside_head_verts": 943,
+ "roots": 170,
+ "secs": 3.3,
+ "src_tris": 23920,
+ "tris": 14409,
+ "verts": 8042,
+ "z": [
+  1.269,
+  1.82
+ ]
+}

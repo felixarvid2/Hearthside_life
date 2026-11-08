@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/short_textured__ubc_female.glb",
+ "hair": "short_textured",
+ "head_base_z": 1.55,
+ "inside_head_verts": 358,
+ "roots": 140,
+ "secs": 1.9,
+ "src_tris": 4672,
+ "tris": 4100,
+ "verts": 2822,
+ "z": [
+  1.561,
+  1.774
+ ]
+}

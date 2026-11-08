@@ -1,0 +1,40 @@
+{
+ "body": "ubc_female",
+ "guides": [],
+ "params": {
+  "attachment": "skinned",
+  "back_flow": 0.55,
+  "cap": true,
+  "cap_offset": 0.0035,
+  "clump_flatness": 0.35,
+  "clump_width": 0.05,
+  "clumps": 0,
+  "color_regions": [
+   {
+    "default": "#4a3020",
+    "id": "hair",
+    "label": "Hair",
+    "materials": [
+     "M_Hair"
+    ]
+   }
+  ],
+  "gravity": 0,
+  "hairline_back": 0.3,
+  "hairline_front": 0.8,
+  "id": "buzz_cut",
+  "label": "Buzz cut",
+  "length": 0.085,
+  "length_jitter": 0.15,
+  "part_offset": 0.025,
+  "points": 7,
+  "profile_resolution": 2,
+  "resolution_cm": 2.4,
+  "root_offset": 0.002,
+  "tags": [
+   "short"
+  ],
+  "target_tris": 9000,
+  "volume": 0.009
+ }
+}

@@ -1,0 +1,9 @@
+{
+ "accessory": "cap_baseball",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/cap_baseball__ubc_male.glb",
+ "kind": "cap",
+ "secs": 0.7,
+ "tris": 420,
+ "verts": 225
+}

@@ -1,0 +1,68 @@
+{
+ "id": "cardigan_long",
+ "label": "Long cardigan",
+ "preset": null,
+ "category": "outer",
+ "slot": "outer",
+ "tags": [
+  "knit",
+  "long"
+ ],
+ "hides": [],
+ "layer": 2,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_CardiganLong"
+   ],
+   "default": "#b9b4aa",
+   "palette": [
+    "#b9b4aa",
+    "#7a7a7a",
+    "#e8e2d6",
+    "#4a4a4a",
+    "#8a7560",
+    "#f2efe6"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.02,
+  "max": 0.04,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.026,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "v",
+    "depth": 0.26
+   },
+   "sleeve": 1.0,
+   "hem": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "open_front": 0.08,
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "length": 0.42,
+   "flare": 0.08,
+   "offset": 0.035,
+   "open_front": 0.7
+  }
+ }
+}

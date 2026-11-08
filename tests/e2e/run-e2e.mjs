@@ -132,7 +132,7 @@ async function runViewport(browser, name, vp) {
   page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   await page.addInitScript(() => {
-    try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0 })); } catch { /* ignore */ }
+    try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ }
   });
   const shots = [];
   const vpReport = { shots, stats: null };
@@ -199,7 +199,16 @@ async function runViewport(browser, name, vp) {
     const id = g.selected();
     const out = {};
     const head = h.view.personPosition(id);
-    if (head) { const s = g.view.worldToScreen(head.x, 1.1, head.z); out.person = g.view.pick(s.x, s.y); }
+    // another household member can stand in front of the selected one at the start (people nearer the camera win), so try a few
+    // heights and sideways offsets around the body before taking the centre pick
+    if (head) {
+      outer: for (const y of [1.1, 1.45, 0.7]) for (const dx of [0, 10, -10, 18, -18]) {
+        const s = g.view.worldToScreen(head.x, y, head.z);
+        const q = g.view.pick(s.x + dx, s.y);
+        if (!out.person) out.person = q;
+        if (q?.kind === 'person' && q.personId === id) { out.person = q; break outer; }
+      }
+    }
     const lot = st.lots[st.activeLotId];
     const fridge = Object.values(lot.objects).find((o) => o.defId === 'fridge-standard');
     // A person cooking at the fridge stands between the camera and it at the start of a guided game, so the middle and

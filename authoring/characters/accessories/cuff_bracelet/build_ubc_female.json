@@ -1,0 +1,9 @@
+{
+ "accessory": "cuff_bracelet",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/cuff_bracelet__ubc_female.glb",
+ "kind": "cuff",
+ "secs": 1.1,
+ "tris": 216,
+ "verts": 108
+}

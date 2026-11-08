@@ -27,8 +27,10 @@ const thumbPart = q.get('thumb');
 const shotOf = (v: string | null): Shot => (v === 'face' || v === 'upper' || v === 'full' ? v : 'full');
 const SHOT = shotOf(q.get('shot'));
 const POSE = q.get('pose') ?? 'idle';
-const POSE_ANIM: Record<string, AnimId> = { idle: 'idle', walk: 'walk', sit: 'sitIdle' };
+const POSE_ANIM: Record<string, AnimId> = { idle: 'idle', walk: 'walk', sit: 'sitIdle', lie: 'sleep' };
 const T = Math.max(0, Number(q.get('t') ?? 0) || 0);
+// yaw=<radians> turns the person (thumbnails of gathered hair show the tail from behind)
+const YAW = Number(q.get('yaw') ?? 0) || 0;
 const SKIN = hex('skin', '#c68642'), HAIR = hex('hair', '#4a3220'), EYES = hex('eyes', '#5b4636');
 // outfit=top:tshirt_crew,bottom:trousers_straight is worn in every column; morph=weight:1,jaw_width:-1 sets morphs
 const pairs = (k: string): Array<[string, string]> => (list(k) ?? []).map((x) => x.split(':') as [string, string]).filter((x) => x.length === 2);
@@ -43,7 +45,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''):
   const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e;
 };
 
-interface Column { id: string; kind: 'bare' | 'hair' | 'garment' }
+interface Column { id: string; kind: 'bare' | 'hair' | 'facial' | 'garment' }
 
 async function loadClips(): Promise<THREE.AnimationClip[]> {
   const loader = new GLTFLoader();
@@ -60,6 +62,7 @@ async function main(): Promise<void> {
   const columns: Column[] = [
     { id: 'bare', kind: 'bare' } as Column,
     ...manifest.hairstyles.map((h): Column => ({ id: h.id, kind: 'hair' })),
+    ...(manifest.facialHair ?? []).map((h): Column => ({ id: h.id, kind: 'facial' })),
     ...manifest.garments.map((g): Column => ({ id: g.id, kind: 'garment' })),
   ].filter((c) => (thumbPart ? c.id === thumbPart : !partFilter || partFilter.includes(c.id)));
 
@@ -85,6 +88,7 @@ async function main(): Promise<void> {
     renderer.forceContextLoss();
   };
   window.wardrobeDispose = dispose;
+  (window as unknown as { wardrobeChars: ModularCharacter[] }).wardrobeChars = characters;   // dev: posture measurements
   addEventListener('pagehide', dispose);
 
   if (!thumbPart) {
@@ -97,8 +101,8 @@ async function main(): Promise<void> {
     grid.style.cssText = 'display:block;padding:0;gap:0';
   }
 
-  const look = (bodyId: string, hairId: string | null, outfit: ModularOutfit): ModularLook => ({
-    v: 1, bodyId, hairId, outfits: { everyday: { ...EXTRA_OUTFIT, ...outfit } }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: MORPHS,
+  const look = (bodyId: string, hairId: string | null, outfit: ModularOutfit, facialHairId: string | null = null): ModularLook => ({
+    v: 2, bodyId, hairId, facialHairId, outfits: { everyday: { ...EXTRA_OUTFIT, ...outfit } }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: MORPHS,
   });
 
   let cells = 0;
@@ -120,6 +124,7 @@ async function main(): Promise<void> {
     character.play(POSE_ANIM[POSE] ?? 'idle', { fade: 0 });
     character.update(0);
     for (let t = T; t > 1e-6; t -= 0.1) character.update(Math.min(0.1, t));
+    character.root.rotation.y = YAW;
     character.root.updateMatrixWorld(true);
     const headTop = character.headTop(new THREE.Vector3());
     const head = character.bone('Head');
@@ -128,6 +133,7 @@ async function main(): Promise<void> {
 
     for (const { col, box, label } of rowCells) {
       const def = col.kind === 'hair' ? manifest.hairstyles.find((h) => h.id === col.id)
+        : col.kind === 'facial' ? (manifest.facialHair ?? []).find((h) => h.id === col.id)
         : col.kind === 'garment' ? manifest.garments.find((g) => g.id === col.id) : null;
       if (def && !def.files[body.id]) {
         box.parentElement!.classList.add('nofit');
@@ -137,7 +143,7 @@ async function main(): Promise<void> {
         continue;
       }
       const garment = col.kind === 'garment' ? manifest.garments.find((g) => g.id === col.id) : undefined;
-      await character.apply(look(body.id, col.kind === 'hair' ? col.id : null, garment ? { [garment.slot]: garment.id } : {}));
+      await character.apply(look(body.id, col.kind === 'hair' ? col.id : null, garment ? { [garment.slot]: garment.id } : {}, col.kind === 'facial' ? col.id : null));
       character.root.updateMatrixWorld(true);
       renderer.render(scene, camera);
       const canvas = el('canvas');
@@ -152,6 +158,7 @@ async function main(): Promise<void> {
       cells++;
     }
     scene.remove(character.root);
+    if (q.get('keep')) continue;               // keep=1: characters stay (posed) for measurements
     character.dispose();
     characters.splice(characters.indexOf(character), 1);
   }

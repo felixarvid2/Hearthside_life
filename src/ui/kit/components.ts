@@ -3,6 +3,7 @@
 
 import { h, setChildren, setText, shieldWorld, toggleClass } from './dom';
 import { icon } from './icons';
+import { currentOpener, keyboardModality, restoreFocus, rovingGroup, trapTab } from './focus';
 import { layout, onLayoutChange } from './layout';
 
 // ---------------------------------------------------------------------------------------------
@@ -113,6 +114,7 @@ export function swatchGrid(o: SwatchGridOpts): { el: HTMLElement; set(value: str
     customInput.addEventListener('input', () => { o.onPick(customInput!.value, null); mark(customInput!.value); });
     grid.appendChild(h('label', { class: 'swatch swatch-custom-wrap', title: 'Custom colour' }, customInput, icon('eyedropper', 18)));
   }
+  const sync = rovingGroup(grid, () => buttons, () => buttons.find((b) => b.classList.contains('is-selected')));
   const mark = (value: string) => {
     const v = value.toLowerCase();
     let found = false;
@@ -123,6 +125,7 @@ export function swatchGrid(o: SwatchGridOpts): { el: HTMLElement; set(value: str
       b.setAttribute('aria-checked', String(on));
     }
     if (customInput && /^#[0-9a-f]{6}$/i.test(value)) { customInput.value = value; toggleClass(customInput.parentElement!, 'is-selected', !found); }
+    sync();
   };
   mark(o.value);
   return { el: h('div', { class: 'field' }, h('div', { class: 'field-label', text: o.label }), grid), set: mark };
@@ -138,7 +141,8 @@ export function segmented<T extends string>(o: { label: string; options: Array<{
     row.appendChild(b);
     return b;
   });
-  const set = (v: T) => btns.forEach((b) => { const on = b.dataset.id === v; toggleClass(b, 'is-selected', on); b.setAttribute('aria-checked', String(on)); });
+  const sync = rovingGroup(row, () => btns, () => btns.find((b) => b.classList.contains('is-selected')));
+  const set = (v: T) => { btns.forEach((b) => { const on = b.dataset.id === v; toggleClass(b, 'is-selected', on); b.setAttribute('aria-checked', String(on)); }); sync(); };
   set(o.value);
   return { el: h('div', { class: 'field' }, h('div', { class: 'field-label', text: o.label }), row), set };
 }
@@ -166,6 +170,7 @@ export function tabs(o: { items: Array<{ id: string; label: string; icon?: strin
     bar.appendChild(b);
     return b;
   });
+  const sync = rovingGroup(bar, () => btns, () => btns.find((b) => b.dataset.id === cur));
   const select = (id: string) => {
     cur = id;
     for (const b of btns) {
@@ -174,6 +179,7 @@ export function tabs(o: { items: Array<{ id: string; label: string; icon?: strin
       b.setAttribute('aria-selected', String(on));
       if (on) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     }
+    sync();
   };
   select(o.value);
   return { el: bar, select, current: () => cur };
@@ -197,8 +203,12 @@ export function meter(o: { label: string; icon?: string; value: number; max?: nu
     const pct = Math.max(0, Math.min(100, (v / max) * 100));
     fill.style.width = `${pct}%`;
     el.setAttribute('aria-valuenow', String(Math.round(v)));
-    el.dataset.level = pct < 20 ? 'critical' : pct < 40 ? 'low' : pct < 70 ? 'ok' : 'good';
-    setText(val, text ?? `${Math.round(pct)}`);
+    const level = pct < 20 ? 'critical' : pct < 40 ? 'low' : pct < 70 ? 'ok' : 'good';
+    el.dataset.level = level;
+    // never colour alone: low and critical add a word (and the stripes in CSS); screen readers hear the level for every value
+    const word = level === 'critical' ? 'Critical' : level === 'low' ? 'Low' : '';
+    el.setAttribute('aria-valuetext', `${Math.round(pct)} percent, ${level === 'good' ? 'good' : level === 'ok' ? 'fine' : word.toLowerCase()}`);
+    setText(val, text ?? (word ? `${Math.round(pct)} ${word}` : `${Math.round(pct)}`));
   };
   set(o.value);
   return { el, set };
@@ -234,7 +244,7 @@ export function panel(o: { title: string; onClose?: () => void; className?: stri
   const handle = h('div', { class: 'sheet-handle', attrs: { 'aria-hidden': 'true' } });
   const header = h('div', { class: 'panel-header' }, title, h('div', { class: 'panel-actions' }, sizeBtn, closeBtn));
   const body = h('div', { class: 'panel-body' });
-  const el = h('section', { class: ['panel', o.className], role: 'dialog', ariaLabel: o.title }, handle, header, body);
+  const el = h('section', { class: ['panel', o.className], role: 'dialog', ariaLabel: o.title, tabIndex: -1 }, handle, header, body);
   shieldWorld(el);
 
   // drag the handle to change sheet height (portrait only)
@@ -256,8 +266,26 @@ export function panel(o: { title: string; onClose?: () => void; className?: stri
     sizeBtn.title = up ? 'Expand panel' : 'Shrink panel';
     sizeBtn.classList.toggle('is-flipped', !up);
   };
-  const open = () => { el.hidden = false; toggleClass(el, 'is-open', true); };
-  const close = () => { toggleClass(el, 'is-open', false); el.hidden = true; };
+  // Keyboard users: focus moves into the panel when it opens and returns to the control that opened it when it closes.
+  let opener: HTMLElement | null = null;
+  const open = () => {
+    const wasOpen = !el.hidden;
+    if (!wasOpen) {
+      const kb = keyboardModality();
+      opener = currentOpener();
+      el.hidden = false;
+      toggleClass(el, 'is-open', true);
+      if (kb) el.focus({ preventScroll: true });
+    }
+  };
+  const close = () => {
+    if (el.hidden) return;
+    toggleClass(el, 'is-open', false);
+    el.hidden = true;
+    const back = opener;
+    opener = null;
+    restoreFocus(back, el);
+  };
   const unsub = onLayoutChange(() => setHeight(height));
   setHeight(height);
   el.hidden = true;
@@ -280,16 +308,26 @@ export function modal(o: { title: string; onClose?: () => void; wide?: boolean }
   const body = h('div', { class: 'modal-body' });
   const footer = h('div', { class: 'modal-footer' });
   const backdrop = h('div', { class: 'modal-backdrop' });
-  const close = () => { backdrop.remove(); document.removeEventListener('keydown', onKey); o.onClose?.(); };
-  // Only the top-most modal reacts to Esc (stacked modals register one listener each on document).
+  const opener = currentOpener();
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    backdrop.remove();
+    document.removeEventListener('keydown', onKey);
+    o.onClose?.();
+    restoreFocus(opener, backdrop); // back to the control that opened it (unless the close handler already moved focus elsewhere)
+  };
+  // Only the top-most modal reacts to Esc and Tab (stacked modals register one listener each on document); Tab stays inside it.
   const onKey = (e: KeyboardEvent) => {
-    if (e.key !== 'Escape') return;
+    if (e.key !== 'Escape' && e.key !== 'Tab') return;
     const all = document.querySelectorAll('.modal-backdrop');
     if (all[all.length - 1] !== backdrop) return;
+    if (e.key === 'Tab') { trapTab(box, e); return; }
     e.stopImmediatePropagation();
     close();
   };
-  const box = h('div', { class: ['modal', o.wide && 'modal-wide'], role: 'dialog', ariaLabel: o.title, attrs: { 'aria-modal': 'true' } },
+  const box = h('div', { class: ['modal', o.wide && 'modal-wide'], role: 'dialog', ariaLabel: o.title, tabIndex: -1, attrs: { 'aria-modal': 'true' } },
     h('div', { class: 'modal-header' }, h('h2', { text: o.title }), button({ icon: 'close', iconOnly: true, label: 'Close', variant: 'ghost', small: true, onClick: close })),
     body, footer);
   backdrop.appendChild(box);

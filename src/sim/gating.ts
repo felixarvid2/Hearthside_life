@@ -58,7 +58,7 @@ export function interactionStageReason(def: Pick<InteractionDef, 'ages' | 'behav
   if (def.behavior === 'planEvent') return 'Only adults can plan gatherings.';
   switch (p.lifeStage) {
     case 'baby': return `${p.firstName} is a baby and needs looking after.`;
-    case 'toddler': return `${p.firstName} is too little to do that.`;
+    case 'toddler': return def.behavior === 'poolSwim' ? `${p.firstName} is too little to swim. Toddlers can paddle at the pool edge with a grown-up watching.` : `${p.firstName} is too little to do that.`;
     case 'child': return `${p.firstName} is too young for that.`;
     case 'teen': return 'Only adults can do that.';
     default: return 'Not at this stage of life.';

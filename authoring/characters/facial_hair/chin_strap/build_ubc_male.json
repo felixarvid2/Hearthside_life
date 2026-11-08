@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/chin_strap__ubc_male.glb",
+ "hair": "chin_strap",
+ "head_base_z": 1.6,
+ "inside_head_verts": 250,
+ "roots": 110,
+ "secs": 2.3,
+ "src_tris": 720,
+ "tris": 1132,
+ "verts": 1419,
+ "z": [
+  1.562,
+  1.706
+ ]
+}

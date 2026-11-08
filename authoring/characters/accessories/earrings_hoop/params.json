@@ -1,0 +1,32 @@
+{
+ "id": "earrings_hoop",
+ "label": "Hoop earrings",
+ "slot": "earrings",
+ "category": "accessory",
+ "kind": "earrings_hoop",
+ "tags": [
+  "jewellery"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_EarringsHoop"
+   ],
+   "default": "#d4af37",
+   "palette": [
+    "#d4af37",
+    "#c0c0c0",
+    "#b87333",
+    "#2f2f33",
+    "#e5e4e2",
+    "#8c7853"
+   ],
+   "metallic": 0.35,
+   "roughness": 0.35
+  }
+ ],
+ "layer": 3,
+ "conflicts": []
+}

@@ -44,13 +44,13 @@ describe('opening meshes', () => {
       expect(box.min.x, o.id).toBeGreaterThanOrEqual(-o.width / 2 - 1e-6);
       expect(box.max.x, o.id).toBeLessThanOrEqual(o.width / 2 + 1e-6);
       expect(box.min.y, o.id).toBeGreaterThanOrEqual(-1e-6 + (o.kind === 'door' ? 0 : c.bottom - 0.2));
-      expect(box.max.y, o.id).toBeLessThanOrEqual(c.top + 0.1);
+      expect(box.max.y, o.id).toBeLessThanOrEqual(c.top + 0.25);
       expect(box.max.y, o.id).toBeGreaterThan(c.top);
       expect(Math.abs(box.min.z), o.id).toBeLessThan(0.15);
       expect(box.max.z, o.id).toBeGreaterThan(WALL_THICKNESS / 2);
       const ms = meshes(g);
       expect(ms.length, o.id).toBeGreaterThanOrEqual(2);
-      expect(ms.length, o.id).toBeLessThanOrEqual(5);
+      expect(ms.length, o.id).toBeLessThanOrEqual(14);
       for (const m of ms) expect(m.geometry.getAttribute('position').count, `${o.id}/${m.name}`).toBeGreaterThan(0);
     }
   });
@@ -67,8 +67,8 @@ describe('opening meshes', () => {
       } else {
         expect(leaf, o.id).toBeDefined();
         expect(leaf?.parent, o.id).toBe(g);
-        // hinge on the frame edge at -x
-        expect(leaf?.position.x ?? 0, o.id).toBeLessThan(-0.25);
+        // swinging leaves hinge on the frame edge at -x; sliding, pocket, barn and roll-up leaves have their own pivots
+        if (!o.style.motion || o.style.motion === 'swing') expect(leaf?.position.x ?? 0, o.id).toBeLessThan(-0.25);
       }
     }
   });

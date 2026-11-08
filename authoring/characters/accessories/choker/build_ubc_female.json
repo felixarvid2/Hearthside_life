@@ -1,0 +1,9 @@
+{
+ "accessory": "choker",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/choker__ubc_female.glb",
+ "kind": "choker",
+ "secs": 1.0,
+ "tris": 280,
+ "verts": 140
+}

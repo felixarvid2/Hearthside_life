@@ -1,0 +1,51 @@
+{
+ "id": "pendant",
+ "label": "Pendant",
+ "slot": "neck",
+ "category": "accessory",
+ "kind": "pendant",
+ "tags": [
+  "jewellery"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Pendant"
+   ],
+   "default": "#d4af37",
+   "palette": [
+    "#d4af37",
+    "#c0c0c0",
+    "#b87333",
+    "#2f2f33",
+    "#e5e4e2",
+    "#8c7853"
+   ],
+   "metallic": 0.35,
+   "roughness": 0.35
+  },
+  {
+   "id": "detail",
+   "label": "Pendant",
+   "materials": [
+    "M_PendantDetail"
+   ],
+   "default": "#f2efe6",
+   "palette": [
+    "#f2efe6",
+    "#c94f4f",
+    "#3f6fa8",
+    "#5c8a5a",
+    "#9b5de5",
+    "#2f2f33"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": [],
+ "height": 0.05,
+ "sag": 0.05
+}

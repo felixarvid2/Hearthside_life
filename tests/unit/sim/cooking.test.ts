@@ -33,7 +33,7 @@ describe('cooking chain', () => {
       return a?.interactionId === 'eatMeal';
     }, 4 * 60 * 2);
     expect(stages).toEqual([0, 1, 2]);
-    expect(funds(h)).toBe(start - 1200);
+    expect(funds(h)).toBe(start - 600);
     expect(groceries(h)).toHaveLength(1);
     const items = Object.values(h.holder.state.items);
     expect(items).toHaveLength(1);
@@ -90,7 +90,7 @@ describe('cooking chain', () => {
     runTicks(h, 8);
     h.sim.cancel(w.mira, id2);
     runUntil(h, () => !head(h, w.mira), 10);
-    expect(funds(h)).toBe(start - 1200);
+    expect(funds(h)).toBe(start - 600);
     expect(groceries(h)).toHaveLength(1);
     expect(Object.keys(h.holder.state.items)).toHaveLength(0);
     expect(h.sim.reservations()).toEqual([]);
@@ -105,7 +105,7 @@ describe('cooking chain', () => {
     const h2 = harness(cloneState(h.holder.state), h.content);
     h2.sim.rebuild();
     runUntil(h2, () => Object.keys(h2.holder.state.items).length > 0, 4 * 60);
-    expect(funds(h2)).toBe(start - 1200);
+    expect(funds(h2)).toBe(start - 600);
     expect(groceries(h2)).toHaveLength(1);
   });
 
@@ -113,7 +113,7 @@ describe('cooking chain', () => {
     const { w, h } = kitchen();
     Object.values(h.holder.state.households).find((x) => x.isPlayable)!.funds = 500;
     const r = h.sim.queue(w.mira, { interactionId: 'cookMeal', target: { kind: 'object', objectId: w.objects.fridge!.id, slotId: null } });
-    expect(r).toEqual({ ok: false, reason: 'Not enough money for groceries ($12.00).' });
+    expect(r).toEqual({ ok: false, reason: 'Not enough money for groceries ($6.00).' });
   });
 
   it('other hungry household members eat leftover portions autonomously', () => {
@@ -176,7 +176,7 @@ describe('cooking chain', () => {
     const { w, h } = kitchen();
     Object.values(h.holder.state.households).find((x) => x.isPlayable)!.funds = 100;
     const opt = h.sim.options(w.mira, { kind: 'object', objectId: w.objects.fridge!.id, slotId: null }).find((o) => o.interactionId === 'cookMeal')!;
-    expect(opt.reason).toBe('Not enough money for groceries ($12.00).');
+    expect(opt.reason).toBe('Not enough money for groceries ($6.00).');
   });
 
   it('a meal spoiling while someone walks to it gives the same result with a save/load on any tick', () => {

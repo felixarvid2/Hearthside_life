@@ -1,0 +1,9 @@
+{
+ "accessory": "bucket_hat",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/bucket_hat__ubc_male.glb",
+ "kind": "bucket_hat",
+ "secs": 0.7,
+ "tris": 420,
+ "verts": 225
+}

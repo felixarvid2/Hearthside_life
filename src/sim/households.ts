@@ -11,13 +11,15 @@
 // costs the first week as a deposit and replaces the property tax on the weekly bill; buying costs the asking price. An
 // owned home that is left is sold for 80 % of its value (the furniture stays with the house).
 
+import { formatMoney } from '../core/money';
 import { addFeed, isProcessed, transact } from '../core/state';
-import type { Cents, Household, Id, Lot, Person, WorldState } from '../core/types';
+import type { Cents, Household, Id, Lot, Person, PlacedObject, WorldState } from '../core/types';
 import { ensureLotBuilt } from '../world/lotBuilders';
 import { beginLightShift, shiftOn } from './careers';
 import { dayIndex } from '../core/clock';
 import type { SimCtx } from './context';
 import { clamp, lotLoc } from './context';
+import { ownsObject, saleValue } from '../building/plans';
 import { homeLotValue } from './economy';
 import { activeEvents } from './events';
 import { activateLot, activeTrip, startTrip, travelProblem } from './lotTravel';
@@ -78,7 +80,7 @@ export function switchPreview(ctx: SimCtx, householdId: Id): SwitchPreview {
   const fromBrief = householdBrief(state, from);
   if (!to) return { ok: false, reason: reason ?? 'There is no such household.', from: fromBrief, to: null, consequences: [] };
   const toBrief = householdBrief(state, to);
-  const money = (c: Cents) => `$${(c / 100).toFixed(2)}`;
+  const money = formatMoney;
   const consequences = [
     `You will play the ${to.name} household (${toBrief.memberNames.join(', ')}). They are ${toBrief.where.toLowerCase()}; you start at ${toBrief.homeLotName ?? 'their home'}, and anyone away at work or elsewhere in town is called home unless a shift is running.`,
     `The ${from.name} household (${fromBrief.memberNames.join(', ')}) will no longer take your orders. They are simulated lightly: they follow a daily plan between home, work and the public venues, their jobs pay once per shift and their weekly bills are paid automatically from their own funds. They only do detailed things, such as cooking or chatting, while you are on the same lot.`,
@@ -147,6 +149,19 @@ export function switchHousehold(ctx: SimCtx, householdId: Id): { ok: true } | { 
 /** Share of its value an owned home sells for when the household moves out. */
 export const SALE_RATE = 0.8;
 
+/** What happens to the furniture of the home that is left: stays (default), goes with the household into its inventory, or is sold. */
+export type FurnitureChoice = 'leave' | 'take' | 'sell';
+export interface MoveOptions { furniture?: FurnitureChoice }
+
+export interface FurnitureSummary {
+  /** Movable pieces the household owns in the home it leaves (stairs and planted beds stay). */
+  count: number;
+  /** Their purchase price, and what selling them now returns. */
+  worth: Cents;
+  saleValue: Cents;
+  choice: FurnitureChoice;
+}
+
 export interface MovePreview {
   ok: boolean;
   reason?: string;
@@ -158,6 +173,8 @@ export interface MovePreview {
   /** Money in from selling an owned home that is left. */
   proceeds: Cents;
   lines: string[];
+  /** The furniture of the old home and the choice this preview is for. */
+  furniture: FurnitureSummary;
 }
 
 /** True when nobody lives at the lot. */
@@ -165,11 +182,28 @@ export function isVacant(state: WorldState, lot: Lot): boolean {
   return lot.kind === 'residential' && !Object.values(state.households).some((h) => h.homeLotId === lot.id);
 }
 
-export function movePreview(ctx: SimCtx, lotId: Id): MovePreview {
+/** The pieces of furniture in `old` that belong to the household and can leave with it (not stairs, not planted beds). */
+export function movableFurniture(ctx: Pick<SimCtx, 'state' | 'content'>, hh: Household, old: Lot | undefined): PlacedObject[] {
+  if (!old) return [];
+  return Object.values(old.objects).filter((o) => {
+    const def = ctx.content.objects[o.defId];
+    return ownsObject(old, o, hh.id) && !def?.stair && !o.garden?.crop && !o.snowman;
+  }).sort((a, b) => (a.id < b.id ? -1 : 1));
+}
+
+function furnitureSummary(ctx: SimCtx, hh: Household, old: Lot | undefined, choice: FurnitureChoice): FurnitureSummary {
+  const list = movableFurniture(ctx, hh, old);
+  return { count: list.length, worth: list.reduce((a, o) => a + o.purchasePrice, 0), saleValue: list.reduce((a, o) => a + saleValue(ctx.state, o), 0), choice };
+}
+
+export function movePreview(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): MovePreview {
   const state = ctx.state;
   const hh = state.households[state.activeHouseholdId]!;
   const lot = state.lots[lotId];
-  const none = (reason: string): MovePreview => ({ ok: false, reason, lotId, mode: null, cost: 0, proceeds: 0, lines: [] });
+  const choice: FurnitureChoice = opts.furniture ?? 'leave';
+  const oldLot = hh.homeLotId ? state.lots[hh.homeLotId] : undefined;
+  const furniture = furnitureSummary(ctx, hh, oldLot, choice);
+  const none = (reason: string): MovePreview => ({ ok: false, reason, lotId, mode: null, cost: 0, proceeds: 0, lines: [], furniture });
   if (!lot) return none('There is no such home.');
   if (lot.kind !== 'residential') return none('Only homes can be lived in.');
   if (lot.id === hh.homeLotId) return none('You already live here.');
@@ -179,28 +213,34 @@ export function movePreview(ctx: SimCtx, lotId: Id): MovePreview {
   if (activeTrip(state)) return none('Wait until the trip is over.');
   const old = hh.homeLotId ? state.lots[hh.homeLotId] : undefined;
   const sells = !!old && old.ownerHouseholdId === hh.id;
-  const proceeds = sells ? Math.round(homeLotValue(state, hh.id) * SALE_RATE) : 0;
+  // Furniture that leaves with the household (taken or sold) no longer counts toward the sale of the house.
+  const leaves = choice === 'leave' ? 0 : furniture.worth;
+  const proceeds = sells ? Math.round(Math.max(0, homeLotValue(state, hh.id) - leaves) * SALE_RATE) : 0;
+  const furnitureCash = choice === 'sell' ? furniture.saleValue : 0;
   const cost = mode === 'rent' ? lot.rent! : lot.price!;
-  const money = (c: Cents) => `$${(c / 100).toFixed(2)}`;
+  const money = formatMoney;
   const lines = [
     mode === 'rent'
       ? `${lot.name} costs ${money(cost)} a week in rent. The first week is paid now and the rent replaces the property tax on the weekly bill.`
       : `${lot.name} costs ${money(cost)}. You will own it, and pay property tax on it.`,
-    sells ? `Your home ${old!.name} is sold for ${money(proceeds)} (${Math.round(SALE_RATE * 100)} % of its value). The furniture stays with the house.` : old ? `You hand ${old.name} back; it becomes available again.` : '',
+    sells ? `Your home ${old!.name} is sold for ${money(proceeds)} (${Math.round(SALE_RATE * 100)} % of its value).` : old ? `You hand ${old.name} back; it becomes available again.` : '',
+    furniture.count === 0 ? '' : choice === 'take' ? `Your ${furniture.count} pieces of furniture go with you into the household inventory; place them in Buy mode.`
+      : choice === 'sell' ? `Your ${furniture.count} pieces of furniture are sold for ${money(furnitureCash)}.`
+        : `Your ${furniture.count} pieces of furniture stay in the house${sells ? ' (they are part of the sale)' : ''}.`,
     'Everyone who is with you travels there (20 to 40 minutes); anyone at work comes home to the new place.',
   ].filter(Boolean);
-  if (hh.funds + proceeds < cost && !state.settings.unlimitedFunds) return { ok: false, reason: `Not enough household funds (${money(cost)} needed).`, lotId, mode, cost, proceeds, lines };
+  if (hh.funds + proceeds + furnitureCash < cost && !state.settings.unlimitedFunds) return { ok: false, reason: `Not enough household funds (${money(cost)} needed).`, lotId, mode, cost, proceeds, lines, furniture };
   const here = hh.memberIds.filter((id) => { const p = state.people[id]; return !!p && !!lotLoc(p); });
   if (here.length > 0) {
     const tp = travelProblem(ctx, here, lot.id);
-    if (tp) return { ok: false, reason: tp, lotId, mode, cost, proceeds, lines };
+    if (tp) return { ok: false, reason: tp, lotId, mode, cost, proceeds, lines, furniture };
   }
-  return { ok: true, lotId, mode, cost, proceeds, lines };
+  return { ok: true, lotId, mode, cost, proceeds, lines, furniture };
 }
 
 /** Moves the active household into an empty home (see the header). Money goes through transact with once-only occurrences. */
-export function moveHousehold(ctx: SimCtx, lotId: Id): { ok: true } | { ok: false; reason: string } {
-  const preview = movePreview(ctx, lotId);
+export function moveHousehold(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): { ok: true } | { ok: false; reason: string } {
+  const preview = movePreview(ctx, lotId, opts);
   if (!preview.ok || !preview.mode) return { ok: false, reason: preview.reason ?? 'That move is not possible.' };
   const state = ctx.state;
   const hh = state.households[state.activeHouseholdId]!;
@@ -218,6 +258,24 @@ export function moveHousehold(ctx: SimCtx, lotId: Id): { ok: true } | { ok: fals
   const pay = transact(state, ctx.events, hh.id, -preview.cost, preview.mode === 'rent' ? 'bill' : 'purchase',
     preview.mode === 'rent' ? `Rent deposit: ${lot.name}` : `Bought ${lot.name}`, { occurrence: `${tag}:cost` });
   if (!pay.ok) return { ok: false, reason: pay.reason };
+  // The furniture leaves first, so the house is sold without it (taken: into the inventory; sold: paid once).
+  if (old && preview.furniture.choice !== 'leave') {
+    for (const o of movableFurniture(ctx, hh, old)) {
+      if (preview.furniture.choice === 'take') {
+        const object = JSON.parse(JSON.stringify(o)) as PlacedObject;
+        delete object.supportId;
+        object.ownerHouseholdId = hh.id;
+        hh.inventory.push({ object, storedAt: ctx.now });
+      }
+      delete old.objects[o.id];
+    }
+    // Anything that rested on a piece that left now rests on nothing.
+    for (const o of Object.values(old.objects)) if (o.supportId && !old.objects[o.supportId]) delete o.supportId;
+    if (preview.furniture.choice === 'sell' && preview.furniture.saleValue > 0) {
+      transact(state, ctx.events, hh.id, preview.furniture.saleValue, 'sale', `Sold the furniture of ${old.name}`, { occurrence: `${tag}:furniture` });
+    }
+    ctx.nav.invalidate(old.id);
+  }
   if (preview.proceeds > 0 && old) {
     transact(state, ctx.events, hh.id, preview.proceeds, 'sale', `Sold ${old.name}`, { occurrence: `${tag}:sale` });
   }

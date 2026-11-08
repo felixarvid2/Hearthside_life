@@ -3,6 +3,7 @@
 // head of their queue. They face each other for the social's duration. The outcome is resolved ONCE at
 // apply with the world rng: acceptance = base + relationship + mood + traits - spam dampening.
 
+import { createGiftItem, giftLine, giftOutcome, giftProblem, giftReaction } from './gifts';
 import { charismaAcceptance } from '../content/skillEffects';
 import type { SocialDef } from '../content/types';
 import { facingTo } from '../core/geometry';
@@ -10,6 +11,7 @@ import { isAdult, romanceInterest } from '../core/relations';
 import { addFeed, transact } from '../core/state';
 import type { ActionInstance, Person, Relationship } from '../core/types';
 import { endAction } from './actions';
+import { nearbyObjectWithTag } from './furnishings';
 import { behaviorFor } from './behaviors';
 import type { SimCtx } from './context';
 import { clamp, householdOf, lotLoc, setThought, socialDef, venueTypeOf } from './context';
@@ -24,9 +26,9 @@ import {
 } from './relationships';
 import { personKey } from './reservations';
 import type { Behavior, Step } from './steps';
-import { canPlanEvent, noteSocial, planEventFromSocial, runningEventOf } from './events';
+import { canPlanEvent, noteGroup, noteSocial, planEventFromSocial, runningEventOf } from './events';
 import {
-  ANGRY_MOOD, JEALOUSY_FRIENDSHIP, JEALOUSY_RIVAL_FRIENDSHIP, JEALOUSY_TRUST, ROMANCE_MIN_MOOD, SOCIAL_ACCEPT_MAX,
+  ANGRY_MOOD, GROUP_CHAT_EXTRAS, GROUP_CHAT_RADIUS, GROUP_CHAT_SIDE_WEIGHT, JEALOUSY_FRIENDSHIP, JEALOUSY_RIVAL_FRIENDSHIP, JEALOUSY_TRUST, ROMANCE_MIN_MOOD, SOCIAL_ACCEPT_MAX,
   SOCIAL_ACCEPT_MIN, SOCIAL_RECENT_DECAY_MINUTES, SOCIAL_SPAM_PENALTY, SOCIAL_WAIT_MINUTES, TAKEN_PENALTY, WITNESS_RADIUS,
   LIBRARY_LOUD_CATEGORIES, LIBRARY_LOUD_PENALTY,
 } from './tuning';
@@ -87,6 +89,7 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
   const r = def.requires;
   const stageReason = socialStageReason(def, actor, target);
   if (stageReason) return stageReason;
+  if (r.objectTag && !nearbyObjectWithTag(ctx, actor, r.objectTag)) return `Needs a ${r.objectTag.replace(/-/g, ' ')}.`;
   if (r.otherHousehold && actor.householdId === target.householdId) return `${target.firstName} already lives here.`;
   if (r.sameHousehold && actor.householdId !== target.householdId) return `${target.firstName} doesn't live here.`;
   if (r.notStatus && bond && r.notStatus.includes(bond.status)) return `Already ${statusLabel(bond.status, true)}.`;
@@ -115,6 +118,7 @@ export function socialRequirementReason(ctx: SimCtx, actor: Person, target: Pers
       return 'Nothing to make up for.';
     }
   }
+  if (def.id === 'groupChat' && groupCircle(ctx, actor, target).length === 0) return 'Needs at least three people together.';
   if (def.cost !== undefined && (ctx.state.households[actor.householdId]?.funds ?? 0) < def.cost && !ctx.state.settings.unlimitedFunds) {
     return `Not enough money ($${(def.cost / 100).toFixed(0)}).`;
   }
@@ -227,15 +231,74 @@ function witnessCheating(ctx: SimCtx, actor: Person, target: Person, def: Social
   }
 }
 
+
+/**
+ * Who a group chat started by `actor` toward `target` pulls in: people on the same lot and level within
+ * GROUP_CHAT_RADIUS of the speaker whom the speaker has met, who are awake, not little ones and free to talk. Nearest first,
+ * at most GROUP_CHAT_EXTRAS.
+ */
+export function groupCircle(ctx: SimCtx, actor: Person, target: Person): Person[] {
+  const la = lotLoc(actor);
+  if (!la) return [];
+  const out: Array<{ p: Person; d: number }> = [];
+  for (const o of Object.values(ctx.state.people)) {
+    if (o.id === actor.id || o.id === target.id) continue;
+    const lo = lotLoc(o);
+    if (!lo || lo.lotId !== la.lotId || lo.level !== la.level || lo.posture === 'lying') continue;
+    if (o.lifeStage === 'baby' || o.lifeStage === 'toddler') continue;
+    const d = Math.hypot(lo.x - la.x, lo.z - la.z);
+    if (d > GROUP_CHAT_RADIUS || peekRel(ctx.state, actor.id, o.id).familiarity <= 0) continue;
+    if (personAvailable(ctx, o, actor) !== null) continue;
+    out.push({ p: o, d });
+  }
+  return out.sort((a, b) => a.d - b.d || (a.p.id < b.p.id ? -1 : 1)).slice(0, GROUP_CHAT_EXTRAS).map((x) => x.p);
+}
+
+/**
+ * Resolves a group chat once: one acceptance roll for the speaker and the person addressed, then every pair in the
+ * circle changes (the speaker's pairs fully, the others by GROUP_CHAT_SIDE_WEIGHT), everyone gains the need and moodlets,
+ * and running events count it as one chat and all pairs mingling.
+ */
+export function resolveGroupChat(ctx: SimCtx, actor: Person, target: Person, extras: Person[], def: SocialDef): boolean {
+  const group = [actor, target, ...extras];
+  const accepted = ctx.rng.next() < socialAcceptance(ctx, actor, target, def);
+  const out = accepted ? def.success : def.failure;
+  for (const x of group) {
+    for (const y of group) {
+      if (x.id === y.id) continue;
+      const weight = x.id === actor.id || y.id === actor.id ? 1 : GROUP_CHAT_SIDE_WEIGHT;
+      applyRelDelta(ctx.state, x.id, y.id, x.id === actor.id ? out.actor : out.target, ctx.now, weight);
+    }
+  }
+  for (const x of group) {
+    if (out.social) changeNeed(ctx, x, 'social', out.social);
+    if (out.fun) changeNeed(ctx, x, 'fun', out.fun);
+    const m = x.id === actor.id ? out.actorMoodlet : out.targetMoodlet;
+    if (m) addMoodlet(ctx.content, x, m, ctx.now, def.id);
+  }
+  for (const x of group) for (const y of group) if (x.id !== y.id) refreshLabel(ctx.state, x.id, y.id);
+  const lines = accepted ? def.lines.success : def.lines.failure;
+  const line = `${fill(ctx.rng.pick(lines), actor, target)}${extras.length > 0 ? ` (${group.length} people)` : ''}`;
+  ctx.events.emit({ type: 'social', actorId: actor.id, targetId: target.id, socialId: def.id, accepted, line });
+  if (group.some((x) => householdOf(ctx, x)?.isPlayable)) addFeed(ctx.state, ctx.events, 'social', line, actor.id);
+  noteGroup(ctx, group, accepted);
+  return accepted;
+}
+
 /** Resolves a social once: relationships, needs, moodlets, memories, status, feed line and event. */
-export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: SocialDef): boolean {
+export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: SocialDef, opts: { giftId?: string } = {}): boolean {
   const relA = ensureRel(ctx.state, actor.id, target.id);
   decayRecent(relA, ctx.now, SOCIAL_RECENT_DECAY_MINUTES);
   const recent = relA.recent[def.id] ?? 0;
   const chance = socialAcceptance(ctx, actor, target, def);
   let accepted = ctx.rng.next() < chance;
   // A gift is paid for when it is accepted; if the money is gone by now it is simply not given.
-  if (accepted && def.cost) {
+  const gift = def.id === 'giveGift' ? ctx.content.gifts?.[opts.giftId ?? 'trinket'] : undefined;
+  const reaction = gift ? giftReaction(target, gift) : null;
+  if (accepted && gift) {
+    const paid = transact(ctx.state, ctx.events, actor.householdId, -gift.price, 'gift', `${gift.name}: ${target.firstName}`, { occurrence: `gift:${actor.id}:${target.id}:${Math.round(ctx.now)}` });
+    if (!paid.ok) accepted = false;
+  } else if (accepted && def.cost) {
     const paid = transact(ctx.state, ctx.events, actor.householdId, -def.cost, 'gift', `${def.name}: ${target.firstName}`, { occurrence: `gift:${actor.id}:${target.id}:${Math.round(ctx.now)}` });
     if (!paid.ok) accepted = false;
   }
@@ -243,7 +306,8 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   // Consent: somebody who is not interested (or not open to it) is never moved by a romantic advance. The advance is
   // declined kindly, and from then on the option stays off for this pair (no pestering).
   if (romantic && !def.unilateral && !romanceInterest(target, actor)) relA.romanceBlocked = true;
-  const out = accepted ? def.success : def.failure;
+  const loving = !!commitmentOf(ctx.state, target.id) || relA.romance >= 20;
+  const out = accepted ? (gift && reaction ? giftOutcome(def.success, reaction.verdict, loving) : def.success) : def.failure;
   const dampen = 1 / (1 + recent);
   applyRelDelta(ctx.state, actor.id, target.id, { ...out.actor, familiarity: (out.actor.familiarity ?? 0) + 2 }, ctx.now, dampen);
   applyRelDelta(ctx.state, target.id, actor.id, { ...out.target, familiarity: (out.target.familiarity ?? 0) + 2 }, ctx.now, dampen);
@@ -276,12 +340,14 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   refreshLabel(ctx.state, actor.id, target.id);
   refreshLabel(ctx.state, target.id, actor.id);
   const lines = accepted ? def.lines.success : def.lines.failure;
-  const line = lines.length > 0 ? fill(ctx.rng.pick(lines), actor, target)
+  const line = accepted && gift && reaction ? giftLine(reaction.verdict, gift, actor.firstName, target.firstName, Math.round(ctx.now))
+    : lines.length > 0 ? fill(ctx.rng.pick(lines), actor, target)
     : accepted ? `${actor.firstName} and ${target.firstName}: ${def.name}.` : `${target.firstName} didn't respond well to ${actor.firstName}.`;
   ctx.events.emit({ type: 'social', actorId: actor.id, targetId: target.id, socialId: def.id, accepted, line });
   ctx.events.emit({ type: 'relationship', fromId: actor.id, toId: target.id, what: 'value' });
   if (householdOf(ctx, actor)?.isPlayable || householdOf(ctx, target)?.isPlayable) addFeed(ctx.state, ctx.events, 'social', line, actor.id);
   witnessCheating(ctx, actor, target, def, accepted);
+  if (accepted && gift) createGiftItem(ctx, actor, target, gift);
   if (accepted && def.startsEvent) planEventFromSocial(ctx, actor, target, def.startsEvent);
   if (accepted && def.effect) applySocialEffect(ctx, actor, target, def);
   noteSocial(ctx, actor, target, def, accepted);
@@ -304,11 +370,18 @@ function faceEachOther(a: Person, b: Person): void {
   lb.facing = facingTo(lb.x, lb.z, la.x, la.z);
 }
 
+/** The people who joined a group chat as listeners (besides the target). */
+function groupMembers(ctx: SimCtx, a: ActionInstance): Person[] {
+  const ids = typeof a.data.group === 'string' && a.data.group ? a.data.group.split(',') : [];
+  return ids.map((id) => ctx.state.people[id]).filter((o): o is Person => !!o);
+}
+
 function endListener(ctx: SimCtx, a: ActionInstance): void {
   const t = partnerOf(ctx, a);
-  if (!t) return;
-  const l = t.queue.find((x) => x.data.role === 'listen' && x.data.with === a.id);
-  if (l) endAction(ctx, t, l, 'done', null);
+  for (const who of [...(t ? [t] : []), ...groupMembers(ctx, a)]) {
+    const l = who.queue.find((x) => x.data.role === 'listen' && x.data.with === a.id);
+    if (l) endAction(ctx, who, l, 'done', null);
+  }
 }
 
 /** Social interactions (actor side) and the passive listener (data.role = 'listen'). */
@@ -321,6 +394,10 @@ export const socialBehavior: Behavior = {
     if (!t || t.id === p.id) return 'Choose someone to talk to.';
     const req = socialRequirementReason(ctx, p, t, def);
     if (req) return req;
+    if (def.id === 'giveGift' && typeof a.data.gift === 'string') {
+      const why = giftProblem(ctx, p, t, a.data.gift);
+      if (why) return why;
+    }
     return personAvailable(ctx, t, p);
   },
   reserve(ctx, _p, a) {
@@ -365,6 +442,20 @@ export const socialBehavior: Behavior = {
     ctx.events.emit({ type: 'action.started', personId: t.id, actionId: l.id, interactionId: l.interactionId });
     ctx.events.emit({ type: 'person.changed', personId: t.id, what: 'queue' });
     faceEachOther(p, t);
+    if (a.interactionId === 'groupChat') {
+      // The circle joins: everyone nearby who is free listens, and takes part when it is resolved.
+      const joined: string[] = [];
+      for (const o of groupCircle(ctx, p, t)) {
+        const lo = makeAction(ctx, o, { interactionId: a.interactionId, target: { kind: 'person', personId: p.id }, data: { role: 'listen', with: a.id } }, 'chain');
+        lo.phase = 'perform';
+        o.queue = o.queue.filter((x, i) => !(x.source === 'autonomy' && !(i === 0 && x.phase !== 'queued')));
+        o.queue.unshift(lo);
+        joined.push(o.id);
+        ctx.events.emit({ type: 'action.started', personId: o.id, actionId: lo.id, interactionId: lo.interactionId });
+        ctx.events.emit({ type: 'person.changed', personId: o.id, what: 'queue' });
+      }
+      a.data.group = joined.join(',');
+    }
     return null;
   },
   begin(ctx, p, a) {
@@ -394,7 +485,10 @@ export const socialBehavior: Behavior = {
     if (a.data.role === 'listen') return;
     const t = partnerOf(ctx, a);
     const def = socialDef(ctx, a.interactionId);
-    if (t && def) a.data.accepted = resolveSocial(ctx, p, t, def);
+    if (t && def && def.id === 'groupChat') {
+      const extras = groupMembers(ctx, a).filter((o) => o.queue[0]?.data.with === a.id);
+      a.data.accepted = resolveGroupChat(ctx, p, t, extras, def);
+    } else if (t && def) a.data.accepted = resolveSocial(ctx, p, t, def, typeof a.data.gift === 'string' ? { giftId: a.data.gift } : {});
     endListener(ctx, a);
   },
   end(ctx, _p, a) {

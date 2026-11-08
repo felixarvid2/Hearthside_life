@@ -1,0 +1,59 @@
+{
+ "id": "henley",
+ "label": "Henley",
+ "preset": null,
+ "category": "top",
+ "slot": "top",
+ "tags": [
+  "tee",
+  "long"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Henley"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.007,
+  "max": 0.022,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.012,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "v",
+    "depth": 0.05
+   },
+   "sleeve": 0.97,
+   "hem": {
+    "at": "hip",
+    "offset": 0.03
+   },
+   "force": true
+  }
+ }
+}

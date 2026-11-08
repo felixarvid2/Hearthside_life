@@ -22,7 +22,7 @@ import { hoursText, lotIsOpen, travelMinutes, venueInfo } from '../world/neighbo
 import { abortQueue } from './actions';
 import type { SimCtx } from './context';
 import { lotLoc } from './context';
-import { eventsOf } from './events';
+import { eventsOf, gatherAtVenue } from './events';
 import { entrySpots, homeLocation, placeOnLot, scatterSpots, takeOffLot, visitingLocation } from './places';
 import { insertAction, makeAction } from './queue';
 import { syncPresence } from './townlife';
@@ -52,7 +52,7 @@ function originOf(state: WorldState, p: Person): Lot | undefined {
 }
 
 /** Why these people cannot set out for the lot now, or null. Pure. */
-export function travelProblem(ctx: SimCtx, personIds: Id[], lotId: Id): string | null {
+export function travelProblem(ctx: SimCtx, personIds: Id[], lotId: Id, opts: { allowHosting?: boolean } = {}): string | null {
   const state = ctx.state;
   const lot = state.lots[lotId];
   if (!lot) return 'There is no such place.';
@@ -75,7 +75,7 @@ export function travelProblem(ctx: SimCtx, personIds: Id[], lotId: Id): string |
   }
   if (activeTrip(state)) return 'A trip is already under way.';
   if (people.every((p) => lotLoc(p)?.lotId === lotId)) return `Already at ${lot.name}.`;
-  const hosting = eventsOf(state).find((e) => e.householdId === hh.id && (e.status === 'invited' || e.status === 'running') && !AMBIENT_EVENTS.has(e.type));
+  const hosting = opts.allowHosting ? undefined : eventsOf(state).find((e) => e.householdId === hh.id && (e.status === 'invited' || e.status === 'running') && !AMBIENT_EVENTS.has(e.type));
   if (hosting) return `Finish or cancel "${hosting.title}" first.`;
   const from = originOf(state, people[0]!);
   const minutes = from ? travelMinutes(from, lot) : 20;
@@ -87,8 +87,8 @@ export function travelProblem(ctx: SimCtx, personIds: Id[], lotId: Id): string |
 }
 
 /** Sets people off for a lot (see the header). Nothing changes when this returns `ok: false`. */
-export function startTrip(ctx: SimCtx, personIds: Id[], lotId: Id): TripResult {
-  const problem = travelProblem(ctx, personIds, lotId);
+export function startTrip(ctx: SimCtx, personIds: Id[], lotId: Id, opts: { allowHosting?: boolean } = {}): TripResult {
+  const problem = travelProblem(ctx, personIds, lotId, opts);
   if (problem) return { ok: false, reason: problem };
   const state = ctx.state;
   const lot = state.lots[lotId]!;
@@ -207,6 +207,7 @@ export function activateLot(ctx: SimCtx, lotId: Id, arrivals: Person[]): Activat
   const entries = entrySpots(ctx, lot, arrivals.length);
   arrivals.forEach((p, i) => placeOnLot(ctx, p, lot, entries[Math.min(i, entries.length - 1)]!));
 
+  gatherAtVenue(ctx, lotId);
   if (fromId !== lotId) ctx.events.emit({ type: 'lot.activated', lotId, fromLotId: fromId });
   if (arrivals.length > 0) {
     ctx.events.emit({ type: 'travel', what: 'arrived', personIds: arrivals.map((p) => p.id), lotId });

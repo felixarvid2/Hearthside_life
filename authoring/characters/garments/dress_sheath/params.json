@@ -1,0 +1,68 @@
+{
+ "id": "dress_sheath",
+ "label": "Sheath dress",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "dress"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_DressSheath"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#3b4252",
+    "#5b3a3a",
+    "#2e4034",
+    "#6b5a45",
+    "#8c9aa8"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.011,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "scoop"
+   },
+   "sleeve": -0.12,
+   "hem": {
+    "at": "hip",
+    "offset": -0.04
+   },
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "hip",
+    "offset": -0.02
+   },
+   "length": 0.5,
+   "flare": 0.0,
+   "offset": 0.022,
+   "pencil": true
+  }
+ }
+}

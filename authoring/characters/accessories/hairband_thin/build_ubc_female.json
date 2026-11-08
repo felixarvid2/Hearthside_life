@@ -1,0 +1,9 @@
+{
+ "accessory": "hairband_thin",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/hairband_thin__ubc_female.glb",
+ "kind": "headband",
+ "secs": 0.5,
+ "tris": 336,
+ "verts": 168
+}

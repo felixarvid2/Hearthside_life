@@ -1,0 +1,9 @@
+{
+ "accessory": "belt_wide",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/belt_wide__ubc_male.glb",
+ "kind": "belt_wide",
+ "secs": 0.5,
+ "tris": 268,
+ "verts": 136
+}

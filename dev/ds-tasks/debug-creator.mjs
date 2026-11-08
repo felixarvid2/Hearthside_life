@@ -30,7 +30,7 @@ try {
   for (let i = 0; i < 80; i++) { try { const r = await fetch(`http://127.0.0.1:${PORT}/`); if (r.ok) break; } catch { /* wait */ } await sleep(250); }
   const browser = await chromium.launch({ ...launchOptions(), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
-  await context.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0 })); } catch { /* ignore */ } });
+  await context.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ } });
   const page = await context.newPage();
   page.on('console', (m) => { if (m.type() === 'error') console.log('console', m.text()); });
   await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
@@ -74,7 +74,7 @@ try {
   await page.waitForTimeout(300);
   await page.screenshot({ path: join(OUT, 'landscape-no-panel.png') });
   const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 720 } });
-  await ctx2.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0 })); } catch { /* ignore */ } });
+  await ctx2.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ } });
   const page2 = await ctx2.newPage();
   await page2.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });
   await page2.waitForFunction(() => window.hearthside?.ready === true, null, { timeout: 120000 });

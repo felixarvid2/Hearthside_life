@@ -71,11 +71,32 @@ npm run preview   # serve the production build locally
 | Delete (or Backspace) | Sell |
 | Ctrl+Z / Ctrl+Y (Cmd on macOS) | Undo / redo |
 
-Shortcuts are ignored while a text field has focus.
+Shortcuts are ignored while a text field has focus, and the camera keys (arrows, letters) leave a control alone when it was
+reached with Tab (a slider, a tab bar), so keyboard users can operate panels without moving the camera.
+
+### Keyboard only
+
+Everything outside the 3D world is reachable with Tab, Shift+Tab, Enter and Space: menus, the creator, panels and dialogs.
+Arrow keys, Home and End move between tabs, radio groups and swatches. Esc closes the hint, then panels and dialogs, and
+focus returns to the control that opened them; dialogs keep Tab inside. To use an object without pointing at it, open the
+person panel, choose the **Queue** tab and press **Choose an object** (or **Name's actions** for the person's own menu).
+
+## Help, hints and accessibility
+
+- **Help** (main menu and in-game Menu): a short how-to for each topic and the controls for touch and keyboard.
+- **Hints:** a small card the first time you reach a situation (creating a household, moving in, needs, the queue, Buy, Build,
+  jobs and money, relationships, the map, floors, saving). One at a time, never over a dialog. **Got it** or Esc marks it seen,
+  **Skip hints** turns them off. Settings > Help has the **Hints** switch and **Reset hints**. What you have seen is kept with
+  the other device settings (`hearthside.settings.v1`, per browser profile).
+- **Settings > Accessibility:** UI scale 90 to 150 %, High contrast, Reduce motion (on by default when the device asks for it).
+- Need bars say "Low" or "Critical" in words as well as stripes and colour; moods have an icon, a word and a border style.
+- Icon-only buttons have accessible names, tabs/menus/dialogs have roles, and notifications and the feed use a polite live
+  region. Touch targets are at least 44 px (checked by `npm run e2e:a11y`); text contrast meets WCAG AA (unit-tested in
+  `tests/unit/ui/contrast.test.ts`).
 
 ## Saving
 
-Saves are stored in IndexedDB in the browser. There are 5 named slots, plus an autosave and a last-known-good backup.
+Saves are stored in IndexedDB in the browser. There are 5 named slots, plus an autosave and a last-known-good backup. Every save carries a checksum, and each slot keeps its last three good versions: a damaged slot loads the newest good one and says so. If something unexpected goes wrong while playing, a recovery dialog offers Keep playing, Reload last autosave and Export diagnostic file.
 
 Browsers on phones can clear site storage, which removes saves. Use **Export** in the game menu to keep a copy of a save as JSON, and **Import** to restore it.
 
@@ -86,6 +107,7 @@ npm run typecheck      # tsc --noEmit
 npm test               # unit tests (Vitest)
 npm run content:check  # validates content definitions (tools/content-report.ts)
 npm run e2e            # end-to-end tests
+npm run e2e:a11y       # keyboard-only flows, accessible names, tap targets, scale/contrast, hints (Milestone 13)
 ```
 
 ## Project layout

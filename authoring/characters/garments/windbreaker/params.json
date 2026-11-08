@@ -1,0 +1,67 @@
+{
+ "id": "windbreaker",
+ "label": "Windbreaker",
+ "preset": null,
+ "category": "outer",
+ "slot": "outer",
+ "tags": [
+  "jacket",
+  "sport"
+ ],
+ "hides": [],
+ "layer": 2,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Windbreaker"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.02,
+  "max": 0.04,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.03,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "mock"
+   },
+   "sleeve": 1.0,
+   "hem": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "open_front": 0.0,
+   "force": true
+  },
+  "hood": {
+   "segments": 28,
+   "ring": 12,
+   "reach_deg": 110,
+   "collar_at": 0.1,
+   "collar": 0.014,
+   "thick": 0.04,
+   "drop": 0.15,
+   "rise": 0.025
+  }
+ }
+}

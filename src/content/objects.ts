@@ -37,6 +37,7 @@
 import type { FinishRegion, ObjectDef, ObjectSlot, ObjectStats, Swatch } from './types';
 import { dollars } from '../core/money';
 import { STAIR_OBJECTS } from './stairBasic';
+import { HANDMADE_POT, applyFurnishingUse } from './furnishingUse';
 import { M10_BUILDERS, M10_MODELS } from './objectsM10';
 
 type Vec3 = [number, number, number];
@@ -1583,11 +1584,11 @@ export type ObjectKit = typeof KIT;
 const M10_OBJECTS: ObjectDef[] = Object.values(M10_BUILDERS).flatMap((build) => build(KIT));
 
 /** Every buy-mode object definition (ready and in development). */
-export const OBJECTS: ObjectDef[] = [
+export const OBJECTS: ObjectDef[] = applyFurnishingUse([
   ...BEDS, ...BEDROOM, ...KITCHEN, ...SEATING_AND_TABLES, ...ELECTRONICS, ...BATHROOM, ...STUDY, ...DECOR,
   ...SEATING_2, ...TABLES_STORAGE_2, ...KITCHEN_2, ...BATHROOM_2, ...LIGHTING_2, ...DECOR_2,
   ...HOBBY_OBJECTS, ...KIDS_OBJECTS, ...OUTDOOR_OBJECTS, ...KITCHEN_3, ...ELECTRONICS_3, ...HOME_3, ...VENUE_OBJECTS, ...STAIR_OBJECTS, ...FAMILY_OBJECTS,
   ...M11_OBJECTS, ...M11_SKILLS_OBJECTS, ...M12_OUTDOOR_OBJECTS,
-  ...M10_OBJECTS,
-];
+  ...M10_OBJECTS, HANDMADE_POT,
+]);
 

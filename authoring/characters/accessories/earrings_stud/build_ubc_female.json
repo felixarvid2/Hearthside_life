@@ -1,0 +1,9 @@
+{
+ "accessory": "earrings_stud",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/earrings_stud__ubc_female.glb",
+ "kind": "earrings_stud",
+ "secs": 0.7,
+ "tris": 96,
+ "verts": 52
+}

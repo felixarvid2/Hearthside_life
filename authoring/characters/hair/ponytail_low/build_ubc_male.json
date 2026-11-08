@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/ponytail_low__ubc_male.glb",
+ "hair": "ponytail_low",
+ "head_base_z": 1.6,
+ "inside_head_verts": 939,
+ "roots": 180,
+ "secs": 6.2,
+ "src_tris": 40128,
+ "tris": 14383,
+ "verts": 5891,
+ "z": [
+  1.381,
+  1.82
+ ]
+}

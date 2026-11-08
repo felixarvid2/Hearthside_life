@@ -1,0 +1,57 @@
+{
+ "id": "shacket",
+ "label": "Overshirt",
+ "preset": null,
+ "category": "outer",
+ "slot": "outer",
+ "tags": [
+  "jacket"
+ ],
+ "hides": [],
+ "layer": 2,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Shacket"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.02,
+  "max": 0.04,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.024,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "v",
+    "depth": 0.08
+   },
+   "sleeve": 1.0,
+   "hem": {
+    "at": "hip",
+    "offset": 0.03
+   },
+   "open_front": 0.03,
+   "force": true
+  }
+ }
+}

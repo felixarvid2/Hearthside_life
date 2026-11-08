@@ -92,6 +92,7 @@ describe('households outside the player\'s control', () => {
     core.startNewGame('guided', premadeHouseholds(db)[0]!, 42);
     const s = core.state()!;
     s.settings.visitors = false;
+    s.settings.townLife = false; // jobs and moves would change who can pay
     s.schedule = [];
     const others = Object.values(s.households).filter((h) => !h.isPlayable);
     const rented = others.find((h) => s.lots[h.homeLotId!]!.rent !== undefined)!;

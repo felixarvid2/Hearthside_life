@@ -50,7 +50,9 @@ describe('tag capabilities', () => {
     }
     for (const id of ['stove-basic', 'counter-basic', 'table-dining-oak', 'bed-double-oak', 'toilet-basic']) expect(isCleanable(db.objects[id]!), id).toBe(true);
     // decor stays chore-free
-    for (const id of ['trash-can', 'lamp-floor-round', 'rug-rectangle', 'microwave', 'washing-machine']) expect(capabilityInteractions(db.objects[id]!), id).toEqual([]);
+    for (const id of ['trash-can', 'lamp-floor-round', 'rug-rectangle']) expect(capabilityInteractions(db.objects[id]!), id).toEqual([]);
+    // Milestone 13: the microwave and washer now work (they have interactions), so they wear out and can be repaired like any appliance
+    for (const id of ['microwave', 'washing-machine']) expect(isRepairable(db.objects[id]!), id).toBe(true);
   });
 
   it('bookcases offer skill books and every chore interaction carries an autonomy tag the traits can use', () => {

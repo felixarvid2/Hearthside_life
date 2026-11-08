@@ -6,6 +6,7 @@ import { button } from '../kit/components';
 import { h } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { progressBar } from '../kit/controls';
+import { bootProgress } from '../bootProgress';
 
 /** Original logo mark: a small house with a hearth glow. */
 export function logoMark(size = 56): HTMLElement {
@@ -23,10 +24,9 @@ export function createBootScreen(root: HTMLElement): BootScreen {
     h('div', { class: 'boot-card' }, logoMark(72), h('h1', { class: 'brand-title', text: 'Hearthside Life' }), h('p', { class: 'brand-tag', text: 'A cosy life on Willow Lane' }), bar.el));
   el.addEventListener('pointerdown', (e) => e.stopPropagation());
   root.appendChild(el);
-  const lines = ['Setting the table…', 'Watering the plants…', 'Fluffing the cushions…', 'Warming up the kettle…'];
-  let i = 0;
-  const timer = setInterval(() => { i = (i + 1) % lines.length; bar.set(null, lines[i]); }, 1800);
-  return { el, destroy: () => { clearInterval(timer); el.classList.add('is-leaving'); setTimeout(() => el.remove(), 250); } };
+  // Driven by the real loading steps (chunk and asset loads, see main.ts); indeterminate until the first report.
+  const off = bootProgress.subscribe((v, label) => bar.set(v, label));
+  return { el, destroy: () => { off(); el.classList.add('is-leaving'); setTimeout(() => el.remove(), 250); } };
 }
 
 /**

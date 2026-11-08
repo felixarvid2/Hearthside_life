@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/mustache_handlebar__ubc_female.glb",
+ "hair": "mustache_handlebar",
+ "head_base_z": 1.55,
+ "inside_head_verts": 125,
+ "roots": 60,
+ "secs": 2.4,
+ "src_tris": 2288,
+ "tris": 1797,
+ "verts": 1103,
+ "z": [
+  1.575,
+  1.607
+ ]
+}

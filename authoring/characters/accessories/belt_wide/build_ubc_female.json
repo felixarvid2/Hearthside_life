@@ -1,0 +1,9 @@
+{
+ "accessory": "belt_wide",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/belt_wide__ubc_female.glb",
+ "kind": "belt_wide",
+ "secs": 0.7,
+ "tris": 268,
+ "verts": 136
+}

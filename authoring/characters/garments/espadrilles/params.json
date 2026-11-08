@@ -1,0 +1,67 @@
+{
+ "id": "espadrilles",
+ "label": "Espadrilles",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "flats"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Espadrilles"
+   ],
+   "default": "#b9b4aa",
+   "palette": [
+    "#b9b4aa",
+    "#7a7a7a",
+    "#e8e2d6",
+    "#4a4a4a",
+    "#8a7560",
+    "#f2efe6"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_EspadrillesSole"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.013,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.009,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.05,
+   "force": true,
+   "vamp": true
+  },
+  "sole": 0.025,
+  "welt": 0.008
+ }
+}

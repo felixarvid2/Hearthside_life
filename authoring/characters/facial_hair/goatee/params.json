@@ -1,0 +1,41 @@
+{
+ "attachment": "skinned",
+ "clumps": 90,
+ "points": 4,
+ "length": 0.016,
+ "length_jitter": 0.2,
+ "volume": 0.003,
+ "part_offset": 0.0,
+ "back_flow": 0.0,
+ "gravity": 0,
+ "hairline_front": 0.8,
+ "hairline_back": 0.3,
+ "clump_width": 0.012,
+ "clump_flatness": 0.5,
+ "root_offset": 0.001,
+ "resolution_cm": 0.8,
+ "target_tris": 5000,
+ "profile_resolution": 2,
+ "cap": true,
+ "cap_offset": 0.0015,
+ "color_regions": [
+  {
+   "id": "hair",
+   "label": "Beard",
+   "materials": [
+    "M_Beard"
+   ],
+   "default": "#3a2418"
+  }
+ ],
+ "id": "goatee",
+ "label": "Goatee",
+ "tags": [
+  "beard"
+ ],
+ "beard": {
+  "mustache": true,
+  "chin": true,
+  "soul": true
+ }
+}

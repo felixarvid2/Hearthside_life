@@ -1,0 +1,63 @@
+{
+ "id": "skirt_flared",
+ "label": "Flared skirt",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "skirt"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SkirtFlared"
+   ],
+   "default": "#f4d6d6",
+   "palette": [
+    "#f4d6d6",
+    "#d6e4f4",
+    "#dff0d8",
+    "#f7ebc6",
+    "#e6dcf2",
+    "#f2f2f2"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.016,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.008,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "leg": -1.0,
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.38,
+   "flare": 0.7,
+   "offset": 0.02
+  }
+ }
+}

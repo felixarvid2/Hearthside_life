@@ -1,0 +1,49 @@
+{
+ "id": "crossbody_bag",
+ "label": "Crossbody bag",
+ "slot": "bag",
+ "category": "accessory",
+ "kind": "crossbody",
+ "tags": [
+  "bag"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_CrossbodyBag"
+   ],
+   "default": "#3a2a20",
+   "palette": [
+    "#3a2a20",
+    "#6b4428",
+    "#1f1f1f",
+    "#8c5a3c",
+    "#c8a27a",
+    "#5b5b5b"
+   ],
+   "metallic": 0.0,
+   "roughness": 0.6
+  },
+  {
+   "id": "detail",
+   "label": "Strap",
+   "materials": [
+    "M_CrossbodyBagDetail"
+   ],
+   "default": "#3a2a20",
+   "palette": [
+    "#3a2a20",
+    "#6b4428",
+    "#1f1f1f",
+    "#8c5a3c",
+    "#c8a27a",
+    "#5b5b5b"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": []
+}

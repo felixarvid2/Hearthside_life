@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { CAREER_EVENTS } from '../../../src/content/careerEvents';
+import { promotionDays } from '../../../src/content/careers';
 import { content } from '../../../src/content/index';
 import { careersForStage } from '../../../src/sim/careers';
 
@@ -54,8 +55,8 @@ describe('Milestone 11 career ladders', () => {
       expect(level.end).toBeLessThanOrEqual(1440);
       expect(level.promotion.performance).toBeGreaterThanOrEqual(-100);
       expect(level.promotion.performance).toBeLessThanOrEqual(100);
-      // The ladder follows the existing convention: the days requirement is the level's number.
-      expect(level.promotion.days ?? 0, `${id} level ${level.level} days worked`).toBe(level.level);
+      // The ladder follows the convention: the days requirement grows with the level (promotionDays).
+      expect(level.promotion.days ?? 0, `${id} level ${level.level} days worked`).toBe(promotionDays(level.level));
       for (const [skill, lvl] of Object.entries(level.promotion.skills)) {
         expect(db.skills[skill], `${id} level ${level.level}: unknown skill '${skill}'`).toBeDefined();
         expect(lvl).toBeGreaterThanOrEqual(1);

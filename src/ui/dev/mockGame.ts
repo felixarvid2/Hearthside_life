@@ -24,6 +24,9 @@ import type {
 import { NEED_IDS } from '../../core/types';
 import { Rng, seedRng } from '../../core/rng';
 import type { MovePreview, NeighbourhoodInfo, PersonPlace, SwitchPreview } from '../../game/api';
+import { giftChoices as simGiftChoices } from '../../sim/gifts';
+import type { GiftChoice } from '../../sim/gifts';
+import type { MoveOptions } from '../../sim/households';
 import { movePreview as simMovePreview, switchPreview as simSwitchPreview } from '../../sim/households';
 import { travelProblem as simTravelProblem } from '../../sim/lotTravel';
 import { neighbourhoodInfo } from '../../sim/neighbourhoodView';
@@ -52,8 +55,8 @@ const HE: Pronouns = { subject: 'he', object: 'him', possessive: 'his' };
 const THEY: Pronouns = { subject: 'they', object: 'them', possessive: 'their' };
 
 const DEFAULT_SETTINGS: GameSettings = {
-  masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.5, reducedMotion: false, textScale: 1, quality: 'high', characterStyle: 'mpfb', shadows: true,
-  weatherEffects: true, actionProgress: 'household', showStats: false, tutorial: true,
+  masterVolume: 0.8, soundVolume: 0.8, musicVolume: 0.5, reducedMotion: false, textScale: 1, highContrast: false, quality: 'high', characterStyle: 'mpfb', shadows: true,
+  weatherEffects: true, actionProgress: 'household', showStats: false, tutorial: true, hints: false, seenHints: [],
 };
 
 function appearance(skin: string, hair: string): Appearance {
@@ -407,6 +410,11 @@ export class MockGame implements GameAPI {
     if (option.interactionId === 'editOutfits') {
       setTimeout(() => this.events.emit({ type: 'ui.request', what: 'editOutfits', personId }), 50);
       return { ok: true };
+    }
+    if (option.interactionId === 'giveGift') {
+      const tok = option.token as { pick?: PickResult };
+      const targetId = tok.pick?.kind === 'person' ? tok.pick.personId : undefined;
+      if (targetId) { setTimeout(() => this.events.emit({ type: 'ui.request', what: 'giveGift', personId, targetId }), 50); return { ok: true }; }
     }
     if (option.interactionId === 'planEvent') {
       setTimeout(() => this.events.emit({ type: 'ui.request', what: 'planEvent', personId }), 50);
@@ -925,13 +933,13 @@ export class MockGame implements GameAPI {
     return { ok: true };
   }
 
-  movePreview(lotId: Id): MovePreview | null { const c = this.simCtx(); return c ? simMovePreview(c, lotId) : null; }
+  movePreview(lotId: Id, opts?: MoveOptions): MovePreview | null { const c = this.simCtx(); return c ? simMovePreview(c, lotId, opts) : null; }
 
-  moveHousehold(lotId: Id): Result {
+  moveHousehold(lotId: Id, opts?: MoveOptions): Result {
     this.log('moveHousehold', lotId);
     const c = this.simCtx(), w = this.world;
     if (!c || !w) return { ok: false, reason: 'No game is running.' };
-    const pv = simMovePreview(c, lotId);
+    const pv = simMovePreview(c, lotId, opts);
     if (!pv.ok) return { ok: false, reason: pv.reason ?? 'Not possible.' };
     const hh = w.households[w.activeHouseholdId]!;
     transact(w, this.events, hh.id, -pv.cost, 'bill', 'Moving in');
@@ -940,6 +948,17 @@ export class MockGame implements GameAPI {
     this.events.emit({ type: 'household.moved', householdId: hh.id, fromLotId: null, toLotId: lotId });
     this.emit('neighbourhood');
     this.emit('state');
+    return { ok: true };
+  }
+
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] {
+    const c = this.simCtx(), w = this.world;
+    const giver = w?.people[giverId], to = w?.people[recipientId];
+    return c && giver && to ? simGiftChoices(c, giver, to) : [];
+  }
+
+  giveGift(giverId: Id, recipientId: Id, giftId: string): Result {
+    this.log('giveGift', { giverId, recipientId, giftId });
     return { ok: true };
   }
 

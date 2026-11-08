@@ -41,7 +41,7 @@
 .ctx-hint.hint-long { background: #f7e0d3; color: #8a4b10; }
 .ctx-unavail { margin: 2px 0 4px; border-radius: 12px; }
 .ctx-unavail-sum {
-  display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 8px; cursor: pointer; list-style: none;
+  display: flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 8px; cursor: pointer; list-style: none;
   font-size: 0.78rem; font-weight: 700; color: var(--ink-3);
 }
 .ctx-unavail-sum::-webkit-details-marker { display: none; }

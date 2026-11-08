@@ -127,7 +127,19 @@ function augment(m) {
   const region = top.colorRegions[0];
   m.hairstyles.push({ ...structuredClone(hair), id: 'e2e_hair_b', label: 'E2E Crop' });
   m.garments.push({ ...structuredClone(top), id: 'e2e_tee_b', label: 'E2E Tee', colorRegions: [{ ...structuredClone(region), palette: ['#c94f4f', '#2f6f9f', '#e0b341'], default: '#c94f4f' }] });
-  m.restrictions = { ...(m.restrictions ?? {}), parts: { ...(m.restrictions?.parts ?? {}), e2e_tee_b: [...(m.restrictions?.parts?.e2e_tee_b ?? []), 'e2e_hair_b'] } };
+  // catalog extension: tagged filler tops (so the Top slot gets filter chips), an outer garment, accessories, facial hair.
+  // Accessories reuse the hairstyle mesh (any skinned part on the shared rig loads), so they need no new assets.
+  const tags = ['tee', 'shirt', 'sweater'];
+  top.tags = ['tee'];
+  for (let i = 1; i <= 14; i++) m.garments.push({ ...structuredClone(top), id: `e2e_fill_${i}`, label: `Plain ${i}`, tags: [tags[i % 3]] });
+  m.garments.push({ ...structuredClone(top), id: 'e2e_jacket_o', label: 'E2E Jacket', slot: 'outer', category: 'outer', layer: 2, hides: [], tags: undefined });
+  const acc = (id, label, slot) => ({ ...structuredClone(m.garments.find((g) => g.slot === 'top')), id, label, slot, category: 'accessory', hides: [], covers: undefined, tags: undefined, files: structuredClone(hair.files), thumbnail: hair.thumbnail, colorRegions: [{ id: 'main', label: 'Colour', materials: [], default: '#3f6fa8', palette: ['#3f6fa8', '#c94f4f'] }] });
+  m.garments.push(acc('e2e_hat_b', 'E2E Hat', 'hat'), acc('e2e_glasses', 'E2E Glasses', 'eyewear'), acc('e2e_bag', 'E2E Bag', 'bag'));
+  m.facialHair = [
+    { ...structuredClone(hair), id: 'e2e_beard', label: 'E2E Beard', colorRegions: [] },
+    { ...structuredClone(hair), id: 'e2e_stache', label: 'E2E Moustache', colorRegions: [] },
+  ];
+  m.restrictions = { ...(m.restrictions ?? {}), parts: { ...(m.restrictions?.parts ?? {}), e2e_tee_b: [...(m.restrictions?.parts?.e2e_tee_b ?? []), 'e2e_hair_b'], e2e_hat_b: [...(m.restrictions?.parts?.e2e_hat_b ?? []), 'e2e_hair_b'] } };
   m.outfitPresets = [...(m.outfitPresets ?? []), { id: 'e2e_preset', label: 'E2E Outfit', outfit: { top: 'e2e_tee_b' }, colors: { e2e_tee_b: { [region.id]: '#2f6f9f' } } }];
   return m;
 }
@@ -149,7 +161,7 @@ async function runViewport(browser, vpName, vp) {
     await route.fulfill({ response: res, json: augment(await res.json()) });
   });
   await page.addInitScript(() => {
-    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0, characterStyle: 'quaternius' })); } catch { /* ignore */ }
+    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0, characterStyle: 'quaternius' })); } catch { /* ignore */ }
   });
   let shotN = 0;
   const T = {
@@ -175,7 +187,7 @@ async function runViewport(browser, vpName, vp) {
   await page.waitForTimeout(1200);
 
   const sections = [
-    ['open', openCreator], ['hair', stepHair], ['clothing', stepClothing], ['body', stepBody], ['undo', stepUndo], ['orientation', stepOrientation],
+    ['open', openCreator], ['hair', stepHair], ['clothing', stepClothing], ['catalog', stepCatalog], ['body', stepBody], ['undo', stepUndo], ['orientation', stepOrientation],
     ['stability', stepStability], ['two', stepTwoPeople], ['move-in', stepMoveIn], ['save', stepSaveReload], ['wardrobe', stepWardrobe],
   ];
   const only = opt('steps', '').split(',').filter(Boolean);
@@ -386,6 +398,116 @@ async function stepClothing(T) {
   T.check(S, 'an outfit preset sets the outfit and its colours', look.outfits.everyday?.top === 'e2e_tee_b' && Object.values(look.colors.garments.e2e_tee_b ?? {}).includes('#2f6f9f'), JSON.stringify(look.outfits.everyday) + JSON.stringify(look.colors.garments.e2e_tee_b));
   T.check(S, 'the preset shows as pressed', await cardSelected(T, 'Outfits', 'E2E Outfit'), '');
   await T.shot('clothing-preset');
+}
+
+async function stepCatalog(T) {
+  const { page } = T;
+  const S = 'catalog';
+  const hairOf = async () => (await previewLook(T)).hairId;
+  // ---- facial hair (Hair step, every body)
+  await goStep(T, 'hair');
+  await page.waitForSelector('[aria-label="Facial hair"] .cr-thumb-card', { timeout: 10000 });
+  const nf = await page.locator('[aria-label="Facial hair"] .cr-thumb-card').count();
+  T.check(S, 'the Hair step has a Facial hair grid with None plus the manifest styles', nf === 3, `${nf} cards`);
+  T.check(S, 'None is pressed to start with', await cardSelected(T, 'Facial hair', 'None'), '');
+  await checkTargets(T, S, 'facial hair grid');
+  await page.locator('[aria-label="Facial hair"]').first().scrollIntoViewIfNeeded();
+  await T.tap(card(T, 'Facial hair', 'E2E Beard'));
+  await T.settle(3); await previewIdle(T);
+  let look = await previewLook(T);
+  T.check(S, 'the beard shows as pressed and the preview wears it', (await cardSelected(T, 'Facial hair', 'E2E Beard')) && look.facialHairId === 'e2e_beard', `${look.facialHairId}`);
+  T.check(S, 'the beard is a loaded part of the preview person', await page.evaluate(() => !!window.hearthside.view.creatorScene.view.root.getObjectByName('part:e2e_beard')), '');
+  await T.shot('facial-hair', true);
+  await T.tap(card(T, 'Facial hair', 'E2E Moustache'));
+  await T.settle(3); await previewIdle(T);
+  look = await previewLook(T);
+  T.check(S, 'another style replaces it', look.facialHairId === 'e2e_stache' && !(await page.evaluate(() => !!window.hearthside.view.creatorScene.view.root.getObjectByName('part:e2e_beard'))), `${look.facialHairId}`);
+  await T.tap(card(T, 'Facial hair', 'None'));
+  await T.settle(3); await previewIdle(T);
+  T.check(S, 'None takes it off', (await previewLook(T)).facialHairId === null, '');
+  await T.tap(card(T, 'Facial hair', 'E2E Beard'));
+  await T.settle(3); await previewIdle(T);
+
+  // ---- clothing: section order, outer over top, tag filter, accessories
+  await goStep(T, 'clothing'); await subTab(T, 'everyday');
+  await page.waitForSelector('[aria-label="Top garments"] .cr-thumb-card', { timeout: 10000 });
+  const titles = await page.locator('.cr-step-clothing .cr-sec-title').allInnerTexts();
+  const pos = (t) => titles.indexOf(t);
+  T.check(S, 'slot sections come in the order Top, Outer, Bottom, ..., Accessories', pos('Top') >= 0 && pos('Top') < pos('Outer') && pos('Outer') < pos('Bottom') && pos('Bottom') < pos('Accessories'), titles.join(' | '));
+  const subs = await page.locator('.cr-subsec-title').allInnerTexts();
+  // expected: the accessory slots that have items in the served manifest (the catalog plus the e2e_ parts), in order
+  const servedSlots = await page.evaluate(async () => {
+    const m = await (await fetch('./assets/characters/modular/manifest.json')).json();
+    const order = ['hat', 'eyewear', 'earrings', 'neck', 'wrist', 'waist', 'bag'];
+    const label = { hat: 'Hat', eyewear: 'Eyewear', earrings: 'Earrings', neck: 'Neck', wrist: 'Wrist', waist: 'Waist', bag: 'Bag' };
+    return order.filter((s) => m.garments.some((g) => g.slot === s)).map((s) => label[s]);
+  });
+  T.check(S, 'the Accessories group only lists slots that have items', subs.join(',') === servedSlots.join(','), `${subs.join(',')} (expected ${servedSlots.join(',')})`);
+
+  await T.tap(card(T, 'Top garments', 'E2E Tee'));
+  await T.settle(3);
+  await T.tap(card(T, 'Outer garments', 'E2E Jacket'));
+  await T.settle(3); await previewIdle(T);
+  look = await previewLook(T);
+  T.check(S, 'an outer garment is worn over a top (both stay on)', look.outfits.everyday?.top === 'e2e_tee_b' && look.outfits.everyday?.outer === 'e2e_jacket_o', JSON.stringify(look.outfits.everyday));
+  T.check(S, 'the jacket card shows as pressed and the top stays pressed', (await cardSelected(T, 'Outer garments', 'E2E Jacket')) && (await cardSelected(T, 'Top garments', 'E2E Tee')), '');
+  T.check(S, 'both garments are drawn on the preview', await page.evaluate(() => ['e2e_tee_b', 'e2e_jacket_o'].every((id) => !!window.hearthside.view.creatorScene.view.root.getObjectByName(`part:${id}`))), '');
+
+  // tag filter chips on the long Top list
+  const chips = page.locator('[aria-label="Top type"] .cr-chip');
+  const nChips = await chips.count();
+  T.check(S, 'the long Top list has filter chips (All plus tags)', nChips >= 4, `${nChips} chips`);
+  const visibleCards = () => page.locator('[aria-label="Top garments"] .cr-thumb-card:not([hidden])').count();
+  const allCards = await visibleCards();
+  const lazy = await page.locator('[aria-label="Top garments"] img').evaluateAll((els) => els.length > 0 && els.every((e) => e.getAttribute('loading') === 'lazy'));
+  T.check(S, 'garment thumbnails are lazy-loaded', lazy, '');
+  await checkTargets(T, S, 'tag filter row');
+  await T.tap(page.locator('[aria-label="Top type"] .cr-chip', { hasText: 'Sweater' }).first());
+  await T.settle(3);
+  const filtered = await visibleCards();
+  T.check(S, 'a tag chip narrows the grid (worn garment and None stay)', filtered < allCards && filtered >= 3, `${allCards} -> ${filtered}`);
+  T.check(S, 'the chosen chip is pressed', (await page.locator('[aria-label="Top type"] .cr-chip', { hasText: 'Sweater' }).first().getAttribute('aria-checked')) === 'true', '');
+  await T.shot('clothing-filter', true);
+  await T.tap(page.locator('[aria-label="Top type"] .cr-chip', { hasText: 'All' }).first());
+  await T.settle(3);
+  T.check(S, 'All shows everything again', (await visibleCards()) === allCards, '');
+
+  // accessories
+  await page.locator('[aria-label="Eyewear garments"]').first().scrollIntoViewIfNeeded();
+  await T.tap(card(T, 'Eyewear garments', 'E2E Glasses'));
+  await T.settle(3); await previewIdle(T);
+  look = await previewLook(T);
+  T.check(S, 'an accessory is worn in its slot next to the clothes', look.outfits.everyday?.eyewear === 'e2e_glasses' && look.outfits.everyday?.top === 'e2e_tee_b' && look.outfits.everyday?.outer === 'e2e_jacket_o', JSON.stringify(look.outfits.everyday));
+  await T.tap(card(T, 'Bag garments', 'E2E Bag'));
+  await T.settle(3); await previewIdle(T);
+  T.check(S, 'a second accessory slot is independent', (await previewLook(T)).outfits.everyday?.bag === 'e2e_bag' && (await previewLook(T)).outfits.everyday?.eyewear === 'e2e_glasses', '');
+  await checkTargets(T, S, 'accessories');
+  await page.locator('[aria-label="Bag garments"]').first().scrollIntoViewIfNeeded();
+  await T.shot('accessories', true);
+
+  // hat vs hairstyle: the feedback names both
+  await T.tap(card(T, 'Top garments', 'None')); await T.settle(2);
+  await goStep(T, 'hair');
+  await T.tap(card(T, 'Hairstyles', 'E2E Crop')); await T.settle(3);
+  T.check(S, 'E2E Crop is worn', (await hairOf()) === 'e2e_hair_b' || (await previewIdle(T), (await hairOf()) === 'e2e_hair_b'), '');
+  await goStep(T, 'clothing'); await subTab(T, 'everyday');
+  await page.locator('[aria-label="Hat garments"]').first().scrollIntoViewIfNeeded();
+  await T.tap(card(T, 'Hat garments', 'E2E Hat'));
+  await T.settle(3);
+  const st = await status(T);
+  T.check(S, 'a hat that does not fit the hairstyle swaps the hair and the status line says so', /E2E Crop doesn't fit with E2E Hat - switched to /.test(st), st);
+  await previewIdle(T);
+  look = await previewLook(T);
+  T.check(S, 'the preview wears the hat and another hairstyle', look.outfits.everyday?.hat === 'e2e_hat_b' && look.hairId !== 'e2e_hair_b' && look.hairId !== null, `${look.outfits.everyday?.hat} / ${look.hairId}`);
+
+  // tidy up: every accessory, the jacket and the beard come off again
+  for (const [group, name] of [['Hat garments', 'None'], ['Eyewear garments', 'None'], ['Bag garments', 'None'], ['Outer garments', 'None']]) { await T.tap(card(T, group, name)); await T.page.waitForTimeout(60); }
+  await T.settle(3); await previewIdle(T);
+  look = await previewLook(T);
+  T.check(S, 'None takes the accessories and the jacket off', !look.outfits.everyday?.hat && !look.outfits.everyday?.eyewear && !look.outfits.everyday?.bag && !look.outfits.everyday?.outer, JSON.stringify(look.outfits.everyday));
+  await goStep(T, 'hair');
+  await T.tap(card(T, 'Facial hair', 'None')); await T.settle(3); await previewIdle(T);
+  T.check(S, 'facial hair is off again', (await previewLook(T)).facialHairId === null, '');
 }
 
 async function stepBody(T) {
@@ -599,7 +721,7 @@ async function stepMoveIn(T) {
       return { id, stored: p.appearance.modular ?? null, drawn: e?.view?.character ? e.view.character.serialize() : null, modularView: e?.view?.modular === true };
     });
   });
-  T.check(S, 'both people moved in with a stored modular look', game.length === 2 && game.every((g) => g.stored && g.stored.v === 1), JSON.stringify(game.map((g) => !!g.stored)));
+  T.check(S, 'both people moved in with a stored modular look', game.length === 2 && game.every((g) => g.stored && g.stored.v === 2), JSON.stringify(game.map((g) => !!g.stored)));
   const same = (a, b) => a.hairId === b.hairId && a.bodyId === b.bodyId && JSON.stringify(a.outfits.everyday ?? {}) === JSON.stringify(b.outfits.everyday ?? {});
   // members keep their order in the household
   T.check(S, 'each stored look is the one chosen in the creator', game.length === 2 && same(game[0].stored, expected[0]) && same(game[1].stored, expected[1]), JSON.stringify({ g: game.map((g) => g.stored && [g.stored.hairId, g.stored.outfits.everyday]), e: expected.map((e) => [e.hairId, e.outfits.everyday]) }));

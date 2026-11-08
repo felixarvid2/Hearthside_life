@@ -6,11 +6,12 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-9, 11, 11.5 and 12 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see
-CONTINUATION.md; M11 on PR #6; M11.5 and M12 verified 2026-11-05). **Milestone 10 - Complete catalogs is the only
-milestone still open: the surface catalog and the furnishings are complete** (360 wall finishes, 200 floor designs,
-573 furniture designs against 560). The full creator catalog is still open. Next: the rest of Milestone 10, then
-**Milestone 13 - Release preparation**.
+**Milestones 1-13 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see CONTINUATION.md; M11 on PR #6;
+M11.5 and M12 verified 2026-11-05). Milestone 10 - Complete catalogs is done: 360 wall finishes, 200 floor designs, 573 furniture
+designs against 560, 48 doors, 64 windows, and the full modular creator catalog (60 hairstyles, 16 facial hair, 133 garments,
+32 accessories). Milestone 13 - Release preparation has parts A and B merged; its guidance, balance, recovery, perf harness and release
+e2e are in place. **Remaining: real-device performance runs** (they need the user's phones; SwiftShader numbers are in
+docs/TEST_CHECKLIST.md), plus the known-and-left items in docs/BALANCE.md, docs/TEST_CHECKLIST.md and CONTINUATION.md.
 
 ## Completed-project targets (brief section 2)
 
@@ -107,7 +108,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   venue, Quayside Baths, with a 6 x 10 pool, changing rooms and a sun deck. Acceptance step 14; screenshots in
   `dev/ds-tasks/m12/shots/`.
 
-## Milestone 10, complete catalogs (in progress)
+## Milestone 10, complete catalogs (complete)
 
 - **Surfaces (complete).** 360 wall finishes (3382 palettes) and 200 floor designs (1523 palettes), meeting the brief
   allocation: walls paint 28, stripes 24, geometric 32, floral 32, botanical 24, vintage-deco 24, playful 24,
@@ -142,26 +143,40 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
     swaps M10 designs into the starter house, runs the real interaction (or forces a use where the sim has none:
     microwave, washers, dishwasher), steps the game clock until each part settles, and writes PNGs and `log.json` to
     `tests/e2e/out/m10f-shots/` (git-ignored). 58/58 checks pass.
-  - Not implemented: the pool table, darts, foosball, table tennis and pottery wheel are decorative; the drum kit, harp
-    and cello are display-only; recliners, storage beds and sofa beds are static; the microwave and washing machines
-    have no sim interaction yet (their parts animate only when forced).
-- **Still open.** The full creator catalog target.
+  - Milestone 13 gave these pieces behaviour (see ARCHITECTURE.md "Furnishings that work"): the pool table, dartboard,
+    foosball and table tennis (five new designs with two-player socials), the pottery wheel (a handmade pot to place or
+    sell), the drum kit, harp and cello (Music), recliners (Recline pose), the sofa bed (Sleep), the microwave and the
+    washers and dryers (their doors and drums animate in normal play). Storage beds already offered Sleep.
+- **Doors and windows (complete).** 48 doors and 64 windows, all procedural (no downloaded or AI models), content in
+  `src/content/openingsM10.ts` (39 + 53 new; the 20 existing ids are unchanged), meshes in `src/render/openingMeshes.ts`.
+  Doors: swinging single and double leaves (panel, shaker, cross-buck, glazed, half-glazed, porthole, slot, grooved,
+  screen, arched with panel, glass or plank), cafe/saloon doors, bi-fold pairs, sliding panes in tracks (2-4 panes), pocket
+  doors that slide into the wall, barn doors on a rail, sectional/slat/roller garage doors (3 tiles wide), sidelights,
+  transoms and fanlights. Windows: sash, casement, sliding, jalousie, ribbon, bay and box bay, fixed lights in arch,
+  round, oval, lunette, octagon, gothic and gable shapes, bar patterns (grid, diamond, prairie, cross, top-grid, fan, spokes),
+  frosted glass, shutters, flower boxes, hoods, grilles, Juliet rail; heights 0.4-2.3 m, sills 0.05-2.0 m, 1-3 tiles wide.
+  Wide openings cut every wall edge they span; doors animate through `setDoorOpen` (swing, fold, slide, roll up) and open
+  for people near any part of a wide door (`DoorInfo.reachX/reachZ`). Tests: `tests/unit/surfaces/openings-m10.test.ts`.
+  Review sheets: `npm run visual:openings` writes `dev/shots/doors-windows/{doors,windows}-N.png` (game renderer, doors
+  closed and open).
+- **Creator catalog (complete).** Modular Quaternius style: 60 hairstyles, 16 facial hair, 133 garments (41 tops, 16 outer, 28 bottoms,
+  24 full outfits, 24 shoes) and 32 accessories, all fitted to both UBC bodies with thumbnails. See CONTINUATION.md "Modular characters".
 
 ## Unfinished systems after M1 (by dependency)
 
-1. Wall/room/door drawing tools (pure systems done, see ARCHITECTURE.md "Build mode construction"; Build-mode UI and rendering pending); move/resize/duplicate rooms still open (M2).
+1. Wall/room/door drawing tools (pure systems done, see ARCHITECTURE.md "Build mode construction"; Build-mode UI and rendering pending); move, resize and duplicate rooms are done in Milestone 13 (rectangular rooms; see ARCHITECTURE.md "Room operations").
 2. More finishes and furniture through the content pipeline, decor packs, room presets (M2, M10).
 3. Creator depth (M3): 24 face presets, 18 face parameters, 54 garments, 15 accessories, hat and hair interaction, outfit slots, family tree editing are done; remaining depth (more garment variety, life-stage bodies, height) belongs to M8 and M10.
 4. Dirt, breakage, repair and cleaning are done (M4, see ARCHITECTURE.md "Daily life"); groceries/freshness depth and household routines remain (M4).
-5. Done in M5 (see ARCHITECTURE.md "Relationships and events"): romance ladder, dates, events with invitations, jealousy after exclusivity. Open: weddings as events, group conversations, gifts as objects. Dates are still planned at home.
+5. Done in M5 (see ARCHITECTURE.md "Relationships and events"): romance ladder, dates, events with invitations, jealousy after exclusivity. Added in the social gaps pass: weddings as planned events (ceremony and celebration), dates and parties at public venues, gifts as parcels, group chat.
 6. Done in M6 (see ARCHITECTURE.md "Careers and economy"): careers with promotions/demotions and work effort, freelance income, weekly bills with late fees and utility cut-offs, auto-pay, and career/wealth aspirations. M11 extends this to 13 careers, 17 career events, 13 aspirations and 19 ready skills. Open: renting vs owning beyond property tax, more career events per track.
-7. Done in M7 (see ARCHITECTURE.md "Neighbourhood"): neighbourhood map, 14 lot records (target 12), including 2 empty homes, 6 venues, 4 NPC households, household switching, off-lot reconciliation. Open: community events, NPC household movement and job changes, furniture moving with a household (M8 and later).
-8. Done in M8 (see ARCHITECTURE.md "Family and life stages"): seven life stages, aging, birthdays, school, babysitter, adoption, moving out. Added after M8: teen part-time jobs, children in town households, fitted kids' clothes, elder wrinkles, L and rectangle fence drags. Open: the sitter for other households, more life-stage detail (see CONTINUATION.md).
-9. Done in M9 (see ARCHITECTURE.md "Floors", "Exterior"): levels 0-2, stairs, balconies, roofs, fences and gates, terrain paint, gardens. Open: the spiral and length-4 stairs are less tested.
+7. Done in M7 (see ARCHITECTURE.md "Neighbourhood"): neighbourhood map, 14 lot records (target 12), including 2 empty homes, 6 venues, 4 NPC households, household switching, off-lot reconciliation. Added in the social gaps pass: weekly community events at the venues, townspeople changing jobs and NPC households moving, a furniture choice when moving (leave, take, sell), the jog track, the phone map entry. Open: renting out the player's home, tenants and landlords, taxi fees.
+8. Done in M8 (see ARCHITECTURE.md "Family and life stages"): seven life stages, aging, birthdays, school, babysitter, adoption, moving out. Added after M8: teen part-time jobs, children in town households, fitted kids' clothes, elder wrinkles, L and rectangle fence drags. The sitter now also serves households you are not playing while you visit them, and town children are generated for older saves on load. Open: more life-stage detail (see CONTINUATION.md).
+9. Done in M9 (see ARCHITECTURE.md "Floors", "Exterior"): levels 0-2, stairs, balconies, roofs, fences and gates, terrain paint, gardens. The spiral and length-4 stairs are covered by `tests/unit/integration/stairKinds-m13.test.ts` and acceptance step 15.
 10. Done in M11.5 and M12 (see ARCHITECTURE.md "Action feedback", "Seasons and weather", "Pools"): moving parts and
     effects, hand props, screens, the progress pill, seasons, weather gates and moods, outdoor activities, pools and
-    the Quayside Baths venue. Open: shade and umbrellas do not count as shelter, pools are ground level only, and
-    weather is planned but not forecast beyond tomorrow.
+    the Quayside Baths venue. Milestone 13 added shade as shelter, rain melting snow cover and a five-day forecast.
+    Open: pools are ground level only.
 
 ## Optional expansions (not part of the required plan)
 

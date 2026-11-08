@@ -1,0 +1,9 @@
+{
+ "accessory": "pearls",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/pearls__ubc_female.glb",
+ "kind": "pearls",
+ "secs": 0.6,
+ "tris": 672,
+ "verts": 364
+}

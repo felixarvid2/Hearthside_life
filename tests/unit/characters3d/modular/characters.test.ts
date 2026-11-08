@@ -205,3 +205,18 @@ describe('cover masks', () => {
     c.dispose();
   });
 });
+
+describe('skinMaterialColor', () => {
+  it('keeps the hue of a light skin instead of clipping red', async () => {
+    const THREE = await import('three');
+    const { skinMaterialColor } = await import('../../../../src/characters/modular/ModularCharacter');
+    const light = new THREE.Color('#f5ddc9');
+    const out = skinMaterialColor(light, 1.4, new THREE.Color());
+    expect(Math.max(out.r, out.g, out.b)).toBeCloseTo(1, 5);
+    expect(out.g / out.r).toBeCloseTo(light.g / light.r, 5);
+    expect(out.b / out.r).toBeCloseTo(light.b / light.r, 5);
+    const dark = new THREE.Color('#5a3a26');
+    const d = skinMaterialColor(dark, 1.4, new THREE.Color());
+    expect(d.r).toBeCloseTo(dark.r * 1.4, 5);
+  });
+});

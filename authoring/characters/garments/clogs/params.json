@@ -1,0 +1,67 @@
+{
+ "id": "clogs",
+ "label": "Clogs",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "flats"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Clogs"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_ClogsSole"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.013,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.009,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.06,
+   "force": true,
+   "vamp": true
+  },
+  "sole": 0.04,
+  "welt": 0.012
+ }
+}

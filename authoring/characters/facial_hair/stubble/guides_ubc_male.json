@@ -1,0 +1,48 @@
+{
+ "body": "ubc_male",
+ "guides": [],
+ "params": {
+  "attachment": "skinned",
+  "back_flow": 0.0,
+  "beard": {
+   "cheeks": true,
+   "chin": true,
+   "jaw": true,
+   "mustache": true,
+   "sideburns": true,
+   "soul": true
+  },
+  "cap": true,
+  "cap_offset": 0.0012,
+  "clump_flatness": 0.5,
+  "clump_width": 0.012,
+  "clumps": 0,
+  "color_regions": [
+   {
+    "default": "#3a2418",
+    "id": "hair",
+    "label": "Beard",
+    "materials": [
+     "M_Beard"
+    ]
+   }
+  ],
+  "gravity": 0,
+  "hairline_back": 0.3,
+  "hairline_front": 0.8,
+  "id": "stubble",
+  "label": "Stubble",
+  "length": 0.012,
+  "length_jitter": 0.2,
+  "part_offset": 0.0,
+  "points": 4,
+  "profile_resolution": 2,
+  "resolution_cm": 0.8,
+  "root_offset": 0.001,
+  "tags": [
+   "short"
+  ],
+  "target_tris": 5000,
+  "volume": 0.003
+ }
+}

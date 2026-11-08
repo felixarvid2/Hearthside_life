@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/beard_full__ubc_male.glb",
+ "hair": "beard_full",
+ "head_base_z": 1.6,
+ "inside_head_verts": 584,
+ "roots": 220,
+ "secs": 2.5,
+ "src_tris": 7056,
+ "tris": 6138,
+ "verts": 4274,
+ "z": [
+  1.517,
+  1.706
+ ]
+}

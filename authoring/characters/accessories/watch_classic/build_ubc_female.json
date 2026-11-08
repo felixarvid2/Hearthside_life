@@ -1,0 +1,9 @@
+{
+ "accessory": "watch_classic",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/watch_classic__ubc_female.glb",
+ "kind": "watch",
+ "secs": 0.3,
+ "tris": 228,
+ "verts": 116
+}

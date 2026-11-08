@@ -1,0 +1,35 @@
+{
+ "id": "reading_glasses",
+ "label": "Reading glasses",
+ "slot": "eyewear",
+ "category": "accessory",
+ "kind": "glasses",
+ "tags": [
+  "glasses"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_ReadingGlasses"
+   ],
+   "default": "#d4af37",
+   "palette": [
+    "#d4af37",
+    "#c0c0c0",
+    "#b87333",
+    "#2f2f33",
+    "#e5e4e2",
+    "#8c7853"
+   ],
+   "metallic": 0.35,
+   "roughness": 0.35
+  }
+ ],
+ "layer": 3,
+ "conflicts": [],
+ "shape": "square",
+ "lens_h": 0.012,
+ "raise": -0.006
+}

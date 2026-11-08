@@ -51,7 +51,7 @@ export async function loadClips(): Promise<THREE.AnimationClip[]> {
 }
 
 export const look = (over: Partial<ModularLook> = {}): ModularLook => ({
-  v: 1, bodyId: BODY, hairId: null, outfits: {}, colors: { skin: '#c68642', eyes: '#5b4636', hair: '#222222', garments: {} }, morphs: {}, ...over,
+  v: 2, bodyId: BODY, hairId: null, facialHairId: null, outfits: {}, colors: { skin: '#c68642', eyes: '#5b4636', hair: '#222222', garments: {} }, morphs: {}, ...over,
 });
 
 export const shellLook = (over: Partial<ModularLook> = {}): ModularLook => look({ outfits: { everyday: { top: 'shell_top' } }, ...over });

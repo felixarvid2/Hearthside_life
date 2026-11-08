@@ -15,19 +15,25 @@ describe('manifest', () => {
   it('the real manifest validates', () => { expect(validateManifest(realManifest())).toEqual([]); });
   it('reports broken manifests', () => {
     const m = testManifest();
-    m.garments.push({ ...shellGarment(), id: 'shell_top', files: { nobody: 'x.glb' }, rig: 'zzz', slot: 'hat' as never, hides: ['wing' as never] });
+    m.garments.push({ ...shellGarment(), id: 'shell_top', files: { nobody: 'x.glb' }, rig: 'zzz', slot: 'cape' as never, hides: ['wing' as never] });
     m.garments[1]!.colorRegions = [...m.garments[0]!.colorRegions, ...m.garments[0]!.colorRegions];
     const issues = validateManifest(m).join('\n');
-    for (const s of ['Duplicate garment', "unknown rig 'zzz'", "unknown slot 'hat'", "unknown body region 'wing'", "unknown body 'nobody'", 'duplicate color region']) expect(issues).toContain(s);
+    for (const s of ['Duplicate garment', "unknown rig 'zzz'", "unknown slot 'cape'", "unknown body region 'wing'", "unknown body 'nobody'", 'duplicate color region']) expect(issues).toContain(s);
   });
   it('looks things up', () => {
     const m = testManifest();
     expect(findBody(m, BODY)?.id).toBe(BODY);
     // testManifest() = the real manifest plus the test-only shell top
-    expect(garmentsFor(m, BODY, 'top').map((g) => g.id).sort()).toEqual(['hoodie_pullover', 'shell_top', 'tshirt_crew']);
-    expect(garmentsFor(m, BODY, 'bottom').map((g) => g.id)).toEqual(['trousers_straight']);
+    // the shipped catalog (Milestone 10 targets): 40 tops, 28 bottoms, 60 hairstyles, every part fitted to both bodies
+    const tops = garmentsFor(m, BODY, 'top').map((g) => g.id);
+    expect(tops).toEqual(expect.arrayContaining(['hoodie_pullover', 'shell_top', 'tshirt_crew']));
+    expect(tops.length).toBe(42);   // 41 catalog tops (incl. the hood-up hoodie) + the test-only shell top
+    expect(garmentsFor(m, BODY, 'bottom').map((g) => g.id)).toContain('trousers_straight');
+    expect(garmentsFor(m, BODY, 'bottom')).toHaveLength(28);
     expect(garmentsFor(m, 'ubc_female').map((g) => g.id)).not.toContain('shell_top');
-    expect(hairFor(m, BODY).map((h) => h.id)).toEqual(['short_crop', 'bob_chin', 'ponytail_mid']);
+    expect(hairFor(m, BODY).map((h) => h.id).slice(0, 3)).toEqual(['short_crop', 'bob_chin', 'ponytail_mid']);
+    expect(hairFor(m, BODY)).toHaveLength(60);
+    expect(hairFor(m, 'ubc_female')).toHaveLength(60);
   });
 });
 
@@ -50,7 +56,7 @@ describe('deriveModularLook', () => {
     const m = testManifest();
     m.defaults.outfit = { top: 'shell_top' };
     const l = deriveModularLook(appearance('b'), m);
-    expect(l).toMatchObject({ v: 1, bodyId: 'ubc_female', hairId: m.defaults.hairstyle, morphs: {}, colors: { skin: '#b07a55', hair: '#774411', eyes: '#336655' } });
+    expect(l).toMatchObject({ v: 2, facialHairId: null, bodyId: 'ubc_female', hairId: m.defaults.hairstyle, morphs: {}, colors: { skin: '#b07a55', hair: '#774411', eyes: '#336655' } });
     expect(l.outfits.everyday).toEqual({}); // shell_top is only fitted to the male body
     expect(deriveModularLook(appearance('a'), m).outfits.everyday).toEqual({ top: 'shell_top' });
   });

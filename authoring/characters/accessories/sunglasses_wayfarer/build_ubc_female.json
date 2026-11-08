@@ -1,0 +1,9 @@
+{
+ "accessory": "sunglasses_wayfarer",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/sunglasses_wayfarer__ubc_female.glb",
+ "kind": "sunglasses",
+ "secs": 1.2,
+ "tris": 494,
+ "verts": 271
+}

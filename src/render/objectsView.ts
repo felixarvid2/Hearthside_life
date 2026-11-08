@@ -55,6 +55,10 @@ export class ObjectsView {
   private readonly highlight: THREE.LineSegments;
   private readonly highlightFill: THREE.Mesh;
   private highlightId: Id | null = null;
+  private readonly giftGeo = new THREE.BoxGeometry(0.24, 0.16, 0.2);
+  private readonly ribbonGeo = new THREE.BoxGeometry(0.05, 0.165, 0.205);
+  private readonly giftMats = new Map<string, THREE.MeshStandardMaterial>();
+  private readonly ribbonMat = new THREE.MeshStandardMaterial({ color: '#f4efe2', roughness: 0.6 });
   private readonly plateGeo = new THREE.CylinderGeometry(0.15, 0.12, 0.025, 20);
   private readonly foodGeo = new THREE.SphereGeometry(0.1, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2);
   private readonly plateMat = new THREE.MeshStandardMaterial({ color: 0xf7f3ea, roughness: 0.4 });
@@ -410,7 +414,7 @@ export class ObjectsView {
   syncItems(state: WorldState, lotId: Id): void {
     const seen = new Set<Id>();
     for (const it of Object.values(state.items)) {
-      if (it.lotId !== lotId) continue;
+      if (it.lotId !== lotId || it.stored) continue; // stored items are in a fridge
       seen.add(it.id);
       const sig = `${it.kind}|${it.position.level}|${it.position.x}|${it.position.z}|${it.position.onObjectId ?? ''}|${it.recipeId}|${it.portions}|${it.quality}`;
       const cur = this.items.get(it.id);
@@ -426,6 +430,17 @@ export class ObjectsView {
       if (it.kind === 'mess') {
         this.buildMess(g, it);
         top = 0.06;
+      } else if (it.kind === 'gift') {
+        // a wrapped parcel in the gift's colour with a pale ribbon
+        const colour = this.content.gifts?.[it.recipeId]?.colour ?? '#9a7bd1';
+        let mat = this.giftMats.get(colour);
+        if (!mat) { mat = new THREE.MeshStandardMaterial({ color: colour, roughness: 0.7 }); this.giftMats.set(colour, mat); }
+        const box = new THREE.Mesh(this.giftGeo, mat);
+        box.position.y = 0.08; box.castShadow = true;
+        const ribbon = new THREE.Mesh(this.ribbonGeo, this.ribbonMat);
+        ribbon.position.y = 0.08;
+        g.add(box, ribbon);
+        top = 0.17;
       } else if (it.kind === 'dishes') {
         // a leaning stack of dirty plates with a smear of leftovers on top
         const n = Math.min(4, Math.max(1, it.portions));
@@ -551,6 +566,10 @@ export class ObjectsView {
   dispose(): void {
     this.clear();
     this.plateGeo.dispose();
+    this.giftGeo.dispose();
+    this.ribbonGeo.dispose();
+    this.ribbonMat.dispose();
+    for (const m of this.giftMats.values()) m.dispose();
     this.foodGeo.dispose();
     this.plateMat.dispose();
     this.dirtyPlateMat.dispose();

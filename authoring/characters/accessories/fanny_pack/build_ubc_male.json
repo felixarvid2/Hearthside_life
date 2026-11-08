@@ -1,0 +1,9 @@
+{
+ "accessory": "fanny_pack",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/fanny_pack__ubc_male.glb",
+ "kind": "fanny_pack",
+ "secs": 0.7,
+ "tris": 236,
+ "verts": 120
+}

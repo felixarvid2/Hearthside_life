@@ -1,0 +1,54 @@
+{
+ "id": "jeans_low_rise",
+ "label": "Low-rise jeans",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "jeans"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_JeansLowRise"
+   ],
+   "default": "#3b5a85",
+   "palette": [
+    "#3b5a85",
+    "#2c3e5c",
+    "#6d8fb5",
+    "#1f2633",
+    "#8aa1b8",
+    "#4a4a4a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.016,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.007,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": -0.05
+   },
+   "leg": 1.0,
+   "force": true
+  }
+ }
+}

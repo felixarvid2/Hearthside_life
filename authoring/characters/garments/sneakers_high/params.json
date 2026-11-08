@@ -1,0 +1,66 @@
+{
+ "id": "sneakers_high",
+ "label": "High-top sneakers",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "sneakers"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SneakersHigh"
+   ],
+   "default": "#f2efe6",
+   "palette": [
+    "#f2efe6",
+    "#2f2f33",
+    "#3f6fa8",
+    "#c94f4f",
+    "#5c8a5a",
+    "#e0b341"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_SneakersHighSole"
+   ],
+   "default": "#3a3a3a",
+   "palette": [
+    "#3a3a3a",
+    "#f2efe6",
+    "#6b4428",
+    "#c8a27a",
+    "#1f1f1f",
+    "#9a9a9a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.013,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.009,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.16,
+   "force": true
+  },
+  "sole": 0.035,
+  "welt": 0.012
+ }
+}

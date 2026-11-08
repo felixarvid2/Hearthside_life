@@ -136,6 +136,48 @@ describe('autonomous caregivers', () => {
   });
 });
 
+describe('carrying a baby is marked in the simulation', () => {
+  it('sets carriedBy while the caregiver holds the baby and clears it when they put the baby down', () => {
+    const { fw, s, baby } = nursery();
+    const b = s.people[baby]!;
+    b.needs.hunger = 20;
+    expect(b.carriedBy).toBeUndefined();
+    const q = fw.h.sim.queue(fw.w.mira, { interactionId: 'careFeed', target: { kind: 'person', personId: baby } });
+    expect(q.ok).toBe(true);
+    runUntil(fw.h, () => b.carriedBy !== undefined, 4 * 60);
+    expect(b.carriedBy).toBe(fw.w.mira);
+    const m = s.people[fw.w.mira]!.location as { x: number; z: number };
+    const bl = b.location as { x: number; z: number };
+    expect(Math.hypot(m.x - bl.x, m.z - bl.z)).toBeLessThan(0.5);
+    runUntil(fw.h, () => s.people[fw.w.mira]!.queue.length === 0, 4 * 60);
+    expect(b.carriedBy).toBeUndefined();
+    expect((b.location as { posture: string }).posture).toBe('lying'); // back in the crib
+  });
+
+  it('a cuddle (not a feed in the crib) also carries; cancelling releases the baby', () => {
+    const { fw, s, baby } = nursery();
+    const b = s.people[baby]!;
+    b.needs.social = 10;
+    const q = fw.h.sim.queue(fw.w.mira, { interactionId: 'careCuddle', target: { kind: 'person', personId: baby } });
+    if (!q.ok) throw new Error(q.reason);
+    runUntil(fw.h, () => b.carriedBy !== undefined, 4 * 60);
+    fw.h.sim.cancel(fw.w.mira, q.actionId);
+    runTicks(fw.h, 8);
+    expect(b.carriedBy).toBeUndefined();
+  });
+
+  it('drops a stale mark (the carrier is not holding anybody) when the nursery is tidied', () => {
+    const { fw, s, baby } = nursery();
+    const b = s.people[baby]!;
+    b.carriedBy = fw.w.theo;
+    settleDependents(pureCtx(fw.h));
+    expect(b.carriedBy).toBeUndefined();
+    b.carriedBy = 'per_gone';
+    settleDependents(pureCtx(fw.h));
+    expect(b.carriedBy).toBeUndefined();
+  });
+});
+
 describe('toddlers', () => {
   it('play with toys, nap and eat on their own, but cannot cook or work', () => {
     const fw = familyWorld({ startMinute: SATURDAY_NOON, autonomy: true });
@@ -222,5 +264,53 @@ describe('the emergency sitter', () => {
     baby.needs.hunger = 0;
     runTicks(fw.h, 4 * 60 * 5);
     expect(s.households[nh]!.ledger.filter((l) => l.kind === 'family')).toHaveLength(0);
+  });
+});
+
+describe('the sitter for households you are not playing', () => {
+  /** A neighbour family's baby, on the lot (a visit to their home), with the neighbour household not playable. */
+  function visitedBaby() {
+    const { fw, s } = nursery();
+    const nb = fw.w.neighbour!;
+    const hhN = s.people[nb]!.householdId;
+    const baby = addMember(fw, hhN, 'Neo', { lifeStage: 'baby' }, { x: 9, z: 9 });
+    s.people[baby.id]!.isNpc = true;
+    return { fw, s, hhN, baby: baby.id };
+  }
+
+  it('steps in for a neglected baby on the lot, charging that household only what it has, with a quiet note', () => {
+    const { fw, s, hhN, baby } = visitedBaby();
+    const b = s.people[baby]!;
+    const funds = s.households[hhN]!.funds;
+    const ctx = pureCtx(fw.h);
+    b.needs.hunger = 0;
+    updateCare(ctx);
+    expect(b.careSince?.hunger).toBe(ctx.now);
+    b.careSince = { hunger: ctx.now - 180 };
+    updateCare(ctx);
+    expect(s.households[hhN]!.funds).toBe(funds - SITTER_FEE);
+    expect(b.needs.hunger).toBeGreaterThanOrEqual(70);
+    expect(s.households[hhN]!.ledger.filter((l) => l.kind === 'family')).toHaveLength(1);
+    expect(s.feed.some((f) => f.kind === 'warning' && /emergency sitter/.test(f.text))).toBe(false);
+    expect(s.feed.some((f) => f.kind === 'info' && /a sitter stepped in/.test(f.text))).toBe(true);
+    // a household with nothing in the bank is never put into debt
+    const funds0 = (s.households[hhN]!.funds = 0);
+    s.households[hhN]!.ledger = [];
+    b.needs.energy = 0;
+    callSitter(ctx, b, 'energy');
+    expect(s.households[hhN]!.funds).toBe(funds0);
+  });
+
+  it('drops the neglect timer of a little one who is off the lot (reconciliation), so it never fires later', () => {
+    const { fw, s, hhN, baby } = visitedBaby();
+    const b = s.people[baby]!;
+    const ctx = pureCtx(fw.h);
+    b.needs.hunger = 0;
+    b.careSince = { hunger: ctx.now - 500 };
+    b.location = { kind: 'offlot', place: 'home', since: ctx.now, until: null };
+    const funds = s.households[hhN]!.funds;
+    updateCare(ctx);
+    expect(b.careSince).toBeUndefined();
+    expect(s.households[hhN]!.funds).toBe(funds);
   });
 });

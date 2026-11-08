@@ -22,6 +22,9 @@ export const POSTURE_ANCHORS = {
     detailed: { a: { seatHeight: 0.442, seatZ: -0.156 }, b: { seatHeight: 0.477, seatZ: -0.197 } },
     /** The MPFB bodies (mpfb_m = frame a, mpfb_f = frame b), measured the same way (`dev/meshy/shootLab.mjs --style=mpfb --plan=measure`). */
     mpfb: { a: { seatHeight: 0.462, seatZ: -0.305 }, b: { seatHeight: 0.461, seatZ: -0.308 } },
+    /** The modular (Quaternius Universal Base Characters) bodies: a = ubc_male, b = ubc_female, measured on the skinned
+     * meshes in the Sitting_Idle pose (dev/wardrobe.html?keep=1&pose=sit, lowest hip/thigh point and its z). */
+    modular: { a: { seatHeight: 0.467, seatZ: -0.097 }, b: { seatHeight: 0.471, seatZ: -0.175 } },
     /** Feet rest on the floor at about this root-space z. */
     feetZ: 0.19,
   },
@@ -37,6 +40,8 @@ export const POSTURE_ANCHORS = {
     length: 1.9,
     /** Arms rest slightly below the back (frame a up to 7 cm), sinking into the mattress. */
     lowestY: -0.11,
+    /** The modular bodies in the same pose (lowest hip/thigh point; middle of crown-to-heels). */
+    modular: { a: { backY: -0.071, centerZ: -0.158 }, b: { backY: -0.076, centerZ: -0.146 } },
   },
   standing: {
     /** Interaction anchors for standing slots are at the feet (root origin). */
@@ -66,6 +71,10 @@ export interface StageOpts {
   stage?: LifeStage;
   /** The stage's own body is drawn (else the adult rig scaled uniformly to the stage's height: the classic and detailed styles, or a body still loading). */
   own?: boolean;
+  /** A modular (Quaternius) body is drawn: its own measured anchors (adults only). */
+  modular?: boolean;
+  /** Body frame, for the per-frame modular anchors when lying. */
+  frame?: 'a' | 'b';
 }
 
 /** Scale of the adult anchors that stands in for a stage (1 for adults). */
@@ -82,6 +91,7 @@ export interface RootPlacement { x: number; y: number; z: number; yaw: number }
 export function seatedPlacement(anchor: { x: number; y: number; z: number }, facing: number, frame?: 'a' | 'b', style: 'classic' | 'detailed' | 'mpfb' = 'classic', opts: StageOpts = {}): RootPlacement {
   let m: { seatHeight: number; seatZ: number } = frame ? (style === 'mpfb' ? POSTURE_ANCHORS.seated.mpfb : style === 'detailed' ? POSTURE_ANCHORS.seated.detailed : POSTURE_ANCHORS.seated.frames)[frame] : POSTURE_ANCHORS.seated;
   const stage = opts.stage;
+  if (opts.modular && (!stage || stage === 'adult' || stage === 'youngAdult')) m = POSTURE_ANCHORS.seated.modular[frame ?? 'a'];
   if (stage && stage !== 'adult' && stage !== 'youngAdult') {
     const own = opts.own !== false && style === 'mpfb' ? STAGE_SEATED[stage] : undefined;
     if (own) m = own[frame ?? 'a'];
@@ -99,7 +109,8 @@ export function lyingPlacement(center: { x: number; y: number; z: number }, head
   const stage = opts.stage;
   const k = stage && stage !== 'adult' && stage !== 'youngAdult' ? stageScale(stage) : 1;
   const own = k !== 1 && opts.own !== false ? STAGE_LYING[stage!] : undefined;
-  const L = own ?? { backY: POSTURE_ANCHORS.lying.backY * k, centerZ: POSTURE_ANCHORS.lying.centerZ * k };
+  const L = own ?? (opts.modular && k === 1 ? POSTURE_ANCHORS.lying.modular[opts.frame ?? 'a']
+    : { backY: POSTURE_ANCHORS.lying.backY * k, centerZ: POSTURE_ANCHORS.lying.centerZ * k });
   const dx = Math.sin(headToFeet), dz = Math.cos(headToFeet);
   return { x: center.x - dx * L.centerZ, y: center.y - L.backY, z: center.z - dz * L.centerZ, yaw: headToFeet };
 }

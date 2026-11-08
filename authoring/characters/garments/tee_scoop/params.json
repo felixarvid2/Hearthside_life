@@ -1,0 +1,57 @@
+{
+ "id": "tee_scoop",
+ "label": "Scoop tee",
+ "preset": null,
+ "category": "top",
+ "slot": "top",
+ "tags": [
+  "tee"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_TeeScoop"
+   ],
+   "default": "#f4d6d6",
+   "palette": [
+    "#f4d6d6",
+    "#d6e4f4",
+    "#dff0d8",
+    "#f7ebc6",
+    "#e6dcf2",
+    "#f2f2f2"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.007,
+  "max": 0.022,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.012,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "scoop"
+   },
+   "sleeve": 0.4,
+   "hem": {
+    "at": "hip",
+    "offset": 0.02
+   },
+   "force": true
+  }
+ }
+}

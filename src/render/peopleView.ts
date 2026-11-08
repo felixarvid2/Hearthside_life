@@ -21,6 +21,7 @@ import { CRADLE } from '../characters/stagePose';
 import { HandProps, propsFor } from './handProps';
 import { ProgressPills, type ProgressScope } from './progressPills';
 import { WATER_Y } from './poolView';
+import { WALK_TILES_PER_MINUTE } from '../sim/tuning';
 
 const ANIMS = new Set<string>(ANIM_IDS);
 const TWO_PI = Math.PI * 2;
@@ -34,6 +35,8 @@ interface Entry {
   /** Milestone 11.5: the props in this person's hands (and the plate put down in front). */
   props: HandProps;
   prevX: number; prevZ: number; curX: number; curZ: number;
+  /** Last drawn position and the smoothed ground speed (tiles per real second), to match the walk cycle to it. */
+  gx: number; gz: number; gv: number;
   facing: number;
   animKey: string;
   appearanceKey: string;
@@ -94,10 +97,10 @@ function injectOverlayCss(): void {
 #world-overlay .wo-p { position: absolute; left: 0; top: 0; will-change: transform; display: flex; flex-direction: column; align-items: center; gap: 6px; transform: translate(-9999px, 0); }
 #world-overlay .wo-bubble { position: relative; width: 38px; height: 38px; border-radius: 50%; background: #fbf6ee; color: #2f2a26; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(60,40,20,.22); border: 2px solid #e6d9c6; }
 #world-overlay .wo-bubble::after { content: ''; position: absolute; bottom: -7px; left: 50%; width: 9px; height: 9px; margin-left: -6px; border-radius: 50%; background: #fbf6ee; border: 2px solid #e6d9c6; }
-#world-overlay .wo-bubble.need { color: #c8473d; }
+#world-overlay .wo-bubble.need { color: #b83c32; }
 #world-overlay .wo-speech { max-width: 220px; white-space: normal; text-align: center; font: 600 calc(13px * var(--text-scale, 1)) / 1.3 var(--font, system-ui); background: #fbf6ee; color: #2f2a26; padding: 6px 10px; border-radius: 14px; box-shadow: 0 3px 10px rgba(60,40,20,.2); width: max-content; }
 #world-overlay .wo-name { font: 700 calc(12px * var(--text-scale, 1)) / 1 var(--font, system-ui); color: #fff; background: rgba(47,42,38,.78); padding: 4px 8px; border-radius: 999px; white-space: nowrap; }
-#world-overlay .wo-name.sel { background: #d9774b; }
+#world-overlay .wo-name.sel { background: #b4562b; }
 #world-overlay [hidden] { display: none !important; }
 .reduced-motion #world-overlay .wo-p { transition: none; }
 `;
@@ -114,8 +117,6 @@ export class PeopleView {
   private slotsLot: Lot | null = null;
   private selected: Id | null = null;
   hovered: Id | null = null;
-  /** Babies held in somebody's arms: baby id -> carrier id (`setHeld`). */
-  private readonly held = new Map<Id, Id>();
   /** Ground height under a point (grass is slightly below floors). */
   groundAt: (x: number, z: number) => number = () => 0;
   /** Milestone 9: people on floors above this one are not drawn. */
@@ -181,14 +182,6 @@ export class PeopleView {
     return best;
   }
 
-  /**
-   * Puts a baby in a carrier's arms (the carrier cradles, the baby lies across the forearms) or back down (null). Without a call, a
-   * baby that is not on a bed slot and stands within arm's reach of somebody playing the 'carry' animation is taken as held by them.
-   */
-  setHeld(babyId: Id, carrierId: Id | null): void {
-    if (carrierId) this.held.set(babyId, carrierId); else this.held.delete(babyId);
-  }
-
   /** Rebuilds every person on the assets' current character style. */
   refreshStyle(): void {
     for (const e of this.entries.values()) {
@@ -246,7 +239,7 @@ export class PeopleView {
     this.overlay?.appendChild(el);
     const loc = p.location.kind === 'lot' ? p.location : null;
     const e: Entry = {
-      id: p.id, view, props, shown: { appearance: structuredClone(p.appearance), outfit, category, stage: p.lifeStage }, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0,
+      id: p.id, view, props, shown: { appearance: structuredClone(p.appearance), outfit, category, stage: p.lifeStage }, prevX: loc?.x ?? 0, prevZ: loc?.z ?? 0, curX: loc?.x ?? 0, curZ: loc?.z ?? 0, gx: loc?.x ?? 0, gz: loc?.z ?? 0, gv: 0,
       facing: loc?.facing ?? 0, animKey: '', appearanceKey: stageKey(p), outfitKey: `${category}|${JSON.stringify(outfit)}`,
       align: loc && (loc.posture === 'seated' || loc.posture === 'lying') ? 1 : 0, slot: null, posture: loc?.posture ?? 'standing',
       shadow, el, bubble, name, speech, speechUntil: 0, thoughtKey: '', visible: false, box: new THREE.Box3(), lastShown: '', layoutKey: '', width: 0, baby: p.lifeStage === 'baby',
@@ -354,6 +347,14 @@ export class PeopleView {
         e.posture = posture;
         e.view.play(id, { fade: first || reducedMotion ? 0 : 0.25, posture });
       }
+      // Milestone 13: the walk cycle follows the real ground speed (fast game speeds no longer skate), and a recliner leans back.
+      if (dt > 0) {
+        e.gv += (Math.min(Math.hypot(x - e.gx, z - e.gz) / dt, 14) - e.gv) * Math.min(1, dt * 8);
+        e.view.setWalkRate(e.gv / WALK_TILES_PER_MINUTE);
+      }
+      e.gx = x; e.gz = z;
+      const head = p.queue[0];
+      e.view.setRecline(head?.interactionId === 'reclineBack' && head.phase === 'perform');
       e.view.update(dt);
       if (e.baby) {
         const holder = this.holderOf(state, e);
@@ -380,7 +381,7 @@ export class PeopleView {
       const s = e.slot;
       const sy = levelY(s?.level ?? 0); // slot heights are above the floor of their level
       // the body of the person's life stage sits and lies lower (children) or on a mat (babies): see characters/posture.ts
-      const so = { stage: p.lifeStage, own: e.view.hasOwnBody };
+      const so = { stage: p.lifeStage, own: e.view.hasOwnBody, modular: e.view.modular, frame: p.appearance.frame };
       const k = e.view.stageHeight / 1.8;
       if (e.baby && !(s && e.align > 0)) {
         // a baby without a bed slot lies on the floor where it is
@@ -448,16 +449,12 @@ export class PeopleView {
     for (const e of this.entries.values()) if (e.view.carrying !== carriers.has(e.id)) e.view.setCarrying(carriers.has(e.id));
   }
 
-  /** Who holds this baby: the carrier set with `setHeld`, else somebody within reach who is playing the 'carry' animation. */
+  /** Who holds this baby: the person the simulation marked as carrying them (`Person.carriedBy`), if they are on the lot. */
   private holderOf(state: WorldState, baby: Entry): Entry | null {
-    const set = this.held.get(baby.id);
-    if (set) { const h = this.entries.get(set); if (h && state.people[h.id]?.location.kind === 'lot') return h; }
-    if (baby.slot) return null;
-    for (const o of this.entries.values()) {
-      if (o.baby || o === baby || state.people[o.id]?.anim.id !== 'carry') continue;
-      if (Math.hypot(o.curX - baby.curX, o.curZ - baby.curZ) < 0.9) return o;
-    }
-    return null;
+    const by = state.people[baby.id]?.carriedBy;
+    if (!by) return null;
+    const h = this.entries.get(by);
+    return h && state.people[h.id]?.location.kind === 'lot' ? h : null;
   }
 
   /** Positions overlay elements (call after matrices are updated). */

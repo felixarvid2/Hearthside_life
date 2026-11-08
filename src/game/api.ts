@@ -82,22 +82,25 @@ import type { Tile } from '../core/nav';
 import type { Cents, FinishRef, HomeEventType, Id, OutfitCategory, Rot, SimSettings, StartMode, Wardrobe, WorldState } from '../core/types';
 import type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 import type { RoomDelta, Vertex } from '../world/roomTracker';
-import type { MovePreview, SwitchPreview } from '../sim/households';
+import type { MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
 import type { FamilyInfo } from '../sim/familyView';
+import type { GiftChoice } from '../sim/gifts';
 import type { SplitPreview, SplitTarget } from '../sim/split';
 
 export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
 export { WALL_HEIGHT_PRESETS } from '../building/buildPlans';
 export type { RoomDelta, Vertex } from '../world/roomTracker';
-export type { HouseholdBrief, MovePreview, SwitchPreview } from '../sim/households';
+export type { FurnitureChoice, FurnitureSummary, HouseholdBrief, MoveOptions, MovePreview, SwitchPreview } from '../sim/households';
 export type { HouseholdInfo, LotInfo, LotPerson, NeighbourhoodInfo, Tenure, TripInfo } from '../sim/neighbourhoodView';
 export type { PersonPlace, PlaceKind } from '../sim/places';
 export type { AdoptionPreview, AdoptionSpec, AdoptStage } from '../sim/adoption';
 export type { FamilyInfo, RelativeInfo } from '../sim/familyView';
 export type { SplitPreview, SplitTarget } from '../sim/split';
+export type { GiftChoice, GiftVerdict } from '../sim/gifts';
+export type { CommunityEventInfo } from '../sim/community';
 export type { SchoolInfo } from '../sim/school';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
@@ -135,6 +138,8 @@ export interface PlanEventRequest {
   hostId: Id;
   guestIds: Id[];
   startAt: number;
+  /** A public venue to hold it at (the household and the guests travel there); absent = at home. */
+  lotId?: Id;
 }
 
 export interface PlacementState {
@@ -182,6 +187,7 @@ export interface RoomDoorSpec {
  * - eraseOpening: remove the door/window under the pointer (the wall stays).
  * - floor / eraseFloor: tile, dragged rectangle, or the whole room under the pointer.
  * - deleteRoom: remove the room under the pointer (outer walls, their openings and the floor).
+ * - roomEdit: move, resize or duplicate the rectangular room under the pointer (Milestone 13).
  */
 export type BuildTool =
   | { kind: 'wall'; shape: 'segment' | 'run'; spec?: WallSpec }
@@ -193,6 +199,9 @@ export type BuildTool =
   | { kind: 'floor'; finish: FinishRef; shape: 'tile' | 'rect' | 'room' }
   | { kind: 'eraseFloor'; shape: 'tile' | 'rect' | 'room' }
   | { kind: 'deleteRoom' }
+  // Milestone 13: move, resize or duplicate the room under the pointer (building/roomOps.ts). `move` and `duplicate` shift it by (dx, dz)
+  // tiles; `resize` moves one `side` by `delta` tiles; `copyObjects` also buys the furniture again for a duplicate.
+  | { kind: 'roomEdit'; edit: 'move' | 'resize' | 'duplicate'; dx?: number; dz?: number; side?: 'n' | 'e' | 's' | 'w'; delta?: number; copyObjects?: boolean }
   // Milestone 9: staircases. `stairs` places the ObjectDef `defId` (a stair) on the active level at the tapped tile, turned `rot` quarter
   // turns (a rise toward the back of the object); `eraseStairs` sells the staircase under the pointer (from either floor it joins).
   | { kind: 'stairs'; defId: string; rot?: number }
@@ -281,7 +290,9 @@ export interface GameSettings {
   soundVolume: number;
   musicVolume: number;
   reducedMotion: boolean;
-  textScale: number; // 0.9..1.3
+  textScale: number; // 0.9..1.5 (UI scale)
+  /** Milestone 13: stronger text and border contrast, no soft shadows on panels. */
+  highContrast: boolean;
   quality: 'low' | 'high';
   /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter); 'quaternius': modular GLB-part adults on top of the classic bodies (preview). */
   characterStyle: 'mpfb' | 'detailed' | 'classic' | 'quaternius';
@@ -292,6 +303,10 @@ export interface GameSettings {
   actionProgress: 'household' | 'all' | 'off';
   showStats: boolean;
   tutorial: boolean;
+  /** Milestone 13: contextual hints for new players (what has been seen is kept separately, see ui/hud/hintState.ts). */
+  hints: boolean;
+  /** Ids of the hints already shown on this device (a Settings > Help reset empties it). */
+  seenHints: string[];
 }
 
 export type SoundId =
@@ -413,6 +428,11 @@ export interface GameAPI {
   planEvent?(req: PlanEventRequest): Result & { eventId?: Id };
   /** Calls off a planned event that has not started. */
   cancelEvent?(eventId: Id): Result;
+  // ---- gifts (social gaps pass; sim/gifts.ts) ----
+  // "Give a Gift..." in the social menu raises ui.request 'giveGift' (personId = giver, targetId = recipient); the picker lists
+  // giftChoices() and calls giveGift() with the chosen kind. The gift is paid for when accepted and left as a parcel at the recipient's lot.
+  giftChoices?(giverId: Id, recipientId: Id): GiftChoice[];
+  giveGift?(giverId: Id, recipientId: Id, giftId: string): Result;
 
   // ---- careers and household economy (Milestone 6) ----
   // Optional like the event planner: standalone dev mocks of other screens may omit them. Money always moves
@@ -440,8 +460,9 @@ export interface GameAPI {
   inviteHome?(hostId: Id, guestId: Id): Result;
   switchPreview?(householdId: Id): SwitchPreview | null;
   switchHousehold?(householdId: Id): Result;
-  movePreview?(lotId: Id): MovePreview | null;
-  moveHousehold?(lotId: Id): Result;
+  /** `opts.furniture` ('leave' default, 'take' into the inventory, 'sell') chooses what happens to the furniture of the old home. */
+  movePreview?(lotId: Id, opts?: MoveOptions): MovePreview | null;
+  moveHousehold?(lotId: Id, opts?: MoveOptions): Result;
 
   // ---- family and life stages (Milestone 8; sim/aging.ts, school.ts, care.ts, adoption.ts, split.ts) ----
   // Optional like the other newer sections. Everything is plain data.

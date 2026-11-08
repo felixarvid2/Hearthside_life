@@ -5,7 +5,7 @@
 //
 // Starts the Vite dev server (or reuses `--url`), opens dev/wardrobe.html in its single-cell mode
 // (?thumb=<partId>&body=<bodyId>&shot=...) with headless Chromium, screenshots the transparent canvas and writes
-// <out>/<partId>.webp (default public/assets/characters/modular/thumbs/). Garments are framed 'upper' (bottoms, shoes and one-pieces 'full'), hairstyles 'face'. The
+// <out>/<partId>.webp (default public/assets/characters/modular/thumbs/). Garments are framed 'upper' (bottoms, shoes and one-pieces 'full'), hairstyles, facial hair, hats, eyewear and earrings 'face' (gathered hair and bags seen from behind). The
 // body is the manifest's default frame 'a' body if the part fits it, else the first body it fits. `--write-manifest` stores
 // each part's `thumbnail` (path relative to the modular asset root, e.g. "thumbs/short_crop.webp") in manifest.json.
 //
@@ -58,8 +58,13 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const preferred = manifest.defaults.bodyByFrame.a;
 const bodyFor = (part) => (part.files[preferred] ? preferred : manifest.bodies.map((b) => b.id).find((id) => part.files[id]));
 const jobs = [
-  ...manifest.garments.map((def) => ({ def, list: 'garments', shot: def.slot === 'bottom' || def.slot === 'shoes' || def.slot === 'full' ? 'full' : 'upper' })),
-  ...manifest.hairstyles.map((def) => ({ def, list: 'hairstyles', shot: 'face' })),
+  ...manifest.garments.map((def) => ({ def, list: 'garments', shot: ['hat', 'eyewear', 'earrings'].includes(def.slot) ? 'face'
+    : def.slot === 'bottom' || def.slot === 'shoes' || def.slot === 'full' ? 'full' : 'upper',
+    yaw: def.slot === 'earrings' ? 0.9 : def.slot === 'bag' ? 2.6 : 0,
+    extra: def.category === 'accessory' ? { skin: 'e6c3a5', hair: '20140c' } : undefined })),
+  ...manifest.hairstyles.map((def) => ({ def, list: 'hairstyles', shot: 'face', yaw: (def.tags ?? []).includes('gathered') ? 2.4 : 0 })),
+  // facial hair and accessories read better on a lighter skin with dark hair (beards and gold on the default tone vanish)
+  ...(manifest.facialHair ?? []).map((def) => ({ def, list: 'facialHair', shot: 'face', yaw: 0.35, extra: { skin: 'e6c3a5', hair: '20140c' } })),
 ].filter((j) => only.length === 0 || only.includes(j.def.id));
 if (jobs.length === 0) { console.error('No matching parts.'); process.exit(1); }
 
@@ -77,13 +82,13 @@ const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=sw
 let failed = 0;
 try {
   fs.mkdirSync(outDir, { recursive: true });
-  for (const { def, list, shot } of jobs) {
+  for (const { def, list, shot, yaw, extra } of jobs) {
     const body = bodyFor(def);
     if (!body) { console.warn(`${def.id}: fits no body, skipped`); failed++; continue; }
     const page = await browser.newPage({ viewport: { width: size, height: size } });
     try {
       page.on('pageerror', (e) => console.warn(`${def.id}: page error ${e}`));
-      const q = new URLSearchParams({ thumb: def.id, body, shot }).toString();
+      const q = new URLSearchParams({ thumb: def.id, body, shot, ...(yaw ? { yaw: String(yaw) } : {}), ...(extra ?? {}) }).toString();
       await page.goto(`${url.replace(/\/$/, '')}/dev/wardrobe.html?${q}`);
       await page.waitForFunction(() => window.wardrobeReady || window.wardrobeError, null, { timeout: timeoutMs });
       const err = await page.evaluate(() => window.wardrobeError);

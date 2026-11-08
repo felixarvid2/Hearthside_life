@@ -1,0 +1,9 @@
+{
+ "accessory": "pendant",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/pendant__ubc_male.glb",
+ "kind": "pendant",
+ "secs": 0.7,
+ "tris": 328,
+ "verts": 166
+}

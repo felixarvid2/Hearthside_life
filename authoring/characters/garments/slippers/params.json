@@ -1,0 +1,67 @@
+{
+ "id": "slippers",
+ "label": "Slippers",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "home"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Slippers"
+   ],
+   "default": "#f4d6d6",
+   "palette": [
+    "#f4d6d6",
+    "#d6e4f4",
+    "#dff0d8",
+    "#f7ebc6",
+    "#e6dcf2",
+    "#f2f2f2"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_SlippersSole"
+   ],
+   "default": "#3a3a3a",
+   "palette": [
+    "#3a3a3a",
+    "#f2efe6",
+    "#6b4428",
+    "#c8a27a",
+    "#1f1f1f",
+    "#9a9a9a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.018000000000000002,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.014,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.06,
+   "force": true,
+   "vamp": true
+  },
+  "sole": 0.015,
+  "welt": 0.006
+ }
+}

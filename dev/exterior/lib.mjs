@@ -65,7 +65,7 @@ export async function openGame(browser, name, url) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
-  await page.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, musicVolume: 0 })); } catch { /* ignore */ } });
+  await page.addInitScript(() => { try { localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ } });
   await page.goto(url, { waitUntil: 'load' });
   // the dev server may re-optimise dependencies on the first visit and reload the page: wait until the game stays ready
   for (let i = 0; i < 6; i++) {

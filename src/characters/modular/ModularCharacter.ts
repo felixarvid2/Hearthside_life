@@ -13,12 +13,12 @@ import { Animator } from '../animation';
 import type { ModularAssetCache } from './cache';
 import { outfitFor, resolveLook } from './look';
 import { hipRatio, scaledClipsFor } from './retarget';
-import { findBody, findGarment, findHair } from './manifest';
+import { findBody, findFacialHair, findGarment, findHair } from './manifest';
 import { BODY_REGIONS, MODULAR_LOOK_VERSION } from './types';
-import type { BodyPresetDef, BodyRegion, ColorRegionDef, CoverMaskFile, GarmentDef, HairstyleDef, ModularLook, ModularManifest, ModularSlot, RigProfile } from './types';
+import type { BodyPresetDef, BodyRegion, ColorRegionDef, CoverMaskFile, FacialHairDef, GarmentDef, HairstyleDef, ModularLook, ModularManifest, ModularSlot, RigProfile } from './types';
 
-type PartDef = GarmentDef | HairstyleDef;
-type PartKey = ModularSlot | 'hair';
+type PartDef = GarmentDef | HairstyleDef | FacialHairDef;
+type PartKey = ModularSlot | 'hair' | 'facialHair';
 
 interface BodyInstance {
   def: BodyPresetDef;
@@ -125,6 +125,17 @@ export function copyMorphNames(src: THREE.Mesh, dst: THREE.Mesh): void {
   dst.morphTargetInfluences = src.morphTargetInfluences.map(() => 0);
 }
 
+/**
+ * Skin material colour = skin colour x factor (the neutral texture's gain). A light skin times the gain can pass 1 in one
+ * channel (red first), and the clipped channel turns the tone golden; scaling the whole colour back keeps its hue.
+ */
+export function skinMaterialColor(skin: THREE.Color, factor: number, out: THREE.Color): THREE.Color {
+  out.copy(skin).multiplyScalar(factor);
+  const m = Math.max(out.r, out.g, out.b);
+  if (m > 1) out.multiplyScalar(1 / m);
+  return out;
+}
+
 /** Bit i of a base64 bitset (LSB first) per vertex, as 0/1 bytes. */
 export function decodeBitset(b64: string, count: number): Uint8Array {
   const bin = atob(b64);
@@ -187,7 +198,7 @@ function patchIris(mat: THREE.Material, iris: NonNullable<BodyPresetDef['iris']>
   mat.needsUpdate = true;
 }
 
-const emptyLook = (): ModularLook => ({ v: MODULAR_LOOK_VERSION, bodyId: '', hairId: null, outfits: {}, colors: { skin: '#d9a98a', eyes: '#5b4636', hair: '#3a2a20', garments: {} }, morphs: {} });
+const emptyLook = (): ModularLook => ({ v: MODULAR_LOOK_VERSION, bodyId: '', hairId: null, facialHairId: null, outfits: {}, colors: { skin: '#d9a98a', eyes: '#5b4636', hair: '#3a2a20', garments: {} }, morphs: {} });
 
 export class ModularCharacter {
   readonly root = new THREE.Group();
@@ -199,9 +210,11 @@ export class ModularCharacter {
   private readonly clips = new Map<string, THREE.AnimationClip>();
   private body: BodyInstance | null = null;
   private hair: PartInstance | null = null;
+  private facialHair: PartInstance | null = null;
   private readonly garments = new Map<ModularSlot, PartInstance>();
   private look: ModularLook = emptyLook();
   private animator: Animator | null = null;
+  private walkRate = 1;
   private lastAnim: { id: AnimId; opts: { fade?: number; posture?: Posture } } = { id: 'idle', opts: { fade: 0 } };
   private chain: Promise<void> = Promise.resolve();
   private target: { look: ModularLook; category: OutfitCategory } | null = null;
@@ -241,10 +254,10 @@ export class ModularCharacter {
   serialize(): ModularLook { return structuredClone(this.look); }
 
   /** What is on the character right now. */
-  equipped(): { bodyId: string | null; hairId: string | null; garments: Partial<Record<ModularSlot, string>> } {
+  equipped(): { bodyId: string | null; hairId: string | null; facialHairId: string | null; garments: Partial<Record<ModularSlot, string>> } {
     const garments: Partial<Record<ModularSlot, string>> = {};
     for (const [slot, p] of this.garments) garments[slot] = p.id;
-    return { bodyId: this.body?.def.id ?? null, hairId: this.hair?.id ?? null, garments };
+    return { bodyId: this.body?.def.id ?? null, hairId: this.hair?.id ?? null, facialHairId: this.facialHair?.id ?? null, garments };
   }
 
   /** Rendered triangles, draw calls and visible meshes (one pass, no shadows). */
@@ -288,6 +301,12 @@ export class ModularCharacter {
     this.animator?.play(id, opts);
   }
 
+  /** Walk-cycle speed factor from the ground speed (see Animator.setWalkRate); remembered across body rebuilds. */
+  setWalkRate(rate: number): void {
+    this.walkRate = rate;
+    this.animator?.setWalkRate(rate);
+  }
+
   update(dt: number): void {
     if (this.disposed) return;
     this.animator?.update(Math.min(dt, 0.1));
@@ -318,12 +337,14 @@ export class ModularCharacter {
     const wanted = new Map<PartKey, PartDef>();
     const hairDef = look.hairId ? findHair(this.manifest, look.hairId) : undefined;
     if (hairDef) wanted.set('hair', hairDef);
+    const facialDef = look.facialHairId ? findFacialHair(this.manifest, look.facialHairId) : undefined;
+    if (facialDef) wanted.set('facialHair', facialDef);
     for (const [slot, id] of Object.entries(outfit) as Array<[ModularSlot, string]>) {
       const g = findGarment(this.manifest, id);
       if (g) wanted.set(slot, g);
     }
     for (const key of [...this.rejected.keys()]) if (bodyChanged || wanted.get(key)?.id !== this.rejected.get(key)) { this.rejected.delete(key); this.rigIssues.delete(key); }
-    const current = (key: PartKey) => (key === 'hair' ? this.hair : this.garments.get(key));
+    const current = (key: PartKey) => (key === 'hair' ? this.hair : key === 'facialHair' ? this.facialHair : this.garments.get(key));
     const toLoad = [...wanted].filter(([key, def]) => (bodyChanged || current(key)?.id !== def.id) && this.rejected.get(key) !== def.id);
 
     // load (one reference per file we may end up owning)
@@ -365,6 +386,7 @@ export class ModularCharacter {
     // unequip what is gone or changed, then equip (the old part of a slot always leaves first)
     const wantedId = (key: PartKey) => wanted.get(key)?.id;
     if (this.hair && this.hair.id !== wantedId('hair')) this.unequip('hair');
+    if (this.facialHair && this.facialHair.id !== wantedId('facialHair')) this.unequip('facialHair');
     for (const slot of [...this.garments.keys()]) if (this.garments.get(slot)!.id !== wantedId(slot)) this.unequip(slot);
     toLoad.forEach(([key, def], i) => {
       const gltf = partGltfs[i];
@@ -380,7 +402,7 @@ export class ModularCharacter {
         if (typeof bits === 'string') loadIssues.push(`cover-mask-mismatch: '${def.id}' ${bits}`);
         else { res.mask = bits; res.maskUrl = m.url; keptMasks.add(m.url); }
       }
-      if (key === 'hair') this.hair = res; else this.garments.set(key, res);
+      if (key === 'hair') this.hair = res; else if (key === 'facialHair') this.facialHair = res; else this.garments.set(key, res);
       kept.add(url);
     });
     releaseUnused(kept, keptMasks);
@@ -423,7 +445,10 @@ export class ModularCharacter {
 
     const skin = hexColor(this.look.colors.skin);
     const gain = body.def.skinGain ?? 1;
-    for (const s of body.skin) (s.mat as THREE.MeshStandardMaterial).color?.copy(skin).multiplyScalar(s.tone * gain);
+    for (const s of body.skin) {
+      const c = (s.mat as THREE.MeshStandardMaterial).color;
+      if (c) skinMaterialColor(skin, s.tone * gain, c);
+    }
     for (const e of body.eyes) hexColor(this.look.colors.eyes, e.uniform.value);
     const hairColor = hexColor(this.look.colors.hair);
     for (const m of body.brows) (m as THREE.MeshStandardMaterial).color?.copy(hairColor);
@@ -433,16 +458,19 @@ export class ModularCharacter {
       this.colorPart(p, g.colorRegions, (r) => this.look.colors.garments[g.id]?.[r.id] ?? r.default);
     }
     if (this.hair) this.colorPart(this.hair, this.hair.def.colorRegions, (r, i) => (i === 0 ? this.look.colors.hair : r.default));
+    // facial hair takes the hair colour like the hairstyle does
+    if (this.facialHair) this.colorPart(this.facialHair, this.facialHair.def.colorRegions, (r, i) => (i === 0 ? this.look.colors.hair : r.default));
 
     applyMorphInfluences(body.meshes, body.def.morphs, this.look.morphs);
     for (const p of this.garments.values()) applyMorphInfluences(p.meshes, body.def.morphs, this.look.morphs, (p.def as GarmentDef).followsMorphs ?? []);
+    if (this.facialHair) applyMorphInfluences(this.facialHair.meshes, body.def.morphs, this.look.morphs, (this.facialHair.def as FacialHairDef).followsMorphs ?? []);
   }
 
   private colorPart(p: PartInstance, regions: ColorRegionDef[], pick: (r: ColorRegionDef, i: number) => Hex): void {
     if (regions.length === 0) {
       // no declared regions: the whole part takes the first color we are asked for (hair color for hair)
       const c = hexColor(this.look.colors.hair);
-      if (p.key === 'hair') for (const m of p.materials) (m as THREE.MeshStandardMaterial).color?.copy(c);
+      if (p.key === 'hair' || p.key === 'facialHair') for (const m of p.materials) (m as THREE.MeshStandardMaterial).color?.copy(c);
       return;
     }
     regions.forEach((r, i) => {
@@ -518,6 +546,7 @@ export class ModularCharacter {
     const pelvis = bones.get('pelvis');
     const ratio = pelvis ? hipRatio(pelvis.position.length(), this.body.rig?.clipPelvisHeight) : 1;
     this.animator = new Animator(this.root, ratio === 1 ? this.clips : scaledClipsFor(this.clips, ratio));
+    this.animator.setWalkRate(this.walkRate);
     this.animator.play(this.lastAnim.id, { ...this.lastAnim.opts, fade: 0 });
   }
 
@@ -575,9 +604,9 @@ export class ModularCharacter {
   }
 
   private unequip(key: PartKey): void {
-    const p = key === 'hair' ? this.hair : this.garments.get(key);
+    const p = key === 'hair' ? this.hair : key === 'facialHair' ? this.facialHair : this.garments.get(key);
     if (!p) return;
-    if (key === 'hair') this.hair = null; else this.garments.delete(key);
+    if (key === 'hair') this.hair = null; else if (key === 'facialHair') this.facialHair = null; else this.garments.delete(key);
     this.freePart(p);
   }
 
@@ -594,6 +623,8 @@ export class ModularCharacter {
     this.animator = null;
     if (this.hair) this.freePart(this.hair);
     this.hair = null;
+    if (this.facialHair) this.freePart(this.facialHair);
+    this.facialHair = null;
     for (const p of this.garments.values()) this.freePart(p);
     this.garments.clear();
     this.rejected.clear();

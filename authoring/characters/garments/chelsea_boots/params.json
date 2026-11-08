@@ -1,0 +1,66 @@
+{
+ "id": "chelsea_boots",
+ "label": "Chelsea boots",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "boots"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_ChelseaBoots"
+   ],
+   "default": "#3a2a20",
+   "palette": [
+    "#3a2a20",
+    "#6b4428",
+    "#1f1f1f",
+    "#8c5a3c",
+    "#c8a27a",
+    "#5b5b5b"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_ChelseaBootsSole"
+   ],
+   "default": "#3a3a3a",
+   "palette": [
+    "#3a3a3a",
+    "#f2efe6",
+    "#6b4428",
+    "#c8a27a",
+    "#1f1f1f",
+    "#9a9a9a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.013,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.009,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.17,
+   "force": true
+  },
+  "sole": 0.025,
+  "welt": 0.008
+ }
+}

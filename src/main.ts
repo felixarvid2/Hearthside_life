@@ -9,13 +9,14 @@
 //   hearthside.debug.run(name, ...args)   call any GameAPI method by name
 //   hearthside.debug.setWeather(kind)     pin today's stored weather plan (tests: keeps runs deterministic)
 
-import { content } from './content/index';
 import type { WeatherKind } from './core/types';
 import type { GameAPI } from './game/api';
 import { Game } from './game/Game';
 import { GameCore } from './game/GameCore';
 import { requestPersistentStorage, SaveStore } from './persistence/index';
 import { createUI, showCompatibilityScreen } from './ui/app';
+import { bootProgress } from './ui/bootProgress';
+import { installCrashRecovery } from './ui/screens/crash';
 
 declare global {
   interface Window {
@@ -33,6 +34,8 @@ declare global {
         /** Pins the stored plan for the current day so an end-to-end run does not depend on the random world seed. */
         setWeather(kind: WeatherKind): boolean;
         stats(): ReturnType<Game['devStats']>;
+        /** Tests: reports a fault as if the loop had thrown it (shows the recovery dialog). */
+        crash(message?: string): void;
       };
     };
   }
@@ -48,8 +51,13 @@ async function boot(): Promise<void> {
     return;
   }
 
+  // The content catalogue (about a third of the code) is its own chunk, fetched here so the entry chunk stays small.
+  bootProgress.set(0.02, 'Fetching the catalogue');
+  const { content } = await import('./content/index');
   const db = content();
+  bootProgress.set(0.08, 'Opening your saves');
   const saves = await SaveStore.open(undefined, { content: db });
+  bootProgress.set(0.12, 'Starting the world');
   void requestPersistentStorage().catch(() => undefined);
   const core = new GameCore({ content: db, saves });
   let game: Game;
@@ -84,12 +92,17 @@ async function boot(): Promise<void> {
         return true;
       },
       stats: () => game.devStats(),
+      crash: (message = 'Test fault') => { game.crashGuard.report('simulation', new Error(message)); },
     },
   };
 
   createUI(game, root);
+  installCrashRecovery(game);
   try {
-    await game.load((p) => { document.body.dataset.loadProgress = String(Math.round(p * 100)); });
+    await game.load((p, label) => {
+      bootProgress.set(0.12 + 0.88 * p, label);
+      document.body.dataset.loadProgress = String(Math.round(p * 100));
+    });
   } catch (e) {
     console.error('[main] asset loading failed', e);
     window.hearthside.error = e instanceof Error ? e.message : String(e);

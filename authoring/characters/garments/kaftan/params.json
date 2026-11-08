@@ -1,0 +1,70 @@
+{
+ "id": "kaftan",
+ "label": "Kaftan",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "dress",
+  "long"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Kaftan"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.011,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "v",
+    "depth": 0.12
+   },
+   "sleeve": 0.7,
+   "hem": {
+    "at": "hip",
+    "offset": -0.04
+   },
+   "force": true,
+   "sleeve_flare": 0.07
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.95,
+   "flare": 0.2,
+   "offset": 0.022
+  }
+ }
+}

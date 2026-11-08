@@ -1,0 +1,69 @@
+{
+ "body": "ubc_male",
+ "body_shell": {
+  "boundary_edges": 388,
+  "skin_verts_hit": 1679,
+  "tris": 3740,
+  "verts": 2067
+ },
+ "coverage": {
+  "belly": 0.8,
+  "calf_l": 0.0,
+  "calf_r": 0.0,
+  "chest": 0.961,
+  "foot_l": 0.0,
+  "foot_r": 0.0,
+  "forearm_l": 0.8,
+  "forearm_r": 0.803,
+  "hand_l": 0.002,
+  "hand_r": 0.002,
+  "head": 0.001,
+  "hips": 0.166,
+  "neck": 0.798,
+  "thigh_l": 0.0,
+  "thigh_r": 0.0,
+  "upperarm_l": 0.901,
+  "upperarm_r": 0.906
+ },
+ "cut_allowed": 1778,
+ "facing": "-Y",
+ "figure": "MAN",
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "garment": "turtleneck",
+ "girth": {
+  "chest": 1.1483,
+  "hip": 0.9349,
+  "waist": 0.7705
+ },
+ "glb": "public/assets/characters/modular/garments/turtleneck__ubc_male.glb",
+ "height": 1.8196,
+ "hides": [],
+ "kw": {},
+ "landmarks": {
+  "chest": 1.3791,
+  "crotch": 0.9712,
+  "hip": 0.9912,
+  "knee": 0.5424,
+  "neck": 1.5205,
+  "shoulder": 1.4555,
+  "waist": 1.1691
+ },
+ "limbs": [
+  "arm_l",
+  "arm_r",
+  "calf_l",
+  "calf_r",
+  "farm_l",
+  "farm_r",
+  "thigh_l",
+  "thigh_r"
+ ],
+ "secs": 3.3,
+ "src_tris": 0,
+ "tris": 3740,
+ "unposed_max_move": 0.0,
+ "unweighted": 0,
+ "verts": 2067
+}

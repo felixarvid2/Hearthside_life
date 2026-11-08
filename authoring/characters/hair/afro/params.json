@@ -1,0 +1,46 @@
+{
+ "attachment": "skinned",
+ "clumps": 260,
+ "points": 7,
+ "length": 0.1,
+ "length_jitter": 0.15,
+ "volume": 0.03,
+ "part_offset": 0.025,
+ "back_flow": 0.55,
+ "gravity": 0,
+ "hairline_front": 0.8,
+ "hairline_back": 0.3,
+ "clump_width": 0.035,
+ "clump_flatness": 0.9,
+ "root_offset": 0.002,
+ "resolution_cm": 3.0,
+ "target_tris": 14000,
+ "profile_resolution": 2,
+ "cap": true,
+ "cap_offset": 0.004,
+ "color_regions": [
+  {
+   "id": "hair",
+   "label": "Hair",
+   "materials": [
+    "M_Hair"
+   ],
+   "default": "#4a3020"
+  }
+ ],
+ "flow": "sphere",
+ "sphere_r": 0.17,
+ "sphere_h": 0.6,
+ "curl": {
+  "radius": 0.008,
+  "per_m": 50,
+  "from": 0.05
+ },
+ "id": "afro",
+ "label": "Afro",
+ "tags": [
+  "medium",
+  "curly",
+  "bold"
+ ]
+}

@@ -87,6 +87,22 @@
   background: #e2f0ee; color: #1f4f49; font-weight: 700;
 }
 .bb-room-info .bb-room-text { flex: 1 1 8rem; }
+.bb-room-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.bb-room-actions .btn { min-height: var(--tap); }
+
+/* ---------- Room edit (Milestone 13): offset arrows, side and size, copy furniture ---------- */
+.bb-roomedit { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; margin: 0 0 8px; border-radius: 14px; background: #eef4f2; color: #1f4f49; }
+.bb-roomedit[hidden], .bb-roomedit [hidden] { display: none; }
+.bb-roomedit-summary { font-weight: 600; font-size: 0.92rem; }
+.bb-roomedit-pad { display: grid; grid-template-columns: repeat(4, minmax(var(--tap), 1fr)); gap: 8px; max-width: 22rem; }
+.bb-roomedit-pad .btn, .bb-roomedit-size .btn { min-height: var(--tap); min-width: var(--tap); }
+.bb-roomedit-size { display: flex; gap: 8px; }
+.bb-roomedit-copy { display: flex; align-items: center; gap: 10px; min-height: var(--tap); font-weight: 600; }
+.bb-roomedit-copy input { width: 22px; height: 22px; }
+
+[data-roomedit='true'] .bb-kindbar { display: none; }
+body.is-portrait [data-roomedit='true'] .bb-subbar, body.is-landscape.is-compact [data-roomedit='true'] .bb-subbar { display: none; }
+body.is-portrait .bb-roomedit-pad { grid-template-columns: repeat(4, minmax(var(--tap), 1fr)); }
 
 /* ---------- Footer: live preview text and Confirm / Cancel ---------- */
 .bb-build-footer { display: flex; flex-direction: column; gap: 8px; }

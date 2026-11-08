@@ -206,7 +206,7 @@ describe('SaveStore: autosave and backup', () => {
     const stored = (await raw.get<{ meta: unknown; data: string; checksum: string }>('saves', 'autosave')) as { ok: true; value: { meta: unknown; data: string; checksum: string } };
     await raw.put('saves', 'autosave', { ...stored.value, data: stored.value.data.slice(0, stored.value.data.length >> 1) }); // cut short
 
-    const bad = await store.load('autosave');
+    const bad = await store.load('autosave', undefined, { recover: false });
     expect(bad).toMatchObject({ ok: false, code: 'damaged' });
     if (!bad.ok) expect(bad.error).toMatch(/The autosave is damaged.*checksum.*backup slot/);
     expect((await store.list())[5]!.problem).toMatch(/damaged/);

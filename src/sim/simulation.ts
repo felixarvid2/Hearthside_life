@@ -18,7 +18,11 @@ import { behaviorFor } from './behaviors';
 import {
   joinCareer, quitCareer, resolveCareerEvent, setCareerEffort, updateCareers,
 } from './careers';
+import { announceCommunityEvents } from './community';
+import { dailyTownChange } from './townChange';
 import { spoilMeals } from './cooking';
+import { giftChoices } from './gifts';
+import type { GiftChoice } from './gifts';
 import { advanceGardens } from './garden';
 import { payBill, setAutoPay, updateBills } from './economy';
 import { cancelEvent, canPlanEvent, dailyReconciliation, ensureEventEnds, planEvent } from './events';
@@ -36,6 +40,7 @@ import { RESERVING_PHASES, Reservations, reservationKeys } from './reservations'
 import { recentUses } from './social';
 import { dailyDropIn, ensureDepartures, ensureFirstVisit, processSchedule } from './visitors';
 import { moveHousehold, movePreview, switchHousehold, switchPreview } from './households';
+import type { MoveOptions } from './households';
 import type { MovePreview, SwitchPreview } from './households';
 import { startTrip, startTripHome, travelProblem } from './lotTravel';
 import type { TripResult } from './lotTravel';
@@ -44,7 +49,7 @@ import type { NeighbourhoodInfo } from './neighbourhoodView';
 import { placeOf } from './places';
 import type { PersonPlace } from './places';
 import { reconcileStrays, runLightWorld } from './townlife';
-import { ensureWeather, updateWeatherMoods } from './weather';
+import { ensureWeather, meltSnowCover, updateWeatherMoods } from './weather';
 import { updateSnowmen } from './snowman';
 import { ageUp, dailyAging } from './aging';
 import { adopt, adoptionPreview } from './adoption';
@@ -123,6 +128,7 @@ export class Simulation {
     if (day !== prevDay) this.dailyRollover(ctx, day);
     // Seasons and weather: keep the stored plan current (half-day boundaries roll the current weather).
     ensureWeather(ctx);
+    meltSnowCover(ctx, TICK_MINUTES);
     // Snowmen thaw when winter ends or after a few snow-free days (task O).
     if (minuteOfDay(ctx.now) % 60 === 0) updateSnowmen(ctx);
     // 2. Schedule
@@ -179,6 +185,8 @@ export class Simulation {
     decayRelationships(ctx.state, ctx.now);
     syncBonds(ctx.state, ctx.events, ctx.now);
     dailyDropIn(ctx, day);
+    announceCommunityEvents(ctx, day);
+    dailyTownChange(ctx, day);
     dailyReconciliation(ctx, day);
     // Family (Milestone 8): the week's report cards, then the day's aging and birthdays.
     reportCards(ctx, day);
@@ -336,7 +344,14 @@ export class Simulation {
   eventProblem(req: PlanRequest): string | null {
     const ctx = this.ctx();
     const host = ctx.state.people[req.hostId];
-    return host ? canPlanEvent(ctx, host, req.guestIds, req.type, req.startAt) : 'Unknown host.';
+    return host ? canPlanEvent(ctx, host, req.guestIds, req.type, req.startAt, req.lotId) : 'Unknown host.';
+  }
+
+  /** The gift catalog as `giverId` would see it for `recipientId` (prices, affordability, hints). Pure. */
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] {
+    const ctx = this.ctx();
+    const giver = ctx.state.people[giverId], recipient = ctx.state.people[recipientId];
+    return giver && recipient ? giftChoices(ctx, giver, recipient) : [];
   }
 
   /** Cancels a planned (not yet started) event. */
@@ -439,12 +454,12 @@ export class Simulation {
     return switchHousehold(this.ctx(), householdId);
   }
 
-  movePreview(lotId: Id): MovePreview {
-    return movePreview(this.ctx(), lotId);
+  movePreview(lotId: Id, opts?: MoveOptions): MovePreview {
+    return movePreview(this.ctx(), lotId, opts);
   }
 
-  moveHousehold(lotId: Id): { ok: boolean; reason?: string } {
-    return moveHousehold(this.ctx(), lotId);
+  moveHousehold(lotId: Id, opts?: MoveOptions): { ok: boolean; reason?: string } {
+    return moveHousehold(this.ctx(), lotId, opts);
   }
 
   // ---------------------------------------------------------------------------------------------

@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/cornrows__ubc_female.glb",
+ "hair": "cornrows",
+ "head_base_z": 1.55,
+ "inside_head_verts": 166,
+ "roots": 200,
+ "secs": 6.2,
+ "src_tris": 54720,
+ "tris": 21471,
+ "verts": 6065,
+ "z": [
+  1.304,
+  1.797
+ ]
+}

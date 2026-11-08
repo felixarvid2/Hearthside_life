@@ -9,10 +9,12 @@ export const NEED_DECAY_PER_HOUR: Readonly<Record<NeedId, number>> = {
   energy: 5,
   hygiene: 4,
   bladder: 11,
-  fun: 5,
-  social: 3.5,
+  fun: 4.2,
+  social: 3,
 };
 
+/** Company: while at work or school social does not run down, it rises by this much per game hour (colleagues and classmates). */
+export const COMPANY_SOCIAL_PER_HOUR = 1.5;
 /** Decay multiplier while away at work, errands or school (lighter, event-based off-lot simulation). */
 export const OFFLOT_DECAY_MULT = 0.5;
 /** People at their own off-lot home drift toward this value (they look after themselves there). */
@@ -70,6 +72,8 @@ export const LIBRARY_LOUD_CATEGORIES: readonly string[] = ['funny', 'mean'];
 export const SOCIAL_RECENT_DECAY_MINUTES = 60;
 /** Social autonomy approaches someone busy with an activity only when the actor's social is below this. */
 export const SOCIAL_INTERRUPT_BELOW = 30;
+/** Somebody this lonely approaches a busy housemate even when that person feels socially fulfilled (balance audit: a home-alone person starved while a housemate who gets company at work was cooking). */
+export const SOCIAL_DESPERATE = 15;
 /** A person this lonely may invite a known neighbour over on their own (daytime). */
 export const LONELY_INVITE_BELOW = 25;
 /** Fun and social decay at this fraction while lying down (people do not get bored or lonely asleep). */
@@ -303,3 +307,30 @@ export const CARE_AUTONOMY_NEED = 45;
 export const ADOPTION_FEES = { baby: 250000, toddler: 200000, child: 150000, teen: 100000 } as const;
 /** Households hold at most this many people. */
 export const MAX_HOUSEHOLD_SIZE = 8;
+
+// Gifts (social gaps pass; sim/gifts.ts)
+/** A gift parcel stays on the recipient's lot this long (game minutes) before it is put away. */
+export const GIFT_KEEP_MINUTES = 14 * 1440;
+/** At most this many parcels wait at one recipient's lot; the oldest are put away first. */
+export const GIFT_LOT_LIMIT = 8;
+/** Familiarity needed before a gift's hint tells whether the recipient would like it. */
+export const GIFT_HINT_FAMILIARITY = 30;
+
+// Group conversations (social gaps pass)
+/** People within this many tiles of the speaker can be pulled into a group chat. */
+export const GROUP_CHAT_RADIUS = 6;
+/** A group chat has the speaker, the person addressed and at most this many more. */
+export const GROUP_CHAT_EXTRAS = 4;
+/** Opinion changes between two people who are not the speaker, relative to the speaker's own. */
+export const GROUP_CHAT_SIDE_WEIGHT = 0.6;
+
+// Life in town (social gaps pass; sim/townChange.ts)
+/** Chance per game day that one townsperson changes their working life (hired, switches career or quits). */
+export const TOWN_JOB_CHANCE = 0.18;
+/** Chance per game week (on its weekly day) that one NPC household moves to an empty home. */
+export const TOWN_MOVE_CHANCE = 0.4;
+/** Day of the week (0 = Monday) the town's moving day falls on. */
+export const TOWN_MOVE_WEEKDAY = 3;
+
+/** Jogging along the park track is this many times faster than walking. */
+export const JOG_PACE = 1.8;

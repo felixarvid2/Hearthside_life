@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/curtain_bangs__ubc_female.glb",
+ "hair": "curtain_bangs",
+ "head_base_z": 1.55,
+ "inside_head_verts": 709,
+ "roots": 170,
+ "secs": 4.1,
+ "src_tris": 26128,
+ "tris": 14546,
+ "verts": 8113,
+ "z": [
+  1.254,
+  1.775
+ ]
+}

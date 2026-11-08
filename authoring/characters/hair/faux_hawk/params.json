@@ -1,0 +1,42 @@
+{
+ "attachment": "skinned",
+ "clumps": 110,
+ "points": 7,
+ "length": 0.07,
+ "length_jitter": 0.15,
+ "volume": 0.009,
+ "part_offset": 0.025,
+ "back_flow": 0.55,
+ "gravity": 0,
+ "hairline_front": 0.8,
+ "hairline_back": 0.3,
+ "clump_width": 0.05,
+ "clump_flatness": 0.35,
+ "root_offset": 0.002,
+ "resolution_cm": 2.4,
+ "target_tris": 9000,
+ "profile_resolution": 2,
+ "cap": true,
+ "cap_offset": 0.004,
+ "color_regions": [
+  {
+   "id": "hair",
+   "label": "Hair",
+   "materials": [
+    "M_Hair"
+   ],
+   "default": "#4a3020"
+  }
+ ],
+ "flow": "radial",
+ "radial_up": 0.8,
+ "root_mask": {
+  "kind": "mohawk",
+  "width": 0.05
+ },
+ "id": "faux_hawk",
+ "label": "Faux hawk",
+ "tags": [
+  "short"
+ ]
+}

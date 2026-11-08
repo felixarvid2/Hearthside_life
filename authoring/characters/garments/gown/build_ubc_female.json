@@ -1,0 +1,74 @@
+{
+ "body": "ubc_female",
+ "body_shell": {
+  "boundary_edges": 210,
+  "skin_verts_hit": 695,
+  "tris": 1588,
+  "verts": 903
+ },
+ "coverage": {
+  "belly": 0.925,
+  "calf_l": 0.0,
+  "calf_r": 0.0,
+  "chest": 0.39,
+  "foot_l": 0.0,
+  "foot_r": 0.0,
+  "forearm_l": 0.0,
+  "forearm_r": 0.0,
+  "hand_l": 0.0,
+  "hand_r": 0.0,
+  "head": 0.0,
+  "hips": 0.688,
+  "neck": 0.0,
+  "thigh_l": 0.186,
+  "thigh_r": 0.186,
+  "upperarm_l": 0.0,
+  "upperarm_r": 0.0
+ },
+ "cut_allowed": 695,
+ "facing": "-Y",
+ "figure": "WOMAN",
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "garment": "gown",
+ "girth": {
+  "chest": 0.9404,
+  "hip": 1.0247,
+  "waist": 0.6516
+ },
+ "glb": "public/assets/characters/modular/garments/gown__ubc_female.glb",
+ "height": 1.7751,
+ "hides": [],
+ "kw": {},
+ "landmarks": {
+  "chest": 1.3318,
+  "crotch": 0.9441,
+  "hip": 0.9641,
+  "knee": 0.5347,
+  "neck": 1.4849,
+  "shoulder": 1.4181,
+  "waist": 1.1518
+ },
+ "limbs": [
+  "arm_l",
+  "arm_r",
+  "calf_l",
+  "calf_r",
+  "farm_l",
+  "farm_r",
+  "thigh_l",
+  "thigh_r"
+ ],
+ "secs": 5.8,
+ "skirt": {
+  "skirt_rings": 41,
+  "skirt_top": 1.152,
+  "skirt_tris": 3200
+ },
+ "src_tris": 0,
+ "tris": 4788,
+ "unposed_max_move": 0.0,
+ "unweighted": 0,
+ "verts": 2543
+}

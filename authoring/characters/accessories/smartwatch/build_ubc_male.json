@@ -1,0 +1,9 @@
+{
+ "accessory": "smartwatch",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/smartwatch__ubc_male.glb",
+ "kind": "smartwatch",
+ "secs": 1.2,
+ "tris": 228,
+ "verts": 116
+}

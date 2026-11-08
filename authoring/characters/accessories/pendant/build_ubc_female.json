@@ -1,0 +1,9 @@
+{
+ "accessory": "pendant",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/pendant__ubc_female.glb",
+ "kind": "pendant",
+ "secs": 0.3,
+ "tris": 328,
+ "verts": 166
+}

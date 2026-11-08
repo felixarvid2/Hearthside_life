@@ -496,7 +496,7 @@ export class GameView {
     // doors open when someone is close
     const pos = people?.positions() ?? [];
     for (const d of this.lotView.doors) {
-      d.target = pos.some((p) => Math.abs(p.x - d.x) < 0.95 && Math.abs(p.z - d.z) < 0.95 && Math.abs(p.y - levelY(d.level)) < 1.6) ? 1 : 0;
+      d.target = pos.some((p) => Math.abs(p.x - d.x) < d.reachX && Math.abs(p.z - d.z) < d.reachZ && Math.abs(p.y - levelY(d.level)) < 1.6) ? 1 : 0;
     }
     this.lotView.animateDoors(dt, this.opts.reducedMotion);
     // hover name tags (mouse)

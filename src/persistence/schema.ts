@@ -51,15 +51,15 @@ export function fillDailyLifeDefaults(raw: Record<string, unknown>): void {
   }
   if (isRecord(raw.items)) {
     for (const item of Object.values(raw.items)) {
-      if (isRecord(item) && item.kind !== 'meal' && item.kind !== 'fish' && item.kind !== 'dishes' && item.kind !== 'mess') item.kind = 'meal';
+      if (isRecord(item) && item.kind !== 'meal' && item.kind !== 'fish' && item.kind !== 'dishes' && item.kind !== 'mess' && item.kind !== 'gift') item.kind = 'meal';
     }
   }
 }
 
 const REL_LABELS = ['stranger', 'acquaintance', 'friend', 'closeFriend', 'bestFriend', 'rival', 'enemy', 'crush', 'partner', 'engaged', 'spouse', 'exPartner'];
-const EVENT_TYPES = ['date', 'dinnerParty', 'houseParty', 'celebration', 'visit', 'welcomeWagon', 'dropIn', 'reconciliation'];
+const EVENT_TYPES = ['date', 'dinnerParty', 'houseParty', 'celebration', 'wedding', 'visit', 'welcomeWagon', 'dropIn', 'reconciliation'];
 const EVENT_STATUSES = ['invited', 'running', 'done', 'cancelled'];
-const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile'];
+const GOAL_KINDS = ['chat', 'eat', 'romantic', 'laugh', 'mingle', 'reconcile', 'ceremony'];
 
 /**
  * Defaults for fields added to schema 1 by Milestone 5 (relationships and events): a relationship may carry a derived
@@ -186,6 +186,7 @@ export function fillNeighbourhoodDefaults(raw: Record<string, unknown>): void {
     version: 1, street: typeof m.street === 'string' && m.street ? m.street : 'Main Street', npcHouseholdIds: ids,
   };
   if (typeof m.nextDoorHouseholdId === 'string' && isRecord(households[m.nextDoorHouseholdId])) fixed.nextDoorHouseholdId = m.nextDoorHouseholdId;
+  if (m.townChildren === true) fixed.townChildren = true; // key order matches game/neighbourhood.ts so a save round-trips byte for byte
   if (whole(m.moves)) fixed.moves = m.moves;
   raw.neighbourhood = fixed;
 }
@@ -245,6 +246,7 @@ export function fillFamilyDefaults(raw: Record<string, unknown>): void {
         if (s.reportWeek !== undefined && !whole(s.reportWeek)) delete s.reportWeek;
       }
     }
+    if (p.carriedBy !== undefined && !(typeof p.carriedBy === 'string' && p.carriedBy !== id && isRecord(people[p.carriedBy]))) delete p.carriedBy;
     if (p.careSince !== undefined) {
       if (!isRecord(p.careSince)) delete p.careSince;
       else {
@@ -372,17 +374,19 @@ export function fillWeatherDefaults(raw: Record<string, unknown>): void {
     const s = raw.settings;
     if (s.seasons !== undefined && typeof s.seasons !== 'boolean') delete s.seasons;
     if (s.weather !== undefined && typeof s.weather !== 'boolean') delete s.weather;
+    if (s.townLife !== undefined && typeof s.townLife !== 'boolean') delete s.townLife;
     if (s.seasonDays !== undefined && !(typeof s.seasonDays === 'number' && SEASON_DAY_OPTIONS.includes(s.seasonDays))) delete s.seasonDays;
   }
   if (raw.weather === undefined) return;
   const w = raw.weather;
   const ok = isRecord(w) && typeof w.current === 'string' && WEATHER_KINDS.includes(w.current) &&
     isPlan(w.today) && isPlan(w.tomorrow) && num(w.day) && Number.isInteger(w.day) && num(w.since) &&
-    (w.snowCover === undefined || typeof w.snowCover === 'boolean');
+    (w.snowCover === undefined || typeof w.snowCover === 'boolean') && (w.melt === undefined || num(w.melt));
   if (!ok) { delete raw.weather; return; }
   w.day = Math.max(0, Math.floor(w.day as number));
   w.since = Math.max(0, Math.floor(w.since as number));
   if (w.snowCover !== true) delete w.snowCover;
+  if (w.snowCover !== true || (w.melt as number | undefined) === undefined || (w.melt as number) <= 0) delete w.melt;
 }
 // ===== end Milestone 12 seasons and weather ==========================================================================
 

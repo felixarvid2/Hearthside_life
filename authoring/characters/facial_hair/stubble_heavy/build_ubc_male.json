@@ -1,0 +1,17 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [],
+ "glb": "public/assets/characters/modular/facial_hair/stubble_heavy__ubc_male.glb",
+ "hair": "stubble_heavy",
+ "head_base_z": 1.6,
+ "inside_head_verts": 2,
+ "roots": 0,
+ "secs": 4.3,
+ "src_tris": 0,
+ "tris": 826,
+ "verts": 525,
+ "z": [
+  1.534,
+  1.706
+ ]
+}

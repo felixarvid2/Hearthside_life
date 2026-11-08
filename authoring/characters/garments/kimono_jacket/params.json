@@ -1,0 +1,68 @@
+{
+ "id": "kimono_jacket",
+ "label": "Kimono jacket",
+ "preset": null,
+ "category": "outer",
+ "slot": "outer",
+ "tags": [
+  "jacket"
+ ],
+ "hides": [],
+ "layer": 2,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_KimonoJacket"
+   ],
+   "default": "#f4d6d6",
+   "palette": [
+    "#f4d6d6",
+    "#d6e4f4",
+    "#dff0d8",
+    "#f7ebc6",
+    "#e6dcf2",
+    "#f2f2f2"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.02,
+  "max": 0.04,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.026,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "v",
+    "depth": 0.3
+   },
+   "sleeve": 0.7,
+   "hem": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "open_front": 0.12,
+   "force": true,
+   "sleeve_flare": 0.06
+  },
+  "skirt": {
+   "top": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "length": 0.25,
+   "flare": 0.05,
+   "offset": 0.035,
+   "open_front": 0.9
+  }
+ }
+}

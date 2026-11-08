@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/facial_hair/circle_beard__ubc_male.glb",
+ "hair": "circle_beard",
+ "head_base_z": 1.6,
+ "inside_head_verts": 216,
+ "roots": 110,
+ "secs": 3.0,
+ "src_tris": 736,
+ "tris": 660,
+ "verts": 1137,
+ "z": [
+  1.571,
+  1.648
+ ]
+}

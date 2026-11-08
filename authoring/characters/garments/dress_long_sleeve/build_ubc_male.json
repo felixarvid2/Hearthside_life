@@ -1,0 +1,74 @@
+{
+ "body": "ubc_male",
+ "body_shell": {
+  "boundary_edges": 402,
+  "skin_verts_hit": 1602,
+  "tris": 3598,
+  "verts": 2004
+ },
+ "coverage": {
+  "belly": 0.95,
+  "calf_l": 0.0,
+  "calf_r": 0.0,
+  "chest": 0.892,
+  "foot_l": 0.0,
+  "foot_r": 0.0,
+  "forearm_l": 0.8,
+  "forearm_r": 0.803,
+  "hand_l": 0.002,
+  "hand_r": 0.002,
+  "head": 0.0,
+  "hips": 0.708,
+  "neck": 0.005,
+  "thigh_l": 0.232,
+  "thigh_r": 0.245,
+  "upperarm_l": 0.901,
+  "upperarm_r": 0.906
+ },
+ "cut_allowed": 1647,
+ "facing": "-Y",
+ "figure": "MAN",
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "garment": "dress_long_sleeve",
+ "girth": {
+  "chest": 1.1483,
+  "hip": 0.9349,
+  "waist": 0.7705
+ },
+ "glb": "public/assets/characters/modular/garments/dress_long_sleeve__ubc_male.glb",
+ "height": 1.8196,
+ "hides": [],
+ "kw": {},
+ "landmarks": {
+  "chest": 1.3791,
+  "crotch": 0.9712,
+  "hip": 0.9912,
+  "knee": 0.5424,
+  "neck": 1.5205,
+  "shoulder": 1.4555,
+  "waist": 1.1691
+ },
+ "limbs": [
+  "arm_l",
+  "arm_r",
+  "calf_l",
+  "calf_r",
+  "farm_l",
+  "farm_r",
+  "thigh_l",
+  "thigh_r"
+ ],
+ "secs": 9.4,
+ "skirt": {
+  "skirt_rings": 23,
+  "skirt_top": 1.169,
+  "skirt_tris": 1760
+ },
+ "src_tris": 0,
+ "tris": 5358,
+ "unposed_max_move": 0.0,
+ "unweighted": 0,
+ "verts": 2924
+}

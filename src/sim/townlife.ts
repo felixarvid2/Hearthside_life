@@ -14,14 +14,15 @@
 // state and survives saving, loading and lot changes.
 
 import type { ContentDB } from '../content/types';
-import { dayIndex, minuteOfDay, weekday } from '../core/clock';
+import { atDayMinute, dayIndex, minuteOfDay, weekday } from '../core/clock';
 import { isProcessed, markProcessed, transact } from '../core/state';
 import type { Id, Lot, Person, PersonLocation, WorldState } from '../core/types';
 import { lotIsOpen, venueInfo } from '../world/neighbourhood';
 import type { SimCtx } from './context';
 import { clamp, hashString, lotLoc } from './context';
 import { billBreakdown, billWeek, openBills, payBill } from './economy';
-import { inActiveEvent } from './events';
+import { runningCommunityEvents, runCommunityEvents, communityEventsBetween } from './community';
+import { atVenueEvent, inActiveEvent } from './events';
 import { entrySpots, homeLocation, isControlled, placeOnLot, takeOffLot, visitingLocation } from './places';
 import { insertAction, makeAction } from './queue';
 import { applyRelDelta, peekRel } from './relationships';
@@ -92,12 +93,14 @@ export function plannedPlace(state: WorldState, content: ContentDB, p: Person, n
     if (w && w.start > now && w.start < now + SLOT_MINUTES + 60) return HOME;
   }
   const weekend = weekday(now) >= 5;
+  // A community event during this slot draws a crowd to its venue (pure: the calendar is a function of the clock).
+  const drawn = communityEventsBetween(state, content, atDayMinute(day, slotStart), atDayMinute(day, slotStart) + SLOT_MINUTES).map((e) => e.lotId);
   const social = p.traits.reduce((m, t) => m * (content.traits[t]?.effects.autonomyBias?.social ?? 1), 1);
-  const goChance = (weekend ? 70 : slotStart >= 17 * 60 ? 58 : 36) + (social > 1 ? 12 : social < 1 ? -12 : 0);
+  const goChance = (weekend ? 70 : slotStart >= 17 * 60 ? 58 : 36) + (social > 1 ? 12 : social < 1 ? -12 : 0) + (drawn.length > 0 ? 30 : 0);
   if (hashString(`${p.id}:${day}:${slot}:go`) % 100 >= goChance) return HOME;
   const open = venueLots(state).filter((l) => lotIsOpen(l, slotStart) && lotIsOpen(l, Math.min(slotStart + SLOT_MINUTES - 1, mod)));
   if (open.length === 0) return HOME;
-  const weights = open.map((l) => venueWeight(content, p, l.venueType ?? ''));
+  const weights = open.map((l) => { const w = venueWeight(content, p, l.venueType ?? ''); return drawn.includes(l.id) ? Math.max(w * 5, 8) : w; });
   const total = weights.reduce((s, w) => s + w, 0);
   let r = (hashString(`${p.id}:${day}:${slot}:where`) % 10000) / 10000 * total;
   for (let i = 0; i < open.length; i++) {
@@ -131,7 +134,7 @@ export function plansAt(state: WorldState, content: ContentDB, now: number): Map
   const slot = Math.floor((minuteOfDay(now) - DAY_START) / SLOT_MINUTES);
   const day = dayIndex(now);
   for (const [lotId, list] of byVenue) {
-    const cap = venueInfo(state.lots[lotId]!)?.capacity ?? 4;
+    const cap = (venueInfo(state.lots[lotId]!)?.capacity ?? 4) + (runningCommunityEvents(state, content, now).some((e) => e.lotId === lotId) ? 4 : 0);
     if (list.length <= cap) continue;
     list.sort((a, b) => hashString(`${a.id}:${day}:${slot}:cap`) - hashString(`${b.id}:${day}:${slot}:cap`) || (a.id < b.id ? -1 : 1));
     for (const p of list.slice(cap)) plans.set(p.id, HOME);
@@ -161,6 +164,7 @@ export function whoIsPlannedAt(state: WorldState, content: ContentDB, lotId: Id,
 function engagement(ctx: SimCtx, p: Person): 'hard' | 'soft' | null {
   const loc = p.location;
   if (loc.kind === 'offlot' && loc.transit) return 'hard';
+  if (atVenueEvent(ctx.state, p.id, ctx.now)) return 'hard';
   const sched = ctx.state.schedule;
   if (lotLoc(p)) {
     // Only residents at home and patrons of a venue follow the plan; anybody else on a lot is a guest, who leaves on their own.
@@ -233,6 +237,7 @@ function moveTo(ctx: SimCtx, p: Person, place: Place): void {
 export function syncPresence(ctx: SimCtx, force = false): void {
   const plans = plansAt(ctx.state, ctx.content, ctx.now);
   for (const p of npcPeople(ctx.state)) {
+    if (atVenueEvent(ctx.state, p.id, ctx.now)) continue; // called to a venue event: the event moves them
     const busy = engagement(ctx, p);
     if (busy === 'hard' && (!force || (p.location.kind === 'offlot' && p.location.transit))) continue;
     const place = plans.get(p.id) ?? HOME;
@@ -331,6 +336,7 @@ export function runLightWorld(ctx: SimCtx): void {
   lightCareers(ctx);
   lightSchool(ctx, (p) => !isControlled(ctx.state, p));
   lightBills(ctx);
+  runCommunityEvents(ctx);
   if (mod % 30 === 0) { syncPresence(ctx); lightSocial(ctx); }
 }
 

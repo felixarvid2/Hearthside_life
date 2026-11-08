@@ -1,0 +1,9 @@
+{
+ "accessory": "reading_glasses",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/reading_glasses__ubc_male.glb",
+ "kind": "glasses",
+ "secs": 0.7,
+ "tris": 462,
+ "verts": 237
+}

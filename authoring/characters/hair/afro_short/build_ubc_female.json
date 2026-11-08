@@ -1,0 +1,24 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/afro_short__ubc_female.glb",
+ "hair": "afro_short",
+ "head_base_z": 1.55,
+ "inside_head_verts": 118,
+ "roots": 220,
+ "secs": 2.0,
+ "src_tris": 10368,
+ "tris": 9156,
+ "verts": 5750,
+ "z": [
+  1.591,
+  1.816
+ ]
+}

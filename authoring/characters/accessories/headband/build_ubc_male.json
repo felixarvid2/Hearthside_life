@@ -1,0 +1,9 @@
+{
+ "accessory": "headband",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/headband__ubc_male.glb",
+ "kind": "headband",
+ "secs": 0.4,
+ "tris": 336,
+ "verts": 168
+}

@@ -162,7 +162,7 @@ The UI talks to it only through the build section of `GameAPI` (documented at th
   walls, hatched demolition/conflicts, floor tiles, ghost door/window, room outline), fed by `Game.refreshBuildPreview` from
   `buildHighlight()`; `GameAPI.highlightRoom(uid)` outlines a room; `thumbnails.opening(defId)` renders door/window pictures
   (`render/openingThumbs.ts`, one per frame). `render/lotView.ts` cuts a hole in every edge a wide opening spans (and in the posts between).
-- Not done yet: move/resize/duplicate whole rooms (delete room exists), wall height change on existing walls, diagonal walls, upper floors.
+- Milestone 13 added move, resize and duplicate for whole rectangular rooms (next section). Not done yet: wall height change on existing walls, diagonal walls.
 
 ### Venue and home layouts (Milestone 7)
 
@@ -250,6 +250,21 @@ Pure code (no three, no DOM), tested in `tests/unit/world/venueLayouts.test.ts` 
   `latest()`, `save(slotId, name, state)` (manual slots only), `autosave(state)` (rotates the previous intact
   autosave into `backup` in the same transaction), `load(slotId, content?)` -> `{ ok, state, report, meta }` or
   `{ ok: false, error, code }`, `remove`, `rename`, `importToSlot`.
+- **Integrity and recovery (M13).** Every record is `{ meta, data, checksum }` (FNV-1a over the JSON text plus its length) and a
+  save is verified (JSON round trip, structure) before it is written, in one transaction. Before a slot (manual or autosave) is
+  overwritten, its current record is pushed onto `<slot>#1`..`<slot>#3` (`BACKUPS_PER_SLOT`, `backupKey`) - only when it is itself intact
+  (checksum, JSON, migration, structure) and differs from the newest backup, so a damaged or failing save never displaces the last good
+  copies. The chain keys are not listed as slots; `remove(slot)` deletes them. `load(slot, content?, { recover? })`
+  falls back to the newest good copy when the slot is damaged (`#1`..`#3`, then `backup` for the autosave) and returns
+  `recovered: { from, savedAt, message }`; GameCore puts the message first in `loadFrom().report`, which the load dialog and Continue
+  show. Storage errors become readable messages (`describeDbError`: quota, unavailable, blocked, aborted); a failed write changes
+  nothing. Tests: `tests/unit/persistence/recovery.test.ts`, `tests/unit/integration/recovery.test.ts`.
+- **Error boundary (M13).** `src/game/crashGuard.ts` (`CrashGuard`, pure): `Game.step` runs the simulation and the render through
+  `guard.run`. A thrown fault is recorded, the simulation halts (no repeated half ticks) and `ui/screens/crash.ts` shows the recovery
+  dialog once: Keep playing (`resume`; the same fault within 5 s shows it again as repeated), Reload last autosave
+  (`loadFrom('autosave')`, with the fallback above) and Export diagnostic file (`buildDiagnostic`: errors with stacks, browser,
+  viewport, mode, speed and the exported world). `window` errors and unhandled rejections feed the same guard (ResizeObserver noise
+  is ignored). `hearthside.debug.crash(msg)` raises a test fault.
 - `exportWorld(state, exportedAt, packs?)`, `importWorld(json, content)`, `migrate(raw)`,
   `validateWorld(state, content)` -> `{ errors, warnings, missing }`; `describeReport(report)` for the UI.
   Missing content references are reported, never deleted.
@@ -379,6 +394,22 @@ freelance jobs train them. Milestone 11 adds baking, wellness, creativity, photo
 - HTML/CSS panels over the canvas; portrait uses a top bar, household strip and bottom sheets; landscape uses
   a bottom HUD and side panels. Touch targets >= 44 px.
 
+### Guidance and accessibility (Milestone 13)
+
+- `ui/hud/hintState.ts` (pure): the 11 hints (id, short text, how-to steps), `enqueue` / `pickNext` / `markSeen`. `ui/hud/hints.ts`
+  is the card: situations come from `api.onChange` (mode, selection, camera/floors), events (queue, social, bills, careers, map)
+  and `sh.hint(id)` calls (person-panel tabs, ledger/bills, map, game menu, creator). It waits while a dialog is open. State
+  lives in `GameSettings.hints` (switch) and `GameSettings.seenHints` (ids), stored with the other device settings.
+- `screens/help.ts` builds the Help modal from the same catalogue plus the touch and keyboard control tables.
+- `GameSettings.textScale` runs 0.9 to 1.5 (`TEXT_SCALE_MIN/MAX`), `highContrast` toggles `html.high-contrast` (token overrides in
+  `styles/a11y.css`), `reducedMotion` also follows `prefers-reduced-motion` and adds `.reduced-motion` (kills transitions and animations).
+- `kit/focus.ts`: `trapTab`, `currentOpener` / `restoreFocus` (modals and panels return focus to the opener; panels take
+  focus when opened from the keyboard) and `rovingGroup` (one Tab stop and arrow keys for tabs, radio groups and swatches).
+  World keys (pan, turn, zoom, delete, rotate) do nothing when focus was put on a control with the keyboard (`input.ts`).
+- `hud/objectPicker.ts` is the keyboard and screen-reader route to world objects (also reachable from the Queue tab).
+- Contrast: tokens in `styles/base.css` are checked against WCAG AA by `tests/unit/ui/contrast.test.ts`; `meter()` adds the words
+  Low / Critical and `aria-valuetext`.
+
 ## Daily life: dirt, breakage, chores (Milestone 4)
 
 Implemented generically by object **tags** (`src/content/capabilities.ts`): `cleanable` (gets dirty, offers Clean),
@@ -462,7 +493,40 @@ Pure code (no three, no DOM), tested in `tests/unit/sim/{relationships,romance,m
   the air (visible condition: an unsettled argument/insult memory, at most once a week per pair).
 - API: `GameAPI.eventProblem/planEvent/cancelEvent` (optional in dev mocks). UI: `ui/hud/eventPlanner.ts` (phone -> Plan an Event, or
   People tab -> Plan an event), `ui/hud/eventTracker.ts` (goal card on the HUD), pure helpers in `ui/hud/socialModel.ts`.
-- Dates happen at home (no lot travel before Milestone 7).
+- Dates and parties may be held at a public venue (social gaps pass, below).
+
+**Weddings (social gaps pass)** (`content/events.ts` `wedding`, `sim/events.ts performCeremony`). A wedding is a planned event with `EventDef.wedding`:
+the first guest is the host's fiance(e) (a bond `engaged`, romance 50+ both ways, trust 30+; they may live in the household), up to eight more
+guests are invited. `HomeEvent.partnerId`, `ceremonyAt` (start + 30 minutes), `stage` ('ceremony' then 'celebration') and `ceremony`
+('done' or 'missed') record it; a `eventStage` schedule entry runs the ceremony once (`wedding:<id>:ceremony`). At the ceremony, when the couple
+are together on the lot and still engaged, the bond becomes `spouse` with the outcome of the "Get Married" social (relationship gains, Just
+Married moodlet, permanent `married` memories; guests get a `party` memory) and the `ceremony` goal completes; otherwise the vows are
+"missed" (a warning in the feed, a lower score) and the celebration still runs. Catering, goals, rating and rewards are the normal event flow.
+"Get Married" in the social menu stays as the quick, guest-free path; the planner (phone -> Plan an Event) pre-selects the fiance(e).
+`ensureEventEnds` repairs a lost stage entry.
+
+**Events at a venue (social gaps pass)** (`sim/events.ts`, `PlanEventRequest.lotId`). Types with `EventDef.venueOk` (date, dinner party, celebration,
+wedding) can be held at a public venue. `canPlanEvent` checks the venue is open for the whole event (`venueSlotProblem`, hours and a notice of
+travel time + 10 minutes). The invitation sends no `visitArrive`; instead an `eventTravel` entry at `HomeEvent.departAt` (start - travel - 5)
+makes the household set off (`startTrip` with `allowHosting`, retried every 10 minutes until the start) and puts the guests at the venue
+(off-lot `visiting`, or on the lot if it is active); `gatherAtVenue` marks guests who are there as arrived (also called from `activateLot`).
+`startEvent` calls the event off when the host did not get there. At the end the guests go home (`visitLeave` on the lot, or straight home
+off-lot) and a second `eventTravel` ('home') sends the household back. Venue guests are left alone by the light schedule from `departAt`
+(`atVenueEvent`). The planner has a "Where?" select (At home / each venue) and only offers start times that fit the opening hours.
+
+**Gifts (social gaps pass)** (`content/gifts.ts`, `sim/gifts.ts`). Eleven gift kinds with a price, the preferences they appeal to, trait fit and the
+life stages they suit. "Give a Gift..." in the social menu raises `ui.request` 'giveGift' (`GameCore.queue` intercepts the social without a
+chosen gift); the picker (`ui/hud/giftPicker.ts`) lists `api.giftChoices(giver, recipient)` (price, affordability, and a hint of how it would
+land once familiarity is 30+) and `api.giveGift` queues the social with `data.gift`. When the social is accepted `resolveSocial` charges the
+price (`gift:<actor>:<target>:<minute>`), builds the outcome from the recipient's reaction (`giftReaction`: likes +1 each, dislikes -1 each,
+trait fit; loved / liked / fine / disliked scale friendship, trust and, for partners, romance; price is irrelevant) and creates a
+`WorldItem` of kind `gift` (`recipeId` = gift id, `ownerPersonId`, `giftFromId`, `ownerHouseholdId`) on a free table of the recipient's home
+(else by the front door); at most 8 parcels per lot, put away after 14 days. The renderer draws a wrapped box in the gift's colour.
+
+**Group chat (social gaps pass)** (`groupChat` social, `sim/social.ts groupCircle / resolveGroupChat`). Offered when at least one more person who
+the speaker has met is free within six tiles. The circle (at most four more) joins as listeners; one acceptance roll for the speaker and the
+person addressed; every ordered pair changes (the speaker's pairs fully, the rest by 0.6), everybody gains social/fun and the moodlet, and
+running events count it as one `chat` and every pair toward `mingle` (`noteGroup`). The autonomy weight is 0.7.
 
 **Saves**: all new fields are optional (`Relationship.label`, `Relationship.romanceBlocked`, `Memory.resolved`, `WorldState.homeEvents`,
 `ScheduledEvent.kind` `eventStart`/`eventEnd`). `persistence/schema.ts fillSocialDefaults` drops unknown labels and malformed events;
@@ -716,6 +780,30 @@ front, the rent replaces the property tax in the weekly bill: `BillBreakdown.ren
 for 80 % of its value (`SALE_RATE`; the furniture stays) and becomes available again; a rental is handed back. Money moves through `transact` with
 `move:<household>:<n>:cost|sale` occurrences. Members who are out travel to the new home like any trip.
 
+**Community events (social gaps pass)** (`content/communityEvents.ts`, `sim/community.ts`). Seven weekly happenings (book club, quiz night, open mic, makers'
+market, dance night, Sunday picnic, family splash) on a weekday and start time inside the venue's opening hours (checked by the content
+validator). The calendar is a pure function of the clock (`communityEventsBetween`), so nothing is stored but once-only marks:
+the daily rollover announces each event in the feed (`commann:<key>`); every 15 minutes a household member on the venue lot while it runs is
+marked as attending (`commatt:<key>:<person>`) and after `attendMinutes` gets fun/social, the Party Glow moodlet and a memory once
+(`commdone`), and meets the townspeople there (`commmeet`, familiarity and friendship). The townspeople turn out: a slot that overlaps an event
+raises their chance to go out and the event venue's weight, and its capacity grows by four (`plannedPlace`, `plansAt`). `NeighbourhoodInfo.events`
+lists the next week; the map shows "What's on this week" and, in a venue's sheet, "On at this venue".
+
+**Town life (social gaps pass)** (`sim/townChange.ts`, setting `townLife`, default on). From the daily rollover, with the world generator: once a day
+one adult outside the played household who is at home with no shift pending may be hired, switch career (back to level 1) or quit (never the
+last earner of a household); once a week (Thursday) one NPC household of the generated town (not the next-door neighbours, nobody on the
+active lot, at work or travelling) may move to an empty home it can afford with a cushion: rent deposit or price through `transact`
+(`townmove:<household>:<day>:cost|sale`), an owned old home is sold at 80 % and listed again, members' home locations follow. The player sees
+it in the feed only for people they know.
+
+**Furniture when moving (social gaps pass)** (`sim/households.ts MoveOptions`). `movePreview(lotId, { furniture })` and `moveHousehold(lotId, { furniture })`:
+'leave' (default, as before: the pieces stay and are part of the sale), 'take' (the household's movable pieces go into `Household.inventory`,
+supports cleared, and the house sells without them), 'sell' (each piece at its sale value, one `:furniture` transaction). Stairs and planted beds always
+stay. The map's move dialog has the three choices and re-reads the preview when the choice changes.
+
+**Phone map and usable (social gaps pass)**. The phone's Neighbourhood Map (`phoneMap`, behaviour `openMap`) raises `ui.request` 'map'. `LotInfo.usable` is true
+for a lot that has not been laid out yet (every layout has things to do) and for a built venue with objects (`lotUsable`).
+
 **Saves**: every M7 field is optional in schema 1 (`Lot.built/variant/blurb/map/rent/price`, `PersonLocation.transit`, `ScheduledEvent.kind
 'travelArrive'`, `WorldState.neighbourhood`). Old saves load unchanged and are completed on load.
 
@@ -732,10 +820,9 @@ them without moving the camera and opens a small card ("At Lakeside Park", "Go t
 map redraws on UiChange 'lot', 'neighbourhood', 'state' and 'selection' only when the data changed. The mock game (`ui/dev/mockGame.ts`) schedules a
 `travelArrive` entry, so the chip and the map work on `dev/ui.html`. Acceptance step 9 drives all of it in the three viewports.
 
-**Not done / remaining** (see also docs/CONTINUATION.md): the phone has no app list, so the map is not reachable from the phone menu; venue activities that charge
+**Not done / remaining** (see also docs/CONTINUATION.md): venue activities that charge
 money are the venue content's job (`InteractionDef.cost` is charged to the actor's household; there is no market stock or cafe menu system);
-townies never change jobs or homes by themselves, and NPC households never move; furniture is not carried along when moving (the old home keeps it);
-no weddings or dates away from home (a date is still planned at home); renting out the player's home, tenants and landlords are not modelled;
+renting out the player's home, tenants and landlords are not modelled;
 travel has no taxi fee; only one trip at a time; group travel always switches the active lot (a split household cannot be watched on two lots).
 
 
@@ -785,6 +872,16 @@ Files: `core/lifeStages.ts` (stage order, lengths, predicates), `sim/aging.ts`, 
 - **Aging.** `SimSettings.aging` is off, long (2.5 x), normal (baby 3, toddler 5, child 10, teen 10, young adult 14, adult 20, elder 14 game days) or custom (`agingDays`, 1..120). `Person.stageDays` advances in the daily rollover (`dailyAging`). A birthday (`ageUp`) is once only per person and stage (`birthday:<pid>:<stage>`): event `birthday`, a memory, the Birthday moodlet, a `family` feed entry (toast), and `migrateStage` (school record, job dropped for children and teens, wardrobe, three traits + aspiration for a new young adult, posture). The "Age up now" birthday (`ageUpNow` at a cake, `careBirthday` for little ones) is the same code with a one-per-day cooldown (`cooldowns['@birthday']`). Elders stay elders unless `elderEndOfLife`: then `passAway` removes them cleanly (`removePerson`), except the last member of the household you run or the last grown-up of children.
 - **Family graph.** `Person.parentIds` (at most two) is the only stored fact; `sim/family.ts` derives children, siblings (shared parent or a sibling bond), grandparents, aunts and uncles, nieces and nephews and cousins, and `linkParent`/`setFamilyTie` keep `Bond.familyAtoB` in step. `applyHouseholdTies` sets `parentIds` from creator ties. The Family tab draws `ui/creator/familyTree.ts` from `treeModel`.
 - **School.** `school:<pid>:<day>` follows the careers pattern (commute lead, `goToSchool` -> off-lot place 'school' -> home). Weekdays 08:00-14:00 (elementary, children) and 08:00-15:00 (high, teens); week 5 of every 5 is a holiday. Not leaving by 09:30 is a missed day. `SchoolState.performance` (-100..100): attendance +3, homework +5 (+2 helped), missed day -5, missed homework -3, low mood at the start -1.5. Homework is once per school day (`homework:<pid>:<day>`) at any desk, table or computer (tag capability `doHomework`); weekly report cards `report:<pid>:<week>`. Other households use `townlife.lightSchool` (no walking).
+- **Carrying and the sitter (social gaps pass).** `Person.carriedBy` is set by the care behaviour while a caregiver holds a baby and cleared when the
+  baby is put down (`settleDependents` drops a stale mark); the renderer cradles the baby in that person's arms from it (no proximity guess). The
+  emergency sitter also serves babies and toddlers of households the player is not playing while they are on the lot being simulated (a visit),
+  charging that household only what it has; off the lot the neglect timer is dropped (their family looks after them, needs drift to comfortable).
+- **Town children for old saves (social gaps pass).** `ensureTownChildren` (game/neighbourhood.ts, run by `GameCore.replaceState` after
+  `ensureNeighbourhood`) gives the family-type town homes their children once (`NeighbourhoodState.townChildren`), from a generator seeded by the
+  world seed; existing ids, jobs and relationships stay, the new people take fresh ids and the world rng is put back.
+- **Jogging (social gaps pass).** Go for a Jog (`jogLoop`, `sim/jog.ts`) runs laps of the park track: a stage per corner (`parkTrack(lot)`) walked at
+  `JOG_PACE` with the jog gait (`ActionInstance.data.moveAnim` / `pace` in `routeTick`); needs and Fitness xp are applied per leg for the minutes run;
+  it ends at the first corner after 40 minutes or when the energy is gone. A park without the plan jogs in place.
 - **Care.** Babies lie in cribs or bassinets (`settleBaby`), never act and are carried by a caregiver during Feed, Change Diaper, Cuddle and Play. Toddlers act within the interactions that list `toddler` in `ages`. `careWishes` lets caregivers notice needs by themselves. A need at zero for 3 hours calls the emergency sitter (`sitter:<pid>:<day>:<n>`, $25 through `transact`, debt allowed).
 - **Gating.** `InteractionDef.ages` (absent = default by behaviour, `sim/gating.ts`), `SocialDef.requires.actorStages/targetStages`; checked by `requestReason`, `socialRequirementReason`, the menus and `candidatesFor`.
 - **Adoption / moving.** `adopt` (`adopt:<hh>:<n>`) and `splitHousehold` (`split:<hh>:<n>:out|in|cost`) charge through `transact`; "Ask to move in" (`moveInNpc`) joins an NPC and their dependents to your household.
@@ -872,6 +969,14 @@ settings screen has Seasons, Weather, season length and Weather effects. All new
 schema 1: `WorldState.weather`, `SimSettings.seasons/seasonDays/weather` and `GameSettings.weatherEffects`;
 `fillWeatherDefaults` repairs malformed plans and drops them without rerolling a valid one.
 
+**Milestone 13 additions.** Shade counts as shelter (`ObjectDef.shelter`, `shadedAt`, `isSheltered`; see "Furnishings that work").
+Rain melts snow: `WeatherState.melt` (optional) collects the minutes of rain that fall on a settled `snowCover` (`meltSnowCover`, called
+once per tick after `ensureWeather`); at `RAIN_MELT_MINUTES` (180, one rainy half-day) the cover is gone and does not come back that
+day; snowfall resets the counter, a midnight re-plan keeps it, and a rainy day counts as two warm days for a snowman. The forecast
+(`forecastDays`, `forecastLines`, `FORECAST_DAYS` = 5) is pure: today and tomorrow are the stored plan, later days come from the same
+`planFor(seed, day, half, season)` the daily re-plan uses, so a day's forecast never changes and equals what the plan stores when the
+day arrives; the feed panel lists the five days ("Today", "Tomorrow", then weekday names). Tests: `tests/unit/sim/weather-m13.test.ts`.
+
 **Debug.** `window.hearthside.debug.setWeather(kind)` pins the current day's stored plan (current, today, tomorrow,
 day/since) and keeps settled `snowCover`, so acceptance steps are independent of the world seed; `ensureWeather`
 keeps a same-day plan, so it lasts until midnight.
@@ -909,6 +1014,13 @@ cancel request use the new `cancelGraceful` hook: the action moves into `exit`, 
 ends on the ladder deck (`backX/backZ` point at the deck, so even `failNow` cannot leave a swimmer in the water). An
 outdoor pool refuses swimming while it snows ("It is snowing."); a roofed pool stays open. Autonomy adds pool
 candidates with the fun utility. Everyone has a `swim` outfit through `defaultWardrobe`, so no new garments.
+
+**Toddlers (Milestone 13).** Toddlers cannot swim: the water menu shows `swimInPool` greyed with "too little to swim. Toddlers can paddle
+at the pool edge with a grown-up watching." Instead `paddleAtEdge` (tile interaction, toddlers only, behavior `paddle` in `sim/pool.ts`)
+puts the toddler on the dry deck tile beside the water (`poolBesideTile`, `nearestPoolEdgeTile`); it needs an awake teen or older within
+`SUPERVISION_RADIUS` (8 tiles) on the same level when it starts, and the action ends the moment nobody watches. The toddler never enters
+the water. Tests: `tests/unit/sim/toddlerPool.test.ts`. The yoga mat stays a rug (walkable): people walk over it and use it from its
+use slot, so it is not a blockage by design.
 
 **Rendering.** The basin is a recessed floor with inner walls and a coping ring in the style colours; water is one
 plane per pool with a small texture-free `ShaderMaterial` (two scrolling ripples and a caustic pattern, transparent,
@@ -977,3 +1089,76 @@ clamps the fraction per action id, writes at most 10 times a second, shows a gre
 (or grey at the stop point when cancelled/failed), and follows the `actionProgress: 'household' | 'all' | 'off'`
 setting (default Household). The pill is the first child of the existing `.wo-p` column, so it stacks above the name
 tag/thought bubble and never blocks the world.
+
+## Room operations: move, resize, duplicate (Milestone 13)
+
+Files: `building/roomOps.ts` (pure plan and diff), `building/roomCommands.ts` (undoable `roomCommand`, factories `moveRoom`,
+`resizeRoom`, `duplicateRoom`), `game/core/build.ts` (`roomEdit` tool -> `RoomOp`, preview, apply), `ui/build/roomEditTools.ts`
+(controls), `ui/build/buildSession.ts` (`startRoomEdit`, `adjustRoomEdit`). Tests: `tests/unit/building/roomOps.test.ts`,
+`tests/unit/ui/buildSession.test.ts` ("room edit"), acceptance step 15.
+
+- **Scope.** An enclosed, rectangular room (`rectangularRoomAt`: its tiles fill their bounding rectangle). L-shaped and
+  other rooms are refused with a reason. Works on every level; the structure rules of upper floors come from `validateDiff`.
+- **Plan.** `planRoomOp(state, content, lotId, householdId, op) -> RoomOpPlan` (`ok, reasons, cost, charge, refund, from, to, counts,
+  diff: RoomDiff, highlight, measure`). `RoomDiff` is a `BuildDiff` (walls, openings, floors) plus `moves` (furniture), `adds`
+  (copied furniture, ids `pending:obj:n`) and `items` (food on moved furniture). Nothing mutates state or allocates ids.
+- **Move** shifts walls, doors and windows in them, floor, furniture and the food on it by (dx, dz); the net cost is 0 (the walls keep
+  their paid prices). A wall shared with the next room stays where it is (the neighbour keeps it) and the moved room gets a new wall on
+  that side; doors in shared walls stay with them. **Resize** moves one side by `delta` tiles: new walls and floor are priced like
+  building, removed ones refunded like demolition; doors and windows on the moving side move with it, those on removed stubs are
+  refunded. **Duplicate** copies the shell at today's prices (walls, floor, openings); `copyObjects` buys the furniture again, with
+  surface items attached to their copied support. The copy may not overlap the original.
+- **Validation.** Destination on the lot and outside every other indoor room; no wall through the new interior; people in the room or
+  its destination block a move, people in a removed strip block a shrink (nobody is pushed); furniture in a removed strip blocks a
+  shrink ("Clear the X out of the strip first"); the structural part runs through `validateDiff` (walls through furniture, wall items
+  losing their wall, doors without walls, walled-in people, unreachable furniture, upper-floor support) with the moving furniture
+  taken out first; every moved or copied object is then placed again through `validatePlacement` in the new structure (collisions,
+  wall items on solid wall, access), supports before the items on them.
+- **Command.** One transaction like every build command: apply = plan, one `transact` for the net cost, real ids, write the diff,
+  `lot.changed` (what `all`); a rejected apply changes nothing (not even `nextId`); revert restores the captured records and reverses the
+  money that moved; reapply re-checks `roomDiffMatches` and the structure rules and re-charges the captured amount.
+- **UI.** With no tool, tapping a room selects it; the Paint tab then shows Move, Resize, Copy and Demolish (44 px buttons). Move and
+  Copy show an arrow pad (one tile per press, touch or mouse), Resize a side selector with Smaller and Bigger, Copy a "copy the
+  furniture too" switch. The footer shows the live preview (measure, walls, cost or Free, or the reason) and Apply; Esc or Cancel
+  clears. A mouse click only re-aims the preview (a room edit never applies without Apply); hover previews are off for this tool.
+
+## Furnishings that work (Milestone 13)
+
+Files: `content/interactionsFurnishings.ts` (the interactions), `content/furnishingUse.ts` (patches older designs, the handmade pot),
+`sim/furnishings.ts` (pot, fish in the fridge, the object test of the two-player games), `objectsM10/decor-hobby.ts` and
+`tools/furniture-extra/m10/decor-hobby.mjs` (five new designs), `render/objectAnim.ts` (door timing), `characters/stagePose.ts`
+(recline, curl). Tests: `tests/unit/integration/furnishings-m13.test.ts`.
+
+- **Games.** New designs `pool-table-classic`, `dartboard-cabinet`, `foosball-table`, `table-tennis-table` (interactions `playPool`,
+  `throwDarts`, `playFoosball`, `playTableTennis`: fun, a moodlet, table tennis also trains Fitness). With two people: socials
+  `playPoolTogether`, `playDartsTogether`, `playFoosballTogether`, `playTableTennisTogether` carry `requires.objectTag` (the actor's lot
+  and level needs a working object with that tag); the pair chat as usual, there is no walk to the table.
+- **Pottery.** `pottery-wheel`: `throwPottery` (Creativity xp, fun) places a Handmade Pot (`pot-handmade`, status dev, `proc:pot` mesh) on a
+  free tile near the potter; its recorded price is `potValue(creativity level)` and it was "bought yesterday", so Build mode sells it
+  for 80 % of that. `sellPottery` pays a freelance fee once through `transact`.
+- **Instruments.** `drum-kit-display`, `harp-concert`, `cello-stand` gained a use slot and `playDrums`, `playHarp`, `playCello`
+  (behavior `computer`: sit at a chair in front when there is one; Music xp, Creativity as secondary skill, fun).
+- **Recliners.** `reclineBack` (seated, +12 energy per hour): `peopleView` calls `PersonView.setRecline` while the action performs and
+  `CharacterView` leans the spine back (`RECLINE_LEAN`, a negative stoop) while seated. The modular view shows the plain seated pose.
+  **Sofa bed** `sofa-bed-convertible` has a `sleep` slot along its length (sleep, nap, sit). Storage beds already offered Sleep.
+- **Microwave, laundry.** `microwaveMeal` (6 min, $4, +35 hunger, behavior `snack`) and `doLaundry` (40 min, +14 hygiene on completion,
+  `freshLaundry` moodlet, a little Handiness). The microwave and the washers and dryers are now `functional`: they wear out and can be
+  repaired like any appliance. Door and drum are driven by the running action: the microwave door is open the first and last
+  `MICROWAVE_DOOR_MINUTES` (1), the washer door or lid the first and last `LAUNDRY_DOOR_MINUTES` (3), the drum and light turn throughout.
+- **Fish in the fridge.** `WorldItem.stored` (optional). The item interaction `storeFish` (walk to the fish, pick it up, walk to a
+  fridge, put it in) sets `stored`, moves it to the fridge and multiplies the remaining shelf life by `FRIDGE_SPOIL_FACTOR` (3). Stored
+  items are not drawn, not eaten (`eatMeal` and `availableMeals` refuse them) and not sold. The recipe `pan-fried-fish`
+  (`RecipeDef.ingredient: 'fish'`, $4 of butter and lemon) is never chosen automatically; the fridge menu offers "Cook the Catch" when a
+  stored fish exists, `cookMeal` takes the oldest stored fish when cooking starts and serves one portion per fish portion.
+- **Shade.** `ObjectDef.shelter` (tiles around the footprint): `parasol-standing`, `table-patio`, `garden-arbour` have 1.
+  `sim/weather.ts` `shadedAt` / `isSheltered`: a person in the shade counts as sheltered (the rain and snow moodlets, the `sheltered`
+  gate). Shade does not make a tile indoors (`outdoorsAt` is unchanged).
+
+## Babies and walking (Milestone 13)
+
+- **Curled pose.** A lying baby that nobody holds draws its knees up and folds its forearms (`CURL_BONES`, `applyCurl`, eased in and out
+  by `CharacterView`); a held baby keeps the carrier's cradle pose.
+- **Walk cycle speed.** `peopleView` measures each person's ground speed (tiles per real second, smoothed) and passes
+  `speed / WALK_TILES_PER_MINUTE` to `PersonView.setWalkRate`; `Animator.setWalkRate` multiplies the locomotion clips' speed by it (on top of
+  the stage's cadence). At normal game speed nothing changes; at Fast and Very fast the legs no longer skate, and a slow route no longer
+  runs the clip at full speed.

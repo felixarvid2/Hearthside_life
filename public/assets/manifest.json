@@ -29577,6 +29577,384 @@
    ],
    "original": true,
    "group": "tables-storage"
+  },
+  "poolTable": {
+   "file": "furniture/poolTable.glb",
+   "thumb": "furniture/thumbs/poolTable.png",
+   "min": [
+    0.0977,
+    0,
+    0.1347
+   ],
+   "max": [
+    1.355,
+    0.6061,
+    0.9915
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
+  },
+  "dartBoard": {
+   "file": "furniture/dartBoard.glb",
+   "thumb": "furniture/thumbs/dartBoard.png",
+   "min": [
+    0.09,
+    0,
+    0
+   ],
+   "max": [
+    0.41,
+    0.32,
+    0.1006
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
+  },
+  "foosballTable": {
+   "file": "furniture/foosballTable.glb",
+   "thumb": "furniture/thumbs/foosballTable.png",
+   "min": [
+    0.075,
+    0,
+    0.025
+   ],
+   "max": [
+    0.925,
+    0.51,
+    0.5
+   ],
+   "materials": [
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "plant",
+     "color": [
+      0.182,
+      0.821,
+      0.576
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
+  },
+  "tableTennisTable": {
+   "file": "furniture/tableTennisTable.glb",
+   "thumb": "furniture/thumbs/tableTennisTable.png",
+   "min": [
+    0.065,
+    0,
+    0.085
+   ],
+   "max": [
+    1.435,
+    0.4575,
+    0.915
+   ],
+   "materials": [
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "carpetDarker",
+     "color": [
+      0.608,
+      0.298,
+      0.285
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
+  },
+  "potteryWheel": {
+   "file": "furniture/potteryWheel.glb",
+   "thumb": "furniture/thumbs/potteryWheel.png",
+   "min": [
+    0.08,
+    0,
+    0.0883
+   ],
+   "max": [
+    0.505,
+    0.43,
+    0.465
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "metal",
+     "color": [
+      0.741,
+      0.823,
+      0.84
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    },
+    {
+     "name": "metalLight",
+     "color": [
+      0.937,
+      0.98,
+      0.957
+     ]
+    },
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "metalMedium",
+     "color": [
+      0.369,
+      0.467,
+      0.467
+     ]
+    },
+    {
+     "name": "carpetBlue",
+     "color": [
+      0.356,
+      0.517,
+      0.868
+     ]
+    }
+   ],
+   "original": true,
+   "group": "decor-hobby"
   }
  },
  "audio": {

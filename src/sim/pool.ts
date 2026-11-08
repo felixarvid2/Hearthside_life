@@ -12,7 +12,7 @@ import type { Tile } from '../core/nav';
 import type { ActionInstance, Person, Pool, PoolLadder } from '../core/types';
 import { computeRooms, roomIndex } from '../world/rooms';
 import {
-  ladderDeckTile, ladderWaterTile, poolAt, poolById, poolCenter, poolDepth, poolWidth, usableLadders,
+  ladderDeckTile, ladderWaterTile, poolAt, poolBesideTile, poolById, poolCenter, poolDepth, poolWidth, usableLadders,
 } from '../world/pools';
 import { switchOutfit } from './behaviors';
 import type { SimCtx } from './context';
@@ -323,5 +323,65 @@ export const getOutBehavior: Behavior = {
   },
   reserve: () => null,
   step: () => ({ goal: { kind: 'here' }, posture: 'standing', performAnim: 'idle', duration: { kind: 'instant' }, rates: {} }),
+  interruptible: false,
+};
+
+// ---------------------------------------------------------------------------------------------
+// Toddlers: paddling at the edge (Milestone 13)
+// ---------------------------------------------------------------------------------------------
+
+/** Tiles within which a grown-up must be to watch a paddling toddler. */
+export const SUPERVISION_RADIUS = 8;
+
+/** An awake teen or adult on the toddler's lot and level within SUPERVISION_RADIUS (the toddler itself excluded). */
+export function supervisorNear(ctx: SimCtx, p: Person): Person | null {
+  const loc = lotLoc(p);
+  if (!loc) return null;
+  for (const o of Object.values(ctx.state.people)) {
+    if (o.id === p.id || !GROWN_UP.includes(o.lifeStage)) continue;
+    const l = lotLoc(o);
+    if (!l || l.lotId !== loc.lotId || l.level !== loc.level || l.posture === 'lying') continue;
+    if (Math.hypot(l.x - loc.x, l.z - loc.z) <= SUPERVISION_RADIUS) return o;
+  }
+  return null;
+}
+const GROWN_UP: readonly Person['lifeStage'][] = ['teen', 'youngAdult', 'adult', 'elder'];
+
+/**
+ * Paddle at the Edge: a toddler stands on the dry deck tile beside the water (never in it) and splashes. It needs a grown-up
+ * close by when it starts, and the activity ends as soon as nobody is watching.
+ */
+export const paddleBehavior: Behavior = {
+  check(ctx, p, a) {
+    const loc = lotLoc(p);
+    const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+    if (!loc || !lot || a.target.kind !== 'tile') return 'Paddle at the pool edge.';
+    if (!poolBesideTile(lot, a.target.level ?? 0, a.target.x, a.target.z)) return 'Toddlers paddle only on the deck right beside the water.';
+    if (!ctx.nav.isWalkable(lot.id, 0, a.target.x, a.target.z)) return "Can't reach the pool edge.";
+    return supervisorNear(ctx, p) ? null : 'A grown-up needs to be watching close by.';
+  },
+  reserve(ctx, p, a) {
+    const loc = lotLoc(p);
+    if (!loc || a.target.kind !== 'tile') return 'Paddle at the pool edge.';
+    const goal = { x: a.target.x, z: a.target.z, level: 0 };
+    const cur = tileOfLoc(loc);
+    const path = cur.x === goal.x && cur.z === goal.z ? [] : planRoute(ctx, p, [goal]);
+    if (!path) return "Can't reach the pool edge.";
+    a.route = routeFromPath(loc, cur, path);
+    return null;
+  },
+  step(ctx, p, a): Step | string {
+    const def = interactionDef(ctx, a.interactionId);
+    if (!def || a.target.kind !== 'tile') return 'Paddle at the pool edge.';
+    const loc = lotLoc(p);
+    const lot = loc ? ctx.state.lots[loc.lotId] : undefined;
+    const pool = lot ? poolBesideTile(lot, 0, a.target.x, a.target.z) : undefined;
+    const c = pool ? poolCenter(pool) : null;
+    return {
+      goal: { kind: 'tile', tile: { x: a.target.x, z: a.target.z, level: 0 }, ...(c ? { face: { x: c.x + 0.5, z: c.z + 0.5 } } : {}), label: 'the pool edge' },
+      posture: 'standing', performAnim: def.anims.perform, duration: defDuration(def), rates: performRates(ctx, p, def, null, null, 'standing'), skill: skillRate(def, null),
+    };
+  },
+  tick(ctx, p) { return supervisorNear(ctx, p) ? null : 'done'; },
   interruptible: false,
 };

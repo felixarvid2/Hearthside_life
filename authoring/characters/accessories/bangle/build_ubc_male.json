@@ -1,0 +1,9 @@
+{
+ "accessory": "bangle",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/bangle__ubc_male.glb",
+ "kind": "bangle",
+ "secs": 1.0,
+ "tris": 216,
+ "verts": 108
+}

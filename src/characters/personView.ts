@@ -31,6 +31,10 @@ export interface PersonView {
   play(anim: AnimId, opts?: { fade?: number; posture?: Posture }): void;
   setBabyUpright(on: boolean): void;
   setCarrying(on: boolean): void;
+  /** Lean back in a seat (recliners); views that cannot pose the spine ignore it. */
+  setRecline(on: boolean): void;
+  /** Walk and jog cycle speed factor (actual ground speed over the clips' natural speed), so feet do not slide. */
+  setWalkRate(rate: number): void;
   cradlePoint(target: THREE.Vector3): THREE.Vector3;
   bone(name: string): THREE.Bone | null;
   update(dtSeconds: number): void;
