@@ -1,0 +1,64 @@
+{
+ "id": "skirt_maxi",
+ "label": "Maxi skirt",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "skirt",
+  "long"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SkirtMaxi"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.016,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.008,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "leg": -1.0,
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.86,
+   "flare": 0.12,
+   "offset": 0.025
+  }
+ }
+}

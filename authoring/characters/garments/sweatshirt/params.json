@@ -1,0 +1,58 @@
+{
+ "id": "sweatshirt",
+ "label": "Sweatshirt",
+ "preset": null,
+ "category": "top",
+ "slot": "top",
+ "tags": [
+  "sweater",
+  "sport"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Sweatshirt"
+   ],
+   "default": "#f2efe6",
+   "palette": [
+    "#f2efe6",
+    "#2f2f33",
+    "#3f6fa8",
+    "#c94f4f",
+    "#5c8a5a",
+    "#e0b341"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.007,
+  "max": 0.022,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.018,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "crew"
+   },
+   "sleeve": 1.0,
+   "hem": {
+    "at": "hip",
+    "offset": 0.03
+   },
+   "force": true
+  }
+ }
+}

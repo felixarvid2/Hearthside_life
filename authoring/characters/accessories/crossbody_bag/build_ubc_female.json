@@ -1,0 +1,9 @@
+{
+ "accessory": "crossbody_bag",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/crossbody_bag__ubc_female.glb",
+ "kind": "crossbody",
+ "secs": 1.3,
+ "tris": 48,
+ "verts": 28
+}

@@ -1,0 +1,33 @@
+{
+ "id": "cuff_bracelet",
+ "label": "Cuff bracelet",
+ "slot": "wrist",
+ "category": "accessory",
+ "kind": "cuff",
+ "tags": [
+  "jewellery"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_CuffBracelet"
+   ],
+   "default": "#d4af37",
+   "palette": [
+    "#d4af37",
+    "#c0c0c0",
+    "#b87333",
+    "#2f2f33",
+    "#e5e4e2",
+    "#8c7853"
+   ],
+   "metallic": 0.8,
+   "roughness": 0.35
+  }
+ ],
+ "layer": 3,
+ "conflicts": [],
+ "side": "r"
+}

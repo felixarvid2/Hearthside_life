@@ -1,0 +1,9 @@
+{
+ "accessory": "glasses_square",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/glasses_square__ubc_male.glb",
+ "kind": "glasses",
+ "secs": 1.8,
+ "tris": 462,
+ "verts": 237
+}

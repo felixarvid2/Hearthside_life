@@ -1,0 +1,45 @@
+{
+ "attachment": "skinned",
+ "clumps": 170,
+ "points": 11,
+ "length": 0.24,
+ "length_jitter": 0.15,
+ "volume": 0.02,
+ "part_offset": 0.025,
+ "back_flow": 0.35,
+ "gravity": 1.0,
+ "hairline_front": 0.8,
+ "hairline_back": 0.3,
+ "clump_width": 0.055,
+ "clump_flatness": 0.8,
+ "root_offset": 0.002,
+ "resolution_cm": 3.0,
+ "target_tris": 14000,
+ "profile_resolution": 2,
+ "cap": true,
+ "cap_offset": 0.004,
+ "color_regions": [
+  {
+   "id": "hair",
+   "label": "Hair",
+   "materials": [
+    "M_Hair"
+   ],
+   "default": "#4a3020"
+  }
+ ],
+ "fall_below": 0.55,
+ "front_side": 2.5,
+ "cut_at": -0.05,
+ "curl": {
+  "radius": 0.01,
+  "per_m": 32,
+  "from": 0.25
+ },
+ "id": "curly_bob",
+ "label": "Curly bob",
+ "tags": [
+  "medium",
+  "curly"
+ ]
+}

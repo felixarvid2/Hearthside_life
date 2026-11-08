@@ -1,0 +1,9 @@
+{
+ "accessory": "hairband_thin",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/hairband_thin__ubc_male.glb",
+ "kind": "headband",
+ "secs": 3.2,
+ "tris": 336,
+ "verts": 168
+}

@@ -1,0 +1,69 @@
+{
+ "id": "nightgown",
+ "label": "Nightgown",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "dress",
+  "sleep",
+  "long"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Nightgown"
+   ],
+   "default": "#f4d6d6",
+   "palette": [
+    "#f4d6d6",
+    "#d6e4f4",
+    "#dff0d8",
+    "#f7ebc6",
+    "#e6dcf2",
+    "#f2f2f2"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.011,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "scoop"
+   },
+   "sleeve": -0.15,
+   "hem": {
+    "at": "hip",
+    "offset": -0.04
+   },
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.9,
+   "flare": 0.18,
+   "offset": 0.022
+  }
+ }
+}

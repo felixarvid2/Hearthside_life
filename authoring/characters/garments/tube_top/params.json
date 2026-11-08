@@ -1,0 +1,59 @@
+{
+ "id": "tube_top",
+ "label": "Tube top",
+ "preset": null,
+ "category": "top",
+ "slot": "top",
+ "tags": [
+  "tank",
+  "crop"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_TubeTop"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.007,
+  "max": 0.022,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.012,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "off",
+    "depth": 0.1
+   },
+   "sleeve": -0.3,
+   "hem": {
+    "at": "waist",
+    "offset": 0.03
+   },
+   "force": true
+  }
+ }
+}

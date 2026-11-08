@@ -1,0 +1,67 @@
+{
+ "id": "dress_aline",
+ "label": "A-line dress",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "dress"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_DressAline"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.011,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "crew"
+   },
+   "sleeve": 0.16,
+   "hem": {
+    "at": "hip",
+    "offset": -0.04
+   },
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.5,
+   "flare": 0.25,
+   "offset": 0.022
+  }
+ }
+}

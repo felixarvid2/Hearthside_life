@@ -1,0 +1,9 @@
+{
+ "accessory": "bow_tie",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/bow_tie__ubc_female.glb",
+ "kind": "bow_tie",
+ "secs": 0.9,
+ "tris": 36,
+ "verts": 24
+}

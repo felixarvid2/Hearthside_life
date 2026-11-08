@@ -1,0 +1,9 @@
+{
+ "accessory": "tie",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/tie__ubc_female.glb",
+ "kind": "tie",
+ "secs": 0.7,
+ "tris": 56,
+ "verts": 32
+}

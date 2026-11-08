@@ -1,0 +1,9 @@
+{
+ "accessory": "belt_leather",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/belt_leather__ubc_female.glb",
+ "kind": "belt",
+ "secs": 0.8,
+ "tris": 268,
+ "verts": 136
+}

@@ -1,0 +1,24 @@
+{
+ "body": "ubc_male",
+ "gbh_modifiers": [
+  "GBH Resolution",
+  "GBH Snap Roots",
+  "GBH Profile Width Control",
+  "GBH Profile Custom",
+  "GBH UV Single for Mesh Hair",
+  "GBH Set Material"
+ ],
+ "glb": "public/assets/characters/modular/hair/pigtails__ubc_male.glb",
+ "hair": "pigtails",
+ "head_base_z": 1.6,
+ "inside_head_verts": 924,
+ "roots": 180,
+ "secs": 3.3,
+ "src_tris": 29856,
+ "tris": 14413,
+ "verts": 7290,
+ "z": [
+  1.48,
+  1.819
+ ]
+}

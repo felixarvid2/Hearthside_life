@@ -1,0 +1,46 @@
+{
+ "attachment": "skinned",
+ "clumps": 180,
+ "points": 7,
+ "length": 0.085,
+ "length_jitter": 0.15,
+ "volume": 0.005,
+ "part_offset": 0.025,
+ "back_flow": 0.55,
+ "gravity": 0,
+ "hairline_front": 0.8,
+ "hairline_back": 0.3,
+ "clump_width": 0.032,
+ "clump_flatness": 0.6,
+ "root_offset": 0.002,
+ "resolution_cm": 3.0,
+ "target_tris": 14000,
+ "profile_resolution": 2,
+ "cap": true,
+ "cap_offset": 0.004,
+ "color_regions": [
+  {
+   "id": "hair",
+   "label": "Hair",
+   "materials": [
+    "M_Hair"
+   ],
+   "default": "#4a3020"
+  }
+ ],
+ "gathers": [
+  {
+   "angle": 0,
+   "gather_h": 0.28,
+   "kind": "bun",
+   "bun_r": 0.035,
+   "bun_turns": 1.6
+  }
+ ],
+ "id": "low_bun",
+ "label": "Low bun",
+ "tags": [
+  "gathered",
+  "bun"
+ ]
+}

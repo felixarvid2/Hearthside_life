@@ -1,0 +1,9 @@
+{
+ "accessory": "sun_hat",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/sun_hat__ubc_male.glb",
+ "kind": "sun_hat",
+ "secs": 0.9,
+ "tris": 420,
+ "verts": 225
+}

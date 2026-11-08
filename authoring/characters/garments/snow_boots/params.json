@@ -1,0 +1,67 @@
+{
+ "id": "snow_boots",
+ "label": "Snow boots",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "boots",
+  "warm"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SnowBoots"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#3b4252",
+    "#5b3a3a",
+    "#2e4034",
+    "#6b5a45",
+    "#8c9aa8"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_SnowBootsSole"
+   ],
+   "default": "#3a3a3a",
+   "palette": [
+    "#3a3a3a",
+    "#f2efe6",
+    "#6b4428",
+    "#c8a27a",
+    "#1f1f1f",
+    "#9a9a9a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.024,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.02,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.25,
+   "force": true
+  },
+  "sole": 0.045,
+  "welt": 0.02
+ }
+}

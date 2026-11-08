@@ -1,0 +1,61 @@
+{
+ "id": "tracksuit",
+ "label": "Tracksuit",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "sport",
+  "jumpsuit"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Tracksuit"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.016,
+  "cut": {
+   "part": "full",
+   "neck": {
+    "kind": "mock"
+   },
+   "sleeve": 1.0,
+   "leg": 1.0,
+   "hem": {
+    "at": "hip",
+    "offset": -0.03
+   },
+   "force": true,
+   "leg_flare": 0.01
+  }
+ }
+}

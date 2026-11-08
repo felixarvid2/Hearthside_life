@@ -1,0 +1,77 @@
+{
+ "id": "parka",
+ "label": "Parka",
+ "preset": null,
+ "category": "outer",
+ "slot": "outer",
+ "tags": [
+  "coat",
+  "warm"
+ ],
+ "hides": [],
+ "layer": 2,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Parka"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.02,
+  "max": 0.041999999999999996,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.038,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "mock"
+   },
+   "sleeve": 1.0,
+   "hem": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "open_front": 0.0,
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "hip",
+    "offset": 0.0
+   },
+   "length": 0.3,
+   "flare": 0.08,
+   "offset": 0.035,
+   "open_front": 0.0
+  },
+  "hood": {
+   "segments": 28,
+   "ring": 12,
+   "reach_deg": 115,
+   "collar_at": 0.15,
+   "collar": 0.02,
+   "thick": 0.05,
+   "drop": 0.17,
+   "rise": 0.03
+  }
+ }
+}

@@ -1,0 +1,56 @@
+{
+ "id": "sweatpants",
+ "label": "Sweatpants",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "sport",
+  "trousers"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Sweatpants"
+   ],
+   "default": "#b9b4aa",
+   "palette": [
+    "#b9b4aa",
+    "#7a7a7a",
+    "#e8e2d6",
+    "#4a4a4a",
+    "#8a7560",
+    "#f2efe6"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.016,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "leg": 1.0,
+   "force": true,
+   "leg_flare": 0.02
+  }
+ }
+}

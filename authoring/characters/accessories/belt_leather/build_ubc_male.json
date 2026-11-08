@@ -1,0 +1,9 @@
+{
+ "accessory": "belt_leather",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/belt_leather__ubc_male.glb",
+ "kind": "belt",
+ "secs": 2.3,
+ "tris": 268,
+ "verts": 136
+}

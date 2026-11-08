@@ -1,0 +1,9 @@
+{
+ "accessory": "earrings_stud",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/earrings_stud__ubc_male.glb",
+ "kind": "earrings_stud",
+ "secs": 1.6,
+ "tris": 96,
+ "verts": 52
+}

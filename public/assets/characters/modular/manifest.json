@@ -372,6 +372,1934 @@
    "followsMorphs": [
     "weight"
    ]
+  },
+  {
+   "id": "tee_v",
+   "label": "V-neck tee",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tee_v__ubc_male.glb",
+    "ubc_female": "garments/tee_v__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tee_v__ubc_male.cover.json",
+    "ubc_female": "garments/tee_v__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TeeV"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tee_v/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tee"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jacket_open",
+   "label": "Open jacket",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/jacket_open__ubc_male.glb",
+    "ubc_female": "garments/jacket_open__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jacket_open__ubc_male.cover.json",
+    "ubc_female": "garments/jacket_open__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_JacketOpen"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#3b4252",
+      "#5b3a3a",
+      "#2e4034",
+      "#6b5a45",
+      "#8c9aa8"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jacket_open/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jacket"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "jeans_flared",
+   "label": "Flared jeans",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/jeans_flared__ubc_male.glb",
+    "ubc_female": "garments/jeans_flared__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/jeans_flared__ubc_male.cover.json",
+    "ubc_female": "garments/jeans_flared__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_JeansFlared"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/jeans_flared/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "jeans"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "dress_aline",
+   "label": "A-line dress",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/dress_aline__ubc_male.glb",
+    "ubc_female": "garments/dress_aline__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/dress_aline__ubc_male.cover.json",
+    "ubc_female": "garments/dress_aline__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_DressAline"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/dress_aline/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "dress"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "overalls",
+   "label": "Overalls",
+   "category": "full",
+   "slot": "full",
+   "files": {
+    "ubc_male": "garments/overalls__ubc_male.glb",
+    "ubc_female": "garments/overalls__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/overalls__ubc_male.cover.json",
+    "ubc_female": "garments/overalls__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "top",
+    "bottom"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Overalls"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/overalls/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "overalls"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sneakers_high",
+   "label": "High-top sneakers",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/sneakers_high__ubc_male.glb",
+    "ubc_female": "garments/sneakers_high__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sneakers_high__ubc_male.cover.json",
+    "ubc_female": "garments/sneakers_high__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SneakersHigh"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_SneakersHighSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sneakers_high/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sneakers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "parka",
+   "label": "Parka",
+   "category": "outer",
+   "slot": "outer",
+   "files": {
+    "ubc_male": "garments/parka__ubc_male.glb",
+    "ubc_female": "garments/parka__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/parka__ubc_male.cover.json",
+    "ubc_female": "garments/parka__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 2,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Parka"
+     ],
+     "default": "#7a5c3e",
+     "palette": [
+      "#7a5c3e",
+      "#a68a64",
+      "#4d5b3a",
+      "#b85c38",
+      "#d9c7a7",
+      "#3b3b3b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/parka/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "coat",
+    "warm"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "skirt_aline",
+   "label": "A-line skirt",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/skirt_aline__ubc_male.glb",
+    "ubc_female": "garments/skirt_aline__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/skirt_aline__ubc_male.cover.json",
+    "ubc_female": "garments/skirt_aline__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SkirtAline"
+     ],
+     "default": "#e04f5f",
+     "palette": [
+      "#e04f5f",
+      "#f29e4c",
+      "#f1c453",
+      "#2bb3a3",
+      "#3d7cc9",
+      "#9b5de5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/skirt_aline/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "skirt"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "tank_scoop",
+   "label": "Scoop tank",
+   "category": "top",
+   "slot": "top",
+   "files": {
+    "ubc_male": "garments/tank_scoop__ubc_male.glb",
+    "ubc_female": "garments/tank_scoop__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/tank_scoop__ubc_male.cover.json",
+    "ubc_female": "garments/tank_scoop__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_TankScoop"
+     ],
+     "default": "#f4d6d6",
+     "palette": [
+      "#f4d6d6",
+      "#d6e4f4",
+      "#dff0d8",
+      "#f7ebc6",
+      "#e6dcf2",
+      "#f2f2f2"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/tank_scoop/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "tank"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "shorts_mid",
+   "label": "Mid shorts",
+   "category": "bottom",
+   "slot": "bottom",
+   "files": {
+    "ubc_male": "garments/shorts_mid__ubc_male.glb",
+    "ubc_female": "garments/shorts_mid__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/shorts_mid__ubc_male.cover.json",
+    "ubc_female": "garments/shorts_mid__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [
+    "full"
+   ],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_ShortsMid"
+     ],
+     "default": "#3b5a85",
+     "palette": [
+      "#3b5a85",
+      "#2c3e5c",
+      "#6d8fb5",
+      "#1f2633",
+      "#8aa1b8",
+      "#4a4a4a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/shorts_mid/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "shorts"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "sneakers_low",
+   "label": "Low sneakers",
+   "category": "shoes",
+   "slot": "shoes",
+   "files": {
+    "ubc_male": "garments/sneakers_low__ubc_male.glb",
+    "ubc_female": "garments/sneakers_low__ubc_female.glb"
+   },
+   "covers": {
+    "ubc_male": "garments/sneakers_low__ubc_male.cover.json",
+    "ubc_female": "garments/sneakers_low__ubc_female.cover.json"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 1,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SneakersLow"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#2f2f33",
+      "#3f6fa8",
+      "#c94f4f",
+      "#5c8a5a",
+      "#e0b341"
+     ]
+    },
+    {
+     "id": "sole",
+     "label": "Sole",
+     "materials": [
+      "M_SneakersLowSole"
+     ],
+     "default": "#3a3a3a",
+     "palette": [
+      "#3a3a3a",
+      "#f2efe6",
+      "#6b4428",
+      "#c8a27a",
+      "#1f1f1f",
+      "#9a9a9a"
+     ]
+    }
+   ],
+   "source": "authoring/characters/garments/sneakers_low/params.json",
+   "license": "CC0 1.0 - Hearthside original (cut design on the body-shell finish, in Blender on Quaternius CC0 bodies)",
+   "tags": [
+    "sneakers"
+   ],
+   "followsMorphs": [
+    "weight"
+   ]
+  },
+  {
+   "id": "backpack",
+   "label": "Backpack",
+   "category": "accessory",
+   "slot": "bag",
+   "files": {
+    "ubc_male": "accessories/backpack__ubc_male.glb",
+    "ubc_female": "accessories/backpack__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Backpack"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Straps",
+     "materials": [
+      "M_BackpackDetail"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/backpack/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "bag"
+   ]
+  },
+  {
+   "id": "bangle",
+   "label": "Bangle",
+   "category": "accessory",
+   "slot": "wrist",
+   "files": {
+    "ubc_male": "accessories/bangle__ubc_male.glb",
+    "ubc_female": "accessories/bangle__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Bangle"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/bangle/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "beanie",
+   "label": "Beanie",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/beanie__ubc_male.glb",
+    "ubc_female": "accessories/beanie__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Beanie"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/beanie/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "warm"
+   ]
+  },
+  {
+   "id": "belt_leather",
+   "label": "Leather belt",
+   "category": "accessory",
+   "slot": "waist",
+   "files": {
+    "ubc_male": "accessories/belt_leather__ubc_male.glb",
+    "ubc_female": "accessories/belt_leather__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BeltLeather"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Buckle",
+     "materials": [
+      "M_BeltLeatherDetail"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/belt_leather/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "belt"
+   ]
+  },
+  {
+   "id": "belt_wide",
+   "label": "Wide belt",
+   "category": "accessory",
+   "slot": "waist",
+   "files": {
+    "ubc_male": "accessories/belt_wide__ubc_male.glb",
+    "ubc_female": "accessories/belt_wide__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BeltWide"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Buckle",
+     "materials": [
+      "M_BeltWideDetail"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/belt_wide/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "belt"
+   ]
+  },
+  {
+   "id": "beret",
+   "label": "Beret",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/beret__ubc_male.glb",
+    "ubc_female": "accessories/beret__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Beret"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/beret/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "formal"
+   ]
+  },
+  {
+   "id": "bow_tie",
+   "label": "Bow tie",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/bow_tie__ubc_male.glb",
+    "ubc_female": "accessories/bow_tie__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BowTie"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/bow_tie/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "formal"
+   ]
+  },
+  {
+   "id": "bucket_hat",
+   "label": "Bucket hat",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/bucket_hat__ubc_male.glb",
+    "ubc_female": "accessories/bucket_hat__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_BucketHat"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/bucket_hat/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "summer"
+   ]
+  },
+  {
+   "id": "cap_baseball",
+   "label": "Baseball cap",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/cap_baseball__ubc_male.glb",
+    "ubc_female": "accessories/cap_baseball__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CapBaseball"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Brim",
+     "materials": [
+      "M_CapBaseballDetail"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/cap_baseball/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "cap"
+   ]
+  },
+  {
+   "id": "choker",
+   "label": "Choker",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/choker__ubc_male.glb",
+    "ubc_female": "accessories/choker__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Choker"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/choker/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "crossbody_bag",
+   "label": "Crossbody bag",
+   "category": "accessory",
+   "slot": "bag",
+   "files": {
+    "ubc_male": "accessories/crossbody_bag__ubc_male.glb",
+    "ubc_female": "accessories/crossbody_bag__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CrossbodyBag"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Strap",
+     "materials": [
+      "M_CrossbodyBagDetail"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/crossbody_bag/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "bag"
+   ]
+  },
+  {
+   "id": "cuff_bracelet",
+   "label": "Cuff bracelet",
+   "category": "accessory",
+   "slot": "wrist",
+   "files": {
+    "ubc_male": "accessories/cuff_bracelet__ubc_male.glb",
+    "ubc_female": "accessories/cuff_bracelet__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_CuffBracelet"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/cuff_bracelet/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "earrings_drop",
+   "label": "Drop earrings",
+   "category": "accessory",
+   "slot": "earrings",
+   "files": {
+    "ubc_male": "accessories/earrings_drop__ubc_male.glb",
+    "ubc_female": "accessories/earrings_drop__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_EarringsDrop"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Stone",
+     "materials": [
+      "M_EarringsDropDetail"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#c94f4f",
+      "#3f6fa8",
+      "#5c8a5a",
+      "#9b5de5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/earrings_drop/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "earrings_hoop",
+   "label": "Hoop earrings",
+   "category": "accessory",
+   "slot": "earrings",
+   "files": {
+    "ubc_male": "accessories/earrings_hoop__ubc_male.glb",
+    "ubc_female": "accessories/earrings_hoop__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_EarringsHoop"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/earrings_hoop/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "earrings_stud",
+   "label": "Stud earrings",
+   "category": "accessory",
+   "slot": "earrings",
+   "files": {
+    "ubc_male": "accessories/earrings_stud__ubc_male.glb",
+    "ubc_female": "accessories/earrings_stud__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_EarringsStud"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#c94f4f",
+      "#3f6fa8",
+      "#5c8a5a",
+      "#9b5de5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/earrings_stud/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "fanny_pack",
+   "label": "Belt bag",
+   "category": "accessory",
+   "slot": "bag",
+   "files": {
+    "ubc_male": "accessories/fanny_pack__ubc_male.glb",
+    "ubc_female": "accessories/fanny_pack__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_FannyPack"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Strap",
+     "materials": [
+      "M_FannyPackDetail"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/fanny_pack/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "bag",
+    "sport"
+   ]
+  },
+  {
+   "id": "fedora",
+   "label": "Fedora",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/fedora__ubc_male.glb",
+    "ubc_female": "accessories/fedora__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Fedora"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Band",
+     "materials": [
+      "M_FedoraDetail"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/fedora/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "formal"
+   ]
+  },
+  {
+   "id": "glasses_round",
+   "label": "Round glasses",
+   "category": "accessory",
+   "slot": "eyewear",
+   "files": {
+    "ubc_male": "accessories/glasses_round__ubc_male.glb",
+    "ubc_female": "accessories/glasses_round__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_GlassesRound"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/glasses_round/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "glasses"
+   ]
+  },
+  {
+   "id": "glasses_square",
+   "label": "Square glasses",
+   "category": "accessory",
+   "slot": "eyewear",
+   "files": {
+    "ubc_male": "accessories/glasses_square__ubc_male.glb",
+    "ubc_female": "accessories/glasses_square__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_GlassesSquare"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/glasses_square/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "glasses"
+   ]
+  },
+  {
+   "id": "hairband_thin",
+   "label": "Thin hairband",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/hairband_thin__ubc_male.glb",
+    "ubc_female": "accessories/hairband_thin__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_HairbandThin"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/hairband_thin/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "hair"
+   ]
+  },
+  {
+   "id": "headband",
+   "label": "Headband",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/headband__ubc_male.glb",
+    "ubc_female": "accessories/headband__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Headband"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/headband/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "sport"
+   ]
+  },
+  {
+   "id": "necklace_chain",
+   "label": "Chain necklace",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/necklace_chain__ubc_male.glb",
+    "ubc_female": "accessories/necklace_chain__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_NecklaceChain"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/necklace_chain/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "pearls",
+   "label": "Pearl necklace",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/pearls__ubc_male.glb",
+    "ubc_female": "accessories/pearls__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Pearls"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#c94f4f",
+      "#3f6fa8",
+      "#5c8a5a",
+      "#9b5de5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/pearls/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery",
+    "formal"
+   ]
+  },
+  {
+   "id": "pendant",
+   "label": "Pendant",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/pendant__ubc_male.glb",
+    "ubc_female": "accessories/pendant__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Pendant"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Pendant",
+     "materials": [
+      "M_PendantDetail"
+     ],
+     "default": "#f2efe6",
+     "palette": [
+      "#f2efe6",
+      "#c94f4f",
+      "#3f6fa8",
+      "#5c8a5a",
+      "#9b5de5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/pendant/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "jewellery"
+   ]
+  },
+  {
+   "id": "reading_glasses",
+   "label": "Reading glasses",
+   "category": "accessory",
+   "slot": "eyewear",
+   "files": {
+    "ubc_male": "accessories/reading_glasses__ubc_male.glb",
+    "ubc_female": "accessories/reading_glasses__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_ReadingGlasses"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/reading_glasses/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "glasses"
+   ]
+  },
+  {
+   "id": "scarf",
+   "label": "Scarf",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/scarf__ubc_male.glb",
+    "ubc_female": "accessories/scarf__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Scarf"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/scarf/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "warm"
+   ]
+  },
+  {
+   "id": "smartwatch",
+   "label": "Smartwatch",
+   "category": "accessory",
+   "slot": "wrist",
+   "files": {
+    "ubc_male": "accessories/smartwatch__ubc_male.glb",
+    "ubc_female": "accessories/smartwatch__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Smartwatch"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Screen",
+     "materials": [
+      "M_SmartwatchDetail"
+     ],
+     "default": "#1f2633",
+     "palette": [
+      "#1f2633",
+      "#3a2a20",
+      "#2e4034",
+      "#5b3a3a",
+      "#6d8fb5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/smartwatch/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "watch",
+    "sport"
+   ]
+  },
+  {
+   "id": "sun_hat",
+   "label": "Sun hat",
+   "category": "accessory",
+   "slot": "hat",
+   "files": {
+    "ubc_male": "accessories/sun_hat__ubc_male.glb",
+    "ubc_female": "accessories/sun_hat__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SunHat"
+     ],
+     "default": "#d9c7a7",
+     "palette": [
+      "#d9c7a7",
+      "#c8a27a",
+      "#f2efe6",
+      "#2f2f33",
+      "#8a7560",
+      "#e8d9b5"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/sun_hat/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "summer"
+   ]
+  },
+  {
+   "id": "sunglasses_aviator",
+   "label": "Aviator sunglasses",
+   "category": "accessory",
+   "slot": "eyewear",
+   "files": {
+    "ubc_male": "accessories/sunglasses_aviator__ubc_male.glb",
+    "ubc_female": "accessories/sunglasses_aviator__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SunglassesAviator"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Lenses",
+     "materials": [
+      "M_SunglassesAviatorDetail"
+     ],
+     "default": "#1f2633",
+     "palette": [
+      "#1f2633",
+      "#3a2a20",
+      "#2e4034",
+      "#5b3a3a",
+      "#6d8fb5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/sunglasses_aviator/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "sunglasses"
+   ]
+  },
+  {
+   "id": "sunglasses_wayfarer",
+   "label": "Wayfarer sunglasses",
+   "category": "accessory",
+   "slot": "eyewear",
+   "files": {
+    "ubc_male": "accessories/sunglasses_wayfarer__ubc_male.glb",
+    "ubc_female": "accessories/sunglasses_wayfarer__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_SunglassesWayfarer"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Lenses",
+     "materials": [
+      "M_SunglassesWayfarerDetail"
+     ],
+     "default": "#1f2633",
+     "palette": [
+      "#1f2633",
+      "#3a2a20",
+      "#2e4034",
+      "#5b3a3a",
+      "#6d8fb5",
+      "#2f2f33"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/sunglasses_wayfarer/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "sunglasses"
+   ]
+  },
+  {
+   "id": "tie",
+   "label": "Tie",
+   "category": "accessory",
+   "slot": "neck",
+   "files": {
+    "ubc_male": "accessories/tie__ubc_male.glb",
+    "ubc_female": "accessories/tie__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_Tie"
+     ],
+     "default": "#2f2f33",
+     "palette": [
+      "#2f2f33",
+      "#c94f4f",
+      "#3f6fa8",
+      "#e0b341",
+      "#5c8a5a",
+      "#f2efe6"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/tie/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "formal"
+   ]
+  },
+  {
+   "id": "watch_classic",
+   "label": "Wristwatch",
+   "category": "accessory",
+   "slot": "wrist",
+   "files": {
+    "ubc_male": "accessories/watch_classic__ubc_male.glb",
+    "ubc_female": "accessories/watch_classic__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "hides": [],
+   "layer": 3,
+   "conflicts": [],
+   "colorRegions": [
+    {
+     "id": "main",
+     "label": "Main",
+     "materials": [
+      "M_WatchClassic"
+     ],
+     "default": "#3a2a20",
+     "palette": [
+      "#3a2a20",
+      "#6b4428",
+      "#1f1f1f",
+      "#8c5a3c",
+      "#c8a27a",
+      "#5b5b5b"
+     ]
+    },
+    {
+     "id": "detail",
+     "label": "Case",
+     "materials": [
+      "M_WatchClassicDetail"
+     ],
+     "default": "#d4af37",
+     "palette": [
+      "#d4af37",
+      "#c0c0c0",
+      "#b87333",
+      "#2f2f33",
+      "#e5e4e2",
+      "#8c7853"
+     ]
+    }
+   ],
+   "source": "authoring/characters/accessories/watch_classic/params.json",
+   "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
+   "tags": [
+    "watch"
+   ]
   }
  ],
  "hairstyles": [
@@ -455,6 +2383,276 @@
     "textureBytes": 0
    },
    "thumbnail": "thumbs/ponytail_mid.webp"
+  },
+  {
+   "id": "pixie",
+   "label": "Pixie cut",
+   "files": {
+    "ubc_male": "hair/pixie__ubc_male.glb",
+    "ubc_female": "hair/pixie__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/pixie/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 5292,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short",
+    "fringe"
+   ]
+  },
+  {
+   "id": "curly_medium",
+   "label": "Medium curls",
+   "files": {
+    "ubc_male": "hair/curly_medium__ubc_male.glb",
+    "ubc_female": "hair/curly_medium__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/curly_medium/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14547,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "curly"
+   ]
+  },
+  {
+   "id": "mohawk",
+   "label": "Mohawk",
+   "files": {
+    "ubc_male": "hair/mohawk__ubc_male.glb",
+    "ubc_female": "hair/mohawk__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/mohawk/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 4458,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short",
+    "bold"
+   ]
+  },
+  {
+   "id": "afro",
+   "label": "Afro",
+   "files": {
+    "ubc_male": "hair/afro__ubc_male.glb",
+    "ubc_female": "hair/afro__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/afro/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 10964,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "curly",
+    "bold"
+   ]
+  },
+  {
+   "id": "long_wavy",
+   "label": "Long waves",
+   "files": {
+    "ubc_male": "hair/long_wavy__ubc_male.glb",
+    "ubc_female": "hair/long_wavy__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/long_wavy/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14548,
+    "textureBytes": 0
+   },
+   "tags": [
+    "long",
+    "wavy"
+   ]
+  },
+  {
+   "id": "bob_bangs",
+   "label": "Bob with bangs",
+   "files": {
+    "ubc_male": "hair/bob_bangs__ubc_male.glb",
+    "ubc_female": "hair/bob_bangs__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/bob_bangs/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 15138,
+    "textureBytes": 0
+   },
+   "tags": [
+    "medium",
+    "fringe"
+   ]
+  },
+  {
+   "id": "braid_single",
+   "label": "Single braid",
+   "files": {
+    "ubc_male": "hair/braid_single__ubc_male.glb",
+    "ubc_female": "hair/braid_single__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/braid_single/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 18949,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "braid"
+   ]
+  },
+  {
+   "id": "pigtails",
+   "label": "Pigtails",
+   "files": {
+    "ubc_male": "hair/pigtails__ubc_male.glb",
+    "ubc_female": "hair/pigtails__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/pigtails/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14534,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered"
+   ]
+  },
+  {
+   "id": "top_bun",
+   "label": "Top bun",
+   "files": {
+    "ubc_male": "hair/top_bun__ubc_male.glb",
+    "ubc_female": "hair/top_bun__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Hair",
+     "materials": [
+      "M_Hair"
+     ],
+     "default": "#4a3020"
+    }
+   ],
+   "source": "authoring/characters/hair/top_bun/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 14511,
+    "textureBytes": 0
+   },
+   "tags": [
+    "gathered",
+    "bun"
+   ]
   }
  ],
  "defaults": {
@@ -508,6 +2706,184 @@
      "main": "#2f2f33"
     }
    }
+  }
+ ],
+ "facialHair": [
+  {
+   "id": "stubble",
+   "label": "Stubble",
+   "files": {
+    "ubc_male": "facial_hair/stubble__ubc_male.glb",
+    "ubc_female": "facial_hair/stubble__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/stubble/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 798,
+    "textureBytes": 0
+   },
+   "tags": [
+    "short"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "beard_full",
+   "label": "Full beard",
+   "files": {
+    "ubc_male": "facial_hair/beard_full__ubc_male.glb",
+    "ubc_female": "facial_hair/beard_full__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/beard_full/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 6138,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "goatee",
+   "label": "Goatee",
+   "files": {
+    "ubc_male": "facial_hair/goatee__ubc_male.glb",
+    "ubc_female": "facial_hair/goatee__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/goatee/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 890,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "mustache_handlebar",
+   "label": "Handlebar mustache",
+   "files": {
+    "ubc_male": "facial_hair/mustache_handlebar__ubc_male.glb",
+    "ubc_female": "facial_hair/mustache_handlebar__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/mustache_handlebar/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 2007,
+    "textureBytes": 0
+   },
+   "tags": [
+    "mustache"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
+  },
+  {
+   "id": "beard_long",
+   "label": "Long beard",
+   "files": {
+    "ubc_male": "facial_hair/beard_long__ubc_male.glb",
+    "ubc_female": "facial_hair/beard_long__ubc_female.glb"
+   },
+   "rig": "ual-standard",
+   "attachment": "skinned",
+   "colorRegions": [
+    {
+     "id": "hair",
+     "label": "Beard",
+     "materials": [
+      "M_Beard"
+     ],
+     "default": "#3a2418"
+    }
+   ],
+   "source": "authoring/characters/facial_hair/beard_long/params.json",
+   "license": "Hearthside original (made with GBH Tool in Blender on Quaternius CC0 bodies)",
+   "stats": {
+    "triangles": 9825,
+    "textureBytes": 0
+   },
+   "tags": [
+    "beard",
+    "long"
+   ],
+   "followsMorphs": [
+    "jaw_width",
+    "chin_length",
+    "mouth_width",
+    "weight"
+   ]
   }
  ]
 }

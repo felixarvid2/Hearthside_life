@@ -1,0 +1,9 @@
+{
+ "accessory": "necklace_chain",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/necklace_chain__ubc_male.glb",
+ "kind": "necklace",
+ "secs": 0.9,
+ "tris": 280,
+ "verts": 140
+}

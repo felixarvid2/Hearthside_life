@@ -1,0 +1,67 @@
+{
+ "id": "running_shoes",
+ "label": "Running shoes",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "sneakers",
+  "sport"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_RunningShoes"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_RunningShoesSole"
+   ],
+   "default": "#3a3a3a",
+   "palette": [
+    "#3a3a3a",
+    "#f2efe6",
+    "#6b4428",
+    "#c8a27a",
+    "#1f1f1f",
+    "#9a9a9a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.013,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.009,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.09,
+   "force": true
+  },
+  "sole": 0.04,
+  "welt": 0.015
+ }
+}

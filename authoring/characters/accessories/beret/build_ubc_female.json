@@ -1,0 +1,9 @@
+{
+ "accessory": "beret",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/beret__ubc_female.glb",
+ "kind": "beret",
+ "secs": 1.7,
+ "tris": 264,
+ "verts": 145
+}

@@ -1,0 +1,50 @@
+{
+ "id": "smartwatch",
+ "label": "Smartwatch",
+ "slot": "wrist",
+ "category": "accessory",
+ "kind": "smartwatch",
+ "tags": [
+  "watch",
+  "sport"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Smartwatch"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#c94f4f",
+    "#3f6fa8",
+    "#e0b341",
+    "#5c8a5a",
+    "#f2efe6"
+   ],
+   "metallic": 0.0,
+   "roughness": 0.6
+  },
+  {
+   "id": "detail",
+   "label": "Screen",
+   "materials": [
+    "M_SmartwatchDetail"
+   ],
+   "default": "#1f2633",
+   "palette": [
+    "#1f2633",
+    "#3a2a20",
+    "#2e4034",
+    "#5b3a3a",
+    "#6d8fb5",
+    "#2f2f33"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": []
+}

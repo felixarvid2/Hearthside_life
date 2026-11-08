@@ -1,0 +1,69 @@
+{
+ "body": "ubc_female",
+ "body_shell": {
+  "boundary_edges": 378,
+  "skin_verts_hit": 1705,
+  "tris": 3780,
+  "verts": 2083
+ },
+ "coverage": {
+  "belly": 0.812,
+  "calf_l": 0.0,
+  "calf_r": 0.0,
+  "chest": 0.853,
+  "foot_l": 0.0,
+  "foot_r": 0.0,
+  "forearm_l": 0.725,
+  "forearm_r": 0.727,
+  "hand_l": 0.0,
+  "hand_r": 0.0,
+  "head": 0.0,
+  "hips": 0.316,
+  "neck": 0.0,
+  "thigh_l": 0.0,
+  "thigh_r": 0.0,
+  "upperarm_l": 0.885,
+  "upperarm_r": 0.876
+ },
+ "cut_allowed": 1815,
+ "facing": "-Y",
+ "figure": "WOMAN",
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "garment": "tee_long",
+ "girth": {
+  "chest": 0.9404,
+  "hip": 1.0247,
+  "waist": 0.6516
+ },
+ "glb": "public/assets/characters/modular/garments/tee_long__ubc_female.glb",
+ "height": 1.7751,
+ "hides": [],
+ "kw": {},
+ "landmarks": {
+  "chest": 1.3318,
+  "crotch": 0.9441,
+  "hip": 0.9641,
+  "knee": 0.5347,
+  "neck": 1.4849,
+  "shoulder": 1.4181,
+  "waist": 1.1518
+ },
+ "limbs": [
+  "arm_l",
+  "arm_r",
+  "calf_l",
+  "calf_r",
+  "farm_l",
+  "farm_r",
+  "thigh_l",
+  "thigh_r"
+ ],
+ "secs": 5.7,
+ "src_tris": 0,
+ "tris": 3780,
+ "unposed_max_move": 0.0,
+ "unweighted": 0,
+ "verts": 2083
+}

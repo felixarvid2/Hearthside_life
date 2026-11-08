@@ -1,0 +1,67 @@
+{
+ "id": "hiking_boots",
+ "label": "Hiking boots",
+ "preset": null,
+ "category": "shoes",
+ "slot": "shoes",
+ "tags": [
+  "boots",
+  "sport"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_HikingBoots"
+   ],
+   "default": "#7a5c3e",
+   "palette": [
+    "#7a5c3e",
+    "#a68a64",
+    "#4d5b3a",
+    "#b85c38",
+    "#d9c7a7",
+    "#3b3b3b"
+   ]
+  },
+  {
+   "id": "sole",
+   "label": "Sole",
+   "materials": [
+    "M_HikingBootsSole"
+   ],
+   "default": "#3a3a3a",
+   "palette": [
+    "#3a3a3a",
+    "#f2efe6",
+    "#6b4428",
+    "#c8a27a",
+    "#1f1f1f",
+    "#9a9a9a"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.016,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.012,
+  "cut": {
+   "part": "shoes",
+   "boot": 0.2,
+   "force": true
+  },
+  "sole": 0.045,
+  "welt": 0.016
+ }
+}

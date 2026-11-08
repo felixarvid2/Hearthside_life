@@ -1,0 +1,50 @@
+{
+ "id": "sunglasses_aviator",
+ "label": "Aviator sunglasses",
+ "slot": "eyewear",
+ "category": "accessory",
+ "kind": "sunglasses",
+ "tags": [
+  "sunglasses"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SunglassesAviator"
+   ],
+   "default": "#d4af37",
+   "palette": [
+    "#d4af37",
+    "#c0c0c0",
+    "#b87333",
+    "#2f2f33",
+    "#e5e4e2",
+    "#8c7853"
+   ],
+   "metallic": 0.8,
+   "roughness": 0.35
+  },
+  {
+   "id": "detail",
+   "label": "Lenses",
+   "materials": [
+    "M_SunglassesAviatorDetail"
+   ],
+   "default": "#1f2633",
+   "palette": [
+    "#1f2633",
+    "#3a2a20",
+    "#2e4034",
+    "#5b3a3a",
+    "#6d8fb5",
+    "#2f2f33"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": [],
+ "shape": "aviator"
+}

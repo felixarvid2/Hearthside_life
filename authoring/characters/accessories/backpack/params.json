@@ -1,0 +1,49 @@
+{
+ "id": "backpack",
+ "label": "Backpack",
+ "slot": "bag",
+ "category": "accessory",
+ "kind": "backpack",
+ "tags": [
+  "bag"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Backpack"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#c94f4f",
+    "#3f6fa8",
+    "#e0b341",
+    "#5c8a5a",
+    "#f2efe6"
+   ],
+   "metallic": 0.0,
+   "roughness": 0.6
+  },
+  {
+   "id": "detail",
+   "label": "Straps",
+   "materials": [
+    "M_BackpackDetail"
+   ],
+   "default": "#3a2a20",
+   "palette": [
+    "#3a2a20",
+    "#6b4428",
+    "#1f1f1f",
+    "#8c5a3c",
+    "#c8a27a",
+    "#5b5b5b"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": []
+}

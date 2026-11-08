@@ -66,27 +66,6 @@ missing = [k for k in ("arm_l", "farm_l", "thigh_l", "calf_l") if k not in m.get
 if missing:
     raise SystemExit("measurement adapter failed, limbs missing: %s" % missing)
 
-# Larger armholes for muscular arms (see opensew_adapter.widen_armhole); `armhole` in params / per_body.
-if P.get("armhole"):
-    opensew_adapter.widen_armhole(library, P["armhole"].get("depth_extra", 0.0), P["armhole"].get("scye_max", 0.05))
-    report["draft"] = {k: (round(v, 4) if isinstance(v, float) else v) for k, v in library._draft_top(m, P["fit"]).items()}
-# Parametric preset: pass the design parameters the preset supports.
-label, fn = library.PRESETS[P["preset"]]
-import inspect
-kw = {k: P[k] for k in ("sleeve_len", "length_to", "flare", "length") if k in P and P[k] is not None and k in inspect.signature(fn).parameters}
-library.PRESETS[P["preset"]] = (label, lambda mm, fit=P["fit"]: fn(mm, fit=fit, **kw))
-scn.cd.fabric = P.get("fabric", "SOFT")
-scn.cd.shrink = P.get("take_in", 0.05)
-scn.cd.settle_frames = P.get("settle_frames", 50)
-scn.cd.thickness = 0.0           # thickness is a render-side concern here: the game draws the shell double-sided
-scn.cd.subdiv_levels = 0
-assert bpy.ops.cd.add_garment(preset=P["preset"], fit=P["fit"], name=gid) == {'FINISHED'}
-assert bpy.ops.cd.sew() == {'FINISHED'}
-if P.get("relax", True):
-    assert bpy.ops.cd.relax() == {'FINISHED'}
-assert bpy.ops.cd.finalize() == {'FINISHED'}
-g = build.garment_object(ctx, create=False)
-
 def unpose(ob):
     """Moves a mesh sewn on the posed body back to the bind pose: per vertex, the inverse of its own linear blend
     skinning matrix at the fitting pose. Afterwards the armature at rest shows the garment where the bind pose has it,
@@ -112,37 +91,6 @@ def unpose(ob):
         v.co = owi @ rest
     ob.data.update()
     return worst
-
-# Runtime cleanup: keep only the armature modifier; the cloth cage is the final shape.
-for md in list(g.modifiers):
-    if md.type != 'ARMATURE':
-        g.modifiers.remove(md)
-for o in list(bpy.data.objects):
-    if o.cd.is_pattern:
-        bpy.data.objects.remove(o)
-src_tris = sum(len(p.vertices) - 2 for p in g.data.polygons)
-ctx.view_layer.objects.active = g
-for o in ctx.selected_objects:
-    o.select_set(False)
-g.select_set(True)
-target = P.get("target_tris", 2600)
-if src_tris > target:
-    dec = g.modifiers.new("Decimate", 'DECIMATE')
-    dec.ratio = target / src_tris
-    dec.use_collapse_triangulate = True
-    bpy.ops.object.modifier_move_to_index(modifier="Decimate", index=0)
-    bpy.ops.object.modifier_apply(modifier="Decimate")
-# UVs (smart projection: solid-color garments; pattern-space UVs are a later improvement).
-bpy.ops.object.mode_set(mode='EDIT')
-bpy.ops.mesh.select_all(action='SELECT')
-bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.01)
-bpy.ops.object.mode_set(mode='OBJECT')
-# Weights: only real bones, max 4 influences, normalized.
-bones = {b.name for b in arm.data.bones}
-for vg in list(g.vertex_groups):
-    if vg.name not in bones:
-        g.vertex_groups.remove(vg)
-
 
 def rebind(ob, reach=0.25, smooth=2):
     """Weights from the body under each garment vertex, replacing OpenSew's nearest-surface transfer.
@@ -219,16 +167,101 @@ def rebind(ob, reach=0.25, smooth=2):
     return rays
 
 
-if P.get("rebind", True):
-    ray_hits = rebind(g, smooth=P.get("weight_smooth", 2))
-    report["rebind_ray_hits"] = ray_hits
-C.limit_and_normalize(g)
-moved = unpose(g) if fit_pose.get("arms_down_deg") else 0.0
+# ---- OpenSew-2 design (optional) -----------------------------------------------------------------------------------
+# A garment with a "preset" is sewn by OpenSew-2 first; the sewn, unposed, re-weighted mesh is what the body-shell finish
+# reads (where the garment is, how loose). Sewing is the slow step (about 2 min), and many catalog garments share one
+# design (same preset, ease, lengths, body), so the sewn mesh is cached outside the repository by that key.
+import hashlib as _hl
+SEWN_CACHE = os.environ.get("HEARTHSIDE_SEWN_CACHE", os.path.expanduser("~/authoring-cache/sewn"))
+g, src_tris, moved, kw = None, 0, 0.0, {}
+if P.get("preset"):
+    _key_src = json.dumps({k: P.get(k) for k in ("preset", "fit", "sleeve_len", "length_to", "flare", "length", "fabric",
+                                                    "take_in", "settle_frames", "relax", "armhole", "fit_pose", "target_tris",
+                                                    "rebind", "weight_smooth")}, sort_keys=True)
+    _fit_blend = os.path.join(repo, "authoring/characters/bodies", body_id, "fitting.blend")
+    _key = _hl.sha1((_key_src + body_id + str(os.path.getsize(_fit_blend)) + str(int(os.path.getmtime(_fit_blend)))).encode()).hexdigest()[:16]
+    _cache_file = os.path.join(SEWN_CACHE, "%s_%s_%s.blend" % (P["preset"], body_id, _key))
+    if os.path.exists(_cache_file) and not a.get("no-cache"):
+        with bpy.data.libraries.load(_cache_file) as (src_, dst_):
+            dst_.meshes = ["Sewn"]
+        _me = dst_.meshes[0]
+        g = bpy.data.objects.new(gid, _me); ctx.collection.objects.link(g)
+        _md = g.modifiers.new("Armature", 'ARMATURE'); _md.object = arm
+        src_tris = _me.get("src_tris", 0); moved = _me.get("moved", 0.0)
+        report["sewn_cache"] = os.path.basename(_cache_file)
+    else:
+        # Larger armholes for muscular arms (see opensew_adapter.widen_armhole); `armhole` in params / per_body.
+        if P.get("armhole"):
+            opensew_adapter.widen_armhole(library, P["armhole"].get("depth_extra", 0.0), P["armhole"].get("scye_max", 0.05))
+            report["draft"] = {k: (round(v, 4) if isinstance(v, float) else v) for k, v in library._draft_top(m, P["fit"]).items()}
+        # Parametric preset: pass the design parameters the preset supports.
+        label, fn = library.PRESETS[P["preset"]]
+        import inspect
+        kw = {k: P[k] for k in ("sleeve_len", "length_to", "flare", "length") if k in P and P[k] is not None and k in inspect.signature(fn).parameters}
+        library.PRESETS[P["preset"]] = (label, lambda mm, fit=P["fit"]: fn(mm, fit=fit, **kw))
+        scn.cd.fabric = P.get("fabric", "SOFT")
+        scn.cd.shrink = P.get("take_in", 0.05)
+        scn.cd.settle_frames = P.get("settle_frames", 50)
+        scn.cd.thickness = 0.0           # thickness is a render-side concern here: the game draws the shell double-sided
+        scn.cd.subdiv_levels = 0
+        assert bpy.ops.cd.add_garment(preset=P["preset"], fit=P["fit"], name=gid) == {'FINISHED'}
+        assert bpy.ops.cd.sew() == {'FINISHED'}
+        if P.get("relax", True):
+            assert bpy.ops.cd.relax() == {'FINISHED'}
+        assert bpy.ops.cd.finalize() == {'FINISHED'}
+        g = build.garment_object(ctx, create=False)
+
+        # Runtime cleanup: keep only the armature modifier; the cloth cage is the final shape.
+        for md in list(g.modifiers):
+            if md.type != 'ARMATURE':
+                g.modifiers.remove(md)
+        for o in list(bpy.data.objects):
+            if o.cd.is_pattern:
+                bpy.data.objects.remove(o)
+        src_tris = sum(len(p.vertices) - 2 for p in g.data.polygons)
+        ctx.view_layer.objects.active = g
+        for o in ctx.selected_objects:
+            o.select_set(False)
+        g.select_set(True)
+        target = P.get("target_tris", 2600)
+        if src_tris > target:
+            dec = g.modifiers.new("Decimate", 'DECIMATE')
+            dec.ratio = target / src_tris
+            dec.use_collapse_triangulate = True
+            bpy.ops.object.modifier_move_to_index(modifier="Decimate", index=0)
+            bpy.ops.object.modifier_apply(modifier="Decimate")
+        # UVs (smart projection: solid-color garments; pattern-space UVs are a later improvement).
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.01)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        # Weights: only real bones, max 4 influences, normalized.
+        bones = {b.name for b in arm.data.bones}
+        for vg in list(g.vertex_groups):
+            if vg.name not in bones:
+                g.vertex_groups.remove(vg)
+
+
+        if P.get("rebind", True):
+            ray_hits = rebind(g, smooth=P.get("weight_smooth", 2))
+            report["rebind_ray_hits"] = ray_hits
+        C.limit_and_normalize(g)
+        moved = unpose(g) if fit_pose.get("arms_down_deg") else 0.0
+        for pb in arm.pose.bones:
+            pb.matrix_basis = Matrix.Identity(4)
+        bpy.context.view_layer.update()
+
+
+        os.makedirs(SEWN_CACHE, exist_ok=True)
+        g.data.name = "Sewn"; g.data["src_tris"] = src_tris; g.data["moved"] = moved
+        bpy.data.libraries.write(_cache_file, {g.data}, fake_user=True)
+        report["sewn_cache"] = "written"
+    report["kw"] = kw
+# back to the bind pose (the fitting pose only served the sewing and measurement)
 for pb in arm.pose.bones:
     pb.matrix_basis = Matrix.Identity(4)
 bpy.context.view_layer.update()
-
-
+bones = {b.name for b in arm.data.bones}
 def conform(ob, offset=0.006, smooth=3):
     """Bind pose: no garment vertex inside or within `offset` of the skin. Each pass smooths the shell half way to
     its neighbours' mean (irons out bunched seams) and then pushes every vertex that ended up too close back out
@@ -331,7 +364,8 @@ def shell_finish(ob, lo=0.006, hi=0.025, k=0.015, smooth=3):
     return round(worst, 4), round(sum(heights) / max(1, len(heights)), 4)
 
 
-def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002, keep=0.05, exclude=(), force=(), force_h=0.012):
+def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, tuck=0.002, keep=0.05, exclude=(), force=(), force_h=0.012,
+               allowed=None, force_all=False, name=None, bonus=None):
     """Hybrid finish (`finish: {"mode": "body"}`): the garment's surface is taken from the body itself.
 
     OpenSew-2's sewn garment (at the bind pose) decides *where* the garment is and *how loose* it is: a skin vertex
@@ -345,9 +379,14 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
     import math as _m
     import bmesh as _bm
     from mathutils.bvhtree import BVHTree
-    dg = bpy.context.evaluated_depsgraph_get()
-    gb = BVHTree.FromObject(ob.evaluated_get(dg), dg)
-    gw = ob.matrix_world; gwi = gw.inverted()
+    # `allowed` (garment_parts cut): only these body vertices may be covered; `force_all` covers all of them (the sewn
+    # design, if any, then only sets heights). Without a sewn garment (ob None) every height is `force_h`.
+    if ob is not None:
+        dg = bpy.context.evaluated_depsgraph_get()
+        gb = BVHTree.FromObject(ob.evaluated_get(dg), dg)
+        gw = ob.matrix_world; gwi = gw.inverted()
+    else:
+        gb, gwi = None, Matrix.Identity(4)
     bw = body.matrix_world
     skin = {i for i, m in enumerate(body.data.materials) if m and m.name == "M_Skin"} or set(range(len(body.data.materials)))
     me = body.data
@@ -363,6 +402,8 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
     h = {}
     for vi in skin_v:
         v = me.vertices[vi]
+        if gb is None:
+            continue
         o = gwi @ (bw @ v.co); n = (gwi.to_3x3() @ (bw.to_3x3() @ v.normal)).normalized()
         hit = gb.ray_cast(o + n * 0.001, n, reach)
         if hit[0] is not None:
@@ -378,6 +419,15 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
             if C.region_of_bone(bone) in force and me.polygons[pi].material_index in skin:
                 for vi in me.polygons[pi].vertices:
                     h.setdefault(vi, force_h)
+    if allowed is not None:
+        if force_all:
+            for vi in allowed:
+                if vi in skin_v:
+                    h.setdefault(vi, force_h)
+        h = {vi: x for vi, x in h.items() if vi in allowed}
+        if bonus:
+            for vi in h:
+                h[vi] += bonus.get(vi, 0.0)
     sel = set(h)
     for _ in range(close):                      # grow ...
         sel |= {j for i in sel for j in adj[i] if j in skin_v}
@@ -392,6 +442,8 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
             for vi in me.polygons[pi].vertices:
                 reg_.setdefault(vi, C.region_of_bone(bone))
         sel = {i for i in sel if reg_.get(i) not in exclude}
+    if allowed is not None:
+        sel &= allowed
     # connected pieces: keep those with at least `keep` x the largest one's vertices (sleeves the sewing left
     # detached at the shoulder stay; specks go)
     seen, comps = set(), []
@@ -419,7 +471,7 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
         h.setdefault(i, lo)
     for _ in range(smooth):
         h = {i: 0.5 * h[i] + 0.5 * (sum(h[j] for j in adj[i] if j in sel) / max(1, sum(1 for j in adj[i] if j in sel))) for i in sel}
-    new = body.copy(); new.data = body.data.copy(); new.name = ob.name
+    new = body.copy(); new.data = body.data.copy(); new.name = name or ob.name
     bpy.context.collection.objects.link(new)
     for md in list(new.modifiers):
         if md.type != 'ARMATURE':
@@ -448,7 +500,8 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
         p.material_index = 0
     rep = {"skin_verts_hit": len(h), "verts": len(new.data.vertices), "tris": sum(len(p.vertices) - 2 for p in new.data.polygons),
            "boundary_edges": len(bedges)}
-    bpy.data.objects.remove(ob)
+    if ob is not None:
+        bpy.data.objects.remove(ob)
     # UVs for the new surface
     for o in bpy.context.selected_objects:
         o.select_set(False)
@@ -535,13 +588,38 @@ def add_hood(ob, spec):
 
 
 fin = P.get("finish") or {}
+import garment_parts as GP
+LM = GP.Landmarks(body, arm, lm)
+_cut = fin.get("cut")
+_allowed = None
+_bonus = None
+if _cut:
+    _dom = C.dominant_bone_per_face(body)
+    _regs = {}
+    for pi, bone in enumerate(_dom):
+        for vi in body.data.polygons[pi].vertices:
+            _regs.setdefault(vi, C.region_of_bone(bone))
+    _bonus = {}
+    _allowed = GP.allowed_set(body, _regs, LM, _cut, _bonus)
+    report["cut_allowed"] = len(_allowed)
 if fin.get("mode") == "body":
     g, report["body_shell"] = body_shell(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015),
                                          fin.get("close", 3), fin.get("reach", 0.08), fin.get("smooth", 3),
                                          keep=fin.get("keep", 0.05), exclude=tuple(fin.get("exclude_regions", ())),
-                                         force=tuple(fin.get("force_regions", ())), force_h=fin.get("force_h", 0.012))
+                                         force=tuple(fin.get("force_regions", ())), force_h=fin.get("force_h", 0.012),
+                                         allowed=_allowed, force_all=bool(_cut and _cut.get("force", True)), name=gid,
+                                         bonus=_bonus)
     if fin.get("hood"):
         report["hood"] = add_hood(g, fin["hood"])
+    if fin.get("skirt"):
+        for _n in ("pelvis", "thigh_l", "thigh_r", "calf_l", "calf_r"):
+            if _n not in g.vertex_groups:
+                g.vertex_groups.new(name=_n)
+        report["skirt"] = GP.add_skirt(g, body, arm, LM, fin["skirt"], [vg.name for vg in g.vertex_groups])
+        C.limit_and_normalize(g)
+    if fin.get("sole") and len(P["color_regions"]) > 1:
+        _ax = {s_: (arm.matrix_world @ arm.data.bones["foot_" + s_].head_local, arm.matrix_world @ arm.data.bones["ball_" + s_].tail_local) for s_ in "lr"}
+        report["sole_faces"] = GP.sole_faces(g, fin["sole"], fin.get("welt", 0.0), _ax)
 if fin.get("mode") == "shell":
     report["shell"] = shell_finish(g, fin.get("min", 0.006), fin.get("max", 0.025), fin.get("k", 0.015), fin.get("smooth", 3))
 if P.get("conform"):
@@ -570,6 +648,7 @@ coverage = {k: round(c / t, 3) for k, (c, t) in cover.items()}
 hides = sorted(k for k, f in coverage.items() if f >= P.get("hide_threshold", 0.97))
 unweighted = sum(1 for v in g.data.vertices if not any(x.weight > 1e-4 for x in v.groups))
 # Materials, one per color region (all faces on the first region for single-region garments).
+_mi = [p_.material_index for p_ in g.data.polygons]   # materials.clear() resets the indices (soles, trims)
 g.data.materials.clear()
 for cr in P["color_regions"]:
     mat = bpy.data.materials.new(cr["materials"][0]); mat.use_nodes = True
@@ -579,6 +658,8 @@ for cr in P["color_regions"]:
     bsdf.inputs["Roughness"].default_value = 0.85
     mat.use_backface_culling = False
     g.data.materials.append(mat)
+for p_, i_ in zip(g.data.polygons, _mi):
+    p_.material_index = min(i_, len(P["color_regions"]) - 1)
 g.name = "Garment_" + gid
 tris = sum(len(p.vertices) - 2 for p in g.data.polygons)
 os.makedirs(src_dir, exist_ok=True)

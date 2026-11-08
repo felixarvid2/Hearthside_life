@@ -1,0 +1,9 @@
+{
+ "accessory": "glasses_square",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/glasses_square__ubc_female.glb",
+ "kind": "glasses",
+ "secs": 2.3,
+ "tris": 462,
+ "verts": 237
+}

@@ -1,0 +1,32 @@
+{
+ "id": "tie",
+ "label": "Tie",
+ "slot": "neck",
+ "category": "accessory",
+ "kind": "tie",
+ "tags": [
+  "formal"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Tie"
+   ],
+   "default": "#2f2f33",
+   "palette": [
+    "#2f2f33",
+    "#c94f4f",
+    "#3f6fa8",
+    "#e0b341",
+    "#5c8a5a",
+    "#f2efe6"
+   ],
+   "metallic": 0.0,
+   "roughness": 0.6
+  }
+ ],
+ "layer": 3,
+ "conflicts": []
+}

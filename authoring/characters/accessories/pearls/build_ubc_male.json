@@ -1,0 +1,9 @@
+{
+ "accessory": "pearls",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/pearls__ubc_male.glb",
+ "kind": "pearls",
+ "secs": 0.8,
+ "tris": 672,
+ "verts": 364
+}

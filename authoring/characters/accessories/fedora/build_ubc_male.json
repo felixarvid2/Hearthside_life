@@ -1,0 +1,9 @@
+{
+ "accessory": "fedora",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/fedora__ubc_male.glb",
+ "kind": "fedora",
+ "secs": 0.7,
+ "tris": 700,
+ "verts": 365
+}

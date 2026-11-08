@@ -1,0 +1,63 @@
+{
+ "id": "skirt_aline",
+ "label": "A-line skirt",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "skirt"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SkirtAline"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.016,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.008,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": -0.005
+   },
+   "leg": -1.0,
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "waist",
+    "offset": 0.0
+   },
+   "length": 0.42,
+   "flare": 0.25,
+   "offset": 0.025
+  }
+ }
+}

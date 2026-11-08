@@ -1,0 +1,52 @@
+{
+ "id": "sunglasses_wayfarer",
+ "label": "Wayfarer sunglasses",
+ "slot": "eyewear",
+ "category": "accessory",
+ "kind": "sunglasses",
+ "tags": [
+  "sunglasses"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_SunglassesWayfarer"
+   ],
+   "default": "#3a2a20",
+   "palette": [
+    "#3a2a20",
+    "#6b4428",
+    "#1f1f1f",
+    "#8c5a3c",
+    "#c8a27a",
+    "#5b5b5b"
+   ],
+   "metallic": 0.0,
+   "roughness": 0.6
+  },
+  {
+   "id": "detail",
+   "label": "Lenses",
+   "materials": [
+    "M_SunglassesWayfarerDetail"
+   ],
+   "default": "#1f2633",
+   "palette": [
+    "#1f2633",
+    "#3a2a20",
+    "#2e4034",
+    "#5b3a3a",
+    "#6d8fb5",
+    "#2f2f33"
+   ],
+   "roughness": 0.3
+  }
+ ],
+ "layer": 3,
+ "conflicts": [],
+ "shape": "square",
+ "frame": 0.003,
+ "lens_w": 0.026
+}

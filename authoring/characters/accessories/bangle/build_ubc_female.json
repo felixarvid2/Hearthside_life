@@ -1,0 +1,9 @@
+{
+ "accessory": "bangle",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/bangle__ubc_female.glb",
+ "kind": "bangle",
+ "secs": 1.5,
+ "tris": 216,
+ "verts": 108
+}

@@ -1,0 +1,9 @@
+{
+ "accessory": "glasses_round",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/glasses_round__ubc_male.glb",
+ "kind": "glasses",
+ "secs": 1.8,
+ "tris": 462,
+ "verts": 237
+}

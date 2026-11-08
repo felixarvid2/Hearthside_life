@@ -1,0 +1,9 @@
+{
+ "accessory": "backpack",
+ "body": "ubc_female",
+ "glb": "public/assets/characters/modular/accessories/backpack__ubc_female.glb",
+ "kind": "backpack",
+ "secs": 0.8,
+ "tris": 68,
+ "verts": 40
+}

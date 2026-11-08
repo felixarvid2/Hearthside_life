@@ -1,0 +1,67 @@
+{
+ "id": "dress_tshirt",
+ "label": "T-shirt dress",
+ "preset": null,
+ "category": "full",
+ "slot": "full",
+ "tags": [
+  "dress"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "top",
+  "bottom"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_DressTshirt"
+   ],
+   "default": "#f2efe6",
+   "palette": [
+    "#f2efe6",
+    "#2f2f33",
+    "#3f6fa8",
+    "#c94f4f",
+    "#5c8a5a",
+    "#e0b341"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.006,
+  "max": 0.02,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.011,
+  "cut": {
+   "part": "top",
+   "neck": {
+    "kind": "crew"
+   },
+   "sleeve": 0.4,
+   "hem": {
+    "at": "hip",
+    "offset": -0.04
+   },
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "hip",
+    "offset": -0.02
+   },
+   "length": 0.45,
+   "flare": 0.05,
+   "offset": 0.022
+  }
+ }
+}

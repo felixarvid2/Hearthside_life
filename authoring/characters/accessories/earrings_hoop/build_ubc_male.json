@@ -1,0 +1,9 @@
+{
+ "accessory": "earrings_hoop",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/earrings_hoop__ubc_male.glb",
+ "kind": "earrings_hoop",
+ "secs": 0.6,
+ "tris": 280,
+ "verts": 140
+}

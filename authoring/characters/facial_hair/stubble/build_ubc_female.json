@@ -1,0 +1,17 @@
+{
+ "body": "ubc_female",
+ "gbh_modifiers": [],
+ "glb": "public/assets/characters/modular/facial_hair/stubble__ubc_female.glb",
+ "hair": "stubble",
+ "head_base_z": 1.55,
+ "inside_head_verts": 0,
+ "roots": 0,
+ "secs": 0.9,
+ "src_tris": 0,
+ "tris": 720,
+ "verts": 476,
+ "z": [
+  1.519,
+  1.667
+ ]
+}

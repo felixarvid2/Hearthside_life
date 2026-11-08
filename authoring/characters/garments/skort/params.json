@@ -1,0 +1,65 @@
+{
+ "id": "skort",
+ "label": "Skort",
+ "preset": null,
+ "category": "bottom",
+ "slot": "bottom",
+ "tags": [
+  "skirt",
+  "shorts",
+  "sport"
+ ],
+ "hides": [],
+ "layer": 1,
+ "conflicts": [
+  "full"
+ ],
+ "color_regions": [
+  {
+   "id": "main",
+   "label": "Main",
+   "materials": [
+    "M_Skort"
+   ],
+   "default": "#e04f5f",
+   "palette": [
+    "#e04f5f",
+    "#f29e4c",
+    "#f1c453",
+    "#2bb3a3",
+    "#3d7cc9",
+    "#9b5de5"
+   ]
+  }
+ ],
+ "fit_pose": {
+  "arms_down_deg": 45
+ },
+ "finish": {
+  "mode": "body",
+  "close": 3,
+  "min": 0.004,
+  "max": 0.016,
+  "k": 0.015,
+  "smooth": 3,
+  "force_h": 0.008,
+  "cut": {
+   "part": "bottom",
+   "waist": {
+    "at": "waist",
+    "offset": -0.01
+   },
+   "leg": 0.2,
+   "force": true
+  },
+  "skirt": {
+   "top": {
+    "at": "hip",
+    "offset": 0.03
+   },
+   "length": 0.2,
+   "flare": 0.3,
+   "offset": 0.02
+  }
+ }
+}

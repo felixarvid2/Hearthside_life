@@ -1,0 +1,9 @@
+{
+ "accessory": "scarf",
+ "body": "ubc_male",
+ "glb": "public/assets/characters/modular/accessories/scarf__ubc_male.glb",
+ "kind": "scarf",
+ "secs": 1.6,
+ "tris": 512,
+ "verts": 260
+}
