@@ -4,7 +4,7 @@ import type { HairDef } from '../../../content/types';
 import { toggleSwitch } from '../../kit/controls';
 import { h } from '../../kit/dom';
 import type { StepDef } from '../context';
-import { modularHairSection, lookOf } from './modularParts';
+import { modularFacialHairSection, modularHairSection, lookOf } from './modularParts';
 import { Binder, card, choiceChips, colorField, hint, section, shade, smallButton } from '../widgets';
 
 const LENGTHS: ReadonlyArray<{ id: HairDef['length']; label: string }> = [
@@ -26,14 +26,15 @@ export const hairStep: StepDef = {
 
     const modular = ctx.modular();
     if (modular) {
-      // Quaternius style: the manifest's hairstyles (thumbnails); the colour is the shared hair colour. Highlights and facial hair are classic-only.
+      // Quaternius style: the manifest's hairstyles and facial hair (thumbnails); the colour is the shared hair colour. Highlights are classic-only.
       const color = b.add(colorField({
         label: 'Hair colour', swatches: content.hairColors ?? [], value: () => hair().color,
         onPick: (c) => ctx.report(s().setHairColor(c)), onCommit: commit,
       }));
       const el = h('div', { class: 'cr-step cr-step-hair cr-step-modular' },
         modularHairSection(ctx, modular, b),
-        section('Colour', color, hint('Highlights and facial hair belong to the classic style and do not show here.')),
+        modularFacialHairSection(ctx, modular, b),
+        section('Colour', color, hint('Highlights belong to the classic style and do not show here. Facial hair takes the hair colour.')),
         h('div', { class: 'cr-actions' }, smallButton('Reset hair', 'undo', () => ctx.report(s().resetCategory('hair')))),
       );
       return { el, sync: () => b.sync() };
