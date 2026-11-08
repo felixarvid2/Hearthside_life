@@ -716,6 +716,8 @@ export interface EventDef {
   /** A wedding: the first guest is the host's fiance(e), who they marry at the ceremony `ceremonyMinutes` after the start. */
   wedding?: boolean;
   ceremonyMinutes?: number;
+  /** Can be held at a public venue (the household and the guests travel there); otherwise at home only. */
+  venueOk?: boolean;
   goals: EventGoalDef[];
   reward: EventRewardDef;
   status: ContentStatus;

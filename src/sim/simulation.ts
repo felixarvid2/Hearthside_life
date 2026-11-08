@@ -338,7 +338,7 @@ export class Simulation {
   eventProblem(req: PlanRequest): string | null {
     const ctx = this.ctx();
     const host = ctx.state.people[req.hostId];
-    return host ? canPlanEvent(ctx, host, req.guestIds, req.type, req.startAt) : 'Unknown host.';
+    return host ? canPlanEvent(ctx, host, req.guestIds, req.type, req.startAt, req.lotId) : 'Unknown host.';
   }
 
   /** The gift catalog as `giverId` would see it for `recipientId` (prices, affordability, hints). Pure. */

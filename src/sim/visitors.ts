@@ -89,7 +89,7 @@ export function processSchedule(ctx: SimCtx): void {
     const p = e.personId ? ctx.state.people[e.personId] : undefined;
     if (e.kind === 'visitArrive' && p) arrive(ctx, p, e);
     else if (e.kind === 'visitLeave' && p) depart(ctx, p);
-    else if (e.kind === 'eventStart' || e.kind === 'eventEnd' || e.kind === 'eventStage') runEventEntry(ctx, e);
+    else if (e.kind === 'eventStart' || e.kind === 'eventEnd' || e.kind === 'eventStage' || e.kind === 'eventTravel') runEventEntry(ctx, e);
     else if (e.kind === 'custom') runScheduledTask(ctx, e);
     else if (e.kind === 'travelArrive') completeTrip(ctx, e);
     // Other kinds (bills) are handled by later milestones; returns from work use career state.

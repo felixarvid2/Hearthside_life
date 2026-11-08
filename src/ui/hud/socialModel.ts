@@ -2,10 +2,11 @@
 // tests/unit/ui/social.test.ts).
 
 import type { EventDef } from '../../content/types';
-import { DAY_NAMES, atDayMinute, dayIndex, formatClock, weekday } from '../../core/clock';
+import { DAY_NAMES, atDayMinute, dayIndex, formatClock, minuteOfDay, weekday } from '../../core/clock';
 import { pairKey } from '../../core/ids';
 import { relationshipLabel, romanceInterest } from '../../core/relations';
-import type { HomeEvent, Person, RelLabel, WorldState } from '../../core/types';
+import type { HomeEvent, Lot, Person, RelLabel, WorldState } from '../../core/types';
+import { lotIsOpen, venueInfo } from '../../world/neighbourhood';
 import type { MenuOption } from '../../game/api';
 
 // ---- social menu ----
@@ -43,6 +44,19 @@ export function trackedEvent(st: WorldState, dismissed: ReadonlySet<string>): Ho
 }
 
 // ---- event planner ----
+
+/** True when a gathering of `minutes` starting at `at` fits the venue's opening hours (homes always fit). */
+export function fitsVenue(lot: Pick<Lot, 'kind' | 'venueType'>, at: number, minutes: number): boolean {
+  const v = venueInfo(lot);
+  if (!v) return true;
+  return lotIsOpen(lot, minuteOfDay(at)) && dayIndex(at + minutes - 1) === dayIndex(at) && minuteOfDay(at + minutes) <= v.close;
+}
+
+/** Public venues a gathering can be held at (the lot builders make the layout on arrival), by name. */
+export function venueChoices(st: WorldState): Lot[] {
+  return Object.values(st.lots).filter((l) => l.kind === 'venue').sort((a, b) => a.name.localeCompare(b.name));
+}
+
 
 /** Start times offered: these hours of the day, today and the next two days, that respect the notice. */
 const HOURS = [10, 12, 15, 18, 19, 20];

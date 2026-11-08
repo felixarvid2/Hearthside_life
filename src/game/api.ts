@@ -137,6 +137,8 @@ export interface PlanEventRequest {
   hostId: Id;
   guestIds: Id[];
   startAt: number;
+  /** A public venue to hold it at (the household and the guests travel there); absent = at home. */
+  lotId?: Id;
 }
 
 export interface PlacementState {

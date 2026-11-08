@@ -21,7 +21,7 @@ import { lotIsOpen, venueInfo } from '../world/neighbourhood';
 import type { SimCtx } from './context';
 import { clamp, hashString, lotLoc } from './context';
 import { billBreakdown, billWeek, openBills, payBill } from './economy';
-import { inActiveEvent } from './events';
+import { atVenueEvent, inActiveEvent } from './events';
 import { entrySpots, homeLocation, isControlled, placeOnLot, takeOffLot, visitingLocation } from './places';
 import { insertAction, makeAction } from './queue';
 import { applyRelDelta, peekRel } from './relationships';
@@ -161,6 +161,7 @@ export function whoIsPlannedAt(state: WorldState, content: ContentDB, lotId: Id,
 function engagement(ctx: SimCtx, p: Person): 'hard' | 'soft' | null {
   const loc = p.location;
   if (loc.kind === 'offlot' && loc.transit) return 'hard';
+  if (atVenueEvent(ctx.state, p.id, ctx.now)) return 'hard';
   const sched = ctx.state.schedule;
   if (lotLoc(p)) {
     // Only residents at home and patrons of a venue follow the plan; anybody else on a lot is a guest, who leaves on their own.
@@ -233,6 +234,7 @@ function moveTo(ctx: SimCtx, p: Person, place: Place): void {
 export function syncPresence(ctx: SimCtx, force = false): void {
   const plans = plansAt(ctx.state, ctx.content, ctx.now);
   for (const p of npcPeople(ctx.state)) {
+    if (atVenueEvent(ctx.state, p.id, ctx.now)) continue; // called to a venue event: the event moves them
     const busy = engagement(ctx, p);
     if (busy === 'hard' && (!force || (p.location.kind === 'offlot' && p.location.transit))) continue;
     const place = plans.get(p.id) ?? HOME;

@@ -783,7 +783,7 @@ export interface ScheduledEvent {
   /** Unique occurrence id, e.g. `visit:<personId>:<day>`; also used in WorldState.processed. */
   occurrence: string;
   at: GameMinutes;
-  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'eventStage' | 'careerEvent' | 'travelArrive';
+  kind: 'visitArrive' | 'visitLeave' | 'returnFromWork' | 'leaveForWork' | 'bill' | 'custom' | 'eventStart' | 'eventEnd' | 'eventStage' | 'eventTravel' | 'careerEvent' | 'travelArrive';
   personId?: Id;
   householdId?: Id;
   data?: Record<string, string | number | boolean | null>;
@@ -853,4 +853,6 @@ export interface HomeEvent {
   stage?: 'ceremony' | 'celebration';
   ceremonyAt?: GameMinutes;
   ceremony?: 'done' | 'missed';
+  /** Events at a public venue (`lotId` is a venue): when the household and the guests set out. Absent = held at home. */
+  departAt?: GameMinutes;
 }
