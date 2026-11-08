@@ -9,10 +9,12 @@ export const NEED_DECAY_PER_HOUR: Readonly<Record<NeedId, number>> = {
   energy: 5,
   hygiene: 4,
   bladder: 11,
-  fun: 5,
+  fun: 4.2,
   social: 3.5,
 };
 
+/** Company: while at work or school social does not run down, it rises by this much per game hour (colleagues and classmates). */
+export const COMPANY_SOCIAL_PER_HOUR = 2.5;
 /** Decay multiplier while away at work, errands or school (lighter, event-based off-lot simulation). */
 export const OFFLOT_DECAY_MULT = 0.5;
 /** People at their own off-lot home drift toward this value (they look after themselves there). */

@@ -16,7 +16,7 @@ import { stageAllows } from './gating';
 import { homeworkDueDay } from './school';
 import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
 import { choreCandidates } from './chores';
-import { availableMeals, stovesOn } from './cooking';
+import { availableMeals, mealPortions, recipeCost, stovesOn } from './cooking';
 import { isBroken } from './housekeeping';
 import type { SimCtx } from './context';
 import { dist, hashString, isVisitor, lotLoc, lotObjects, objectCenter, tileOfLoc, venueRestriction } from './context';
@@ -138,7 +138,8 @@ export function candidatesFor(ctx: SimCtx, p: Person): Candidate[] {
       if (def.cost && def.cost > funds) continue;
       if (beh === 'cook') {
         if (!hasStove || meals.length > 0 || householdCooking(ctx, p)) continue;
-        const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready' && !r.skill).reduce((m, r) => Math.min(m, r.cost), Infinity);
+        const portions = mealPortions(ctx, p);
+        const cheapest = Object.values(ctx.content.recipes).filter((r) => r.status === 'ready' && !r.skill).reduce((m, r) => Math.min(m, recipeCost(p, r, portions)), Infinity);
         if (!(cheapest <= funds)) continue;
       }
       // Skill books: study the skill the person knows least (up to the level books can teach).

@@ -8,7 +8,7 @@ import { NEED_IDS } from '../core/types';
 import type { SimCtx } from './context';
 import { clamp, householdOf, lotLoc, setThought } from './context';
 import {
-  LYING_FUN_SOCIAL_DECAY, NEED_CRITICAL, NEED_DECAY_PER_HOUR, NEED_LOW, OFFLOT_DECAY_MULT, OFFLOT_HOME_DRIFT_PER_HOUR, OFFLOT_HOME_NEED_TARGET,
+  COMPANY_SOCIAL_PER_HOUR, LYING_FUN_SOCIAL_DECAY, NEED_CRITICAL, NEED_DECAY_PER_HOUR, NEED_LOW, OFFLOT_DECAY_MULT, OFFLOT_HOME_DRIFT_PER_HOUR, OFFLOT_HOME_NEED_TARGET,
 } from './tuning';
 
 /** Player-facing need names. */
@@ -52,8 +52,10 @@ export function decayNeeds(ctx: SimCtx, p: Person): void {
   }
   const mult = loc.kind === 'offlot' ? OFFLOT_DECAY_MULT : 1;
   const lying = loc.kind === 'lot' && loc.posture === 'lying';
+  const withOthers = loc.kind === 'offlot' && (loc.place === 'work' || loc.place === 'school');
   for (const n of NEED_IDS) {
     if (n === 'energy' && lying) continue;
+    if (n === 'social' && withOthers) { changeNeed(ctx, p, n, (COMPANY_SOCIAL_PER_HOUR / 60) * TICK_MINUTES); continue; }
     const posture = lying && (n === 'fun' || n === 'social') ? LYING_FUN_SOCIAL_DECAY : 1;
     const fit = n === 'energy' ? fitnessEnergyDecay(p.skills.fitness?.level ?? 1) : 1;
     // A steady wellness practice slows how fast energy and fun run down (Milestone 11).
