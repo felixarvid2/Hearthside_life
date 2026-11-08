@@ -334,6 +334,8 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       case 'eraseWall': return tool.shape === 'segment' ? (t ? 'Tap a wall piece, then confirm.' : 'Click a wall piece to demolish it.') : 'Drag to choose the walls to demolish.';
       case 'floor': case 'eraseFloor': return tool.shape === 'rect' ? 'Drag a rectangle over the floor tiles.' : (t ? 'Tap the floor, then confirm.' : 'Click the floor.');
       case 'deleteRoom': return t ? 'Tap a room, then confirm to demolish it.' : 'Click a room to demolish it.';
+      case 'roomEdit': return tool.edit === 'move' ? 'Use the arrows to choose where the room goes, then confirm. Furniture moves with it.'
+        : tool.edit === 'resize' ? 'Choose a side and use plus and minus to move it, then confirm.' : 'Use the arrows to choose where the copy goes, then confirm.';
       // Milestone 9 exterior tools (ui/build/exteriorTools.ts has their own tips; these are the footer's fallback)
       case 'fence': return exteriorHint(tool, t);
       case 'eraseFence': return t ? 'Tap a fence or gate, then confirm to take it down.' : 'Click a fence or gate to take it down.';
@@ -376,7 +378,7 @@ export function createStructureTools(deps: StructureDeps): StructureTools {
       setChildren(status, icon(iconName, 20), h('span', { class: 'bb-build-text' }, h('strong', { text: title }), detail ? h('span', { class: 'bb-build-detail', text: detail }) : null));
     }
     const erasing = s.tool?.kind === 'eraseWall' || s.tool?.kind === 'eraseOpening' || s.tool?.kind === 'eraseFloor' || s.tool?.kind === 'deleteRoom' || s.tool?.kind === 'eraseStairs' || s.tool?.kind === 'eraseFence' || s.tool?.kind === 'eraseRoof' || s.tool?.kind === 'erasePool';
-    const verb = erasing ? 'Demolish' : 'Build';
+    const verb = erasing ? 'Demolish' : s.tool?.kind === 'roomEdit' ? 'Apply' : 'Build';
     const cost = pv && pv.ok && !pv.unchanged ? pv.cost : 0;
     const long = cost > 0 ? `${verb} for ${formatMoney(cost)}` : cost < 0 ? `${verb}, ${formatMoney(-cost)} back` : verb;
     setLabel(confirm, long, verb);

@@ -243,6 +243,42 @@ export class BuildSession {
     this.emit();
   }
 
+  /**
+   * Milestone 13: starts moving, resizing or duplicating the selected room. The preview is ready for Confirm at once; the room
+   * panel's arrows then change the tool through adjustRoomEdit (the target, the chosen room, stays).
+   */
+  startRoomEdit(edit: 'move' | 'resize' | 'duplicate'): void {
+    const room = this.api.rooms(this.level()).find((r) => r.uid === this.selectedRoom);
+    const t = room?.tiles[0];
+    if (!room || !t) return;
+    const xs = room.tiles.map((q) => q.x);
+    const width = Math.max(...xs) - Math.min(...xs) + 1;
+    const tool: BuildTool = edit === 'resize' ? { kind: 'roomEdit', edit, side: 'e', delta: 1 }
+      : edit === 'duplicate' ? { kind: 'roomEdit', edit, dx: width + 1, dz: 0, copyObjects: false } : { kind: 'roomEdit', edit, dx: 0, dz: 0 };
+    this.setTool(tool);
+    this.target = { from: { x: t.x + 0.5, z: t.z + 0.5 }, level: this.level() };
+    this.lastKey = '';
+    this.runPreview();
+    this.pending = true;
+    this.emit();
+  }
+
+  /** Changes the room edit tool (offset, side, size, copy furniture) and re-previews at the same room. */
+  adjustRoomEdit(patch: Partial<Extract<BuildTool, { kind: 'roomEdit' }>>): void {
+    const tool = this.api.buildTool();
+    if (!tool || tool.kind !== 'roomEdit') return;
+    const next: BuildTool = { ...tool, ...patch };
+    const keep = this.target;
+    this.toolKey = JSON.stringify(next);
+    this.api.setBuildTool(next);
+    this.target = keep;
+    this.pending = true;
+    this.lastKey = '';
+    this.runPreview();
+    this.sound('tap');
+    this.emit();
+  }
+
   // ---- tool selection ----
 
   /** Chooses the tool (null ends tool use). Clears the paint tool: only one tool at a time. */
@@ -330,7 +366,7 @@ export class BuildSession {
 
   private syncRoomOutline(): void {
     const tool = this.api.buildTool();
-    const wantsRoom = tool && (tool.kind === 'deleteRoom' || (tool.kind === 'floor' && tool.shape === 'room') || (tool.kind === 'eraseFloor' && tool.shape === 'room'));
+    const wantsRoom = tool && (tool.kind === 'deleteRoom' || tool.kind === 'roomEdit' || (tool.kind === 'floor' && tool.shape === 'room') || (tool.kind === 'eraseFloor' && tool.shape === 'room'));
     if (!wantsRoom || !this.target) { return; }
     const room = this.api.roomAt({ x: Math.floor(this.target.from.x), z: Math.floor(this.target.from.z) }, this.target.level ?? 0);
     this.api.highlightRoom(room && !room.outdoor ? room.uid : null, 'hover');
@@ -360,6 +396,7 @@ export class BuildSession {
   hover(x: number, y: number): void {
     const tool = this.tool();
     if (!tool || toolMode(tool) !== 'click' || this.dragging) return;
+    if (tool.kind === 'roomEdit') return; // the room is chosen by a tap and the arrows change the rest
     if (tool.kind === 'moveOpening' && !tool.openingId) return;
     const t = this.targetAt(tool, x, y);
     if (!t) { if (this.target && !this.pending) { this.dropTarget(); this.api.buildCancel(); this.emit(); } return; }
@@ -405,7 +442,7 @@ export class BuildSession {
     const t = this.targetAt(tool, x, y, pick);
     if (!t) return true;
     this.target = t;
-    this.afterPoint(mouse);
+    this.afterPoint(mouse && tool.kind !== 'roomEdit'); // a room edit always waits for Confirm
     return true;
   }
 
