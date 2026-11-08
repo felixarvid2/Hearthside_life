@@ -4054,8 +4054,9 @@ async function stepStairKinds(T) {
     await page.waitForTimeout(150);
     if (!(await page.locator('.bb-build-footer .bb-confirm').isDisabled())) { ok = true; break; }
   }
-  const footer = (await page.locator('.bb-build-footer').innerText()).replace(/\s+/g, ' ');
-  T.check(S, 'nudging the room gives a valid preview that says moving is free', ok && /Free/.test(footer), footer);
+  // textContent: the compact landscape footer hides the detail line (cost) with CSS, but the text is there
+  const footer = ((await page.locator('.bb-build-footer').textContent()) ?? '').replace(/\s+/g, ' ');
+  T.check(S, 'nudging the room gives a valid preview that says moving is free', ok && /Free/.test(footer), `${ok ? 'valid' : 'never valid'}: ${footer}`);
   await T.shot('m13-room-move-preview');
   const same = await snap();
   T.check(S, 'nothing changed before Apply', same.keys === before.keys && same.funds === before.funds, '');
