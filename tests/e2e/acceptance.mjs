@@ -3862,7 +3862,8 @@ async function stepStairKinds(T) {
     }
     for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) busy.add(`${x},${z}`);
     const fenced = (dir, x, z) => !!lot.fences?.[`0:${dir}:${x}:${z}`];
-    const wall = (dir, x, z) => !!lot.walls[`0:${dir}:${x}:${z}`] || fenced(dir, x, z);
+    // with `loose`, fences do not block either: the spot lists the fence edges in the block so they can be taken down first
+    const wall = (dir, x, z) => !!lot.walls[`0:${dir}:${x}:${z}`] || (!looseOk && fenced(dir, x, z));
     for (let z = 0; z + 3 < lot.depth; z++) for (let x = 1; x + 8 < lot.width; x++) {
       let free = true;
       for (let j = 0; j < 4 && free; j++) for (let i = 0; i <= 7 && free; i++) if (busy.has(`${x + i},${z + j}`)) free = false;
@@ -3871,7 +3872,10 @@ async function stepStairKinds(T) {
       if (free) {
         const clear = new Set();
         for (let j = 0; j < 4; j++) for (let i = 0; i <= 7; i++) { const id = owner.get(`${x + i},${z + j}`); if (id) clear.add(id); }
-        return { x, z, clear: [...clear] };
+        const fences = [];
+        for (let i = 0; i < 7; i++) for (let j = 0; j <= 4; j++) if (fenced('h', x + i, z + j)) fences.push({ dir: 'h', x: x + i, z: z + j });
+        for (let j = 0; j < 4; j++) for (let i = 0; i <= 8; i++) if (fenced('v', x + i, z + j)) fences.push({ dir: 'v', x: x + i, z: z + j });
+        return { x, z, clear: [...clear], fences };
       }
     }
     return null;
@@ -3884,7 +3888,21 @@ async function stepStairKinds(T) {
     let spot = await findSpot(used);
     if (!spot) {
       spot = await findSpot(used, true);
-      if (spot) spot.sold = await page.evaluate((ids) => ids.map((id) => window.hearthside.game.sell(id).ok), spot.clear);
+      if (spot) spot.sold = await page.evaluate(([ids, fences]) => {
+        const g = window.hearthside.game;
+        const sold = ids.map((id) => g.sell(id).ok);
+        if (fences.length) {
+          g.setMode('build');
+          g.view.setLevel?.(0);
+          g.setBuildTool({ kind: 'eraseFence' });
+          for (const f of fences) g.buildApply({ from: f.dir === 'h' ? { x: f.x + 0.5, z: f.z } : { x: f.x, z: f.z + 0.5 }, level: 0 });
+          g.setBuildTool(null);
+          g.setMode('live');
+          const lot = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId];
+          for (const f of fences) sold.push(!lot.fences?.[`0:${f.dir}:${f.x}:${f.z}`]);
+        }
+        return sold;
+      }, [spot.clear, spot.fences]);
     }
     // on a miss, a map of level 0 (F floor, o object, P pool, # floor and object) says what fills the lot
     const lotMap = spot ? null : await page.evaluate(() => {
