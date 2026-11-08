@@ -174,7 +174,9 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
   Shared browser plumbing for the new scripts is in `tests/e2e/common.mjs`.
 - **Checks on this branch** (2026-11-08): typecheck clean; `npm test` 195 files, 2469 tests, all pass (the three
   `tests/unit/characters3d/modular` failures are fixed: expectations updated to 42 tops (41 catalog tops plus the test-only shell top), and skin colour via `skinMaterialColor`); `content:check` 0 errors 0 warnings; `build` passes; `npm run e2e` OK;
-  `npm run e2e:release` 54/54 (portrait and landscape); `npm run e2e:perf` ran (table in TEST_CHECKLIST.md).
+  `npm run e2e:release` 54/54 (portrait and landscape); `npm run e2e:perf` ran (table in TEST_CHECKLIST.md); `e2e:creator`,
+  `e2e:creator-modular` and `e2e:a11y` OK; acceptance portrait 382/382, landscape 381/381, desktop 369/369 (step 15 now sells loose
+  outdoor objects, takes down fences in the way, keeps people out of the stretch and tries the next stretch when a room is refused).
 - **Placeholders**: audited (docs/TEST_CHECKLIST.md "Release readiness"); `tests/unit/tools/productionClean.test.ts` keeps dev imports and
   placeholder wording out of the shipped source.
 
