@@ -35,7 +35,8 @@ export const UPPER_SLAB_DEPTH = LEVEL_HEIGHT - 2.8;
 
 interface Hole { a: number; b: number; bottom: number; top: number }
 
-export interface DoorInfo { group: THREE.Group; x: number; z: number; level: number; open: number; target: number }
+/** `reachX`/`reachZ`: how close (metres, per axis) someone must be for the door to open; wide doors reach further along their wall. */
+export interface DoorInfo { group: THREE.Group; x: number; z: number; level: number; open: number; target: number; reachX: number; reachZ: number }
 
 export interface WallHit { wallId: string; side: 'a' | 'b'; distance: number; point: THREE.Vector3 }
 
@@ -501,7 +502,8 @@ export class LotView {
       if (def.kind === 'door') {
         groupOf(w.level).add(holder);
         this.openingsByWall.set(w.id, holder);
-        this.doors.push({ group: g, x: holder.position.x, z: holder.position.z, level: w.level, open: 0, target: 0 });
+        const reach = Math.max(0.95, def.width / 2 + 0.45);
+        this.doors.push({ group: g, x: holder.position.x, z: holder.position.z, level: w.level, open: 0, target: 0, reachX: w.dir === 'h' ? reach : 0.95, reachZ: w.dir === 'h' ? 0.95 : reach });
         continue;
       }
       // windows never move: bake them into per-material merged meshes (a few draw calls for all windows)

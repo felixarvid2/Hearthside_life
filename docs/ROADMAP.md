@@ -8,7 +8,7 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 **Milestones 1-9, 11, 11.5 and 12 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see
 CONTINUATION.md; M11 on PR #6; M11.5 and M12 verified 2026-11-05). **Milestone 10 - Complete catalogs is the only
-milestone still open: the surface catalog and the furnishings are complete** (360 wall finishes, 200 floor designs,
+milestone still open: the surface catalog, the furnishings and the doors and windows are complete** (360 wall finishes, 200 floor designs,
 573 furniture designs against 560). The full creator catalog is still open. Next: the rest of Milestone 10, then
 **Milestone 13 - Release preparation**.
 
@@ -145,6 +145,18 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   - Not implemented: the pool table, darts, foosball, table tennis and pottery wheel are decorative; the drum kit, harp
     and cello are display-only; recliners, storage beds and sofa beds are static; the microwave and washing machines
     have no sim interaction yet (their parts animate only when forced).
+- **Doors and windows (complete).** 48 doors and 64 windows, all procedural (no downloaded or AI models), content in
+  `src/content/openingsM10.ts` (39 + 53 new; the 20 existing ids are unchanged), meshes in `src/render/openingMeshes.ts`.
+  Doors: swinging single and double leaves (panel, shaker, cross-buck, glazed, half-glazed, porthole, slot, grooved,
+  screen, arched with panel, glass or plank), cafe/saloon doors, bi-fold pairs, sliding panes in tracks (2-4 panes), pocket
+  doors that slide into the wall, barn doors on a rail, sectional/slat/roller garage doors (3 tiles wide), sidelights,
+  transoms and fanlights. Windows: sash, casement, sliding, jalousie, ribbon, bay and box bay, fixed lights in arch,
+  round, oval, lunette, octagon, gothic and gable shapes, bar patterns (grid, diamond, prairie, cross, top-grid, fan, spokes),
+  frosted glass, shutters, flower boxes, hoods, grilles, Juliet rail; heights 0.4-2.3 m, sills 0.05-2.0 m, 1-3 tiles wide.
+  Wide openings cut every wall edge they span; doors animate through `setDoorOpen` (swing, fold, slide, roll up) and open
+  for people near any part of a wide door (`DoorInfo.reachX/reachZ`). Tests: `tests/unit/surfaces/openings-m10.test.ts`.
+  Review sheets: `npm run visual:openings` writes `dev/shots/doors-windows/{doors,windows}-N.png` (game renderer, doors
+  closed and open).
 - **Still open.** The full creator catalog target.
 
 ## Unfinished systems after M1 (by dependency)
