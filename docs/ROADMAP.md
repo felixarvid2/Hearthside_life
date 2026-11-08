@@ -6,11 +6,12 @@ content counts live in `docs/CONTENT_STATUS.md` (generated with `npm run content
 
 ## Current milestone
 
-**Milestones 1-9, 11, 11.5 and 12 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see
-CONTINUATION.md; M11 on PR #6; M11.5 and M12 verified 2026-11-05). **Milestone 10 - Complete catalogs is the only
-milestone still open: the surface catalog, the furnishings and the doors and windows are complete** (360 wall finishes, 200 floor designs,
-573 furniture designs against 560). The full creator catalog is still open. Next: the rest of Milestone 10, then
-**Milestone 13 - Release preparation**.
+**Milestones 1-13 are complete** (M1-7 verified 2026-11-02; M8 and M9 merged in PR #4, see CONTINUATION.md; M11 on PR #6;
+M11.5 and M12 verified 2026-11-05). Milestone 10 - Complete catalogs is done: 360 wall finishes, 200 floor designs, 573 furniture
+designs against 560, 48 doors, 64 windows, and the full modular creator catalog (60 hairstyles, 16 facial hair, 133 garments,
+32 accessories). Milestone 13 - Release preparation has parts A and B merged; its guidance, balance, recovery, perf harness and release
+e2e are in place. **Remaining: real-device performance runs** (they need the user's phones; SwiftShader numbers are in
+docs/TEST_CHECKLIST.md), plus the known-and-left items in docs/BALANCE.md, docs/TEST_CHECKLIST.md and CONTINUATION.md.
 
 ## Completed-project targets (brief section 2)
 
@@ -107,7 +108,7 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   venue, Quayside Baths, with a 6 x 10 pool, changing rooms and a sun deck. Acceptance step 14; screenshots in
   `dev/ds-tasks/m12/shots/`.
 
-## Milestone 10, complete catalogs (in progress)
+## Milestone 10, complete catalogs (complete)
 
 - **Surfaces (complete).** 360 wall finishes (3382 palettes) and 200 floor designs (1523 palettes), meeting the brief
   allocation: walls paint 28, stripes 24, geometric 32, floral 32, botanical 24, vintage-deco 24, playful 24,
@@ -158,7 +159,8 @@ Content counts are cumulative. Each milestone keeps every earlier feature workin
   for people near any part of a wide door (`DoorInfo.reachX/reachZ`). Tests: `tests/unit/surfaces/openings-m10.test.ts`.
   Review sheets: `npm run visual:openings` writes `dev/shots/doors-windows/{doors,windows}-N.png` (game renderer, doors
   closed and open).
-- **Still open.** The full creator catalog target.
+- **Creator catalog (complete).** Modular Quaternius style: 60 hairstyles, 16 facial hair, 133 garments (41 tops, 16 outer, 28 bottoms,
+  24 full outfits, 24 shoes) and 32 accessories, all fitted to both UBC bodies with thumbnails. See CONTINUATION.md "Modular characters".
 
 ## Unfinished systems after M1 (by dependency)
 

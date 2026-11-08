@@ -1,24 +1,25 @@
 # Continuation note
 
-State on 2026-11-06. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
-gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-9, 11, 11.5
-and 12 are complete and verified** (brief section 26, docs/ROADMAP.md). **Milestone 10 is the only one still open: the surface
-catalog (360 wall finishes, 200 floor designs) and the furnishings (573 designs, target 560) are complete**; the full creator
-catalog remains. The next work is the rest of Milestone 10, then Milestone 13 (release preparation).
+State on 2026-11-08. Work happens on branch `ccr-333d8ff5-slv7qa`. PRs #1-#5 (Milestones 1-9, MPFB bodies and the post-M9
+gaps) are merged. Milestone 11 is on PR #6 (merged once all checks pass; standing approval in CLAUDE.md). **Milestones 1-13
+are complete** (brief section 26, docs/ROADMAP.md). Milestone 10 finished with the full creator catalog in the modular
+Quaternius style (60 hairstyles, 16 facial hair, 133 garments, 32 accessories), next to the surfaces (360 walls, 200 floors),
+the furnishings (573 designs, target 560), doors (48) and windows (64). Milestone 13 parts A and B are merged. What remains is
+the real-device performance runs, which need the user's phones (record them in docs/TEST_CHECKLIST.md), and the known-and-left
+items in docs/BALANCE.md, docs/TEST_CHECKLIST.md and below.
 
 The social gaps pass (branch `wt/gaps-social`) closed the open social, neighbourhood and family gaps listed in the old known issues: weddings,
 gifts as objects, dates and events at venues, group chat, community events, town life, furniture when moving, town children for old saves,
 the sitter for other households, the jog track, explicit baby carrying, the phone map entry and `LotInfo.usable`. See ARCHITECTURE.md
 ("Relationships and events", "Neighbourhood", "Family and life stages") and the known issues below for what stays simple.
 
-Milestone 13 part A (branch `wt/m13a`: guidance and accessibility) is done; part B (balance, save recovery, perf harness, release
-e2e) is `wt/m13b`. Part A added: contextual hints (`ui/hud/hintState.ts`, `hints.ts`; Settings > Help: Hints, Reset hints), a Help screen
+Milestone 13 part A (branch `wt/m13a`: guidance and accessibility) and part B (branch `wt/m13b`: balance, save recovery, perf
+harness, release e2e) are both merged into this branch. Part A added: contextual hints (`ui/hud/hintState.ts`, `hints.ts`; Settings > Help: Hints, Reset hints), a Help screen
 (`screens/help.ts`), UI scale 90-150 %, High contrast, focus trap/return and roving tabs (`ui/kit/focus.ts`), WCAG AA tokens
 (`tests/unit/ui/contrast.test.ts`), a keyboard route to world objects (Queue tab > Choose an object), a room-edit panel that fits phones, and
 `npm run e2e:a11y` (`tests/e2e/a11y.mjs`, screenshots in `dev/shots/m13a/`). Test harnesses seed `hints: false` next to `tutorial: false`.
 Known and left: picking things in the 3D world still needs a pointer (the object picker is the keyboard route; people other than the
-selected one and floor/wall picks have no keyboard route); the three `tests/unit/characters3d/modular` failures (manifest count 42 vs 41,
-ubcBodies colour clamp) pre-date this work.
+selected one and floor/wall picks have no keyboard route).
 
 ## Milestone status
 
@@ -33,9 +34,10 @@ ubcBodies colour clamp) pre-date this work.
 | 7 Neighbourhood and venues | Lot travel (20-40 game minutes, free), one active lot, 4 NPC households generated once from the world seed with jobs and cross-household relationships, light off-lot schedule (work, home, venue visits), NPC pay once and NPC bill auto-pay, invite home, household switching, rent/buy and moving (owned home sells at 80%), lazy venue/home layouts validated for reachability, 15 venue interactions with once-only costs, library quiet rule, no sleeping in public venues; Map/List modal, lot detail sheet, trip chip, away card; phone landscape HUD (funds drop cents from $1,000 up, icon-only Map/Menu) | 14 lots (12), 6 usable venues (3), 121 furniture (10 new models) | acceptance step 9 (map, travel to park, venue activity, go home, switch preview) in all viewports |
 | 8 Family and life stages (PR #4) | seven life stages (baby to elder) with per-stage MPFB bodies, lazy-loaded; aging off / long / normal / custom, optional elder end of life; birthdays; school with performance, homework and report cards; babysitter; adoption; moving out (household split); age-gated interactions and family socials; family view and dialogs; 6 family furniture models | 7 life stages | acceptance step 10 (`stepFamily`) in all viewports; `npm run e2e:acceptance` |
 | 9 Multiple floors and exteriors (PR #4) | levels 0-2 (3 m apart, walls 2.8 m); upper floors need support, balconies up to 2 tiles out; stairs as objects with stairwell cut and undo; multi-level path search; HUD level selector; two-storey Hazelbank loft; 12 roof styles and 11 finishes, Roof camera toggle, auto roof; 24 fence designs (123 variants) and 12 gates (64 variants); 12 terrain paints; 16 garden objects and 10 crops (plant, water, weed, harvest at 75 % of value) | 3 floors, 12 roof styles, 24 fences, 12 gates, 12 staircases (catalogue has 9 straight and 4 spiral) | acceptance step 11 (`stepFloors`, `stepExterior`) in all viewports; `--steps=12` runs the exterior part alone |
-| 10 Complete catalogs | surfaces done: AI-sourced and code-painted wall and floor designs, palette tinting, on-demand maps (pipeline below); furnishings done: 573 own low-poly designs from `tools/furniture-extra` (pipeline below) | 360 walls (360), 200 floors (200), 573 furnishings (560), full creator catalog (open) | surfaces and furnishings complete; creator catalog still open |
+| 10 Complete catalogs | surfaces done: AI-sourced and code-painted wall and floor designs, palette tinting, on-demand maps (pipeline below); furnishings done: 573 own low-poly designs from `tools/furniture-extra` (pipeline below); doors and windows; modular creator catalog (Quaternius style, `tools/characters/catalog/`, all fitted to both UBC bodies with thumbnails) | 360 walls (360), 200 floors (200), 573 furnishings (560), 48 doors (48), 64 windows (64), 60 hairstyles (60), 16 facial hair (16), 133 garments (132: 41 tops incl. hood-up hoodie, 16 outer, 28 bottoms, 24 full outfits, 24 shoes), 32 accessories (32) | complete; the classic style keeps 28 hair, 5 facial hair, 54 garments, 15 accessories |
 | 11 Complete progression and social scope (own PR) | 13 careers (130 levels) with 17 on-the-job events; six ready skills with practice activities and effects (baking, wellness, creativity, photography, fishing, research); six new objects (bread oven, yoga mat, sketchbook, camera tripod, telescope, stocked garden pond); 40 traits in six categories; 13 three-stage, adult-only aspirations; 45 social interactions; once-only payouts through `transact` | 13 careers (12), 19 skills (16), 40 traits (40), 13 aspirations (12), 45 socials (40) | typecheck, 1746 tests, content check, build, `e2e:creator`; visual checks 25/25 careers, 45/45 skills, 39/39 photography/fishing/research, 19/19 traits |
 | 11.5 Animations and activity feedback (own PR) | moving parts and effects driven by the running action (21 descriptors: fridge/oven doors, hob rings and steam, wardrobe, toilet lid, shower/bath, taps, dishwasher); hand props on the rig (snacks, ingredients, plate and fork, books, phone, mug, tools); computer and TV screens (word processor, code, game, browser, TV); a stage-weighted progress pill above the head with Household/All/Off; all render-side, no save fields | no new content; the screen pictures are deterministic generators | acceptance step 13 (`--steps=13`) in all three viewports; `visual:m115:d` 24/24, `visual:m115:h` 27/27, `visual:m115:screens` 57/57, `visual:m115:b` 41/41 |
+| 13 Release preparation (`wt/m13a`, `wt/m13b`, merged) | part A: contextual hints, Help screen, UI scale 90-150 %, High contrast, focus trap and roving tabs, WCAG AA tokens, keyboard route to world objects, `npm run e2e:a11y`; part B: balance audit (docs/BALANCE.md), per-slot save backups and crash guard, `npm run e2e:perf`, `npm run e2e:release`, production-clean guard | all targets audited (docs/TEST_CHECKLIST.md "Release readiness") | part A and B merged; `e2e:release` 54/54; measurements on real phones pending (needs the user's devices); SwiftShader numbers in docs/TEST_CHECKLIST.md |
 | 12 Environment and venues (own PR) | seasons (3/7/14 days) and a two-half-day weather plan stored in the save (clear/cloudy/rain/snow, snow only in winter); seasonal lighting, grass, trees, terrain and snow cover; capped rain/snow particles with a Weather effects setting; weather moodlets, preferences and trait biases; weather/season/outdoor/day/night gates that grey out options and filter autonomy; nine outdoor activities and two socials; pools (build tool, ladders, blocked water, swimming, graceful Get Out); the seventh venue, Quayside Baths (6 x 10 pool, changing rooms, sun deck) | 7 venues (6), 108 activities (40), 47 socials (40), 3 pool styles | acceptance step 14 (`--steps=14`) in all three viewports; `visual:m12:{weather,outdoor,pools}` 29/29, 60/60, 33-36/36 |
 
 ## How to check Milestones 11.5 and 12
@@ -170,9 +172,8 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
   `qualityFor()` in `src/game/settings.ts` is the quality auto-detect (phones and low-memory devices start on Low).
 - **Release scenario**: `npm run e2e:release` (portrait and landscape; add `--only=desktop`), screenshots in `dev/shots/release/`.
   Shared browser plumbing for the new scripts is in `tests/e2e/common.mjs`.
-- **Checks on this branch** (2026-11-08): typecheck clean; `npm test` 187 files, 2386 tests, 2383 pass - the 3 failures are
-  `tests/unit/characters3d/modular/look.test.ts` (garment count 41 against 42) and `ubcBodies.test.ts` (skin colour), which depend only on the
-  character asset manifest, none of whose files this branch changes (not run on the base commit; unrelated to the files changed here); `content:check` 0 errors 0 warnings; `build` passes; `npm run e2e` OK;
+- **Checks on this branch** (2026-11-08): typecheck clean; `npm test` 195 files, 2469 tests, all pass (the three
+  `tests/unit/characters3d/modular` failures are fixed: expectations updated to 42 tops (41 catalog tops plus the test-only shell top), and skin colour via `skinMaterialColor`); `content:check` 0 errors 0 warnings; `build` passes; `npm run e2e` OK;
   `npm run e2e:release` 54/54 (portrait and landscape); `npm run e2e:perf` ran (table in TEST_CHECKLIST.md).
 - **Placeholders**: audited (docs/TEST_CHECKLIST.md "Release readiness"); `tests/unit/tools/productionClean.test.ts` keeps dev imports and
   placeholder wording out of the shipped source.
@@ -182,9 +183,8 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
 1. Modular Quaternius characters (opt-in style "Quaternius (preview)"; see "Modular characters" below). Stages A to D
    are done on the Universal Base Characters (`ubc_male`, `ubc_female`). Next: the known gaps listed there (garment
    folds, hood up, hair spikes at the hairline, ponytail thumbnail, real-device performance).
-2. Milestone 10, complete catalogs: surfaces (360 walls, 200 floors) and furnishings (573 designs, target 560) are done. The
-   remaining target is the full creator catalog (ROADMAP). Current counts are in `docs/CONTENT_STATUS.md`.
-3. social gaps pass, release preparation: guidance, balance, accessibility, recovery and measured mobile performance (ROADMAP).
+2. Milestone 10, complete catalogs: done, including the modular creator catalog. Current counts are in `docs/CONTENT_STATUS.md`.
+3. Milestone 13, release preparation: parts A and B are merged; the open part is the real-device measurement (item 7).
 4. Polish of the M8, M9, M11, M11.5 and M12 gaps (listed under "Known issues").
 5. People: brow styles, the garment hem flare on the female body, real-device performance.
 6. Performance:

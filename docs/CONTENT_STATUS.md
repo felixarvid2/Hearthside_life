@@ -57,6 +57,22 @@ variants = curated palettes of ready designs (a design counts once however many 
 
 garment variants = solid plus allowed patterns per ready garment (colours are free choice).
 
+The rows above are the classic style's counts (28 hairstyles, 5 facial hair, 54 garments, 15 accessories); they are unchanged.
+The modular (Quaternius) style has its own full catalog, counted below. Both styles are built from the same content tables, so a
+row is not summed across styles.
+
+#### Modular character catalog (Quaternius style, Settings > Character style)
+
+| | ready | full target | notes |
+|---|---:|---:|---|
+| hairstyles | 60 | 60 | fitted to both UBC bodies (`ubc_male`, `ubc_female`) |
+| facial hair | 16 | 16 | |
+| garments | 133 | 132 | 41 tops (incl. a hood-up hoodie), 16 outer layers, 28 bottoms, 24 full outfits, 24 shoes |
+| accessories | 32 | 32 | 8 hats, 5 eyewear, 3 earrings, 7 neck, 4 wrist, 2 waist, 3 bags |
+
+Every modular part is fitted to both bodies and has a thumbnail. Catalog tables are in `tools/characters/catalog/`; the manifest is
+`public/assets/characters/modular/manifest.json`.
+
 ### Gameplay content
 
 | | ready | dev | variants | M1 min | M2 min | M3 min | M4 min | M6 min | M11 min | full target |
