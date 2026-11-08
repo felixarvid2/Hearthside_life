@@ -14,9 +14,9 @@
 import type { ContentDB, ParamDef, TraitDef } from '../content/types';
 import type { HouseholdDraft, PersonDraft } from '../core/drafts';
 import { type Rng, uiRng } from '../core/rng';
-import { applyPreset, equipGarment, equipHair, randomizeLook, setGarmentRegionColor, unequipSlot, fallbackHair } from './modular/equip';
+import { applyPreset, equipFacialHair, equipGarment, equipHair, randomizeLook, setGarmentRegionColor, unequipSlot, fallbackHair } from './modular/equip';
 import { deriveModularLook, lookFor, resolveLook } from './modular/look';
-import { findBody, findGarment, findHair, findPreset } from './modular/manifest';
+import { findBody, findFacialHair, findGarment, findHair, findPreset } from './modular/manifest';
 import type { ModularLook, ModularManifest, ModularSlot } from './modular/types';
 import type {
   Appearance, BodyFrame, FamilyTie, GarmentLayer, Hex, LifeStage, Outfit, OutfitCategory, Pronouns, Wardrobe,
@@ -765,6 +765,19 @@ export class CreatorSession {
     });
   }
 
+  /** Wears facial hair (a beard or moustache; takes the hair colour), or none (null). Garments / hairstyles it excludes change. */
+  setModularFacialHair(facialHairId: string | null): CreatorResult {
+    const m = this.modularDef;
+    if (!m) return fail(NOT_MODULAR);
+    const f = facialHairId === null ? null : findFacialHair(m, facialHairId);
+    if (facialHairId !== null && !f) return fail('That facial hair is not available.');
+    return this.modularEdit(f ? `Facial hair: ${f.label}` : 'No facial hair', (_p, look, ctx) => {
+      if (f && !f.files[look.bodyId]) return `${f.label} is not available for this body.`;
+      const notes = equipFacialHair(m, look, facialHairId);
+      if (notes.length) ctx.note = notes.join(' ');
+    });
+  }
+
   /** Wears a garment in a slot of an outfit category, or takes the slot's garment off (null). */
   setModularGarment(category: OutfitCategory, slot: ModularSlot, garmentId: string | null): CreatorResult {
     const m = this.modularDef;
@@ -854,7 +867,7 @@ export class CreatorSession {
     if (!m || !look) return null;
     const body = findBody(m, bodyId);
     if (!body) return null;
-    const had = new Set<string>([...Object.values(look.outfits).flatMap((o) => Object.values(o ?? {})), ...(look.hairId ? [look.hairId] : [])]);
+    const had = new Set<string>([...Object.values(look.outfits).flatMap((o) => Object.values(o ?? {})), ...(look.hairId ? [look.hairId] : []), ...(look.facialHairId ? [look.facialHairId] : [])]);
     if (look.bodyId !== bodyId) look.morphs = {};
     look.bodyId = bodyId;
     const frame = (['a', 'b'] as const).find((f) => m.defaults.bodyByFrame[f] === bodyId);
@@ -865,8 +878,8 @@ export class CreatorSession {
     }
     const res = resolveLook(look, m);
     p.appearance.modular = res.look;
-    const kept = new Set<string>([...Object.values(res.look.outfits).flatMap((o) => Object.values(o ?? {})), ...(res.look.hairId ? [res.look.hairId] : [])]);
-    const lost = [...had].filter((id) => !kept.has(id)).map((id) => findGarment(m, id)?.label ?? findHair(m, id)?.label ?? id);
+    const kept = new Set<string>([...Object.values(res.look.outfits).flatMap((o) => Object.values(o ?? {})), ...(res.look.hairId ? [res.look.hairId] : []), ...(res.look.facialHairId ? [res.look.facialHairId] : [])]);
+    const lost = [...had].filter((id) => !kept.has(id)).map((id) => findGarment(m, id)?.label ?? findHair(m, id)?.label ?? findFacialHair(m, id)?.label ?? id);
     if (lost.length === 0) return null;
     // a hairstyle that is not fitted to the new body is replaced instead of leaving the head bare
     let swapped = '';
@@ -902,7 +915,7 @@ export class CreatorSession {
     if (!m || !look || !modularStage(p.lifeStage)) return;
     const def = deriveModularLook(p.appearance, m);
     if (category === 'body') { look.bodyId = def.bodyId; look.morphs = {}; }
-    else if (category === 'hair') look.hairId = def.hairId;
+    else if (category === 'hair') { look.hairId = def.hairId; look.facialHairId = def.facialHairId; }
     else look.outfits = def.outfits;
     p.appearance.modular = resolveLook(look, m).look;
   }

@@ -15,10 +15,10 @@ describe('manifest', () => {
   it('the real manifest validates', () => { expect(validateManifest(realManifest())).toEqual([]); });
   it('reports broken manifests', () => {
     const m = testManifest();
-    m.garments.push({ ...shellGarment(), id: 'shell_top', files: { nobody: 'x.glb' }, rig: 'zzz', slot: 'hat' as never, hides: ['wing' as never] });
+    m.garments.push({ ...shellGarment(), id: 'shell_top', files: { nobody: 'x.glb' }, rig: 'zzz', slot: 'cape' as never, hides: ['wing' as never] });
     m.garments[1]!.colorRegions = [...m.garments[0]!.colorRegions, ...m.garments[0]!.colorRegions];
     const issues = validateManifest(m).join('\n');
-    for (const s of ['Duplicate garment', "unknown rig 'zzz'", "unknown slot 'hat'", "unknown body region 'wing'", "unknown body 'nobody'", 'duplicate color region']) expect(issues).toContain(s);
+    for (const s of ['Duplicate garment', "unknown rig 'zzz'", "unknown slot 'cape'", "unknown body region 'wing'", "unknown body 'nobody'", 'duplicate color region']) expect(issues).toContain(s);
   });
   it('looks things up', () => {
     const m = testManifest();
@@ -50,7 +50,7 @@ describe('deriveModularLook', () => {
     const m = testManifest();
     m.defaults.outfit = { top: 'shell_top' };
     const l = deriveModularLook(appearance('b'), m);
-    expect(l).toMatchObject({ v: 1, bodyId: 'ubc_female', hairId: m.defaults.hairstyle, morphs: {}, colors: { skin: '#b07a55', hair: '#774411', eyes: '#336655' } });
+    expect(l).toMatchObject({ v: 2, facialHairId: null, bodyId: 'ubc_female', hairId: m.defaults.hairstyle, morphs: {}, colors: { skin: '#b07a55', hair: '#774411', eyes: '#336655' } });
     expect(l.outfits.everyday).toEqual({}); // shell_top is only fitted to the male body
     expect(deriveModularLook(appearance('a'), m).outfits.everyday).toEqual({ top: 'shell_top' });
   });

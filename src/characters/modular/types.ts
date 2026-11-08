@@ -8,7 +8,7 @@
 import type { Hex, OutfitCategory } from '../../core/types';
 
 /** Version of `ModularLook`. Bump it and add a step to `migrateModularLook` (look.ts) when the shape changes. */
-export const MODULAR_LOOK_VERSION = 1;
+export const MODULAR_LOOK_VERSION = 2;
 
 /** Body regions, one skinned mesh `Body_<region>` each in a body GLB; garments hide the ones they fully cover. */
 export const BODY_REGIONS = [
@@ -17,9 +17,19 @@ export const BODY_REGIONS = [
 ] as const;
 export type BodyRegion = (typeof BODY_REGIONS)[number];
 
-/** Outfit slots of the modular catalog. 'full' (one-piece) excludes 'top' and 'bottom'. */
-export const MODULAR_SLOTS = ['top', 'bottom', 'outer', 'full', 'shoes'] as const;
+/**
+ * Outfit slots of the modular catalog. 'full' (one-piece) excludes 'top' and 'bottom'; 'outer' (jacket, coat) is worn over a
+ * 'top' and may go with 'full'. The accessory slots hold one item each and never exclude anything by themselves.
+ */
+export const MODULAR_SLOTS = ['top', 'bottom', 'outer', 'full', 'shoes', 'hat', 'eyewear', 'earrings', 'neck', 'wrist', 'waist', 'bag'] as const;
 export type ModularSlot = (typeof MODULAR_SLOTS)[number];
+
+/** The accessory slots (GarmentDef.category 'accessory'), in the order the creator lists them. */
+export const ACCESSORY_SLOTS = ['hat', 'eyewear', 'earrings', 'neck', 'wrist', 'waist', 'bag'] as const;
+export type AccessorySlot = (typeof ACCESSORY_SLOTS)[number];
+export const isAccessorySlot = (s: string): s is AccessorySlot => (ACCESSORY_SLOTS as readonly string[]).includes(s);
+/** The `GarmentDef.category` that goes with a slot: the slot itself, or 'accessory' for the accessory slots. */
+export const categoryOfSlot = (s: ModularSlot): GarmentDef['category'] => (isAccessorySlot(s) ? 'accessory' : s);
 
 /** A named color region of a part: the material(s) it recolors and its default color. */
 export interface ColorRegionDef {
@@ -83,7 +93,7 @@ export interface BodyPresetDef {
 export interface GarmentDef {
   id: string;
   label: string;
-  category: 'top' | 'bottom' | 'outer' | 'full' | 'shoes';
+  category: 'top' | 'bottom' | 'outer' | 'full' | 'shoes' | 'accessory';
   slot: ModularSlot;
   /** Body preset id -> GLB path. A garment is only offered on the bodies it was fitted to. */
   files: Record<string, string>;
@@ -107,6 +117,8 @@ export interface GarmentDef {
   license: string;
   /** Morph values of the body this garment follows (see BodyPresetDef.morphs); absent = only the neutral body. */
   followsMorphs?: string[];
+  /** Optional sub-categories for the creator's filter chips (e.g. ["tee", "shirt", "sweater"]); lower-case words. */
+  tags?: string[];
 }
 
 export interface HairstyleDef {
@@ -125,6 +137,14 @@ export interface HairstyleDef {
   stats?: { triangles: number; textureBytes: number };
 }
 
+/**
+ * A beard / moustache. Same shape as a hairstyle (it takes the hair colour); because beards are built from the face skin
+ * they can carry the face morphs: `followsMorphs` lists the body morph ids (BodyPresetDef.morphs) the mesh has shape keys for.
+ */
+export interface FacialHairDef extends HairstyleDef {
+  followsMorphs?: string[];
+}
+
 /** A named outfit: slot -> garment id, optionally with garment colours (garment id -> color region id -> color). */
 export interface OutfitPresetDef {
   id: string;
@@ -139,6 +159,8 @@ export interface ModularManifest {
   bodies: BodyPresetDef[];
   garments: GarmentDef[];
   hairstyles: HairstyleDef[];
+  /** Beards and moustaches; absent = none in the catalog. */
+  facialHair?: FacialHairDef[];
   /**
    * Optional exclusion rules beyond each garment's own `conflicts` (see restrictions.ts). Both kinds are symmetric: naming
    * the pair on one side is enough.
@@ -146,7 +168,7 @@ export interface ModularManifest {
   restrictions?: {
     /** Slot-type exclusions: `{ outer: ['full'] }` = no garment in 'outer' together with one in 'full' (and vice versa). */
     slots?: Partial<Record<ModularSlot, ModularSlot[]>>;
-    /** Part-id exclusions (garment or hairstyle ids): `{ hood: ['short_crop'] }` = the hood and that hairstyle never go together. */
+    /** Part-id exclusions (garment, hairstyle or facial hair ids): `{ hat_beanie: ['ponytail_mid'] }` = the beanie and that hairstyle never go together. */
     parts?: Record<string, string[]>;
   };
   /** Ready-made outfits the creator offers (one tap sets a whole category outfit; see equip.ts applyPreset). */
@@ -184,6 +206,8 @@ export interface ModularLook {
   v: typeof MODULAR_LOOK_VERSION;
   bodyId: string;
   hairId: string | null;
+  /** Beard / moustache, drawn in the hair colour (v2; older looks migrate to null). */
+  facialHairId: string | null;
   /** Outfits per category; a missing category falls back to 'everyday'. */
   outfits: Partial<Record<OutfitCategory, ModularOutfit>>;
   colors: {

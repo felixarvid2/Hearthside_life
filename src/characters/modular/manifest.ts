@@ -1,8 +1,8 @@
 // Loading, validation and lookups of the modular character manifest (public/assets/characters/modular/manifest.json).
 // Pure data helpers: nothing here touches three.js.
 
-import { BODY_REGIONS, MODULAR_SLOTS } from './types';
-import type { BodyPresetDef, GarmentDef, HairstyleDef, ModularManifest, ModularSlot, OutfitPresetDef } from './types';
+import { BODY_REGIONS, MODULAR_SLOTS, categoryOfSlot } from './types';
+import type { BodyPresetDef, FacialHairDef, GarmentDef, HairstyleDef, ModularManifest, ModularSlot, OutfitPresetDef } from './types';
 
 /** Fetches `${baseUrl}characters/modular/manifest.json`. Rejects when it cannot be read or is not a version 1 manifest. */
 export async function loadModularManifest(baseUrl = './assets/'): Promise<ModularManifest> {
@@ -41,6 +41,7 @@ export function validateManifest(m: ModularManifest): string[] {
   for (const g of m.garments) {
     if (!rigIds.includes(g.rig)) out.push(`Garment '${g.id}' uses unknown rig '${g.rig}'.`);
     if (!slots.includes(g.slot)) out.push(`Garment '${g.id}' has unknown slot '${g.slot}'.`);
+    if (slots.includes(g.slot) && g.category !== categoryOfSlot(g.slot)) out.push(`Garment '${g.id}' in slot '${g.slot}' must have category '${categoryOfSlot(g.slot)}', not '${g.category}'.`);
     for (const c of g.conflicts) if (!slots.includes(c)) out.push(`Garment '${g.id}' conflicts with unknown slot '${c}'.`);
     for (const r of g.hides) if (!regions.includes(r)) out.push(`Garment '${g.id}' hides unknown body region '${r}'.`);
     files('Garment', g.id, g.files);
@@ -52,7 +53,15 @@ export function validateManifest(m: ModularManifest): string[] {
     files('Hairstyle', h.id, h.files);
     colors('Hairstyle', h.id, h.colorRegions);
   }
-  const partIds = new Set([...m.garments.map((g) => g.id), ...m.hairstyles.map((h) => h.id)]);
+  const facial = m.facialHair ?? [];
+  for (const id of new Set(dupes(facial.map((h) => h.id)))) out.push(`Duplicate facial hair id '${id}'.`);
+  for (const h of facial) {
+    if (!rigIds.includes(h.rig)) out.push(`Facial hair '${h.id}' uses unknown rig '${h.rig}'.`);
+    if (h.attachment !== 'skinned' && h.attachment !== 'head-bone') out.push(`Facial hair '${h.id}' has unknown attachment '${String(h.attachment)}'.`);
+    files('Facial hair', h.id, h.files);
+    colors('Facial hair', h.id, h.colorRegions);
+  }
+  const partIds = new Set([...m.garments.map((g) => g.id), ...m.hairstyles.map((h) => h.id), ...facial.map((h) => h.id)]);
   for (const [slot, list] of Object.entries(m.restrictions?.slots ?? {})) {
     if (!slots.includes(slot)) out.push(`Restriction on unknown slot '${slot}'.`);
     for (const s of list ?? []) if (!slots.includes(s)) out.push(`Slot '${slot}' is restricted against unknown slot '${s}'.`);
@@ -95,6 +104,7 @@ export function validateManifest(m: ModularManifest): string[] {
 // ---- lookups ----
 
 export const findBody = (m: ModularManifest, id: string): BodyPresetDef | undefined => m.bodies.find((b) => b.id === id);
+export const findFacialHair = (m: ModularManifest, id: string): FacialHairDef | undefined => m.facialHair?.find((h) => h.id === id);
 export const findGarment = (m: ModularManifest, id: string): GarmentDef | undefined => m.garments.find((g) => g.id === id);
 export const findHair = (m: ModularManifest, id: string): HairstyleDef | undefined => m.hairstyles.find((h) => h.id === id);
 
@@ -108,4 +118,9 @@ export function garmentsFor(m: ModularManifest, bodyId: string, slot?: ModularSl
 /** Hairstyles that have a file for the body. */
 export function hairFor(m: ModularManifest, bodyId: string): HairstyleDef[] {
   return m.hairstyles.filter((h) => !!h.files[bodyId]);
+}
+
+/** Facial hair styles that have a file for the body. */
+export function facialHairFor(m: ModularManifest, bodyId: string): FacialHairDef[] {
+  return (m.facialHair ?? []).filter((h) => !!h.files[bodyId]);
 }

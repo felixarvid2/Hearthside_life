@@ -4,7 +4,7 @@
 import type { Appearance, Hex, OutfitCategory } from '../../core/types';
 import { OUTFIT_CATEGORIES } from '../../core/types';
 import type { ContentDB } from '../../content/types';
-import { findBody, findGarment, findHair } from './manifest';
+import { findBody, findFacialHair, findGarment, findHair } from './manifest';
 import { conflicts } from './restrictions';
 import { MODULAR_LOOK_VERSION, MODULAR_SLOTS } from './types';
 import type { ModularLook, ModularManifest, ModularOutfit, ModularSlot } from './types';
@@ -13,23 +13,27 @@ const isRec = (v: unknown): v is Record<string, unknown> => typeof v === 'object
 const isHex = (v: unknown): v is Hex => typeof v === 'string' && /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v);
 
 /** Slot order used when resolving conflicts: a one-piece wins over top and bottom, then inner to outer. */
-const SLOT_PRIORITY: readonly ModularSlot[] = ['full', 'top', 'bottom', 'outer', 'shoes'];
+const SLOT_PRIORITY: readonly ModularSlot[] = ['full', 'top', 'bottom', 'outer', 'shoes', 'hat', 'eyewear', 'earrings', 'neck', 'wrist', 'waist', 'bag'];
 
 /**
- * Reads a stored look (any version this build knows). Version 1 is current. Returns a clean copy, or null when the data
+ * Reads a stored look (any version this build knows). Version 2 is current; version 1 (no facial hair) is migrated by
+ * adding `facialHairId: null`. Returns a clean copy, or null when the data
  * cannot be understood (wrong shape, missing body or colors, unknown future version).
  */
 export function migrateModularLook(raw: unknown): ModularLook | null {
   let v = raw;
   if (typeof v === 'string') { try { v = JSON.parse(v); } catch { return null; } }
   if (!isRec(v) || typeof v.v !== 'number') return null;
-  if (v.v === 1) return readV1(v);
+  if (v.v === 1) return readLook(v, 1);
+  if (v.v === 2) return readLook(v, 2);
   return null;
 }
 
-function readV1(r: Record<string, unknown>): ModularLook | null {
+/** Shared reader of v1 and v2 (v1 had no `facialHairId`); the result is always the current version. */
+function readLook(r: Record<string, unknown>, version: 1 | 2): ModularLook | null {
   if (typeof r.bodyId !== 'string' || !r.bodyId) return null;
   if (r.hairId !== null && r.hairId !== undefined && typeof r.hairId !== 'string') return null;
+  if (version === 2 && r.facialHairId !== null && r.facialHairId !== undefined && typeof r.facialHairId !== 'string') return null;
   const c = r.colors;
   if (!isRec(c) || !isHex(c.skin) || !isHex(c.eyes) || !isHex(c.hair)) return null;
   const garments: Record<string, Record<string, Hex>> = {};
@@ -64,7 +68,7 @@ function readV1(r: Record<string, unknown>): ModularLook | null {
     if (!isRec(r.morphs)) return null;
     for (const [k, n] of Object.entries(r.morphs)) { if (typeof n !== 'number' || !Number.isFinite(n)) return null; morphs[k] = n; }
   }
-  const out: ModularLook = { v: MODULAR_LOOK_VERSION, bodyId: r.bodyId, hairId: (r.hairId as string | null | undefined) ?? null, outfits, colors: { skin: c.skin, eyes: c.eyes, hair: c.hair, garments }, morphs };
+  const out: ModularLook = { v: MODULAR_LOOK_VERSION, bodyId: r.bodyId, hairId: (r.hairId as string | null | undefined) ?? null, facialHairId: version === 2 ? ((r.facialHairId as string | null | undefined) ?? null) : null, outfits, colors: { skin: c.skin, eyes: c.eyes, hair: c.hair, garments }, morphs };
   if (typeof r.seed === 'number' && Number.isFinite(r.seed)) out.seed = r.seed;
   return out;
 }
@@ -83,6 +87,7 @@ export function deriveModularLook(appearance: Appearance, manifest: ModularManif
     v: MODULAR_LOOK_VERSION,
     bodyId,
     hairId: hairDef && hairDef.files[bodyId] ? hairDef.id : null,
+    facialHairId: null,
     outfits: { everyday: outfit },
     colors: { skin: appearance.skin, eyes: appearance.face?.eyeColor ?? manifest.defaults.eyeColor, hair: appearance.hair.color, garments: {} },
     morphs: {},
@@ -115,11 +120,13 @@ export function resolveLook(look: ModularLook, manifest: ModularManifest): { loo
     body = findBody(manifest, fallback);
   }
   const bodyId = out.bodyId;
+  out.facialHairId ??= null;
   if (out.hairId !== null) {
     const h = findHair(manifest, out.hairId);
     if (!h) { issues.push(`Unknown hairstyle '${out.hairId}' dropped.`); out.hairId = null; }
     else if (!h.files[bodyId]) { issues.push(`Hairstyle '${h.id}' does not fit body '${bodyId}' and was dropped.`); out.hairId = null; }
   }
+  const keptByCat: Array<Array<NonNullable<ReturnType<typeof findGarment>>>> = [];
   for (const cat of OUTFIT_CATEGORIES) {
     const src = out.outfits[cat];
     if (!src) continue;
@@ -141,6 +148,17 @@ export function resolveLook(look: ModularLook, manifest: ModularManifest): { loo
       keptDefs.set(slot, g);
     }
     out.outfits[cat] = kept;
+    keptByCat.push([...keptDefs.values()]);
+  }
+  if (out.facialHairId !== null) {
+    const f = findFacialHair(manifest, out.facialHairId);
+    if (!f) { issues.push(`Unknown facial hair '${out.facialHairId}' dropped.`); out.facialHairId = null; }
+    else if (!f.files[bodyId]) { issues.push(`Facial hair '${f.id}' does not fit body '${bodyId}' and was dropped.`); out.facialHairId = null; }
+    else {
+      const other = (out.hairId !== null && conflicts(manifest, f.id, out.hairId) ? out.hairId : null)
+        ?? keptByCat.flat().find((g) => conflicts(manifest, f.id, g.id))?.id ?? null;
+      if (other) { issues.push(`Facial hair '${f.id}' cannot be worn with '${other}'; dropped.`); out.facialHairId = null; }
+    }
   }
   return { look: out, issues };
 }

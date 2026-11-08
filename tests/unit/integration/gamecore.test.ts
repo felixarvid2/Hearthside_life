@@ -248,7 +248,7 @@ describe('live mode', () => {
   it('updateWardrobe can also replace or remove the stored modular look, and refuses an unreadable one', () => {
     const core = started();
     const p = members(core.state()!)[0]!;
-    const look = { v: 1, bodyId: 'ubc_male', hairId: null, outfits: { everyday: {} }, colors: { skin: '#aa7755', eyes: '#228855', hair: '#112233', garments: {} }, morphs: {} } as const;
+    const look = { v: 2, bodyId: 'ubc_male', hairId: null, facialHairId: null, outfits: { everyday: {} }, colors: { skin: '#aa7755', eyes: '#228855', hair: '#112233', garments: {} }, morphs: {} } as const;
     const events: string[] = [];
     core.events.on('person.changed', (e) => events.push(`${e.personId}:${e.what}`));
     expect(core.updateWardrobe(p.id, p.outfits).ok).toBe(true);
