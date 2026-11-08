@@ -3892,7 +3892,7 @@ async function stepStairKinds(T) {
   for (const [defId, label] of kinds) {
     // a room refused here (someone would be shut in, an object blocks the door) moves on to the next stretch
     let spot = null, built = null, lotMap = null;
-    for (let attempt = 0; attempt < 6; attempt++) {
+    for (let attempt = 0; attempt < 16; attempt++) {
       spot = await findSpot(used);
       if (!spot) {
         spot = await findSpot(used, true);
@@ -3925,7 +3925,6 @@ async function stepStairKinds(T) {
         return { lot: st.activeLotId, w: lot.width, d: lot.depth, walls: Object.keys(lot.walls).filter((k) => k.startsWith('0:')).length, fences: Object.keys(lot.fences ?? {}).length, map: rows.map((r) => r.join('')).join('/') };
       });
       if (!spot) break;
-      for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${spot.x + i},${spot.z + j}`);
       // ---- a ground room with a floor and a door, a room over it on Floor 2
       built = await page.evaluate(([x0, z0]) => {
         const g = window.hearthside.game;
@@ -3942,7 +3941,9 @@ async function stepStairKinds(T) {
         g.setMode('live');
         return { ground: ground.ok ? true : ground.reason, upper: upper.ok ? true : upper.reason };
       }, [spot.x, spot.z]);
-      if (built.ground === true) break;
+      // a built room keeps its block and a margin; a refused one only blocks its corner, so the next search shifts by a tile
+      if (built.ground === true) { for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${spot.x + i},${spot.z + j}`); break; }
+      used.push(`${spot.x},${spot.z}`);
     }
     T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every((v) => v === true), JSON.stringify(spot ?? lotMap));
     if (!spot) return;
