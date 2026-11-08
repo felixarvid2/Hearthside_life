@@ -1,7 +1,7 @@
 // The two real Quaternius base bodies: skin gain, iris tint, brow color and hip retargeting of the shared clips.
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { ModularCharacter, hexColor } from '../../../../src/characters/modular/ModularCharacter';
+import { ModularCharacter, skinMaterialColor, hexColor } from '../../../../src/characters/modular/ModularCharacter';
 import { scaledClipsFor } from '../../../../src/characters/modular/retarget';
 import { BODY, loadClips, look, realManifest, testCache } from './helpers';
 
@@ -31,7 +31,7 @@ describe.each(['ubc_male', 'ubc_female'])('%s', (id) => {
     const skin = materialsNamed(c.root, def.skinMaterials[0]!);
     expect(skin.length).toBe(1);
     expect(def.skinGain).toBeGreaterThan(0);
-    close(skin[0]!.color, hexColor('#c68642').multiplyScalar(def.skinGain!));
+    close(skin[0]!.color, skinMaterialColor(hexColor('#c68642'), def.skinGain!, new THREE.Color()));
 
     const brows = materialsNamed(c.root, def.browMaterials![0]!);
     expect(brows.length).toBe(1);
@@ -49,7 +49,8 @@ describe.each(['ubc_male', 'ubc_female'])('%s', (id) => {
     expect(shader.uniforms.uIrisColor).toBe(uniform); // same uniform object, updated in place
     close(uniform.value, hexColor('#2a6fdb'));
     close(brows[0]!.color, hexColor('#aa5500'));
-    close(skin[0]!.color, hexColor('#ffffff').multiplyScalar(def.skinGain!));
+    // white x gain passes 1: scaled back as a whole (hue kept, no clipped channel)
+    close(skin[0]!.color, skinMaterialColor(hexColor('#ffffff'), def.skinGain!, new THREE.Color()));
     c.dispose();
   });
 });
