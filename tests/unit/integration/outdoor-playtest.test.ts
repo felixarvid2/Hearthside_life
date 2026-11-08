@@ -237,8 +237,8 @@ describe('four weeks with the weather on', { timeout: 480_000 }, () => {
       if (minute % MINUTES_PER_DAY === 0) weatherOn(dayIndex(minute));
       s.h.sim.tick();
       if (i % 24 === 0) { seasons.add(currentSeason(w.state)); kinds.add(currentWeather(w.state)); }
-      // nudge fun down every few hours, so something outdoors stays worth choosing
-      if (i % 480 === 0) for (const p of Object.values(w.state.people)) if (p.needs.fun > 60) p.needs.fun = 55;
+      // nudge fun down every two hours (the base decay is lower since Milestone 13), so something outdoors stays worth choosing
+      if (i % 480 === 0) for (const p of Object.values(w.state.people)) if (p.needs.fun > 50) p.needs.fun = 45;
     }
 
     expect([...seasons].sort()).toEqual(['autumn', 'spring', 'summer', 'winter']);

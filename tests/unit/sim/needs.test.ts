@@ -52,7 +52,7 @@ describe('needs', () => {
     runTicks(h, 4 * 60);
     const m = h.holder.state.people[w.mira]!.needs;
     expect(m.energy).toBeCloseTo(80 - 5 * 1.25, 6);
-    expect(m.social).toBeCloseTo(80 - 3.5 * 0.5, 6);
+    expect(m.social).toBeCloseTo(80 - NEED_DECAY_PER_HOUR.social * 0.5, 6);
     expect(h.holder.state.people[w.theo]!.needs.hunger).toBeCloseTo(80 - 6.5 * 0.5, 6);
 
     const mira = h.holder.state.people[w.mira]!;
