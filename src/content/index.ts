@@ -10,6 +10,7 @@ import { SOCIALS } from './socials';
 import { FAMILY_INTERACTIONS, FAMILY_SOCIALS } from './family';
 import { EVENTS } from './events';
 import { GIFTS } from './gifts';
+import { COMMUNITY_EVENTS } from './communityEvents';
 import { TRAITS } from './traits';
 import { ASPIRATIONS } from './aspirations';
 import { SKILLS } from './skills';
@@ -45,6 +46,7 @@ export function buildContentDB(): ContentDB {
     socials: byId('social', [...SOCIALS, ...FAMILY_SOCIALS]),
     events: byId('event', EVENTS),
     gifts: byId('gift', GIFTS),
+    communityEvents: byId('community event', COMMUNITY_EVENTS),
     traits: byId('trait', TRAITS),
     aspirations: byId('aspiration', ASPIRATIONS),
     skills: byId('skill', SKILLS),

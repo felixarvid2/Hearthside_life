@@ -100,6 +100,7 @@ export type { AdoptionPreview, AdoptionSpec, AdoptStage } from '../sim/adoption'
 export type { FamilyInfo, RelativeInfo } from '../sim/familyView';
 export type { SplitPreview, SplitTarget } from '../sim/split';
 export type { GiftChoice, GiftVerdict } from '../sim/gifts';
+export type { CommunityEventInfo } from '../sim/community';
 export type { SchoolInfo } from '../sim/school';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';

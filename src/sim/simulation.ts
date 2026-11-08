@@ -18,6 +18,7 @@ import { behaviorFor } from './behaviors';
 import {
   joinCareer, quitCareer, resolveCareerEvent, setCareerEffort, updateCareers,
 } from './careers';
+import { announceCommunityEvents } from './community';
 import { spoilMeals } from './cooking';
 import { giftChoices } from './gifts';
 import type { GiftChoice } from './gifts';
@@ -181,6 +182,7 @@ export class Simulation {
     decayRelationships(ctx.state, ctx.now);
     syncBonds(ctx.state, ctx.events, ctx.now);
     dailyDropIn(ctx, day);
+    announceCommunityEvents(ctx, day);
     dailyReconciliation(ctx, day);
     // Family (Milestone 8): the week's report cards, then the day's aging and birthdays.
     reportCards(ctx, day);

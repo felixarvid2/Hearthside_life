@@ -644,6 +644,8 @@ export interface ContentDB {
   events?: Record<string, EventDef>;
   /** Gift kinds a person can buy and give (content/gifts.ts). Optional so older content fixtures stay valid. */
   gifts?: Record<string, GiftDef>;
+  /** Weekly happenings at the public venues (content/communityEvents.ts). Optional so older content fixtures stay valid. */
+  communityEvents?: Record<string, CommunityEventDef>;
   /** Milestone 9: fences and gates, roof styles and finishes, terrain paints and garden crops (content/exterior.ts). Optional so older fixtures stay valid. */
   exterior?: ExteriorContent;
   /** Likes/dislikes the creator offers, grouped: 'activity' | 'music' | 'decor' | 'food' | 'topic'. */
@@ -694,6 +696,25 @@ export interface GiftDef {
   ages: LifeStage[];
   /** Colour of the wrapped parcel in the world (hex). */
   colour: Hex;
+  status: ContentStatus;
+}
+
+/** A weekly happening at a public venue (content/communityEvents.ts; sim/community.ts). */
+export interface CommunityEventDef {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  /** The kind of venue that hosts it (the first lot of that type). */
+  venueType: string;
+  /** 0 = Monday ... 6 = Sunday. */
+  weekday: number;
+  /** Minute of the day it starts, and its length. */
+  start: number;
+  minutes: number;
+  /** A household member who stays this long gets the reward, once. */
+  attendMinutes: number;
+  reward: { fun: number; social: number; friendship: number };
   status: ContentStatus;
 }
 

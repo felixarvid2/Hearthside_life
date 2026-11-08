@@ -167,3 +167,15 @@ body.is-landscape.is-compact .hud-trip { max-width: min(320px, 38vw); }
   .nbm-subhead { margin-top: 8px; }
 }
 @media (max-width: 700px) { .nbm-gohome[hidden] { display: none; } }
+
+/* Community events (what is on at the venues) */
+.nbm-events { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.nbm-event {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 10px; text-align: left;
+  border: 1px solid var(--line, #d9d2c3); border-radius: 10px; background: var(--paper, #fffdf8); color: inherit; font: inherit;
+}
+button.nbm-event { cursor: pointer; }
+.nbm-event.is-running { border-color: var(--accent-2, #2f7d6d); background: #e4f1ee; }
+.nbm-event-main { display: flex; flex-direction: column; min-width: 0; }
+.nbm-event-name { font-weight: 700; }
+.nbm-event-sub { font-size: 0.78rem; color: var(--ink-2, #5b564c); }

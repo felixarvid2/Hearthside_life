@@ -11,7 +11,7 @@ import { h } from '../kit/dom';
 import { icon } from '../kit/icons';
 import { formatMoney } from './format';
 import {
-  awayFromHome, defaultTravellers, hoursLine, keepTravellers, lotActions, lotIconName, lotMarks, lotSections, lotStatus, mapSummary,
+  awayFromHome, defaultTravellers, eventsAt, eventWhen, hoursLine, keepTravellers, lotActions, lotIconName, lotMarks, lotSections, lotStatus, mapSummary,
   moveSummary, peopleLine, pinPosition, tenureText, travellers, travelLine, tripView, type Traveller,
 } from './neighbourhoodModel';
 import type { Shell } from './shell';
@@ -195,12 +195,28 @@ export function openNeighbourhood(sh: Shell, opts: { lotId?: Id } = {}): Neighbo
     return box;
   };
 
+  /** "On at ..." list: tap an event to open its venue. */
+  const eventList = (info: NeighbourhoodInfo, lotId?: Id): HTMLElement | null => {
+    const list = eventsAt(info.events ?? [], lotId);
+    if (list.length === 0) return null;
+    return h('ul', { class: 'nbm-events', ariaLabel: lotId ? 'On at this venue' : "What's on" }, ...list.map((e) => {
+      const inner = [icon(e.icon, 18), h('span', { class: 'nbm-event-main' }, h('span', { class: 'nbm-event-name', text: e.name }),
+        h('span', { class: 'nbm-event-sub', text: `${eventWhen(e, info.now)}${lotId ? '' : ` · ${e.lotName}`}` }))];
+      const row = lotId ? h('div', { class: ['nbm-event', e.running && 'is-running'], title: e.description }, ...inner)
+        : h('button', { type: 'button', class: ['nbm-event', e.running && 'is-running'], title: e.description, dataset: { lotId: e.lotId } }, ...inner);
+      if (!lotId) row.addEventListener('click', () => select(e.lotId));
+      return h('li', {}, row);
+    }));
+  };
+
   const renderDetail = (info: NeighbourhoodInfo) => {
     const lot = selectedId ? info.lots.find((l) => l.id === selectedId) : undefined;
     detailEl.dataset.empty = lot ? 'false' : 'true';
     left.classList.toggle('has-sheet', !!lot);
     if (!lot) {
-      detailEl.replaceChildren(h('div', { class: 'nbm-placeholder' }, icon('map', 28), h('p', { text: 'Choose a place on the map to see who is there and how to get there.' })));
+      const on = eventList(info);
+      detailEl.replaceChildren(h('div', { class: 'nbm-placeholder' }, icon('map', 28), h('p', { text: 'Choose a place on the map to see who is there and how to get there.' })),
+        ...(on ? [h('h4', { class: 'nbm-subhead', text: "What's on this week" }), on] : []));
       return;
     }
     const st = api.state()!;
@@ -228,6 +244,8 @@ export function openNeighbourhood(sh: Shell, opts: { lotId?: Id } = {}): Neighbo
       parts.push(h('div', { class: 'nbm-household' }, icon('family', 18),
         h('div', {}, h('strong', { text: `${household.name} household` }), h('span', { text: `${household.memberNames.join(', ')} · ${household.where}` }))));
     }
+    const onHere = lot.kind === 'venue' ? eventList(info, lot.id) : null;
+    if (onHere) parts.push(h('h4', { class: 'nbm-subhead', text: 'On at this venue' }), onHere);
     parts.push(h('h4', { class: 'nbm-subhead', text: lot.people.length > 0 ? `Here now (${lot.people.length})` : 'Here now' }),
       lot.people.length > 0 ? h('ul', { class: 'nbm-people' }, ...lot.people.map(peopleRow)) : h('p', { class: 'nbm-empty', text: 'Nobody is here right now.' }));
 

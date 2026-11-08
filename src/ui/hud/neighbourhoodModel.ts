@@ -2,10 +2,10 @@
 // words, marks, groups and action states the map panel draws. No DOM, no game calls: everything is a function of its
 // arguments, so it is tested in tests/unit/ui/neighbourhoodModel.test.ts.
 
-import { formatClock, formatDuration } from '../../core/clock';
+import { DAY_NAMES, dayIndex, formatClock, formatDuration, weekday } from '../../core/clock';
 import { formatMoney } from '../../core/money';
 import type { Id, Person, WorldState } from '../../core/types';
-import type { HouseholdInfo, LotInfo, LotPerson, MovePreview, NeighbourhoodInfo, TripInfo } from '../../game/api';
+import type { CommunityEventInfo, HouseholdInfo, LotInfo, LotPerson, MovePreview, NeighbourhoodInfo, TripInfo } from '../../game/api';
 import { activeTrip } from '../../sim/lotTravel';
 import { placeOf, type PlaceKind } from '../../sim/places';
 
@@ -277,4 +277,19 @@ export function awayIconName(kind: PlaceKind): string {
     case 'transit': return 'car';
     default: return 'pin';
   }
+}
+
+// ---- community events (what is on at the venues) ----
+
+/** "Now until 8:00 PM", "Today 6:00 PM", "Tomorrow 10:00 AM" or "Sat 6:00 PM". */
+export function eventWhen(e: Pick<CommunityEventInfo, 'startAt' | 'endAt'>, now: number): string {
+  if (e.startAt <= now && now < e.endAt) return `Now until ${formatClock(e.endAt)}`;
+  const d = dayIndex(e.startAt) - dayIndex(now);
+  const day = d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : DAY_NAMES[weekday(e.startAt)]!.slice(0, 3);
+  return `${day} ${formatClock(e.startAt)}`;
+}
+
+/** Events at one venue, or all of them, running ones first. */
+export function eventsAt(events: CommunityEventInfo[], lotId?: Id): CommunityEventInfo[] {
+  return events.filter((e) => !lotId || e.lotId === lotId).sort((a, b) => Number(b.running) - Number(a.running) || a.startAt - b.startAt);
 }
