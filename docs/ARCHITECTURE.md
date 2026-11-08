@@ -379,6 +379,22 @@ freelance jobs train them. Milestone 11 adds baking, wellness, creativity, photo
 - HTML/CSS panels over the canvas; portrait uses a top bar, household strip and bottom sheets; landscape uses
   a bottom HUD and side panels. Touch targets >= 44 px.
 
+### Guidance and accessibility (Milestone 13)
+
+- `ui/hud/hintState.ts` (pure): the 11 hints (id, short text, how-to steps), `enqueue` / `pickNext` / `markSeen`. `ui/hud/hints.ts`
+  is the card: situations come from `api.onChange` (mode, selection, camera/floors), events (queue, social, bills, careers, map)
+  and `sh.hint(id)` calls (person-panel tabs, ledger/bills, map, game menu, creator). It waits while a dialog is open. State
+  lives in `GameSettings.hints` (switch) and `GameSettings.seenHints` (ids), stored with the other device settings.
+- `screens/help.ts` builds the Help modal from the same catalogue plus the touch and keyboard control tables.
+- `GameSettings.textScale` runs 0.9 to 1.5 (`TEXT_SCALE_MIN/MAX`), `highContrast` toggles `html.high-contrast` (token overrides in
+  `styles/a11y.css`), `reducedMotion` also follows `prefers-reduced-motion` and adds `.reduced-motion` (kills transitions and animations).
+- `kit/focus.ts`: `trapTab`, `currentOpener` / `restoreFocus` (modals and panels return focus to the opener; panels take
+  focus when opened from the keyboard) and `rovingGroup` (one Tab stop and arrow keys for tabs, radio groups and swatches).
+  World keys (pan, turn, zoom, delete, rotate) do nothing when focus was put on a control with the keyboard (`input.ts`).
+- `hud/objectPicker.ts` is the keyboard and screen-reader route to world objects (also reachable from the Queue tab).
+- Contrast: tokens in `styles/base.css` are checked against WCAG AA by `tests/unit/ui/contrast.test.ts`; `meter()` adds the words
+  Low / Critical and `aria-valuetext`.
+
 ## Daily life: dirt, breakage, chores (Milestone 4)
 
 Implemented generically by object **tags** (`src/content/capabilities.ts`): `cleanable` (gets dirty, offers Clean),

@@ -100,6 +100,10 @@
 .bb-roomedit-copy { display: flex; align-items: center; gap: 10px; min-height: var(--tap); font-weight: 600; }
 .bb-roomedit-copy input { width: 22px; height: 22px; }
 
+[data-roomedit='true'] .bb-kindbar { display: none; }
+body.is-portrait [data-roomedit='true'] .bb-subbar, body.is-landscape.is-compact [data-roomedit='true'] .bb-subbar { display: none; }
+body.is-portrait .bb-roomedit-pad { grid-template-columns: repeat(4, minmax(var(--tap), 1fr)); }
+
 /* ---------- Footer: live preview text and Confirm / Cancel ---------- */
 .bb-build-footer { display: flex; flex-direction: column; gap: 8px; }
 .bb-build-status { padding: 6px 10px; font-size: 0.9rem; align-items: flex-start; }

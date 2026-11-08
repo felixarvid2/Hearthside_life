@@ -97,6 +97,17 @@ export function createHints(sh: Shell): Hints {
   });
   el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); sh.sound('close'); finish(); } });
 
+  // Outside the game world (the creator) the world input is off, so Esc is handled here
+  const onDocKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || !showing || el.hidden || document.body.dataset.shellRoute === 'game' || document.querySelector('.modal-backdrop')) return;
+    const t = e.target as HTMLElement | null;
+    if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && (t as HTMLInputElement).type !== 'range' && (t as HTMLInputElement).type !== 'checkbox') return;
+    e.preventDefault();
+    sh.sound('close');
+    finish();
+  };
+  document.addEventListener('keydown', onDocKey);
+
   // ---- situations observed here (panels, menus and the creator call sh.hint directly) ----
   const household = (): ReadonlySet<string> => new Set(activeHousehold(api.state() ?? ({} as never))?.memberIds ?? []);
   const checkFloors = () => {
@@ -137,6 +148,6 @@ export function createHints(sh: Shell): Hints {
 
   return {
     el, request, dismiss: finish, isShowing: () => showing !== null && !el.hidden,
-    destroy: () => { unsubChange(); unsubEvents(); mo?.disconnect(); if (timer) clearTimeout(timer); el.remove(); },
+    destroy: () => { document.removeEventListener('keydown', onDocKey); unsubChange(); unsubEvents(); mo?.disconnect(); if (timer) clearTimeout(timer); el.remove(); },
   };
 }

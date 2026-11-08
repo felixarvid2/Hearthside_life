@@ -178,6 +178,22 @@ Portrait 390x844, landscape 844x390 and desktop 1280x720:
 - Quayside Baths: the map lists the pool venue; Go here travels there; the hall has the 6 x 10 pool with two
   ladders, changing rooms, showers and a sun deck. Go home brings the household back and the lot is unchanged.
 
+## Milestone 13 part A: guidance and accessibility (manual, after `npm run e2e:a11y`)
+
+- New profile (clear site data): Guided Start shows "Moving in" as a card above the bottom bar; "Got it" shows the next
+  situation hint when you reach it (select a person: needs; open Queue; Buy; Build; Map; Menu: saving). "Skip hints" ends them.
+  Settings > Help: Hints on again, Reset hints, Open Help; Help has How to play and Controls tabs.
+- Keyboard only (no mouse): menu -> New Game -> Create a Household -> Next ... -> Move In; open Feed, Esc; open the person
+  panel from the portrait, Queue tab, Choose an object, Enter, pick an action. Focus ring visible everywhere; Tab never leaves
+  an open dialog; Esc returns focus to the opener.
+- Settings > Accessibility: UI scale 150 % and High contrast on a phone in both orientations: top and bottom bars still fit,
+  panels scroll, nothing is cut off. Turn Reduce motion on: no camera swings, no panel animation.
+- Screen reader (VoiceOver or TalkBack): icon buttons are announced by name, tabs say selected, notifications are read.
+- Need bars: lower Hunger below 20: the row says "Critical" in words; below 40 "Low".
+- Colour blindness: set the OS to greyscale and play a minute: needs, mood and selected states are still readable.
+- Build > select a room > Move / Resize / Copy on a 390x844 phone: the arrows (or the side and size buttons) and the
+  Apply/Cancel footer are visible together without scrolling.
+
 ## Acceptance totals
 
 `npm run e2e:acceptance` covers steps 1-14 (step 13 is Milestone 11.5, step 14 is Milestone 12). Each viewport

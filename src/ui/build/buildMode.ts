@@ -602,6 +602,8 @@ export function mountBuildMode(root: HTMLElement, api: GameAPI, sessionIn?: Buil
     setHidden(roomInfo, !sel);
     if (sel) setText(roomText, `Room selected: ${sel.area} m2`);
     roomEdit.refresh();
+    // while a room is being moved, resized or copied the tool tabs give way to its controls (phones: the arrows must not hide behind the footer)
+    p.el.dataset.roomedit = api.buildTool()?.kind === 'roomEdit' ? 'true' : 'false';
   }
 
   structure.onDone = () => {

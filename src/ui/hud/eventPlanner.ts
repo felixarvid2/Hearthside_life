@@ -40,9 +40,9 @@ export function openEventPlanner(sh: Shell, hostId: Id): void {
   const desc = h('p', { class: 'evp-desc' });
   const guestBox = h('div', { class: 'evp-guests', role: 'group', ariaLabel: 'Guests' });
   const guestHint = h('div', { class: 'field-label' });
-  const where = h('select', { class: 'evp-where', ariaLabel: 'Where' });
+  const where = h('select', { class: 'text-input evp-where', ariaLabel: 'Where' });
   const whereField = h('div', { class: 'field' }, h('label', { class: 'field-label', text: 'Where?' }), where);
-  const when = h('select', { class: 'evp-when', ariaLabel: 'When' });
+  const when = h('select', { class: 'text-input evp-when', ariaLabel: 'When' });
   const summary = h('div', { class: 'evp-summary', role: 'status' });
   const send = button({ label: 'Send invitations', icon: 'phone', variant: 'primary', disabled: true, onClick: () => doSend() });
   const cancelBtn = button({ label: 'Cancel', variant: 'ghost', onClick: () => m.close() });
