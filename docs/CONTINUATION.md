@@ -151,8 +151,7 @@ phone landscape HUD fix. All runs are SwiftShader emulation. Notes from the veri
 4. Polish of the M8, M9, M11, M11.5 and M12 gaps (listed under "Known issues").
 5. People: brow styles, the garment hem flare on the female body, real-device performance.
 6. Performance:
-   - Main chunk is about 2.3 MB. Lazy-load the build, creator and dev modules and split `content`.
-   - Measure on a real phone.
+   - Measure the split bundle on a real phone (see Known issues).
 7. Real-device runs. Record them in the device log in `docs/TEST_CHECKLIST.md`.
 
 ## Modular characters (Quaternius)
@@ -307,9 +306,14 @@ changes for existing saves or styles.
     once with a 60 s timeout and logs `tap retry after …`; the retried step passes without a layout change.
   - Acceptance run time on the final tree: about 23 minutes portrait, 25 landscape and 68 minutes desktop
     (SwiftShader; the desktop run renders 1280x720 and spends most of its time in screenshots).
-- Main JS chunk about 2.82 MB, and `content/index.ts` is imported both statically and dynamically. Lazy-load
-  build/creator-only modules.
-- Boot progress bar is not driven.
+- Bundle split (`vite.config.ts` `manualChunks`, `src/ui/bootProgress.ts`): the entry chunk is about 0.59 MB
+  (was 3.07 MB, gzip 899 KB to about 194 KB). `three` (704 KB), `content` (885 KB), `textures` (242 KB),
+  `characters` (279 KB) and `sim` (395 KB) are separate chunks that load in parallel and cache across releases; build
+  mode and the creator stay lazy chunks (`ui/app.ts`). `main.ts` imports `content/index` only dynamically (the old
+  static+dynamic warning is gone). The boot bar follows real steps (catalogue, saves, asset loads) via `bootProgress`.
+  Nothing under `src/**/dev/` is imported by production code. These are split chunks, not less code: total download is
+  unchanged, and `render/` still imports `content/objects` and `content/surfaces` eagerly, so content cannot be fully
+  deferred. Measure on a real phone.
 - M7 neighbourhood:
   - `goForJog` jogs in place (no track loop); no community event at the arts centre.
   - Furniture does not move with the household. NPC households never move and townies never change jobs.
