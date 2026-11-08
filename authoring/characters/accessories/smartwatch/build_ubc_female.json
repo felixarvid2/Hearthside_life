@@ -3,7 +3,7 @@
  "body": "ubc_female",
  "glb": "public/assets/characters/modular/accessories/smartwatch__ubc_female.glb",
  "kind": "smartwatch",
- "secs": 1.1,
+ "secs": 0.4,
  "tris": 228,
  "verts": 116
 }

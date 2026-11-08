@@ -3,7 +3,7 @@
  "body": "ubc_female",
  "glb": "public/assets/characters/modular/accessories/reading_glasses__ubc_female.glb",
  "kind": "glasses",
- "secs": 1.5,
+ "secs": 0.4,
  "tris": 462,
  "verts": 237
 }

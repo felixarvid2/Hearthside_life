@@ -417,7 +417,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_v.webp"
   },
   {
    "id": "jacket_open",
@@ -461,7 +462,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jacket_open.webp"
   },
   {
    "id": "jeans_flared",
@@ -507,7 +509,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jeans_flared.webp"
   },
   {
    "id": "dress_aline",
@@ -554,7 +557,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_aline.webp"
   },
   {
    "id": "overalls",
@@ -601,7 +605,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/overalls.webp"
   },
   {
    "id": "sneakers_high",
@@ -661,7 +666,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sneakers_high.webp"
   },
   {
    "id": "parka",
@@ -706,7 +712,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/parka.webp"
   },
   {
    "id": "skirt_aline",
@@ -752,7 +759,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_aline.webp"
   },
   {
    "id": "tank_scoop",
@@ -798,7 +806,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tank_scoop.webp"
   },
   {
    "id": "shorts_mid",
@@ -844,7 +853,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/shorts_mid.webp"
   },
   {
    "id": "sneakers_low",
@@ -904,7 +914,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sneakers_low.webp"
   },
   {
    "id": "backpack",
@@ -957,7 +968,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "bag"
-   ]
+   ],
+   "thumbnail": "thumbs/backpack.webp"
   },
   {
    "id": "bangle",
@@ -994,7 +1006,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/bangle.webp"
   },
   {
    "id": "beanie",
@@ -1031,7 +1044,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "warm"
-   ]
+   ],
+   "thumbnail": "thumbs/beanie.webp"
   },
   {
    "id": "belt_leather",
@@ -1084,7 +1098,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "belt"
-   ]
+   ],
+   "thumbnail": "thumbs/belt_leather.webp"
   },
   {
    "id": "belt_wide",
@@ -1137,7 +1152,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "belt"
-   ]
+   ],
+   "thumbnail": "thumbs/belt_wide.webp"
   },
   {
    "id": "beret",
@@ -1174,7 +1190,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "formal"
-   ]
+   ],
+   "thumbnail": "thumbs/beret.webp"
   },
   {
    "id": "bow_tie",
@@ -1211,7 +1228,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "formal"
-   ]
+   ],
+   "thumbnail": "thumbs/bow_tie.webp"
   },
   {
    "id": "bucket_hat",
@@ -1248,7 +1266,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "summer"
-   ]
+   ],
+   "thumbnail": "thumbs/bucket_hat.webp"
   },
   {
    "id": "cap_baseball",
@@ -1301,7 +1320,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "cap"
-   ]
+   ],
+   "thumbnail": "thumbs/cap_baseball.webp"
   },
   {
    "id": "choker",
@@ -1338,7 +1358,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/choker.webp"
   },
   {
    "id": "crossbody_bag",
@@ -1391,7 +1412,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "bag"
-   ]
+   ],
+   "thumbnail": "thumbs/crossbody_bag.webp"
   },
   {
    "id": "cuff_bracelet",
@@ -1428,7 +1450,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/cuff_bracelet.webp"
   },
   {
    "id": "earrings_drop",
@@ -1481,7 +1504,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/earrings_drop.webp"
   },
   {
    "id": "earrings_hoop",
@@ -1518,7 +1542,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/earrings_hoop.webp"
   },
   {
    "id": "earrings_stud",
@@ -1555,7 +1580,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/earrings_stud.webp"
   },
   {
    "id": "fanny_pack",
@@ -1609,7 +1635,8 @@
    "tags": [
     "bag",
     "sport"
-   ]
+   ],
+   "thumbnail": "thumbs/fanny_pack.webp"
   },
   {
    "id": "fedora",
@@ -1662,7 +1689,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "formal"
-   ]
+   ],
+   "thumbnail": "thumbs/fedora.webp"
   },
   {
    "id": "glasses_round",
@@ -1699,7 +1727,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "glasses"
-   ]
+   ],
+   "thumbnail": "thumbs/glasses_round.webp"
   },
   {
    "id": "glasses_square",
@@ -1736,7 +1765,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "glasses"
-   ]
+   ],
+   "thumbnail": "thumbs/glasses_square.webp"
   },
   {
    "id": "hairband_thin",
@@ -1773,7 +1803,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "hair"
-   ]
+   ],
+   "thumbnail": "thumbs/hairband_thin.webp"
   },
   {
    "id": "headband",
@@ -1810,7 +1841,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "sport"
-   ]
+   ],
+   "thumbnail": "thumbs/headband.webp"
   },
   {
    "id": "necklace_chain",
@@ -1847,7 +1879,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/necklace_chain.webp"
   },
   {
    "id": "pearls",
@@ -1885,7 +1918,8 @@
    "tags": [
     "jewellery",
     "formal"
-   ]
+   ],
+   "thumbnail": "thumbs/pearls.webp"
   },
   {
    "id": "pendant",
@@ -1938,7 +1972,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "jewellery"
-   ]
+   ],
+   "thumbnail": "thumbs/pendant.webp"
   },
   {
    "id": "reading_glasses",
@@ -1975,7 +2010,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "glasses"
-   ]
+   ],
+   "thumbnail": "thumbs/reading_glasses.webp"
   },
   {
    "id": "scarf",
@@ -2012,7 +2048,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "warm"
-   ]
+   ],
+   "thumbnail": "thumbs/scarf.webp"
   },
   {
    "id": "smartwatch",
@@ -2066,7 +2103,8 @@
    "tags": [
     "watch",
     "sport"
-   ]
+   ],
+   "thumbnail": "thumbs/smartwatch.webp"
   },
   {
    "id": "sun_hat",
@@ -2103,7 +2141,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "summer"
-   ]
+   ],
+   "thumbnail": "thumbs/sun_hat.webp"
   },
   {
    "id": "sunglasses_aviator",
@@ -2156,7 +2195,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "sunglasses"
-   ]
+   ],
+   "thumbnail": "thumbs/sunglasses_aviator.webp"
   },
   {
    "id": "sunglasses_wayfarer",
@@ -2209,7 +2249,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "sunglasses"
-   ]
+   ],
+   "thumbnail": "thumbs/sunglasses_wayfarer.webp"
   },
   {
    "id": "tie",
@@ -2246,7 +2287,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "formal"
-   ]
+   ],
+   "thumbnail": "thumbs/tie.webp"
   },
   {
    "id": "watch_classic",
@@ -2299,7 +2341,8 @@
    "license": "CC0 1.0 - Hearthside original (procedural model, in Blender, fitted to Quaternius CC0 bodies)",
    "tags": [
     "watch"
-   ]
+   ],
+   "thumbnail": "thumbs/watch_classic.webp"
   },
   {
    "id": "ankle_boots",
@@ -2359,7 +2402,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/ankle_boots.webp"
   },
   {
    "id": "ballet_flats",
@@ -2419,7 +2463,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/ballet_flats.webp"
   },
   {
    "id": "bermuda",
@@ -2465,7 +2510,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/bermuda.webp"
   },
   {
    "id": "bike_shorts",
@@ -2512,7 +2558,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/bike_shorts.webp"
   },
   {
    "id": "blazer",
@@ -2557,7 +2604,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/blazer.webp"
   },
   {
    "id": "blouse_long",
@@ -2604,7 +2652,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/blouse_long.webp"
   },
   {
    "id": "blouse_square",
@@ -2650,7 +2699,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/blouse_square.webp"
   },
   {
    "id": "blouse_v",
@@ -2696,7 +2746,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/blouse_v.webp"
   },
   {
    "id": "bodysuit",
@@ -2743,7 +2794,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/bodysuit.webp"
   },
   {
    "id": "boilersuit",
@@ -2790,7 +2842,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/boilersuit.webp"
   },
   {
    "id": "bomber",
@@ -2834,7 +2887,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/bomber.webp"
   },
   {
    "id": "camisole",
@@ -2880,7 +2934,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/camisole.webp"
   },
   {
    "id": "capri",
@@ -2926,7 +2981,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/capri.webp"
   },
   {
    "id": "cardigan",
@@ -2970,7 +3026,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/cardigan.webp"
   },
   {
    "id": "cardigan_long",
@@ -3015,7 +3072,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/cardigan_long.webp"
   },
   {
    "id": "cargo_shorts",
@@ -3061,7 +3119,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/cargo_shorts.webp"
   },
   {
    "id": "chelsea_boots",
@@ -3121,7 +3180,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/chelsea_boots.webp"
   },
   {
    "id": "chinos",
@@ -3167,7 +3227,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/chinos.webp"
   },
   {
    "id": "clogs",
@@ -3227,7 +3288,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/clogs.webp"
   },
   {
    "id": "cocktail_dress",
@@ -3275,7 +3337,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/cocktail_dress.webp"
   },
   {
    "id": "court_shoes",
@@ -3336,7 +3399,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/court_shoes.webp"
   },
   {
    "id": "cowboy_boots",
@@ -3396,7 +3460,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/cowboy_boots.webp"
   },
   {
    "id": "culottes",
@@ -3442,7 +3507,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/culottes.webp"
   },
   {
    "id": "denim_jacket",
@@ -3486,7 +3552,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/denim_jacket.webp"
   },
   {
    "id": "dress_long_sleeve",
@@ -3534,7 +3601,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_long_sleeve.webp"
   },
   {
    "id": "dress_maxi",
@@ -3582,7 +3650,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_maxi.webp"
   },
   {
    "id": "dress_mini",
@@ -3629,7 +3698,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_mini.webp"
   },
   {
    "id": "dress_off_shoulder",
@@ -3676,7 +3746,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_off_shoulder.webp"
   },
   {
    "id": "dress_sheath",
@@ -3723,7 +3794,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_sheath.webp"
   },
   {
    "id": "dress_shirt",
@@ -3770,7 +3842,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_shirt.webp"
   },
   {
    "id": "dress_slip",
@@ -3817,7 +3890,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_slip.webp"
   },
   {
    "id": "dress_tshirt",
@@ -3864,7 +3938,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_tshirt.webp"
   },
   {
    "id": "dress_wrap",
@@ -3911,7 +3986,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dress_wrap.webp"
   },
   {
    "id": "dungaree_shorts",
@@ -3959,7 +4035,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/dungaree_shorts.webp"
   },
   {
    "id": "espadrilles",
@@ -4019,7 +4096,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/espadrilles.webp"
   },
   {
    "id": "flip_flops",
@@ -4079,7 +4157,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/flip_flops.webp"
   },
   {
    "id": "gown",
@@ -4128,7 +4207,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/gown.webp"
   },
   {
    "id": "halter_top",
@@ -4174,7 +4254,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/halter_top.webp"
   },
   {
    "id": "henley",
@@ -4221,7 +4302,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/henley.webp"
   },
   {
    "id": "hiking_boots",
@@ -4282,7 +4364,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/hiking_boots.webp"
   },
   {
    "id": "hoodie_crop",
@@ -4329,7 +4412,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/hoodie_crop.webp"
   },
   {
    "id": "hot_pants",
@@ -4375,7 +4459,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/hot_pants.webp"
   },
   {
    "id": "jeans_low_rise",
@@ -4421,7 +4506,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jeans_low_rise.webp"
   },
   {
    "id": "jeans_slim",
@@ -4467,7 +4553,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jeans_slim.webp"
   },
   {
    "id": "jeans_straight",
@@ -4513,7 +4600,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jeans_straight.webp"
   },
   {
    "id": "joggers",
@@ -4560,7 +4648,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/joggers.webp"
   },
   {
    "id": "jumpsuit",
@@ -4607,7 +4696,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jumpsuit.webp"
   },
   {
    "id": "jumpsuit_sleeve",
@@ -4654,7 +4744,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/jumpsuit_sleeve.webp"
   },
   {
    "id": "kaftan",
@@ -4702,7 +4793,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/kaftan.webp"
   },
   {
    "id": "kimono_jacket",
@@ -4746,7 +4838,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/kimono_jacket.webp"
   },
   {
    "id": "knee_boots",
@@ -4807,7 +4900,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/knee_boots.webp"
   },
   {
    "id": "leggings",
@@ -4853,7 +4947,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/leggings.webp"
   },
   {
    "id": "loafers",
@@ -4913,7 +5008,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/loafers.webp"
   },
   {
    "id": "longsleeve_scoop",
@@ -4959,7 +5055,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/longsleeve_scoop.webp"
   },
   {
    "id": "longsleeve_v",
@@ -5005,7 +5102,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/longsleeve_v.webp"
   },
   {
    "id": "moccasins",
@@ -5065,7 +5163,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/moccasins.webp"
   },
   {
    "id": "mock_neck",
@@ -5111,7 +5210,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/mock_neck.webp"
   },
   {
    "id": "mules",
@@ -5171,7 +5271,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/mules.webp"
   },
   {
    "id": "nightgown",
@@ -5220,7 +5321,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/nightgown.webp"
   },
   {
    "id": "off_shoulder_long",
@@ -5267,7 +5369,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/off_shoulder_long.webp"
   },
   {
    "id": "off_shoulder_top",
@@ -5313,7 +5416,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/off_shoulder_top.webp"
   },
   {
    "id": "oxfords",
@@ -5373,7 +5477,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/oxfords.webp"
   },
   {
    "id": "peplum_top",
@@ -5419,7 +5524,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/peplum_top.webp"
   },
   {
    "id": "pinafore_dress",
@@ -5466,7 +5572,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/pinafore_dress.webp"
   },
   {
    "id": "platform_sneakers",
@@ -5526,7 +5633,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/platform_sneakers.webp"
   },
   {
    "id": "polo_like",
@@ -5572,7 +5680,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/polo_like.webp"
   },
   {
    "id": "puffer",
@@ -5617,7 +5726,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/puffer.webp"
   },
   {
    "id": "puffer_vest",
@@ -5662,7 +5772,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/puffer_vest.webp"
   },
   {
    "id": "raglan_tee",
@@ -5708,7 +5819,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/raglan_tee.webp"
   },
   {
    "id": "rain_boots",
@@ -5768,7 +5880,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/rain_boots.webp"
   },
   {
    "id": "raincoat",
@@ -5812,7 +5925,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/raincoat.webp"
   },
   {
    "id": "romper",
@@ -5859,7 +5973,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/romper.webp"
   },
   {
    "id": "rugby_top",
@@ -5907,7 +6022,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/rugby_top.webp"
   },
   {
    "id": "running_shoes",
@@ -5968,7 +6084,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/running_shoes.webp"
   },
   {
    "id": "sandals",
@@ -6028,7 +6145,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sandals.webp"
   },
   {
    "id": "shacket",
@@ -6072,7 +6190,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/shacket.webp"
   },
   {
    "id": "shorts_short",
@@ -6118,7 +6237,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/shorts_short.webp"
   },
   {
    "id": "skirt_flared",
@@ -6164,7 +6284,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_flared.webp"
   },
   {
    "id": "skirt_maxi",
@@ -6211,7 +6332,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_maxi.webp"
   },
   {
    "id": "skirt_midi",
@@ -6257,7 +6379,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_midi.webp"
   },
   {
    "id": "skirt_mini",
@@ -6303,7 +6426,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_mini.webp"
   },
   {
    "id": "skirt_pencil",
@@ -6350,7 +6474,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_pencil.webp"
   },
   {
    "id": "skirt_tiered",
@@ -6397,7 +6522,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skirt_tiered.webp"
   },
   {
    "id": "skort",
@@ -6445,7 +6571,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/skort.webp"
   },
   {
    "id": "slides",
@@ -6505,7 +6632,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/slides.webp"
   },
   {
    "id": "slippers",
@@ -6565,7 +6693,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/slippers.webp"
   },
   {
    "id": "snow_boots",
@@ -6626,7 +6755,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/snow_boots.webp"
   },
   {
    "id": "sport_bra_top",
@@ -6673,7 +6803,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sport_bra_top.webp"
   },
   {
    "id": "sundress",
@@ -6720,7 +6851,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sundress.webp"
   },
   {
    "id": "sweater_crew",
@@ -6767,7 +6899,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sweater_crew.webp"
   },
   {
    "id": "sweater_crop",
@@ -6814,7 +6947,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sweater_crop.webp"
   },
   {
    "id": "sweater_v",
@@ -6861,7 +6995,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sweater_v.webp"
   },
   {
    "id": "sweatpants",
@@ -6908,7 +7043,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sweatpants.webp"
   },
   {
    "id": "sweatshirt",
@@ -6955,7 +7091,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sweatshirt.webp"
   },
   {
    "id": "tank_crew",
@@ -7001,7 +7138,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tank_crew.webp"
   },
   {
    "id": "tank_crop",
@@ -7048,7 +7186,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tank_crop.webp"
   },
   {
    "id": "tank_racer",
@@ -7095,7 +7234,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tank_racer.webp"
   },
   {
    "id": "tank_v",
@@ -7141,7 +7281,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tank_v.webp"
   },
   {
    "id": "tee_cap",
@@ -7187,7 +7328,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_cap.webp"
   },
   {
    "id": "tee_crop",
@@ -7234,7 +7376,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_crop.webp"
   },
   {
    "id": "tee_elbow",
@@ -7280,7 +7423,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_elbow.webp"
   },
   {
    "id": "tee_long",
@@ -7327,7 +7471,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_long.webp"
   },
   {
    "id": "tee_scoop",
@@ -7373,7 +7518,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_scoop.webp"
   },
   {
    "id": "tee_square",
@@ -7419,7 +7565,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tee_square.webp"
   },
   {
    "id": "three_quarter_top",
@@ -7465,7 +7612,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/three_quarter_top.webp"
   },
   {
    "id": "track_pants",
@@ -7512,7 +7660,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/track_pants.webp"
   },
   {
    "id": "tracksuit",
@@ -7560,7 +7709,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tracksuit.webp"
   },
   {
    "id": "trench_coat",
@@ -7605,7 +7755,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/trench_coat.webp"
   },
   {
    "id": "trousers_high",
@@ -7652,7 +7803,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/trousers_high.webp"
   },
   {
    "id": "trousers_wide",
@@ -7698,7 +7850,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/trousers_wide.webp"
   },
   {
    "id": "tube_top",
@@ -7745,7 +7898,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tube_top.webp"
   },
   {
    "id": "tunic",
@@ -7792,7 +7946,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/tunic.webp"
   },
   {
    "id": "turtleneck",
@@ -7839,7 +7994,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/turtleneck.webp"
   },
   {
    "id": "vest_open",
@@ -7883,7 +8039,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/vest_open.webp"
   },
   {
    "id": "waistcoat",
@@ -7928,7 +8085,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/waistcoat.webp"
   },
   {
    "id": "windbreaker",
@@ -7973,7 +8131,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/windbreaker.webp"
   },
   {
    "id": "work_boots",
@@ -8033,7 +8192,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/work_boots.webp"
   },
   {
    "id": "wrap_top",
@@ -8079,7 +8239,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/wrap_top.webp"
   },
   {
    "id": "hoodie_up",
@@ -8126,7 +8287,8 @@
    ],
    "followsMorphs": [
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/hoodie_up.webp"
   }
  ],
  "hairstyles": [
@@ -8239,7 +8401,8 @@
    "tags": [
     "short",
     "fringe"
-   ]
+   ],
+   "thumbnail": "thumbs/pixie.webp"
   },
   {
    "id": "curly_medium",
@@ -8269,7 +8432,8 @@
    "tags": [
     "medium",
     "curly"
-   ]
+   ],
+   "thumbnail": "thumbs/curly_medium.webp"
   },
   {
    "id": "mohawk",
@@ -8299,7 +8463,8 @@
    "tags": [
     "short",
     "bold"
-   ]
+   ],
+   "thumbnail": "thumbs/mohawk.webp"
   },
   {
    "id": "afro",
@@ -8330,7 +8495,8 @@
     "medium",
     "curly",
     "bold"
-   ]
+   ],
+   "thumbnail": "thumbs/afro.webp"
   },
   {
    "id": "long_wavy",
@@ -8360,7 +8526,8 @@
    "tags": [
     "long",
     "wavy"
-   ]
+   ],
+   "thumbnail": "thumbs/long_wavy.webp"
   },
   {
    "id": "bob_bangs",
@@ -8390,7 +8557,8 @@
    "tags": [
     "medium",
     "fringe"
-   ]
+   ],
+   "thumbnail": "thumbs/bob_bangs.webp"
   },
   {
    "id": "braid_single",
@@ -8420,7 +8588,8 @@
    "tags": [
     "gathered",
     "braid"
-   ]
+   ],
+   "thumbnail": "thumbs/braid_single.webp"
   },
   {
    "id": "pigtails",
@@ -8449,7 +8618,8 @@
    },
    "tags": [
     "gathered"
-   ]
+   ],
+   "thumbnail": "thumbs/pigtails.webp"
   },
   {
    "id": "top_bun",
@@ -8479,7 +8649,8 @@
    "tags": [
     "gathered",
     "bun"
-   ]
+   ],
+   "thumbnail": "thumbs/top_bun.webp"
   },
   {
    "id": "afro_short",
@@ -8509,7 +8680,8 @@
    "tags": [
     "short",
     "curly"
-   ]
+   ],
+   "thumbnail": "thumbs/afro_short.webp"
   },
   {
    "id": "bob_long",
@@ -8538,7 +8710,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/bob_long.webp"
   },
   {
    "id": "bob_side",
@@ -8567,7 +8740,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/bob_side.webp"
   },
   {
    "id": "box_braids",
@@ -8597,7 +8771,8 @@
    "tags": [
     "long",
     "textured"
-   ]
+   ],
+   "thumbnail": "thumbs/box_braids.webp"
   },
   {
    "id": "braided_ponytail",
@@ -8627,7 +8802,8 @@
    "tags": [
     "gathered",
     "braid"
-   ]
+   ],
+   "thumbnail": "thumbs/braided_ponytail.webp"
   },
   {
    "id": "braids_two",
@@ -8657,7 +8833,8 @@
    "tags": [
     "gathered",
     "braid"
-   ]
+   ],
+   "thumbnail": "thumbs/braids_two.webp"
   },
   {
    "id": "caesar",
@@ -8687,7 +8864,8 @@
    "tags": [
     "short",
     "fringe"
-   ]
+   ],
+   "thumbnail": "thumbs/caesar.webp"
   },
   {
    "id": "cornrows",
@@ -8718,7 +8896,8 @@
     "gathered",
     "braid",
     "textured"
-   ]
+   ],
+   "thumbnail": "thumbs/cornrows.webp"
   },
   {
    "id": "crew_cut",
@@ -8747,7 +8926,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/crew_cut.webp"
   },
   {
    "id": "curly_bob",
@@ -8777,7 +8957,8 @@
    "tags": [
     "medium",
     "curly"
-   ]
+   ],
+   "thumbnail": "thumbs/curly_bob.webp"
   },
   {
    "id": "curly_short",
@@ -8807,7 +8988,8 @@
    "tags": [
     "short",
     "curly"
-   ]
+   ],
+   "thumbnail": "thumbs/curly_short.webp"
   },
   {
    "id": "curtain_bangs",
@@ -8837,7 +9019,8 @@
    "tags": [
     "medium",
     "fringe"
-   ]
+   ],
+   "thumbnail": "thumbs/curtain_bangs.webp"
   },
   {
    "id": "dreads_short",
@@ -8867,7 +9050,8 @@
    "tags": [
     "medium",
     "textured"
-   ]
+   ],
+   "thumbnail": "thumbs/dreads_short.webp"
   },
   {
    "id": "faux_hawk",
@@ -8896,7 +9080,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/faux_hawk.webp"
   },
   {
    "id": "half_up",
@@ -8925,7 +9110,8 @@
    },
    "tags": [
     "long"
-   ]
+   ],
+   "thumbnail": "thumbs/half_up.webp"
   },
   {
    "id": "ivy_league",
@@ -8954,7 +9140,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/ivy_league.webp"
   },
   {
    "id": "layered_medium",
@@ -8983,7 +9170,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/layered_medium.webp"
   },
   {
    "id": "locs_long",
@@ -9013,7 +9201,8 @@
    "tags": [
     "long",
     "textured"
-   ]
+   ],
+   "thumbnail": "thumbs/locs_long.webp"
   },
   {
    "id": "long_bangs",
@@ -9043,7 +9232,8 @@
    "tags": [
     "long",
     "fringe"
-   ]
+   ],
+   "thumbnail": "thumbs/long_bangs.webp"
   },
   {
    "id": "long_beach",
@@ -9073,7 +9263,8 @@
    "tags": [
     "long",
     "wavy"
-   ]
+   ],
+   "thumbnail": "thumbs/long_beach.webp"
   },
   {
    "id": "long_center",
@@ -9102,7 +9293,8 @@
    },
    "tags": [
     "long"
-   ]
+   ],
+   "thumbnail": "thumbs/long_center.webp"
   },
   {
    "id": "long_curly",
@@ -9132,7 +9324,8 @@
    "tags": [
     "long",
     "curly"
-   ]
+   ],
+   "thumbnail": "thumbs/long_curly.webp"
   },
   {
    "id": "long_layered",
@@ -9161,7 +9354,8 @@
    },
    "tags": [
     "long"
-   ]
+   ],
+   "thumbnail": "thumbs/long_layered.webp"
   },
   {
    "id": "long_side_part",
@@ -9190,7 +9384,8 @@
    },
    "tags": [
     "long"
-   ]
+   ],
+   "thumbnail": "thumbs/long_side_part.webp"
   },
   {
    "id": "long_straight",
@@ -9219,7 +9414,8 @@
    },
    "tags": [
     "long"
-   ]
+   ],
+   "thumbnail": "thumbs/long_straight.webp"
   },
   {
    "id": "low_bun",
@@ -9249,7 +9445,8 @@
    "tags": [
     "gathered",
     "bun"
-   ]
+   ],
+   "thumbnail": "thumbs/low_bun.webp"
   },
   {
    "id": "messy_bun",
@@ -9279,7 +9476,8 @@
    "tags": [
     "gathered",
     "bun"
-   ]
+   ],
+   "thumbnail": "thumbs/messy_bun.webp"
   },
   {
    "id": "middle_part",
@@ -9308,7 +9506,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/middle_part.webp"
   },
   {
    "id": "mullet",
@@ -9338,7 +9537,8 @@
    "tags": [
     "medium",
     "bold"
-   ]
+   ],
+   "thumbnail": "thumbs/mullet.webp"
   },
   {
    "id": "ponytail_high",
@@ -9367,7 +9567,8 @@
    },
    "tags": [
     "gathered"
-   ]
+   ],
+   "thumbnail": "thumbs/ponytail_high.webp"
   },
   {
    "id": "ponytail_low",
@@ -9396,7 +9597,8 @@
    },
    "tags": [
     "gathered"
-   ]
+   ],
+   "thumbnail": "thumbs/ponytail_low.webp"
   },
   {
    "id": "ponytail_side",
@@ -9425,7 +9627,8 @@
    },
    "tags": [
     "gathered"
-   ]
+   ],
+   "thumbnail": "thumbs/ponytail_side.webp"
   },
   {
    "id": "receding",
@@ -9454,7 +9657,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/receding.webp"
   },
   {
    "id": "shag",
@@ -9483,7 +9687,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/shag.webp"
   },
   {
    "id": "short_textured",
@@ -9512,7 +9717,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/short_textured.webp"
   },
   {
    "id": "shoulder_straight",
@@ -9541,7 +9747,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/shoulder_straight.webp"
   },
   {
    "id": "side_part_short",
@@ -9570,7 +9777,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/side_part_short.webp"
   },
   {
    "id": "side_swept",
@@ -9599,7 +9807,8 @@
    },
    "tags": [
     "medium"
-   ]
+   ],
+   "thumbnail": "thumbs/side_swept.webp"
   },
   {
    "id": "slick_back",
@@ -9628,7 +9837,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/slick_back.webp"
   },
   {
    "id": "space_buns",
@@ -9658,7 +9868,8 @@
    "tags": [
     "gathered",
     "bun"
-   ]
+   ],
+   "thumbnail": "thumbs/space_buns.webp"
   },
   {
    "id": "spiky",
@@ -9687,7 +9898,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/spiky.webp"
   },
   {
    "id": "top_knot",
@@ -9718,7 +9930,8 @@
     "gathered",
     "bun",
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/top_knot.webp"
   },
   {
    "id": "twists_short",
@@ -9748,7 +9961,8 @@
    "tags": [
     "medium",
     "textured"
-   ]
+   ],
+   "thumbnail": "thumbs/twists_short.webp"
   },
   {
    "id": "undercut",
@@ -9777,7 +9991,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/undercut.webp"
   },
   {
    "id": "waist_length",
@@ -9806,7 +10021,8 @@
    },
    "tags": [
     "long"
-   ]
+   ],
+   "thumbnail": "thumbs/waist_length.webp"
   },
   {
    "id": "wavy_medium",
@@ -9836,7 +10052,8 @@
    "tags": [
     "medium",
     "wavy"
-   ]
+   ],
+   "thumbnail": "thumbs/wavy_medium.webp"
   },
   {
    "id": "wolf_cut",
@@ -9866,7 +10083,8 @@
    "tags": [
     "medium",
     "bold"
-   ]
+   ],
+   "thumbnail": "thumbs/wolf_cut.webp"
   },
   {
    "id": "buzz_cut",
@@ -9895,7 +10113,8 @@
    },
    "tags": [
     "short"
-   ]
+   ],
+   "thumbnail": "thumbs/buzz_cut.webp"
   }
  ],
  "defaults": {
@@ -10099,7 +10318,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/stubble.webp"
   },
   {
    "id": "beard_full",
@@ -10134,7 +10354,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/beard_full.webp"
   },
   {
    "id": "goatee",
@@ -10169,7 +10390,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/goatee.webp"
   },
   {
    "id": "mustache_handlebar",
@@ -10204,7 +10426,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/mustache_handlebar.webp"
   },
   {
    "id": "beard_long",
@@ -10240,7 +10463,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/beard_long.webp"
   },
   {
    "id": "anchor_beard",
@@ -10275,7 +10499,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/anchor_beard.webp"
   },
   {
    "id": "beard_short",
@@ -10310,7 +10535,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/beard_short.webp"
   },
   {
    "id": "chin_strap",
@@ -10345,7 +10571,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/chin_strap.webp"
   },
   {
    "id": "circle_beard",
@@ -10380,7 +10607,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/circle_beard.webp"
   },
   {
    "id": "mustache",
@@ -10415,7 +10643,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/mustache.webp"
   },
   {
    "id": "mustache_chevron",
@@ -10450,7 +10679,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/mustache_chevron.webp"
   },
   {
    "id": "mutton_chops",
@@ -10485,7 +10715,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/mutton_chops.webp"
   },
   {
    "id": "sideburns",
@@ -10520,7 +10751,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/sideburns.webp"
   },
   {
    "id": "soul_patch",
@@ -10555,7 +10787,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/soul_patch.webp"
   },
   {
    "id": "stubble_heavy",
@@ -10590,7 +10823,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/stubble_heavy.webp"
   },
   {
    "id": "van_dyke",
@@ -10625,7 +10859,8 @@
     "chin_length",
     "mouth_width",
     "weight"
-   ]
+   ],
+   "thumbnail": "thumbs/van_dyke.webp"
   }
  ]
 }

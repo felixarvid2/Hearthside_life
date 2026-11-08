@@ -3,7 +3,7 @@
  "body": "ubc_female",
  "glb": "public/assets/characters/modular/accessories/tie__ubc_female.glb",
  "kind": "tie",
- "secs": 0.7,
+ "secs": 0.5,
  "tris": 56,
  "verts": 32
 }
