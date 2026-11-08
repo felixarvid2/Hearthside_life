@@ -3,7 +3,7 @@
 
 export * from './types';
 export { DB_NAME, DB_VERSION, HearthDb, deleteHearthDb, openHearthDb, requestPersistentStorage, type DbResult, type DbErrorCode } from './db';
-export { SaveStore, type SaveStoreOptions, type SaveResult, type AutosaveResult, type LoadResult, type LoadErrorCode, type OpResult, type ImportToSlotResult } from './saves';
+export { SaveStore, BACKUPS_PER_SLOT, backupKey, type Recovery, type SaveStoreOptions, type SaveResult, type AutosaveResult, type LoadResult, type LoadErrorCode, type OpResult, type ImportToSlotResult } from './saves';
 export { Autosaver, type AutosaverOptions } from './autosaver';
 export {
   MIGRATIONS, OLDEST_SUPPORTED_VERSION, migrate, validateWorld, validateWorldStructure,

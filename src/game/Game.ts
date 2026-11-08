@@ -27,6 +27,7 @@ import type {
   SaveSlotInfo, SoundId, SwitchPreview, UiChange,
 } from './api';
 import { GameAudio } from './audio';
+import { CrashGuard, type CrashInfo } from './crashGuard';
 import type { GameCore } from './GameCore';
 import { createNewWorld } from './newWorld';
 import { applyDocumentSettings, loadSettings, mergeSettings, saveSettings } from './settings';
@@ -61,6 +62,11 @@ export class Game implements GameAPI {
   private lastTime = 0;
   private fps = 60;
   private frameMs = 16;
+  /** Error boundary for the loop; the interface installs the recovery dialog (ui/screens/crash.ts). */
+  readonly crashGuard = new CrashGuard({ onCrash: (info) => { this.crashListener?.(info); } });
+  private crashListener: ((info: CrashInfo) => void) | null = null;
+  /** The recovery dialog's hook (one listener). */
+  onCrash(fn: ((info: CrashInfo) => void) | null): void { this.crashListener = fn; }
   private framedWorld: WorldState | null = null;
   private running = false;
   private readonly portraitPending = new Set<string>();
@@ -173,18 +179,15 @@ export class Game implements GameAPI {
   step(dt: number): void {
     const t0 = performance.now();
     let alpha = 1;
-    try {
-      const r = this.core.update(dt);
-      alpha = r.alpha;
-      if (r.ticks > 0) this.gameView.onTicks();
-    } catch (e) {
-      console.error('[game] simulation error', e);
+    // Error boundary: a fault is reported once (recovery dialog) and the simulation stays halted until the player chooses.
+    if (!this.crashGuard.halted) {
+      this.crashGuard.run('simulation', () => {
+        const r = this.core.update(dt);
+        alpha = r.alpha;
+        if (r.ticks > 0) this.gameView.onTicks();
+      });
     }
-    try {
-      this.gameView.render(this.core.mode(), dt, alpha);
-    } catch (e) {
-      console.error('[game] render error', e);
-    }
+    this.crashGuard.run('render', () => { this.gameView.render(this.core.mode(), dt, alpha); });
     const ms = performance.now() - t0;
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.1;
     this.frameMs += (ms - this.frameMs) * 0.1;

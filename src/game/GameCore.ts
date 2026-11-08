@@ -281,7 +281,7 @@ export class GameCore {
     const r = await this.saves.load(slotId, this.content);
     if (!r.ok) return fail(r.error);
     this.enterWorld(r.state, loadedSpeed(r.state));
-    const report = describeReport(r.report);
+    const report = [...(r.recovered ? [r.recovered.message] : []), ...describeReport(r.report)];
     return report.length > 0 ? { ok: true, report } : OK;
   }
 
