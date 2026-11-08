@@ -21,7 +21,7 @@ import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
 import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
-import { getOutBehavior, poolSwimBehavior } from './pool';
+import { getOutBehavior, paddleBehavior, poolSwimBehavior } from './pool';
 import { placePot, storeFishBehavior } from './furnishings';
 import { isOutdoors, nearestOutdoorTile } from './weather';
 import { makePlacedObject } from '../world/objects';
@@ -805,6 +805,7 @@ function buildRegistry(): Record<string, Behavior> {
     garden: gardenBehavior,
     poolSwim: poolSwimBehavior,
     getOut: getOutBehavior,
+    paddle: paddleBehavior,
     pottery: potteryBehavior,
     storeFish: storeFishBehavior,
     laundry: laundryBehavior,

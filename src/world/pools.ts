@@ -158,3 +158,29 @@ export function usableLadders(lot: Lot, pool: Pool, near?: Tile): PoolLadder[] {
 export function isWaterTile(lot: Lot, level: number, x: number, z: number): boolean {
   return poolAt(lot, level, x, z) !== undefined;
 }
+
+/**
+ * Milestone 13: a pool whose water touches this dry tile on a side (the tile is on the deck, beside the water) - the "shallow
+ * edge" where a toddler may paddle. Undefined for water tiles and tiles away from a pool.
+ */
+export function poolBesideTile(lot: Lot, level: number, x: number, z: number): Pool | undefined {
+  if (level !== 0 || isWaterTile(lot, level, x, z)) return undefined;
+  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+    const p = poolAt(lot, level, x + dx, z + dz);
+    if (p) return p;
+  }
+  return undefined;
+}
+
+/** The dry tile beside the pool nearest to (x, z), for a toddler who pointed at water: null when the pool is walled in. */
+export function nearestPoolEdgeTile(lot: Lot, pool: Pool, x: number, z: number): Tile | null {
+  let best: Tile | null = null, bestD = Infinity;
+  for (let tz = pool.z0 - 1; tz <= pool.z1 + 1; tz++) {
+    for (let tx = pool.x0 - 1; tx <= pool.x1 + 1; tx++) {
+      if (tx < 0 || tz < 0 || tx >= lot.width || tz >= lot.depth || !poolBesideTile(lot, 0, tx, tz)) continue;
+      const d = (tx - x) ** 2 + (tz - z) ** 2;
+      if (d < bestD) { bestD = d; best = { x: tx, z: tz }; }
+    }
+  }
+  return best;
+}

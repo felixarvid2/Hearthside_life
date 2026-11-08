@@ -1,5 +1,5 @@
 // Milestone 12: the swimming interactions offered on pool water (sim/pool.ts implements the behavior). Children and
-// up may swim; babies and toddlers may not. Outdoor pools close in the snow, but the weather rule is checked by the
+// up may swim; babies and toddlers may not. Milestone 13: toddlers may paddle at the deck edge with a grown-up watching. Outdoor pools close in the snow, but the weather rule is checked by the
 // behavior against the pool's own position (indoor pools stay open), so `weather` is not set here.
 
 import type { InteractionDef } from './types';
@@ -26,6 +26,15 @@ export const POOL_INTERACTIONS: InteractionDef[] = [
     moodletOnComplete: 'peaceful',
     autonomy: { enabled: true, ads: { fun: 15 }, tags: ['swim', 'swimming', 'relax', 'fun'] },
     allowVisitors: true, ages: [...SWIMMERS], status: 'ready',
+  },
+  {
+    id: 'paddleAtEdge', name: 'Paddle at the Edge',
+    description: 'Sit on the deck with bare feet in the water and splash. Toddlers only, and only while a grown-up (a teen or older) is awake and close by.',
+    icon: 'fun', kind: 'tile', slotKinds: [], anims: { perform: 'interact' }, posture: 'standing', behavior: 'paddle',
+    duration: { kind: 'fixed', minutes: 25 },
+    needsPerHour: { fun: 22, hygiene: 3, energy: -2 }, needsOnComplete: {}, moodletOnComplete: 'puddleSplash',
+    autonomy: { enabled: false, ads: {}, tags: ['swim', 'paddle', 'fun'] },
+    allowVisitors: true, ages: ['toddler'], status: 'ready',
   },
   {
     id: 'getOutOfPool', name: 'Get Out', description: 'Climb out at the nearest ladder.',

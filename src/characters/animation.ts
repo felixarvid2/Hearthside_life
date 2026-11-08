@@ -132,6 +132,8 @@ export class Animator {
   private fading: Array<{ action: THREE.AnimationAction; until: number }> = [];
   private time = 0;
   private postureNow: Posture = 'standing';
+  /** Extra speed factor of the locomotion clips (ground speed over the clips' natural speed); 1 = as authored. */
+  private walkRate = 1;
 
   /** `cadence` speeds up (or slows down) the walk and jog cycles: short-legged stages take quicker steps (stagePose.ts). */
   constructor(root: THREE.Object3D, private clips: Map<string, THREE.AnimationClip>, private cadence = 1) {
@@ -177,11 +179,25 @@ export class Animator {
     if (spec.posture !== 'keep') this.postureNow = spec.posture === 'walking' ? 'standing' : spec.posture;
   }
 
+  /**
+   * Matches the walk and jog cycles to the ground speed (`rate` = actual speed / the speed the clips were authored for, so fast
+   * game speeds do not skate): applied at once to a locomotion clip that is playing, and to every one started later.
+   */
+  setWalkRate(rate: number): void {
+    const r = Math.max(0.2, Math.min(4, rate));
+    if (Math.abs(r - this.walkRate) < 0.02) return;
+    this.walkRate = r;
+    const cur = this.current;
+    if (cur && LOCOMOTION_CLIPS.has(cur.spec.clip) && !cur.spec.reverse && !cur.spec.pose) {
+      cur.main.timeScale = (cur.spec.speed ?? 1) * this.cadence * r;
+    }
+  }
+
   private prepare(a: THREE.AnimationAction, spec: AnimSpec, loop: boolean): void {
     a.reset();
     a.clampWhenFinished = true;
     a.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
-    const speed = (spec.speed ?? 1) * (LOCOMOTION_CLIPS.has(spec.clip) ? this.cadence : 1);
+    const speed = (spec.speed ?? 1) * (LOCOMOTION_CLIPS.has(spec.clip) ? this.cadence * this.walkRate : 1);
     if (spec.pose) {
       a.setLoop(THREE.LoopOnce, 1);
       a.time = spec.pose === 'first' ? 0 : a.getClip().duration;

@@ -78,6 +78,9 @@ export class ModularCharacterView {
   /** Remembered for `carrying` only: there is no cradle pose for the stand-in bodies yet. */
   setCarrying(on: boolean): void { this.cradleOn = on; }
   get carrying(): boolean { return this.cradleOn; }
+  /** The modular rig has no spine pose effects yet: a recliner shows the plain seated pose. */
+  setRecline(_on: boolean): void { /* not supported */ }
+  setWalkRate(rate: number): void { this.character.setWalkRate(rate); }
 
   cradlePoint(target: THREE.Vector3): THREE.Vector3 {
     this.root.updateWorldMatrix(true, false);
