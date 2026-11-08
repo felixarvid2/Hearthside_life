@@ -87,6 +87,8 @@ g("wrap_top", "Wrap top", "top", ["blouse"], top({"kind": "v", "depth": 0.2}, 0.
 g("polo_like", "Collar tee", "top", ["tee"], top({"kind": "v", "depth": 0.035}, 0.38, H("hip", 0.03)), "basic")
 g("rugby_top", "Rugby top", "top", ["sweater", "sport", "long"], top({"kind": "v", "depth": 0.035}, 1.0, H("hip", 0.04)), "bright",
   fh=0.016)
+g("hoodie_up", "Hoodie, hood up", "top", ["hoodie", "warm"], top("crew", 1.0, H("hip", 0.03)), "dark", fh=0.018,
+  hood={"up": True})
 g("raglan_tee", "Raglan tee", "top", ["tee"], top("crew", 0.75, H("hip", 0.03)), "basic", fh=0.014)
 
 # ---- outerwear (16) ----------------------------------------------------------------------------------------------
@@ -227,7 +229,9 @@ def params(d):
            "cut": d["cut"]}
     if d["skirt"]:
         fin["skirt"] = d["skirt"]
-    if d["hood"]:
+    if d["hood"] and d["hood"].get("up"):
+        fin["hood_up"] = {"offset": 0.03, "face_deg": 62, "segments": 32, "rows": 12}
+    elif d["hood"]:
         fin["hood"] = dict(segments=28, ring=12, **d["hood"])
     if d["sole"]:
         fin["sole"] = d["sole"]; fin["welt"] = d["welt"]

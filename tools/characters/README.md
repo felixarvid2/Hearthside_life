@@ -30,7 +30,7 @@ Licences: the GPL add-ons run inside Blender only. The exported meshes, weights 
 are not covered by the add-ons' licences; no add-on code, node group or library asset is exported. The bodies are
 Quaternius CC0. Asset licences are recorded per part in the manifest and in `public/assets/LICENSES.md`.
 
-## Steps (updated 2026-11-07; all scripts: `blender -b --factory-startup --python <script> -- <args>`)
+## Steps (updated 2026-11-08; all scripts: `blender -b --factory-startup --python <script> -- <args>`)
 
 1. **Body**: `blender/prepare_body.py --src <quaternius.gltf> --id <body-id> --out-glb public/assets/characters/modular/bodies/<id>.glb --out-blend authoring/characters/bodies/<id>/fitting.blend --out-json authoring/characters/bodies/<id>/info.json --materials authoring/characters/bodies/<id>/materials.json`
    - Imports with `bone_heuristic='BLENDER'`, so glTF joint frames survive the round trip. Measured on the UAL
@@ -65,6 +65,19 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
    - `finish` options: `force_regions` (always covered; applied before the morphological close, so the navel fills),
      `force_h`, and `hood` (`add_hood`, a measured rolled hood on the back of the neck; params `reach_deg`, `collar_at`,
      `collar`, `thick`, `drop`, `rise`, `segments`, `ring`).
+   - Catalog garments (`blender/garment_parts.py`, used by `build_garment.py` `finish.cut`): part `top`, `bottom`,
+     `full`, or `shoes`. Neck kinds `crew`, `scoop`, `v`, `square`, `mock`, `turtle`, `off`, cut relative to the measured
+     neck landmark + 3 cm so the trapezius stays covered. Sleeve and leg cuts are fractions along the arm and leg bone
+     chains (a negative sleeve cuts into the shoulder, for tanks). Hem and waist sit at landmarks (neck, shoulder, chest,
+     waist, hip, crotch, knee, ankle) plus an offset. Also `open_front` width, `bib` (overalls), `leg_flare` and
+     `sleeve_flare` (extra height below the knee or towards the wrist). Shoes: boot height, `vamp` (toe box kept for low
+     shoes), `straps` (sandal pitch), sole height and `welt` (a second colour region, pushed out from the foot axis).
+   - `finish.skirt`: a tube fitted to the oval hull of the body at each height, with `flare`, `offset`, `pencil`,
+     `open_front` (radians, for coats). Weights are mostly pelvis, with the thighs swinging the lower part.
+   - `finish.hood` (worn down) and `finish.hood_up` (a shell round the head with a face opening, `max_r` clamp; used by
+     `hoodie_up`). `force`: the cut is covered even where no sewn design reaches.
+   - OpenSew sewing is optional (`"preset": null`) and cached by design key in `~/authoring-cache/sewn`
+     (`HEARTHSIDE_SEWN_CACHE`).
 3. **Cover mask**: `node tools/characters/cover-masks.mjs <body.glb> <garment.glb> <out.cover.json> --body <id> --garment <id>`
    - Marks the body vertices the garment covers: a ray along the vertex normal hits the garment within 6 cm.
    - The game hides only triangles whose three vertices are covered. A T-shirt that ends mid-belly hides the covered
@@ -85,13 +98,74 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
      `ponytail` {`gather_h`, `gather_out`, `walk_seg`, `tail_points`, `tail_len`, `tail_spread`, `tail_out`}. Lower
      `resolution_cm` rather than decimating GBH ribbons, which makes spiky clumps (ponytail 3.0 cm, 14,000 tris; bob
      2.6 cm, 12,000 tris).
+   - Catalog options (`blender/build_hair.py`): `root_mask` (mohawk, undercut, sides); `fringe` {`depth`, `to`, `sweep`,
+     `length`, `band`}; `curl` {`radius`, `per_m`, `from`}; `wave` {`amp`, `per_m`}; `flow` `radial` (spikes) or
+     `sphere` (afro, with `sphere_r`, `sphere_h`). `gathers` is a list of {`angle`, `gather_h`, `kind` `tail`|`bun`|`braid`,
+     `tail_len`, `tail_points`, `tail_spread`, `tail_out`, `bun_r`, `bun_turns`, `braid_w`, `braid_twists`}, with
+     `gather_all` or `gather_above` (half-up). A ponytail stays one back gather. `clumps` 0 keeps only the raised cap
+     (buzz cut, stubble).
+   - Beard mode (`"beard": {mustache, soul, chin, jaw, cheeks, sideburns, neck, chin_w, cheek_h, spread, forward}`):
+     roots are sampled by area on the face skin from `morphs.landmarks`. Weights and face/body morph keys are copied from
+     the nearest body vertex. Output goes to `facial_hair/`.
 5. **Inspect**: `dev/wardrobe.html` (`npm run dev`) shows every part on every body in the game's renderer, posed
    (`pose=idle|walk|sit`). `blender/render_views.py --blend <source.blend> --out <prefix> [--focus head|torso]
    [--pose fit] [--hide <prefix>]` renders the Blender sources (front/left/back/right, Cycles on the CPU).
+   - `dev/wardrobe.html` query parameters: `part`, `body`, `pose=idle|walk|sit|lie`, `t`, `shot`, `size`,
+     `outfit=slot:id,...`, `morph=id:value,...`, `yaw`, and `keep=1` (characters stay posed; `window.wardrobeChars`
+     exposes them for measurements).
 6. **Audit**: `node tools/characters/audit-glb.mjs <files...>` prints hierarchy, skins (joint rest transforms,
    inverse bind translations), meshes, morph targets, materials, textures and clips as JSON.
+7. **Catalog**: see "Catalog (Milestone 10, Quaternius style)" below. Designs are written with `--write`, then built
+   and listed in the manifest in one run.
 
-## Status (2026-11-07)
+## Catalog (Milestone 10, Quaternius style)
+
+The catalog is generated from design tables, so the parameters are edited in code, not in the files. Each design
+script writes `authoring/characters/<kind>/<id>/params.json` when run with `--write`.
+
+| Kind | Design table | Count | Contents |
+|---|---|---|---|
+| garments | `catalog/garments.py` | 133 | 41 tops (including `hoodie_up`, hood worn up), 16 outer, 28 bottoms, 24 one-pieces, 24 shoes. 130 cut designs and 3 sewn Stage C garments. |
+| hair | `catalog/hair.py` | 60 | 57 hairstyles and 3 Stage C hairstyles. |
+| facial hair | `catalog/facial_hair.py` | 16 | Beard mode, see Steps 4. |
+| accessories | `catalog/accessories.py` | 32 | Slots: hat, eyewear, earrings, neck, wrist, waist, bag. |
+
+Build with `catalog/build_all.py`:
+
+```sh
+python3 tools/characters/catalog/build_all.py <garments|hair|facial|accessories> [--ids a,b] [--jobs 3] [--skip-built] [--manifest-only]
+```
+
+- Runs Blender (`--python-exit-code 1`) once per body (`ubc_male`, `ubc_female`). Garments also get cover masks
+  (`cover-masks.mjs`).
+- Updates the manifest entries: `files`, `covers`, `colorRegions` with palettes, `tags`, `followsMorphs`, `licence`,
+  `source`. Thumbnails are kept (`thumbnails.mjs`).
+- `--manifest-only` updates the manifest entries without running Blender, from the GLBs already in `public/` and the `build_<body>.json` reports next to the params.
+- Logs go to `~/authoring-cache/logs`.
+
+Thumbnails (`thumbnails.mjs`): hats, eyewear and earrings and facial hair use a face shot; bottoms, shoes and
+one-pieces are framed full-body; gathered hair and bags are seen from behind (`yaw=`).
+
+Restrictions in the manifest:
+
+- Hats exclude tall styles (buns, mohawk, afro, spiky, high ponytail). The headband excludes afro, mohawk and spikes.
+- Hooded garments exclude low gathered styles. `hoodie_up` is also restricted against long hair and hats.
+
+Accessories (`blender/build_accessory.py`): procedural hats (cap, beanie, fedora, sun hat, bucket hat, beret,
+headbands); glasses and sunglasses (round, square, aviator; lenses are a second colour region); earrings (stud, hoop,
+drop) at the ear lobes; neck (chain, pendant, choker, pearls, scarf, tie, bow tie); wrist (watch, smartwatch, bangle,
+cuff on the lower arm); belts at the waist; bags (backpack, crossbody, belt bag). Landmarks come from the body (eye
+material centres, ear extremes and lobes, skull, neck ring, wrist, waist). Weights are single-bone or blended. Morph
+deltas come from the nearest body vertex within 6-10 cm.
+
+Posture anchors for modular adults were measured with the wardrobe in `src/characters/posture.ts`. Sit: seat a
+0.467 / -0.097, seat b 0.471 / -0.175. Lie: backY, centerZ a -0.071 / -0.158, b -0.076 / -0.146 (a = ubc_male,
+b = ubc_female, the body frames of `defaults.bodyByFrame`).
+
+Light skin: `skinMaterialColor` scales a colour that the texture gain pushes above 1 back as a whole, so light skin
+gets no golden tint.
+
+## Status (2026-11-08)
 
 - **Bodies.** `ubc_male` / `ubc_female`: Quaternius Universal Base Characters (Standard, CC0), from the pack's
   `Base Characters/Godot - UE/*.gltf`. `authoring/characters/bodies/<id>/materials.json` renames the materials to
@@ -106,6 +180,9 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
 - **Thumbnails.** Every part, rendered by `thumbnails.mjs`; bottoms, shoes and one-pieces are framed full-body.
 - **Morphs (Stage D).** Shape keys from `blender/morphs.py`, see Steps 1.
 - **Restriction.** `hoodie_pullover` and `ponytail_mid` conflict (`manifest.restrictions.parts`).
+- **Catalog (Milestone 10).** 133 garments (41 tops incl. `hoodie_up`, 16 outer, 28 bottoms, 24 one-pieces, 24 shoes;
+  130 cut designs and 3 sewn Stage C), 60 hairstyles (57 + 3 Stage C), 16 facial hair, 32 accessories (hat, eyewear,
+  earrings, neck, wrist, waist, bag). Each built for `ubc_male` and `ubc_female`. See "Catalog" above.
 
 ## CharacterStudio
 

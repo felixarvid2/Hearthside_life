@@ -206,7 +206,7 @@ def build():
                 elif shape == "aviator":
                     cz = cz * (1.0 if cz > 0 else 1.35)
                 pts.append(e + Vector((cx * rw, 0, cz * rh)))
-            tube(pts, P.get("frame", 0.0018), True, 6, HEADW, 0)
+            tube(pts, P.get("frame", 0.0028), True, 6, HEADW, 0)
             if k == "sunglasses":
                 c = bm.verts.new(e); VBONE[c] = HEADW
                 rv = []
@@ -218,10 +218,10 @@ def build():
             ear = EARS[s] + Vector((0, 0.0, 0.004))
             start = e + Vector(((rw if s == "l" else -rw), 0, 0.004))
             tube([start, start + (ear - start) * 0.5 + Vector(((0.006 if s == "l" else -0.006), 0, 0)), ear + Vector((0, 0.012, -0.01))],
-                 P.get("frame", 0.0018) * 0.9, False, 5, HEADW, 0)
+                 P.get("frame", 0.0028) * 0.9, False, 5, HEADW, 0)
         l, r = EYES["l"] + Vector((-rw, -off, 0.004)), EYES["r"] + Vector((rw, -off, 0.004))
         mid = (l + r) / 2 + Vector((0, -0.004, 0.003))
-        tube([l, mid, r], P.get("frame", 0.0018), False, 5, HEADW, 0)
+        tube([l, mid, r], P.get("frame", 0.0028), False, 5, HEADW, 0)
     elif k in ("cap", "beanie", "fedora", "sun_hat", "bucket_hat", "beret", "headband"):
         if k == "headband":
             hz = TOP - H0.z
@@ -272,7 +272,7 @@ def build():
             f = min(pts, key=lambda p: p.y)
             for sx in (-0.02, 0.025):
                 tube([f + Vector((sx, -0.01, -0.01)), f + Vector((sx * 1.2, -0.03, -0.12)), f + Vector((sx * 1.3, -0.035, -0.22))],
-                     0.016, False, 6, {"spine_03": 1.0}, 0, flat=0.35)
+                     0.022, False, 6, {"spine_03": 1.0}, 0, flat=0.3)
         elif k == "pearls":
             for p in pts[::2]:
                 sphere(p, 0.0045, nb, 0, 8)
@@ -327,11 +327,11 @@ def build():
         r = ray_r(s3, Vector((0, 1, 0))) or 0.12
         c = Vector((H0.x, s3.y + r + 0.036, s3.z - 0.08))
         box(c, (0.16, 0.06, 0.2), weights={"spine_03": 0.6, "spine_02": 0.4})
-        for sx in (-0.07, 0.07):
+        for sx in (-0.105, 0.105):
             top = Vector((H0.x + sx, s3.y, s3.z + 0.1))
             rf = ray_r(top, Vector((0, -1, 0))) or 0.1
             rb = ray_r(top, Vector((0, 1, 0))) or 0.1
-            zt = (ray_r(Vector((top.x, top.y, top.z - 0.2)), Vector((0, 0, 1)), 0.6) or 0.25) + top.z - 0.2
+            zt = (ray_r(Vector((top.x, top.y, top.z - 0.2)), Vector((0, 0, 1)), 0.32) or 0.25) + top.z - 0.2
             path = [c + Vector((sx, -0.03, 0.17)), Vector((top.x, top.y + rb * 0.6, zt + 0.012)),
                     Vector((top.x, top.y - rf * 0.6, zt + 0.006)), Vector((top.x, top.y - rf - 0.01, s3.z - 0.12))]
             tube(path, 0.012, False, 4, {"spine_03": 1.0}, 1 if len(P["color_regions"]) > 1 else 0, flat=0.25)

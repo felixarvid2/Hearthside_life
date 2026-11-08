@@ -117,13 +117,13 @@ def allowed_set(body, regions, L, cut, bonus=None):
             # neckline
             k = neck.get("kind", "crew"); dpt = neck.get("depth", None)
             if k == "crew":
-                top = nz - 0.004 - (dpt if dpt is not None else 0.014) * wf ** 2
+                top = nz + 0.03 - (dpt if dpt is not None else 0.045) * wf ** 2
             elif k == "scoop":
-                top = nz - 0.02 - (dpt if dpt is not None else 0.08) * wf ** 3
+                top = nz + 0.01 - (dpt if dpt is not None else 0.1) * wf ** 2
             elif k == "v":
-                top = nz - 0.01 - (dpt if dpt is not None else 0.13) * max(0.0, 1 - abs(ang) / 0.85)
+                top = nz + 0.025 - 0.03 * wf - (dpt if dpt is not None else 0.13) * max(0.0, 1 - abs(ang) / 0.85)
             elif k == "square":
-                top = nz - ((dpt if dpt is not None else 0.07) if abs(ang) < 1.0 else 0.01)
+                top = nz + 0.02 - ((dpt if dpt is not None else 0.09) if abs(ang) < 1.0 else 0.0)
             elif k == "mock":
                 top = nz + 0.035
             elif k == "turtle":

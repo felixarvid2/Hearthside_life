@@ -20,7 +20,7 @@ D = []
 
 def acc(id_, label, slot, kind, tags, main="fabric", second=None, metallic=False, **kw):
     regions = [{"id": "main", "label": "Main", "materials": ["M_" + "".join(w.title() for w in id_.split("_"))],
-                "default": PAL[main][0], "palette": PAL[main], "metallic": 0.8 if metallic else 0.0,
+                "default": PAL[main][0], "palette": PAL[main], "metallic": 0.35 if metallic else 0.0,
                 "roughness": 0.35 if metallic else 0.6}]
     if second:
         lab, pal = second

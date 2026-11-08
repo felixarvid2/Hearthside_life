@@ -512,6 +512,71 @@ def body_shell(ob, lo=0.006, hi=0.025, k=0.015, close=3, reach=0.08, smooth=3, t
     return new, rep
 
 
+def add_hood_up(ob, spec):
+    """A hood worn up (`finish.hood_up`): a shell around the skull, `offset` off the head (room for short hair), open
+    at the face (between the brows and the chin, `face_deg` either side of the front), closing into the collar at
+    the neck. Top weighted to the head, lower rows blend into the neck and upper spine."""
+    import math as _m
+    import bmesh as _bm
+    from mathutils.bvhtree import BVHTree
+    bm_b = _bm.new(); bm_b.from_mesh(body.data); bm_b.transform(body.matrix_world)
+    bvh = BVHTree.FromBMesh(bm_b)
+    owi = ob.matrix_world.inverted()
+    H = arm.matrix_world @ arm.data.bones["Head"].head_local
+    N = arm.matrix_world @ arm.data.bones["neck_01"].head_local
+    top = max((v.co.z for v in bm_b.verts if abs(v.co.x - H.x) < 0.03 and abs(v.co.y - H.y) < 0.06), default=H.z + 0.22)
+    c = Vector((H.x, H.y - 0.005, H.z + (top - H.z) * 0.42))
+    off = spec.get("offset", 0.03)
+    face = _m.radians(spec.get("face_deg", 62))
+    nseg, nrow = int(spec.get("segments", 32)), int(spec.get("rows", 12))
+    bm = _bm.new(); bm.from_mesh(ob.data)
+    deform = bm.verts.layers.deform.verify()
+    gi = {vg.name: vg.index for vg in ob.vertex_groups}
+    for nme in ("Head", "neck_01", "spine_03"):
+        if nme not in gi:
+            gi[nme] = ob.vertex_groups.new(name=nme).index
+    zl = N.z - 0.02                                   # the hood ends in the collar, around the neck base
+    rows = []
+    for r in range(nrow):
+        el = -0.95 + (_m.pi / 2 + 0.95) * r / (nrow - 1)    # from below the jaw up to the crown
+        ring = []
+        for i in range(nseg):
+            th = 2 * _m.pi * i / nseg                       # 0 = front
+            d = Vector((_m.sin(th) * _m.cos(el), -_m.cos(th) * _m.cos(el), _m.sin(el)))
+            hit = bvh.ray_cast(c + d * 0.4, -d, 0.4)
+            rr = (hit[0] - c).length if hit[0] is not None else 0.1
+            rr = min(rr, spec.get("max_r", 0.125))          # below the jaw the rays reach the shoulders: stay at the neck
+            p = c + d * (rr + off)
+            p.z = max(p.z, zl)
+            front = min(th, 2 * _m.pi - th)
+            ring.append(None if (front < face and el < 0.95) else p)
+        rows.append(ring)
+    vrows = []
+    for r, ring in enumerate(rows):
+        vr = []
+        for p in ring:
+            if p is None:
+                vr.append(None); continue
+            v = bm.verts.new(owi @ p)
+            t = max(0.0, min(1.0, (H.z + 0.04 - p.z) / 0.1))        # 0 above the jaw .. 1 at the collar
+            v[deform][gi["Head"]] = 1 - t
+            if t > 0:
+                v[deform][gi["neck_01"]] = t * 0.7; v[deform][gi["spine_03"]] = t * 0.3
+            vr.append(v)
+        vrows.append(vr)
+    nf = 0
+    for r in range(nrow - 1):
+        for i in range(nseg):
+            q = (vrows[r][i], vrows[r][(i + 1) % nseg], vrows[r + 1][(i + 1) % nseg], vrows[r + 1][i])
+            if all(x is not None for x in q):
+                f = bm.faces.new(q); f.material_index = 0; nf += 1
+    _bm.ops.recalc_face_normals(bm, faces=[f for f in bm.faces if f.is_valid])
+    bm.to_mesh(ob.data); bm.free(); bm_b.free()
+    ob.data.update()
+    C.limit_and_normalize(ob)
+    return {"hood_up_faces": nf}
+
+
 def add_hood(ob, spec):
     """A hood, worn down, for the body-shell finish (`finish.hood`). The sewn OpenSew-2 hood crumples on these
     bodies, and the shell cannot make one (it only lifts skin), so the hood is built from measurements instead: a
@@ -611,6 +676,8 @@ if fin.get("mode") == "body":
                                          bonus=_bonus)
     if fin.get("hood"):
         report["hood"] = add_hood(g, fin["hood"])
+    if fin.get("hood_up"):
+        report["hood_up"] = add_hood_up(g, fin["hood_up"])
     if fin.get("skirt"):
         for _n in ("pelvis", "thigh_l", "thigh_r", "calf_l", "calf_r"):
             if _n not in g.vertex_groups:
