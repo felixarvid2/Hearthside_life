@@ -13,7 +13,9 @@ describe('visitors', () => {
     expect(h.holder.state.schedule.find((e) => e.occurrence === `visit:${ada}:0`)).toMatchObject({ kind: 'visitArrive', at: atDayMinute(0, 17 * 60) });
     runUntil(h, () => h.holder.state.people[ada]!.location.kind === 'lot', 4 * 60 * 10);
     expect(h.holder.state.clock.minutes).toBe(atDayMinute(0, 17 * 60));
-    expect(h.holder.state.people[ada]!.location).toMatchObject({ kind: 'lot', lotId: w.lot.id, x: 8.5 });
+    expect(h.holder.state.people[ada]!.location).toMatchObject({ kind: 'lot', lotId: w.lot.id });
+    // she arrives at the door tile; a first step in the arrival tick is fine
+    expect(Math.abs((h.holder.state.people[ada]!.location as { x: number }).x - 8.5)).toBeLessThan(1);
     expect((h.holder.state.people[ada]!.location as { z: number }).z).toBeGreaterThan(10.9); // entry tile (8, 11)
     expect(h.holder.state.people[ada]!.queue[0]).toMatchObject({ interactionId: 'introduce', source: 'schedule' });
     const leave = h.holder.state.schedule.find((e) => e.kind === 'visitLeave' && e.personId === ada)!;

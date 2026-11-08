@@ -31,7 +31,7 @@ import { isVisitPending, neighbours } from './visitors';
 import { currentWeather, outdoorGateReason } from './weather';
 import { personAvailable, romanceInterest, socialAcceptance, socialRequirementReason } from './social';
 import {
-  EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
+  EVENT_EAT_SCORE, LONELY_INVITE_BELOW, SOCIAL_DESPERATE, SOCIAL_INTERRUPT_BELOW, SLEEP_DAY_ENERGY, SLEEP_NIGHT_END, SLEEP_NIGHT_START, AUTONOMY_INTERRUPT_FACTOR, AUTONOMY_INTERRUPT_NEED, AUTONOMY_INTERVAL, AUTONOMY_MIN_SCORE, AUTONOMY_PICK_BAND,
 } from './tuning';
 import type { ActionRequest } from './types';
 
@@ -354,7 +354,7 @@ function socialCandidate(ctx: SimCtx, p: Person): Candidate | null {
     // if the other person does not already feel socially fulfilled.
     const busy = other.queue.length > 0;
     if (busy && !(p.needs.social < SOCIAL_INTERRUPT_BELOW || isVisitor(ctx, p) || isVisitor(ctx, other))) continue;
-    if (busy && other.needs.social > 80) continue;
+    if (busy && other.needs.social > 80 && p.needs.social >= SOCIAL_DESPERATE) continue;
     let pick: SocialDef | null = null, pickW = 0;
     for (const def of Object.values(ctx.content.socials)) {
       if (!def.autonomy.enabled || def.status !== 'ready') continue;

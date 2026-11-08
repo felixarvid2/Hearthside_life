@@ -10,11 +10,11 @@ export const NEED_DECAY_PER_HOUR: Readonly<Record<NeedId, number>> = {
   hygiene: 4,
   bladder: 11,
   fun: 4.2,
-  social: 3.5,
+  social: 3,
 };
 
 /** Company: while at work or school social does not run down, it rises by this much per game hour (colleagues and classmates). */
-export const COMPANY_SOCIAL_PER_HOUR = 2.5;
+export const COMPANY_SOCIAL_PER_HOUR = 1.5;
 /** Decay multiplier while away at work, errands or school (lighter, event-based off-lot simulation). */
 export const OFFLOT_DECAY_MULT = 0.5;
 /** People at their own off-lot home drift toward this value (they look after themselves there). */
@@ -72,6 +72,8 @@ export const LIBRARY_LOUD_CATEGORIES: readonly string[] = ['funny', 'mean'];
 export const SOCIAL_RECENT_DECAY_MINUTES = 60;
 /** Social autonomy approaches someone busy with an activity only when the actor's social is below this. */
 export const SOCIAL_INTERRUPT_BELOW = 30;
+/** Somebody this lonely approaches a busy housemate even when that person feels socially fulfilled (balance audit: a home-alone person starved while a housemate who gets company at work was cooking). */
+export const SOCIAL_DESPERATE = 15;
 /** A person this lonely may invite a known neighbour over on their own (daytime). */
 export const LONELY_INVITE_BELOW = 25;
 /** Fun and social decay at this fraction while lying down (people do not get bored or lonely asleep). */

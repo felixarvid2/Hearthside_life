@@ -5,6 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { premadeHouseholds } from '../../../src/characters/creator';
 import { atDayMinute, weekday } from '../../../src/core/clock';
+import { promotionDays } from '../../../src/content/careers';
 import type { CareerLevelDef } from '../../../src/content/types';
 import type { Person } from '../../../src/core/types';
 import type { GameCore } from '../../../src/game/GameCore';
@@ -69,11 +70,12 @@ describe('Milestone 11 careers in the simulation', () => {
 
     // Enough performance to clear the first promotion; skills are not needed until the next rung.
     core.state()!.people[p.id]!.career!.performance = 100;
+    core.state()!.people[p.id]!.career!.daysWorked = promotionDays(1) - 1; // the first promotion also needs the days (docs/BALANCE.md)
     runTo(core, atDayMinute(day, level.start - 45));
     runTo(core, atDayMinute(day, level.end + 1));
 
     const after = core.state()!.people[p.id]!;
-    expect(after.career, careerId).toMatchObject({ careerId, level: 2, daysWorked: 1, shift: { status: 'done' } });
+    expect(after.career, careerId).toMatchObject({ careerId, level: 2, daysWorked: promotionDays(1), shift: { status: 'done' } });
     const wages = core.state()!.households[core.state()!.activeHouseholdId]!.ledger
       .filter((l) => l.kind === 'wage' && l.occurrence === `pay:${p.id}:${day}`);
     expect(wages, `${careerId} wage occurrence`).toHaveLength(1);
@@ -96,13 +98,15 @@ describe('Milestone 11 careers in the simulation', () => {
     setNeeds(p, 90);
     expect(core.joinCareer(p.id, 'education')).toEqual({ ok: true });
     s.people[p.id]!.career!.performance = 100;
+    s.people[p.id]!.career!.daysWorked = promotionDays(1) - 3; // three shifts reach the days for level 2
+    const base = promotionDays(1) - 3;
 
     // Monday, Tuesday and Wednesday: one weekday shift per day.
     for (let day = 0; day < 3; day++) {
       setNeeds(s.people[p.id]!, 90);
       runTo(core, atDayMinute(day, level.end + 30));
       const worked = s.people[p.id]!.career!;
-      expect(worked.daysWorked, `shifts completed by day ${day}`).toBe(day + 1);
+      expect(worked.daysWorked, `shifts completed by day ${day}`).toBe(base + day + 1);
       const paid = s.households[s.activeHouseholdId]!.ledger
         .filter((l) => l.kind === 'wage' && l.occurrence === `pay:${p.id}:${day}`);
       expect(paid, `day ${day} wage`).toHaveLength(1);

@@ -54,7 +54,7 @@ Numbers are for seed 11 and eight game weeks (seed 7 gives the same picture). "B
 | 1 | **Groceries priced for the whole dish.** A recipe's `cost` buys all its `servings` (4 to 8), but a cook serves one plate per household member and throws the rest away. A single adult paid $16 to $32 for every plate. | Single: groceries $525 a week against wages of $1,232. Elder: $746 a week. | `recipeCost(p, recipe, portions)` charges `cost x portions / servings` (`src/sim/cooking.ts`). The cook, its availability check and autonomy use the household size as `portions`. A household of four pays what it paid before. |
 | 2 | **Retired elders had no income.** Elders can keep working, but nothing paid an elder who quit or retired, so the funds drained. | Elder: $9,000 to $3,583 in 8 weeks (about $680 a week out), broke around week 13. | `ELDER_PENSION` = $300 a week for every elder without a career in a playable household, paid once per week by `transact` (occurrence `pension:<person>:<week>`, ledger kind `wage`, `src/sim/economy.ts`). |
 | 3 | **The career ladder was climbed in two months.** The promotion days requirement was the level number (1, 2, ... 9 cumulative days), so only performance and skills gated it. | Culinary reached level 9 in week 7 and the cap at 8 weeks; 14 promotions in 8 weeks for a couple. | `promotionDays(n)` = ceil(3n + n^2 / 2): 4, 8, 14, 20, 28, 36, 46, 56, 68 cumulative days (`src/content/careers.ts`). Level 2 still comes in week 1; level 7 is reached around week 8 (measured); level 10 follows around week 15 to 17 (projected from the day counts, five shifts a week). |
-| 4 | **Social collapsed for people who work.** Social decays 3.5 an hour and a worker gets no company on the job. | Single adult, weeks 2 to 5: social averages of 14 to 22, below 15 for up to 64 % of the time at home. | `COMPANY_SOCIAL_PER_HOUR` = 2.5: while at work or school social rises instead of decaying (`src/sim/needs.ts`, `src/sim/tuning.ts`). |
+| 4 | **Social collapsed for people who work.** Social decays 3.5 an hour and a worker gets no company on the job. | Single adult, weeks 2 to 5: social averages of 14 to 22, below 15 for up to 64 % of the time at home. | `COMPANY_SOCIAL_PER_HOUR` = 1.5: while at work or school social rises instead of decaying (`src/sim/needs.ts`). Social decay 3.5 to 3.0 an hour. A lonely person (social below `SOCIAL_DESPERATE` = 15) now approaches a busy housemate even when that housemate feels fulfilled (`src/sim/autonomy.ts`): with company at work, a housemate who works no longer needs the chat, and the one at home starved (the 7-day roommate playtest caught it). |
 | 5 | **Fun was the lowest need for everybody.** Fun decays 5 an hour and the free evening hours could not keep up. | Single adult: fun averages of 20 to 30 in weeks 2 to 5; teen household fun below 15 for 32 % of week 2. | `NEED_DECAY_PER_HOUR.fun` 5 to 4.2 (`src/sim/tuning.ts`). |
 | 6 | **A false stuck report in the harness.** A toddler with every need satisfied and nothing to do stood idle for 6 hours. | "Toddler stood still 376 min". | Not a game bug: the harness now counts stillness only when a need is below 30 (`audit.ts`). |
 
@@ -66,34 +66,36 @@ hunger, energy, hygiene and bladder. They already met the targets.
 | household | funds start to end | income a week | groceries a week | lowest need mean | worst time below 15 | careers at week 8 | findings |
 |---|---|---|---|---|---|---|---|
 | single, before | $9,000 to $15,232 | $1,507 | $525 | fun 36 | social 64 % (week 5) | Maren 9 | 25 |
-| single, after | $9,000 to $17,944 | $1,418 | $137 | fun 43 | fun 9 % (week 3) | Maren 7 | 11 |
+| single, after | $9,000 to $17,853 | $1,420 | $140 | social 45 | social 7 % (week 5) | Maren 7 | 9 |
 | couple, before | $9,000 to $22,816 | $2,448 | $538 | fun 53 | fun 14 % (week 2) | Ines 7, Rafael 9 | 6 |
-| couple, after | $9,000 to $24,094 | $2,366 | $274 | fun 57 | bladder 3 % | Ines 6, Rafael 7 | 0 |
+| couple, after | $9,000 to $23,963 | $2,341 | $266 | fun 58 | fun 3 % | Ines 6, Rafael 7 | 0 |
 | family, before | $5,500 to $20,187 | $2,560 | $530 | social 62 | fun 7 % | Ines 7, Rafael 9 | 4 |
-| family, after | $5,500 to $18,846 | $2,399 | $506 | fun 65 | bladder 2 % | Ines 6, Rafael 7 | 0 |
+| family, after | $5,500 to $18,905 | $2,368 | $518 | fun 64 | bladder 3 % | Ines 7, Rafael 7 | 1 (a toddler waiting) |
 | elder, before | $9,000 to $3,583 | $275 (rewards) | $746 | social 51 | bladder 2 % | none | 1 (funds run out) |
-| elder, after | $9,000 to $10,995 | $612 (pension $300) | $189 | social 50 | bladder 0 % | none | 0 |
+| elder, after | $9,000 to $10,724 | $612 (pension $300) | $191 | social 52 | bladder 1 % | none | 0 |
 | teen, before | $8,000 to $16,973 | $1,771 | $454 | fun 44 | fun 32 % (week 2) | Maren 9, Tess 3 | 25 |
-| teen, after | $8,000 to $17,530 | $1,582 | $227 | fun 48 | fun 15 % (week 2) | Maren 7, Tess 3 | 8 |
+| teen, after | $8,000 to $17,344 | $1,591 | $228 | fun 49 | fun 10 % (week 3) | Maren 7, Tess 3 | 8 |
 
 Career level of the single adult by week, before: 2, 4, 5, 6, 7, 8, 9, 9; after: 2, 3, 4, 5, 5, 6, 7, 7.
-The elder's funds by week, before: 8,864 to 3,583 (falling about $950 a week); after: 9,821 to 10,995 (flat after the first rewards).
-The single adult's social by week, before: 50, 14, 22, 41, 12, 44, 49, 63; after: 56, 36, 40, 43, 48, 50, 45, 53.
+The elder's funds by week, before: 8,864 to 3,583 (falling about $950 a week); after: 9,906 to 10,724 (flat after the first rewards).
+The single adult's social by week, before: 50, 14, 22, 41, 12, 44, 49, 63; after: 58, 31, 36, 33, 54, 59, 42, 45.
 
 The family pays about the same for groceries as before because four plates is a whole dish; the couple pays half. The findings column counts the harness findings against the final targets, recomputed for both trees (the family's 4 before include a
 harness false positive, the idle toddler of row 6).
 
 ## Open
 
-- The **single adult's** second week still dips (fun 36, social 36, hygiene below 15 for 8 % of the time at home) before the first friends
-  and the routine settle; weeks 3 to 8 are within the targets.
-- The **teen household** still has a dip in week 2: fun is below 15 for about a quarter of the time at home. Both seeds show it. The parent and
-  the teenager compete for the same entertainment objects in the first school week; a second TV or computer in the starter house, or an
-  autonomy weight for outdoor fun, would remove it. Later weeks are within the targets.
-- The **single adult's** accepted socials fall to about 2 a week now that work provides company; relationships still form (4 to 6 people
-  known, 1 to 2 friends after eight weeks), but a solo player has to use the phone and the map for more.
-- The audit never leaves home. Venue visits, events and community life are only counted when the household does them; a household that
+- The **single adult** still has a low stretch in weeks 2 to 4 (social 31 to 36, fun 36 to 40) before the first friends and the routine settle;
+  weeks 5 to 8 are within the targets. Accepted socials fall to under 2 a week now that work provides company.
+- A **toddler** (family household, week 6) waited 323 minutes with a need under 30 while both parents were busy; the emergency sitter
+  rule (3 hours at zero) is the safety net. Not investigated further.
+- The **teen household** still has a dip: fun is below 15 for 5 to 10 % of the time at home in weeks 1 to 6 (seed 11; it was 32 % in week 2 before the changes). The parent and
+  the teenager compete for the same entertainment objects in the first school weeks; a second TV or computer in the starter house, or an
+  autonomy weight for outdoor fun, would remove it. It is now 5 to 10 % of the time, not a quarter.
+- Relationships still form for the single adult (5 people known, 3 friends after eight weeks); a solo player has to use the phone and the
+  map for more.
+- The audit never leaves home (the player runs the household; autonomy does not travel). Venue visits, events and community life are only counted when the household does them; a household that
   never travels has no trips.
-- Real players decide purchases and building; the audit buys nothing. Purchases in a first week ($3,000 to $4,000 for an extension with a
-  second floor, see `tests/e2e/release.mjs`) fit the starting funds but leave about half.
+- Real players decide purchases and building; the audit buys nothing. The release scenario's purchases (an 8 x 4 m extension with a door, a staircase, an upper room and three pieces of
+  furniture: $3,616 of the $12,000 Create-mode funds, `tests/e2e/release.mjs`) fit the starting funds and leave 70 %.
 - Seeds differ by a few percent in every number above; the harness takes `--seed` so a change can be checked on several.

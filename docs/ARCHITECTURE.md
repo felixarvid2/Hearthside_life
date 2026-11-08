@@ -250,6 +250,21 @@ Pure code (no three, no DOM), tested in `tests/unit/world/venueLayouts.test.ts` 
   `latest()`, `save(slotId, name, state)` (manual slots only), `autosave(state)` (rotates the previous intact
   autosave into `backup` in the same transaction), `load(slotId, content?)` -> `{ ok, state, report, meta }` or
   `{ ok: false, error, code }`, `remove`, `rename`, `importToSlot`.
+- **Integrity and recovery (M13).** Every record is `{ meta, data, checksum }` (FNV-1a over the JSON text plus its length) and a
+  save is verified (JSON round trip, structure) before it is written, in one transaction. Before a slot (manual or autosave) is
+  overwritten, its current record is pushed onto `<slot>#1`..`<slot>#3` (`BACKUPS_PER_SLOT`, `backupKey`) - only when it is itself intact
+  (checksum, JSON, migration, structure) and differs from the newest backup, so a damaged or failing save never displaces the last good
+  copies. The chain keys are not listed as slots; `remove(slot)` deletes them. `load(slot, content?, { recover? })`
+  falls back to the newest good copy when the slot is damaged (`#1`..`#3`, then `backup` for the autosave) and returns
+  `recovered: { from, savedAt, message }`; GameCore puts the message first in `loadFrom().report`, which the load dialog and Continue
+  show. Storage errors become readable messages (`describeDbError`: quota, unavailable, blocked, aborted); a failed write changes
+  nothing. Tests: `tests/unit/persistence/recovery.test.ts`, `tests/unit/integration/recovery.test.ts`.
+- **Error boundary (M13).** `src/game/crashGuard.ts` (`CrashGuard`, pure): `Game.step` runs the simulation and the render through
+  `guard.run`. A thrown fault is recorded, the simulation halts (no repeated half ticks) and `ui/screens/crash.ts` shows the recovery
+  dialog once: Keep playing (`resume`; the same fault within 5 s shows it again as repeated), Reload last autosave
+  (`loadFrom('autosave')`, with the fallback above) and Export diagnostic file (`buildDiagnostic`: errors with stacks, browser,
+  viewport, mode, speed and the exported world). `window` errors and unhandled rejections feed the same guard (ResizeObserver noise
+  is ignored). `hearthside.debug.crash(msg)` raises a test fault.
 - `exportWorld(state, exportedAt, packs?)`, `importWorld(json, content)`, `migrate(raw)`,
   `validateWorld(state, content)` -> `{ errors, warnings, missing }`; `describeReport(report)` for the UI.
   Missing content references are reported, never deleted.
