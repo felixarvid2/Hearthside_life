@@ -435,7 +435,14 @@ async function stepCatalog(T) {
   const pos = (t) => titles.indexOf(t);
   T.check(S, 'slot sections come in the order Top, Outer, Bottom, ..., Accessories', pos('Top') >= 0 && pos('Top') < pos('Outer') && pos('Outer') < pos('Bottom') && pos('Bottom') < pos('Accessories'), titles.join(' | '));
   const subs = await page.locator('.cr-subsec-title').allInnerTexts();
-  T.check(S, 'the Accessories group only lists slots that have items (Hat, Eyewear, Bag)', subs.join(',') === 'Hat,Eyewear,Bag', subs.join(','));
+  // expected: the accessory slots that have items in the served manifest (the catalog plus the e2e_ parts), in order
+  const servedSlots = await page.evaluate(async () => {
+    const m = await (await fetch('./assets/characters/modular/manifest.json')).json();
+    const order = ['hat', 'eyewear', 'earrings', 'neck', 'wrist', 'waist', 'bag'];
+    const label = { hat: 'Hat', eyewear: 'Eyewear', earrings: 'Earrings', neck: 'Neck', wrist: 'Wrist', waist: 'Waist', bag: 'Bag' };
+    return order.filter((s) => m.garments.some((g) => g.slot === s)).map((s) => label[s]);
+  });
+  T.check(S, 'the Accessories group only lists slots that have items', subs.join(',') === servedSlots.join(','), `${subs.join(',')} (expected ${servedSlots.join(',')})`);
 
   await T.tap(card(T, 'Top garments', 'E2E Tee'));
   await T.settle(3);
