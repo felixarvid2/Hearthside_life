@@ -62,6 +62,7 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
         const it = st.items[pick.itemId];
         if (it?.kind === 'dishes') return `Dirty dishes${it.portions > 1 ? ` (${it.portions} plates)` : ''}`;
         if (it?.kind === 'mess') return it.recipeId === 'crumbs' ? 'Crumbs' : it.recipeId === 'spill' ? 'Spill' : 'Puddle';
+        if (it?.kind === 'gift') return `${api.content.gifts?.[it.recipeId]?.name ?? 'Gift'} (for ${st.people[it.ownerPersonId ?? '']?.firstName ?? 'someone'})`;
         if (it?.kind === 'fish') return `${fishSpecies(it.recipeId)?.name ?? 'Fish'}${it.portions > 1 ? ` (${it.portions} fish)` : ''}`;
         return it ? `${api.content.recipes[it.recipeId]?.name ?? 'Meal'}${it.portions > 1 ? ` (${it.portions} servings)` : ''}` : 'Meal';
       }

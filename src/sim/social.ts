@@ -3,6 +3,7 @@
 // head of their queue. They face each other for the social's duration. The outcome is resolved ONCE at
 // apply with the world rng: acceptance = base + relationship + mood + traits - spam dampening.
 
+import { createGiftItem, giftLine, giftOutcome, giftProblem, giftReaction } from './gifts';
 import { charismaAcceptance } from '../content/skillEffects';
 import type { SocialDef } from '../content/types';
 import { facingTo } from '../core/geometry';
@@ -228,14 +229,19 @@ function witnessCheating(ctx: SimCtx, actor: Person, target: Person, def: Social
 }
 
 /** Resolves a social once: relationships, needs, moodlets, memories, status, feed line and event. */
-export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: SocialDef): boolean {
+export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: SocialDef, opts: { giftId?: string } = {}): boolean {
   const relA = ensureRel(ctx.state, actor.id, target.id);
   decayRecent(relA, ctx.now, SOCIAL_RECENT_DECAY_MINUTES);
   const recent = relA.recent[def.id] ?? 0;
   const chance = socialAcceptance(ctx, actor, target, def);
   let accepted = ctx.rng.next() < chance;
   // A gift is paid for when it is accepted; if the money is gone by now it is simply not given.
-  if (accepted && def.cost) {
+  const gift = def.id === 'giveGift' ? ctx.content.gifts?.[opts.giftId ?? 'trinket'] : undefined;
+  const reaction = gift ? giftReaction(target, gift) : null;
+  if (accepted && gift) {
+    const paid = transact(ctx.state, ctx.events, actor.householdId, -gift.price, 'gift', `${gift.name}: ${target.firstName}`, { occurrence: `gift:${actor.id}:${target.id}:${Math.round(ctx.now)}` });
+    if (!paid.ok) accepted = false;
+  } else if (accepted && def.cost) {
     const paid = transact(ctx.state, ctx.events, actor.householdId, -def.cost, 'gift', `${def.name}: ${target.firstName}`, { occurrence: `gift:${actor.id}:${target.id}:${Math.round(ctx.now)}` });
     if (!paid.ok) accepted = false;
   }
@@ -243,7 +249,8 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   // Consent: somebody who is not interested (or not open to it) is never moved by a romantic advance. The advance is
   // declined kindly, and from then on the option stays off for this pair (no pestering).
   if (romantic && !def.unilateral && !romanceInterest(target, actor)) relA.romanceBlocked = true;
-  const out = accepted ? def.success : def.failure;
+  const loving = !!commitmentOf(ctx.state, target.id) || relA.romance >= 20;
+  const out = accepted ? (gift && reaction ? giftOutcome(def.success, reaction.verdict, loving) : def.success) : def.failure;
   const dampen = 1 / (1 + recent);
   applyRelDelta(ctx.state, actor.id, target.id, { ...out.actor, familiarity: (out.actor.familiarity ?? 0) + 2 }, ctx.now, dampen);
   applyRelDelta(ctx.state, target.id, actor.id, { ...out.target, familiarity: (out.target.familiarity ?? 0) + 2 }, ctx.now, dampen);
@@ -276,12 +283,14 @@ export function resolveSocial(ctx: SimCtx, actor: Person, target: Person, def: S
   refreshLabel(ctx.state, actor.id, target.id);
   refreshLabel(ctx.state, target.id, actor.id);
   const lines = accepted ? def.lines.success : def.lines.failure;
-  const line = lines.length > 0 ? fill(ctx.rng.pick(lines), actor, target)
+  const line = accepted && gift && reaction ? giftLine(reaction.verdict, gift, actor.firstName, target.firstName, Math.round(ctx.now))
+    : lines.length > 0 ? fill(ctx.rng.pick(lines), actor, target)
     : accepted ? `${actor.firstName} and ${target.firstName}: ${def.name}.` : `${target.firstName} didn't respond well to ${actor.firstName}.`;
   ctx.events.emit({ type: 'social', actorId: actor.id, targetId: target.id, socialId: def.id, accepted, line });
   ctx.events.emit({ type: 'relationship', fromId: actor.id, toId: target.id, what: 'value' });
   if (householdOf(ctx, actor)?.isPlayable || householdOf(ctx, target)?.isPlayable) addFeed(ctx.state, ctx.events, 'social', line, actor.id);
   witnessCheating(ctx, actor, target, def, accepted);
+  if (accepted && gift) createGiftItem(ctx, actor, target, gift);
   if (accepted && def.startsEvent) planEventFromSocial(ctx, actor, target, def.startsEvent);
   if (accepted && def.effect) applySocialEffect(ctx, actor, target, def);
   noteSocial(ctx, actor, target, def, accepted);
@@ -321,6 +330,10 @@ export const socialBehavior: Behavior = {
     if (!t || t.id === p.id) return 'Choose someone to talk to.';
     const req = socialRequirementReason(ctx, p, t, def);
     if (req) return req;
+    if (def.id === 'giveGift' && typeof a.data.gift === 'string') {
+      const why = giftProblem(ctx, p, t, a.data.gift);
+      if (why) return why;
+    }
     return personAvailable(ctx, t, p);
   },
   reserve(ctx, _p, a) {
@@ -394,7 +407,7 @@ export const socialBehavior: Behavior = {
     if (a.data.role === 'listen') return;
     const t = partnerOf(ctx, a);
     const def = socialDef(ctx, a.interactionId);
-    if (t && def) a.data.accepted = resolveSocial(ctx, p, t, def);
+    if (t && def) a.data.accepted = resolveSocial(ctx, p, t, def, typeof a.data.gift === 'string' ? { giftId: a.data.gift } : {});
     endListener(ctx, a);
   },
   end(ctx, _p, a) {

@@ -2,6 +2,7 @@
 // with the game's real socials, events, moodlets and traits, and helpers to add people and set relationships.
 
 import { EVENTS } from '../../../src/content/events';
+import { GIFTS } from '../../../src/content/gifts';
 import { INTERACTIONS } from '../../../src/content/interactions';
 import { MOODLETS } from '../../../src/content/moodlets';
 import { SOCIALS } from '../../../src/content/socials';
@@ -25,6 +26,7 @@ export function socialContent(): ContentDB {
     interactions: { ...base.interactions, ...byId(INTERACTIONS.filter((i) => i.id === 'planEvent' || i.id === 'phoneDate')) },
     socials: byId(SOCIALS),
     events: byId(EVENTS),
+    gifts: byId(GIFTS),
     moodlets: { ...base.moodlets, ...byId(MOODLETS) },
     traits: { ...base.traits, ...byId(TRAITS) },
   };

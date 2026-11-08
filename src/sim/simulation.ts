@@ -19,6 +19,8 @@ import {
   joinCareer, quitCareer, resolveCareerEvent, setCareerEffort, updateCareers,
 } from './careers';
 import { spoilMeals } from './cooking';
+import { giftChoices } from './gifts';
+import type { GiftChoice } from './gifts';
 import { advanceGardens } from './garden';
 import { payBill, setAutoPay, updateBills } from './economy';
 import { cancelEvent, canPlanEvent, dailyReconciliation, ensureEventEnds, planEvent } from './events';
@@ -337,6 +339,13 @@ export class Simulation {
     const ctx = this.ctx();
     const host = ctx.state.people[req.hostId];
     return host ? canPlanEvent(ctx, host, req.guestIds, req.type, req.startAt) : 'Unknown host.';
+  }
+
+  /** The gift catalog as `giverId` would see it for `recipientId` (prices, affordability, hints). Pure. */
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] {
+    const ctx = this.ctx();
+    const giver = ctx.state.people[giverId], recipient = ctx.state.people[recipientId];
+    return giver && recipient ? giftChoices(ctx, giver, recipient) : [];
   }
 
   /** Cancels a planned (not yet started) event. */

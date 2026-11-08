@@ -303,3 +303,11 @@ export const CARE_AUTONOMY_NEED = 45;
 export const ADOPTION_FEES = { baby: 250000, toddler: 200000, child: 150000, teen: 100000 } as const;
 /** Households hold at most this many people. */
 export const MAX_HOUSEHOLD_SIZE = 8;
+
+// Gifts (Milestone 13; sim/gifts.ts)
+/** A gift parcel stays on the recipient's lot this long (game minutes) before it is put away. */
+export const GIFT_KEEP_MINUTES = 14 * 1440;
+/** At most this many parcels wait at one recipient's lot; the oldest are put away first. */
+export const GIFT_LOT_LIMIT = 8;
+/** Familiarity needed before a gift's hint tells whether the recipient would like it. */
+export const GIFT_HINT_FAMILIARITY = 30;

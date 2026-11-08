@@ -342,8 +342,8 @@ const TRUST: SocialDef[] = [
     topics: ['favour'], autonomy: { enabled: false, weight: 0 },
   }),
   social({
-    id: 'giveGift', name: 'Give a Gift', description: 'Bring a small present ($20). Charged to your household when accepted.', icon: 'star', category: 'friendly', section: 'special',
-    minutes: 2, anim: 'agree', requires: { minFamiliarity: 15 }, acceptance: 0.9, cost: 2000,
+    id: 'giveGift', name: 'Give a Gift...', description: 'Choose a present from a small catalog. It is paid for when accepted and left as a parcel at their home; what they like decides how much it means.', icon: 'star', category: 'friendly', section: 'special',
+    minutes: 2, anim: 'agree', requires: { minFamiliarity: 15 }, acceptance: 0.9, cost: 400,
     success: out({
       actor: { friendship: 2, trust: 1 }, target: { friendship: 6, trust: 2 }, social: 8, targetMoodlet: 'giftReceived', actorMoodlet: 'pleasantChat',
       memory: { kind: 'gift', importance: 1, text: '{a} gave {b} a thoughtful gift.' },

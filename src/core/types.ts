@@ -416,13 +416,15 @@ export interface GardenState {
 }
 
 /** What a WorldItem is: a served meal, a caught fish, dirty dishes left after eating, or a floor mess (puddle, crumbs, spill). */
-export type WorldItemKind = 'meal' | 'fish' | 'dishes' | 'mess';
+export type WorldItemKind = 'meal' | 'fish' | 'dishes' | 'mess' | 'gift';
 
 /**
  * Transient items created by actions (e.g. a served meal or a landed fish). Saved, but never sold by the household.
  * `fish`: `recipeId` = the species id (content/fishing.ts), `portions` = number of fish, `quality` unused (1).
  * `dishes`: `portions` = number of dirty plates, `recipeId` = the dish they held, `quality` unused (1).
  * `mess`: `recipeId` = the variant ('puddle' | 'crumbs' | 'spill'), `quality` = severity 0..1, `portions` = 1.
+ * `gift` (Milestone 13): a wrapped parcel somebody gave; `recipeId` = the gift kind (content/gifts.ts), `ownerPersonId` = the
+ * recipient, `giftFromId` = the giver; it is put away when `spoilsAt` passes (sim/gifts.ts).
  * Only meals and fish spoil; dishes and messes stay until somebody cleans them.
  */
 export interface WorldItem {
@@ -437,6 +439,9 @@ export interface WorldItem {
   createdAt: GameMinutes;
   spoilsAt: GameMinutes;
   ownerHouseholdId: Id | null;
+  /** Gifts only: who it belongs to and who gave it. */
+  ownerPersonId?: Id;
+  giftFromId?: Id;
 }
 
 // ---------------------------------------------------------------------------------------------

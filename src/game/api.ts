@@ -87,6 +87,7 @@ import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
 import type { PersonPlace } from '../sim/places';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
 import type { FamilyInfo } from '../sim/familyView';
+import type { GiftChoice } from '../sim/gifts';
 import type { SplitPreview, SplitTarget } from '../sim/split';
 
 export type { BuildCounts, BuildHighlight, BuildMeasure, WallSpec } from '../building/buildPlans';
@@ -98,6 +99,7 @@ export type { PersonPlace, PlaceKind } from '../sim/places';
 export type { AdoptionPreview, AdoptionSpec, AdoptStage } from '../sim/adoption';
 export type { FamilyInfo, RelativeInfo } from '../sim/familyView';
 export type { SplitPreview, SplitTarget } from '../sim/split';
+export type { GiftChoice, GiftVerdict } from '../sim/gifts';
 export type { SchoolInfo } from '../sim/school';
 
 export type GameMode = 'boot' | 'menu' | 'creator' | 'live' | 'buy' | 'build';
@@ -413,6 +415,11 @@ export interface GameAPI {
   planEvent?(req: PlanEventRequest): Result & { eventId?: Id };
   /** Calls off a planned event that has not started. */
   cancelEvent?(eventId: Id): Result;
+  // ---- gifts (Milestone 13; sim/gifts.ts) ----
+  // "Give a Gift..." in the social menu raises ui.request 'giveGift' (personId = giver, targetId = recipient); the picker lists
+  // giftChoices() and calls giveGift() with the chosen kind. The gift is paid for when accepted and left as a parcel at the recipient's lot.
+  giftChoices?(giverId: Id, recipientId: Id): GiftChoice[];
+  giveGift?(giverId: Id, recipientId: Id, giftId: string): Result;
 
   // ---- careers and household economy (Milestone 6) ----
   // Optional like the event planner: standalone dev mocks of other screens may omit them. Money always moves

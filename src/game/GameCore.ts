@@ -28,6 +28,7 @@ import { describeReport, exportWorld as exportWorldJson, importWorld as importWo
 import { isManualSlot, isSlotId } from '../persistence/types';
 import type { AdoptionPreview, AdoptionSpec } from '../sim/adoption';
 import type { FamilyInfo } from '../sim/familyView';
+import type { GiftChoice } from '../sim/gifts';
 import type { MovePreview, SwitchPreview } from '../sim/households';
 import type { SplitPreview, SplitTarget } from '../sim/split';
 import type { NeighbourhoodInfo } from '../sim/neighbourhoodView';
@@ -382,7 +383,21 @@ export class GameCore {
     if (!this.world) return fail('No game is running.');
     const t = readToken(option?.token, option?.interactionId);
     if (!t) return fail('That choice is no longer available.');
+    // "Give a Gift..." opens the picker; the chosen gift comes back through giveGift().
+    if (t.interactionId === 'giveGift' && t.data?.gift === undefined && t.target.kind === 'person') {
+      this.events.emit({ type: 'ui.request', what: 'giveGift', personId, targetId: t.target.personId });
+      return OK;
+    }
     const r = this.sim.queue(personId, { ...t, source: 'player' });
+    return r.ok ? OK : fail(r.reason);
+  }
+
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] { return this.world ? this.sim.giftChoices(giverId, recipientId) : []; }
+
+  /** Queues giving the chosen gift: the giver walks over and offers it; it is paid for if accepted. */
+  giveGift(giverId: Id, recipientId: Id, giftId: string): Result {
+    if (!this.world) return fail('No game is running.');
+    const r = this.sim.queue(giverId, { interactionId: 'giveGift', target: { kind: 'person', personId: recipientId }, data: { gift: giftId }, source: 'player' });
     return r.ok ? OK : fail(r.reason);
   }
 

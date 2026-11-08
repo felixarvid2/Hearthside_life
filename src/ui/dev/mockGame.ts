@@ -24,6 +24,8 @@ import type {
 import { NEED_IDS } from '../../core/types';
 import { Rng, seedRng } from '../../core/rng';
 import type { MovePreview, NeighbourhoodInfo, PersonPlace, SwitchPreview } from '../../game/api';
+import { giftChoices as simGiftChoices } from '../../sim/gifts';
+import type { GiftChoice } from '../../sim/gifts';
 import { movePreview as simMovePreview, switchPreview as simSwitchPreview } from '../../sim/households';
 import { travelProblem as simTravelProblem } from '../../sim/lotTravel';
 import { neighbourhoodInfo } from '../../sim/neighbourhoodView';
@@ -407,6 +409,11 @@ export class MockGame implements GameAPI {
     if (option.interactionId === 'editOutfits') {
       setTimeout(() => this.events.emit({ type: 'ui.request', what: 'editOutfits', personId }), 50);
       return { ok: true };
+    }
+    if (option.interactionId === 'giveGift') {
+      const tok = option.token as { pick?: PickResult };
+      const targetId = tok.pick?.kind === 'person' ? tok.pick.personId : undefined;
+      if (targetId) { setTimeout(() => this.events.emit({ type: 'ui.request', what: 'giveGift', personId, targetId }), 50); return { ok: true }; }
     }
     if (option.interactionId === 'planEvent') {
       setTimeout(() => this.events.emit({ type: 'ui.request', what: 'planEvent', personId }), 50);
@@ -940,6 +947,17 @@ export class MockGame implements GameAPI {
     this.events.emit({ type: 'household.moved', householdId: hh.id, fromLotId: null, toLotId: lotId });
     this.emit('neighbourhood');
     this.emit('state');
+    return { ok: true };
+  }
+
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] {
+    const c = this.simCtx(), w = this.world;
+    const giver = w?.people[giverId], to = w?.people[recipientId];
+    return c && giver && to ? simGiftChoices(c, giver, to) : [];
+  }
+
+  giveGift(giverId: Id, recipientId: Id, giftId: string): Result {
+    this.log('giveGift', { giverId, recipientId, giftId });
     return { ok: true };
   }
 

@@ -51,7 +51,7 @@ export function fillDailyLifeDefaults(raw: Record<string, unknown>): void {
   }
   if (isRecord(raw.items)) {
     for (const item of Object.values(raw.items)) {
-      if (isRecord(item) && item.kind !== 'meal' && item.kind !== 'fish' && item.kind !== 'dishes' && item.kind !== 'mess') item.kind = 'meal';
+      if (isRecord(item) && item.kind !== 'meal' && item.kind !== 'fish' && item.kind !== 'dishes' && item.kind !== 'mess' && item.kind !== 'gift') item.kind = 'meal';
     }
   }
 }

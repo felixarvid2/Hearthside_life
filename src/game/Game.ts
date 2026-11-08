@@ -23,7 +23,7 @@ import { resolveSlots } from '../world/slots';
 import { DEFAULT_WALL_HEIGHT } from '../world/walls';
 import type {
   BuildApplyResult, BuildPreview, BuildTarget, BuildTool, CreatorPreviewOptions, CutawayMode, DevStats, GameAPI, GameMode, GameSettings,
-  AdoptionPreview, AdoptionSpec, FamilyInfo, MenuOption, MovePreview, NeighbourhoodInfo, SplitPreview, SplitTarget, PaintPreview, PaintTool, PersonPlace, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo,
+  AdoptionPreview, AdoptionSpec, FamilyInfo, GiftChoice, MenuOption, MovePreview, NeighbourhoodInfo, SplitPreview, SplitTarget, PaintPreview, PaintTool, PersonPlace, PickResult, PlacementState, PlanEventRequest, Result, RoomInfo,
   SaveSlotInfo, SoundId, SwitchPreview, UiChange,
 } from './api';
 import { GameAudio } from './audio';
@@ -450,6 +450,8 @@ export class Game implements GameAPI {
   eventProblem(req: PlanEventRequest): string | null { return this.core.eventProblem(req); }
   planEvent(req: PlanEventRequest): Result & { eventId?: Id } { return this.core.planEvent(req); }
   cancelEvent(eventId: Id): Result { return this.core.cancelEvent(eventId); }
+  giftChoices(giverId: Id, recipientId: Id): GiftChoice[] { return this.core.giftChoices(giverId, recipientId); }
+  giveGift(giverId: Id, recipientId: Id, giftId: string): Result { return this.core.giveGift(giverId, recipientId, giftId); }
 
   // ---- careers and household economy (Milestone 6) ----
 
