@@ -3886,7 +3886,17 @@ async function stepStairKinds(T) {
       spot = await findSpot(used, true);
       if (spot) spot.sold = await page.evaluate((ids) => ids.map((id) => window.hearthside.game.sell(id).ok), spot.clear);
     }
-    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every(Boolean), JSON.stringify(spot));
+    // on a miss, a map of level 0 (F floor, o object, P pool, # floor and object) says what fills the lot
+    const lotMap = spot ? null : await page.evaluate(() => {
+      const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId], defs = window.hearthside.game.content.objects;
+      const rows = Array.from({ length: lot.depth }, () => Array(lot.width).fill('.'));
+      const put = (x, z, c) => { if (rows[z]?.[x] !== undefined) rows[z][x] = rows[z][x] === '.' ? c : '#'; };
+      for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) put(x, z, 'F'); }
+      for (const o of Object.values(lot.objects)) { if (o.level !== 0) continue; const d = defs[o.defId]; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) put(o.x + i, o.z + j, 'o'); }
+      for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) put(x, z, 'P');
+      return { lot: st.activeLotId, w: lot.width, d: lot.depth, walls: Object.keys(lot.walls).filter((k) => k.startsWith('0:')).length, fences: Object.keys(lot.fences ?? {}).length, map: rows.map((r) => r.join('')).join('/') };
+    });
+    T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every(Boolean), JSON.stringify(spot ?? lotMap));
     if (!spot) return;
     const { x: X0, z: Z0 } = spot;
     for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${X0 + i},${Z0 + j}`);
