@@ -319,3 +319,11 @@ export const GROUP_CHAT_RADIUS = 6;
 export const GROUP_CHAT_EXTRAS = 4;
 /** Opinion changes between two people who are not the speaker, relative to the speaker's own. */
 export const GROUP_CHAT_SIDE_WEIGHT = 0.6;
+
+// Life in town (Milestone 13; sim/townChange.ts)
+/** Chance per game day that one townsperson changes their working life (hired, switches career or quits). */
+export const TOWN_JOB_CHANCE = 0.18;
+/** Chance per game week (on its weekly day) that one NPC household moves to an empty home. */
+export const TOWN_MOVE_CHANCE = 0.4;
+/** Day of the week (0 = Monday) the town's moving day falls on. */
+export const TOWN_MOVE_WEEKDAY = 3;

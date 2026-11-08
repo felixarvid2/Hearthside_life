@@ -19,6 +19,7 @@ import {
   joinCareer, quitCareer, resolveCareerEvent, setCareerEffort, updateCareers,
 } from './careers';
 import { announceCommunityEvents } from './community';
+import { dailyTownChange } from './townChange';
 import { spoilMeals } from './cooking';
 import { giftChoices } from './gifts';
 import type { GiftChoice } from './gifts';
@@ -183,6 +184,7 @@ export class Simulation {
     syncBonds(ctx.state, ctx.events, ctx.now);
     dailyDropIn(ctx, day);
     announceCommunityEvents(ctx, day);
+    dailyTownChange(ctx, day);
     dailyReconciliation(ctx, day);
     // Family (Milestone 8): the week's report cards, then the day's aging and birthdays.
     reportCards(ctx, day);
