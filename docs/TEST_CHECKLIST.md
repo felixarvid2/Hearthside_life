@@ -149,7 +149,7 @@ Audit of what reaches the production build (`npm run build`, one Vite entry: `in
 
 ## Release scenario results (`npm run e2e:release`)
 
-See the commands above. Last run: 2026-11-08, portrait 390x844 and landscape 844x390, all checks passed (see CONTINUATION for the count). The extension
+See the commands above. Last run: 2026-11-08, portrait 390x844 and landscape 844x390, 54/54 checks passed (27 per viewport). The extension
 (8 x 4 m room with a door, a staircase, an upper room) and three pieces of furniture cost $3,616 of the $12,000 Create-mode funds. Screenshots:
 `dev/shots/release/` (main menu, creator, review, move-in, second floor in Build, furnished, after the weeks, venue, reload, load, event planner
 with the Where? select, gift picker, map with What's on, venue sheet, move dialog with the furniture choice).

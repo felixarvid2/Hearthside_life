@@ -161,6 +161,10 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
   `qualityFor()` in `src/game/settings.ts` is the quality auto-detect (phones and low-memory devices start on Low).
 - **Release scenario**: `npm run e2e:release` (portrait and landscape; add `--only=desktop`), screenshots in `dev/shots/release/`.
   Shared browser plumbing for the new scripts is in `tests/e2e/common.mjs`.
+- **Checks on this branch** (2026-11-08): typecheck clean; `npm test` 187 files, 2386 tests, 2383 pass - the 3 failures are
+  `tests/unit/characters3d/modular/look.test.ts` (garment count 41 against 42) and `ubcBodies.test.ts` (skin colour), which depend only on the
+  character asset manifest, none of whose files this branch changes (not run on the base commit; unrelated to the files changed here); `content:check` 0 errors 0 warnings; `build` passes; `npm run e2e` OK;
+  `npm run e2e:release` 54/54 (portrait and landscape); `npm run e2e:perf` ran (table in TEST_CHECKLIST.md).
 - **Placeholders**: audited (docs/TEST_CHECKLIST.md "Release readiness"); `tests/unit/tools/productionClean.test.ts` keeps dev imports and
   placeholder wording out of the shipped source.
 
