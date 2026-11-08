@@ -3890,58 +3890,64 @@ async function stepStairKinds(T) {
   const kinds = [['stair-spiral-wood', 'spiral (4 tiles)'], ['stair-grand', 'straight, 4 tiles, two wide']];
   let first = null;
   for (const [defId, label] of kinds) {
-    let spot = await findSpot(used);
-    if (!spot) {
-      spot = await findSpot(used, true);
-      if (spot) spot.sold = await page.evaluate(([ids, fences]) => {
-        const g = window.hearthside.game;
-        if (ids.length) { g.setMode('buy'); }
-        const sold = ids.map((id) => { const o = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId].objects[id]; const r = g.sell(id); return r.ok || `${o?.defId}: ${r.reason}`; });
-        if (fences.length) {
-          g.setMode('build');
-          g.view.setLevel?.(0);
-          g.setBuildTool({ kind: 'eraseFence' });
-          for (const f of fences) g.buildApply({ from: f.dir === 'h' ? { x: f.x + 0.5, z: f.z } : { x: f.x, z: f.z + 0.5 }, level: 0 });
-          g.setBuildTool(null);
+    // a room refused here (someone would be shut in, an object blocks the door) moves on to the next stretch
+    let spot = null, built = null, lotMap = null;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      spot = await findSpot(used);
+      if (!spot) {
+        spot = await findSpot(used, true);
+        if (spot) spot.sold = await page.evaluate(([ids, fences]) => {
+          const g = window.hearthside.game;
+          if (ids.length) { g.setMode('buy'); }
+          const sold = ids.map((id) => { const o = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId].objects[id]; const r = g.sell(id); return r.ok || `${o?.defId}: ${r.reason}`; });
+          if (fences.length) {
+            g.setMode('build');
+            g.view.setLevel?.(0);
+            g.setBuildTool({ kind: 'eraseFence' });
+            for (const f of fences) g.buildApply({ from: f.dir === 'h' ? { x: f.x + 0.5, z: f.z } : { x: f.x, z: f.z + 0.5 }, level: 0 });
+            g.setBuildTool(null);
+            g.setMode('live');
+            const lot = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId];
+            for (const f of fences) sold.push(!lot.fences?.[`0:${f.dir}:${f.x}:${f.z}`]);
+          }
           g.setMode('live');
-          const lot = window.hearthside.debug.state().lots[window.hearthside.debug.state().activeLotId];
-          for (const f of fences) sold.push(!lot.fences?.[`0:${f.dir}:${f.x}:${f.z}`]);
-        }
+          return sold;
+        }, [spot.clear, spot.fences]);
+      }
+      // on a miss, a map of level 0 (F floor, o object, P pool, # floor and object) says what fills the lot
+      if (!spot) lotMap = await page.evaluate(() => {
+        const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId], defs = window.hearthside.game.content.objects;
+        const rows = Array.from({ length: lot.depth }, () => Array(lot.width).fill('.'));
+        const put = (x, z, c) => { if (rows[z]?.[x] !== undefined) rows[z][x] = rows[z][x] === '.' ? c : '#'; };
+        for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) put(x, z, 'F'); }
+        for (const o of Object.values(lot.objects)) { if (o.level !== 0) continue; const d = defs[o.defId]; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) put(o.x + i, o.z + j, 'o'); }
+        for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) put(x, z, 'P');
+        return { lot: st.activeLotId, w: lot.width, d: lot.depth, walls: Object.keys(lot.walls).filter((k) => k.startsWith('0:')).length, fences: Object.keys(lot.fences ?? {}).length, map: rows.map((r) => r.join('')).join('/') };
+      });
+      if (!spot) break;
+      for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${spot.x + i},${spot.z + j}`);
+      // ---- a ground room with a floor and a door, a room over it on Floor 2
+      built = await page.evaluate(([x0, z0]) => {
+        const g = window.hearthside.game;
+        const fd = Object.values(g.content.floorDesigns).find((d) => d.status === 'ready');
+        const floor = { designId: fd.id, paletteId: fd.palettes[0].id };
+        const door = Object.values(g.content.openings).find((d) => d.kind === 'door' && d.status === 'ready' && d.width === 1);
+        g.setMode('build');
+        g.view.setLevel?.(0);
+        g.setBuildTool({ kind: 'room', floor, doors: [{ defId: door.id, side: 'e' }] });
+        const ground = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 0 });
+        g.setBuildTool({ kind: 'room', floor, doors: [] });
+        const upper = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 1 });
+        g.setBuildTool(null);
         g.setMode('live');
-        return sold;
-      }, [spot.clear, spot.fences]);
+        return { ground: ground.ok ? true : ground.reason, upper: upper.ok ? true : upper.reason };
+      }, [spot.x, spot.z]);
+      if (built.ground === true) break;
     }
-    // on a miss, a map of level 0 (F floor, o object, P pool, # floor and object) says what fills the lot
-    const lotMap = spot ? null : await page.evaluate(() => {
-      const st = window.hearthside.debug.state(), lot = st.lots[st.activeLotId], defs = window.hearthside.game.content.objects;
-      const rows = Array.from({ length: lot.depth }, () => Array(lot.width).fill('.'));
-      const put = (x, z, c) => { if (rows[z]?.[x] !== undefined) rows[z][x] = rows[z][x] === '.' ? c : '#'; };
-      for (const k of Object.keys(lot.floors)) { const [l, x, z] = k.split(':').map(Number); if (l === 0) put(x, z, 'F'); }
-      for (const o of Object.values(lot.objects)) { if (o.level !== 0) continue; const d = defs[o.defId]; const w = o.rot % 2 ? d.footprint.d : d.footprint.w, dd = o.rot % 2 ? d.footprint.w : d.footprint.d; for (let i = 0; i < w; i++) for (let j = 0; j < dd; j++) put(o.x + i, o.z + j, 'o'); }
-      for (const p of Object.values(lot.pools ?? {})) for (let z = p.z0; z <= p.z1; z++) for (let x = p.x0; x <= p.x1; x++) put(x, z, 'P');
-      return { lot: st.activeLotId, w: lot.width, d: lot.depth, walls: Object.keys(lot.walls).filter((k) => k.startsWith('0:')).length, fences: Object.keys(lot.fences ?? {}).length, map: rows.map((r) => r.join('')).join('/') };
-    });
     T.check(S, `there is an empty stretch of the lot for the ${label} staircase`, !!spot && (spot.sold ?? []).every((v) => v === true), JSON.stringify(spot ?? lotMap));
     if (!spot) return;
     const { x: X0, z: Z0 } = spot;
-    for (let j = -1; j <= 4; j++) for (let i = -1; i <= 9; i++) used.push(`${X0 + i},${Z0 + j}`);
-    if (!first) first = spot;
-    // ---- a ground room with a floor and a door, a room over it on Floor 2
-    const built = await page.evaluate(([x0, z0]) => {
-      const g = window.hearthside.game;
-      const fd = Object.values(g.content.floorDesigns).find((d) => d.status === 'ready');
-      const floor = { designId: fd.id, paletteId: fd.palettes[0].id };
-      const door = Object.values(g.content.openings).find((d) => d.kind === 'door' && d.status === 'ready' && d.width === 1);
-      g.setMode('build');
-      g.view.setLevel?.(0);
-      g.setBuildTool({ kind: 'room', floor, doors: [{ defId: door.id, side: 'e' }] });
-      const ground = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 0 });
-      g.setBuildTool({ kind: 'room', floor, doors: [] });
-      const upper = g.buildApply({ from: { x: x0, z: z0 }, to: { x: x0 + 7, z: z0 + 4 }, level: 1 });
-      g.setBuildTool(null);
-      g.setMode('live');
-      return { ground: ground.ok ? true : ground.reason, upper: upper.ok ? true : upper.reason };
-    }, [X0, Z0]);
+    if (!first && built.ground === true && built.upper === true) first = spot;
     T.check(S, `the ${label} staircase: ground room and Floor 2 room built`, built.ground === true && built.upper === true, JSON.stringify(built));
     const memberOnLot = () => page.evaluate(() => { const st = window.hearthside.debug.state(); return st.households[st.activeHouseholdId].memberIds.find((id) => st.people[id].location.kind === 'lot') ?? null; });
     let walker = await memberOnLot();
