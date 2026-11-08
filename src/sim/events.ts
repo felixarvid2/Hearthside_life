@@ -76,7 +76,7 @@ function emit(ctx: SimCtx, ev: HomeEvent, what: 'planned' | 'started' | 'goal' |
 
 
 // ---------------------------------------------------------------------------------------------
-// Events at a public venue (Milestone 13): the household and the guests travel there
+// Events at a public venue (social gaps pass): the household and the guests travel there
 // ---------------------------------------------------------------------------------------------
 
 /** The venue lot an event request names, `null` for the host's home, or 'bad' for any other lot. */

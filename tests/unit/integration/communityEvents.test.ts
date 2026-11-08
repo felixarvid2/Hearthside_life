@@ -1,4 +1,4 @@
-// Milestone 13: the weekly community events at the venues, on the real content and world.
+// social gaps pass: the weekly community events at the venues, on the real content and world.
 
 import { describe, expect, it, vi } from 'vitest';
 import { premadeHouseholds } from '../../../src/characters/creator';

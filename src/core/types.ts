@@ -120,7 +120,7 @@ export interface SimSettings {
   seasonDays?: number;
   /** Milestone 12: weather on (default). Off = always clear. */
   weather?: boolean;
-  /** Milestone 13: townspeople change jobs and households move to empty homes over time (default on). */
+  /** social gaps pass: townspeople change jobs and households move to empty homes over time (default on). */
   townLife?: boolean;
 }
 
@@ -427,7 +427,7 @@ export type WorldItemKind = 'meal' | 'fish' | 'dishes' | 'mess' | 'gift';
  * `fish`: `recipeId` = the species id (content/fishing.ts), `portions` = number of fish, `quality` unused (1).
  * `dishes`: `portions` = number of dirty plates, `recipeId` = the dish they held, `quality` unused (1).
  * `mess`: `recipeId` = the variant ('puddle' | 'crumbs' | 'spill'), `quality` = severity 0..1, `portions` = 1.
- * `gift` (Milestone 13): a wrapped parcel somebody gave; `recipeId` = the gift kind (content/gifts.ts), `ownerPersonId` = the
+ * `gift` (social gaps pass): a wrapped parcel somebody gave; `recipeId` = the gift kind (content/gifts.ts), `ownerPersonId` = the
  * recipient, `giftFromId` = the giver; it is put away when `spoilsAt` passes (sim/gifts.ts).
  * Only meals and fish spoil; dishes and messes stay until somebody cleans them.
  */
@@ -502,7 +502,7 @@ export interface Person {
   /** Milestone 8: game minute since which a baby's or toddler's need has been empty (the emergency sitter comes after 3 hours). */
   careSince?: Partial<Record<NeedId, GameMinutes>>;
   /**
-   * Milestone 13: the person who is carrying this baby right now (set by the care behaviour while it holds the baby, cleared when it
+   * social gaps pass: the person who is carrying this baby right now (set by the care behaviour while it holds the baby, cleared when it
    * puts them down). The renderer cradles the baby in that person's arms; absent = not carried.
    */
   carriedBy?: Id;

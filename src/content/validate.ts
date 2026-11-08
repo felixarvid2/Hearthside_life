@@ -435,7 +435,7 @@ export function validateContent(db: ContentDB, opts: { models?: Record<string, M
     if (!(sc.start >= 0 && sc.end > sc.start && sc.end <= 24 * 60)) err(`${w}: bad school hours`);
   }
 
-  // ---- Gifts and community events (Milestone 13) ----
+  // ---- Gifts and community events (social gaps pass) ----
   const prefIds = new Set(db.preferences.map((x) => x.id));
   for (const g of Object.values(db.gifts ?? {})) {
     const w = `gift '${g.id}'`;

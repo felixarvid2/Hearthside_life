@@ -1,4 +1,4 @@
-// Gifts (Milestone 13): a gift is bought when it is accepted and becomes a parcel (a WorldItem of kind 'gift') on the
+// Gifts (social gaps pass): a gift is bought when it is accepted and becomes a parcel (a WorldItem of kind 'gift') on the
 // recipient's lot, owned by them. The reaction depends on the recipient's likes, dislikes, traits and age, never on the
 // price, and sets how far the friendship and trust move. All of it is a pure function of the state; there are no
 // dice, so the picker can show a fair hint once the giver knows the recipient well enough.

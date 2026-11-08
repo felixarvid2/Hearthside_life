@@ -418,7 +418,7 @@ export interface GameAPI {
   planEvent?(req: PlanEventRequest): Result & { eventId?: Id };
   /** Calls off a planned event that has not started. */
   cancelEvent?(eventId: Id): Result;
-  // ---- gifts (Milestone 13; sim/gifts.ts) ----
+  // ---- gifts (social gaps pass; sim/gifts.ts) ----
   // "Give a Gift..." in the social menu raises ui.request 'giveGift' (personId = giver, targetId = recipient); the picker lists
   // giftChoices() and calls giveGift() with the chosen kind. The gift is paid for when accepted and left as a parcel at the recipient's lot.
   giftChoices?(giverId: Id, recipientId: Id): GiftChoice[];

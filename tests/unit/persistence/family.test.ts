@@ -87,7 +87,7 @@ describe('family fields in saves', () => {
   });
 });
 
-describe('Milestone 13 optional fields', () => {
+describe('social gaps pass optional fields', () => {
   it('keeps a good carriedBy and townChildren marker, drops bad ones, and an old save without them is untouched', () => {
     const raw = { people: { a: { id: 'a', carriedBy: 'b' }, b: { id: 'b' }, c: { id: 'c', carriedBy: 'zzz' }, d: { id: 'd', carriedBy: 'd' }, e: { id: 'e', carriedBy: 7 } }, settings: {} } as unknown as Record<string, unknown>;
     fillFamilyDefaults(raw);

@@ -462,7 +462,40 @@ Pure code (no three, no DOM), tested in `tests/unit/sim/{relationships,romance,m
   the air (visible condition: an unsettled argument/insult memory, at most once a week per pair).
 - API: `GameAPI.eventProblem/planEvent/cancelEvent` (optional in dev mocks). UI: `ui/hud/eventPlanner.ts` (phone -> Plan an Event, or
   People tab -> Plan an event), `ui/hud/eventTracker.ts` (goal card on the HUD), pure helpers in `ui/hud/socialModel.ts`.
-- Dates happen at home (no lot travel before Milestone 7).
+- Dates and parties may be held at a public venue (social gaps pass, below).
+
+**Weddings (social gaps pass)** (`content/events.ts` `wedding`, `sim/events.ts performCeremony`). A wedding is a planned event with `EventDef.wedding`:
+the first guest is the host's fiance(e) (a bond `engaged`, romance 50+ both ways, trust 30+; they may live in the household), up to eight more
+guests are invited. `HomeEvent.partnerId`, `ceremonyAt` (start + 30 minutes), `stage` ('ceremony' then 'celebration') and `ceremony`
+('done' or 'missed') record it; a `eventStage` schedule entry runs the ceremony once (`wedding:<id>:ceremony`). At the ceremony, when the couple
+are together on the lot and still engaged, the bond becomes `spouse` with the outcome of the "Get Married" social (relationship gains, Just
+Married moodlet, permanent `married` memories; guests get a `party` memory) and the `ceremony` goal completes; otherwise the vows are
+"missed" (a warning in the feed, a lower score) and the celebration still runs. Catering, goals, rating and rewards are the normal event flow.
+"Get Married" in the social menu stays as the quick, guest-free path; the planner (phone -> Plan an Event) pre-selects the fiance(e).
+`ensureEventEnds` repairs a lost stage entry.
+
+**Events at a venue (social gaps pass)** (`sim/events.ts`, `PlanEventRequest.lotId`). Types with `EventDef.venueOk` (date, dinner party, celebration,
+wedding) can be held at a public venue. `canPlanEvent` checks the venue is open for the whole event (`venueSlotProblem`, hours and a notice of
+travel time + 10 minutes). The invitation sends no `visitArrive`; instead an `eventTravel` entry at `HomeEvent.departAt` (start - travel - 5)
+makes the household set off (`startTrip` with `allowHosting`, retried every 10 minutes until the start) and puts the guests at the venue
+(off-lot `visiting`, or on the lot if it is active); `gatherAtVenue` marks guests who are there as arrived (also called from `activateLot`).
+`startEvent` calls the event off when the host did not get there. At the end the guests go home (`visitLeave` on the lot, or straight home
+off-lot) and a second `eventTravel` ('home') sends the household back. Venue guests are left alone by the light schedule from `departAt`
+(`atVenueEvent`). The planner has a "Where?" select (At home / each venue) and only offers start times that fit the opening hours.
+
+**Gifts (social gaps pass)** (`content/gifts.ts`, `sim/gifts.ts`). Eleven gift kinds with a price, the preferences they appeal to, trait fit and the
+life stages they suit. "Give a Gift..." in the social menu raises `ui.request` 'giveGift' (`GameCore.queue` intercepts the social without a
+chosen gift); the picker (`ui/hud/giftPicker.ts`) lists `api.giftChoices(giver, recipient)` (price, affordability, and a hint of how it would
+land once familiarity is 30+) and `api.giveGift` queues the social with `data.gift`. When the social is accepted `resolveSocial` charges the
+price (`gift:<actor>:<target>:<minute>`), builds the outcome from the recipient's reaction (`giftReaction`: likes +1 each, dislikes -1 each,
+trait fit; loved / liked / fine / disliked scale friendship, trust and, for partners, romance; price is irrelevant) and creates a
+`WorldItem` of kind `gift` (`recipeId` = gift id, `ownerPersonId`, `giftFromId`, `ownerHouseholdId`) on a free table of the recipient's home
+(else by the front door); at most 8 parcels per lot, put away after 14 days. The renderer draws a wrapped box in the gift's colour.
+
+**Group chat (social gaps pass)** (`groupChat` social, `sim/social.ts groupCircle / resolveGroupChat`). Offered when at least one more person who
+the speaker has met is free within six tiles. The circle (at most four more) joins as listeners; one acceptance roll for the speaker and the
+person addressed; every ordered pair changes (the speaker's pairs fully, the rest by 0.6), everybody gains social/fun and the moodlet, and
+running events count it as one `chat` and every pair toward `mingle` (`noteGroup`). The autonomy weight is 0.7.
 
 **Saves**: all new fields are optional (`Relationship.label`, `Relationship.romanceBlocked`, `Memory.resolved`, `WorldState.homeEvents`,
 `ScheduledEvent.kind` `eventStart`/`eventEnd`). `persistence/schema.ts fillSocialDefaults` drops unknown labels and malformed events;
@@ -716,6 +749,30 @@ front, the rent replaces the property tax in the weekly bill: `BillBreakdown.ren
 for 80 % of its value (`SALE_RATE`; the furniture stays) and becomes available again; a rental is handed back. Money moves through `transact` with
 `move:<household>:<n>:cost|sale` occurrences. Members who are out travel to the new home like any trip.
 
+**Community events (social gaps pass)** (`content/communityEvents.ts`, `sim/community.ts`). Seven weekly happenings (book club, quiz night, open mic, makers'
+market, dance night, Sunday picnic, family splash) on a weekday and start time inside the venue's opening hours (checked by the content
+validator). The calendar is a pure function of the clock (`communityEventsBetween`), so nothing is stored but once-only marks:
+the daily rollover announces each event in the feed (`commann:<key>`); every 15 minutes a household member on the venue lot while it runs is
+marked as attending (`commatt:<key>:<person>`) and after `attendMinutes` gets fun/social, the Party Glow moodlet and a memory once
+(`commdone`), and meets the townspeople there (`commmeet`, familiarity and friendship). The townspeople turn out: a slot that overlaps an event
+raises their chance to go out and the event venue's weight, and its capacity grows by four (`plannedPlace`, `plansAt`). `NeighbourhoodInfo.events`
+lists the next week; the map shows "What's on this week" and, in a venue's sheet, "On at this venue".
+
+**Town life (social gaps pass)** (`sim/townChange.ts`, setting `townLife`, default on). From the daily rollover, with the world generator: once a day
+one adult outside the played household who is at home with no shift pending may be hired, switch career (back to level 1) or quit (never the
+last earner of a household); once a week (Thursday) one NPC household of the generated town (not the next-door neighbours, nobody on the
+active lot, at work or travelling) may move to an empty home it can afford with a cushion: rent deposit or price through `transact`
+(`townmove:<household>:<day>:cost|sale`), an owned old home is sold at 80 % and listed again, members' home locations follow. The player sees
+it in the feed only for people they know.
+
+**Furniture when moving (social gaps pass)** (`sim/households.ts MoveOptions`). `movePreview(lotId, { furniture })` and `moveHousehold(lotId, { furniture })`:
+'leave' (default, as before: the pieces stay and are part of the sale), 'take' (the household's movable pieces go into `Household.inventory`,
+supports cleared, and the house sells without them), 'sell' (each piece at its sale value, one `:furniture` transaction). Stairs and planted beds always
+stay. The map's move dialog has the three choices and re-reads the preview when the choice changes.
+
+**Phone map and usable (social gaps pass)**. The phone's Neighbourhood Map (`phoneMap`, behaviour `openMap`) raises `ui.request` 'map'. `LotInfo.usable` is true
+for a lot that has not been laid out yet (every layout has things to do) and for a built venue with objects (`lotUsable`).
+
 **Saves**: every M7 field is optional in schema 1 (`Lot.built/variant/blurb/map/rent/price`, `PersonLocation.transit`, `ScheduledEvent.kind
 'travelArrive'`, `WorldState.neighbourhood`). Old saves load unchanged and are completed on load.
 
@@ -732,10 +789,9 @@ them without moving the camera and opens a small card ("At Lakeside Park", "Go t
 map redraws on UiChange 'lot', 'neighbourhood', 'state' and 'selection' only when the data changed. The mock game (`ui/dev/mockGame.ts`) schedules a
 `travelArrive` entry, so the chip and the map work on `dev/ui.html`. Acceptance step 9 drives all of it in the three viewports.
 
-**Not done / remaining** (see also docs/CONTINUATION.md): the phone has no app list, so the map is not reachable from the phone menu; venue activities that charge
+**Not done / remaining** (see also docs/CONTINUATION.md): venue activities that charge
 money are the venue content's job (`InteractionDef.cost` is charged to the actor's household; there is no market stock or cafe menu system);
-townies never change jobs or homes by themselves, and NPC households never move; furniture is not carried along when moving (the old home keeps it);
-no weddings or dates away from home (a date is still planned at home); renting out the player's home, tenants and landlords are not modelled;
+renting out the player's home, tenants and landlords are not modelled;
 travel has no taxi fee; only one trip at a time; group travel always switches the active lot (a split household cannot be watched on two lots).
 
 
@@ -785,6 +841,16 @@ Files: `core/lifeStages.ts` (stage order, lengths, predicates), `sim/aging.ts`, 
 - **Aging.** `SimSettings.aging` is off, long (2.5 x), normal (baby 3, toddler 5, child 10, teen 10, young adult 14, adult 20, elder 14 game days) or custom (`agingDays`, 1..120). `Person.stageDays` advances in the daily rollover (`dailyAging`). A birthday (`ageUp`) is once only per person and stage (`birthday:<pid>:<stage>`): event `birthday`, a memory, the Birthday moodlet, a `family` feed entry (toast), and `migrateStage` (school record, job dropped for children and teens, wardrobe, three traits + aspiration for a new young adult, posture). The "Age up now" birthday (`ageUpNow` at a cake, `careBirthday` for little ones) is the same code with a one-per-day cooldown (`cooldowns['@birthday']`). Elders stay elders unless `elderEndOfLife`: then `passAway` removes them cleanly (`removePerson`), except the last member of the household you run or the last grown-up of children.
 - **Family graph.** `Person.parentIds` (at most two) is the only stored fact; `sim/family.ts` derives children, siblings (shared parent or a sibling bond), grandparents, aunts and uncles, nieces and nephews and cousins, and `linkParent`/`setFamilyTie` keep `Bond.familyAtoB` in step. `applyHouseholdTies` sets `parentIds` from creator ties. The Family tab draws `ui/creator/familyTree.ts` from `treeModel`.
 - **School.** `school:<pid>:<day>` follows the careers pattern (commute lead, `goToSchool` -> off-lot place 'school' -> home). Weekdays 08:00-14:00 (elementary, children) and 08:00-15:00 (high, teens); week 5 of every 5 is a holiday. Not leaving by 09:30 is a missed day. `SchoolState.performance` (-100..100): attendance +3, homework +5 (+2 helped), missed day -5, missed homework -3, low mood at the start -1.5. Homework is once per school day (`homework:<pid>:<day>`) at any desk, table or computer (tag capability `doHomework`); weekly report cards `report:<pid>:<week>`. Other households use `townlife.lightSchool` (no walking).
+- **Carrying and the sitter (social gaps pass).** `Person.carriedBy` is set by the care behaviour while a caregiver holds a baby and cleared when the
+  baby is put down (`settleDependents` drops a stale mark); the renderer cradles the baby in that person's arms from it (no proximity guess). The
+  emergency sitter also serves babies and toddlers of households the player is not playing while they are on the lot being simulated (a visit),
+  charging that household only what it has; off the lot the neglect timer is dropped (their family looks after them, needs drift to comfortable).
+- **Town children for old saves (social gaps pass).** `ensureTownChildren` (game/neighbourhood.ts, run by `GameCore.replaceState` after
+  `ensureNeighbourhood`) gives the family-type town homes their children once (`NeighbourhoodState.townChildren`), from a generator seeded by the
+  world seed; existing ids, jobs and relationships stay, the new people take fresh ids and the world rng is put back.
+- **Jogging (social gaps pass).** Go for a Jog (`jogLoop`, `sim/jog.ts`) runs laps of the park track: a stage per corner (`parkTrack(lot)`) walked at
+  `JOG_PACE` with the jog gait (`ActionInstance.data.moveAnim` / `pace` in `routeTick`); needs and Fitness xp are applied per leg for the minutes run;
+  it ends at the first corner after 40 minutes or when the energy is gone. A park without the plan jogs in place.
 - **Care.** Babies lie in cribs or bassinets (`settleBaby`), never act and are carried by a caregiver during Feed, Change Diaper, Cuddle and Play. Toddlers act within the interactions that list `toddler` in `ages`. `careWishes` lets caregivers notice needs by themselves. A need at zero for 3 hours calls the emergency sitter (`sitter:<pid>:<day>:<n>`, $25 through `transact`, debt allowed).
 - **Gating.** `InteractionDef.ages` (absent = default by behaviour, `sim/gating.ts`), `SocialDef.requires.actorStages/targetStages`; checked by `requestReason`, `socialRequirementReason`, the menus and `candidatesFor`.
 - **Adoption / moving.** `adopt` (`adopt:<hh>:<n>`) and `splitHousehold` (`split:<hh>:<n>:out|in|cost`) charge through `transact`; "Ask to move in" (`moveInNpc`) joins an NPC and their dependents to your household.

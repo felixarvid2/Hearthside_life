@@ -1,4 +1,4 @@
-// Milestone 13: planned events at a public venue on the real content. The household and the guest travel together, the
+// social gaps pass: planned events at a public venue on the real content. The household and the guest travel together, the
 // event runs on the venue lot, and everyone ends up at home again, with money and ledgers exact.
 
 import { describe, expect, it, vi } from 'vitest';

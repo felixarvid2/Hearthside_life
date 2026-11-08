@@ -1,4 +1,4 @@
-// Community events (Milestone 13): the weekly calendar at the public venues (content/communityEvents.ts). What is on is a pure
+// Community events (social gaps pass): the weekly calendar at the public venues (content/communityEvents.ts). What is on is a pure
 // function of the clock and the venue lots, so nothing is stored but the once-only marks of what has been rewarded:
 //
 //   - `communityEventsBetween` / `runningCommunityEvents`: the calendar (also read by the townspeople's light schedule, which

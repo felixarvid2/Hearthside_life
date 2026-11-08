@@ -1,4 +1,4 @@
-// Milestone 13: Go for a Jog follows the park's track in a loop (with the jog gait) instead of jogging on the spot.
+// social gaps pass: Go for a Jog follows the park's track in a loop (with the jog gait) instead of jogging on the spot.
 
 import { describe, expect, it } from 'vitest';
 import { content } from '../../../src/content/index';

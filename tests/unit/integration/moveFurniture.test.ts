@@ -1,4 +1,4 @@
-// Milestone 13: what happens to the furniture when the household moves: it stays (default), comes along into the inventory, or is sold.
+// social gaps pass: what happens to the furniture when the household moves: it stays (default), comes along into the inventory, or is sold.
 
 import { describe, expect, it, vi } from 'vitest';
 import { premadeHouseholds } from '../../../src/characters/creator';

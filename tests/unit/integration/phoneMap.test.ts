@@ -1,4 +1,4 @@
-// Milestone 13: the phone has a Neighbourhood Map entry, and LotInfo.usable is right before a venue layout is first built.
+// social gaps pass: the phone has a Neighbourhood Map entry, and LotInfo.usable is right before a venue layout is first built.
 
 import { describe, expect, it, vi } from 'vitest';
 import { premadeHouseholds } from '../../../src/characters/creator';

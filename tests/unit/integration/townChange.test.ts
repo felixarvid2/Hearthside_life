@@ -1,4 +1,4 @@
-// Milestone 13: townspeople change jobs and NPC households move to empty homes, from the world generator, on the real world.
+// social gaps pass: townspeople change jobs and NPC households move to empty homes, from the world generator, on the real world.
 
 import { describe, expect, it, vi } from 'vitest';
 import { premadeHouseholds } from '../../../src/characters/creator';

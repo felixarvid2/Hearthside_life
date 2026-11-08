@@ -1,4 +1,4 @@
-// Life in town (Milestone 13): the townspeople's lives change slowly. Once a game day one adult may be hired, switch career
+// Life in town (social gaps pass): the townspeople's lives change slowly. Once a game day one adult may be hired, switch career
 // or quit; once a week one NPC household may move to an empty home they can afford. Both draw from the world generator
 // (`ctx.rng`, the saved sequence), so the same world always unfolds the same way, and neither touches the household the player
 // runs, the next-door neighbours or anybody who is on the active lot, at work or on the way somewhere.

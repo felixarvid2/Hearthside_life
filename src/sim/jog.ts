@@ -1,4 +1,4 @@
-// Go for a Jog (Milestone 13): the person runs laps of the park track instead of jogging on the spot. The action is a chain of
+// Go for a Jog (social gaps pass): the person runs laps of the park track instead of jogging on the spot. The action is a chain of
 // stages, one per corner of the track (world/venues.ts parkTrack), each walked with the jog gait at a faster pace; needs and
 // Fitness xp for the minutes run are applied when a leg ends (so they follow the real time spent, not a fixed block), and the
 // session ends at the first corner reached after the interaction's duration. On a lot without a track (an older or edited park)
