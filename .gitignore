@@ -39,3 +39,8 @@ dev/ds-tasks/m10/tmp*
 
 # Blender backups
 *.blend1
+# catalog build outputs: regenerate with tools/characters/catalog/build_all.py (params.json and guides are the sources)
+authoring/characters/garments/*/*.blend
+authoring/characters/hair/*/*.blend
+authoring/characters/facial_hair/*/*.blend
+authoring/characters/accessories/*/*.blend
