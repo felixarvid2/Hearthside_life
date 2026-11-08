@@ -23,6 +23,7 @@
     "e2e:creator": "node tests/e2e/creator-m3.mjs",
     "e2e:creator-modular": "node tests/e2e/creator-modular.mjs",
     "visual:surfaces": "node dev/surfaces-sheet.mjs",
+    "visual:openings": "node dev/openings-sheet.mjs",
     "visual:m5": "node dev/ds-tasks/visual-m5.mjs",
     "visual:m11:careers": "node dev/ds-tasks/m11/shots-careers.mjs",
     "visual:m11:skills-c": "node dev/ds-tasks/m11/shoot-skills-c.mjs",

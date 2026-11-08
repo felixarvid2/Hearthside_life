@@ -12,6 +12,7 @@
 
 import type { FinishRef } from '../core/types';
 import type { OpeningDef, Palette, PriceTier, SurfaceDesign } from './types';
+import { OPENINGS_3 } from './openingsM10';
 import { FLOOR_DESIGNS_2, OPENINGS_2, WALL_DESIGNS_2 } from './surfaces2';
 import { FLOOR_DESIGNS_3, WALL_DESIGNS_3 } from './surfaces3';
 
@@ -523,7 +524,7 @@ const OPENINGS_1: OpeningDef[] = [
 ];
 
 /** Every door and window: the Milestone 1 set here, then Milestone 2 (surfaces2.ts) and Milestone 10 (surfaces3/). */
-export const OPENINGS: OpeningDef[] = [...OPENINGS_1, ...OPENINGS_2];
+export const OPENINGS: OpeningDef[] = [...OPENINGS_1, ...OPENINGS_2, ...OPENINGS_3];
 
 // ---------------------------------------------------------------------------------------------
 // Helpers

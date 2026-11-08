@@ -1,3 +1,4 @@
+import { OPENINGS_3 } from '../../../src/content/openingsM10';
 import { describe, expect, it } from 'vitest';
 import {
   FLOOR_DESIGNS, FLOOR_FAMILIES, OPENINGS, WALL_DESIGNS, WALL_FAMILIES, colorMetrics, defaultFinish, findPalette,
@@ -138,8 +139,9 @@ describe('surface catalog', () => {
     expect(defaultFinish(d)).toEqual({ designId: d.id, paletteId: d.palettes[0]?.id });
   });
 
-  it('openings have consistent sizes and styles', () => {
-    for (const o of OPENINGS) {
+  it('openings have consistent sizes and styles (Milestone 1-2 set; the M10 set is checked in openings-m10.test.ts)', () => {
+    const m10 = new Set(OPENINGS_3.map((o) => o.id));
+    for (const o of OPENINGS.filter((x) => !m10.has(x.id))) {
       expect(o.width, o.id).toBe(1);
       expect(Number.isInteger(o.price) && o.price > 0).toBe(true);
       const hole = o.style.holeWidth;
