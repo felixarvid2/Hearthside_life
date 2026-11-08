@@ -311,3 +311,11 @@ export const GIFT_KEEP_MINUTES = 14 * 1440;
 export const GIFT_LOT_LIMIT = 8;
 /** Familiarity needed before a gift's hint tells whether the recipient would like it. */
 export const GIFT_HINT_FAMILIARITY = 30;
+
+// Group conversations (Milestone 13)
+/** People within this many tiles of the speaker can be pulled into a group chat. */
+export const GROUP_CHAT_RADIUS = 6;
+/** A group chat has the speaker, the person addressed and at most this many more. */
+export const GROUP_CHAT_EXTRAS = 4;
+/** Opinion changes between two people who are not the speaker, relative to the speaker's own. */
+export const GROUP_CHAT_SIDE_WEIGHT = 0.6;

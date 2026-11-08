@@ -68,6 +68,18 @@ const FRIENDLY: SocialDef[] = [
     topics: ['smalltalk', 'topic:food', 'topic:movies'], autonomy: { enabled: true, weight: 1 },
   }),
   social({
+    id: 'groupChat', name: 'Chat With the Group', description: 'Bring everyone nearby into one conversation. Needs at least three people together; every pair in the circle warms up a little.',
+    icon: 'people', category: 'friendly', section: 'friendly',
+    minutes: 6, anim: 'talk', requires: { minFamiliarity: 10 }, acceptance: 0.85, targetTraits: { outgoing: 0.05 }, actorTraits: { outgoing: 0.05, charismatic: 0.05 },
+    success: out({ actor: { familiarity: 2, friendship: 3, trust: 1 }, target: { familiarity: 2, friendship: 3, trust: 1 }, social: 14, fun: 3, actorMoodlet: 'pleasantChat', targetMoodlet: 'pleasantChat' }),
+    failure: out({ actor: { familiarity: 1 }, target: { familiarity: 1 }, social: 4 }),
+    lines: {
+      success: ['{a} pulls {b} and the others into one lively conversation.', 'The group around {a} and {b} laughs together.', '{a}, {b} and the rest swap stories in a happy circle.'],
+      failure: ['The group conversation around {a} and {b} fizzles out.', '{a} tries to include everyone, but {b} is not in the mood.'],
+    },
+    topics: ['smalltalk', 'topic:food', 'topic:movies', 'topic:travel'], autonomy: { enabled: true, weight: 0.7 },
+  }),
+  social({
     id: 'askAboutDay', name: 'Ask About Their Day', description: 'Show some interest in how things are going.', icon: 'social', category: 'friendly',
     minutes: 4, anim: 'talk', requires: { minFamiliarity: 10 }, acceptance: 0.85, targetTraits: { 'family-oriented': 0.05 },
     success: out({ actor: { familiarity: 3, friendship: 2 }, target: { familiarity: 3, friendship: 4, trust: 1 }, social: 10, targetMoodlet: 'pleasantChat' }),

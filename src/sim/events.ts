@@ -583,6 +583,29 @@ export function noteSocial(ctx: SimCtx, actor: Person, target: Person, def: Soci
   }
 }
 
+/**
+ * Counts an accepted group chat toward the goals of running events: one 'chat' (not one per pair) and every pair of the
+ * circle toward 'mingle'.
+ */
+export function noteGroup(ctx: SimCtx, people: Person[], accepted: boolean): void {
+  if (!accepted) return;
+  for (const ev of eventsOf(ctx.state)) {
+    if (ev.status !== 'running') continue;
+    const who = participantsOf(ctx.state, ev);
+    if (!people.every((p) => who.includes(p.id))) continue;
+    const hostSide = ctx.state.households[ev.householdId]?.memberIds ?? [];
+    if (people.every((p) => hostSide.includes(p.id))) continue;
+    bump(ctx, ev, 'chat');
+    for (let i = 0; i < people.length; i++) {
+      for (let j = i + 1; j < people.length; j++) {
+        const key = pairKey(people[i]!.id, people[j]!.id);
+        if (!ev.pairs.includes(key)) ev.pairs.push(key);
+      }
+    }
+    bump(ctx, ev, 'mingle', ev.pairs.length);
+  }
+}
+
 /** Counts a finished meal toward the 'eat' goal of the running event the eater takes part in. */
 export function noteEat(ctx: SimCtx, p: Person): void {
   const ev = runningEventOf(ctx.state, p.id);
