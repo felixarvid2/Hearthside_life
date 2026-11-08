@@ -186,8 +186,8 @@ export function fillNeighbourhoodDefaults(raw: Record<string, unknown>): void {
     version: 1, street: typeof m.street === 'string' && m.street ? m.street : 'Main Street', npcHouseholdIds: ids,
   };
   if (typeof m.nextDoorHouseholdId === 'string' && isRecord(households[m.nextDoorHouseholdId])) fixed.nextDoorHouseholdId = m.nextDoorHouseholdId;
+  if (m.townChildren === true) fixed.townChildren = true; // key order matches game/neighbourhood.ts so a save round-trips byte for byte
   if (whole(m.moves)) fixed.moves = m.moves;
-  if (m.townChildren === true) fixed.townChildren = true;
   raw.neighbourhood = fixed;
 }
 

@@ -190,7 +190,7 @@ function generate(state: WorldState, content: ContentDB): NeighbourhoodState {
     if (a && b) setLink(state, a, b, link, link.status);
   }
 
-  const marker: NeighbourhoodState = { version: 1, street, npcHouseholdIds, townChildren: true, ...(next ? { nextDoorHouseholdId: next.id } : {}) };
+  const marker: NeighbourhoodState = { version: 1, street, npcHouseholdIds, ...(next ? { nextDoorHouseholdId: next.id } : {}), townChildren: true };
   state.neighbourhood = marker;
   return marker;
 }
