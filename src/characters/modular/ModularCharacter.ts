@@ -125,6 +125,17 @@ export function copyMorphNames(src: THREE.Mesh, dst: THREE.Mesh): void {
   dst.morphTargetInfluences = src.morphTargetInfluences.map(() => 0);
 }
 
+/**
+ * Skin material colour = skin colour x factor (the neutral texture's gain). A light skin times the gain can pass 1 in one
+ * channel (red first), and the clipped channel turns the tone golden; scaling the whole colour back keeps its hue.
+ */
+export function skinMaterialColor(skin: THREE.Color, factor: number, out: THREE.Color): THREE.Color {
+  out.copy(skin).multiplyScalar(factor);
+  const m = Math.max(out.r, out.g, out.b);
+  if (m > 1) out.multiplyScalar(1 / m);
+  return out;
+}
+
 /** Bit i of a base64 bitset (LSB first) per vertex, as 0/1 bytes. */
 export function decodeBitset(b64: string, count: number): Uint8Array {
   const bin = atob(b64);
@@ -427,7 +438,10 @@ export class ModularCharacter {
 
     const skin = hexColor(this.look.colors.skin);
     const gain = body.def.skinGain ?? 1;
-    for (const s of body.skin) (s.mat as THREE.MeshStandardMaterial).color?.copy(skin).multiplyScalar(s.tone * gain);
+    for (const s of body.skin) {
+      const c = (s.mat as THREE.MeshStandardMaterial).color;
+      if (c) skinMaterialColor(skin, s.tone * gain, c);
+    }
     for (const e of body.eyes) hexColor(this.look.colors.eyes, e.uniform.value);
     const hairColor = hexColor(this.look.colors.hair);
     for (const m of body.brows) (m as THREE.MeshStandardMaterial).color?.copy(hairColor);

@@ -24,10 +24,16 @@ describe('manifest', () => {
     const m = testManifest();
     expect(findBody(m, BODY)?.id).toBe(BODY);
     // testManifest() = the real manifest plus the test-only shell top
-    expect(garmentsFor(m, BODY, 'top').map((g) => g.id).sort()).toEqual(['hoodie_pullover', 'shell_top', 'tshirt_crew']);
-    expect(garmentsFor(m, BODY, 'bottom').map((g) => g.id)).toEqual(['trousers_straight']);
+    // the shipped catalog (Milestone 10 targets): 40 tops, 28 bottoms, 60 hairstyles, every part fitted to both bodies
+    const tops = garmentsFor(m, BODY, 'top').map((g) => g.id);
+    expect(tops).toEqual(expect.arrayContaining(['hoodie_pullover', 'shell_top', 'tshirt_crew']));
+    expect(tops.length).toBe(41);
+    expect(garmentsFor(m, BODY, 'bottom').map((g) => g.id)).toContain('trousers_straight');
+    expect(garmentsFor(m, BODY, 'bottom')).toHaveLength(28);
     expect(garmentsFor(m, 'ubc_female').map((g) => g.id)).not.toContain('shell_top');
-    expect(hairFor(m, BODY).map((h) => h.id)).toEqual(['short_crop', 'bob_chin', 'ponytail_mid']);
+    expect(hairFor(m, BODY).map((h) => h.id).slice(0, 3)).toEqual(['short_crop', 'bob_chin', 'ponytail_mid']);
+    expect(hairFor(m, BODY)).toHaveLength(60);
+    expect(hairFor(m, 'ubc_female')).toHaveLength(60);
   });
 });
 

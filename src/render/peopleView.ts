@@ -380,7 +380,7 @@ export class PeopleView {
       const s = e.slot;
       const sy = levelY(s?.level ?? 0); // slot heights are above the floor of their level
       // the body of the person's life stage sits and lies lower (children) or on a mat (babies): see characters/posture.ts
-      const so = { stage: p.lifeStage, own: e.view.hasOwnBody };
+      const so = { stage: p.lifeStage, own: e.view.hasOwnBody, modular: e.view.modular, frame: p.appearance.frame };
       const k = e.view.stageHeight / 1.8;
       if (e.baby && !(s && e.align > 0)) {
         // a baby without a bed slot lies on the floor where it is

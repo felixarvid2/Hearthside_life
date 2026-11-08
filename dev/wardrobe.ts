@@ -45,7 +45,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''):
   const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e;
 };
 
-interface Column { id: string; kind: 'bare' | 'hair' | 'garment' }
+interface Column { id: string; kind: 'bare' | 'hair' | 'facial' | 'garment' }
 
 async function loadClips(): Promise<THREE.AnimationClip[]> {
   const loader = new GLTFLoader();
@@ -62,6 +62,7 @@ async function main(): Promise<void> {
   const columns: Column[] = [
     { id: 'bare', kind: 'bare' } as Column,
     ...manifest.hairstyles.map((h): Column => ({ id: h.id, kind: 'hair' })),
+    ...(manifest.facialHair ?? []).map((h): Column => ({ id: h.id, kind: 'facial' })),
     ...manifest.garments.map((g): Column => ({ id: g.id, kind: 'garment' })),
   ].filter((c) => (thumbPart ? c.id === thumbPart : !partFilter || partFilter.includes(c.id)));
 
@@ -100,8 +101,8 @@ async function main(): Promise<void> {
     grid.style.cssText = 'display:block;padding:0;gap:0';
   }
 
-  const look = (bodyId: string, hairId: string | null, outfit: ModularOutfit): ModularLook => ({
-    v: 1, bodyId, hairId, outfits: { everyday: { ...EXTRA_OUTFIT, ...outfit } }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: MORPHS,
+  const look = (bodyId: string, hairId: string | null, outfit: ModularOutfit, facialHairId: string | null = null): ModularLook => ({
+    v: 2, bodyId, hairId, facialHairId, outfits: { everyday: { ...EXTRA_OUTFIT, ...outfit } }, colors: { skin: SKIN, eyes: EYES, hair: HAIR, garments: {} }, morphs: MORPHS,
   });
 
   let cells = 0;
@@ -132,6 +133,7 @@ async function main(): Promise<void> {
 
     for (const { col, box, label } of rowCells) {
       const def = col.kind === 'hair' ? manifest.hairstyles.find((h) => h.id === col.id)
+        : col.kind === 'facial' ? (manifest.facialHair ?? []).find((h) => h.id === col.id)
         : col.kind === 'garment' ? manifest.garments.find((g) => g.id === col.id) : null;
       if (def && !def.files[body.id]) {
         box.parentElement!.classList.add('nofit');
@@ -141,7 +143,7 @@ async function main(): Promise<void> {
         continue;
       }
       const garment = col.kind === 'garment' ? manifest.garments.find((g) => g.id === col.id) : undefined;
-      await character.apply(look(body.id, col.kind === 'hair' ? col.id : null, garment ? { [garment.slot]: garment.id } : {}));
+      await character.apply(look(body.id, col.kind === 'hair' ? col.id : null, garment ? { [garment.slot]: garment.id } : {}, col.kind === 'facial' ? col.id : null));
       character.root.updateMatrixWorld(true);
       renderer.render(scene, camera);
       const canvas = el('canvas');
