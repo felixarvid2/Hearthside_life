@@ -110,6 +110,30 @@ npm run e2e            # end-to-end tests
 npm run e2e:a11y       # keyboard-only flows, accessible names, tap targets, scale/contrast, hints (Milestone 13)
 ```
 
+## Packaging
+
+Both packages wrap the built game (`dist/`). Outputs go to `release-builds/` (gitignored). Neither build output, the Android
+SDK, the Electron zip nor any keystore is committed.
+
+**Linux .deb (amd64, Electron).** `npm run package:deb` builds the game, then `tools/package-deb.mjs` assembles
+`release-builds/hearthside-life_<version>_amd64.deb` by hand with `dpkg-deb` (electron-builder is not used: it downloads tools from
+GitHub). The app is `packaging/electron/main.js`; it serves `dist/` through a privileged `app://hearthside/` scheme, which gives
+`localStorage` (the saves) one stable origin. The Electron runtime (v44.9.3) is cached in `~/.cache/hearthside-electron/`; when
+it is missing the script downloads it from the npm mirror (`ELECTRON_MIRROR`, default
+`https://registry.npmmirror.com/-/binary/electron/`), because GitHub release downloads can be blocked. Install with
+`sudo dpkg -i release-builds/hearthside-life_*.deb`; the postinst makes `chrome-sandbox` setuid (4755), and the launcher
+`/usr/bin/hearthside-life` adds `--no-sandbox` only when that is not the case.
+
+**Android .apk (Capacitor).** `npm run package:apk` runs the build, `npx cap sync android`, `./gradlew assembleRelease` in `android/`
+and copies the signed APK to `release-builds/hearthside-life-<version>.apk`. Needs Java 17+ and an Android SDK (`ANDROID_HOME`,
+default `/home/user/android-sdk`) with platform 36, build-tools 36.0.0 and platform-tools. Gradle resolves artifacts from
+`repo1.maven.org` ahead of `mavenCentral()`. Package `com.hearthside.life`, minSdk 24, immersive full screen, portrait and landscape.
+Signing: set `HEARTHSIDE_KEYSTORE`, `HEARTHSIDE_KEYSTORE_PASSWORD`, `HEARTHSIDE_KEY_ALIAS`, `HEARTHSIDE_KEY_PASSWORD`, or put
+`storeFile`, `storePassword`, `keyAlias`, `keyPassword` in the gitignored `android/keystore.properties`. The release key lives
+outside the repository at `/home/user/authoring-cache/keys/hearthside-release.jks` (password file next to it). **Back it up: an
+installed app can only be updated by an APK signed with the same key**; with a new key users must uninstall (and lose their saves).
+The app's origin is `https://localhost`, so saves persist between launches and updates. Runtime on a device is untested.
+
 ## Project layout
 
 - `src/core`: shared core code

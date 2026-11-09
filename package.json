@@ -49,12 +49,17 @@
     "visual:stages:compose": "node dev/mpfb/composeStages.mjs",
     "debug:creator": "node dev/ds-tasks/debug-creator.mjs",
     "debug:pixels": "node dev/ds-tasks/pixels.mjs",
-    "hair:ai": "node --experimental-strip-types --no-warnings tools/build-ai-hair.mts"
+    "hair:ai": "node --experimental-strip-types --no-warnings tools/build-ai-hair.mts",
+    "package:deb": "npm run build && node tools/package-deb.mjs",
+    "package:apk": "node tools/package-apk.mjs"
   },
   "dependencies": {
     "three": "0.186.1"
   },
   "devDependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/cli": "8.5.3",
+    "@capacitor/core": "8.5.3",
     "@gltf-transform/core": "4.5.1",
     "@gltf-transform/extensions": "4.5.1",
     "@gltf-transform/functions": "4.5.1",
