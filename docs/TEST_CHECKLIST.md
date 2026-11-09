@@ -144,7 +144,7 @@ Audit of what reaches the production build (`npm run build`, one Vite entry: `in
 | Content with status `dev` | One object, `snowman` (made by the Build a Snowman activity, not for sale); the buy catalogue lists `ready` designs only. |
 | Source maps | Not shipped: `build.sourcemap` is off unless `HEARTHSIDE_SOURCEMAP=1` is set when building (no e2e, perf or acceptance script reads a `.map` file). The build output holds no `.map` files. |
 | Debug hooks | Deliberately kept: `window.hearthside` (game, core, view, `debug.step/frame/state/run/stats/setWeather/crash`) and `?debug` (performance overlay) are live in production. The game is single-player with local saves, so there is nothing to protect, and every e2e, perf and acceptance script drives the production build through these hooks. Do not gate them behind a build flag. |
-| "(preview)" labels | Settings > Character style > "Quaternius (preview)" is a deliberate opt-in label. |
+| "(preview)" labels | None: Settings > Character style lists "Quaternius" first (the default), then Natural, Detailed and Classic. |
 | Credits | `assets/LICENSES.md` is shipped. |
 
 ## Release scenario results (`npm run e2e:release`)

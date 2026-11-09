@@ -79,7 +79,7 @@ describe('manifest outfit presets', () => {
 });
 
 describe('CreatorSession modular setters', () => {
-  it('refuses modular edits while the style is off or the person is not an adult', () => {
+  it('refuses modular edits while the style is off, and edits every life stage while it is on', () => {
     const off = session(null);
     expect(off.isModular()).toBe(false);
     expect(off.setModularHair('pony')).toMatchObject({ ok: false });
@@ -87,9 +87,10 @@ describe('CreatorSession modular setters', () => {
     const s = session();
     setStageBodyAvailability(() => true);
     try { expect(s.setLifeStage('child').ok).toBe(true); } finally { setStageBodyAvailability(null); }
-    expect(s.isModular()).toBe(false);
-    expect(s.setModularBody('b_b')).toMatchObject({ ok: false });
-    expect(stored(s)).toBeUndefined();
+    expect(s.isModular()).toBe(true);
+    expect(s.modularLook()).not.toBeNull();
+    expect(s.setModularHair('pony').ok).toBe(true);
+    expect(stored(s)?.hairId).toBe('pony');
   });
 
   it('materializes the stored look from the derived one on the first edit', () => {

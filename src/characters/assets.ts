@@ -26,8 +26,8 @@ import type { ModularRuntime } from './modular/runtime';
 export type CharacterStyle = 'mpfb' | 'detailed' | 'classic';
 
 /**
- * The style the player picks in Settings: one of the above, or 'quaternius' (preview): the modular GLB-part characters for adults, on top
- * of the 'classic' assets (clips, and the bodies of everybody who is not an adult yet).
+ * The style the player picks in Settings: one of the above, or 'quaternius' (the default): the modular GLB-part characters of every
+ * life stage, on top of the 'classic' assets (clips, and the bodies everybody gets while the modular assets cannot be loaded).
  */
 export type CharacterStyleSetting = CharacterStyle | 'quaternius';
 
@@ -135,7 +135,7 @@ export async function loadCharacterAssets(baseUrl = './assets/', style: Characte
  * detailed bodies keeps (or loads) the classic ones. Views must be rebuilt after a change (CharacterView.refreshStyle).
  */
 export async function setCharacterStyle(assets: CharacterAssets, setting: CharacterStyleSetting): Promise<CharacterStyleSetting> {
-  // 'quaternius' draws children, teens, elders and babies with the classic bodies; adults come from the modular runtime
+  // 'quaternius' draws everybody from the modular runtime; the classic bodies are the fallback when it cannot be loaded
   const style: CharacterStyle = setting === 'quaternius' ? 'classic' : setting;
   let modular: ModularRuntime | null = null;
   if (setting === 'quaternius') {

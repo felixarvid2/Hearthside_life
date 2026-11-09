@@ -8,11 +8,15 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { AnimId } from '../../core/anim';
-import type { Hex, OutfitCategory, Posture } from '../../core/types';
+import type { Hex, LifeStage, OutfitCategory, Posture } from '../../core/types';
 import { Animator } from '../animation';
+import { CRADLE_PAIRS, CURL_BONES, RECLINE_LEAN, STOOP_BONES, applyCradle, applyCurl, applyStoop, bindBones, stageLook } from '../stagePose';
+import type { BindBone } from '../stagePose';
 import type { ModularAssetCache } from './cache';
 import { outfitFor, resolveLook } from './look';
 import { hipRatio, scaledClipsFor } from './retarget';
+import { StageRig, proportionsFor } from './stageProportions';
+import type { StageFit } from './stageProportions';
 import { findBody, findFacialHair, findGarment, findHair } from './manifest';
 import { BODY_REGIONS, MODULAR_LOOK_VERSION } from './types';
 import type { BodyPresetDef, BodyRegion, ColorRegionDef, CoverMaskFile, FacialHairDef, GarmentDef, HairstyleDef, ModularLook, ModularManifest, ModularSlot, RigProfile } from './types';
@@ -39,8 +43,14 @@ interface BodyInstance {
   /** Cloned eyebrow materials (colored like the hair). */
   brows: THREE.Material[];
   masked: MaskedMesh[];
-  /** Height of the crown above the Head bone at rest. */
+  /** Height of the crown above the Head bone at rest (head scale included). */
   crownAboveHead: number;
+  /** Life-stage proportions on this body's skeleton. */
+  stageRig: StageRig;
+  /** Bind pose of the cradle arms. */
+  cradleBind: Map<string, BindBone>;
+  /** Pelvis length of the body at bind, for the clips' own hip ratio. */
+  pelvisLength: number;
 }
 
 /** A body skinned mesh with its own geometry (shared attributes plus a per-character `aHidden` attribute). */
@@ -215,9 +225,19 @@ export class ModularCharacter {
   private look: ModularLook = emptyLook();
   private animator: Animator | null = null;
   private walkRate = 1;
+  private stage: LifeStage = 'adult';
+  private fit: StageFit | null = null;
+  private babyUpright = false;
+  private cradleOn = false;
+  private cradleWeight = 0;
+  private stoopWeight = 0;
+  private reclineOn = false;
+  private reclineWeight = 0;
+  private curlWeight = 0;
+  private readonly fxSaved = new Map<THREE.Bone, THREE.Quaternion>();
   private lastAnim: { id: AnimId; opts: { fade?: number; posture?: Posture } } = { id: 'idle', opts: { fade: 0 } };
   private chain: Promise<void> = Promise.resolve();
-  private target: { look: ModularLook; category: OutfitCategory } | null = null;
+  private target: { look: ModularLook; category: OutfitCategory; stage: LifeStage } | null = null;
   private done: object | null = null;
   private applyIssues: string[] = [];
   private readonly rigIssues = new Map<PartKey, string>();
@@ -233,15 +253,15 @@ export class ModularCharacter {
    * Makes the character wear `look` (the outfit of `category`, falling back to 'everyday'). Only the difference to what is
    * worn is loaded and changed; a body change rebuilds everything. Calls are serialized and only the newest look is applied.
    */
-  apply(look: ModularLook, category: OutfitCategory = 'everyday'): Promise<void> {
+  apply(look: ModularLook, category: OutfitCategory = 'everyday', stage: LifeStage = this.target?.stage ?? this.stage): Promise<void> {
     if (this.disposed) return Promise.resolve();
-    const target = { look: structuredClone(look), category };
+    const target = { look: structuredClone(look), category, stage };
     this.target = target;
     const run = this.chain.then(async () => {
       const t = this.target;
       if (!t || t === this.done || this.disposed) return;
       this.done = t;
-      await this.applyNow(t.look, t.category);
+      await this.applyNow(t.look, t.category, t.stage);
     });
     this.chain = run.catch((e) => { console.warn('[modular] apply failed', e); });
     this.ready = this.chain;
@@ -278,7 +298,15 @@ export class ModularCharacter {
   bone(name: string): THREE.Bone | null { return this.body?.bones.get(name) ?? null; }
 
   /** Standing height of the body in metres. */
-  get height(): number { return this.body?.def.height ?? 1.8; }
+  get height(): number { return (this.body?.def.height ?? 1.8) * this.root.scale.y; }
+
+  get lifeStage(): LifeStage { return this.stage; }
+
+  /** Size of the head relative to the figure (1 for adults). */
+  get headScale(): number { return this.fit?.headScale ?? 1; }
+
+  /** Rest hip height over the body's bind hip height with the stage's legs (1 for adults). */
+  get stageHipRatio(): number { return this.fit?.hipRatio ?? 1; }
 
   get posture(): Posture { return this.animator?.posture ?? 'standing'; }
 
@@ -298,8 +326,26 @@ export class ModularCharacter {
   play(id: AnimId, opts: { fade?: number; posture?: Posture } = {}): void {
     if (this.disposed) return;
     this.lastAnim = { id, opts };
-    this.animator?.play(id, opts);
+    this.playNow();
   }
+
+  /** A baby only lies (crib, mat, arms); in previews and portraits it sits up. Everybody else plays what was asked. */
+  private playNow(): void {
+    const { id, opts } = this.lastAnim;
+    if (this.stage === 'baby') this.animator?.play(this.babyUpright ? 'sitIdle' : 'sleep', { ...opts, posture: this.babyUpright ? 'seated' : 'lying' });
+    else this.animator?.play(id, opts);
+  }
+
+  setBabyUpright(on: boolean): void {
+    if (on === this.babyUpright) return;
+    this.babyUpright = on;
+    this.lastAnim = { id: this.lastAnim.id, opts: { ...this.lastAnim.opts, fade: 0 } };
+    this.playNow();
+  }
+  get isBabyUpright(): boolean { return this.babyUpright; }
+  setCarrying(on: boolean): void { this.cradleOn = on; }
+  get carrying(): boolean { return this.cradleOn; }
+  setRecline(on: boolean): void { this.reclineOn = on; }
 
   /** Walk-cycle speed factor from the ground speed (see Animator.setWalkRate); remembered across body rebuilds. */
   setWalkRate(rate: number): void {
@@ -309,7 +355,37 @@ export class ModularCharacter {
 
   update(dt: number): void {
     if (this.disposed) return;
-    this.animator?.update(Math.min(dt, 0.1));
+    const d = Math.min(dt, 0.1);
+    // give the bones back what the clips wrote last time: the mixer skips a track whose value did not change
+    for (const [bone, q] of this.fxSaved) bone.quaternion.copy(q);
+    this.animator?.update(d);
+    this.applyPoseFx(d);
+  }
+
+  /** Stoop (elders), recline, a lying baby's curl and the carrier's cradle arms, put on the bones after the clips (as CharacterView does). */
+  private applyPoseFx(dt: number): void {
+    const body = this.body, animator = this.animator;
+    this.fxSaved.clear();
+    if (!body || !animator) return;
+    const bones = body.bones;
+    const look = stageLook(this.stage);
+    const needStoop = look.stoop > 0 || this.reclineOn || this.reclineWeight > 0, needCradle = this.cradleOn || this.cradleWeight > 0;
+    const babyLying = this.stage === 'baby' && !this.babyUpright && !this.cradleOn && animator.posture === 'lying';
+    const needCurl = babyLying || this.curlWeight > 0;
+    const save = (names: Iterable<string>) => { for (const n of names) { const b = bones.get(n); if (b) this.fxSaved.set(b, b.quaternion.clone()); } };
+    if (needStoop) save(STOOP_BONES);
+    if (needCurl) save(CURL_BONES.map(([n]) => n));
+    if (needCradle) save(Object.keys(CRADLE_PAIRS));
+    const ease = (v: number, target: number, rate: number) => v + Math.sign(target - v) * Math.min(Math.abs(target - v), dt * rate);
+    const posture = animator.posture;
+    this.stoopWeight = ease(this.stoopWeight, posture === 'standing' ? 1 : posture === 'seated' ? 0.4 : 0, 2.5);
+    this.reclineWeight = ease(this.reclineWeight, this.reclineOn && posture === 'seated' ? 1 : 0, 1.6);
+    if (look.stoop && this.stoopWeight > 0) applyStoop(bones, look.stoop * this.stoopWeight);
+    if (this.reclineWeight > 0) applyStoop(bones, -RECLINE_LEAN * this.reclineWeight);
+    this.curlWeight = ease(this.curlWeight, babyLying ? 1 : 0, 2);
+    if (this.curlWeight > 0) applyCurl(bones, this.curlWeight);
+    this.cradleWeight = ease(this.cradleWeight, this.cradleOn ? 1 : 0, 4);
+    if (this.cradleWeight > 0) applyCradle(bones, body.cradleBind, this.cradleWeight);
   }
 
   // ---- lifetime ----
@@ -324,8 +400,10 @@ export class ModularCharacter {
 
   // ---- apply ----
 
-  private async applyNow(raw: ModularLook, category: OutfitCategory): Promise<void> {
-    const resolved = resolveLook(raw, this.manifest);
+  private async applyNow(raw: ModularLook, category: OutfitCategory, stage: LifeStage): Promise<void> {
+    const stageChanged = stage !== this.stage;
+    this.stage = stage;
+    const resolved = resolveLook(raw, this.manifest, stage);
     const look = resolved.look;
     const outfit = outfitFor(look, category);
     this.applyIssues = resolved.issues;
@@ -383,6 +461,8 @@ export class ModularCharacter {
       kept.add(bodyUrl);
     }
     const body = this.body!;
+    if (stageChanged && !bodyChanged) this.applyStage(body);
+    // (refreshAppearance below applies the stage's weight bias)
     // unequip what is gone or changed, then equip (the old part of a slot always leaves first)
     const wantedId = (key: PartKey) => wanted.get(key)?.id;
     if (this.hair && this.hair.id !== wantedId('hair')) this.unequip('hair');
@@ -461,9 +541,12 @@ export class ModularCharacter {
     // facial hair takes the hair colour like the hairstyle does
     if (this.facialHair) this.colorPart(this.facialHair, this.facialHair.def.colorRegions, (r, i) => (i === 0 ? this.look.colors.hair : r.default));
 
-    applyMorphInfluences(body.meshes, body.def.morphs, this.look.morphs);
-    for (const p of this.garments.values()) applyMorphInfluences(p.meshes, body.def.morphs, this.look.morphs, (p.def as GarmentDef).followsMorphs ?? []);
-    if (this.facialHair) applyMorphInfluences(this.facialHair.meshes, body.def.morphs, this.look.morphs, (this.facialHair.def as FacialHairDef).followsMorphs ?? []);
+    // the stage rounds or slims the body a little on top of the look's own weight (clamped to the morph's range)
+    const bias = proportionsFor(this.stage).weight;
+    const morphs = bias ? { ...this.look.morphs, weight: (this.look.morphs.weight ?? 0) + bias } : this.look.morphs;
+    applyMorphInfluences(body.meshes, body.def.morphs, morphs);
+    for (const p of this.garments.values()) applyMorphInfluences(p.meshes, body.def.morphs, morphs, (p.def as GarmentDef).followsMorphs ?? []);
+    if (this.facialHair) applyMorphInfluences(this.facialHair.meshes, body.def.morphs, morphs, (this.facialHair.def as FacialHairDef).followsMorphs ?? []);
   }
 
   private colorPart(p: PartInstance, regions: ColorRegionDef[], pick: (r: ColorRegionDef, i: number) => Hex): void {
@@ -538,16 +621,34 @@ export class ModularCharacter {
     scene.updateMatrixWorld(true);
     const head = bones.get('Head');
     const headY = head ? head.getWorldPosition(new THREE.Vector3()).y : def.height - 0.2;
+    // bind data first: the cradle arms are aimed from it, and the stage proportions change the bones afterwards
+    const saved = { p: this.root.position.clone(), q: this.root.quaternion.clone(), s: this.root.scale.clone() };
+    this.root.position.set(0, 0, 0); this.root.quaternion.identity(); this.root.scale.setScalar(1);
+    const cradleBind = bindBones(scene, CRADLE_PAIRS);
+    this.root.position.copy(saved.p); this.root.quaternion.copy(saved.q); this.root.scale.copy(saved.s);
+    const pelvis = bones.get('pelvis');
     this.body = {
       def, rig: this.manifest.rigs.find((r) => r.id === def.rig) as RigProfile, url, scene, bones, inverses, regions, meshes, skeletons,
       materials: [...cloned.values()], skin, eyes, brows, masked, crownAboveHead: Math.max(0.1, def.height - headY),
+      stageRig: new StageRig(bones, def.height), cradleBind, pelvisLength: pelvis ? pelvis.position.length() : 0,
     };
-    // clips authored for another hip height get their position tracks scaled for this body (shared between characters)
-    const pelvis = bones.get('pelvis');
-    const ratio = pelvis ? hipRatio(pelvis.position.length(), this.body.rig?.clipPelvisHeight) : 1;
-    this.animator = new Animator(this.root, ratio === 1 ? this.clips : scaledClipsFor(this.clips, ratio));
+    this.stoopWeight = this.cradleWeight = this.reclineWeight = this.curlWeight = 0;
+    this.fxSaved.clear();
+    this.applyStage(this.body);
+  }
+
+  /** Puts the life stage's proportions on the body, scales the figure and starts an animator whose clips fit the new hip height. */
+  private applyStage(body: BodyInstance): void {
+    this.fit = body.stageRig.apply(this.stage);
+    this.root.scale.setScalar(this.fit.rootScale);
+    body.crownAboveHead = this.fit.crownAboveHead;
+    // clips authored for another hip height get their position tracks scaled for this body and stage (cached per source clip and ratio)
+    const ratio = (body.pelvisLength ? hipRatio(body.pelvisLength, body.rig?.clipPelvisHeight) : 1) * this.fit.hipRatio;
+    const clips = Math.abs(ratio - 1) < 1e-3 ? this.clips : scaledClipsFor(this.clips, ratio);
+    this.animator?.dispose();
+    this.animator = new Animator(this.root, clips, stageLook(this.stage).cadence);
     this.animator.setWalkRate(this.walkRate);
-    this.animator.play(this.lastAnim.id, { ...this.lastAnim.opts, fade: 0 });
+    this.playNow();
   }
 
   /** A part bound to this character's bones, or the reason it was rejected ('rig-mismatch: ...'). */

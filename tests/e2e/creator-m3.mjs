@@ -131,7 +131,8 @@ async function runViewport(browser, vpName, vp) {
   page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   await page.addInitScript(() => {
-    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0 })); } catch { /* ignore */ }
+    // this harness is about the classic creator controls: pin the Natural style (version 3 so the default migration leaves it alone)
+    try { if (!localStorage.getItem('hearthside.settings.v1')) localStorage.setItem('hearthside.settings.v1', JSON.stringify({ tutorial: false, hints: false, musicVolume: 0, characterStyle: 'mpfb', version: 3 })); } catch { /* ignore */ }
   });
   let shotN = 0;
   const T = {

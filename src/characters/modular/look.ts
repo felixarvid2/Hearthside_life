@@ -1,11 +1,12 @@
 // The serializable look of a modular character: migration of stored data, derivation for people who have none yet
 // (nothing is written back implicitly), sanitizing against the manifest, and the outfit of a category. Pure functions.
 
-import type { Appearance, Hex, OutfitCategory } from '../../core/types';
+import type { Appearance, Hex, LifeStage, OutfitCategory } from '../../core/types';
 import { OUTFIT_CATEGORIES } from '../../core/types';
 import type { ContentDB } from '../../content/types';
 import { findBody, findFacialHair, findGarment, findHair } from './manifest';
 import { conflicts } from './restrictions';
+import { applyStageRules, defaultHairFor, defaultOutfitFor } from './stageRules';
 import { MODULAR_LOOK_VERSION, MODULAR_SLOTS } from './types';
 import type { ModularLook, ModularManifest, ModularOutfit, ModularSlot } from './types';
 
@@ -73,20 +74,17 @@ function readLook(r: Record<string, unknown>, version: 1 | 2): ModularLook | nul
   return out;
 }
 
-/** The look of a person who has no `appearance.modular`: manifest defaults plus the colors of their classic appearance. */
-export function deriveModularLook(appearance: Appearance, manifest: ModularManifest, _content?: ContentDB): ModularLook {
+/**
+ * The look of a person who has no `appearance.modular`: manifest defaults plus the colors of their classic appearance. A baby,
+ * toddler, child or teen gets the small simple outfit and hair of their stage (stageRules.ts); every stage has a look.
+ */
+export function deriveModularLook(appearance: Appearance, manifest: ModularManifest, _content?: ContentDB, stage?: LifeStage): ModularLook {
   const bodyId = manifest.defaults.bodyByFrame[appearance.frame];
-  const outfit: ModularOutfit = {};
-  for (const slot of MODULAR_SLOTS) {
-    const id = manifest.defaults.outfit[slot];
-    const g = id ? findGarment(manifest, id) : undefined;
-    if (g && g.files[bodyId]) outfit[slot] = g.id;
-  }
-  const hairDef = manifest.defaults.hairstyle ? findHair(manifest, manifest.defaults.hairstyle) : undefined;
+  const outfit: ModularOutfit = defaultOutfitFor(manifest, bodyId, stage);
   return {
     v: MODULAR_LOOK_VERSION,
     bodyId,
-    hairId: hairDef && hairDef.files[bodyId] ? hairDef.id : null,
+    hairId: defaultHairFor(manifest, bodyId, stage),
     facialHairId: null,
     outfits: { everyday: outfit },
     colors: { skin: appearance.skin, eyes: appearance.face?.eyeColor ?? manifest.defaults.eyeColor, hair: appearance.hair.color, garments: {} },
@@ -95,8 +93,8 @@ export function deriveModularLook(appearance: Appearance, manifest: ModularManif
 }
 
 /** The look to draw for a person: their stored one when it reads, else the derived one. */
-export function lookFor(appearance: Appearance, manifest: ModularManifest, content?: ContentDB): ModularLook {
-  return (appearance.modular ? migrateModularLook(appearance.modular) : null) ?? deriveModularLook(appearance, manifest, content);
+export function lookFor(appearance: Appearance, manifest: ModularManifest, content?: ContentDB, stage?: LifeStage): ModularLook {
+  return (appearance.modular ? migrateModularLook(appearance.modular) : null) ?? deriveModularLook(appearance, manifest, content, stage);
 }
 
 /** The outfit worn in a category; a category without one falls back to 'everyday'. */
@@ -107,11 +105,12 @@ export function outfitFor(look: ModularLook, category: OutfitCategory): ModularO
 /**
  * A copy of `look` that only names things the manifest can draw: an unknown body becomes the default one; hair and garments
  * that do not exist, are not fitted to that body, sit in the wrong slot or exclude each other are dropped. `issues` says what
- * was changed. The input is not modified.
+ * was changed. The input is not modified. With a life `stage` the parts that stage may not wear are dropped first (stageRules.ts).
  */
-export function resolveLook(look: ModularLook, manifest: ModularManifest): { look: ModularLook; issues: string[] } {
-  const issues: string[] = [];
-  const out = structuredClone(look);
+export function resolveLook(look: ModularLook, manifest: ModularManifest, stage?: LifeStage): { look: ModularLook; issues: string[] } {
+  const staged = applyStageRules(look, manifest, stage);
+  const issues: string[] = [...staged.issues];
+  const out = structuredClone(staged.look);
   let body = findBody(manifest, out.bodyId);
   if (!body) {
     const fallback = manifest.defaults.bodyByFrame.a;

@@ -1,12 +1,13 @@
 // Adapter that lets a ModularCharacter stand in for a CharacterView (the PersonView surface used by peopleView, the creator
-// preview and portraits). Stage A: adults only (the factory in ../personView.ts decides); concepts that do not exist for the
-// stand-in bodies yet are harmless no-ops and say so below.
+// preview and portraits). Every life stage: the stage's proportions are put on the skeleton (stageProportions.ts), babies lie
+// curled or are cradled, elders stoop (the pose effects live in ModularCharacter).
 
 import * as THREE from 'three';
 import type { AnimId } from '../../core/anim';
 import type { Appearance, LifeStage, Outfit, OutfitCategory, Posture } from '../../core/types';
 import { selectionRing } from '../CharacterView';
 import { CRADLE } from '../stagePose';
+import { seatedPlacement } from '../posture';
 import { STAGE_HEIGHTS } from '../stages';
 import { ModularCharacter } from './ModularCharacter';
 import { lookFor } from './look';
@@ -20,7 +21,6 @@ export class ModularCharacterView {
   private category: OutfitCategory;
   private selected = false;
   private ring: THREE.Mesh | null = null;
-  private cradleOn = false;
   private pendingApplies = 0;
   private lastKey = '';
   private disposed = false;
@@ -40,12 +40,12 @@ export class ModularCharacterView {
   get busy(): boolean { return this.pendingApplies > 0; }
 
   private apply(): void {
-    const look = lookFor(this.appearance, this.runtime.manifest);
-    const key = `${this.category}|${JSON.stringify(look)}`;
+    const look = lookFor(this.appearance, this.runtime.manifest, undefined, this.stage);
+    const key = `${this.category}|${this.stage}|${JSON.stringify(look)}`;
     if (key === this.lastKey) return;
     this.lastKey = key;
     this.pendingApplies++;
-    void this.character.apply(look, this.category).finally(() => { this.pendingApplies--; });
+    void this.character.apply(look, this.category, this.stage).finally(() => { this.pendingApplies--; });
   }
 
   // ---- PersonView surface ----
@@ -65,24 +65,28 @@ export class ModularCharacterView {
   }
 
   get lifeStage(): LifeStage { return this.stage; }
-  /** The modular bodies are adult bodies, drawn at their own size. */
+  /** The figure is drawn at the stage's size by its own skeleton and root scale. */
   get hasOwnBody(): boolean { return true; }
   get stageHeight(): number { return STAGE_HEIGHTS[this.stage]; }
-  /** The mannequins' pelvis sits where the adult rig's does. */
-  get pelvisRatio(): number { return 1; }
-  /** Babies are not modular yet: nothing to lower. */
-  get floorDrop(): number { return 0; }
-  /** No-op: babies are not modular yet. */
-  setBabyUpright(_on: boolean): void { /* adults only */ }
+  /** Hip height of the stage's skeleton over the adult's. */
+  get pelvisRatio(): number { return this.character.stageHipRatio; }
+  /** How far the root must be lowered so a sitting baby's bottom rests on the floor (0 for everybody else). */
+  get floorDrop(): number {
+    if (this.stage !== 'baby' || !this.character.isBabyUpright) return 0;
+    return -seatedPlacement({ x: 0, y: 0, z: 0 }, 0, this.appearance.frame, 'mpfb', { stage: 'baby', modular: true }).y;
+  }
+  /** A baby sits up instead of lying (previews and portraits). */
+  setBabyUpright(on: boolean): void { this.character.setBabyUpright(on); }
 
-  /** Remembered for `carrying` only: there is no cradle pose for the stand-in bodies yet. */
-  setCarrying(on: boolean): void { this.cradleOn = on; }
-  get carrying(): boolean { return this.cradleOn; }
-  /** The modular rig has no spine pose effects yet: a recliner shows the plain seated pose. */
-  setRecline(_on: boolean): void { /* not supported */ }
+  /** Cradle the arms for holding a baby. */
+  setCarrying(on: boolean): void { this.character.setCarrying(on); }
+  get carrying(): boolean { return this.character.carrying; }
+  /** Lean back in a seat (recliners). */
+  setRecline(on: boolean): void { this.character.setRecline(on); }
   setWalkRate(rate: number): void { this.character.setWalkRate(rate); }
 
   cradlePoint(target: THREE.Vector3): THREE.Vector3 {
+    // the root scale already carries the stage's size
     this.root.updateWorldMatrix(true, false);
     return target.set(CRADLE.x, CRADLE.y, CRADLE.z).applyMatrix4(this.root.matrixWorld);
   }

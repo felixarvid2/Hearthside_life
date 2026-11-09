@@ -343,12 +343,15 @@ async function stepCreator(T) {
 
   // ---- face & body: a body preset
   await goNext('Face');
-  const bodyChips = page.locator('[aria-label="Body presets"] .chip');
+  // the default Quaternius style edits modular looks (thumbnail cards: Body, Hairstyles, garment slots); the classic styles have chips
+  // and the card grids of the classic creator. The checks below follow whichever the creator shows.
+  T.modular = (await page.locator('.cr-body-grid .cr-thumb-card').count()) > 0;
+  const bodyChips = T.modular ? page.locator('.cr-body-grid .cr-thumb-card') : page.locator('[aria-label="Body presets"] .chip');
   const nBody = await bodyChips.count();
-  T.check(S, 'Face & Body step offers body presets', nBody >= 2, `${nBody} presets`);
+  T.check(S, `Face & Body step offers body ${T.modular ? 'types' : 'presets'}`, nBody >= 2, `${nBody} ${T.modular ? 'types' : 'presets'}`);
   let bodyIdx = 0;
   for (let i = 0; i < nBody; i++) { if ((await bodyChips.nth(i).getAttribute('aria-checked')) !== 'true') { bodyIdx = i; break; } }
-  T.expected.bodyPresetLabel = (await bodyChips.nth(bodyIdx).innerText()).trim();
+  T.expected.bodyPresetLabel = T.modular ? (await bodyChips.nth(bodyIdx).locator('.cr-thumb-label').innerText()).trim() : (await bodyChips.nth(bodyIdx).innerText()).trim();
   await T.tap(bodyChips.nth(bodyIdx));
   await T.frames(4);
   T.check(S, 'body preset chip is selected after tap', (await bodyChips.nth(bodyIdx).getAttribute('aria-checked')) === 'true', T.expected.bodyPresetLabel);
@@ -356,12 +359,13 @@ async function stepCreator(T) {
 
   // ---- hair: style and colour
   await goNext('Hair');
-  const hairCards = page.locator('.cr-hair-grid .cr-card');
+  const hairCards = T.modular ? page.locator('[aria-label="Hairstyles"] .cr-thumb-card') : page.locator('.cr-hair-grid .cr-card');
+  const hairLabel = T.modular ? '.cr-thumb-label' : '.cr-card-title';
   const nHair = await hairCards.count();
   T.check(S, 'Hair step offers >= 8 hairstyles', nHair >= 8, `${nHair} styles`);
   let hairIdx = 1;
   for (let i = nHair - 1; i >= 0; i--) { if ((await hairCards.nth(i).getAttribute('aria-checked')) !== 'true') { hairIdx = i; break; } }
-  T.expected.hairTitle = (await hairCards.nth(hairIdx).locator('.cr-card-title').innerText()).trim();
+  T.expected.hairTitle = (await hairCards.nth(hairIdx).locator(hairLabel).innerText()).trim();
   await T.tap(hairCards.nth(hairIdx));
   await T.frames(3);
   const hairSw = page.locator('[aria-label="Hair colour"].swatches .swatch[data-id]');
@@ -374,73 +378,98 @@ async function stepCreator(T) {
   T.check(S, 'hair style + colour selected in the UI', (await hairCards.nth(hairIdx).getAttribute('aria-checked')) === 'true' && (await hairSw.nth(swIdx).getAttribute('aria-checked')) === 'true', `${T.expected.hairTitle} ${T.expected.hairColor}`);
   await T.shot('creator-hair');
 
-  // ---- clothing: everyday outfit with a pattern
+  // ---- clothing: everyday outfit with a pattern (classic styles) or a garment colour (Quaternius: garments have colours, no patterns)
   await goNext('Clothing');
   await page.waitForTimeout(200);
   await T.shot('creator-clothing-initial');
-  // choose a layer that has a pattern chip group with a non-solid option (top, or full outfit)
-  let patterned = null;
-  const layers = page.locator('.cr-layer');
-  const nLayers = await layers.count();
-  for (let i = 0; i < nLayers && !patterned; i++) {
-    const layer = layers.nth(i);
-    const chips = layer.locator('[aria-label="Pattern"] .chip');
-    const n = await chips.count();
-    for (let j = 0; j < n; j++) {
-      const label = (await chips.nth(j).innerText()).trim();
-      if (!/^\W*solid/i.test(label)) { patterned = { layer, chip: chips.nth(j), label, layerName: await layer.getAttribute('data-layer') }; break; }
+  if (T.modular) {
+    const topCards = page.locator('[aria-label="Top garments"] .cr-thumb-card');
+    await topCards.first().waitFor({ timeout: 8000 });
+    const nTop = await topCards.count();
+    T.check(S, 'clothing: the Top section lists garments', nTop >= 3, `${nTop} cards`);
+    let topIdx = -1;
+    for (let i = nTop - 1; i >= 1; i--) { if ((await topCards.nth(i).getAttribute('aria-checked')) !== 'true') { topIdx = i; break; } }
+    await T.tap(topCards.nth(topIdx));
+    await T.frames(6);
+    T.expected.topLabel = (await topCards.nth(topIdx).locator('.cr-thumb-label').innerText()).trim();
+    T.check(S, 'clothing: the chosen top is selected', (await topCards.nth(topIdx).getAttribute('aria-checked')) === 'true', T.expected.topLabel);
+    // the top's own colour swatches
+    const colorSw = page.locator('.cr-panel .swatches .swatch[data-id]').first();
+    if (await colorSw.count()) { await T.tap(colorSw); await T.frames(3); }
+    // a top always comes with a bottom (or the person would be bare-legged): wear one if the starting look has none
+    const botCards = page.locator('[aria-label="Bottom garments"] .cr-thumb-card');
+    let botWorn = false;
+    for (let i = 1; i < await botCards.count(); i++) botWorn = botWorn || (await botCards.nth(i).getAttribute('aria-checked')) === 'true';
+    if (!botWorn && (await botCards.count()) > 1) { await T.tap(botCards.nth(1)); await T.frames(3); }
+    T.expected.modularLook = await page.evaluate(() => window.hearthside.view.creatorScene.view?.character?.serialize?.() ?? null);
+    await T.shot('creator-clothing-pattern');
+    await T.audit('creator clothing step');
+  } else {
+    // choose a layer that has a pattern chip group with a non-solid option (top, or full outfit)
+    let patterned = null;
+    const layers = page.locator('.cr-layer');
+    const nLayers = await layers.count();
+    for (let i = 0; i < nLayers && !patterned; i++) {
+      const layer = layers.nth(i);
+      const chips = layer.locator('[aria-label="Pattern"] .chip');
+      const n = await chips.count();
+      for (let j = 0; j < n; j++) {
+        const label = (await chips.nth(j).innerText()).trim();
+        if (!/^\W*solid/i.test(label)) { patterned = { layer, chip: chips.nth(j), label, layerName: await layer.getAttribute('data-layer') }; break; }
+      }
     }
-  }
-  if (!patterned) {
-    // the random starting garment has no patterns (e.g. overalls): try other garments until one offers a pattern
-    T.ok(S, 'clothing: the starting garments offer no pattern; switching garment', 'looking for a patterned garment');
-    // A full outfit first: switching a full outfit to a top alone leaves no bottom, and Move In is then refused.
-    outer: for (const layerName of ['full', 'top', 'bottom']) {
-      const nG = await page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).count();
-      for (let j = 0; j < nG; j++) {
-        const chip = page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).nth(j);
-        if (/^\W*none/i.test((await chip.innerText()).trim())) continue;
-        await T.tap(chip);
-        await T.frames(3);
-        const pc = page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label="Pattern"] .chip`);
-        const nP = await pc.count();
-        for (let k = 0; k < nP; k++) {
-          const label = (await pc.nth(k).innerText()).trim();
-          if (!/^\W*solid/i.test(label)) { patterned = { layer: page.locator(`.cr-layer[data-layer="${layerName}"]`), chip: pc.nth(k), label, layerName }; break outer; }
+    if (!patterned) {
+      // the random starting garment has no patterns (e.g. overalls): try other garments until one offers a pattern
+      T.ok(S, 'clothing: the starting garments offer no pattern; switching garment', 'looking for a patterned garment');
+      // A full outfit first: switching a full outfit to a top alone leaves no bottom, and Move In is then refused.
+      outer: for (const layerName of ['full', 'top', 'bottom']) {
+        const nG = await page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).count();
+        for (let j = 0; j < nG; j++) {
+          const chip = page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label$=" garments"] .chip`).nth(j);
+          if (/^\W*none/i.test((await chip.innerText()).trim())) continue;
+          await T.tap(chip);
+          await T.frames(3);
+          const pc = page.locator(`.cr-layer[data-layer="${layerName}"] [aria-label="Pattern"] .chip`);
+          const nP = await pc.count();
+          for (let k = 0; k < nP; k++) {
+            const label = (await pc.nth(k).innerText()).trim();
+            if (!/^\W*solid/i.test(label)) { patterned = { layer: page.locator(`.cr-layer[data-layer="${layerName}"]`), chip: pc.nth(k), label, layerName }; break outer; }
+          }
+        }
+      }
+      // A top or bottom chosen in place of a full outfit: make sure the other half is worn too.
+      const other = patterned?.layerName === 'top' ? 'bottom' : patterned?.layerName === 'bottom' ? 'top' : null;
+      if (other) {
+        const og = page.locator(`.cr-layer[data-layer="${other}"] [aria-label$=" garments"] .chip`);
+        const nO = await og.count();
+        let worn = false;
+        for (let j = 0; j < nO && !worn; j++) {
+          worn = (await og.nth(j).getAttribute('aria-checked')) === 'true' && !/^\W*none/i.test((await og.nth(j).innerText()).trim());
+        }
+        for (let j = 0; j < nO && !worn; j++) {
+          if (/^\W*none/i.test((await og.nth(j).innerText()).trim())) continue;
+          await T.tap(og.nth(j));
+          await T.frames(3);
+          worn = true;
+          T.ok(S, `clothing: a ${other} added to go with the patterned ${patterned.layerName}`, (await og.nth(j).innerText()).trim());
         }
       }
     }
-    // A top or bottom chosen in place of a full outfit: make sure the other half is worn too.
-    const other = patterned?.layerName === 'top' ? 'bottom' : patterned?.layerName === 'bottom' ? 'top' : null;
-    if (other) {
-      const og = page.locator(`.cr-layer[data-layer="${other}"] [aria-label$=" garments"] .chip`);
-      const nO = await og.count();
-      let worn = false;
-      for (let j = 0; j < nO && !worn; j++) {
-        worn = (await og.nth(j).getAttribute('aria-checked')) === 'true' && !/^\W*none/i.test((await og.nth(j).innerText()).trim());
-      }
-      for (let j = 0; j < nO && !worn; j++) {
-        if (/^\W*none/i.test((await og.nth(j).innerText()).trim())) continue;
-        await T.tap(og.nth(j));
-        await T.frames(3);
-        worn = true;
-        T.ok(S, `clothing: a ${other} added to go with the patterned ${patterned.layerName}`, (await og.nth(j).innerText()).trim());
-      }
+    if (!patterned) T.bad(S, 'clothing: a pattern is selectable in the everyday outfit', 'no garment offered a non-solid pattern');
+    else {
+      await T.tap(patterned.chip);
+      await T.frames(6);
+      T.expected.patternLabel = patterned.label;
+      T.expected.patternLayer = patterned.layerName;
+      T.check(S, 'clothing: pattern chip selected', (await patterned.chip.getAttribute('aria-checked')) === 'true', `${patterned.layerName}: ${patterned.label}`);
+      // garment colour as well
+      const colorSw = patterned.layer.locator('.swatches .swatch[data-id]').first();
+      if (await colorSw.count()) { await T.tap(colorSw); await T.frames(3); }
     }
-  }
-  if (!patterned) T.bad(S, 'clothing: a pattern is selectable in the everyday outfit', 'no garment offered a non-solid pattern');
-  else {
-    await T.tap(patterned.chip);
-    await T.frames(6);
-    T.expected.patternLabel = patterned.label;
-    T.expected.patternLayer = patterned.layerName;
-    T.check(S, 'clothing: pattern chip selected', (await patterned.chip.getAttribute('aria-checked')) === 'true', `${patterned.layerName}: ${patterned.label}`);
-    // garment colour as well
-    const colorSw = patterned.layer.locator('.swatches .swatch[data-id]').first();
-    if (await colorSw.count()) { await T.tap(colorSw); await T.frames(3); }
-  }
-  await T.shot('creator-clothing-pattern');
-  await T.audit('creator clothing step');
+    await T.shot('creator-clothing-pattern');
+    await T.audit('creator clothing step');
+    }
+
 
   // ---- personality: exactly three traits and an aspiration
   await goNext('Personality');
@@ -540,6 +569,8 @@ async function stepCreator(T) {
       people: people.map((p) => ({ id: p.id, first: p.firstName, last: p.lastName, traits: p.traits, asp: p.aspiration?.aspirationId ?? null, career: p.career?.careerId ?? null })),
       hairStyleId: p0.appearance.hair.styleId, hairName: hair?.name, hairColor: p0.appearance.hair.color.toLowerCase(),
       bodyPresetId: p0.appearance.bodyPresetId, bodyPresetName: bp?.name ?? null,
+      modular: p0.appearance.modular ? { bodyId: p0.appearance.modular.bodyId, hairId: p0.appearance.modular.hairId, outfit: p0.appearance.modular.outfits.everyday ?? null, hairColor: p0.appearance.modular.colors.hair } : null,
+      modularManifest: window.hearthside.game.creator?.modular?.()?.manifest ?? null,
       outfitLayers: outfit.layers,
       aspName: window.hearthside.game.content.aspirations[p0.aspiration?.aspirationId]?.name ?? null,
       traitNames: p0.traits.map((t) => window.hearthside.game.content.traits[t]?.name ?? t),
@@ -549,10 +580,22 @@ async function stepCreator(T) {
   });
   log('created', JSON.stringify(made));
   const hasPattern = Object.values(made.outfitLayers).some((l) => l && l.pattern && l.pattern !== 'solid');
+  // the Quaternius style: the stored modular look carries the choices (hair and body ids go through the manifest's labels)
+  const mm = made.modularManifest;
+  const modHairLabel = made.modular && mm ? mm.hairstyles.find((h) => h.id === made.modular.hairId)?.label : null;
+  const modBodyLabel = made.modular && mm ? mm.bodies.find((b) => b.id === made.modular.bodyId)?.label : null;
+  delete made.modularManifest;
   T.check(S, 'two real people created with the chosen names', made.n === 2 && made.people[0].first === 'Mira' && made.people[0].last === 'Vance', `${made.people.map((p) => `${p.first} ${p.last}`).join(' + ')}; household "${made.hhName}"`);
-  T.check(S, 'created person: hairstyle and colour as chosen', made.hairName === T.expected.hairTitle && made.hairColor === T.expected.hairColor, `${made.hairName} ${made.hairColor}`);
-  T.check(S, 'created person: body preset as chosen', !!made.bodyPresetName && made.bodyPresetName === T.expected.bodyPresetLabel, `${made.bodyPresetName} (wanted ${T.expected.bodyPresetLabel})`);
-  T.check(S, 'created person: everyday outfit keeps a pattern', hasPattern, JSON.stringify(made.outfitLayers));
+  if (T.modular) {
+    T.check(S, 'created person: hairstyle and colour as chosen', modHairLabel === T.expected.hairTitle && made.hairColor === T.expected.hairColor && made.modular.hairColor.toLowerCase() === T.expected.hairColor, `${modHairLabel} ${made.hairColor}`);
+    T.check(S, 'created person: body type as chosen', !!modBodyLabel && modBodyLabel === T.expected.bodyPresetLabel, `${modBodyLabel} (wanted ${T.expected.bodyPresetLabel})`);
+    const ex = T.expected.modularLook?.outfits?.everyday ?? null;
+    T.check(S, 'created person: everyday outfit as chosen', !!ex && sortedJson(made.modular.outfit) === sortedJson(ex), JSON.stringify(made.modular.outfit));
+  } else {
+    T.check(S, 'created person: hairstyle and colour as chosen', made.hairName === T.expected.hairTitle && made.hairColor === T.expected.hairColor, `${made.hairName} ${made.hairColor}`);
+    T.check(S, 'created person: body preset as chosen', !!made.bodyPresetName && made.bodyPresetName === T.expected.bodyPresetLabel, `${made.bodyPresetName} (wanted ${T.expected.bodyPresetLabel})`);
+    T.check(S, 'created person: everyday outfit keeps a pattern', hasPattern, JSON.stringify(made.outfitLayers));
+  }
   T.check(S, 'created person: exactly three traits as chosen', made.traitNames.length === 3 && T.expected.traitTitles.every((t) => made.traitNames.includes(t)), made.traitNames.join(', '));
   T.check(S, 'created person: aspiration as chosen', made.aspName === T.expected.aspirationTitle, `${made.aspName}`);
   T.check(S, 'household name and a roommate tie exist', made.hhName === 'Vance House' && made.ties.some((t) => t.tie === 'roommate'), JSON.stringify(made.ties));
@@ -1651,6 +1694,8 @@ async function stepBuild(T) {
 // STEP 5 - save, reload, load, compare
 // ===============================================================================================================
 
+/** JSON of an object with its keys sorted (outfit slots come in different orders from the preview and from the stored look). */
+const sortedJson = (o) => JSON.stringify(Object.fromEntries(Object.entries(o ?? {}).sort()));
 const deepDiff = (a, b, path = '') => {
   if (JSON.stringify(a) === JSON.stringify(b)) return [];
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return [`${path}: ${JSON.stringify(a)} != ${JSON.stringify(b)}`];
@@ -1723,8 +1768,13 @@ async function stepSaveLoad(T) {
   if (T.created) {
     T.check(S, 'loaded: hairstyle and colour as chosen in the creator', p0.hair.styleId === T.created.hairStyleId && p0.hair.color.toLowerCase() === E.hairColor, JSON.stringify(p0.hair));
     T.check(S, 'loaded: body preset as chosen', p0.bodyPresetId === T.created.bodyPresetId, `${p0.bodyPresetId}`);
-    const lay = (p0.outfits.outfits.everyday ?? []).flatMap((o) => Object.values(o.layers));
-    T.check(S, 'loaded: the patterned everyday outfit is intact', lay.some((l) => l && l.pattern && l.pattern !== 'solid'), JSON.stringify(lay.map((l) => l && `${l.garmentId}:${l.pattern}`)));
+    if (T.modular) {
+      const ml = await page.evaluate(() => { const st = window.hearthside.debug.state(); const p = st.people[st.households[st.activeHouseholdId].memberIds[0]]; const m = p.appearance.modular; return m ? { bodyId: m.bodyId, hairId: m.hairId, outfit: m.outfits.everyday ?? null } : null; });
+      T.check(S, 'loaded: the modular look (body, hairstyle, everyday outfit) is intact', !!ml && !!T.created.modular && ml.bodyId === T.created.modular.bodyId && ml.hairId === T.created.modular.hairId && sortedJson(ml.outfit) === sortedJson(T.created.modular.outfit), JSON.stringify(ml));
+    } else {
+      const lay = (p0.outfits.outfits.everyday ?? []).flatMap((o) => Object.values(o.layers));
+      T.check(S, 'loaded: the patterned everyday outfit is intact', lay.some((l) => l && l.pattern && l.pattern !== 'solid'), JSON.stringify(lay.map((l) => l && `${l.garmentId}:${l.pattern}`)));
+    }
     T.check(S, 'loaded: exactly three traits, same as chosen', p0.traits.length === 3 && JSON.stringify(p0.traits) === JSON.stringify(T.created.people[0].traits), p0.traits.join(','));
     T.check(S, 'loaded: aspiration as chosen', p0.aspiration === T.created.people[0].asp, `${p0.aspiration}`);
     T.check(S, 'loaded: roommate tie and household name kept', after.hhName === 'Vance House' && after.ties.some((t) => /roommate/.test(t)), `${after.hhName}; ${after.ties.join(' ; ')}`);
@@ -1791,10 +1841,11 @@ async function stepRotate(T) {
   await first.press('Tab');
   await T.tap(page.locator('.cr-next')); await page.waitForTimeout(300);
   await T.tap(page.locator('.cr-next')); await page.waitForTimeout(300);
-  const hairCards = page.locator('.cr-hair-grid .cr-card');
+  const rotModular = (await page.locator('[aria-label="Hairstyles"] .cr-thumb-card').count()) > 0;
+  const hairCards = rotModular ? page.locator('[aria-label="Hairstyles"] .cr-thumb-card') : page.locator('.cr-hair-grid .cr-card');
   let pickIdx = 2;
-  for (let i = 0; i < await hairCards.count(); i++) if ((await hairCards.nth(i).getAttribute('aria-checked')) !== 'true') { pickIdx = i; break; }
-  const hairTitle = (await hairCards.nth(pickIdx).locator('.cr-card-title').innerText()).trim();
+  for (let i = 1; i < await hairCards.count(); i++) if ((await hairCards.nth(i).getAttribute('aria-checked')) !== 'true') { pickIdx = i; break; }
+  const hairTitle = (await hairCards.nth(pickIdx).locator(rotModular ? '.cr-thumb-label' : '.cr-card-title').innerText()).trim();
   await T.tap(hairCards.nth(pickIdx));
   await T.frames(6);
   await T.shot('rotate-creator-before');
