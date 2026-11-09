@@ -1,0 +1,8 @@
+{
+  "appId": "com.hearthside.life",
+  "appName": "Hearthside Life",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#1b1712"
+  }
+}

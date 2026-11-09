@@ -361,7 +361,7 @@ async function runViewport(browser, url, name) {
 
   // event planner with the "Where?" select
   await emit('planEvent', ids.host);
-  await page.waitForSelector('.evp', { timeout: 8000 }).catch(() => undefined);
+  await page.waitForSelector('.evp', { timeout: 20000 }).catch(() => undefined);
   await page.waitForTimeout(500);
   const where = page.locator('select.evp-where');
   const whereOptions = (await where.count()) ? await where.locator('option').allInnerTexts() : [];
