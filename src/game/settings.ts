@@ -6,11 +6,11 @@ import type { GameSettings } from './api';
 
 export const SETTINGS_KEY = 'hearthside.settings.v1';
 /**
- * Version stamped on every saved settings object. Saves from before it was introduced (no `version`) were written while
- * 'detailed' (the Meshy bodies) was the default style and cannot be told apart from a deliberate choice of it, so they are moved
- * to the new default 'mpfb' once (see migrateSettings).
+ * Version stamped on every saved settings object. Saves from before version 2 (no `version`) were written while 'detailed'
+ * (the Meshy bodies) was the default style, and version 2 saves while 'mpfb' was. Neither can be told apart from a deliberate
+ * choice, so both are moved to the current default 'quaternius' once (see migrateSettings).
  */
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   masterVolume: 0.8,
@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   textScale: 1,
   highContrast: false,
   quality: 'high',
-  characterStyle: 'mpfb', // 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback), 'quaternius' = modular GLB-part adults (preview)
+  characterStyle: 'quaternius', // modular GLB-part people of every life stage; 'mpfb' = Natural, 'detailed' = the scanned Meshy bodies, 'classic' = the procedural bodies (also the last fallback)
   shadows: true,
   weatherEffects: true,
   actionProgress: 'household',
@@ -94,14 +94,15 @@ export function mergeSettings(base: GameSettings, patch: Partial<GameSettings> |
 }
 
 /**
- * One-time migration of a stored settings object: a save without `version` that has the character style 'detailed' (or none)
- * moves to 'mpfb'. 'classic' was never the default, so it stays; anything stored with the current version is left alone, so
- * choosing 'detailed' again in Settings sticks. Returns a new object (and whether it changed the style).
+ * One-time migration of a stored settings object. A save older than the current version whose character style is the old
+ * default of its day ('detailed' or none before version 2, 'mpfb' before version 3) moves to 'quaternius'. 'classic' was never
+ * the default, so it stays; anything stored with the current version is left alone, so choosing 'mpfb' again in Settings sticks.
+ * Returns a new object.
  */
 export function migrateSettings(stored: Partial<GameSettings> & { version?: number }): Partial<GameSettings> & { version: number } {
   const out = { ...stored, version: SETTINGS_VERSION };
-  const old = typeof stored.version !== 'number' || stored.version < 2;
-  if (old && (stored.characterStyle === 'detailed' || stored.characterStyle === undefined)) out.characterStyle = 'mpfb';
+  const old = typeof stored.version !== 'number' || stored.version < SETTINGS_VERSION;
+  if (old && (stored.characterStyle === 'detailed' || stored.characterStyle === 'mpfb' || stored.characterStyle === undefined)) out.characterStyle = 'quaternius';
   return out;
 }
 

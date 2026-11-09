@@ -16,7 +16,7 @@ const TEXTURE_NAMES: Record<HairDef['texture'], string> = {
 const LENGTH_NAMES: Record<HairDef['length'], string> = { shaved: 'Shaved', short: 'Short', medium: 'Medium', long: 'Long' };
 
 export const hairStep: StepDef = {
-  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.hairLength}|${ctx.session.current.appearance.hair.highlight !== null}|${ctx.modular() ? `m:${lookOf(ctx.session).bodyId}` : ''}`,
+  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.hairLength}|${ctx.session.current.appearance.hair.highlight !== null}|${ctx.modular() ? `m:${lookOf(ctx.session).bodyId}:${ctx.session.current.lifeStage}` : ''}`,
   build(ctx) {
     const s = () => ctx.session;
     const hair = () => ctx.session.current.appearance.hair;

@@ -66,12 +66,30 @@ export const STAGE_LYING: Partial<Record<LifeStage, { backY: number; centerZ: nu
   elder: { backY: -0.058, centerZ: -0.155, length: 1.726 },
 };
 
+/** Seat anchors of the modular stage figures (stage proportions on the UBC bodies), per body: a = ubc_male, b = ubc_female. Measured by
+ * tests/unit/characters3d/modular/stageAnchors.test.ts (`MEASURE=1` prints them), in world units with the figure's root scale applied. */
+export const MODULAR_STAGE_SEATED: Partial<Record<LifeStage, { a: { seatHeight: number; seatZ: number }; b: { seatHeight: number; seatZ: number } }>> = {
+  baby: { a: { seatHeight: 0.123, seatZ: -0.055 }, b: { seatHeight: 0.114, seatZ: -0.082 } },
+  toddler: { a: { seatHeight: 0.182, seatZ: -0.064 }, b: { seatHeight: 0.177, seatZ: -0.097 } },
+  child: { a: { seatHeight: 0.283, seatZ: -0.064 }, b: { seatHeight: 0.283, seatZ: -0.117 } },
+  teen: { a: { seatHeight: 0.438, seatZ: -0.092 }, b: { seatHeight: 0.441, seatZ: -0.153 } },
+  elder: { a: { seatHeight: 0.448, seatZ: -0.094 }, b: { seatHeight: 0.452, seatZ: -0.178 } },
+};
+/** Lying anchors of the modular stage figures. */
+export const MODULAR_STAGE_LYING: Partial<Record<LifeStage, { a: { backY: number; centerZ: number }; b: { backY: number; centerZ: number } }>> = {
+  baby: { a: { backY: -0.048, centerZ: -0.175 }, b: { backY: -0.045, centerZ: -0.169 } },
+  toddler: { a: { backY: -0.051, centerZ: -0.157 }, b: { backY: -0.05, centerZ: -0.151 } },
+  child: { a: { backY: -0.048, centerZ: -0.167 }, b: { backY: -0.05, centerZ: -0.16 } },
+  teen: { a: { backY: -0.06, centerZ: -0.144 }, b: { backY: -0.065, centerZ: -0.134 } },
+  elder: { a: { backY: -0.072, centerZ: -0.158 }, b: { backY: -0.077, centerZ: -0.147 } },
+};
+
 export interface StageOpts {
   /** Life stage of the person (default adult). */
   stage?: LifeStage;
   /** The stage's own body is drawn (else the adult rig scaled uniformly to the stage's height: the classic and detailed styles, or a body still loading). */
   own?: boolean;
-  /** A modular (Quaternius) body is drawn: its own measured anchors (adults only). */
+  /** A modular (Quaternius) figure is drawn: its own measured anchors, per life stage. */
   modular?: boolean;
   /** Body frame, for the per-frame modular anchors when lying. */
   frame?: 'a' | 'b';
@@ -89,6 +107,15 @@ export interface RootPlacement { x: number; y: number; z: number; yaw: number }
  * (radians, 0 = +z). Pass the frame for its exact measurement (and the style: the scanned bodies sit a little differently).
  */
 export function seatedPlacement(anchor: { x: number; y: number; z: number }, facing: number, frame?: 'a' | 'b', style: 'classic' | 'detailed' | 'mpfb' = 'classic', opts: StageOpts = {}): RootPlacement {
+  const young = !!opts.stage && opts.stage !== 'adult' && opts.stage !== 'youngAdult';
+  if (opts.modular) {
+    const adult = POSTURE_ANCHORS.seated.modular[frame ?? 'a'];
+    const own = young ? MODULAR_STAGE_SEATED[opts.stage!]?.[frame ?? 'a'] : undefined;
+    const k = young && !own ? stageScale(opts.stage) : 1;
+    const mm = own ?? { seatHeight: adult.seatHeight * k, seatZ: adult.seatZ * k };
+    const sx = Math.sin(facing), sz = Math.cos(facing);
+    return { x: anchor.x - sx * mm.seatZ, y: anchor.y - mm.seatHeight, z: anchor.z - sz * mm.seatZ, yaw: facing };
+  }
   let m: { seatHeight: number; seatZ: number } = frame ? (style === 'mpfb' ? POSTURE_ANCHORS.seated.mpfb : style === 'detailed' ? POSTURE_ANCHORS.seated.detailed : POSTURE_ANCHORS.seated.frames)[frame] : POSTURE_ANCHORS.seated;
   const stage = opts.stage;
   if (opts.modular && (!stage || stage === 'adult' || stage === 'youngAdult')) m = POSTURE_ANCHORS.seated.modular[frame ?? 'a'];
@@ -108,6 +135,13 @@ export function seatedPlacement(anchor: { x: number; y: number; z: number }, fac
 export function lyingPlacement(center: { x: number; y: number; z: number }, headToFeet: number, opts: StageOpts = {}): RootPlacement {
   const stage = opts.stage;
   const k = stage && stage !== 'adult' && stage !== 'youngAdult' ? stageScale(stage) : 1;
+  if (opts.modular) {
+    const adult = POSTURE_ANCHORS.lying.modular[opts.frame ?? 'a'];
+    const mine = stage ? MODULAR_STAGE_LYING[stage]?.[opts.frame ?? 'a'] : undefined;
+    const Lm = mine ?? { backY: adult.backY * k, centerZ: adult.centerZ * k };
+    const mx = Math.sin(headToFeet), mz = Math.cos(headToFeet);
+    return { x: center.x - mx * Lm.centerZ, y: center.y - Lm.backY, z: center.z - mz * Lm.centerZ, yaw: headToFeet };
+  }
   const own = k !== 1 && opts.own !== false ? STAGE_LYING[stage!] : undefined;
   const L = own ?? (opts.modular && k === 1 ? POSTURE_ANCHORS.lying.modular[opts.frame ?? 'a']
     : { backY: POSTURE_ANCHORS.lying.backY * k, centerZ: POSTURE_ANCHORS.lying.centerZ * k });

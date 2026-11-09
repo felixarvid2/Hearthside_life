@@ -1,6 +1,6 @@
 // The surface a rendered person offers to peopleView, the creator preview, portraits and hand props, plus the factory that
-// picks the implementation: the modular (GLB-part) view for adults while the 'quaternius' style is active, CharacterView
-// for everybody else.
+// picks the implementation: the modular (GLB-part) view for every life stage while the 'quaternius' style is active, CharacterView
+// for the other styles.
 
 import type * as THREE from 'three';
 import type { AnimId } from '../core/anim';
@@ -47,7 +47,8 @@ export interface PersonView {
 
 /** Whether a person of this life stage is drawn by the modular view under the assets' current style. */
 export function wantsModular(assets: CharacterAssets, lifeStage: LifeStage): boolean {
-  return !!assets.modular && (lifeStage === 'youngAdult' || lifeStage === 'adult');
+  void lifeStage;
+  return !!assets.modular;
 }
 
 export function createPersonView(assets: CharacterAssets, content: ContentDB, appearance: Appearance, outfit: Outfit, lifeStage: LifeStage = 'adult', category: OutfitCategory = 'everyday'): PersonView {

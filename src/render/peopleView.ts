@@ -414,7 +414,7 @@ export class PeopleView {
       const rootScale = e.view.root.scale.x || 1;
       e.props.update(
         propsFor(p, p.queue[0] ?? null, p.anim, state.clock.minutes, state.items),
-        { scale: e.view.hasOwnBody ? k : 1, tableY: (ground + 0.74 - ry) / rootScale, forward: 0.48 / rootScale },
+        { scale: e.view.hasOwnBody && !e.view.modular ? k : 1, tableY: (ground + 0.74 - ry) / rootScale, forward: 0.48 / rootScale },
       );
       e.shadow.position.set(rx, ground + 0.012, rz);
       e.shadow.visible = e.align < 0.5 && !swimming;
@@ -439,7 +439,7 @@ export class PeopleView {
     for (const [e, h] of heldNow) {
       carriers.add(h.id);
       h.view.cradlePoint(this.tmp);
-      const pl = lyingPlacement({ x: this.tmp.x, y: this.tmp.y, z: this.tmp.z }, h.view.root.rotation.y + CRADLE.yaw, { stage: 'baby', own: e.view.hasOwnBody });
+      const pl = lyingPlacement({ x: this.tmp.x, y: this.tmp.y, z: this.tmp.z }, h.view.root.rotation.y + CRADLE.yaw, { stage: 'baby', own: e.view.hasOwnBody, modular: e.view.modular, frame: state.people[e.id]?.appearance.frame });
       e.view.root.position.set(pl.x, pl.y, pl.z);
       e.view.root.rotation.y = pl.yaw;
       e.shadow.visible = false;

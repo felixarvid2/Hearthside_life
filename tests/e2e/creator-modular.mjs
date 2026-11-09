@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Creator acceptance for modular (Quaternius) looks, through the real creator UI with Settings > Character style set to
-// "Quaternius (preview)": hairstyle, garment, colour, outfit preset and body pickers, restriction feedback, undo, orientation
+// "Quaternius" (the default style): hairstyle, garment, colour, outfit preset and body pickers, restriction feedback, undo, orientation
 // changes, Move In and the in-game person, save and reload, the wardrobe (Save and Cancel), resource counts after repeated
 // swaps and two people with independent looks.
 //
@@ -188,7 +188,7 @@ async function runViewport(browser, vpName, vp) {
 
   const sections = [
     ['open', openCreator], ['hair', stepHair], ['clothing', stepClothing], ['catalog', stepCatalog], ['body', stepBody], ['undo', stepUndo], ['orientation', stepOrientation],
-    ['stability', stepStability], ['two', stepTwoPeople], ['move-in', stepMoveIn], ['save', stepSaveReload], ['wardrobe', stepWardrobe],
+    ['stability', stepStability], ['two', stepTwoPeople], ['child', stepChild], ['move-in', stepMoveIn], ['save', stepSaveReload], ['wardrobe', stepWardrobe],
   ];
   const only = opt('steps', '').split(',').filter(Boolean);
   for (const [id, fn] of sections) {
@@ -678,6 +678,52 @@ async function stepTwoPeople(T) {
   const a2 = await previewLook(T);
   T.check(S, 'the first person kept their own look', a2.outfits.everyday?.top === 'e2e_tee_b' && a2.hairId === a.hairId && a2.hairId !== 'e2e_hair_b', JSON.stringify({ h: a2.hairId, o: a2.outfits.everyday }));
   await T.shot('two-people');
+}
+
+/** A child member: drawn with the modular view at child size, with only the parts a child may wear in the lists. */
+async function stepChild(T) {
+  const { page } = T;
+  const S = 'child';
+  await addPerson(T);
+  const members = await page.locator('.cr-member:not(.cr-member-add)').count();
+  await pickMember(T, members - 1);
+  await goStep(T, 'identity');
+  const seg = page.locator('[role="radiogroup"][aria-label="Life stage"], [aria-label="Life stage"]').first();
+  const childBtn = seg.getByRole('radio', { name: 'Child' }).or(seg.getByRole('button', { name: 'Child' })).first();
+  await T.tap(childBtn);
+  await T.settle(3);
+  await previewIdle(T);
+  T.check(S, 'the child is drawn with the modular view', await previewIsModular(T), '');
+  const stage = await page.evaluate(() => window.hearthside.view.creatorScene.view.lifeStage);
+  T.check(S, 'the preview person is a child', stage === 'child', String(stage));
+  const h = await page.evaluate(() => { const v = window.hearthside.view.creatorScene.view; const p = new (v.root.position.constructor)(); v.headTop(p); return p.y - v.root.position.y; });
+  T.check(S, 'the child is about two thirds of an adult tall', h > 0.9 && h < 1.5, `${h.toFixed(2)} m to the crown`);
+  const look = await previewLook(T);
+  T.check(S, 'the child wears a top and bottom or a one-piece and has no facial hair', !!look && (!!look.outfits.everyday?.full || (!!look.outfits.everyday?.top && !!look.outfits.everyday?.bottom)) && look.facialHairId === null, JSON.stringify(look?.outfits.everyday));
+  await goStep(T, 'hair');
+  await page.waitForSelector('.cr-hair-thumbs .cr-thumb-card', { timeout: 10000 });
+  T.check(S, 'the hair step offers no facial hair to a child', (await page.locator('.cr-facial-thumbs').count()) === 0, '');
+  await goStep(T, 'clothing'); await subTab(T, 'everyday');
+  await page.waitForSelector('[aria-label="Top garments"] .cr-thumb-card', { timeout: 10000 });
+  T.check(S, 'the clothing step lists child tops but not a tube top', (await card(T, 'Top garments', 'Crew T-shirt').count()) === 1 && (await card(T, 'Top garments', 'Tube top').count()) === 0, '');
+  T.check(S, 'there are no pearls for a child', (await page.locator('[aria-label="Neck garments"] .cr-thumb-card', { hasText: 'Pearl necklace' }).count()) === 0, '');
+  await checkTargets(T, S, 'child clothing');
+  await T.shot('child-clothing');
+  // the first member is a grown-up: the full catalog (and facial hair) is still theirs
+  await pickMember(T, 0);
+  await goStep(T, 'clothing'); await subTab(T, 'everyday');
+  T.check(S, 'an adult lists the tube top', (await card(T, 'Top garments', 'Tube top').count()) === 1, '');
+  await goStep(T, 'hair');
+  T.check(S, 'an adult is offered facial hair', (await page.locator('.cr-facial-thumbs').count()) === 1, '');
+  // the later sections work with the two people of the 'two' step: take the child out again
+  await pickMember(T, members - 1);
+  await T.tap(page.locator('.cr-member:not(.cr-member-add)').nth(members - 1));
+  await page.waitForSelector('.cr-sheet-actions', { timeout: 5000 });
+  await T.tap(page.locator('.cr-sheet-actions .row-btn', { hasText: 'Remove from household' }));
+  await page.waitForSelector('.modal, .dialog, [role=dialog]', { timeout: 5000 }).catch(() => undefined);
+  await T.tap(page.getByRole('button', { name: /^Remove$/ }).first()); await T.settle(3);
+  T.check(S, 'the child can be removed again', (await page.locator('.cr-member:not(.cr-member-add)').count()) === members - 1, '');
+  await pickMember(T, 0);
 }
 
 async function stepMoveIn(T) {

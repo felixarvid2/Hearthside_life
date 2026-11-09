@@ -51,7 +51,7 @@ function groupParams(defs: readonly ParamDef[]): Array<{ group: string; params: 
 const isFaceSection = (s: FaceBodySection) => FACE_SECTIONS.includes(s);
 
 export const faceBodyStep: StepDef = {
-  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.faceBodySection}|${ctx.session.current.appearance.frame}|${ctx.modular() ? `m:${lookOf(ctx.session).bodyId}` : ''}`,
+  key: (ctx) => `${ctx.session.currentIndex}|${ctx.ui.faceBodySection}|${ctx.session.current.appearance.frame}|${ctx.modular() ? `m:${lookOf(ctx.session).bodyId}:${ctx.session.current.lifeStage}` : ''}`,
   enter(ctx) { if (isFaceSection(ctx.ui.faceBodySection)) ctx.preview.enterFace(); },
   leave(ctx) { ctx.preview.leaveFace(); },
   build(ctx) {

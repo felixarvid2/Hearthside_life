@@ -109,8 +109,8 @@ export type CreatorResult = { ok: true; note?: string } | { ok: false; reason: s
 const OK: CreatorResult = { ok: true };
 const fail = (reason: string): CreatorResult => ({ ok: false, reason });
 const NOT_MODULAR = 'The Quaternius character style is not active.';
-/** Life stages drawn with the modular bodies (src/characters/personView.ts wantsModular). */
-const modularStage = (s: LifeStage): boolean => s === 'youngAdult' || s === 'adult';
+/** Life stages drawn with the modular bodies (src/characters/personView.ts wantsModular): all of them. */
+const modularStage = (_s: LifeStage): boolean => true;
 /** Keeps a stored modular look's shared colours equal to the classic appearance (the source of truth). */
 function mirrorModularColors(a: Appearance): void {
   const l = a.modular;
@@ -636,6 +636,8 @@ export class CreatorSession {
     if (!availableLifeStages().includes(stage)) return fail('That life stage is not available yet.');
     return this.mutateMember('Life stage', (p) => {
       p.lifeStage = stage;
+      // a stored modular look drops what the new stage may not wear (facial hair on a child, a gown on a toddler)
+      if (this.modularDef && p.appearance.modular) p.appearance.modular = resolveLook(p.appearance.modular, this.modularDef, stage).look;
       if (!ADULT_STAGES.includes(stage)) { p.careerId = null; p.aspirationId = null; }
     });
   }
@@ -739,7 +741,7 @@ export class CreatorSession {
   /** The look drawn for a member (stored, else derived); null when not modular. */
   modularLook(index: number = this.cur): ModularLook | null {
     const p = this.d.members[index];
-    return this.modularDef && p && modularStage(p.lifeStage) ? lookFor(p.appearance, this.modularDef) : null;
+    return this.modularDef && p && modularStage(p.lifeStage) ? lookFor(p.appearance, this.modularDef, undefined, p.lifeStage) : null;
   }
 
   setModularBody(bodyId: string): CreatorResult {
@@ -833,7 +835,7 @@ export class CreatorSession {
     const m = this.modularDef;
     if (!m) return fail(NOT_MODULAR);
     return this.mutateMember(label, (p, _d, ctx) => {
-      if (!modularStage(p.lifeStage)) return 'Only young adults and adults use the Quaternius bodies.';
+      if (!modularStage(p.lifeStage)) return NOT_MODULAR;
       const err = fn(p, this.materialize(p, m), ctx);
       if (typeof err === 'string') return err;
       this.settle(p, m, ctx);
@@ -842,7 +844,7 @@ export class CreatorSession {
 
   /** Writes the derived look into the draft when it has none yet. */
   private materialize(p: PersonDraft, m: ModularManifest): ModularLook {
-    const look = lookFor(p.appearance, m);
+    const look = lookFor(p.appearance, m, undefined, p.lifeStage);
     p.appearance.modular = look;
     return look;
   }
@@ -852,7 +854,7 @@ export class CreatorSession {
     const look = p.appearance.modular;
     if (!look) return;
     const before = JSON.stringify(look);
-    const res = resolveLook(look, m);
+    const res = resolveLook(look, m, p.lifeStage);
     p.appearance.modular = res.look;
     if (res.issues.length > 0 && JSON.stringify(res.look) !== before) {
       const extra = 'Some parts did not fit together and were removed.';
@@ -876,7 +878,7 @@ export class CreatorSession {
       const preset = p.appearance.bodyPresetId;
       if (preset && this.content.bodyPresets[preset]?.frame !== frame) p.appearance.bodyPresetId = null;
     }
-    const res = resolveLook(look, m);
+    const res = resolveLook(look, m, p.lifeStage);
     p.appearance.modular = res.look;
     const kept = new Set<string>([...Object.values(res.look.outfits).flatMap((o) => Object.values(o ?? {})), ...(res.look.hairId ? [res.look.hairId] : []), ...(res.look.facialHairId ? [res.look.facialHairId] : [])]);
     const lost = [...had].filter((id) => !kept.has(id)).map((id) => findGarment(m, id)?.label ?? findHair(m, id)?.label ?? findFacialHair(m, id)?.label ?? id);
@@ -884,7 +886,7 @@ export class CreatorSession {
     // a hairstyle that is not fitted to the new body is replaced instead of leaving the head bare
     let swapped = '';
     if (look.hairId && !res.look.hairId) {
-      const fb = fallbackHair(m, res.look);
+      const fb = fallbackHair(m, res.look, undefined, p.lifeStage);
       if (fb) { res.look.hairId = fb; swapped = ` Hair switched to ${findHair(m, fb)?.label ?? fb}.`; }
     }
     return `${lost.join(', ')} ${lost.length === 1 ? "isn't" : "aren't"} available for ${body.label} - taken off.${swapped}`;
@@ -894,7 +896,7 @@ export class CreatorSession {
   private randomModular(p: PersonDraft, parts: { body?: boolean; hair?: boolean; clothing?: boolean }): void {
     const m = this.modularDef;
     if (!m || !modularStage(p.lifeStage)) return;
-    const look = lookFor(p.appearance, m);
+    const look = lookFor(p.appearance, m, undefined, p.lifeStage);
     if (parts.body) {
       // the frame was just rolled: the body follows it (see setFrame), morphs are re-rolled for that body
       look.bodyId = m.defaults.bodyByFrame[p.appearance.frame];
@@ -904,8 +906,8 @@ export class CreatorSession {
       for (const mo of def?.morphs ?? []) look.morphs[mo.id] = round3(this.rng.range(mo.range[0], mo.range[1]));
     }
     p.appearance.modular = look;
-    randomizeLook(m, look, this.rng, { hair: !!parts.hair, clothing: !!parts.clothing });
-    p.appearance.modular = resolveLook(look, m).look;
+    randomizeLook(m, look, this.rng, { hair: !!parts.hair, clothing: !!parts.clothing, stage: p.lifeStage });
+    p.appearance.modular = resolveLook(look, m, p.lifeStage).look;
   }
 
   /** Reset hook: puts one category of a stored modular look back to what the manifest derives for this person. */
@@ -913,11 +915,11 @@ export class CreatorSession {
     const m = this.modularDef;
     const look = p.appearance.modular;
     if (!m || !look || !modularStage(p.lifeStage)) return;
-    const def = deriveModularLook(p.appearance, m);
+    const def = deriveModularLook(p.appearance, m, undefined, p.lifeStage);
     if (category === 'body') { look.bodyId = def.bodyId; look.morphs = {}; }
     else if (category === 'hair') { look.hairId = def.hairId; look.facialHairId = def.facialHairId; }
     else look.outfits = def.outfits;
-    p.appearance.modular = resolveLook(look, m).look;
+    p.appearance.modular = resolveLook(look, m, p.lifeStage).look;
   }
 
   // ---- clothing ----

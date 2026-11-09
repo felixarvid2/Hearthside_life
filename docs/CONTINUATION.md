@@ -188,7 +188,7 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
 
 ## Next steps, in order
 
-1. Modular Quaternius characters (opt-in style "Quaternius (preview)"; see "Modular characters" below). Stages A to D
+1. Modular Quaternius characters (the default style "Quaternius" for every life stage; see "Modular characters" below). Stages A to D
    are done on the Universal Base Characters (`ubc_male`, `ubc_female`). Next: the known gaps listed there (garment
    folds, hood up, hair spikes at the hairline, ponytail thumbnail, real-device performance).
 2. Milestone 10, complete catalogs: done, including the modular creator catalog. Current counts are in `docs/CONTENT_STATUS.md`.
@@ -201,8 +201,10 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
 
 ## Modular characters (Quaternius)
 
-Opt in with Settings > Character style > "Quaternius (preview)". The default stays "Natural" (MPFB), and nothing
-changes for existing saves or styles.
+Settings > Character style > "Quaternius" is the default (listed first; Natural, Detailed and Classic remain options) and draws
+every life stage, baby to elder. Stored settings are migrated once (`SETTINGS_VERSION` 3, `migrateSettings`): an older save whose style
+was the old default of its day (`detailed`, none or `mpfb`) becomes `quaternius`; a saved `classic` stays, and a choice made at version 3 sticks.
+No save data changes.
 
 - **Runtime.** `src/characters/modular/`:
   - `types.ts` is the contract: manifest, the `ModularLook` appearance block (own version `v`), cover masks.
@@ -211,8 +213,9 @@ changes for existing saves or styles.
   - `ModularCharacterView.ts`: the `PersonView` adapter. `src/characters/personView.ts` is the factory the people
     view, creator scene and portraits use.
   - `Appearance.modular` is optional. People without it get a look derived from their frame, skin, hair and eye
-    colours (`deriveModularLook`); it is never written back implicitly. Only `youngAdult` and `adult` use modular
-    bodies; other stages keep the classic bodies.
+    colours and their life stage (`deriveModularLook(appearance, manifest, content, stage)`); it is never written back implicitly.
+    `wantsModular` is true for every stage while the style is on (the classic bodies are only the fallback when the modular
+    assets fail to load).
 - **Assets.** `public/assets/characters/modular/` (manifest, bodies, garments, hair). Sources are in
   `authoring/characters/`; the pipeline and tool versions are in `tools/characters/README.md` (Blender 4.5.15,
   OpenSew-2 86b4322, GBH Tool 2.2.3, isolated add-on profile).
@@ -237,8 +240,25 @@ changes for existing saves or styles.
   - Dev check: `dev/wardrobe.html` takes `outfit=top:id,bottom:id` and `morph=weight:1,...`.
   - CharacterStudio ports (MIT): `creator/framing.ts`, `restrictions.ts` (used by `resolveLook`),
     `tools/characters/thumbnails.mjs`, and the dev-only wardrobe grid `dev/wardrobe.html` (`npm run dev`).
-- **Creator (Stage C).** While Settings > Character style is "Quaternius (preview)" and the member is youngAdult/adult
-  (`CreatorSession.isModular()`), the Face & Body, Hair and Clothing steps edit `appearance.modular` instead of the classic
+- **Life stages.** The two UBC bodies are the only meshes; a stage is a profile of bone scales applied at runtime.
+  - `stageProportions.ts`: `STAGE_PROPORTIONS` (height over the adult, head, neck, torso, hips, shoulders, upper/lower arm, hand, thigh,
+    shin, foot) and `StageRig`. Every bone of the profile gets a uniform world scale `e` (uniform, so rotated bones never shear); its local
+    scale is `e / e(parent)`, so a scaled bone does not inflate its children and garments, hair and hats (skinned to the same bones) follow.
+    The pelvis is lowered so the soles stay on the floor, then `ModularCharacter.root.scale` brings the crown to the stage height.
+  - Animations: `retarget.ts` scales the pelvis/root position tracks by the body's own hip ratio times the stage's (`StageFit.hipRatio`);
+    clips are cached per source clip and ratio. Walk cadence, the elder's stoop, a lying baby's curl, the cradle hold of a carrier and
+    the recliner lean are the same pose effects CharacterView has (`stagePose.ts`), applied in `ModularCharacter.update`. A baby only
+    lies (`sleep`), or sits up in portraits and the creator (`setBabyUpright`, `floorDrop`).
+  - Posture: `MODULAR_STAGE_SEATED` / `MODULAR_STAGE_LYING` in `posture.ts` hold the measured seat and bed anchors per stage and body
+    (`MEASURE=1 npx vitest run tests/unit/characters3d/modular/stageAnchors.test.ts` prints them; the test checks them).
+  - Parts by stage: `stageRules.ts` (code table over catalog ids). Facial hair from young adult; babies get a short white list (tee, romper,
+    shorts, trousers; no shoes, no accessories), toddlers a slightly longer one (shoes, coat, hat, scarf), children and teens lose the adult
+    cuts and kinds. `resolveLook(look, manifest, stage)` drops what a stage may not wear and keeps a child dressed; `garmentsFor`,
+    `hairFor` and `facialHairFor` take the stage (the creator lists, `randomizeLook`). `deriveModularLook(..., stage)`: baby tee, trousers and
+    buzz cut, toddler tee and shorts with sneakers, others the manifest defaults. Hair colour logic is unchanged.
+  - Review: `dev/stages.html` (`node dev/shoot-stages.mjs`) draws the family lineup in idle, walk, sit, lie and carry;
+    the kept shots are in `dev/shots/quaternius-stages/`.
+- **Creator (Stage C).** While Settings > Character style is "Quaternius" (`CreatorSession.isModular()`, every life stage), the Face & Body, Hair and Clothing steps edit `appearance.modular` instead of the classic
   looks (UI in `src/ui/creator/steps/modularParts.ts`; the steps branch on `ctx.modular()`).
   - Session API (`src/characters/creator.ts`, all one undoable `mutateMember` each): `setModularBody`, `setModularHair`,
     `setModularGarment(category, slot, id|null)`, `setModularGarmentColor`, `setModularMorph`, `applyOutfitPreset`. The first
@@ -297,7 +317,7 @@ changes for existing saves or styles.
   - The ponytail thumbnail is a front view, so the tail barely shows.
   - Very light skin looks golden (skin gain).
   - Under this style people's classic clothes, hair and accessories are not drawn.
-  - Seat and bed anchors use the classic values.
+  - Stage proportions are bone scaling by eye (see Life stages), not a per-age mesh: a child's face is the adult face on a larger head.
   - Garment UVs come from a smart projection (fine for solid colours).
   - Morphs are one shape key each: no corrective shapes, and hair is not adjusted for jaw width.
   - Real-device performance is not measured.
@@ -317,7 +337,7 @@ changes for existing saves or styles.
 - M8 family and life stages:
   - The move-out dialog scrolls in phone landscape.
   - Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry). Babies now lie curled (Milestone 13;
-    the modular adult view has no spine effects, so its recliner pose is the plain seated one).
+    the modular view now has the same spine effects, `ModularCharacter.applyPoseFx`).
   - Feet slid when walking at Fast and Very fast speed; the walk cycle now follows the measured ground speed (Milestone 13). A little
     sliding remains on turns and when a path changes speed within a tick.
 - M9 floors and exteriors:
@@ -422,9 +442,9 @@ changes for existing saves or styles.
 
 ## Assets and AI generation
 
-- **People.** Three character styles (Settings > Display, `GameSettings.characterStyle`): `mpfb` ("Natural", the default), `detailed`
+- **People.** Four character styles (Settings > Display, `GameSettings.characterStyle`): `quaternius` ("Quaternius", the default: modular parts, every life stage), `mpfb` ("Natural"), `detailed`
   (Meshy bodies: `dev/meshy/`, `npm run assets:meshy` builds `public/assets/characters/meshy_{a,b}.glb`) and `classic` (procedural).
-  Saved settings from before the version stamp are moved once from `detailed` to `mpfb` (`migrateSettings`; a saved `classic` stays).
+  Saved settings from before version 3 are moved once from `detailed`/`mpfb` to `quaternius` (`migrateSettings`; a saved `classic` stays).
   Meshy credits left: 42.
 - **fal.ai.** The key is in the user's repo `felixarvid2/apis`, file `Fal.ai`, cloned to `/home/user/apis`. Read it at run
   time; never print or commit it. Use `queue.fal.run` or `fal.run`, never `api.fal.ai`, where a proxy overrides auth.
