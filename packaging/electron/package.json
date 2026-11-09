@@ -1,0 +1,9 @@
+{
+  "name": "hearthside-life",
+  "productName": "Hearthside Life",
+  "version": "0.1.0",
+  "description": "Hearthside Life - an original life simulation.",
+  "main": "main.js",
+  "author": "Hearthside Life",
+  "license": "UNLICENSED"
+}
