@@ -709,12 +709,21 @@ async function stepChild(T) {
   T.check(S, 'there are no pearls for a child', (await page.locator('[aria-label="Neck garments"] .cr-thumb-card', { hasText: 'Pearl necklace' }).count()) === 0, '');
   await checkTargets(T, S, 'child clothing');
   await T.shot('child-clothing');
-  // back to the grown-up: the full catalog and facial hair return
-  await goStep(T, 'identity');
-  await T.tap(seg.getByRole('radio', { name: 'Adult' }).or(seg.getByRole('button', { name: 'Adult' })).first());
-  await T.settle(3);
+  // the first member is a grown-up: the full catalog (and facial hair) is still theirs
+  await pickMember(T, 0);
   await goStep(T, 'clothing'); await subTab(T, 'everyday');
-  T.check(S, 'an adult lists the tube top again', (await card(T, 'Top garments', 'Tube top').count()) === 1, '');
+  T.check(S, 'an adult lists the tube top', (await card(T, 'Top garments', 'Tube top').count()) === 1, '');
+  await goStep(T, 'hair');
+  T.check(S, 'an adult is offered facial hair', (await page.locator('.cr-facial-thumbs').count()) === 1, '');
+  // the later sections work with the two people of the 'two' step: take the child out again
+  await pickMember(T, members - 1);
+  await T.tap(page.locator('.cr-member:not(.cr-member-add)').nth(members - 1));
+  await page.waitForSelector('.cr-sheet-actions', { timeout: 5000 });
+  await T.tap(page.locator('.cr-sheet-actions .row-btn', { hasText: 'Remove from household' }));
+  await page.waitForSelector('.modal, .dialog, [role=dialog]', { timeout: 5000 }).catch(() => undefined);
+  await T.tap(page.getByRole('button', { name: /^Remove$/ }).first()); await T.settle(3);
+  T.check(S, 'the child can be removed again', (await page.locator('.cr-member:not(.cr-member-add)').count()) === members - 1, '');
+  await pickMember(T, 0);
 }
 
 async function stepMoveIn(T) {
