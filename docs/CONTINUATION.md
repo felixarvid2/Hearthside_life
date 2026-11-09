@@ -180,6 +180,9 @@ Guidance and accessibility (UI) are part A, done elsewhere. This part:
   `npm run e2e:release` 54/54 (portrait and landscape); `npm run e2e:perf` ran (table in TEST_CHECKLIST.md); `e2e:creator`,
   `e2e:creator-modular` and `e2e:a11y` OK; acceptance portrait 382/382, landscape 381/381, desktop 369/369 (step 15 now sells loose
   outdoor objects, takes down fences in the way, keeps people out of the stretch and tries the next stretch when a room is refused).
+- **After the release-gap fixes** (2026-11-09: portrait What's on sheet, Choose a person / Go somewhere, no source maps): `npm test` 196 files,
+  2473 tests; `e2e`, `e2e:creator`, `e2e:creator-modular` OK; `e2e:a11y` 220/220; `e2e:release` 56/56; acceptance portrait 382/382,
+  landscape 381/381, desktop 368/368.
 - **Placeholders**: audited (docs/TEST_CHECKLIST.md "Release readiness"); `tests/unit/tools/productionClean.test.ts` keeps dev imports and
   placeholder wording out of the shipped source.
 
