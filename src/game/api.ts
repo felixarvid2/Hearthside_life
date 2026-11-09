@@ -294,7 +294,7 @@ export interface GameSettings {
   /** Milestone 13: stronger text and border contrast, no soft shadows on panels. */
   highContrast: boolean;
   quality: 'low' | 'high';
-  /** 'mpfb': the natural MakeHuman bodies (default); 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter); 'quaternius': modular GLB-part adults on top of the classic bodies (preview). */
+  /** 'quaternius': the modular GLB-part characters of every life stage (default); 'mpfb': the natural MakeHuman bodies; 'detailed': scanned Meshy bodies; 'classic': the procedural bodies (fallback, lighter). */
   characterStyle: 'mpfb' | 'detailed' | 'classic' | 'quaternius';
   shadows: boolean;
   /** Milestone 12: rain/snow particles (render-only; the weather light tint stays when this is off). */

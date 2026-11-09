@@ -94,7 +94,7 @@ export function modularBodySection(ctx: CreatorContext, info: ModularInfo, b: Bi
 export function modularHairSection(ctx: CreatorContext, info: ModularInfo, b: Binder): HTMLElement {
   const s = () => ctx.session;
   const m = info.manifest;
-  const styles = hairFor(m, lookOf(s()).bodyId);
+  const styles = hairFor(m, lookOf(s()).bodyId, s().current.lifeStage);
   const grid = h('div', { class: 'cr-thumb-grid cr-hair-thumbs', role: 'radiogroup', ariaLabel: 'Hairstyles' });
   const none = thumbCard({ label: 'None', none: true, onClick: () => { if (lookOf(s()).hairId !== null) ctx.report(s().setModularHair(null)); } });
   grid.appendChild(none.el);
@@ -121,7 +121,7 @@ export function modularHairSection(ctx: CreatorContext, info: ModularInfo, b: Bi
 export function modularFacialHairSection(ctx: CreatorContext, info: ModularInfo, b: Binder): HTMLElement | null {
   const s = () => ctx.session;
   const m = info.manifest;
-  const styles = facialHairFor(m, lookOf(s()).bodyId);
+  const styles = facialHairFor(m, lookOf(s()).bodyId, s().current.lifeStage);
   if (styles.length === 0) return null;
   const grid = h('div', { class: 'cr-thumb-grid cr-facial-thumbs', role: 'radiogroup', ariaLabel: 'Facial hair' });
   const none = thumbCard({ label: 'None', none: true, onClick: () => { if (lookOf(s()).facialHairId !== null) ctx.report(s().setModularFacialHair(null)); } });
@@ -201,7 +201,7 @@ export function modularClothingSections(ctx: CreatorContext, info: ModularInfo, 
 
   /** One slot's cards, optional tag filter and colour controls (null when no garment fits the body). */
   const slotBlock = (slot: ModularSlot): HTMLElement | null => {
-    const list = garmentsFor(m, bodyId, slot);
+    const list = garmentsFor(m, bodyId, slot, s().current.lifeStage);
     if (list.length === 0) return null;
     const grid = h('div', { class: 'cr-thumb-grid', role: 'radiogroup', ariaLabel: `${SLOT_TITLES[slot]} garments` });
     const none = thumbCard({ label: 'None', none: true, onClick: () => { if (outfitFor(lookOf(s()), category)[slot] !== undefined) ctx.report(s().setModularGarment(category, slot, null)); } });

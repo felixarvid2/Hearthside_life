@@ -2,18 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS, SETTINGS_VERSION, mergeSettings, migrateSettings, qualityFor } from '../../../src/game/settings';
 
 describe('player settings', () => {
-  it('defaults to the natural (MPFB) character style and keeps it across old saves', () => {
-    expect(DEFAULT_SETTINGS.characterStyle).toBe('mpfb');
+  it('defaults to the Quaternius (modular) character style and keeps it across old saves', () => {
+    expect(DEFAULT_SETTINGS.characterStyle).toBe('quaternius');
     const base = { ...DEFAULT_SETTINGS };
-    expect(mergeSettings(base, { masterVolume: 0.5 }).characterStyle).toBe('mpfb');
+    expect(mergeSettings(base, { masterVolume: 0.5 }).characterStyle).toBe('quaternius');
   });
 
-  it('accepts the three character styles and ignores anything else', () => {
+  it('accepts the four character styles and ignores anything else', () => {
     const base = { ...DEFAULT_SETTINGS };
     expect(mergeSettings(base, { characterStyle: 'classic' }).characterStyle).toBe('classic');
     expect(mergeSettings(base, { characterStyle: 'detailed' }).characterStyle).toBe('detailed');
     expect(mergeSettings({ ...base, characterStyle: 'classic' }, { characterStyle: 'mpfb' }).characterStyle).toBe('mpfb');
-    expect(mergeSettings(base, { characterStyle: 'fancy' as never }).characterStyle).toBe('mpfb');
+    expect(mergeSettings({ ...base, characterStyle: 'classic' }, { characterStyle: 'quaternius' }).characterStyle).toBe('quaternius');
+    expect(mergeSettings(base, { characterStyle: 'fancy' as never }).characterStyle).toBe('quaternius');
     expect(mergeSettings({ ...base, characterStyle: 'classic' }, { characterStyle: 3 as never }).characterStyle).toBe('classic');
   });
 
@@ -27,23 +28,26 @@ describe('player settings', () => {
   });
 });
 
-describe('settings migration to the natural character style', () => {
-  it('moves a save from before the version stamp that has the old default style to mpfb', () => {
-    expect(migrateSettings({ characterStyle: 'detailed', quality: 'low' })).toMatchObject({ characterStyle: 'mpfb', quality: 'low', version: SETTINGS_VERSION });
-    expect(migrateSettings({ masterVolume: 0.2 })).toMatchObject({ characterStyle: 'mpfb', version: SETTINGS_VERSION });
+describe('settings migration to the Quaternius character style', () => {
+  it('moves a save from before the current version that has an old default style to quaternius', () => {
+    expect(migrateSettings({ characterStyle: 'detailed', quality: 'low' })).toMatchObject({ characterStyle: 'quaternius', quality: 'low', version: SETTINGS_VERSION });
+    expect(migrateSettings({ masterVolume: 0.2 })).toMatchObject({ characterStyle: 'quaternius', version: SETTINGS_VERSION });
+    expect(migrateSettings({ characterStyle: 'mpfb', version: 2 })).toMatchObject({ characterStyle: 'quaternius', version: SETTINGS_VERSION });
+    expect(migrateSettings({ characterStyle: 'mpfb' }).characterStyle).toBe('quaternius');
   });
 
   it('keeps the classic style, which was never the default, and leaves a current save alone', () => {
     expect(migrateSettings({ characterStyle: 'classic' }).characterStyle).toBe('classic');
+    expect(migrateSettings({ characterStyle: 'classic', version: 2 }).characterStyle).toBe('classic');
     expect(migrateSettings({ characterStyle: 'detailed', version: SETTINGS_VERSION }).characterStyle).toBe('detailed');
     expect(migrateSettings({ characterStyle: 'mpfb', version: SETTINGS_VERSION }).characterStyle).toBe('mpfb');
   });
 
-  it('migrates once: the result carries the version, so choosing detailed again afterwards sticks', () => {
-    const once = migrateSettings({ characterStyle: 'detailed' });
-    expect(once.characterStyle).toBe('mpfb');
-    const chosen = migrateSettings({ ...once, characterStyle: 'detailed' });
-    expect(chosen.characterStyle).toBe('detailed');
+  it('migrates once: the result carries the version, so choosing Natural again afterwards sticks', () => {
+    const once = migrateSettings({ characterStyle: 'mpfb', version: 2 });
+    expect(once.characterStyle).toBe('quaternius');
+    const chosen = migrateSettings({ ...once, characterStyle: 'mpfb' });
+    expect(chosen.characterStyle).toBe('mpfb');
   });
 });
 

@@ -2,6 +2,8 @@
 // Pure data helpers: nothing here touches three.js.
 
 import { BODY_REGIONS, MODULAR_SLOTS, categoryOfSlot } from './types';
+import type { LifeStage } from '../../core/types';
+import { partAllowedForStage } from './stageRules';
 import type { BodyPresetDef, FacialHairDef, GarmentDef, HairstyleDef, ModularManifest, ModularSlot, OutfitPresetDef } from './types';
 
 /** Fetches `${baseUrl}characters/modular/manifest.json`. Rejects when it cannot be read or is not a version 1 manifest. */
@@ -111,16 +113,16 @@ export const findHair = (m: ModularManifest, id: string): HairstyleDef | undefin
 export const findPreset = (m: ModularManifest, id: string): OutfitPresetDef | undefined => m.outfitPresets?.find((p) => p.id === id);
 
 /** Garments that have a file for the body (optionally only one slot). */
-export function garmentsFor(m: ModularManifest, bodyId: string, slot?: ModularSlot): GarmentDef[] {
-  return m.garments.filter((g) => !!g.files[bodyId] && (slot === undefined || g.slot === slot));
+export function garmentsFor(m: ModularManifest, bodyId: string, slot?: ModularSlot, stage?: LifeStage): GarmentDef[] {
+  return m.garments.filter((g) => !!g.files[bodyId] && (slot === undefined || g.slot === slot) && partAllowedForStage('garment', g.id, stage));
 }
 
 /** Hairstyles that have a file for the body. */
-export function hairFor(m: ModularManifest, bodyId: string): HairstyleDef[] {
-  return m.hairstyles.filter((h) => !!h.files[bodyId]);
+export function hairFor(m: ModularManifest, bodyId: string, stage?: LifeStage): HairstyleDef[] {
+  return m.hairstyles.filter((h) => !!h.files[bodyId] && partAllowedForStage('hair', h.id, stage));
 }
 
 /** Facial hair styles that have a file for the body. */
-export function facialHairFor(m: ModularManifest, bodyId: string): FacialHairDef[] {
-  return (m.facialHair ?? []).filter((h) => !!h.files[bodyId]);
+export function facialHairFor(m: ModularManifest, bodyId: string, stage?: LifeStage): FacialHairDef[] {
+  return (m.facialHair ?? []).filter((h) => !!h.files[bodyId] && partAllowedForStage('facial', h.id, stage));
 }

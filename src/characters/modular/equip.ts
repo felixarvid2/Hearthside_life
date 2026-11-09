@@ -5,7 +5,7 @@
 // Hair and facial hair are shared by every outfit category, garments are per category, so a hair/garment conflict is checked against all
 // categories: wearing a hood in "work" also rules out a ponytail for "everyday".
 
-import type { Hex, OutfitCategory } from '../../core/types';
+import type { Hex, LifeStage, OutfitCategory } from '../../core/types';
 import { OUTFIT_CATEGORIES } from '../../core/types';
 import type { Rng } from '../../core/rng';
 import { facialHairFor, findBody, findFacialHair, findGarment, findHair, findPreset, garmentsFor, hairFor } from './manifest';
@@ -48,8 +48,8 @@ function hairFitsOutfits(m: ModularManifest, look: ModularLook, hairId: string):
 }
 
 /** The hairstyle to switch to when the current one has to go: the default if it fits, else the first that does, else none. */
-export function fallbackHair(m: ModularManifest, look: ModularLook, avoid?: string): string | null {
-  const ids = [...(m.defaults.hairstyle ? [m.defaults.hairstyle] : []), ...hairFor(m, look.bodyId).map((h) => h.id)];
+export function fallbackHair(m: ModularManifest, look: ModularLook, avoid?: string, stage?: LifeStage): string | null {
+  const ids = [...(m.defaults.hairstyle ? [m.defaults.hairstyle] : []), ...hairFor(m, look.bodyId, stage).map((h) => h.id)];
   for (const id of ids) {
     if (id === avoid) continue;
     const h = findHair(m, id);
@@ -238,7 +238,7 @@ const ACCESSORY_CHANCE: Record<(typeof ACCESSORY_SLOTS)[number], number> = { hat
 /** Chance that a random hair roll also grows facial hair. */
 const FACIAL_HAIR_CHANCE = 0.3;
 
-export interface RandomParts { body?: boolean; hair?: boolean; clothing?: boolean }
+export interface RandomParts { body?: boolean; hair?: boolean; clothing?: boolean; /** Life stage of the person: only parts that stage may wear are rolled. */ stage?: LifeStage }
 
 /**
  * Re-rolls parts of a look. The result may still need `resolveLook` (the creator session always runs it). Never throws on
@@ -257,14 +257,14 @@ export function randomizeLook(m: ModularManifest, look: ModularLook, rng: Rng, p
       look.outfits[cat] = {};
       const pick = (slot: ModularSlot, chance = 1): void => {
         // random clothes never push the current hairstyle out (it may be locked)
-        const list = garmentsFor(m, look.bodyId, slot).filter((g) => (look.hairId === null || !conflicts(m, g.id, look.hairId))
+        const list = garmentsFor(m, look.bodyId, slot, parts.stage).filter((g) => (look.hairId === null || !conflicts(m, g.id, look.hairId))
           && (look.facialHairId === null || !conflicts(m, g.id, look.facialHairId)));
         if (list.length === 0 || !rng.chance(chance)) return;
         const g = rng.pick(list);
         equipGarment(m, look, cat, g.id);
         randomizeGarmentColors(look, g, rng);
       };
-      const onePiece = garmentsFor(m, look.bodyId, 'full').some((g) => look.hairId === null || !conflicts(m, g.id, look.hairId)) && rng.chance(0.2);
+      const onePiece = garmentsFor(m, look.bodyId, 'full', parts.stage).some((g) => look.hairId === null || !conflicts(m, g.id, look.hairId)) && rng.chance(0.2);
       if (onePiece) pick('full');
       else { pick('top'); pick('bottom'); }
       pick('outer', 0.25);
@@ -274,11 +274,11 @@ export function randomizeLook(m: ModularManifest, look: ModularLook, rng: Rng, p
     }
   }
   if (parts.hair) {
-    const fits = hairFor(m, look.bodyId).filter((h) => hairFitsOutfits(m, look, h.id));
+    const fits = hairFor(m, look.bodyId, parts.stage).filter((h) => hairFitsOutfits(m, look, h.id));
     if (fits.length > 0) equipHair(m, look, rng.pick(fits).id);
     // facial hair: often none, and only a style that fits the hairstyle and every worn garment
     look.facialHairId = null;
-    const beards = facialHairFor(m, look.bodyId).filter((f) => (look.hairId === null || !conflicts(m, f.id, look.hairId))
+    const beards = facialHairFor(m, look.bodyId, parts.stage).filter((f) => (look.hairId === null || !conflicts(m, f.id, look.hairId))
       && allOutfits(look).every((o) => blockersOf(m, o, null, f.id).length === 0));
     if (beards.length > 0 && rng.chance(FACIAL_HAIR_CHANCE)) look.facialHairId = rng.pick(beards).id;
   }

@@ -168,15 +168,16 @@ export class CreatorScene {
    */
   private anchorFace(v: PersonView): void {
     if (!(v instanceof ModularCharacterView) || v.busy || this.viewName !== 'face') return;
-    const key = `${v.character.serialize().bodyId}`;
+    const key = `${v.character.serialize().bodyId}|${v.lifeStage}`;
     if (this.headY?.key !== key) {
       const head = v.bone('Head');
       if (!head) return;
       v.root.updateWorldMatrix(true, true);
-      this.headY = { key, y: head.getWorldPosition(new THREE.Vector3()).y };
+      this.headY = { key, y: head.getWorldPosition(new THREE.Vector3()).y - v.root.position.y };
     }
-    // the Universal Base Characters' Head joint sits at the skull base; the face's centre is ~8 cm above it
-    const ty = (this.headY.y + 0.08) * this.stageK;
+    // the Universal Base Characters' Head joint sits at the skull base; the face's centre is ~8 cm above it at adult size (the figure's
+    // own scale, stage included, is already in the joint's height and in the root scale)
+    const ty = this.headY.y + v.root.position.y + 0.08 * v.root.scale.y * v.character.headScale;
     if (Math.abs(ty - this.cam.ty) < 1e-4) return;
     this.cam.ty = ty;
     if (this.cam.t >= 1) this.cam.y = ty;

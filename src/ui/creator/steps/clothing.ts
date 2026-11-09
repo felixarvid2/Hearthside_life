@@ -74,7 +74,7 @@ export const clothingStep: StepDef = {
     const cat = ctx.ui.clothingCategory;
     if (ctx.modular()) {
       const look = lookOf(ctx.session);
-      return `m|${ctx.session.currentIndex}|${cat}|${look.bodyId}|${JSON.stringify(modularOutfitFor(look, cat))}`;
+      return `m|${ctx.session.currentIndex}|${ctx.session.current.lifeStage}|${cat}|${look.bodyId}|${JSON.stringify(modularOutfitFor(look, cat))}`;
     }
     const list = ctx.session.current.outfits.outfits[cat] ?? [];
     const o = outfitAt(ctx);

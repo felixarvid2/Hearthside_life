@@ -217,10 +217,12 @@ Pure code (no three, no DOM), tested in `tests/unit/world/venueLayouts.test.ts` 
 
 ### characters (`src/characters`)
 - `assets.ts`: `loadCharacterAssets(baseUrl = './assets/', style = 'detailed'): Promise<CharacterAssets>` (bodies + clips) and
-  `setCharacterStyle(assets, style)`. Styles: `mpfb` (the default, "Natural" in Settings: MakeHuman bodies
+  `setCharacterStyle(assets, style)`. Styles: `quaternius` (the default, "Quaternius" in Settings: the modular GLB-part people of every life
+  stage, `src/characters/modular/`; the stage proportions are bone scaling of the two UBC bodies, `stageProportions.ts`; it sits on top of
+  the `classic` assets, which are its fallback when the modular assets cannot load), `mpfb` ("Natural" in Settings: MakeHuman bodies
   `mpfb_f/m.glb`, see below), `detailed` (scanned Meshy bodies `meshy_a/b.glb`, skin recoloured through a
   mask: `meshyBody.ts`, `meshyAtlas.ts`, `meshyBake.ts`, `meshyFit.ts`, `headMap.ts`, `createMeshySkinMaterial`) and `classic`
-  (procedural skin). A style that cannot load falls back mpfb -> detailed -> classic. `assets.frames` is the active set;
+  (procedural skin). A style that cannot load falls back mpfb -> detailed -> classic (quaternius -> classic). `assets.frames` is the active set;
   `CharacterView.refreshStyle()` rebuilds a person after a switch.
 - MPFB style (`mpfbBody.ts`, `createMpfb*Material` in `materials.ts`; GLB contract in `tools/mpfb/README.md`): the GLB is
   meshopt-compressed (the decoder is imported on first use) and has five or six primitives on the shared skeleton (skin, underwear,
