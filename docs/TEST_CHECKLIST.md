@@ -142,8 +142,8 @@ Audit of what reaches the production build (`npm run build`, one Vite entry: `in
 | "TODO", "FIXME", "coming soon", "lorem ipsum", "not implemented" in player-facing text | None left. One line in the creator said "Face shape controls for this style are coming soon." (shown only when a modular style has no face morphs); it now says "This style has no face shape controls." The unit test guards the wording. The in-game computer and TV screens show deterministic pseudo text on purpose (`src/render/screenPrograms.ts`). |
 | Placeholder or temporary assets | None found: no `e2e_`, test, tmp or placeholder files in `public/`; `public/assets/manifest.json` and the modular manifest hold no test parts (the e2e script adds its own parts to a served copy only). `render/objectAssets.ts` can draw a labelled box for an object whose model fails to load; the e2e and release runs saw none. The "mock neck" garment is a real garment. |
 | Content with status `dev` | One object, `snowman` (made by the Build a Snowman activity, not for sale); the buy catalogue lists `ready` designs only. |
-| Source maps | `build.sourcemap` is on: nine `.map` files (about 10 MB) ship next to the chunks. Left on deliberately (readable crash reports, open source code); switch `sourcemap` off in `vite.config.ts` to drop them. |
-| Debug hooks | `window.hearthside` (game, core, view, `debug.step/frame/state/run/stats/setWeather/crash`) and `?debug` (performance overlay) are live in production; they are single-player and local. Remove or gate them behind a build flag if that is unwanted. |
+| Source maps | Not shipped: `build.sourcemap` is off unless `HEARTHSIDE_SOURCEMAP=1` is set when building (no e2e, perf or acceptance script reads a `.map` file). The build output holds no `.map` files. |
+| Debug hooks | Deliberately kept: `window.hearthside` (game, core, view, `debug.step/frame/state/run/stats/setWeather/crash`) and `?debug` (performance overlay) are live in production. The game is single-player with local saves, so there is nothing to protect, and every e2e, perf and acceptance script drives the production build through these hooks. Do not gate them behind a build flag. |
 | "(preview)" labels | Settings > Character style > "Quaternius (preview)" is a deliberate opt-in label. |
 | Credits | `assets/LICENSES.md` is shipped. |
 
@@ -152,7 +152,7 @@ Audit of what reaches the production build (`npm run build`, one Vite entry: `in
 See the commands above. Last run: 2026-11-08, portrait 390x844 and landscape 844x390, 54/54 checks passed (27 per viewport). The extension
 (8 x 4 m room with a door, a staircase, an upper room) and three pieces of furniture cost $3,616 of the $12,000 Create-mode funds. Screenshots:
 `dev/shots/release/` (main menu, creator, review, move-in, second floor in Build, furnished, after the weeks, venue, reload, load, event planner
-with the Where? select, gift picker, map with What's on, venue sheet, move dialog with the furniture choice).
+with the Where? select, gift picker, map with What's on (in portrait a sheet below the map, checked for 44 px rows), venue sheet, move dialog with the furniture choice).
 
 ## Manual browser checks, Milestone 5 (emulation only; no named device)
 
@@ -264,8 +264,11 @@ Portrait 390x844, landscape 844x390 and desktop 1280x720:
   situation hint when you reach it (select a person: needs; open Queue; Buy; Build; Map; Menu: saving). "Skip hints" ends them.
   Settings > Help: Hints on again, Reset hints, Open Help; Help has How to play and Controls tabs.
 - Keyboard only (no mouse): menu -> New Game -> Create a Household -> Next ... -> Move In; open Feed, Esc; open the person
-  panel from the portrait, Queue tab, Choose an object, Enter, pick an action. Focus ring visible everywhere; Tab never leaves
-  an open dialog; Esc returns focus to the opener.
+  panel from the portrait, Queue tab, Choose an object, Enter, pick an action. Likewise Choose a person (opens the social menu)
+  and Go somewhere (pick a room or the front door or yard; the person walks there). Walls have no player actions in live mode,
+  so they need no keyboard route. Focus ring visible everywhere; Tab never leaves an open dialog; Esc returns focus to the opener.
+- Portrait map (390x844): the "What's on this week" list sits in a sheet below the map without choosing a pin; tapping a pin
+  covers the map with the venue's own sheet and Back returns.
 - Settings > Accessibility: UI scale 150 % and High contrast on a phone in both orientations: top and bottom bars still fit,
   panels scroll, nothing is cut off. Turn Reduce motion on: no camera swings, no panel animation.
 - Screen reader (VoiceOver or TalkBack): icon buttons are announced by name, tabs say selected, notifications are read.

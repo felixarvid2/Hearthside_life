@@ -22,6 +22,7 @@ import { birthdayText, stageName, treeModel } from './familyModel';
 import type { PersonTab, Shell } from './shell';
 import type { HintId } from './hintState';
 import { openObjectPicker } from './objectPicker';
+import { openGoHerePicker, openPersonPicker } from './placePicker';
 
 const TABS: Array<{ id: PersonTab; label: string; icon: string }> = [
   { id: 'needs', label: 'Needs', icon: 'heart' },
@@ -174,7 +175,9 @@ export function createPersonPanel(sh: Shell, onClosed: () => void): PersonPanel 
         // a route to the world without pointing at it (keyboard, screen reader, or just a shortcut); after the queue so it never pushes it down
         items.push(h('div', { class: 'q-quick' },
           button({ icon: 'live', label: `${pr.firstName}'s actions`, small: true, variant: 'secondary', onClick: () => { sh.sound('click'); sh.openContextMenu(pr.id, { kind: 'person', personId: pr.id }); } }),
-          button({ icon: 'box', label: 'Choose an object', small: true, variant: 'secondary', onClick: () => { sh.sound('open'); openObjectPicker(sh, pr.id); } })));
+          button({ icon: 'box', label: 'Choose an object', small: true, variant: 'secondary', onClick: () => { sh.sound('open'); openObjectPicker(sh, pr.id); } }),
+          button({ icon: 'people', label: 'Choose a person', small: true, variant: 'secondary', onClick: () => { sh.sound('open'); openPersonPicker(sh, pr.id); } }),
+          button({ icon: 'move', label: 'Go somewhere', small: true, variant: 'secondary', onClick: () => { sh.sound('open'); openGoHerePicker(sh, pr.id); } })));
       }
       content.replaceChildren(...items);
     }

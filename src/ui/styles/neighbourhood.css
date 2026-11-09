@@ -147,9 +147,13 @@ body.is-landscape.is-compact .hud-trip { max-width: min(320px, 38vw); }
   .nbm-gohome .btn-label, .nbm-toggle .seg-text { display: none; }
   .nbm-gohome { padding: 0; width: var(--tap); }
   .nbm-toggle .seg { padding: 0; width: var(--tap); }
-  .nbm-main { grid-template-columns: minmax(0, 1fr); }
-  .nbm-detail { position: absolute; inset: 0; z-index: 3; border-left: none; }
-  .nbm[data-sheet='closed'] .nbm-detail { display: none; }
+  .nbm-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .nbm-detail { border-left: none; }
+  /* a chosen place covers the map; with none chosen the sheet sits below it and lists what is on this week */
+  .nbm[data-sheet='open'] .nbm-detail { position: absolute; inset: 0; z-index: 3; }
+  .nbm[data-sheet='closed'] .nbm-detail { max-height: 38vh; border-top: 1px solid var(--line); }
+  .nbm[data-sheet='closed'] .nbm-placeholder { display: none; }
+  .nbm[data-sheet='closed'] .nbm-detail[data-empty='true']:not(:has(.nbm-events)) { display: none; }
   .nbm-back { display: inline-flex; }
   .nbm-map { width: max(100%, 780px); height: max(100%, 540px); }
   .nbm-pin { width: 104px; }

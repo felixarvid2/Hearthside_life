@@ -4,7 +4,8 @@ export default defineConfig({
   base: './',
   build: {
     target: 'es2022',
-    sourcemap: true,
+    // Production builds ship no source maps (about 10 MB); HEARTHSIDE_SOURCEMAP=1 turns them on for debugging.
+    sourcemap: process.env.HEARTHSIDE_SOURCEMAP === '1',
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
