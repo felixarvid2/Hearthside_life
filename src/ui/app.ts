@@ -180,6 +180,12 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
     if (cluster && route === 'game') {
       const room = rootRect.height - shellBottom - sheet - shellTop;
       toggleClass(cluster, 'is-squeezed', room < cluster.offsetHeight + 24);
+      // While something is being placed, the cluster counts as covered area: it floats over the canvas, and after a turn of
+      // the device to portrait it used to land on the tile being placed. The camera now keeps the preview beside it
+      // (GameView.setInsets -> keepInView), and what can be tapped does not change while the ghost moves.
+      let placing = false;
+      try { placing = !!api.placement(); } catch { /* no game yet */ }
+      if (placing && !cluster.classList.contains('is-squeezed') && cluster.offsetParent !== null && cluster.getClientRects().length > 0) covers.push(cluster);
     }
     if (report) {
       const ins = route === 'boot' ? ZERO_INSETS : computeInsets({ left: c.left, top: c.top, right: c.right, bottom: c.bottom }, covers.map((el) => el.getBoundingClientRect()));
@@ -488,6 +494,7 @@ export function createUI(api: GameAPI, root: HTMLElement): { destroy(): void } {
       case 'lot': ctx.close(); awayCard?.hide(); hud.onSelection(); hud.refresh(); personPanel?.refresh(); evTracker.refresh(); scheduleMeasure(); break;
       case 'neighbourhood': hud.onTrip(); hud.onSelection(); break;
       case 'camera': hud.onCamera(); ctx.reposition(); break;
+      case 'placement': scheduleMeasure(); break;      // a placement starting or ending changes the covered area (camera cluster)
       case 'portraits': hud.onPortraits(); personPanel?.refresh(); break;
       case 'settings': applySettings(); break;
       case 'state': hud.refresh(); evTracker.refresh(); personPanel?.refresh(); feedPanel?.refresh(); ledgerPanel?.refresh(); billsPanel?.refresh(); tutorial?.update(api.mode()); break;

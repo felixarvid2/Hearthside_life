@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 396,
+ "cards": 54,
+ "fringe_trimmed": 18,
+ "hat_key": 1241,
+ "id": "waist_length",
+ "lowest": 1.225,
+ "pushed": 226,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5320,
+ "source": "authoring/characters/hair/waist_length/cards.json",
+ "source_tris": 20558,
+ "triangles": 5716
+}

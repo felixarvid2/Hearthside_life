@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 236,
+ "cards": 35,
+ "fringe_trimmed": 0,
+ "hat_key": 882,
+ "id": "mohawk",
+ "lowest": 1.743,
+ "pushed": 79,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1206,
+ "source": "authoring/characters/hair/mohawk/cards.json",
+ "source_tris": 3590,
+ "triangles": 1442
+}

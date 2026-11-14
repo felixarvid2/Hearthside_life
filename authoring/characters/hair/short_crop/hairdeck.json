@@ -1,0 +1,6 @@
+{
+ "prompt": "short cropped haircut, neat short sides and a short tidy top, brown hair, young man",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

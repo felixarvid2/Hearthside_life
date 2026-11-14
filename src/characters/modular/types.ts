@@ -66,8 +66,32 @@ export interface BodyPresetDef {
   file: string;
   /** Materials recolored by the skin color. */
   skinMaterials: string[];
-  /** Morph targets the creator may drive (continuous 0..1 unless `range` says otherwise). Empty until authored. */
-  morphs: Array<{ id: string; label: string; target: string; range: [number, number]; group: 'face' | 'body' }>;
+  /**
+   * A child's skin texture (path relative to the modular asset root; same layout as the skin material's own map, the painted
+   * adult shading taken out: tools/characters/blender/young_skin.py). Drawn for the stages that are mostly `young`.
+   */
+  youngSkin?: string;
+  /** The body frame this body goes with (the classic appearance's frame follows the body); absent = the frame whose default it is. */
+  frame?: 'a' | 'b';
+  /**
+   * A second build of another body: the same files (`file`, and every part lists the same path under both ids), drawn with
+   * `shape` on. Authoring: tools/characters/README.md, "Second builds".
+   */
+  base?: string;
+  /**
+   * Morphs this body is always drawn with (its build and face; group `stage` morphs, never in a look). `young` is how much of
+   * `value` is left on a fully young figure: a child's body is the `young` morph's alone, its face keeps part of the family's.
+   */
+  shape?: Array<{ morph: string; value: number; young: number }>;
+  /** Bone proportions of this body on top of the life stage's (factors; see StageProportions). */
+  proportions?: Partial<Record<'head' | 'neck' | 'torso' | 'hips' | 'shoulders' | 'upperArm' | 'foreArm' | 'hand' | 'thigh' | 'shin' | 'foot', number>>;
+  /** Skin texture drawn in place of the skin material's own map (same layout), for the stages that do not use `youngSkin`. */
+  skin?: string;
+  /**
+   * Morph targets the creator may drive (continuous 0..1 unless `range` says otherwise). Empty until authored. Group `stage`
+   * is not listed in the creator: the life stage drives it (`young`, see stageProportions.ts).
+   */
+  morphs: Array<{ id: string; label: string; target: string; range: [number, number]; group: 'face' | 'body' | 'stage' }>;
   height: number;
   /**
    * Skin materials' color = skin color x tone x skinGain (default 1). The skin texture is normalised
@@ -115,6 +139,12 @@ export interface GarmentDef {
   /** Editable source (pattern parameters / .blend) in authoring/characters/. */
   source: string;
   license: string;
+  /**
+   * A hat that sits on the skull: while it is worn, the hairstyle's `hat` shape key is on (the hair above the hat's edge lies
+   * down on the scalp instead of standing through the crown; tools/characters/blender/hairdeck_to_hair.py). Hair without the
+   * key is left as it is.
+   */
+  flattensHair?: boolean;
   /** Morph values of the body this garment follows (see BodyPresetDef.morphs); absent = only the neutral body. */
   followsMorphs?: string[];
   /** Optional sub-categories for the creator's filter chips (e.g. ["tee", "shirt", "sweater"]); lower-case words. */
@@ -135,15 +165,15 @@ export interface HairstyleDef {
   source: string;
   license: string;
   stats?: { triangles: number; textureBytes: number };
+  /** Body morph ids (BodyPresetDef.morphs) the mesh has shape keys for; hair follows the stage's `young` face. */
+  followsMorphs?: string[];
 }
 
 /**
  * A beard / moustache. Same shape as a hairstyle (it takes the hair colour); because beards are built from the face skin
  * they can carry the face morphs: `followsMorphs` lists the body morph ids (BodyPresetDef.morphs) the mesh has shape keys for.
  */
-export interface FacialHairDef extends HairstyleDef {
-  followsMorphs?: string[];
-}
+export type FacialHairDef = HairstyleDef;
 
 /** A named outfit: slot -> garment id, optionally with garment colours (garment id -> color region id -> color). */
 export interface OutfitPresetDef {

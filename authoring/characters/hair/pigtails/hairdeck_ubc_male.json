@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 500,
+ "cards": 127,
+ "fringe_trimmed": 8,
+ "hat_key": 1791,
+ "id": "pigtails",
+ "lowest": 1.444,
+ "pushed": 112,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5754,
+ "source": "authoring/characters/hair/pigtails/cards.json",
+ "source_tris": 19464,
+ "triangles": 6254
+}

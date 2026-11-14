@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 379,
+ "cards": 72,
+ "fringe_trimmed": 4,
+ "hat_key": 792,
+ "id": "braids_two",
+ "lowest": 1.342,
+ "pushed": 131,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3668,
+ "source": "authoring/characters/hair/braids_two/cards.json",
+ "source_tris": 11494,
+ "triangles": 4047
+}

@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 293,
+ "cards": 46,
+ "fringe_trimmed": 0,
+ "hat_key": 1138,
+ "id": "faux_hawk",
+ "lowest": 1.703,
+ "pushed": 119,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1622,
+ "source": "authoring/characters/hair/faux_hawk/cards.json",
+ "source_tris": 4572,
+ "triangles": 1915
+}

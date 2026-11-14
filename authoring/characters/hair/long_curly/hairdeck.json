@@ -1,0 +1,6 @@
+{
+ "prompt": "long curly hair past the shoulders, big voluminous curls, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

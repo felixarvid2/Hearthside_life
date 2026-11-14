@@ -1,0 +1,6 @@
+{
+ "prompt": "short curly hair, a compact top of loose springy curls with shorter sides, brown hair, young man",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

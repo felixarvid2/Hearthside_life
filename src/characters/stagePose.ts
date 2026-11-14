@@ -12,13 +12,19 @@ export interface StageLook {
   stoop: number;
   /** Cadence of the walk and jog cycles: short legs take quicker steps to keep up with the same ground speed. */
   cadence: number;
+  /**
+   * How far a standing small person's legs and arms are drawn in, in radians (the shared idle is a grown hero's: feet wide apart,
+   * arms held off the body). 0 or absent leaves the clip as it is.
+   */
+  stance?: number;
 }
 
 const NEUTRAL: StageLook = { stoop: 0, cadence: 1 };
 const LOOKS: Partial<Record<LifeStage, StageLook>> = {
-  toddler: { stoop: 0, cadence: 1.6 },
-  child: { stoop: 0, cadence: 1.28 },
-  teen: { stoop: 0, cadence: 1.05 },
+  baby: { stoop: 0, cadence: 1, stance: 0.1 },
+  toddler: { stoop: 0, cadence: 1.6, stance: 0.14 },
+  child: { stoop: 0, cadence: 1.28, stance: 0.17 },
+  teen: { stoop: 0, cadence: 1.05, stance: 0.07 },
   elder: { stoop: 0.15, cadence: 0.85 },
 };
 
@@ -107,6 +113,24 @@ export function applyStoop(bones: Map<string, THREE.Bone>, amount: number): void
   for (const [name, share] of STOOP_SHARES) {
     const b = bones.get(name);
     if (b) rotateInModel(b, X_AXIS, amount * share);
+  }
+}
+
+/** Bones the narrow stance turns. */
+export const STANCE_BONES: readonly string[] = ['thigh_l', 'thigh_r', 'foot_l', 'foot_r', 'upperarm_l', 'upperarm_r'];
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+/**
+ * Draws a standing figure's legs in under the hips and its arms in to the sides by `amount` radians: the thighs turn about the
+ * model's forward axis and the feet turn back by the same angle, so the soles stay flat; the upper arms take 0.4 of it (more, and the hands go into the hips).
+ */
+export function applyStance(bones: Map<string, THREE.Bone>, amount: number): void {
+  if (!amount) return;
+  for (const [side, sign] of [['l', -1], ['r', 1]] as const) {      // the left leg hangs at +x: a turn about +z swings it outward
+    const thigh = bones.get(`thigh_${side}`), foot = bones.get(`foot_${side}`), arm = bones.get(`upperarm_${side}`);
+    if (thigh) rotateInModel(thigh, Z_AXIS, sign * amount);
+    if (foot) rotateInModel(foot, Z_AXIS, -sign * amount);
+    if (arm) rotateInModel(arm, Z_AXIS, sign * amount * 0.4);
   }
 }
 

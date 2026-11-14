@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 500,
+ "cards": 94,
+ "fringe_trimmed": 14,
+ "hat_key": 1172,
+ "id": "shag",
+ "lowest": 1.555,
+ "pushed": 154,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 4592,
+ "source": "authoring/characters/hair/shag/cards.json",
+ "source_tris": 16118,
+ "triangles": 5092
+}

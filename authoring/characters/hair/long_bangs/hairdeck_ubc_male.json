@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 379,
+ "cards": 29,
+ "fringe_trimmed": 8,
+ "hat_key": 904,
+ "id": "long_bangs",
+ "lowest": 1.384,
+ "pushed": 78,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2952,
+ "source": "authoring/characters/hair/long_bangs/cards.json",
+ "source_tris": 10398,
+ "triangles": 3331
+}

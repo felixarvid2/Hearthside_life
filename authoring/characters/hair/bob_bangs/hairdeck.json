@@ -1,0 +1,6 @@
+{
+ "prompt": "chin-length bob haircut with a short straight fringe, smooth brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

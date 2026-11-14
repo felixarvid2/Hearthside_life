@@ -1,0 +1,12 @@
+{
+ "body": "ubc_female",
+ "id": "chin_strap",
+ "lock_triangles": 5580,
+ "locks": 186,
+ "regions": [
+  "chin",
+  "jaw",
+  "sideburns"
+ ],
+ "triangles": 6244
+}

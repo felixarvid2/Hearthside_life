@@ -16,6 +16,8 @@ export interface ModularCacheOptions {
   load?: GltfLoadFn;
   /** Replaces the fetch of cover mask JSON files. */
   loadMask?: (url: string) => Promise<CoverMaskFile>;
+  /** Replaces the image loader of loose textures (a body's young skin). */
+  loadTexture?: (url: string) => Promise<THREE.Texture>;
 }
 
 interface MaskEntry { refs: number; promise: Promise<CoverMaskFile> }
@@ -24,6 +26,12 @@ async function defaultLoadMask(url: string): Promise<CoverMaskFile> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return (await res.json()) as CoverMaskFile;
+}
+
+interface TextureEntry { refs: number; promise: Promise<THREE.Texture> }
+
+function defaultLoadTexture(url: string): Promise<THREE.Texture> {
+  return new THREE.TextureLoader().loadAsync(url);
 }
 
 interface Entry { url: string; refs: number; promise: Promise<GLTF>; gltf: GLTF | null }
@@ -56,12 +64,15 @@ export class ModularAssetCache {
   private readonly loadFn: GltfLoadFn;
   private readonly loadMaskFn: (url: string) => Promise<CoverMaskFile>;
   private readonly masks = new Map<string, MaskEntry>();
+  private readonly textures = new Map<string, TextureEntry>();
+  private readonly loadTextureFn: (url: string) => Promise<THREE.Texture>;
 
   constructor(opts: ModularCacheOptions = {}) {
     const r = opts.root ?? './assets/characters/modular/';
     this.root = r.endsWith('/') ? r : `${r}/`;
     this.loadFn = opts.load ?? defaultLoad;
     this.loadMaskFn = opts.loadMask ?? defaultLoadMask;
+    this.loadTextureFn = opts.loadTexture ?? defaultLoadTexture;
   }
 
   /** Reference-counted cover mask JSON (see GarmentDef.covers); a failed load drops the reference and rejects. */
@@ -77,6 +88,27 @@ export class ModularAssetCache {
   releaseMask(url: string): void {
     const e = this.masks.get(url);
     if (e && --e.refs <= 0) this.masks.delete(url);
+  }
+
+  /**
+   * Reference-counted loose texture (shared by every character that draws it). A failed load drops the reference and rejects,
+   * so the caller must not release it.
+   */
+  acquireTexture(url: string): Promise<THREE.Texture> {
+    const e = this.textures.get(url);
+    if (e) { e.refs++; return e.promise; }
+    const entry: TextureEntry = { refs: 1, promise: null as unknown as Promise<THREE.Texture> };
+    // the loader may throw at once where there is no DOM (unit tests): that is a failed load like any other
+    entry.promise = new Promise<THREE.Texture>((res) => res(this.loadTextureFn(url))).catch((err) => { if (this.textures.get(url) === entry) this.textures.delete(url); throw err; });
+    this.textures.set(url, entry);
+    return entry.promise;
+  }
+
+  releaseTexture(url: string): void {
+    const e = this.textures.get(url);
+    if (!e || --e.refs > 0) return;
+    this.textures.delete(url);
+    void e.promise.then((t) => t.dispose(), () => { /* failed load */ });
   }
 
   /** Full URL of a manifest-relative path. */
@@ -123,5 +155,7 @@ export class ModularAssetCache {
     for (const e of this.entries.values()) void e.promise.then((g) => disposeGltf(g), () => { /* ignore */ });
     this.entries.clear();
     this.masks.clear();
+    for (const t of this.textures.values()) void t.promise.then((x) => x.dispose(), () => { /* ignore */ });
+    this.textures.clear();
   }
 }

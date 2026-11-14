@@ -10,7 +10,7 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { AnimId } from '../../core/anim';
 import type { Hex, LifeStage, OutfitCategory, Posture } from '../../core/types';
 import { Animator } from '../animation';
-import { CRADLE_PAIRS, CURL_BONES, RECLINE_LEAN, STOOP_BONES, applyCradle, applyCurl, applyStoop, bindBones, stageLook } from '../stagePose';
+import { CRADLE_PAIRS, CURL_BONES, RECLINE_LEAN, STANCE_BONES, STOOP_BONES, applyCradle, applyCurl, applyStance, applyStoop, bindBones, stageLook } from '../stagePose';
 import type { BindBone } from '../stagePose';
 import type { ModularAssetCache } from './cache';
 import { outfitFor, resolveLook } from './look';
@@ -38,6 +38,11 @@ interface BodyInstance {
   materials: THREE.Material[];
   /** Cloned skin materials; `tone` scales the skin color (joints are a little darker). */
   skin: Array<{ mat: THREE.Material; tone: number }>;
+  /**
+   * The skin materials' own maps and the loose skin textures (BodyPresetDef.youngSkin / .skin) by URL: an entry once a
+   * reference is asked for, its texture once it has loaded (a copy with the own map's settings).
+   */
+  youngSkin: { adult: Map<THREE.Material, THREE.Texture | null>; maps: Map<string, THREE.Texture | null> };
   /** Cloned eye materials with their iris tint uniform (kept so recoloring after compile works). */
   eyes: Array<{ mat: THREE.Material; uniform: { value: THREE.Color } }>;
   /** Cloned eyebrow materials (colored like the hair). */
@@ -231,6 +236,7 @@ export class ModularCharacter {
   private cradleOn = false;
   private cradleWeight = 0;
   private stoopWeight = 0;
+  private stanceWeight = 0;
   private reclineOn = false;
   private reclineWeight = 0;
   private curlWeight = 0;
@@ -376,6 +382,8 @@ export class ModularCharacter {
     if (needStoop) save(STOOP_BONES);
     if (needCurl) save(CURL_BONES.map(([n]) => n));
     if (needCradle) save(Object.keys(CRADLE_PAIRS));
+    const stance = look.stance ?? 0;
+    if (stance && !this.cradleOn) save(STANCE_BONES);
     const ease = (v: number, target: number, rate: number) => v + Math.sign(target - v) * Math.min(Math.abs(target - v), dt * rate);
     const posture = animator.posture;
     this.stoopWeight = ease(this.stoopWeight, posture === 'standing' ? 1 : posture === 'seated' ? 0.4 : 0, 2.5);
@@ -384,6 +392,10 @@ export class ModularCharacter {
     if (this.reclineWeight > 0) applyStoop(bones, -RECLINE_LEAN * this.reclineWeight);
     this.curlWeight = ease(this.curlWeight, babyLying ? 1 : 0, 2);
     if (this.curlWeight > 0) applyCurl(bones, this.curlWeight);
+    // the narrow stance is for standing still; a walk already sets the feet under the hips, so it only gets a little
+    const moving = /walk|jog|run/i.test(animator.playing ?? '');
+    this.stanceWeight = ease(this.stanceWeight, stance && !this.cradleOn && posture === 'standing' ? (moving ? 0.35 : 1) : 0, 3);
+    if (stance && !this.cradleOn && this.stanceWeight > 0) applyStance(bones, stance * this.stanceWeight);
     this.cradleWeight = ease(this.cradleWeight, this.cradleOn ? 1 : 0, 4);
     if (this.cradleWeight > 0) applyCradle(bones, body.cradleBind, this.cradleWeight);
   }
@@ -529,6 +541,7 @@ export class ModularCharacter {
       const c = (s.mat as THREE.MeshStandardMaterial).color;
       if (c) skinMaterialColor(skin, s.tone * gain, c);
     }
+    this.refreshSkinMap(body);
     for (const e of body.eyes) hexColor(this.look.colors.eyes, e.uniform.value);
     const hairColor = hexColor(this.look.colors.hair);
     for (const m of body.brows) (m as THREE.MeshStandardMaterial).color?.copy(hairColor);
@@ -542,11 +555,58 @@ export class ModularCharacter {
     if (this.facialHair) this.colorPart(this.facialHair, this.facialHair.def.colorRegions, (r, i) => (i === 0 ? this.look.colors.hair : r.default));
 
     // the stage rounds or slims the body a little on top of the look's own weight (clamped to the morph's range)
-    const bias = proportionsFor(this.stage).weight;
-    const morphs = bias ? { ...this.look.morphs, weight: (this.look.morphs.weight ?? 0) + bias } : this.look.morphs;
+    // and it is drawn young: the `young` morph is the stage's alone (a look never stores it)
+    const prof = proportionsFor(this.stage);
+    const morphs: Record<string, number> = { ...this.look.morphs, weight: (this.look.morphs.weight ?? 0) + prof.weight };
+    // stage morphs are never a look's to set (an old or random look may still name them)
+    for (const mo of body.def.morphs) if (mo.group === 'stage') delete morphs[mo.id];
+    morphs.young = prof.young;
+    // a second build is its base body with its own build and face on; a child's body is the young morph's alone
+    const y = Math.min(1, Math.max(0, prof.young));
+    for (const sh of body.def.shape ?? []) morphs[sh.morph] = sh.value * (1 - y + y * sh.young);
     applyMorphInfluences(body.meshes, body.def.morphs, morphs);
     for (const p of this.garments.values()) applyMorphInfluences(p.meshes, body.def.morphs, morphs, (p.def as GarmentDef).followsMorphs ?? []);
     if (this.facialHair) applyMorphInfluences(this.facialHair.meshes, body.def.morphs, morphs, (this.facialHair.def as FacialHairDef).followsMorphs ?? []);
+    // hair only follows what it has keys for (the stage's `young` face: forehead, cheeks and jaw move under it)
+    if (this.hair) applyMorphInfluences(this.hair.meshes, body.def.morphs, morphs, (this.hair.def as HairstyleDef).followsMorphs ?? []);
+    // under a hat the hair lies down (its own `hat` key, not a body morph)
+    if (this.hair) {
+      const flat = [...this.garments.values()].some((p) => (p.def as GarmentDef).flattensHair) ? 1 : 0;
+      for (const mesh of this.hair.meshes) {
+        const i = mesh.morphTargetDictionary?.hat;
+        if (i !== undefined && mesh.morphTargetInfluences) mesh.morphTargetInfluences[i] = flat;
+      }
+    }
+  }
+
+  /**
+   * The skin texture of the stage: the child's for young stages (BodyPresetDef.youngSkin), else the body's own override
+   * (`skin`, a second build's), else the map the body file came with. A loose texture is fetched on first need (shared
+   * through the cache) and put on when it arrives; until then, and when it cannot be loaded, the file's map stays.
+   */
+  private refreshSkinMap(body: BodyInstance): void {
+    const ys = body.youngSkin;
+    const def = body.def;
+    const path = def.youngSkin && proportionsFor(this.stage).young >= 0.75 ? def.youngSkin : def.skin ?? null;
+    const url = path ? this.cache.urlFor(path) : null;
+    if (url && !ys.maps.has(url)) {
+      ys.maps.set(url, null);
+      this.cache.acquireTexture(url).then((tex) => {
+        if (this.body !== body || this.disposed) { this.cache.releaseTexture(url); return; }
+        const ref = [...ys.adult.values()].find((t) => t) ?? null;
+        const map = tex.clone();
+        if (ref) { map.flipY = ref.flipY; map.colorSpace = ref.colorSpace; map.wrapS = ref.wrapS; map.wrapT = ref.wrapT; map.channel = ref.channel; map.anisotropy = ref.anisotropy; }
+        map.needsUpdate = true;
+        ys.maps.set(url, map);
+        this.refreshSkinMap(body);
+      }, () => { /* no texture: the file's map stays */ });
+    }
+    const loose = url ? ys.maps.get(url) ?? null : null;
+    for (const s of body.skin) {
+      const mat = s.mat as THREE.MeshStandardMaterial;
+      const next = loose ?? ys.adult.get(s.mat) ?? null;
+      if (mat.map !== next) { mat.map = next; mat.needsUpdate = true; }
+    }
   }
 
   private colorPart(p: PartInstance, regions: ColorRegionDef[], pick: (r: ColorRegionDef, i: number) => Hex): void {
@@ -629,17 +689,18 @@ export class ModularCharacter {
     const pelvis = bones.get('pelvis');
     this.body = {
       def, rig: this.manifest.rigs.find((r) => r.id === def.rig) as RigProfile, url, scene, bones, inverses, regions, meshes, skeletons,
-      materials: [...cloned.values()], skin, eyes, brows, masked, crownAboveHead: Math.max(0.1, def.height - headY),
+      materials: [...cloned.values()], skin, eyes, brows, masked,
+      youngSkin: { adult: new Map(skin.map((x) => [x.mat, (x.mat as THREE.MeshStandardMaterial).map ?? null])), maps: new Map() }, crownAboveHead: Math.max(0.1, def.height - headY),
       stageRig: new StageRig(bones, def.height), cradleBind, pelvisLength: pelvis ? pelvis.position.length() : 0,
     };
-    this.stoopWeight = this.cradleWeight = this.reclineWeight = this.curlWeight = 0;
+    this.stoopWeight = this.stanceWeight = this.cradleWeight = this.reclineWeight = this.curlWeight = 0;
     this.fxSaved.clear();
     this.applyStage(this.body);
   }
 
   /** Puts the life stage's proportions on the body, scales the figure and starts an animator whose clips fit the new hip height. */
   private applyStage(body: BodyInstance): void {
-    this.fit = body.stageRig.apply(this.stage);
+    this.fit = body.stageRig.apply(this.stage, body.def.proportions);
     this.root.scale.setScalar(this.fit.rootScale);
     body.crownAboveHead = this.fit.crownAboveHead;
     // clips authored for another hip height get their position tracks scaled for this body and stage (cached per source clip and ratio)
@@ -734,6 +795,7 @@ export class ModularCharacter {
     if (b) {
       b.scene.removeFromParent();
       for (const m of b.materials) m.dispose();
+      for (const [u, t] of b.youngSkin.maps) if (t) { t.dispose(); this.cache.releaseTexture(u); }
       for (const s of b.skeletons) s.dispose();
       for (const m of b.masked) m.geometry.dispose();
       this.cache.release(b.url);

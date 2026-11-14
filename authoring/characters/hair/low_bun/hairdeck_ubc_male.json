@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 391,
+ "cards": 37,
+ "fringe_trimmed": 3,
+ "hat_key": 651,
+ "id": "low_bun",
+ "lowest": 1.449,
+ "pushed": 113,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2148,
+ "source": "authoring/characters/hair/low_bun/cards.json",
+ "source_tris": 6904,
+ "triangles": 2539
+}

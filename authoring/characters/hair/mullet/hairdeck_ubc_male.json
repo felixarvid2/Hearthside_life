@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 421,
+ "cards": 40,
+ "fringe_trimmed": 5,
+ "hat_key": 1148,
+ "id": "mullet",
+ "lowest": 1.447,
+ "pushed": 118,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3162,
+ "source": "authoring/characters/hair/mullet/cards.json",
+ "source_tris": 10740,
+ "triangles": 3583
+}

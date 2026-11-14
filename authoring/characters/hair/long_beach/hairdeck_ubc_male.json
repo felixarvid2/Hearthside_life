@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 500,
+ "cards": 55,
+ "fringe_trimmed": 5,
+ "hat_key": 874,
+ "id": "long_beach",
+ "lowest": 1.397,
+ "pushed": 200,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 4330,
+ "source": "authoring/characters/hair/long_beach/cards.json",
+ "source_tris": 15430,
+ "triangles": 4830
+}

@@ -872,7 +872,7 @@ export class CreatorSession {
     const had = new Set<string>([...Object.values(look.outfits).flatMap((o) => Object.values(o ?? {})), ...(look.hairId ? [look.hairId] : []), ...(look.facialHairId ? [look.facialHairId] : [])]);
     if (look.bodyId !== bodyId) look.morphs = {};
     look.bodyId = bodyId;
-    const frame = (['a', 'b'] as const).find((f) => m.defaults.bodyByFrame[f] === bodyId);
+    const frame = body.frame ?? (['a', 'b'] as const).find((f) => m.defaults.bodyByFrame[f] === bodyId);
     if (frame && p.appearance.frame !== frame) {
       p.appearance.frame = frame;
       const preset = p.appearance.bodyPresetId;
@@ -899,11 +899,13 @@ export class CreatorSession {
     const look = lookFor(p.appearance, m, undefined, p.lifeStage);
     if (parts.body) {
       // the frame was just rolled: the body follows it (see setFrame), morphs are re-rolled for that body
-      look.bodyId = m.defaults.bodyByFrame[p.appearance.frame];
+      // any body of that frame: its default, or a second build of it
+      const ofFrame = m.bodies.filter((b) => (b.frame ?? (m.defaults.bodyByFrame.a === b.id ? 'a' : m.defaults.bodyByFrame.b === b.id ? 'b' : null)) === p.appearance.frame);
+      look.bodyId = ofFrame.length > 0 ? this.rng.pick(ofFrame).id : m.defaults.bodyByFrame[p.appearance.frame];
       randomizeLook(m, look, this.rng, { body: false });
       const def = findBody(m, look.bodyId);
       look.morphs = {};
-      for (const mo of def?.morphs ?? []) look.morphs[mo.id] = round3(this.rng.range(mo.range[0], mo.range[1]));
+      for (const mo of def?.morphs ?? []) if (mo.group !== 'stage') look.morphs[mo.id] = round3(this.rng.range(mo.range[0], mo.range[1]));
     }
     p.appearance.modular = look;
     randomizeLook(m, look, this.rng, { hair: !!parts.hair, clothing: !!parts.clothing, stage: p.lifeStage });

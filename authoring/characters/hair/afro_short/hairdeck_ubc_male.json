@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 314,
+ "cards": 70,
+ "fringe_trimmed": 5,
+ "hat_key": 1935,
+ "id": "afro_short",
+ "lowest": 1.655,
+ "pushed": 23,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3244,
+ "source": "authoring/characters/hair/afro_short/cards.json",
+ "source_tris": 9970,
+ "triangles": 3558
+}

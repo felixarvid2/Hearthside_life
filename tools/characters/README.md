@@ -41,6 +41,45 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
      `weight` (-0.5..1). Body-shell garments copy the body's keys; hair does not follow them.
    - Splits the skin into 17 `Body_<region>` meshes by dominant bone, and keeps the whole body in `fitting.blend` for
      fitting.
+   - `--young [authoring/characters/bodies/<id>/young.json]` adds the `young` shape key (`blender/stage_morph.py`): a
+     child's body and face. The skin is relaxed so muscles, bust and glutes even out (shrink-free: only the part of the
+     movement that differs from its surroundings is kept), and the face gets larger eyes, a smaller nose, a shorter lower
+     face, a narrower jaw, fuller cheeks and thinner, level brows. The life stage drives it
+     (`STAGE_PROPORTIONS[stage].young` in `src/characters/modular/stageProportions.ts`: baby, toddler and child 1,
+     teen 0.4); the manifest lists it with group `stage`, which the creator does not show.
+   - **Shipped GLBs**: `blender -b --factory-startup authoring/characters/bodies/<id>/fitting.blend --python
+     blender/apply_stage_morph.py -- --body <id> --repo .` (run `ubc_male`, then `ubc_female`) patches the key into the
+     body and into every garment, accessory and hairstyle in place, as a morph target with normals (on garments the
+     normals of the reshaped surface, as a shell garment stores the adult skin's), and updates the manifest
+     (`followsMorphs`). Vertex order is untouched, so cover masks and thumbnails stay valid. It builds the key in memory
+     when `fitting.blend` has none, so it also runs on a newer Blender (tested on 5.2.1) without re-saving the source.
+     Run it again after rebuilding a body or a part, then `MEASURE=1 npx vitest run
+     tests/unit/characters3d/modular/stageAnchors.test.ts --reporter=verbose` and copy the anchors to `posture.ts`.
+     Tuning: put overrides of `stage_morph.DEFAULTS` in `young.json`; look at the result with
+     `stage_morph.py -- --no-save --save-as <copy.blend>` and `node dev/shoot-stages.mjs`.
+   - **Child skin texture**: `blender -b --factory-startup --python blender/young_skin.py -- --src
+     authoring/characters/bodies/<id>/skin_base.png --out public/assets/characters/modular/bodies/<id>_skin_young.jpg`
+     takes the painted adult shading (muscles, eye sockets, folds, lip lines) out of the neutral skin texture and keeps
+     its colour (lips, cheeks, nails); tone and `skinGain` do not change. The manifest names it as the body's
+     `youngSkin`; the runtime fetches it on first need and draws it where `young` is 0.75 or more
+     (`ModularCharacter.refreshSkinMap`).
+   - **Stance**: `StageLook.stance` in `src/characters/stagePose.ts` draws a standing child's legs in under the hips and
+     the arms in to the sides (`applyStance`; a third of it while walking). The shared idle is a grown hero's.
+   - **Second builds** (2026-11-13: `ubc_male_lean` "Lean", `ubc_female_slim` "Slim"). Another man and another woman
+     without a second set of files: a body entry in the manifest with `base` (the body whose files it shares; every part
+     lists the same path under both ids), `frame`, and
+     - `shape`: morphs it is always drawn with. `build2` is the everyday body (muscle relief, bust and seat partly
+       relaxed, regions slimmed or filled by signed pads), `face2` a friendlier face (larger eyes, smaller nose, softer
+       jaw, level brows, a slight smile). Both come from `stage_morph.py` with the specs
+       `authoring/characters/bodies/<base>/build2.json` and `face2.json`, and `apply_stage_morph.py` patches them in with
+       `young` (hair and beards take `face2` only). On a young figure `build2` fades out (the child's body is `young`'s)
+       and `face2` stays at half;
+     - `proportions`: bone-scale factors on top of the life stage's (narrower shoulders, slimmer neck and arms, a
+       slightly larger head);
+     - `skin`: a texture with half of the painted shading left (`young_skin.py --luma 0.5 --chroma 0.9 --out
+       .../<base>_skin_soft.jpg`).
+     To add one: write the two specs, add the body entry and the extra `files` / `covers` keys, run
+     `apply_stage_morph.py` for the base body. Review: `node dev/shoot-stages.mjs --runs='x@idle@front@frame=a&bodies=second'`.
 2. **Garment**: `blender/build_garment.py --params authoring/characters/garments/<id>/params.json --body <body-id> --repo .`
    - The design parameters live in `params.json`: preset, ease (`fit`), `sleeve_len`, `length_to`, fabric, take-in,
      settle frames, fitting pose, triangle budget, colour regions. `per_body` overrides them per body.
@@ -107,6 +146,31 @@ Quaternius CC0. Asset licences are recorded per part in the manifest and in `pub
    - Beard mode (`"beard": {mustache, soul, chin, jaw, cheeks, sideburns, neck, chin_w, cheek_h, spread, forward}`):
      roots are sampled by area on the face skin from `morphs.landmarks`. Weights and face/body morph keys are copied from
      the nearest body vertex. Output goes to `facial_hair/`.
+   - **Hairstyles from HairDeck (2026-11-14; 56 of the 60, the catalog's default way now).** GBH ribbons read as thin,
+     spiky strands. HairDeck (github.com/hyz317/HairDeck, Apache-2.0) makes stylized hair cards from one picture; we
+     mesh and fit them ourselves. `tools/characters/hairdeck/`:
+     1. `styles.json`: one prompt and a hair description per hairstyle id. `python3 tools/characters/hairdeck/refs.py`
+        draws the reference pictures with a local ComfyUI (FLUX schnell) into `~/authoring-cache/hairdeck/refs`.
+     2. `python3 tools/characters/hairdeck/build.py cards` runs HairDeck (its own checkout and `.venv`, `HAIRDECK`,
+        `HAIRDECK_ROOT`; an NVIDIA GPU, 8 GB with `HAIRDECK_OFFLOAD=on`, which the script sets): two variations each.
+     3. `build.py trial` fits every variation to one body and renders review sheets
+        (`~/authoring-cache/hairdeck/sheets/NN.png`: front, three-quarter, back; left seed 0, right seed 1).
+     4. `choices.json`: the seed to use per hairstyle, written by hand from the sheets (and per-style `options` for
+        `hairdeck_to_hair.py`). A style that is not listed keeps what it has (afro, buzz_cut, receding, top_knot keep
+        their GBH build: HairDeck gave nothing usable for them).
+     5. `build.py install` copies the chosen cards to `authoring/characters/hair/<id>/cards.json` (the source: the GLBs
+        rebuild from it with Blender alone, no HairDeck or GPU), builds both bodies and updates the manifest entry.
+        Then `apply_stage_morph.py` for both bodies and `thumbnails.mjs`.
+     `blender/hairdeck_to_hair.py` does the fitting: HairDeck's canonical head (`hairdeck/head_proxy.json`) is scaled
+     onto our cranium; locks that come down over the face are cut at the brow line (`--fringe-at`, `--keep-fringe`);
+     every lock is meshed again with fewer rings (4,000-7,000 triangles a hairstyle); a ring that ends up inside the
+     body is lifted out whole; a scalp cap fills what shows between locks; each lock has a tone of its own and darker
+     roots in the vertex colour. HairDeck needs SAM 3 and DINOv3 (gated on Hugging Face; licences in
+     `public/assets/LICENSES.md`).
+   - **Beards as locks**: `blender/build_beard_cards.py --id <id> --body <body> --repo .` builds a beard from its
+     existing `params.json` regions as tapered locks over a darker base layer (14 of the 16; the two stubbles keep
+     their raised-skin layer). Afterwards `apply_stage_morph.py --keys jaw_width,chin_length,mouth_width,weight
+     --only <ids>` for its creator keys, next to the default run for `young` and `face2`.
 5. **Inspect**: `dev/wardrobe.html` (`npm run dev`) shows every part on every body in the game's renderer, posed
    (`pose=idle|walk|sit`). `blender/render_views.py --blend <source.blend> --out <prefix> [--focus head|torso]
    [--pose fit] [--hide <prefix>]` renders the Blender sources (front/left/back/right, Cycles on the CPU).

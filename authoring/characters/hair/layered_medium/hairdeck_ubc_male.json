@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 256,
+ "cards": 64,
+ "fringe_trimmed": 14,
+ "hat_key": 1908,
+ "id": "layered_medium",
+ "lowest": 1.535,
+ "pushed": 68,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5736,
+ "source": "authoring/characters/hair/layered_medium/cards.json",
+ "source_tris": 20658,
+ "triangles": 5992
+}

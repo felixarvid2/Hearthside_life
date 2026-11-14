@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 345,
+ "cards": 33,
+ "fringe_trimmed": 5,
+ "hat_key": 827,
+ "id": "pixie",
+ "lowest": 1.553,
+ "pushed": 82,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2304,
+ "source": "authoring/characters/hair/pixie/cards.json",
+ "source_tris": 8256,
+ "triangles": 2649
+}

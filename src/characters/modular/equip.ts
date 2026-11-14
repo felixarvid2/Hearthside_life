@@ -250,7 +250,7 @@ export function randomizeLook(m: ModularManifest, look: ModularLook, rng: Rng, p
     if (bodies.length > 0) look.bodyId = rng.pick(bodies).id;
     const def = findBody(m, look.bodyId);
     look.morphs = {};
-    for (const mo of def?.morphs ?? []) look.morphs[mo.id] = Math.round(rng.range(mo.range[0], mo.range[1]) * 100) / 100;
+    for (const mo of def?.morphs ?? []) if (mo.group !== 'stage') look.morphs[mo.id] = Math.round(rng.range(mo.range[0], mo.range[1]) * 100) / 100;
   }
   if (parts.clothing) {
     for (const cat of OUTFIT_CATEGORIES) {

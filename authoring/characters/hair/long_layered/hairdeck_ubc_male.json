@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 422,
+ "cards": 64,
+ "fringe_trimmed": 13,
+ "hat_key": 1182,
+ "id": "long_layered",
+ "lowest": 1.343,
+ "pushed": 209,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5450,
+ "source": "authoring/characters/hair/long_layered/cards.json",
+ "source_tris": 19328,
+ "triangles": 5872
+}

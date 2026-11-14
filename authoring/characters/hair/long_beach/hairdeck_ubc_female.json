@@ -1,0 +1,19 @@
+{
+ "body": "ubc_female",
+ "cap_faces": 556,
+ "cards": 55,
+ "fringe_trimmed": 5,
+ "hat_key": 867,
+ "id": "long_beach",
+ "lowest": 1.352,
+ "pushed": 162,
+ "scale": [
+  1.5676,
+  1.6254,
+  1.5965
+ ],
+ "single_sided": 4322,
+ "source": "authoring/characters/hair/long_beach/cards.json",
+ "source_tris": 15430,
+ "triangles": 4878
+}

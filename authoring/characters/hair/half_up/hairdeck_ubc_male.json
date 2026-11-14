@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 426,
+ "cards": 69,
+ "fringe_trimmed": 6,
+ "hat_key": 1777,
+ "id": "half_up",
+ "lowest": 1.403,
+ "pushed": 78,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5180,
+ "source": "authoring/characters/hair/half_up/cards.json",
+ "source_tris": 17958,
+ "triangles": 5606
+}

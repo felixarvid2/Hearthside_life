@@ -1,0 +1,6 @@
+{
+ "prompt": "shag haircut, choppy layered medium-length hair with a wispy fringe, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

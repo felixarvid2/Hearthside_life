@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 455,
+ "cards": 62,
+ "fringe_trimmed": 6,
+ "hat_key": 935,
+ "id": "long_wavy",
+ "lowest": 1.422,
+ "pushed": 209,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5460,
+ "source": "authoring/characters/hair/long_wavy/cards.json",
+ "source_tris": 19784,
+ "triangles": 5915
+}

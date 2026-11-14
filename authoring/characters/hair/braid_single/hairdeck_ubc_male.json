@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 384,
+ "cards": 52,
+ "fringe_trimmed": 1,
+ "hat_key": 717,
+ "id": "braid_single",
+ "lowest": 1.347,
+ "pushed": 64,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2858,
+ "source": "authoring/characters/hair/braid_single/cards.json",
+ "source_tris": 9424,
+ "triangles": 3242
+}

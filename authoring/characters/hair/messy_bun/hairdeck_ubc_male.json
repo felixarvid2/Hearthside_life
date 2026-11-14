@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 432,
+ "cards": 24,
+ "fringe_trimmed": 4,
+ "hat_key": 906,
+ "id": "messy_bun",
+ "lowest": 1.499,
+ "pushed": 86,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2244,
+ "source": "authoring/characters/hair/messy_bun/cards.json",
+ "source_tris": 7738,
+ "triangles": 2676
+}

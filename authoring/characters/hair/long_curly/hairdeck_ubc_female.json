@@ -1,0 +1,19 @@
+{
+ "body": "ubc_female",
+ "cap_faces": 556,
+ "cards": 112,
+ "fringe_trimmed": 11,
+ "hat_key": 1909,
+ "id": "long_curly",
+ "lowest": 1.396,
+ "pushed": 307,
+ "scale": [
+  1.5676,
+  1.6254,
+  1.5965
+ ],
+ "single_sided": 10016,
+ "source": "authoring/characters/hair/long_curly/cards.json",
+ "source_tris": 34444,
+ "triangles": 10572
+}

@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 323,
+ "cards": 43,
+ "fringe_trimmed": 4,
+ "hat_key": 1438,
+ "id": "side_swept",
+ "lowest": 1.583,
+ "pushed": 245,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3312,
+ "source": "authoring/characters/hair/side_swept/cards.json",
+ "source_tris": 11546,
+ "triangles": 3635
+}

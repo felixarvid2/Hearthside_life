@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 500,
+ "cards": 141,
+ "fringe_trimmed": 7,
+ "hat_key": 3468,
+ "id": "twists_short",
+ "lowest": 1.568,
+ "pushed": 350,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 7762,
+ "source": "authoring/characters/hair/twists_short/cards.json",
+ "source_tris": 24862,
+ "triangles": 8262
+}

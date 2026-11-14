@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { ModularAssetCache } from '../../../../src/characters/modular/cache';
 import type { CoverMaskFile, GarmentDef, ModularLook, ModularManifest } from '../../../../src/characters/modular/types';
 
-const repo = (p: string) => fileURLToPath(new URL(`../../../../${p}`, import.meta.url));
+export const repo = (p: string) => fileURLToPath(new URL(`../../../../${p}`, import.meta.url));
 
 export function parseGlb(file: string): Promise<GLTF> {
   const b = readFileSync(file);

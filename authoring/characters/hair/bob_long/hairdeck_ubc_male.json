@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 435,
+ "cards": 31,
+ "fringe_trimmed": 9,
+ "hat_key": 942,
+ "id": "bob_long",
+ "lowest": 1.399,
+ "pushed": 103,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3172,
+ "source": "authoring/characters/hair/bob_long/cards.json",
+ "source_tris": 10672,
+ "triangles": 3607
+}

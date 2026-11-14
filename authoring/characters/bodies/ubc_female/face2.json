@@ -1,0 +1,18 @@
+{
+ "body": 0,
+ "eye_scale": 1.1,
+ "nose_scale": 0.88,
+ "nose_lift": 0.002,
+ "face_shorten": 0.06,
+ "jaw_narrow": 0.08,
+ "chin_back": 0.0,
+ "chin_scale": 0.95,
+ "cheek": 0.005,
+ "mouth_narrow": -0.05,
+ "forehead": 0.002,
+ "smile": 0.003,
+ "brow_lift": 0.002,
+ "brow_inner": 0.003,
+ "brow_thin": 0.8,
+ "brow_level": 0.6
+}

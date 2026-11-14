@@ -1,0 +1,6 @@
+{
+ "prompt": "pixie cut, very short feathered hair with a short side-swept fringe, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

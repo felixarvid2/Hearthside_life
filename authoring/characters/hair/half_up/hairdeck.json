@@ -1,0 +1,6 @@
+{
+ "prompt": "half-up hairstyle, the top half tied back and the rest hanging loose to the shoulders, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

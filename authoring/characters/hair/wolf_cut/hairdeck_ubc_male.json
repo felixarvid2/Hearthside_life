@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 316,
+ "cards": 73,
+ "fringe_trimmed": 7,
+ "hat_key": 825,
+ "id": "wolf_cut",
+ "lowest": 1.327,
+ "pushed": 129,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3914,
+ "source": "authoring/characters/hair/wolf_cut/cards.json",
+ "source_tris": 13456,
+ "triangles": 4230
+}

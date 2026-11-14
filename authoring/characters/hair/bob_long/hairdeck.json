@@ -1,0 +1,6 @@
+{
+ "prompt": "long bob haircut reaching the shoulders, straight and sleek, center part, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 500,
+ "cards": 79,
+ "fringe_trimmed": 1,
+ "hat_key": 2036,
+ "id": "spiky",
+ "lowest": 1.588,
+ "pushed": 220,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3680,
+ "source": "authoring/characters/hair/spiky/cards.json",
+ "source_tris": 11898,
+ "triangles": 4180
+}

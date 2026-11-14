@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 424,
+ "cards": 38,
+ "fringe_trimmed": 8,
+ "hat_key": 1548,
+ "id": "top_bun",
+ "lowest": 1.439,
+ "pushed": 113,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3188,
+ "source": "authoring/characters/hair/top_bun/cards.json",
+ "source_tris": 11096,
+ "triangles": 3612
+}

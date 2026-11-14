@@ -1,0 +1,6 @@
+{
+ "prompt": "cornrows, tight braided rows running straight back over the scalp, dark brown hair, young man",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}
