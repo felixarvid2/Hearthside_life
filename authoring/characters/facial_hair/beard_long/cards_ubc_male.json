@@ -1,0 +1,16 @@
+{
+ "body": "ubc_male",
+ "id": "beard_long",
+ "lock_triangles": 2670,
+ "locks": 89,
+ "regions": [
+  "cheeks",
+  "chin",
+  "jaw",
+  "mustache",
+  "neck",
+  "sideburns",
+  "soul"
+ ],
+ "triangles": 3496
+}

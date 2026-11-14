@@ -1,0 +1,15 @@
+{
+ "body": "ubc_female",
+ "id": "beard_full",
+ "lock_triangles": 3600,
+ "locks": 120,
+ "regions": [
+  "cheeks",
+  "chin",
+  "jaw",
+  "mustache",
+  "sideburns",
+  "soul"
+ ],
+ "triangles": 4320
+}

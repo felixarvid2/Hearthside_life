@@ -1,0 +1,19 @@
+{
+ "body": "ubc_female",
+ "cap_faces": 542,
+ "cards": 77,
+ "fringe_trimmed": 7,
+ "hat_key": 2507,
+ "id": "caesar",
+ "lowest": 1.565,
+ "pushed": 228,
+ "scale": [
+  1.5676,
+  1.6254,
+  1.5965
+ ],
+ "single_sided": 4790,
+ "source": "authoring/characters/hair/caesar/cards.json",
+ "source_tris": 16904,
+ "triangles": 5332
+}

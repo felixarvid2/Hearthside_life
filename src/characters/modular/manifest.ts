@@ -33,6 +33,8 @@ export function validateManifest(m: ModularManifest): string[] {
   for (const b of m.bodies) {
     if (!rigIds.includes(b.rig)) out.push(`Body '${b.id}' uses unknown rig '${b.rig}'.`);
     if (!b.file) out.push(`Body '${b.id}' has no file.`);
+    if (b.base !== undefined && !m.bodies.some((x) => x.id === b.base && x.base === undefined && x.file === b.file)) out.push(`Body '${b.id}' is a build of '${b.base}', which is not a body with the same file.`);
+    for (const sh of b.shape ?? []) if (!b.morphs.some((x) => x.id === sh.morph)) out.push(`Body '${b.id}' is shaped by unknown morph '${sh.morph}'.`);
   }
   const files = (what: string, id: string, f: Record<string, string>) => {
     for (const k of Object.keys(f)) if (!bodyIds.includes(k)) out.push(`${what} '${id}' has a file for unknown body '${k}'.`);

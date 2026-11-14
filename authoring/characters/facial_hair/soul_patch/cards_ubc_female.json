@@ -1,0 +1,10 @@
+{
+ "body": "ubc_female",
+ "id": "soul_patch",
+ "lock_triangles": 180,
+ "locks": 6,
+ "regions": [
+  "soul"
+ ],
+ "triangles": 212
+}

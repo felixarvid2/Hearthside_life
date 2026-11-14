@@ -1,7 +1,7 @@
 // Family lineup of the modular (Quaternius) style (QA, dev only): baby, toddler, child, teen, adult man and woman, elder, in one
 // scene through the real ModularCharacterView, so the stage proportions, poses and posture anchors can be looked at.
 // Open /dev/stages.html with `npm run dev`, or run `node dev/shoot-stages.mjs` for the screenshots in dev/shots/quaternius-stages/.
-// Query: pose=idle|walk|sit|lie|carry  t=<seconds into the clip>  cam=front|three|side|close  w=<px> h=<px>
+// Query: pose=idle|walk|sit|lie|carry  t=<seconds into the clip>  cam=front|three|side|close  w=<px> h=<px>  frame=a|b  bodies=second
 // window.stagesReady = true when everything is drawn; window.stagesError holds a fatal error message.
 
 import * as THREE from 'three';
@@ -13,6 +13,7 @@ import { loadModularRuntime } from '../src/characters/modular/runtime';
 import { lyingPlacement, seatedPlacement } from '../src/characters/posture';
 import { CRADLE } from '../src/characters/stagePose';
 import { STAGE_PROPORTIONS } from '../src/characters/modular/stageProportions';
+import { deriveModularLook } from '../src/characters/modular/look';
 
 declare global { interface Window { stagesReady?: boolean; stagesError?: string } }
 
@@ -35,6 +36,11 @@ const FAMILY: Member[] = [
   { stage: 'elder', frame: 'a', skin: '#d9b08c', hair: '#c9c9c9' },
 ];
 const SPACING = 1.0;
+
+// frame=a|b puts every stage on that frame; bodies=second draws each frame's second build (BodyPresetDef.base) instead of its default
+const FRAME = q.get('frame');
+if (FRAME === 'a' || FRAME === 'b') for (const m of FAMILY) m.frame = FRAME;
+const SECOND = q.get('bodies') === 'second';
 
 const appearanceOf = (m: Member): Appearance => ({
   frame: m.frame, skin: m.skin as Appearance['skin'], body: {}, bodyPresetId: null,
@@ -74,7 +80,13 @@ async function main(): Promise<void> {
   const grid = new THREE.GridHelper(20, 20, 0x6b604f, 0x9a8f7c); (grid.material as THREE.Material).opacity = 0.5; (grid.material as THREE.Material).transparent = true; scene.add(grid);
 
   const views = FAMILY.map((m) => {
-    const v = new ModularCharacterView(runtime, clips, appearanceOf(m), {} as never, m.stage);
+    const app = appearanceOf(m);
+    if (SECOND) {
+      const mf = runtime.manifest;
+      const second = mf.bodies.find((b) => b.base === mf.defaults.bodyByFrame[m.frame]);
+      if (second) app.modular = { ...deriveModularLook(app, mf, undefined, m.stage), bodyId: second.id };
+    }
+    const v = new ModularCharacterView(runtime, clips, app, {} as never, m.stage);
     v.root.traverse((o) => { o.castShadow = true; });
     scene.add(v.root);
     return v;
@@ -126,6 +138,9 @@ async function main(): Promise<void> {
   else if (CAM === 'side') { cam.position.set(7.5, 1.0, 0.5); cam.lookAt(0, 0.8, 0); }
   else if (POSE === 'lie') { cam.position.set(0, 7, 5); cam.lookAt(0, 0.4, 0); }
   else { const d = span / (2 * Math.tan(THREE.MathUtils.degToRad(13)) * (W / H)) * 1.05; cam.position.set(CAM === 'three' ? d * 0.45 : 0, 0.9, d); cam.lookAt(0, 0.8, 0); }
+  renderer.render(scene, cam);
+  // the young skin textures arrive after the bodies: give them a moment, then draw again
+  await new Promise((r) => setTimeout(r, 1200));
   renderer.render(scene, cam);
   window.stagesReady = true;
 }

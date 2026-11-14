@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 389,
+ "cards": 53,
+ "fringe_trimmed": 6,
+ "hat_key": 1406,
+ "id": "wavy_medium",
+ "lowest": 1.44,
+ "pushed": 250,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 6006,
+ "source": "authoring/characters/hair/wavy_medium/cards.json",
+ "source_tris": 25046,
+ "triangles": 6395
+}

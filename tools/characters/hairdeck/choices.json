@@ -1,0 +1,218 @@
+{
+ "short_crop": {
+  "seed": 1
+ },
+ "bob_chin": {
+  "seed": 1
+ },
+ "ponytail_mid": {
+  "seed": 0
+ },
+ "pixie": {
+  "seed": 1
+ },
+ "curly_medium": {
+  "seed": 0,
+  "label": "Tousled curls"
+ },
+ "mohawk": {
+  "seed": 0
+ },
+ "long_wavy": {
+  "seed": 1
+ },
+ "bob_bangs": {
+  "seed": 1
+ },
+ "braid_single": {
+  "seed": 1,
+  "label": "Side braid"
+ },
+ "pigtails": {
+  "seed": 1
+ },
+ "top_bun": {
+  "seed": 1
+ },
+ "afro_short": {
+  "seed": 0
+ },
+ "bob_long": {
+  "seed": 1
+ },
+ "bob_side": {
+  "seed": 1
+ },
+ "box_braids": {
+  "seed": 1,
+  "label": "Pigtails with braids",
+  "tags": [
+   "gathered",
+   "braid"
+  ]
+ },
+ "braided_ponytail": {
+  "seed": 1,
+  "label": "Braided bun",
+  "tags": [
+   "gathered",
+   "braid",
+   "bun"
+  ]
+ },
+ "braids_two": {
+  "seed": 0
+ },
+ "caesar": {
+  "seed": 0
+ },
+ "cornrows": {
+  "seed": 1,
+  "label": "Braided pigtails",
+  "tags": [
+   "gathered",
+   "braid"
+  ]
+ },
+ "crew_cut": {
+  "seed": 0,
+  "label": "Neat crop"
+ },
+ "curly_bob": {
+  "seed": 0,
+  "label": "Flipped bob",
+  "tags": [
+   "medium",
+   "wavy"
+  ]
+ },
+ "curly_short": {
+  "seed": 1,
+  "label": "Messy spikes",
+  "tags": [
+   "short"
+  ]
+ },
+ "curtain_bangs": {
+  "seed": 0
+ },
+ "dreads_short": {
+  "seed": 1,
+  "label": "Short pigtails",
+  "tags": [
+   "gathered"
+  ]
+ },
+ "faux_hawk": {
+  "seed": 1
+ },
+ "half_up": {
+  "seed": 1
+ },
+ "ivy_league": {
+  "seed": 1
+ },
+ "layered_medium": {
+  "seed": 0,
+  "label": "Layered bob"
+ },
+ "locs_long": {
+  "seed": 1,
+  "label": "High pigtails",
+  "tags": [
+   "gathered"
+  ]
+ },
+ "long_bangs": {
+  "seed": 1
+ },
+ "long_beach": {
+  "seed": 1
+ },
+ "long_center": {
+  "seed": 1
+ },
+ "long_curly": {
+  "seed": 1
+ },
+ "long_layered": {
+  "seed": 1
+ },
+ "long_side_part": {
+  "seed": 1
+ },
+ "long_straight": {
+  "seed": 1
+ },
+ "low_bun": {
+  "seed": 0,
+  "label": "Low tie",
+  "tags": [
+   "gathered"
+  ]
+ },
+ "messy_bun": {
+  "seed": 1
+ },
+ "middle_part": {
+  "seed": 1
+ },
+ "mullet": {
+  "seed": 0
+ },
+ "ponytail_high": {
+  "seed": 0
+ },
+ "ponytail_low": {
+  "seed": 0
+ },
+ "ponytail_side": {
+  "seed": 0
+ },
+ "shag": {
+  "seed": 1
+ },
+ "short_textured": {
+  "seed": 0
+ },
+ "shoulder_straight": {
+  "seed": 0
+ },
+ "side_part_short": {
+  "seed": 0
+ },
+ "side_swept": {
+  "seed": 0
+ },
+ "slick_back": {
+  "seed": 1,
+  "label": "Tousled crop"
+ },
+ "space_buns": {
+  "seed": 1
+ },
+ "spiky": {
+  "seed": 0
+ },
+ "twists_short": {
+  "seed": 0,
+  "label": "Mini buns",
+  "tags": [
+   "gathered",
+   "bun"
+  ]
+ },
+ "undercut": {
+  "seed": 0
+ },
+ "waist_length": {
+  "seed": 1,
+  "label": "Extra long"
+ },
+ "wavy_medium": {
+  "seed": 0
+ },
+ "wolf_cut": {
+  "seed": 1
+ }
+}

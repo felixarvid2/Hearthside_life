@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 368,
+ "cards": 41,
+ "fringe_trimmed": 4,
+ "hat_key": 864,
+ "id": "bob_side",
+ "lowest": 1.541,
+ "pushed": 54,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3156,
+ "source": "authoring/characters/hair/bob_side/cards.json",
+ "source_tris": 11102,
+ "triangles": 3524
+}

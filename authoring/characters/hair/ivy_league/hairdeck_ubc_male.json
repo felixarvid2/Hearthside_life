@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 422,
+ "cards": 41,
+ "fringe_trimmed": 4,
+ "hat_key": 806,
+ "id": "ivy_league",
+ "lowest": 1.569,
+ "pushed": 111,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1888,
+ "source": "authoring/characters/hair/ivy_league/cards.json",
+ "source_tris": 5852,
+ "triangles": 2310
+}

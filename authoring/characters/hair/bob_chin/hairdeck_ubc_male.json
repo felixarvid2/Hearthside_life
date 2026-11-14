@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 198,
+ "cards": 16,
+ "fringe_trimmed": 3,
+ "hat_key": 576,
+ "id": "bob_chin",
+ "lowest": 1.555,
+ "pushed": 51,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1446,
+ "source": "authoring/characters/hair/bob_chin/cards.json",
+ "source_tris": 5052,
+ "triangles": 1644
+}

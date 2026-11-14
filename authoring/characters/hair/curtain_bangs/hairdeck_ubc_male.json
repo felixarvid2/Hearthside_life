@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 388,
+ "cards": 45,
+ "fringe_trimmed": 12,
+ "hat_key": 1209,
+ "id": "curtain_bangs",
+ "lowest": 1.411,
+ "pushed": 155,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3654,
+ "source": "authoring/characters/hair/curtain_bangs/cards.json",
+ "source_tris": 13460,
+ "triangles": 4042
+}

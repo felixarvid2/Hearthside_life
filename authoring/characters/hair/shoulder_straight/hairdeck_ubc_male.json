@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 337,
+ "cards": 22,
+ "fringe_trimmed": 3,
+ "hat_key": 749,
+ "id": "shoulder_straight",
+ "lowest": 1.408,
+ "pushed": 140,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2782,
+ "source": "authoring/characters/hair/shoulder_straight/cards.json",
+ "source_tris": 9464,
+ "triangles": 3119
+}

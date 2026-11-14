@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 329,
+ "cards": 33,
+ "fringe_trimmed": 10,
+ "hat_key": 1112,
+ "id": "bob_bangs",
+ "lowest": 1.553,
+ "pushed": 102,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2742,
+ "source": "authoring/characters/hair/bob_bangs/cards.json",
+ "source_tris": 9586,
+ "triangles": 3071
+}
