@@ -83,6 +83,9 @@ export class ModularCharacterView {
   get carrying(): boolean { return this.character.carrying; }
   /** Lean back in a seat (recliners). */
   setRecline(on: boolean): void { this.character.setRecline(on); }
+  setSeatEdge(edgeFromRoot: number | null): void { this.character.setSeatEdge(edgeFromRoot); }
+  get seatForward(): number { return this.character.seatForward; }
+  setChildMotion(on: boolean): void { this.character.childMotion = on; }
   setWalkRate(rate: number): void { this.character.setWalkRate(rate); }
 
   cradlePoint(target: THREE.Vector3): THREE.Vector3 {

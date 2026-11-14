@@ -558,6 +558,38 @@ export class ObjectsView {
   /** True when the object shows its real model (not still loading, not the missing-model placeholder). */
   hasModel(id: Id): boolean { const e = this.objects.get(id); return !!e && !e.placeholder; }
 
+  /**
+   * How far the seat reaches in front of a sit slot's anchor (metres along the slot's facing), read off the model: rays
+   * straight down, stepping forward, until there is no seat under them any more. A small person whose knees do not get that
+   * far sits with the legs out on the seat (ModularCharacter.setSeatEdge). null when the object has no model yet.
+   */
+  seatEdge(slot: { objectId: Id; slotId: string; x: number; z: number; height: number; facing: number; level?: number }, floorY: number): number | null {
+    const e = this.objects.get(slot.objectId);
+    if (!e || !e.model || e.placeholder) return null;
+    const key = `${slot.objectId}:${slot.slotId}:${slot.x.toFixed(2)},${slot.z.toFixed(2)},${slot.facing.toFixed(2)}:${e.sig}`;
+    const hit = this.seatEdges.get(key);
+    if (hit !== undefined) return hit;
+    e.group.updateMatrixWorld(true);
+    // only this object's own model: the table a chair is pushed under belongs to another entry
+    const fx = Math.sin(slot.facing), fz = Math.cos(slot.facing), top = floorY + slot.height;
+    const ray = this.seatRay; ray.far = 0.5;
+    const origin = new THREE.Vector3(), down = new THREE.Vector3(0, -1, 0);
+    let edge = 0;
+    for (let d = 0; d <= 0.9; d += 0.02) {
+      origin.set(slot.x + fx * d, top + 0.3, slot.z + fz * d);
+      ray.set(origin, down);
+      const hits = ray.intersectObject(e.model, true);
+      // the seat itself: a surface at the seat's height, give or take (a table over the knees and the floor are not it)
+      if (!hits.some((h) => h.point.y > top - 0.12 && h.point.y < top + 0.08)) break;
+      edge = d;
+    }
+    if (this.seatEdges.size > 400) this.seatEdges.clear();
+    this.seatEdges.set(key, edge);
+    return edge;
+  }
+  private readonly seatEdges = new Map<string, number>();
+  private readonly seatRay = new THREE.Raycaster();
+
   boxOf(id: Id): THREE.Box3 | null { return this.objects.get(id)?.box ?? this.items.get(id)?.box ?? null; }
 
   /** The placed object's group (rot-0 local space; visibility already follows level, cutaway and hiding). */

@@ -33,6 +33,15 @@ export interface PersonView {
   setCarrying(on: boolean): void;
   /** Lean back in a seat (recliners); views that cannot pose the spine ignore it. */
   setRecline(on: boolean): void;
+  /**
+   * Seated: how far the seat reaches in front of the figure's root (metres), or null when unknown or not seated. A small
+   * person whose knees do not reach the edge sits with the legs out on the seat. Optional: only the modular figures use it.
+   */
+  setSeatEdge?(edgeFromRoot: number | null): void;
+  /** Seated: how far forward of the seat anchor the figure sits so its knees clear the seat's edge (metres; with setSeatEdge). */
+  readonly seatForward?: number;
+  /** A child's own movement on the shared clips (sway, waddle, leg swing); off with reduced motion. Optional: modular figures. */
+  setChildMotion?(on: boolean): void;
   /** Walk and jog cycle speed factor (actual ground speed over the clips' natural speed), so feet do not slide. */
   setWalkRate(rate: number): void;
   cradlePoint(target: THREE.Vector3): THREE.Vector3;

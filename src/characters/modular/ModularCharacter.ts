@@ -10,7 +10,7 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { AnimId } from '../../core/anim';
 import type { Hex, LifeStage, OutfitCategory, Posture } from '../../core/types';
 import { Animator } from '../animation';
-import { CRADLE_PAIRS, CURL_BONES, RECLINE_LEAN, STANCE_BONES, STOOP_BONES, applyCradle, applyCurl, applyStance, applyStoop, bindBones, stageLook } from '../stagePose';
+import { CHILD_MOTION_BONES, CRADLE_PAIRS, CURL_BONES, RECLINE_LEAN, STANCE_BONES, STOOP_BONES, applyChildMotion, applyCradle, applyCurl, applyStance, applyStoop, bindBones, stageLook } from '../stagePose';
 import type { BindBone } from '../stagePose';
 import type { ModularAssetCache } from './cache';
 import { outfitFor, resolveLook } from './look';
@@ -51,6 +51,8 @@ interface BodyInstance {
   /** Height of the crown above the Head bone at rest (head scale included). */
   crownAboveHead: number;
   /** Life-stage proportions on this body's skeleton. */
+  /** Bind data of the shins (aimed forward when a small person's legs lie out on a seat). */
+  calfBind: Map<string, BindBone>;
   stageRig: StageRig;
   /** Bind pose of the cradle arms. */
   cradleBind: Map<string, BindBone>;
@@ -237,6 +239,21 @@ export class ModularCharacter {
   private cradleWeight = 0;
   private stoopWeight = 0;
   private stanceWeight = 0;
+  /** A child's own movement (stagePose.applyChildMotion): cross-fading weights, a running clock and a per-person offset. */
+  private motionW = { idle: 0, walk: 0, sit: 0 };
+  private motionTime = 0;
+  private seatEdge: number | null = null;
+  /**
+   * Seated with the shins hanging: how far forward of its seat anchor the figure has to sit for the knees to clear the seat's
+   * front edge (metres, eased; 0 when they already do, when the legs lie out on the seat, or when the edge is not known).
+   * A sofa is deeper than a thigh is long: without it the shins of a grown-up go down through the cushion.
+   */
+  seatForward = 0;
+  private legsOut = 0;
+  /** 0..1, per person, so siblings do not move in step (tests set it). */
+  motionSeed = Math.random();
+  /** False stops the child motion (reduced motion; measurements that want the bare clip). */
+  childMotion = true;
   private reclineOn = false;
   private reclineWeight = 0;
   private curlWeight = 0;
@@ -352,6 +369,8 @@ export class ModularCharacter {
   setCarrying(on: boolean): void { this.cradleOn = on; }
   get carrying(): boolean { return this.cradleOn; }
   setRecline(on: boolean): void { this.reclineOn = on; }
+  /** Seated: how far the seat reaches in front of the root (metres); null = unknown or not seated (see applyPoseFx). */
+  setSeatEdge(edgeFromRoot: number | null): void { this.seatEdge = edgeFromRoot; }
 
   /** Walk-cycle speed factor from the ground speed (see Animator.setWalkRate); remembered across body rebuilds. */
   setWalkRate(rate: number): void {
@@ -384,6 +403,8 @@ export class ModularCharacter {
     if (needCradle) save(Object.keys(CRADLE_PAIRS));
     const stance = look.stance ?? 0;
     if (stance && !this.cradleOn) save(STANCE_BONES);
+    const motion = this.childMotion ? look.motion : undefined;
+    if (motion && !this.cradleOn) save(CHILD_MOTION_BONES);
     const ease = (v: number, target: number, rate: number) => v + Math.sign(target - v) * Math.min(Math.abs(target - v), dt * rate);
     const posture = animator.posture;
     this.stoopWeight = ease(this.stoopWeight, posture === 'standing' ? 1 : posture === 'seated' ? 0.4 : 0, 2.5);
@@ -396,6 +417,42 @@ export class ModularCharacter {
     const moving = /walk|jog|run/i.test(animator.playing ?? '');
     this.stanceWeight = ease(this.stanceWeight, stance && !this.cradleOn && posture === 'standing' ? (moving ? 0.35 : 1) : 0, 3);
     if (stance && !this.cradleOn && this.stanceWeight > 0) applyStance(bones, stance * this.stanceWeight);
+    {
+      // knees over the edge (every stage; the child motion below may put the legs out on the seat instead)
+      let need = 0;
+      if (posture === 'seated' && this.seatEdge !== null && Number.isFinite(this.seatEdge)) {
+        const knee = bones.get('calf_l');
+        const kneeZ = knee ? modelPosition(knee, _mp).z * (this.root.scale.x || 1) : 0;
+        need = Math.min(0.3, Math.max(0, this.seatEdge + 0.06 - (kneeZ)));
+      }
+      this.seatForward = ease(this.seatForward, need * (1 - this.legsOut), 0.6);
+    }
+    if (motion && !this.cradleOn) {
+      // which of the three the figure is doing now; the weights ease, so a child that stops walking settles into the sway
+      const cyc = animator.cycle;
+      const walking = moving && posture === 'standing';
+      const still = posture === 'standing' && !moving && (cyc?.clip === 'Idle_Loop' || cyc?.clip === 'Idle_Talking_Loop' || cyc?.clip === 'Idle_FoldArms_Loop');
+      const sitting = posture === 'seated' && (cyc?.clip === 'Sitting_Idle_Loop' || cyc?.clip === 'Sitting_Talking_Loop');
+      const w = this.motionW;
+      w.idle = ease(w.idle, still ? 1 : 0, 2.5); w.walk = ease(w.walk, walking ? 1 : 0, 4); w.sit = ease(w.sit, sitting ? 1 : 0, 1.5);
+      this.motionTime += dt;
+      // Seated: do the knees reach the seat's front edge? If not (a toddler anywhere, a child on a sofa) the legs lie out on
+      // the seat instead of hanging through it. Without a measured edge: a figure under a metre never reaches one.
+      let out = 0;
+      if (w.sit > 0 && motion.legSwing) {
+        const knee = bones.get('calf_l'), scale = this.root.scale.x || 1;
+        const kneeZ = knee ? modelPosition(knee, _mp).z * scale : 0;
+        // A small child would have to sit far forward for the knees to reach the edge: more than a third of the thigh, and the
+        // legs go out on the seat instead. Without a measured edge: a figure under a metre never reaches one.
+        const edge = this.seatEdge ?? (scale * body.def.height < 1 ? Infinity : 0);
+        const thigh = 0.42 * scale;
+        out = Math.min(1, Math.max(0, (edge + 0.06 - kneeZ - thigh * 0.35) / 0.05));
+      }
+      this.legsOut = ease(this.legsOut, out, 3);
+      if (w.idle > 0 || w.walk > 0 || w.sit > 0) applyChildMotion(bones, motion, { ...w, phase: cyc?.phase ?? 0, time: this.motionTime, seed: this.motionSeed, legsOut: this.legsOut, calfBind: body.calfBind });
+    } else {
+      this.motionW.idle = this.motionW.walk = this.motionW.sit = 0;
+    }
     this.cradleWeight = ease(this.cradleWeight, this.cradleOn ? 1 : 0, 4);
     if (this.cradleWeight > 0) applyCradle(bones, body.cradleBind, this.cradleWeight);
   }
@@ -682,16 +739,21 @@ export class ModularCharacter {
     const head = bones.get('Head');
     const headY = head ? head.getWorldPosition(new THREE.Vector3()).y : def.height - 0.2;
     // bind data first: the cradle arms are aimed from it, and the stage proportions change the bones afterwards
-    const saved = { p: this.root.position.clone(), q: this.root.quaternion.clone(), s: this.root.scale.clone() };
-    this.root.position.set(0, 0, 0); this.root.quaternion.identity(); this.root.scale.setScalar(1);
+    // The rotation is kept as its Euler angles, not as a quaternion: the views turn a figure by `root.rotation.y` alone, and a
+    // quaternion read back for a figure facing the back half of the circle comes out as x = z = pi with y mirrored. A body
+    // built while its person faced that way then turned the wrong way along z for good (sat through chair backs, walked
+    // backwards up and down the screen).
+    const saved = { p: this.root.position.clone(), r: this.root.rotation.clone(), s: this.root.scale.clone() };
+    this.root.position.set(0, 0, 0); this.root.rotation.set(0, 0, 0); this.root.scale.setScalar(1);
     const cradleBind = bindBones(scene, CRADLE_PAIRS);
-    this.root.position.copy(saved.p); this.root.quaternion.copy(saved.q); this.root.scale.copy(saved.s);
+    const calfBind = bindBones(scene, { calf_l: 'foot_l', calf_r: 'foot_r' });
+    this.root.position.copy(saved.p); this.root.rotation.copy(saved.r); this.root.scale.copy(saved.s);
     const pelvis = bones.get('pelvis');
     this.body = {
       def, rig: this.manifest.rigs.find((r) => r.id === def.rig) as RigProfile, url, scene, bones, inverses, regions, meshes, skeletons,
       materials: [...cloned.values()], skin, eyes, brows, masked,
       youngSkin: { adult: new Map(skin.map((x) => [x.mat, (x.mat as THREE.MeshStandardMaterial).map ?? null])), maps: new Map() }, crownAboveHead: Math.max(0.1, def.height - headY),
-      stageRig: new StageRig(bones, def.height), cradleBind, pelvisLength: pelvis ? pelvis.position.length() : 0,
+      stageRig: new StageRig(bones, def.height), cradleBind, calfBind, pelvisLength: pelvis ? pelvis.position.length() : 0,
     };
     this.stoopWeight = this.stanceWeight = this.cradleWeight = this.reclineWeight = this.curlWeight = 0;
     this.fxSaved.clear();
@@ -805,6 +867,15 @@ export class ModularCharacter {
 }
 
 type GLTFLike = { scene: THREE.Object3D };
+
+const _mp = new THREE.Vector3();
+const _mm = new THREE.Matrix4();
+/** Position of a bone in the figure's model space (bones' local transforms up to the skeleton's root joint). */
+function modelPosition(bone: THREE.Object3D, out: THREE.Vector3): THREE.Vector3 {
+  _mm.identity();
+  for (let o: THREE.Object3D | null = bone; o && (o as THREE.Bone).isBone; o = o.parent) { o.updateMatrix(); _mm.premultiply(o.matrix); }
+  return out.setFromMatrixPosition(_mm);
+}
 
 function sameBind(a: THREE.Skeleton, b: THREE.Skeleton): boolean {
   if (a === b) return true;

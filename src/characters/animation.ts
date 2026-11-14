@@ -143,6 +143,13 @@ export class Animator {
 
   get posture(): Posture { return this.postureNow; }
   get playing(): AnimId | null { return this.current?.id ?? null; }
+  /** Source clip of the main action and where it is in its cycle (0..1); null when nothing plays. */
+  get cycle(): { clip: string; phase: number } | null {
+    const c = this.current;
+    if (!c) return null;
+    const d = c.main.getClip().duration;
+    return { clip: c.spec.clip, phase: d > 0 ? (((c.main.time % d) + d) % d) / d : 0 };
+  }
 
   play(id: AnimId, opts: { fade?: number; posture?: Posture } = {}): void {
     const posture = opts.posture ?? this.inferPosture(id);

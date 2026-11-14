@@ -108,7 +108,7 @@ function armaturePosition(bone: THREE.Object3D, top: THREE.Object3D, out: THREE.
  * at their bind pose); `apply` can be called again for another stage.
  */
 export class StageRig {
-  private readonly bind = new Map<THREE.Bone, { p: THREE.Vector3; s: THREE.Vector3 }>();
+  private readonly bind = new Map<THREE.Bone, { p: THREE.Vector3; s: THREE.Vector3; q: THREE.Quaternion }>();
   private readonly top: THREE.Bone;
   private readonly pelvis: THREE.Bone | null;
   private readonly foot: THREE.Bone | null;
@@ -123,7 +123,7 @@ export class StageRig {
 
   constructor(bones: ReadonlyMap<string, THREE.Bone>, bodyHeight: number) {
     this.top = bones.get('root') ?? [...bones.values()][0]!;
-    for (const b of bones.values()) this.bind.set(b, { p: b.position.clone(), s: b.scale.clone() });
+    for (const b of bones.values()) this.bind.set(b, { p: b.position.clone(), s: b.scale.clone(), q: b.quaternion.clone() });
     this.pelvis = bones.get('pelvis') ?? null;
     this.foot = bones.get('foot_l') ?? null;
     this.head = bones.get('Head') ?? null;
@@ -142,6 +142,20 @@ export class StageRig {
 
   /** Applies the stage's proportions, and the body's own on top (resets first, so any stage can follow any other). */
   apply(stage: LifeStage, own?: Partial<Record<keyof StageProportions, number>>): StageFit {
+    // The fit is measured on the bind pose. A figure that is sitting or lying when its look changes (pyjamas at bedtime, a
+    // part that finishes loading) has its bones turned by the clip: measured like that, the crown and the soles are somewhere
+    // else, and the figure came out up to a tenth too large or small and sank into its chair or bed. So: bind rotations for
+    // the measurement, the pose back afterwards.
+    const posed = new Map<THREE.Bone, THREE.Quaternion>();
+    for (const [b, t] of this.bind) { posed.set(b, b.quaternion.clone()); b.quaternion.copy(t.q); }
+    try {
+      return this.applyAtBind(stage, own);
+    } finally {
+      for (const [b, q] of posed) b.quaternion.copy(q);
+    }
+  }
+
+  private applyAtBind(stage: LifeStage, own?: Partial<Record<keyof StageProportions, number>>): StageFit {
     this.reset();
     let prof = proportionsFor(stage);
     // a body's own proportions (BodyPresetDef.proportions) are factors on the stage's bone scales

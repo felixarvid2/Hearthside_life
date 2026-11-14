@@ -17,14 +17,27 @@ export interface StageLook {
    * arms held off the body). 0 or absent leaves the clip as it is.
    */
   stance?: number;
+  /** How a small person moves on top of the shared (grown-up) clips; absent = as the clip plays. See applyChildMotion. */
+  motion?: ChildMotion;
 }
+
+/**
+ * A child's own movement, layered on the shared clips (amounts in radians, 0 = off):
+ * - standing still: the weight shifts from foot to foot (`sway`), the head looks about (`look`), a toddler wobbles;
+ * - walking: the body rocks over the standing foot (`waddle`), the arms are held out for balance (`armsOut`, toddlers) and the
+ *   head bobs (`bob`);
+ * - sitting: the shared sitting clip is a still pose, feet flat on a floor a child's feet do not reach: the shins hang and
+ *   swing (`legSwing`), now one leg and then the other, with rests.
+ */
+export interface ChildMotion { sway: number; look: number; waddle: number; armsOut: number; bob: number; legSwing: number; /** Speed of the idle and sitting movement (1 = a child of ten). */ tempo: number }
+
 
 const NEUTRAL: StageLook = { stoop: 0, cadence: 1 };
 const LOOKS: Partial<Record<LifeStage, StageLook>> = {
   baby: { stoop: 0, cadence: 1, stance: 0.1 },
-  toddler: { stoop: 0, cadence: 1.6, stance: 0.14 },
-  child: { stoop: 0, cadence: 1.28, stance: 0.17 },
-  teen: { stoop: 0, cadence: 1.05, stance: 0.07 },
+  toddler: { stoop: 0, cadence: 1.6, stance: 0.14, motion: { sway: 0.055, look: 0.3, waddle: 0.11, armsOut: 0.42, bob: 0.07, legSwing: 0.5, tempo: 1.35 } },
+  child: { stoop: 0, cadence: 1.28, stance: 0.17, motion: { sway: 0.04, look: 0.24, waddle: 0.045, armsOut: 0, bob: 0.04, legSwing: 0.4, tempo: 1 } },
+  teen: { stoop: 0, cadence: 1.05, stance: 0.07, motion: { sway: 0.022, look: 0.12, waddle: 0, armsOut: 0, bob: 0, legSwing: 0, tempo: 0.8 } },
   elder: { stoop: 0.15, cadence: 0.85 },
 };
 
@@ -131,6 +144,83 @@ export function applyStance(bones: Map<string, THREE.Bone>, amount: number): voi
     if (thigh) rotateInModel(thigh, Z_AXIS, sign * amount);
     if (foot) rotateInModel(foot, Z_AXIS, -sign * amount);
     if (arm) rotateInModel(arm, Z_AXIS, sign * amount * 0.4);
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// A child's own movement
+// ---------------------------------------------------------------------------------------------
+
+/** Bones the child motion turns. */
+export const CHILD_MOTION_BONES: readonly string[] = ['pelvis', 'spine_01', 'spine_02', 'neck_01', 'Head', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r', 'foot_l', 'foot_r', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r'];
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+const TAU = Math.PI * 2;
+
+/** What the figure is doing, for applyChildMotion: weights 0..1 (they cross-fade) and the walk cycle's phase. */
+export interface ChildMotionState { idle: number; walk: number; sit: number; /** Seated: 0 = the shins hang over the seat's edge, 1 = the knees do not reach it and the legs lie out on the seat. */ legsOut?: number; /** Bind data of calf_l / calf_r (bindBones), needed for legsOut. */ calfBind?: Map<string, BindBone>; /** Phase of the walk clip, 0..1 (the left foot stands from 0 to 0.5 in the shared walk and carry clips). */ phase: number; /** Seconds, running. */ time: number; /** 0..1, different per person, so siblings do not move in step. */ seed: number }
+
+/**
+ * Lays a child's movement over the sampled clip (see ChildMotion). All of it is small turns of bones in model space; the feet
+ * of a standing figure are turned back by what the hips rolled, so they stay where the clip put them.
+ */
+export function applyChildMotion(bones: Map<string, THREE.Bone>, m: ChildMotion, s: ChildMotionState): void {
+  const t = s.time * m.tempo + s.seed * 37;
+  const turn = (name: string, axis: THREE.Vector3, angle: number): void => { const b = bones.get(name); if (b && angle) rotateInModel(b, axis, angle); };
+  // hips rolled by `a` about the forward axis, legs turned back so the soles stay put, the chest half way back
+  const roll = (a: number): void => {
+    if (!a) return;
+    turn('pelvis', Z_AXIS, a);
+    turn('thigh_l', Z_AXIS, -a); turn('thigh_r', Z_AXIS, -a);
+    turn('spine_01', Z_AXIS, -a * 0.35); turn('spine_02', Z_AXIS, -a * 0.35);
+    turn('Head', Z_AXIS, -a * 0.3);
+  };
+  if (s.idle > 0) {
+    const w = s.idle;
+    // slow shift of the weight, with a faster wobble on top for the smallest
+    roll(w * m.sway * (Math.sin(t * 0.9) + 0.35 * Math.sin(t * 2.3 + 1.7)));
+    // looking about: mostly ahead, now and then to a side (a slow wave, sharpened so the head rests at the ends)
+    const side = Math.sin(t * 0.37) * Math.sin(t * 0.11 + s.seed * TAU);
+    const look = w * m.look * Math.sign(side) * Math.min(1, Math.abs(side) * 2.2);
+    turn('neck_01', Y_AXIS, look * 0.4); turn('Head', Y_AXIS, look * 0.6);
+    turn('Head', X_AXIS, w * m.look * 0.2 * Math.sin(t * 0.53 + 0.8));
+    // loose arms: the forearms swing a little
+    turn('lowerarm_l', X_AXIS, -w * m.sway * 1.2 * (0.5 + 0.5 * Math.sin(t * 1.1)));
+    turn('lowerarm_r', X_AXIS, -w * m.sway * 1.2 * (0.5 + 0.5 * Math.sin(t * 1.1 + 2.1)));
+  }
+  if (s.walk > 0) {
+    const w = s.walk, ph = s.phase * TAU;
+    // over the standing foot: left (+x) in the first half of the cycle
+    roll(-w * m.waddle * Math.sin(ph));
+    if (m.armsOut) {
+      // arms out and a little up, elbows bent: a toddler balancing
+      turn('upperarm_l', Z_AXIS, w * m.armsOut); turn('upperarm_r', Z_AXIS, -w * m.armsOut);
+      turn('lowerarm_l', X_AXIS, -w * m.armsOut * 0.9); turn('lowerarm_r', X_AXIS, -w * m.armsOut * 0.9);
+    }
+    // the head nods twice a cycle, once per step
+    turn('Head', X_AXIS, w * m.bob * Math.sin(ph * 2));
+    turn('spine_02', X_AXIS, w * m.bob * 0.5 * Math.sin(ph * 2 + 0.6));
+  }
+  if (s.sit > 0 && m.legSwing) {
+    const w = s.sit;
+    // the shins hang as the clip has them (straight down from the knee) and swing in turns, with rests
+    const hang = w * 0.04;
+    const busy = Math.max(0, Math.sin(t * 0.23 + s.seed * TAU)) ** 0.6;          // swinging for a while, then still
+    const a = w * m.legSwing * busy;
+    const out = Math.min(1, Math.max(0, s.legsOut ?? 0));
+    // kicks go forward of the hanging shin, hardly back: the seat's front is there
+    const kick = (x: number): number => hang - a * (0.4 + 0.6 * x);
+    const l = kick(Math.sin(t * 3.1)) * (1 - out), r = kick(Math.sin(t * 3.1 + Math.PI * 0.9)) * (1 - out);
+    turn('calf_l', X_AXIS, l); turn('calf_r', X_AXIS, r);
+    turn('foot_l', X_AXIS, -l * 0.35); turn('foot_r', X_AXIS, -r * 0.35);
+    if (out > 0 && s.calfBind) {
+      // legs out on the seat: the shins carry on forward from the knees, a little apart, the feet wagging now and then
+      for (const [side, sx] of [['l', 1], ['r', -1]] as const) {
+        const calf = bones.get(`calf_${side}`), bind = s.calfBind.get(`calf_${side}`);
+        if (calf && bind) aimBone(calf, bind, _v.set(sx * 0.05, 0.03, 1), 0, w * out);
+        turn(`foot_${side}`, X_AXIS, w * out * (-0.5 + 0.18 * busy * Math.sin(t * 2.7 + (sx > 0 ? 0 : 2))));
+      }
+    }
+    turn('Head', Y_AXIS, w * m.look * 0.5 * Math.sin(t * 0.31));
   }
 }
 
