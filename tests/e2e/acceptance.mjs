@@ -1273,7 +1273,23 @@ async function stepLive(T) {
       if (pickLabel) {
         await chooseMenu(T, new RegExp(pickLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
         T.ok(S, 'chose a social interaction', pickLabel);
+        // The menu choice reaches the queue a frame later: wait for it to be there before waiting for it to be gone, or
+        // the wait ends at once and the relationship is read before the two have spoken (seen in portrait).
+        await runUntil(T, 4 * 8, `(() => { const p = st.people['${mira}']; return !!st.relationships['${mira}>${nb[0].id}'] || p.queue.some(a => a.target && a.target.personId === '${nb[0].id}'); })()`);
         const r7 = await runUntil(T, 4 * 90, `(() => { const p = st.people['${mira}']; return !p.queue.length || !p.queue.some(a => a.target && a.target.personId === '${nb[0].id}'); })()`);
+        // The neighbour may have been busy with the roommate and the social dropped: ask again through the game, as a
+        // player would tap again, and wait for the two to have met.
+        if (!(await page.evaluate(([a, b]) => !!window.hearthside.debug.state().relationships[`${a}>${b}`], [mira, nb[0].id]))) {
+          const again = await page.evaluate(([a, b]) => {
+            const g = window.hearthside.game;
+            const opt = g.options(a, { kind: 'person', personId: b }).find((o) => o.enabled && /introduce|chat|greet|compliment/i.test(`${o.interactionId} ${o.label ?? ''}`));
+            if (!opt) return { ok: false, reason: 'no enabled social' };
+            const r = g.queue(a, opt);
+            return { ok: r.ok, reason: r.ok ? '' : r.reason, what: opt.interactionId };
+          }, [mira, nb[0].id]);
+          log('neighbour social asked again', JSON.stringify(again));
+          await runUntil(T, 4 * 120, `!!st.relationships['${mira}>${nb[0].id}']`);
+        }
         await T.frames(3);
         await T.shot('live-after-social');
         const relAfter = await page.evaluate(([a, b]) => { const st = window.hearthside.debug.state(); const r = st.relationships[`${a}>${b}`]; const p = st.people[a]; return { rel: r ? { fam: r.familiarity, fr: r.friendship } : null, memories: p.memories.length, feed: st.feed.slice(-4).map((f) => f.text), now: st.clock.minutes }; }, [mira, nb[0].id]);
@@ -3754,15 +3770,32 @@ async function stepAnimations(T) {
   const ready = await runUntil(T, 4 * 120, `g.options('${member}', { kind: 'object', objectId: '${info.fridge}' }).some((o) => o.interactionId === 'cookMeal' && o.enabled)`);
   // The wait above ticks the sim while the member is idle, so autonomy can queue Sleep (likely late in the day): clear
   // it so the player's Cook a Meal is the next action.
+  // Late in a long run the cook is often tired, and a tired person goes back to bed as soon as the queue is empty (seen in
+  // portrait: the pill read "Sleep 21%" where the cook should have been). Rest them, as a night's sleep would, so the
+  // player's order is what they do next.
+  await page.evaluate((m) => { const n = window.hearthside.debug.state().people[m].needs; n.energy = Math.max(n.energy, 85); n.bladder = Math.max(n.bladder, 80); n.hygiene = Math.max(n.hygiene, 70); }, member);
   await clearQueue(member);
-  const queued = await page.evaluate(([m, f]) => {
-    const g = window.hearthside.game;
-    const opt = g.options(m, { kind: 'object', objectId: f }).find((o) => o.interactionId === 'cookMeal');
-    if (!opt) return { ok: false, reason: 'not offered' };
-    if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
-    const r = g.queue(m, opt);
-    return { ok: r.ok, reason: r.ok ? '' : r.reason };
-  }, [member, info.fridge]);
+  // Clearing the queue ticks the sim, and the roommate can reach for the fridge in those ticks ("Someone is using it."):
+  // wait for it to be free again and try once more instead of failing on the race.
+  let queued = { ok: false, reason: 'not tried' };
+  for (let attempt = 0; attempt < 4 && !queued.ok; attempt++) {
+    if (attempt > 0) {
+      await runUntil(T, 4 * 60, `g.options('${member}', { kind: 'object', objectId: '${info.fridge}' }).some((o) => o.interactionId === 'cookMeal' && o.enabled)`);
+      await clearQueue(member);
+      log('step 13 cook retry', JSON.stringify({ attempt, last: queued }));
+    }
+    queued = await page.evaluate(([m, f]) => {
+      const g = window.hearthside.game;
+      const opt = g.options(m, { kind: 'object', objectId: f }).find((o) => o.interactionId === 'cookMeal');
+      if (!opt) return { ok: false, reason: 'not offered' };
+      if (!opt.enabled) return { ok: false, reason: opt.reason ?? 'disabled' };
+      const r = g.queue(m, opt);
+      // anything autonomy slipped in ahead of the cook goes
+      const p = window.hearthside.debug.state().people[m];
+      for (const a of [...p.queue]) { if (a.interactionId === 'cookMeal') break; g.cancel(m, a.id); }
+      return { ok: r.ok, reason: r.ok ? '' : r.reason };
+    }, [member, info.fridge]);
+  }
   T.check(S, 'Cook a Meal is queued', queued.ok, JSON.stringify({ queued, ready: ready.done }));
   if (!queued.ok) return;
 

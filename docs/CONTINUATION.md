@@ -396,6 +396,16 @@ No save data changes.
   - The Quayside Baths lot exists only in worlds created after M12; old saves keep their 14 lots.
   - Rain/snow particles are capped at 1500 desktop / 600 touch and hidden by reduced motion or Weather effects off.
 - Flakes in acceptance:
+  - Step 6 "buy: the ghost tile is still visible and not covered by the panel" (landscape, 2026-11-14, also on `main`): after
+    the rotation to portrait the floating camera cluster lay on the placement preview. A real fault, fixed in the app: while
+    something is being placed the cluster counts as covered area, so the camera keeps the preview beside it (`measure` in
+    `src/ui/app.ts`). Hiding the cluster instead made the set of tappable tiles change under the ghost (step 3 then failed).
+  - Step 2 "the interaction changed the relationship" (portrait): the wait for the social to leave the queue ended before
+    the menu choice had reached it. The step now waits for it to arrive first, and asks again through the game when the
+    neighbour was busy.
+  - Step 13 "Cook a Meal is queued" / the cook's pill reads "Sleep" (portrait): a tired cook went back to bed, or the
+    roommate took the fridge in the ticks that clear the queue. The step rests the cook first, retries when the fridge is
+    taken and cancels whatever autonomy put ahead of the cook.
   - Step 2 "neighbour visible to tap". The Welcome Wagon visit ends on a clock: a slow screenshot or a long wait for a
     free social can outlast it, and the step then tapped a neighbour who had gone home (landscape and desktop,
     2026-11-05). It now checks she is still on the lot and, if not, calls `game.inviteHome` and waits for her to
