@@ -36,6 +36,7 @@ function skinnedPoints(c: ModularCharacter, regions: RegExp): THREE.Vector3[] {
 async function posed(bodyId: string, stage: LifeStage, anim: 'idle' | 'walk' | 'sitIdle' | 'sleep', t = 0.3): Promise<ModularCharacter> {
   const c = new ModularCharacter(testCache(), m, await allClips());
   await c.apply(look({ bodyId }), 'everyday', stage);
+  c.childMotion = false;            // the anchors are those of the clip itself; a child's own movement (leg swing, sway) is random
   c.play(anim, { fade: 0 });
   for (let i = 0; i < Math.round(t / 0.05) + 1; i++) c.update(0.05);
   return c;

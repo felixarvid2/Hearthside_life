@@ -128,6 +128,8 @@ export class PeopleView {
   private readonly tmp = new THREE.Vector3();
   private readonly scr = { x: 0, y: 0, visible: false };
   private overlayOn = true;
+  /** Set by GameView: how far a seat reaches in front of a sit slot's anchor (ObjectsView.seatEdge). */
+  seatProbe: ((slot: WorldSlot, floorY: number) => number | null) | null = null;
 
   constructor(private readonly assets: CharacterAssets, private readonly content: ContentDB, private readonly overlay: HTMLElement | null) {
     this.group.name = 'people';
@@ -355,6 +357,7 @@ export class PeopleView {
       e.gx = x; e.gz = z;
       const head = p.queue[0];
       e.view.setRecline(head?.interactionId === 'reclineBack' && head.phase === 'perform');
+      e.view.setChildMotion?.(!reducedMotion);
       e.view.update(dt);
       if (e.baby) {
         const holder = this.holderOf(state, e);
@@ -388,6 +391,7 @@ export class PeopleView {
         const pl = lyingPlacement({ x, y: ground, z }, e.facing, so);
         rx = pl.x; ry = pl.y; rz = pl.z; rot = pl.yaw;
       }
+      let seatEdge: number | null = null;
       if (s && e.align > 0) {
         const k = e.align * e.align * (3 - 2 * e.align);
         let ax = s.x, az = s.z, ay = s.height + sy, ar = s.facing;
@@ -399,6 +403,14 @@ export class PeopleView {
         } else if (s.kind === 'sit' || posture === 'seated') {
           const pl = seatedPlacement(anchor, s.facing, p.appearance.frame, this.assets.style, so);
           ax = pl.x; ay = pl.y; az = pl.z; ar = pl.yaw;
+          if (e.view.setSeatEdge) {
+            const edge = s.kind === 'sit' ? this.seatProbe?.(s, sy) ?? null : null;
+            // from the root, not the anchor: the figure sits a little ahead of or behind it (posture.ts seatZ)
+            seatEdge = edge === null ? null : edge + (anchor.x - pl.x) * Math.sin(s.facing) + (anchor.z - pl.z) * Math.cos(s.facing);
+            // the edge is given for the anchored position; the figure sits forward of it as far as its knees need
+            const fwd = e.view.seatForward ?? 0;
+            ax += Math.sin(s.facing) * fwd; az += Math.cos(s.facing) * fwd;
+          }
         }
         rx += (ax - rx) * k;
         rz += (az - rz) * k;
@@ -407,6 +419,7 @@ export class PeopleView {
       } else if (slot && posture === 'standing' && slot.height > 0.05 && slot.kind === 'use') {
         ry = Math.max(ground, slot.height + levelY(slot.level ?? 0)); // shower tray
       }
+      e.view.setSeatEdge?.(seatEdge);
       e.view.root.position.set(rx, ry, rz);
       e.view.root.rotation.y = rot;
       // Milestone 11.5, task H: the props in the hands follow the animated bones; a seated eater's plate is

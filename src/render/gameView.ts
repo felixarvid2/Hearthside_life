@@ -142,6 +142,7 @@ export class GameView {
   setCharacterAssets(assets: CharacterAssets): void {
     this.charAssets = assets;
     this.people = new PeopleView(assets, this.content, this.overlay);
+    this.people.seatProbe = (slot, floorY) => this.objects.seatEdge(slot, floorY);
     this.people.groundAt = (x, z) => this.groundAt(x, z);
     this.people.setActiveLevel(this.activeLevel);
     this.people.setProgressScope(this.opts.actionProgress ?? 'household');

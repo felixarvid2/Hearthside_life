@@ -265,6 +265,25 @@ No save data changes.
     buzz cut, toddler tee and shorts with sneakers, others the manifest defaults. Hair colour logic is unchanged.
   - Review: `dev/stages.html` (`node dev/shoot-stages.mjs`) draws the family lineup in idle, walk, sit, lie and carry;
     the kept shots are in `dev/shots/quaternius-stages/`.
+- **Children's movement and seating (2026-11-14).**
+  - `StageLook.motion` (`stagePose.applyChildMotion`, on in `ModularCharacter.applyPoseFx`; off with reduced motion): a standing
+    toddler, child or teen shifts its weight and looks about; a toddler walks with the arms out and rocks over the standing
+    foot; a seated child's shins swing. The clips themselves are still the shared ones (the sitting clip is a still pose).
+  - Seats: `ObjectsView.seatEdge` reads the seat's front edge off the model; `PeopleView` gives it to the figure
+    (`setSeatEdge`). A figure sits as far forward as its knees need to clear the edge (`seatForward`, every stage: sofas are
+    deeper than a thigh); a small child whose knees would not get there sits with the legs out on the seat.
+  - Three faults found with `node dev/shoot-kids-seats.mjs` (children on every seat and bed of the starter home, measured
+    against the furniture; a few shots kept in `dev/shots/kids-seats/`): the stage fit was measured on the current pose, so a
+    look applied while sitting or lying (pyjamas) left a child up to a tenth too large and 9-15 cm inside its chair or bed
+    (`StageRig.apply` now measures on the bind pose); a body built while its person faced the back half of the circle was
+    mirrored along z from then on (sat through chair backs; `ModularCharacter` kept the root's rotation as a quaternion);
+    grown-ups' shins went through sofa cushions. Tests: `childMotion.test.ts`.
+  - Checks at the merge (the user asked to stop the runs and merge): typecheck, 2530 unit tests, content:check, build, e2e,
+    acceptance landscape 381/381 and desktop 369/369. Acceptance portrait 380/382: step 15 "nudging the room gives a valid
+    preview" failed once with "Nora is in the way" and was not run again, so it is open whether that is this change (people
+    sit further forward now) or the step's timing. `e2e:creator` and `e2e:creator-modular` were stopped half way.
+  - Not done: the classic, Natural and Detailed styles (`CharacterView`) have none of this; only the starter home's six seat
+    and bed designs were checked.
 - **Creator (Stage C).** While Settings > Character style is "Quaternius" (`CreatorSession.isModular()`, every life stage), the Face & Body, Hair and Clothing steps edit `appearance.modular` instead of the classic
   looks (UI in `src/ui/creator/steps/modularParts.ts`; the steps branch on `ctx.modular()`).
   - Session API (`src/characters/creator.ts`, all one undoable `mutateMember` each): `setModularBody`, `setModularHair`,
