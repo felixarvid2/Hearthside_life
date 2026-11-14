@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 445,
+ "cards": 31,
+ "fringe_trimmed": 5,
+ "hat_key": 900,
+ "id": "long_side_part",
+ "lowest": 1.364,
+ "pushed": 144,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 3632,
+ "source": "authoring/characters/hair/long_side_part/cards.json",
+ "source_tris": 12792,
+ "triangles": 4077
+}

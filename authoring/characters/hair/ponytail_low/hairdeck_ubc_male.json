@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 500,
+ "cards": 39,
+ "fringe_trimmed": 4,
+ "hat_key": 906,
+ "id": "ponytail_low",
+ "lowest": 1.456,
+ "pushed": 108,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2612,
+ "source": "authoring/characters/hair/ponytail_low/cards.json",
+ "source_tris": 9248,
+ "triangles": 3112
+}

@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 269,
+ "cards": 30,
+ "fringe_trimmed": 1,
+ "hat_key": 1031,
+ "id": "undercut",
+ "lowest": 1.696,
+ "pushed": 85,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1508,
+ "source": "authoring/characters/hair/undercut/cards.json",
+ "source_tris": 5190,
+ "triangles": 1777
+}

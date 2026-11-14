@@ -120,6 +120,10 @@ if a.get("morphs"):
     with open(a["morphs"]) as f:
         morph_report = _morphs.add_morphs(body, arm, _json.load(f))
     print("MORPHS", _json.dumps(morph_report))
+if a.get("young"):
+    # the child's body and face as one more shape key (stage_morph.py); body-shell garments copy it like the others
+    import json as _json2, stage_morph as _stage
+    print("STAGE_MORPH", _json2.dumps(_stage.add_key(body, arm, _stage.load_spec(a["young"] if isinstance(a["young"], str) else None))))
 
 # Materials get stable names: skin regions are recoloured at runtime.
 mat_names = []

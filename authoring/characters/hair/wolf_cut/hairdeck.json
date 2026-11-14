@@ -1,0 +1,6 @@
+{
+ "prompt": "wolf cut, shaggy layered hair with volume at the crown and thinner longer ends at the neck, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

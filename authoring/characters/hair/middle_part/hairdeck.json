@@ -1,0 +1,6 @@
+{
+ "prompt": "medium-short men's haircut with a middle part, the top falling to both sides of the forehead, brown hair, young man",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

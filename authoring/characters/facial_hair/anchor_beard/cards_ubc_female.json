@@ -1,0 +1,12 @@
+{
+ "body": "ubc_female",
+ "id": "anchor_beard",
+ "lock_triangles": 1710,
+ "locks": 57,
+ "regions": [
+  "chin",
+  "mustache",
+  "soul"
+ ],
+ "triangles": 1934
+}

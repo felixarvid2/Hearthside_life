@@ -1,0 +1,19 @@
+{
+ "body": "ubc_female",
+ "cap_faces": 482,
+ "cards": 41,
+ "fringe_trimmed": 4,
+ "hat_key": 805,
+ "id": "ivy_league",
+ "lowest": 1.516,
+ "pushed": 110,
+ "scale": [
+  1.5676,
+  1.6254,
+  1.5965
+ ],
+ "single_sided": 1880,
+ "source": "authoring/characters/hair/ivy_league/cards.json",
+ "source_tris": 5852,
+ "triangles": 2362
+}

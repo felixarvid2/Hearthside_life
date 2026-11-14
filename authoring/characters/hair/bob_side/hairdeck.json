@@ -1,0 +1,6 @@
+{
+ "prompt": "chin-length bob with a deep side part, hair swept to one side, brown hair, young woman",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

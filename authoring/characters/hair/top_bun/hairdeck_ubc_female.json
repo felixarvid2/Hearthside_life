@@ -1,0 +1,19 @@
+{
+ "body": "ubc_female",
+ "cap_faces": 531,
+ "cards": 38,
+ "fringe_trimmed": 8,
+ "hat_key": 1552,
+ "id": "top_bun",
+ "lowest": 1.394,
+ "pushed": 103,
+ "scale": [
+  1.5676,
+  1.6254,
+  1.5965
+ ],
+ "single_sided": 3180,
+ "source": "authoring/characters/hair/top_bun/cards.json",
+ "source_tris": 11096,
+ "triangles": 3711
+}

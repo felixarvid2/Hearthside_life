@@ -69,18 +69,18 @@ export const STAGE_LYING: Partial<Record<LifeStage, { backY: number; centerZ: nu
 /** Seat anchors of the modular stage figures (stage proportions on the UBC bodies), per body: a = ubc_male, b = ubc_female. Measured by
  * tests/unit/characters3d/modular/stageAnchors.test.ts (`MEASURE=1` prints them), in world units with the figure's root scale applied. */
 export const MODULAR_STAGE_SEATED: Partial<Record<LifeStage, { a: { seatHeight: number; seatZ: number }; b: { seatHeight: number; seatZ: number } }>> = {
-  baby: { a: { seatHeight: 0.123, seatZ: -0.055 }, b: { seatHeight: 0.114, seatZ: -0.082 } },
-  toddler: { a: { seatHeight: 0.182, seatZ: -0.064 }, b: { seatHeight: 0.177, seatZ: -0.097 } },
-  child: { a: { seatHeight: 0.283, seatZ: -0.064 }, b: { seatHeight: 0.283, seatZ: -0.117 } },
-  teen: { a: { seatHeight: 0.438, seatZ: -0.092 }, b: { seatHeight: 0.441, seatZ: -0.153 } },
+  baby: { a: { seatHeight: 0.118, seatZ: -0.072 }, b: { seatHeight: 0.111, seatZ: -0.082 } },
+  toddler: { a: { seatHeight: 0.188, seatZ: -0.071 }, b: { seatHeight: 0.179, seatZ: -0.1 } },
+  child: { a: { seatHeight: 0.303, seatZ: -0.08 }, b: { seatHeight: 0.297, seatZ: -0.102 } },
+  teen: { a: { seatHeight: 0.446, seatZ: -0.083 }, b: { seatHeight: 0.446, seatZ: -0.12 } },
   elder: { a: { seatHeight: 0.448, seatZ: -0.094 }, b: { seatHeight: 0.452, seatZ: -0.178 } },
 };
 /** Lying anchors of the modular stage figures. */
 export const MODULAR_STAGE_LYING: Partial<Record<LifeStage, { a: { backY: number; centerZ: number }; b: { backY: number; centerZ: number } }>> = {
-  baby: { a: { backY: -0.048, centerZ: -0.175 }, b: { backY: -0.045, centerZ: -0.169 } },
-  toddler: { a: { backY: -0.051, centerZ: -0.157 }, b: { backY: -0.05, centerZ: -0.151 } },
-  child: { a: { backY: -0.048, centerZ: -0.167 }, b: { backY: -0.05, centerZ: -0.16 } },
-  teen: { a: { backY: -0.06, centerZ: -0.144 }, b: { backY: -0.065, centerZ: -0.134 } },
+  baby: { a: { backY: -0.044, centerZ: -0.178 }, b: { backY: -0.037, centerZ: -0.172 } },
+  toddler: { a: { backY: -0.045, centerZ: -0.155 }, b: { backY: -0.037, centerZ: -0.15 } },
+  child: { a: { backY: -0.041, centerZ: -0.157 }, b: { backY: -0.037, centerZ: -0.149 } },
+  teen: { a: { backY: -0.056, centerZ: -0.144 }, b: { backY: -0.06, centerZ: -0.134 } },
   elder: { a: { backY: -0.072, centerZ: -0.158 }, b: { backY: -0.077, centerZ: -0.147 } },
 };
 

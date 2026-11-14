@@ -240,9 +240,16 @@ No save data changes.
   - Dev check: `dev/wardrobe.html` takes `outfit=top:id,bottom:id` and `morph=weight:1,...`.
   - CharacterStudio ports (MIT): `creator/framing.ts`, `restrictions.ts` (used by `resolveLook`),
     `tools/characters/thumbnails.mjs`, and the dev-only wardrobe grid `dev/wardrobe.html` (`npm run dev`).
+- **Bodies in the creator.** Four: Broad (`ubc_male`), Curvy (`ubc_female`), and since 2026-11-13 the second builds Lean
+  (`ubc_male_lean`) and Slim (`ubc_female_slim`): an everyday man and woman drawn from the base bodies' files with the
+  `build2` and `face2` morphs, their own bone proportions and a softer skin texture, at every life stage
+  (`BodyPresetDef.base` / `.shape` / `.proportions` / `.skin`; `tools/characters/README.md` step 1, "Second builds";
+  tests in `tests/unit/characters3d/modular/secondBuilds.test.ts`; shots `dev/shots/quaternius-stages/idle-lean.png`,
+  `idle-slim.png`). People without a stored look keep the default body of their frame; Random person rolls all four.
 - **Life stages.** The two UBC bodies are the only meshes; a stage is a profile of bone scales applied at runtime.
   - `stageProportions.ts`: `STAGE_PROPORTIONS` (height over the adult, head, neck, torso, hips, shoulders, upper/lower arm, hand, thigh,
-    shin, foot) and `StageRig`. Every bone of the profile gets a uniform world scale `e` (uniform, so rotated bones never shear); its local
+    shin, foot) and `StageRig`. `young` is the influence of the `young` morph (the child's body and face; baby, toddler and
+    child 1, teen 0.4), set in `ModularCharacter.refreshAppearance` on the body and on parts whose `followsMorphs` has it. Every bone of the profile gets a uniform world scale `e` (uniform, so rotated bones never shear); its local
     scale is `e / e(parent)`, so a scaled bone does not inflate its children and garments, hair and hats (skinned to the same bones) follow.
     The pelvis is lowered so the soles stay on the floor, then `ModularCharacter.root.scale` brings the crown to the stage height.
   - Animations: `retarget.ts` scales the pelvis/root position tracks by the body's own hip ratio times the stage's (`StageFit.hipRatio`);
@@ -313,11 +320,25 @@ No save data changes.
 - **Known gaps.**
   - Garments read tight: the body-shell method flattens most folds.
   - The hoodie hood is a simple measured roll; there is no hood up.
-  - Hair clumps are still a little spiky at the hairline.
+  - Hair (2026-11-14): 56 of the 60 hairstyles are HairDeck hair cards (stylized locks; `tools/characters/README.md`
+    step 4, `tools/characters/hairdeck/`), 14 of the 16 beards are locks from `build_beard_cards.py`. Left as they were:
+    afro, buzz_cut, receding, top_knot and the two stubbles. HairDeck is trained on anime characters: box_braids, cornrows and locs_long came out as tails with braids, the "long"
+    styles end at the shoulder blades, ponytails keep side strands; better reference pictures or more seeds are the way to redo
+    one (`build.py cards <id>` after deleting its folder under `~/authoring-cache/hairdeck/out`). Where the result is
+    another style than the id says, the label and tags were changed instead (`tools/characters/hairdeck/choices.json`:
+    box_braids is "Pigtails with braids", waist_length "Extra long", ...); ids stay. Under a hat the hair lies down: each
+    HairDeck hairstyle has a `hat` shape key and the six crown hats have `flattensHair` (`hairHat.test.ts`,
+    `dev/shots/hair-new/hats-*.png`).
   - The ponytail thumbnail is a front view, so the tail barely shows.
   - Very light skin looks golden (skin gain).
   - Under this style people's classic clothes, hair and accessories are not drawn.
-  - Stage proportions are bone scaling by eye (see Life stages), not a per-age mesh: a child's face is the adult face on a larger head.
+  - Stage proportions are bone scaling by eye (see Life stages) plus the `young` morph (2026-11-13: a child's soft body and
+    face as one shape key on both bodies and on every garment, accessory and hairstyle), a child's skin texture
+    (`BodyPresetDef.youngSkin`) and a narrower standing pose (`StageLook.stance`); see `tools/characters/README.md` step 1
+    (`stage_morph.py`, `apply_stage_morph.py`, `young_skin.py`). Still adult: the deep-set eyes and the clips themselves
+    (a child idles and walks like a grown-up, only narrower). A faint trace of the chest can show on a baby's or toddler's
+    top close up. The keys (`young`, `build2`, `face2`) add about 66 MB to `public/assets/characters/modular` (a target with normals per
+    part and key).
   - Garment UVs come from a smart projection (fine for solid colours).
   - Morphs are one shape key each: no corrective shapes, and hair is not adjusted for jaw width.
   - Real-device performance is not measured.

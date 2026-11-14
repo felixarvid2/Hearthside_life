@@ -1,0 +1,20 @@
+{
+ "face": 0,
+ "relax": 0.85,
+ "bust": 0.75,
+ "seat": 0.5,
+ "pad": {
+  "belly": 0.012,
+  "hips": 0.0,
+  "chest": -0.012,
+  "upperarm_l": -0.01,
+  "upperarm_r": -0.01,
+  "forearm_l": -0.006,
+  "forearm_r": -0.006,
+  "thigh_l": -0.008,
+  "thigh_r": -0.008,
+  "calf_l": -0.004,
+  "calf_r": -0.004,
+  "neck": -0.006
+ }
+}

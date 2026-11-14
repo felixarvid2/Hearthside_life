@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 482,
+ "cards": 61,
+ "fringe_trimmed": 3,
+ "hat_key": 886,
+ "id": "short_crop",
+ "lowest": 1.567,
+ "pushed": 191,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 2526,
+ "source": "authoring/characters/hair/short_crop/cards.json",
+ "source_tris": 6942,
+ "triangles": 3008
+}

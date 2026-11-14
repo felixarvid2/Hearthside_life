@@ -1,0 +1,13 @@
+{
+ "body": "ubc_male",
+ "id": "mutton_chops",
+ "lock_triangles": 5910,
+ "locks": 197,
+ "regions": [
+  "cheeks",
+  "jaw",
+  "mustache",
+  "sideburns"
+ ],
+ "triangles": 6524
+}

@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 456,
+ "cards": 81,
+ "fringe_trimmed": 11,
+ "hat_key": 1638,
+ "id": "braided_ponytail",
+ "lowest": 1.44,
+ "pushed": 110,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 4368,
+ "source": "authoring/characters/hair/braided_ponytail/cards.json",
+ "source_tris": 14162,
+ "triangles": 4824
+}

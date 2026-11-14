@@ -1,0 +1,12 @@
+{
+ "body": "ubc_male",
+ "id": "goatee",
+ "lock_triangles": 2130,
+ "locks": 71,
+ "regions": [
+  "chin",
+  "mustache",
+  "soul"
+ ],
+ "triangles": 2408
+}

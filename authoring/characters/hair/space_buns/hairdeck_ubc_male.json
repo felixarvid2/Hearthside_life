@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 487,
+ "cards": 86,
+ "fringe_trimmed": 14,
+ "hat_key": 1816,
+ "id": "space_buns",
+ "lowest": 1.458,
+ "pushed": 278,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 5008,
+ "source": "authoring/characters/hair/space_buns/cards.json",
+ "source_tris": 16802,
+ "triangles": 5495
+}

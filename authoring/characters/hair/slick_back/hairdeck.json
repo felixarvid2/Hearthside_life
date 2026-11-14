@@ -1,0 +1,6 @@
+{
+ "prompt": "slicked back haircut, medium-length hair combed straight back from the forehead, brown hair, young man",
+ "seed": 1,
+ "options": {},
+ "tool": "HairDeck (Apache-2.0), tools/characters/hairdeck/build.py"
+}

@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 316,
+ "cards": 35,
+ "fringe_trimmed": 5,
+ "hat_key": 1049,
+ "id": "crew_cut",
+ "lowest": 1.669,
+ "pushed": 163,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1678,
+ "source": "authoring/characters/hair/crew_cut/cards.json",
+ "source_tris": 6230,
+ "triangles": 1994
+}

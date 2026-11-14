@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 425,
+ "cards": 109,
+ "fringe_trimmed": 9,
+ "hat_key": 2244,
+ "id": "curly_medium",
+ "lowest": 1.565,
+ "pushed": 130,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 6166,
+ "source": "authoring/characters/hair/curly_medium/cards.json",
+ "source_tris": 21118,
+ "triangles": 6591
+}

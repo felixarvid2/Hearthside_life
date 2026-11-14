@@ -1,0 +1,11 @@
+{
+ "body": "ubc_male",
+ "id": "van_dyke",
+ "lock_triangles": 1530,
+ "locks": 51,
+ "regions": [
+  "chin",
+  "mustache"
+ ],
+ "triangles": 1724
+}

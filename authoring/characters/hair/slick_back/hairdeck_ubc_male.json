@@ -1,0 +1,19 @@
+{
+ "body": "ubc_male",
+ "cap_faces": 468,
+ "cards": 39,
+ "fringe_trimmed": 4,
+ "hat_key": 707,
+ "id": "slick_back",
+ "lowest": 1.561,
+ "pushed": 121,
+ "scale": [
+  1.5624,
+  1.6171,
+  1.5897
+ ],
+ "single_sided": 1756,
+ "source": "authoring/characters/hair/slick_back/cards.json",
+ "source_tris": 5938,
+ "triangles": 2224
+}
