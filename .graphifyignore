@@ -1,0 +1,15 @@
+# Assets, generated output and build trees: not code
+public/
+android/
+release-builds/
+dist/
+dev/shots/
+dev/**/shots/
+**/*.glb
+**/*.png
+**/*.jpg
+**/*.webp
+**/*.ogg
+.tokeneconomizer/
+authoring/**/*.json
+dev/ds-tasks/
