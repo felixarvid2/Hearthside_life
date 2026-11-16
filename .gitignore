@@ -45,3 +45,6 @@ authoring/characters/hair/*/*.blend
 authoring/characters/facial_hair/*/*.blend
 authoring/characters/accessories/*/*.blend
 release-builds/
+
+# graphify knowledge graph: rebuilt locally with `graphify update .`
+graphify-out/
