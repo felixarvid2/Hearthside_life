@@ -468,7 +468,7 @@ No save data changes.
   - Gaps closed in social gaps pass (see ARCHITECTURE.md): weddings, gifts as objects, venue events, group chat, community events,
     town life (job changes, moving households), furniture choice when moving, town children for old saves, the sitter for
     other households, the jog track, `Person.carriedBy`, the phone map entry and `LotInfo.usable`. What is still simple:
-    - Taken furniture goes into the household inventory; it is not re-placed in the new home automatically.
+    - Taken furniture goes into the household inventory. The move dialog's "Place it in the new home" toggle (default on, `MoveOptions.autoPlace`) then places it automatically (`src/sim/autoPlace.ts`: same room kind first, ground floor first, validatePlacement rules, capped at 6000 validator calls); pieces that do not fit stay in the inventory and the feed says so. NPC town moves are unchanged (they take no furniture).
     - A wedding's ceremony is a stage with a feed line, a goal, a bond change and memories; the couple are not choreographed
       (no walking to an altar, no officiant).
     - Gifts are parcels at the recipient's lot (put away after two weeks); there is no unwrapping or re-gifting interaction.

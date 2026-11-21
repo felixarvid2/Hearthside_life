@@ -95,15 +95,17 @@ export function openNeighbourhood(sh: Shell, opts: { lotId?: Id } = {}): Neighbo
   /** The move dialog: what it costs, and what happens to the furniture of the old home (stay / come along / sell). */
   const confirmMove = async (lot: LotInfo) => {
     let furniture: FurnitureChoice = 'leave';
-    const first = api.movePreview?.(lot.id, { furniture });
+    let autoPlace = true;
+    const first = api.movePreview?.(lot.id, { furniture, autoPlace });
     if (!first) return;
     if (!first.ok) { toast(first.reason ?? 'That move is not possible.', 'warning'); return; }
     const dlg = modal({ title: moveSummary(first, lot.name).title });
     dlg.el.classList.add('nbm-move-dialog');
     const choiceBox = h('div', { class: 'nbm-furniture', role: 'radiogroup', ariaLabel: 'The furniture' });
+    const placeBox = h('label', { class: 'nbm-autoplace' });
     const linesBox = h('ul', { class: 'confirm-lines' });
     const go = button({ label: 'Move', variant: 'primary', onClick: () => {
-      const r = api.moveHousehold?.(lot.id, { furniture }) ?? { ok: false as const, reason: 'Moving is not available here.' };
+      const r = api.moveHousehold?.(lot.id, { furniture, autoPlace }) ?? { ok: false as const, reason: 'Moving is not available here.' };
       dlg.close();
       if (!r.ok) { sh.sound('error'); toast(r.reason, 'warning'); refresh(true); return; }
       sh.sound('money');
@@ -111,7 +113,7 @@ export function openNeighbourhood(sh: Shell, opts: { lotId?: Id } = {}): Neighbo
     } });
     dlg.footer.append(button({ label: 'Cancel', variant: 'ghost', onClick: () => dlg.close() }), go);
     const draw = () => {
-      const pv = api.movePreview?.(lot.id, { furniture }) ?? first;
+      const pv = api.movePreview?.(lot.id, { furniture, autoPlace }) ?? first;
       const s = moveSummary(pv, lot.name);
       go.textContent = s.confirm;
       go.disabled = !pv.ok;
@@ -124,9 +126,14 @@ export function openNeighbourhood(sh: Shell, opts: { lotId?: Id } = {}): Neighbo
         b.addEventListener('click', () => { furniture = c.id; sh.sound('click'); draw(); });
         return b;
       }));
+      placeBox.hidden = n === 0 || furniture !== 'take';
+      const box = h('input', { type: 'checkbox', attrs: { 'aria-label': 'Place it in the new home' } }) as HTMLInputElement;
+      box.checked = autoPlace;
+      box.addEventListener('change', () => { autoPlace = box.checked; sh.sound('click'); draw(); });
+      placeBox.replaceChildren(box, h('span', { text: 'Place it in the new home' }));
     };
     draw();
-    dlg.body.append(choiceBox, linesBox);
+    dlg.body.append(choiceBox, placeBox, linesBox);
   };
 
   const confirmSwitch = async (householdId: Id, householdName: string) => {
