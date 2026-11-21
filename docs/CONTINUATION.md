@@ -493,7 +493,7 @@ No save data changes.
 - Garments: a faint seam on the thigh where swimwear leaves the baked shorts visible; folds are static; seated skirts open
   like a lampshade.
 - AI hair: box-braids and twin-tails have flat parts; some bangs stop at eye level; the backs are invented by TRELLIS.
-- Weddings are events with a choreographed ceremony (above). Gifts are chosen from the catalog (picker, priced per gift); the autonomy default for a gift is "trinket". The date social still plans the date at home (the event planner itself can use venues).
+- Weddings are events with a choreographed ceremony (above). Gifts are chosen from the catalog (picker, priced per gift); the autonomy default for a gift is "trinket". The date social plans the date at the venue when it is asked there and the venue can take it (open hours, notice), otherwise at home (`planEventFromSocial`).
 - Room move, resize and duplicate are not implemented. Delete room is.
 - Only SwiftShader emulation so far; record real devices in the TEST_CHECKLIST device log.
 

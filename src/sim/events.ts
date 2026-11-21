@@ -382,6 +382,11 @@ export function planEvent(ctx: SimCtx, req: PlanRequest, opts: { skipConsent?: b
 
 /** An accepted invitation in person (or on the phone): plans the event for this evening. A failure is told kindly. */
 export function planEventFromSocial(ctx: SimCtx, actor: Person, target: Person, type: HomeEventType): void {
+  // Asked while out at a venue (a cafe, the park...): hold it there when the venue can take it, otherwise at home as before.
+  const here = lotLoc(actor)?.lotId;
+  const venue = here && ctx.state.lots[here]?.kind === 'venue' ? here : undefined;
+  const atVenue = venue ? planEvent(ctx, { type, hostId: actor.id, guestIds: [target.id], lotId: venue }, { skipConsent: true }) : null;
+  if (atVenue?.ok) return;
   const r = planEvent(ctx, { type, hostId: actor.id, guestIds: [target.id] }, { skipConsent: true });
   if (!r.ok && householdOf(ctx, actor)?.isPlayable) {
     addFeed(ctx.state, ctx.events, 'social', `${target.firstName} said yes, but it will have to wait: ${r.reason}`, actor.id);
