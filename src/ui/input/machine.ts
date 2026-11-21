@@ -74,6 +74,8 @@ export class InputMachine {
   private multi = false;
   /** A primary drag draws instead of panning (Build tools that drag out a shape). */
   private drawing = false;
+  /** Optional check on where a draw-mode press began (screen px); false means the press pans instead (a room drag that starts outside the room). */
+  private drawGate: ((x: number, y: number) => boolean) | null = null;
 
   constructor(o: InputMachineOptions = {}) {
     this.tapSlop = o.tapSlop ?? TAP_SLOP;
@@ -86,6 +88,7 @@ export class InputMachine {
   /** Switches draw mode on or off. A drawing in progress is not affected until it ends. */
   setDrawMode(on: boolean): void { this.drawing = on; }
   get drawMode(): boolean { return this.drawing; }
+  setDrawGate(gate: ((x: number, y: number) => boolean) | null): void { this.drawGate = gate; }
   /** Number of pointers currently held. */
   get pointerCount(): number { return this.pointers.size; }
   isTracking(id: number): boolean { return this.pointers.has(id); }
@@ -138,7 +141,7 @@ export class InputMachine {
         if (p.id !== this.primary) return [];
         const dist = Math.hypot(p.x - tr.startX, p.y - tr.startY);
         if (dist < this.tapSlop) return [];
-        if (this.drawing && tr.button === 0) {
+        if (this.drawing && tr.button === 0 && (!this.drawGate || this.drawGate(tr.startX, tr.startY))) {
           this.st = 'drawing';
           return [{ type: 'drawStart', x: tr.startX, y: tr.startY, kind: tr.kind }, { type: 'draw', x: p.x, y: p.y, kind: tr.kind }];
         }
