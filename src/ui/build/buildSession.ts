@@ -296,8 +296,11 @@ export class BuildSession {
     const g = this.ground(x, y);
     if (!g) return false;
     const level = this.target.level ?? 0;
+    const t = this.api.buildTool();
+    // The preview sits at the current offset: a press on the moved preview maps back to the room's own tiles.
+    const ox = t && t.kind === 'roomEdit' ? t.dx ?? 0 : 0, oz = t && t.kind === 'roomEdit' ? t.dz ?? 0 : 0;
     const room = this.api.roomAt({ x: Math.floor(this.target.from.x), z: Math.floor(this.target.from.z) }, level);
-    const under = this.api.roomAt({ x: Math.floor(g.x), z: Math.floor(g.z) }, level);
+    const under = this.api.roomAt({ x: Math.floor(g.x) - ox, z: Math.floor(g.z) - oz }, level);
     return !!room && !room.outdoor && under?.uid === room.uid;
   }
 
