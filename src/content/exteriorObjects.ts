@@ -8,6 +8,7 @@
 
 import { dollars } from '../core/money';
 import { EXTERIOR_BOUNDS } from './exteriorModels';
+import { applyFurnishingUse } from './furnishingUse';
 import type { FinishRegion, ObjectDef, ObjectSlot, PriceTier, StairSpec, Swatch } from './types';
 
 type Vec3 = [number, number, number];
@@ -292,4 +293,5 @@ export const STAIR_OBJECTS: ObjectDef[] = [
 ];
 
 /** Every exterior ObjectDef (the registry in content/index.ts adds them to the catalogue). */
-export const EXTERIOR_OBJECTS: ObjectDef[] = [...GARDEN_OBJECTS, ...STAIR_OBJECTS];
+/** The furnishing-use table (shelter, shade tags, blurbs) applies to the outdoor objects too, as it does to OBJECTS. */
+export const EXTERIOR_OBJECTS: ObjectDef[] = applyFurnishingUse([...GARDEN_OBJECTS, ...STAIR_OBJECTS]);

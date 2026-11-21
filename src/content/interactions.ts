@@ -348,7 +348,7 @@ const HOUSEWORK: InteractionDef[] = [
     autonomy: { enabled: true, ads: {}, tags: ['cleaning', 'chore', 'dishes'] },
   }),
   def({
-    id: 'unwrapGift', ages: ['toddler', 'child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Unwrap Gift', description: 'Open a gift parcel meant for your household.',
+    id: 'unwrapGift', ages: ['child', 'teen', 'youngAdult', 'adult', 'elder'], name: 'Unwrap Gift', description: 'Open a gift parcel meant for your household.',
     icon: 'star', kind: 'item', itemKinds: ['gift'], behavior: 'unwrapGift', posture: 'standing',
     anims: { perform: 'pickUp' }, duration: { kind: 'fixed', minutes: 3 },
     autonomy: { enabled: false, ads: {}, tags: ['gift'] },

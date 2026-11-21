@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { MINUTES_PER_DAY, START_MINUTE, TICK_MINUTES } from '../../../src/core/clock';
 import { OBJECTS } from '../../../src/content/objects';
+import { EXTERIOR_OBJECTS } from '../../../src/content/exteriorObjects';
 import type { ContentDB, ObjectDef } from '../../../src/content/types';
 import type { PlacedObject } from '../../../src/core/types';
 import { newId } from '../../../src/core/ids';
@@ -86,8 +87,9 @@ describe('shade as shelter', () => {
 
 describe('covers and window awnings', () => {
   it('the pergola, canopy and patio awning shelter exactly their own footprint', () => {
-    for (const id of ['garden-pergola', 'garden-canopy', 'garden-awning']) expect(OBJECTS.find((o) => o.id === id)?.shelter).toBe(0);
-    expect(OBJECTS.find((o) => o.id === 'garden-pergola')?.blocksMovement).toBe(false);
+    for (const id of ['garden-pergola', 'garden-canopy', 'garden-awning']) expect(EXTERIOR_OBJECTS.find((o) => o.id === id)?.shelter).toBe(0);
+    expect(EXTERIOR_OBJECTS.find((o) => o.id === 'garden-arbour')?.shelter).toBe(1);
+    expect(EXTERIOR_OBJECTS.find((o) => o.id === 'garden-pergola')?.blocksMovement).toBe(false);
   });
 
   it('an awning window shades the outdoor tile in front of it (the hood side, mirrored by flip), nothing else', () => {
