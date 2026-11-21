@@ -7,7 +7,7 @@ import { isAdult, romanceInterest } from '../core/relations';
 import { OUTFIT_CATEGORIES } from '../core/types';
 import { dayIndex } from '../core/clock';
 import type { ActionInstance, OutfitCategory, Person } from '../core/types';
-import { SKILL_BOOKS, behaviorFor, freeUsePointExists } from './behaviors';
+import { SKILL_BOOKS, behaviorFor, freeUsePointExists, usePointBlockedReason } from './behaviors';
 import { dirtOf, isBroken, wearOf } from './housekeeping';
 import { repairFee } from './housework';
 import type { SimCtx } from './context';
@@ -66,7 +66,7 @@ export function requestReason(ctx: SimCtx, p: Person, req: ActionRequest, transi
   const def = interactionDef(ctx, req.interactionId);
   if (!def) return null;
   if (def.duration.kind === 'untilFull' && p.needs[def.duration.need] >= 95) return `${NEED_LABELS[def.duration.need]} is already full.`;
-  if (def.kind === 'object' && def.behavior !== 'callRepair' && req.target.kind === 'object' && !freeUsePointExists(ctx, p, def, req.target.objectId)) return 'Someone is using it.';
+  if (def.kind === 'object' && def.behavior !== 'callRepair' && req.target.kind === 'object' && !freeUsePointExists(ctx, p, def, req.target.objectId)) return usePointBlockedReason(ctx, p, def, req.target.objectId);
   return null;
 }
 

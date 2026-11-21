@@ -354,6 +354,7 @@ These ids are used across modules and must exist with these meanings.
 | `cleanObject` | `clean` | tag `cleanable`; scrubs dirt to 0; minutes = 6 + 24 x dirt, faster with Handiness |
 | `washDishes` | `washDishes` | item (dishes); pick up, carry to a working `sink`/`dishes` object, wash; item removed on completion |
 | `mopFloor` | `mop` | item (mess); wipes a puddle, spill or crumbs |
+| `unwrapGift` | `unwrapGift` | item (gift parcel of the actor's household); 3 minutes, parcel removed, feed line, `giftReceived` moodlet unless disliked; no autonomy |
 | `tidyUp` | `tidy` | self; takes 0.2 dirt off cleanable things within 5 tiles and sweeps crumbs |
 | `repairObject` | `repair` | tags `plumbing`/`appliance`/`electronics`, only when broken; success by Handiness/Logic/Programming, failures can shock or splash |
 | `serviceObject` | `service` | same tags; removes wear so the object breaks less often |

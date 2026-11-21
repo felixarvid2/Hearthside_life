@@ -60,6 +60,7 @@ export function resolveSlot(obj: PlacedObject, def: ObjectDef, slot: ObjectSlot)
     facing: rotateFacing(slot.facing, obj.rot),
     approach: obj.level > 0 ? { x: obj.x + a.x, z: obj.z + a.z, level: obj.level } : { x: obj.x + a.x, z: obj.z + a.z },
     posture: slot.posture,
+    ...(slot.excludes ? { excludes: slot.excludes } : {}),
     ...(obj.level > 0 ? { level: obj.level } : {}),
   };
 }

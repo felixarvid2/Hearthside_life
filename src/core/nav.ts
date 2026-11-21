@@ -29,6 +29,8 @@ export interface WorldSlot {
   /** Milestone 9: floor level of the object (absent = 0). */
   level?: number;
   posture: Posture;
+  /** Ids of other slots of the same object that cannot be in use together with this one (see ObjectSlot.excludes). */
+  excludes?: string[];
 }
 
 export interface NavProvider {

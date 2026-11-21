@@ -86,6 +86,8 @@ export interface ObjectSlot {
   approach: [number, number];
   /** Posture while using the slot. */
   posture: Posture;
+  /** Ids of other slots on the same object that cannot be in use at the same time (the exclusion works both ways). */
+  excludes?: string[];
 }
 
 export interface FinishRegion {
