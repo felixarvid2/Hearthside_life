@@ -370,7 +370,7 @@ No save data changes.
   - The game socials (`playPoolTogether` and the others) only need the object somewhere on the lot and level; the pair do not walk to it.
   - The sofa bed's `sleep` slot and its two sit slots can be used at the same time (a sleeper and a sitter overlap).
   - Room edits work on rectangular rooms only; moving a room never moves people (anyone inside blocks it). Moving is free, copying and
-    resizing are priced like building. There is no drag handle on the room: the arrow pad moves one tile per press.
+    resizing are priced like building. The room move tool can also be dragged: press on the room and drag (mouse or one finger) to move it tile by tile; the arrow pad moves one tile per press.
   - The recliner lean and the baby curl are bone poses measured by eye (no render check ran in CI); look at them in the browser
     (select a person at a recliner, open the baby's crib).
 
