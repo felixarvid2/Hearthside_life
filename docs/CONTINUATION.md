@@ -368,7 +368,7 @@ No save data changes.
 
 - Milestone 13 (furnishings, rooms, babies; this branch):
   - The game socials (`playPoolTogether` and the others) only need the object somewhere on the lot and level; the pair do not walk to it.
-  - The sofa bed's `sleep` slot and its two sit slots can be used at the same time (a sleeper and a sitter overlap).
+  - The sofa bed's `sleep` slot excludes its two sit slots (`ObjectSlot.excludes`, checked both ways in `candidateFree`): nobody sits while someone sleeps and the other way round.
   - Room edits work on rectangular rooms only; moving a room never moves people (anyone inside blocks it). Moving is free, copying and
     resizing are priced like building. There is no drag handle on the room: the arrow pad moves one tile per press.
   - The recliner lean and the baby curl are bone poses measured by eye (no render check ran in CI); look at them in the browser
@@ -471,7 +471,7 @@ No save data changes.
     - Taken furniture goes into the household inventory; it is not re-placed in the new home automatically.
     - A wedding's ceremony is a stage with a feed line, a goal, a bond change and memories; the couple are not choreographed
       (no walking to an altar, no officiant).
-    - Gifts are parcels at the recipient's lot (put away after two weeks); there is no unwrapping or re-gifting interaction.
+    - Gifts are parcels at the recipient's lot (put away after two weeks). A member of the recipient's household can Unwrap Gift (the parcel is removed, a feed line and the Thoughtful Gift moodlet unless it was disliked; gifts are keepsakes, not objects, so nothing goes to the inventory); there is no re-gifting interaction.
     - A venue event needs the host at home or on the way at the departure time; if a trip is already under way it is retried
       every ten minutes until the start and then called off.
     - NPC homes move only among the generated NPC households and the empty homes; the next-door neighbours stay put. They pay

@@ -15,6 +15,7 @@ import { behaviorOf, clamp, dist, lotLoc, lotObjects, objectCenter, objectName, 
 import {
   CHORE_BEHAVIORS, dirtOf, failsOf, fixObject, isBroken, removeItem, setDirt, spawnMess, useObject, walkableNear, wearOf,
 } from './housekeeping';
+import { giftReaction, giftUnwrapLine } from './gifts';
 import { addMoodlet } from './mood';
 import { changeNeed } from './needs';
 import { addSkillXp } from './skills';
@@ -244,6 +245,43 @@ export const mopBehavior: Behavior = {
   apply(ctx, _p, a) {
     const item = itemOf(ctx, a);
     if (item) removeItem(ctx, item);
+  },
+  interruptible: true,
+};
+
+/** Unwrap a gift parcel meant for one's household: walk to it, open it, and it is gone (a gift is a keepsake, not an object). */
+export const unwrapGiftBehavior: Behavior = {
+  check(ctx, p, a) {
+    const r = interactionCheck(ctx, p, a);
+    if (r) return r;
+    const loc = lotLoc(p), item = itemOf(ctx, a);
+    if (!item || item.kind !== 'gift' || !loc || item.lotId !== loc.lotId) return 'The parcel is gone.';
+    if (item.ownerHouseholdId !== p.householdId) return "That parcel isn't for your household.";
+    return ctx.res.itemReserved(item.id, a.id) > 0 ? SOMEONE : null;
+  },
+  reserve(ctx, p, a) {
+    const loc = lotLoc(p), item = itemOf(ctx, a);
+    if (!loc || !item) return 'The parcel is gone.';
+    return pickUsePoint(ctx, p, a, 'use', itemCandidates(ctx, loc.lotId, item), { plan: true, what: 'parcel' });
+  },
+  step(ctx, p, a): Step | string {
+    const def = defOf(ctx, a);
+    const item = itemOf(ctx, a);
+    if (!item) return 'The parcel is gone.';
+    const goal = itemGoal(ctx, p, a, item, 'parcel');
+    if (typeof goal === 'string') return goal;
+    return { goal, posture: 'standing', performAnim: 'pickUp', duration: { kind: 'fixed', minutes: 3 }, rates: performRates(ctx, p, def, null, null, 'standing') };
+  },
+  apply(ctx, p, a) {
+    const item = itemOf(ctx, a);
+    if (!item) return;
+    const gift = ctx.content.gifts?.[item.recipeId];
+    const giver = item.giftFromId ? ctx.state.people[item.giftFromId] : undefined;
+    removeItem(ctx, item);
+    if (!gift) return;
+    const verdict = giftReaction(p, gift).verdict;
+    if (verdict !== 'disliked') addMoodlet(ctx.content, p, 'giftReceived', ctx.now, 'gift');
+    if (playable(ctx, p)) addFeed(ctx.state, ctx.events, 'social', giftUnwrapLine(verdict, gift, p.firstName, giver?.firstName ?? null, item.createdAt), p.id);
   },
   interruptible: true,
 };

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { GIFTS } from '../../../src/content/gifts';
+import { INTERACTIONS } from '../../../src/content/interactions';
+import { OBJECTS } from '../../../src/content/objects';
 import { PREFERENCES } from '../../../src/content/preferences';
 import { TRAITS } from '../../../src/content/traits';
 import { relKey } from '../../../src/core/ids';
 import { cloneState } from '../../../src/core/state';
-import { createGiftItem, giftChoices, giftOutcome, giftReaction, giftsOf } from '../../../src/sim/gifts';
+import { createGiftItem, giftChoices, giftOutcome, giftReaction, giftsOf, giftUnwrapLine } from '../../../src/sim/gifts';
 import { resolveSocial } from '../../../src/sim/social';
 import { runTicks } from './fixtures';
 import { pureCtx, setBoth, socialWorld } from './socialFixtures';
@@ -137,5 +139,27 @@ describe('giving a gift', () => {
     list = giftChoices(pureCtx(h), mira, adaP);
     expect(list.find((c) => c.id === 'plush')!.reason).toMatch(/Not enough money/);
     expect(list.find((c) => c.id === 'card')!.enabled).toBe(true);
+  });
+});
+
+describe('unwrapping a gift', () => {
+  it('is an item interaction for gift parcels, with deterministic feed lines', () => {
+    const def = INTERACTIONS.find((d) => d.id === 'unwrapGift')!;
+    expect(def.kind).toBe('item');
+    expect(def.itemKinds).toEqual(['gift']);
+    const a = giftUnwrapLine('liked', gift('book'), 'Ada', 'Mira', 1234);
+    expect(a).toBe(giftUnwrapLine('liked', gift('book'), 'Ada', 'Mira', 1234));
+    expect(a).toContain('Ada');
+    expect(a).toContain('from Mira');
+  });
+});
+
+describe('sofa bed slot exclusion', () => {
+  it('the sleep slot excludes both sit slots', () => {
+    const sofa = OBJECTS.find((o) => o.id === 'sofa-bed-convertible')!;
+    const sleep = sofa.slots.find((s) => s.kind === 'sleep')!;
+    const sits = sofa.slots.filter((s) => s.kind === 'sit').map((s) => s.id);
+    expect(sits).toHaveLength(2);
+    expect(sleep.excludes).toEqual(sits);
   });
 });

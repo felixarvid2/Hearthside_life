@@ -148,7 +148,15 @@ export function candidateFree(ctx: SimCtx, lotId: Id, level: number, c: UseCandi
     const seat = coincidentSeat(ctx, lotId, level, c.slot);
     if (seat?.slot && !ctx.res.isFree(slotKey(seat.objectId, seat.slot.slotId), actionId)) return false;
   }
-  return true;
+  return !slotExcluded(ctx, lotId, c, actionId);
+}
+
+/** True when a slot that `c.slot` excludes (or one that excludes it) is held by another action. */
+export function slotExcluded(ctx: SimCtx, lotId: Id, c: UseCandidate, actionId?: Id): boolean {
+  const s = c.slot;
+  if (!s) return false;
+  const others = ctx.nav.slotsOf(lotId, c.objectId).filter((o) => o.slotId !== s.slotId && (s.excludes?.includes(o.slotId) || o.excludes?.includes(s.slotId)));
+  return others.some((o) => !ctx.res.isFree(slotKey(c.objectId, o.slotId), actionId));
 }
 
 /**

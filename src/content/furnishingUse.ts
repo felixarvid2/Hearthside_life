@@ -20,8 +20,11 @@ interface Patch {
 
 const DECOR_REMARK = /\s*(Decorative for now[^.]*\.|A display piece in this version: nobody plays it yet\.)/;
 
-/** The sofa bed's mattress runs along its width: the head is at the left end, the slot faces the foot (+x). */
-const SOFA_BED_SLOT: ObjectSlot = { id: 'bed', kind: 'sleep', pos: [1, 0.5], height: 0.5, facing: Math.PI / 2, approach: [1, 1], posture: 'lying' };
+/**
+ * The sofa bed's mattress runs along its width: the head is at the left end, the slot faces the foot (+x). It lies on top
+ * of the seats, so nobody sits while someone sleeps and the other way round.
+ */
+const SOFA_BED_SLOT: ObjectSlot = { id: 'bed', kind: 'sleep', pos: [1, 0.5], height: 0.5, facing: Math.PI / 2, approach: [1, 1], posture: 'lying', excludes: ['left', 'right'] };
 
 const LAUNDRY_BLURB = 'Do the Laundry from the menu: a wash cycle, fresh clothes and a Fresh Laundry mood.';
 const PATCHES: Record<string, Patch> = {
