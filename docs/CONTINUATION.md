@@ -383,7 +383,8 @@ No save data changes.
 - M9 floors and exteriors:
   - The spiral and length-4 stairs are covered by `tests/unit/integration/stairKinds-m13.test.ts` and acceptance step 15 (a spiral and
     the grand stair are built, climbed up and down; Floor 2 stairwell checked).
-  - The camera bar now has 7 buttons and was not measured on phones narrower than 390 px.
+  - The camera bar has 7 buttons. Measured at 360x780 and 320x640 (Playwright, touch): it fits; below 360 px the top
+    bar's speed buttons narrow to 40 px (44 px high) so "Very fast" is no longer cut off at 320 px (`hud.css`).
   - Roofs only draw at or below the active level, and only with the Roof toggle on.
 - M11 progression and social:
   - The new career ladders ask for photography, wellness, creativity or research only from level 4-5, so a new hire can climb
