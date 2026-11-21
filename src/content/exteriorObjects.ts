@@ -61,6 +61,10 @@ const TERRACOTTA: Swatch[] = [
   sw('terracotta', 'Terracotta', '#c2663f'), sw('clay', 'Clay', '#a0623f'), sw('sand', 'Sand', '#d6b98a'), sw('white', 'Whitewash', '#ece6dc'),
   sw('slate', 'Slate Blue', '#5d6f86'), sw('moss', 'Moss Glaze', '#6f8a63'),
 ];
+const CLOTH: Swatch[] = [
+  sw('coral', 'Coral Stripe', '#d9594c'), sw('navy', 'Navy Stripe', '#34496b'), sw('sage', 'Sage Stripe', '#8fae8a'), sw('sunny', 'Sunny Stripe', '#e3b640'),
+  sw('cream', 'Cream', '#e8dcc0'), sw('charcoal', 'Charcoal', '#4a4a50'),
+];
 const STRAW: Swatch[] = [
   sw('golden', 'Golden Straw', '#dcbd5c'), sw('pale', 'Pale Straw', '#e8d79a'), sw('weathered', 'Weathered', '#a8946a'), sw('green', 'Hay Green', '#9aa860'),
   sw('rust', 'Rust', '#b87a45'), sw('grey', 'Grey', '#9c9588'),
@@ -79,7 +83,7 @@ function garden(asset: string, d: Base, lift = 0): ObjectDef {
   };
 }
 
-const FP11 = { w: 1, d: 1 }, FP21 = { w: 2, d: 1 }, FP22 = { w: 2, d: 2 };
+const FP11 = { w: 1, d: 1 }, FP21 = { w: 2, d: 1 }, FP22 = { w: 2, d: 2 }, FP32 = { w: 3, d: 2 };
 const WATER = ['waterPlant'];
 const CROP = ['gardenPlant', 'gardenWater', 'gardenWeed', 'gardenHarvest'];
 
@@ -187,6 +191,26 @@ export const GARDEN_OBJECTS: ObjectDef[] = [
       { id: 'seat-b', kind: 'sit', pos: [1.2, 0.5], height: 0.5, facing: 0, approach: [1, 1], posture: 'seated' },
     ] satisfies ObjectSlot[]),
     interactions: ['sit'], stats: { comfort: 4, environment: 5 }, finishes: [region('wood', 'Timber', ['wood', 'woodDark'], WOOD)],
+  }),
+  garden('gardenPergola', {
+    id: 'garden-pergola', name: 'Patio Pergola Cover', subcategory: 'structure', style: 'classic',
+    description: 'A timber pergola with a close-slatted roof, tall enough to stand a patio set under. Keeps the rain and the snow off whoever sits beneath it.',
+    tags: ['pergola', 'cover', 'roof', 'garden', 'structure', 'outdoor'], price: dollars(520), quality: 4,
+    footprint: FP22, layer: 'ceiling', blocksMovement: false, stats: { environment: 4 }, finishes: [region('wood', 'Timber', ['wood', 'woodDark'], WOOD)],
+  }),
+  garden('gardenCanopy', {
+    id: 'garden-canopy', name: 'Garden Canopy', subcategory: 'shade', style: 'coastal',
+    description: 'A striped cloth roof on four slim steel poles: a light, airy shelter that turns any corner of the garden into a dry place to sit.',
+    tags: ['canopy', 'cover', 'roof', 'garden', 'shade', 'outdoor'], price: dollars(260), quality: 3,
+    footprint: FP32, layer: 'ceiling', blocksMovement: false, stats: { environment: 3 },
+    finishes: [region('cloth', 'Cloth', ['carpet', 'carpetWhite'], CLOTH), region('poles', 'Poles', ['metalDark'], METAL_DARK)],
+  }),
+  garden('gardenAwning', {
+    id: 'garden-awning', name: 'Patio Awning', subcategory: 'shade', style: 'coastal',
+    description: 'A striped awning on folding arms that unrolls over the patio from an outside wall. Hangs on a wall, with no door or window under it.',
+    tags: ['awning', 'cover', 'shade', 'garden', 'outdoor'], price: dollars(190), quality: 3,
+    footprint: FP21, layer: 'wall', blocksMovement: false, needsWall: true, stats: { environment: 2 },
+    finishes: [region('cloth', 'Cloth', ['carpet', 'carpetWhite'], CLOTH), region('arms', 'Arms', ['metalDark'], METAL_DARK)],
   }),
 ];
 

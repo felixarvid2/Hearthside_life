@@ -8,8 +8,9 @@ import { DAY_NAMES, MINUTES_PER_DAY, dayIndex, hourOfDay, minuteOfDay } from '..
 import type { Tile } from '../core/nav';
 import { SEASON_NAMES, seasonDays, seasonFor, seasonForDay, seasonsOn } from '../core/season';
 import type {
-  Person, Season, WeatherKind, WeatherRule, WeatherState, WorldState,
+  Lot, Person, Season, WeatherKind, WeatherRule, WeatherState, WorldState,
 } from '../core/types';
+import { parseEdgeKey } from '../core/ids';
 import { computeRooms, roomIndex } from '../world/rooms';
 import type { SimCtx } from './context';
 import { lotLoc } from './context';
@@ -244,17 +245,46 @@ export function outdoorsAt(
  * shelters the tile without making it "indoors" (rooms, sun and night rules are unchanged).
  */
 export function shadedAt(
-  state: Pick<WorldState, 'lots'>, content: Pick<ContentDB, 'objects'>, lotId: string, level: number, x: number, z: number,
+  state: Pick<WorldState, 'lots'>, content: Pick<ContentDB, 'objects'> & Partial<Pick<ContentDB, 'openings'>>, lotId: string, level: number, x: number, z: number,
 ): boolean {
   const lot = state.lots[lotId];
   if (!lot) return false;
+  if (awningShadesTile(lot, content.openings, level, Math.floor(x), Math.floor(z))) return true;
   for (const o of Object.values(lot.objects)) {
     if (o.level !== level) continue;
     const def = content?.objects?.[o.defId];
     const r = def?.shelter;
-    if (!def || !r || o.condition.broken) continue;
+    if (!def || r === undefined || o.condition.broken) continue;
     const w = o.rot % 2 === 0 ? def.footprint.w : def.footprint.d, d = o.rot % 2 === 0 ? def.footprint.d : def.footprint.w;
     if (x >= o.x - r && x < o.x + w + r && z >= o.z - r && z < o.z + d + r) return true;
+  }
+  return false;
+}
+
+/**
+ * A window awning (OpeningDef.shelter) shades the outdoor tile(s) straight in front of it: the hood is built on the local +z side
+ * of the opening (render/openingMeshes.ts addHood), which is world +z on an 'h' wall and world -x on a 'v' wall, mirrored by `flip`.
+ */
+function awningShadesTile(lot: Lot, openings: ContentDB['openings'] | undefined, level: number, tx: number, tz: number): boolean {
+  if (!openings) return false;
+  for (const o of Object.values(lot.openings)) {
+    const depth = openings[o.defId]?.shelter;
+    if (!depth) continue;
+    const e = parseEdgeKey(o.wallId);
+    if (e.level !== level) continue;
+    const span = o.span ?? 1;
+    const sign = o.flip ? -1 : 1;
+    if (e.dir === 'h') {
+      // wall on the line z = e.z: tiles z = e.z (south, +z) or e.z - 1 (north) and so on outward
+      if (tx < e.x || tx >= e.x + span) continue;
+      const k = sign > 0 ? tz - e.z : e.z - 1 - tz;
+      if (k >= 0 && k < depth) return true;
+    } else {
+      // wall on the line x = e.x: the hood faces -x (tiles x = e.x - 1 ...) unless flipped
+      if (tz < e.z || tz >= e.z + span) continue;
+      const k = sign > 0 ? e.x - 1 - tx : tx - e.x;
+      if (k >= 0 && k < depth) return true;
+    }
   }
   return false;
 }

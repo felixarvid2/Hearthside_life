@@ -44,6 +44,10 @@ const PATCHES: Record<string, Patch> = {
   'parasol-standing': { shelter: 1, tags: ['shade'], blurb: 'Its shade keeps the rain off: people under it count as sheltered.' },
   'table-patio': { shelter: 1, tags: ['shade'] },
   'garden-arbour': { shelter: 1, tags: ['shade'] },
+  // roofs and awnings cover exactly their own footprint (radius 0)
+  'garden-pergola': { shelter: 0, tags: ['shade'], blurb: 'Its roof keeps the rain and snow off: people under it count as sheltered.' },
+  'garden-canopy': { shelter: 0, tags: ['shade'], blurb: 'Its cloth roof keeps the rain and snow off: people under it count as sheltered.' },
+  'garden-awning': { shelter: 0, tags: ['shade'], blurb: 'The tiles under it count as sheltered from rain and snow.' },
 };
 
 /** Applies the table to the catalog (a new array; definitions without a patch are returned as they are). */
