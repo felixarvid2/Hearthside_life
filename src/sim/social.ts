@@ -11,7 +11,7 @@ import { isAdult, romanceInterest } from '../core/relations';
 import { addFeed, transact } from '../core/state';
 import type { ActionInstance, Person, Relationship } from '../core/types';
 import { endAction } from './actions';
-import { nearbyObjectWithTag } from './furnishings';
+import { gameGoal, nearbyObjectWithTag, reserveGameSpots } from './furnishings';
 import { behaviorFor } from './behaviors';
 import type { SimCtx } from './context';
 import { clamp, householdOf, lotLoc, setThought, socialDef, venueTypeOf } from './context';
@@ -26,6 +26,7 @@ import {
 } from './relationships';
 import { personKey } from './reservations';
 import type { Behavior, Step } from './steps';
+import { moveUsePoint, syncReservations } from './steps';
 import { canPlanEvent, noteGroup, noteSocial, planEventFromSocial, runningEventOf } from './events';
 import {
   ANGRY_MOOD, GROUP_CHAT_EXTRAS, GROUP_CHAT_RADIUS, GROUP_CHAT_SIDE_WEIGHT, JEALOUSY_FRIENDSHIP, JEALOUSY_RIVAL_FRIENDSHIP, JEALOUSY_TRUST, ROMANCE_MIN_MOOD, SOCIAL_ACCEPT_MAX,
@@ -363,6 +364,26 @@ function listenerOf(target: Person, a: ActionInstance): ActionInstance | undefin
   return h && h.data.role === 'listen' && h.data.with === a.id ? h : undefined;
 }
 
+/** Social with an object to play at (`requires.objectTag`): the pair walk to spots at it and face it instead of each other. */
+const isGame = (def: SocialDef | undefined): boolean => !!def?.requires.objectTag;
+
+/**
+ * Game socials: starts the partner's listener, which walks to the spot reserved for them (under `mate`) and takes it over.
+ * The listener begins in the route phase; the actor's `arrive` waits until it has reached the object.
+ */
+function joinGame(ctx: SimCtx, p: Person, t: Person, a: ActionInstance): string | null {
+  const l = makeAction(ctx, t, { interactionId: a.interactionId, target: { kind: 'person', personId: p.id }, data: { role: 'listen', with: a.id } }, 'chain');
+  moveUsePoint(a, 'mate', l, 'use');
+  if (!syncReservations(ctx, a) || !syncReservations(ctx, l)) { ctx.res.release(l.id); return 'Someone else is using it.'; }
+  l.phase = 'route';
+  l.phaseSince = ctx.now;
+  t.queue.unshift(l);
+  a.data.mateId = l.id;
+  ctx.events.emit({ type: 'action.started', personId: t.id, actionId: l.id, interactionId: l.interactionId });
+  ctx.events.emit({ type: 'person.changed', personId: t.id, what: 'queue' });
+  return null;
+}
+
 function faceEachOther(a: Person, b: Person): void {
   const la = lotLoc(a), lb = lotLoc(b);
   if (!la || !lb) return;
@@ -380,7 +401,11 @@ function endListener(ctx: SimCtx, a: ActionInstance): void {
   const t = partnerOf(ctx, a);
   for (const who of [...(t ? [t] : []), ...groupMembers(ctx, a)]) {
     const l = who.queue.find((x) => x.data.role === 'listen' && x.data.with === a.id);
-    if (l) endAction(ctx, who, l, 'done', null);
+    if (!l) continue;
+    // A game listener stands at its spot: step back to the tile it came from, as the cleanup of a normal action would.
+    const loc = lotLoc(who);
+    if (loc && typeof l.data.backX === 'number' && typeof l.data.backZ === 'number') { loc.x = l.data.backX; loc.z = l.data.backZ; }
+    endAction(ctx, who, l, 'done', null);
   }
 }
 
@@ -400,10 +425,15 @@ export const socialBehavior: Behavior = {
     }
     return personAvailable(ctx, t, p);
   },
-  reserve(ctx, _p, a) {
+  reserve(ctx, p, a) {
     const t = partnerOf(ctx, a);
     if (!t) return 'They left.';
     if (!ctx.res.isFree(personKey(t.id), a.id)) return `${t.firstName} is busy.`;
+    const game = socialDef(ctx, a.interactionId)?.requires.objectTag;
+    if (game && a.data.role !== 'listen') {
+      const why = reserveGameSpots(ctx, p, t, a, game);
+      if (why) return why;
+    }
     const head = t.queue[0];
     // Drop the target's queued autonomous plans and stop their interruptible autonomous activity.
     t.queue = t.queue.filter((x, i) => {
@@ -414,28 +444,53 @@ export const socialBehavior: Behavior = {
     if (head && t.queue[0] === head && head.phase !== 'queued' && head.source === 'autonomy' && head.data.social !== true) head.cancelRequested = true;
     return null;
   },
-  step(ctx, _p, a): Step | string {
+  step(ctx, p, a): Step | string {
     const def = socialDef(ctx, a.interactionId);
     if (!def) return 'That interaction is not available.';
     if (a.data.role === 'listen') {
-      return { goal: { kind: 'here' }, posture: 'standing', performAnim: 'talk', duration: { kind: 'external' }, rates: {} };
+      if (!isGame(def)) return { goal: { kind: 'here' }, posture: 'standing', performAnim: 'talk', duration: { kind: 'external' }, rates: {} };
+      const actor = partnerOf(ctx, a);
+      // The game fell through before the partner got there (the actor was cancelled or failed).
+      if ((a.phase === 'route' || a.phase === 'prepare') && actor?.queue[0]?.id !== a.data.with) return 'The game was called off.';
+      const spot = gameGoal(ctx, p, a);
+      if (typeof spot === 'string') return spot;
+      return { goal: spot, posture: 'standing', performAnim: def.anim, duration: { kind: 'external' }, rates: {} };
     }
     const t = partnerOf(ctx, a);
     if (!t || !lotLoc(t)) return `${t?.firstName ?? 'They'} left.`;
+    if (isGame(def)) {
+      const spot = gameGoal(ctx, p, a);
+      if (typeof spot === 'string') return spot;
+      return { goal: spot, posture: 'standing', performAnim: def.anim, duration: { kind: 'fixed', minutes: Math.max(1, def.minutes) }, rates: {} };
+    }
     return {
       goal: { kind: 'person', personId: t.id, label: t.firstName }, posture: 'standing', performAnim: def.anim,
       duration: { kind: 'fixed', minutes: Math.max(1, def.minutes) }, rates: {},
     };
   },
-  arrive(ctx, p, a) {
+  routing(ctx, p, a) {
+    if (a.data.role === 'listen' || !isGame(socialDef(ctx, a.interactionId))) return null;
     const t = partnerOf(ctx, a);
     if (!t || !lotLoc(t)) return 'They left.';
-    if (listenerOf(t, a)) return null;
+    if (typeof a.data.mateId === 'string') return listenerOf(t, a) ? null : `${t.firstName} walked away.`;
+    // The partner sets off as soon as they are free, so both walk at once.
+    return t.queue.length === 0 && lotLoc(t)!.posture !== 'lying' ? joinGame(ctx, p, t, a) : null;
+  },
+  arrive(ctx, p, a) {
+    if (a.data.role === 'listen') return null;
+    const t = partnerOf(ctx, a);
+    if (!t || !lotLoc(t)) return 'They left.';
+    const game = isGame(socialDef(ctx, a.interactionId));
+    const joined = listenerOf(t, a);
+    if (game && joined) return joined.phase === 'prepare' || joined.phase === 'perform' ? null : 'wait';
+    if (game && typeof a.data.mateId === 'string') return `${t.firstName} walked away.`;
+    if (joined) return null;
     const ready = t.queue.length === 0 && lotLoc(t)!.posture !== 'lying';
     if (!ready) {
       if (typeof a.data.waitSince !== 'number') a.data.waitSince = ctx.now;
       return ctx.now - a.data.waitSince > SOCIAL_WAIT_MINUTES ? `${t.firstName} is busy.` : 'wait';
     }
+    if (game) return joinGame(ctx, p, t, a) ?? 'wait';
     const l = makeAction(ctx, t, { interactionId: a.interactionId, target: { kind: 'person', personId: p.id }, data: { role: 'listen', with: a.id } }, 'chain');
     l.phase = 'perform';
     t.queue.unshift(l);
@@ -459,11 +514,12 @@ export const socialBehavior: Behavior = {
     return null;
   },
   begin(ctx, p, a) {
+    if (a.data.role === 'listen') return null;
     const t = partnerOf(ctx, a);
     const def = socialDef(ctx, a.interactionId);
     if (!t || !def) return 'They left.';
     if (!listenerOf(t, a)) return `${t.firstName} walked away.`;
-    faceEachOther(p, t);
+    if (!isGame(def)) faceEachOther(p, t);
     const topic = def.topics[0] ?? def.name;
     setThought(p, def.icon, topic, ctx.now + def.minutes);
     setThought(t, def.icon, topic, ctx.now + def.minutes);
@@ -474,7 +530,7 @@ export const socialBehavior: Behavior = {
       const actor = partnerOf(ctx, a);
       const head = actor?.queue[0];
       if (!actor || !head || head.id !== a.data.with) return 'done';
-      faceEachOther(p, actor);
+      if (!isGame(socialDef(ctx, a.interactionId))) faceEachOther(p, actor);
       return null;
     }
     const t = partnerOf(ctx, a);

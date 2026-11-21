@@ -213,4 +213,37 @@ describe('games for two', () => {
     placeFree(rig.state, rig.lot, 'pool-table-classic');
     expect(social()?.enabled, social()?.reason).toBe(true);
   });
+
+  it('Play Pool Together: both walk to the table before the game starts, and the table counts as in use', () => {
+    const rig = setup();
+    const [a, b] = members(rig.state);
+    const table = placeFree(rig.state, rig.lot, 'pool-table-classic');
+    const option = rig.core.options(a!.id, { kind: 'person', personId: b!.id }).find((o) => o.interactionId === 'playPoolTogether');
+    expect(option?.enabled, option?.reason).toBe(true);
+    expect(rig.core.queue(a!.id, option!).ok).toBe(true);
+    const near = (p: typeof a) => {
+      const loc = p!.location;
+      if (loc.kind !== 'lot') return false;
+      // the pool table is 3 x 2 tiles: anyone playing stands within a tile or two of it
+      return loc.x > table.x - 1.6 && loc.x < table.x + 3 + 1.6 && loc.z > table.z - 1.6 && loc.z < table.z + 2 + 1.6;
+    };
+    let playing = false;
+    for (let i = 0; i < 4 * 200 && !playing; i++) {
+      rig.core.advanceTicks(1);
+      const head = a!.queue[0];
+      if (head?.interactionId === 'playPoolTogether' && head.phase === 'perform') {
+        playing = true;
+        expect(head.data.surfObj, 'the table is reserved as in use').toBe(table.id);
+        const mate = b!.queue[0];
+        expect(mate?.data.role).toBe('listen');
+        expect(mate?.data.useObj).toBe(table.id);
+        expect(near(a), 'the actor is at the table').toBe(true);
+        expect(near(b), 'the partner is at the table').toBe(true);
+      }
+    }
+    expect(playing, 'the game started').toBe(true);
+    for (let i = 0; i < 4 * 200 && a!.queue.length > 0; i++) rig.core.advanceTicks(1);
+    expect(a!.queue.length).toBe(0);
+    expect(b!.queue.some((x) => x.data.role === 'listen')).toBe(false);
+  });
 });

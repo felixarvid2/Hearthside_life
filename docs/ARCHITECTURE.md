@@ -1136,7 +1136,7 @@ Files: `content/interactionsFurnishings.ts` (the interactions), `content/furnish
 - **Games.** New designs `pool-table-classic`, `dartboard-cabinet`, `foosball-table`, `table-tennis-table` (interactions `playPool`,
   `throwDarts`, `playFoosball`, `playTableTennis`: fun, a moodlet, table tennis also trains Fitness). With two people: socials
   `playPoolTogether`, `playDartsTogether`, `playFoosballTogether`, `playTableTennisTogether` carry `requires.objectTag` (the actor's lot
-  and level needs a working object with that tag); the pair chat as usual, there is no walk to the table.
+  and level needs a working object with that tag). `socialBehavior` runs them in stages: `reserveGameSpots` (sim/furnishings.ts) reserves the actor's spot (`use`), the partner's (`mate`) and the table (`surfObj`); the partner's listener action starts in the route phase (`Behavior.routing`) with the `mate` spot handed over, both walk there, `arrive` waits until the listener has arrived, then the usual timed stage runs with both facing the table. A removed or broken table or an unreachable spot fails the action cleanly (the listener ends with it).
 - **Pottery.** `pottery-wheel`: `throwPottery` (Creativity xp, fun) places a Handmade Pot (`pot-handmade`, status dev, `proc:pot` mesh) on a
   free tile near the potter; its recorded price is `potValue(creativity level)` and it was "bought yesterday", so Build mode sells it
   for 80 % of that. `sellPottery` pays a freelance fee once through `transact`.

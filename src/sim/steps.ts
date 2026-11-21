@@ -71,6 +71,8 @@ export interface Behavior {
    * first). Returning true means the behavior took the request over; the runner keeps the action running.
    */
   cancelGraceful?(ctx: SimCtx, p: Person, a: ActionInstance): boolean;
+  /** Every tick of the route phase, after the stage was computed and before walking: a reason fails the action (a game partner who walked off). */
+  routing?(ctx: SimCtx, p: Person, a: ActionInstance): string | null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -114,6 +116,16 @@ function setUsePoint(a: ActionInstance, prefix: UsePointPrefix, c: UseCandidate)
   a.data[`${prefix}Obj`] = c.objectId;
   if (c.slot) a.data[`${prefix}Slot`] = c.slot.slotId;
   else if (c.tile) { a.data[`${prefix}X`] = c.tile.x; a.data[`${prefix}Z`] = c.tile.z; }
+}
+
+/** Moves a use point from one action's data to another's (under another prefix); the caller re-syncs both reservations. */
+export function moveUsePoint(from: ActionInstance, fromPrefix: UsePointPrefix, to: ActionInstance, toPrefix: UsePointPrefix): void {
+  clearUsePoint(to, toPrefix);
+  for (const k of ['Obj', 'Slot', 'X', 'Z']) {
+    const v = from.data[`${fromPrefix}${k}`];
+    if (v !== undefined) to.data[`${toPrefix}${k}`] = v;
+  }
+  clearUsePoint(from, fromPrefix);
 }
 
 /** Item capacity for reservations: a meal's or a catch's remaining portions; dishes and messes are cleaned by one person at a time. */
@@ -221,7 +233,7 @@ export function standCandidates(ctx: SimCtx, lotId: Id, objectId: Id): UseCandid
 }
 
 const GONE: Record<UsePointPrefix, string> = {
-  use: 'It is gone.', seat: 'The seat is gone.', stove: 'The stove is gone.', surf: 'The counter is gone.', wash: 'The sink is gone.',
+  use: 'It is gone.', seat: 'The seat is gone.', stove: 'The stove is gone.', surf: 'The counter is gone.', wash: 'The sink is gone.', mate: 'It is gone.',
 };
 
 /** Goal for a stored use point, or a failure reason when its object or slot vanished. */

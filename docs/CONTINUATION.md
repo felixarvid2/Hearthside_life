@@ -367,7 +367,7 @@ No save data changes.
 ## Known issues
 
 - Milestone 13 (furnishings, rooms, babies; this branch):
-  - The game socials (`playPoolTogether` and the others) only need the object somewhere on the lot and level; the pair do not walk to it.
+  - The game socials (`playPoolTogether` and the others): the pair walk to the table and face it before the game runs (the actor takes the use slot, the partner a tile on the opposite side), and the table is reserved for the game. The partner's spot is not route-checked when it is picked: if they cannot reach it the game is called off when they fail to arrive. Not run in a browser or tested beyond the one unit test.
   - The sofa bed's `sleep` slot excludes its two sit slots (`ObjectSlot.excludes`, checked both ways in `candidateFree`): nobody sits while someone sleeps and the other way round.
   - Room edits work on rectangular rooms only; moving a room never moves people (anyone inside blocks it). Moving is free, copying and
     resizing are priced like building. There is no drag handle on the room: the arrow pad moves one tile per press.
