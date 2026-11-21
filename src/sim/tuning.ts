@@ -334,3 +334,13 @@ export const TOWN_MOVE_WEEKDAY = 3;
 
 /** Jogging along the park track is this many times faster than walking. */
 export const JOG_PACE = 1.8;
+
+/** Wedding ceremony choreography (sim/ceremony.ts): how long the couple get to reach the spot before the vows are said where they stand. */
+export const CEREMONY_WALK_MINUTES = 45;
+/** Minutes the couple stand facing each other before the vows. */
+export const CEREMONY_VOWS_MINUTES = 2;
+/** Minutes everybody stays and cheers after the vows. */
+export const CEREMONY_CHEER_MINUTES = 2;
+/** Guests stand at least this many tiles from the couple's row, and at most this many tiles away. */
+export const CEREMONY_GUEST_MIN = 2;
+export const CEREMONY_GUEST_RADIUS = 6;

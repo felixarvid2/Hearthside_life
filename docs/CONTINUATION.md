@@ -469,8 +469,10 @@ No save data changes.
     town life (job changes, moving households), furniture choice when moving, town children for old saves, the sitter for
     other households, the jog track, `Person.carriedBy`, the phone map entry and `LotInfo.usable`. What is still simple:
     - Taken furniture goes into the household inventory; it is not re-placed in the new home automatically.
-    - A wedding's ceremony is a stage with a feed line, a goal, a bond change and memories; the couple are not choreographed
-      (no walking to an altar, no officiant).
+    - A wedding's ceremony is choreographed (`sim/ceremony.ts`): the couple walk to a spot beside a `wedding-arch` object (the
+      garden arbour) or on open ground near the lot centre, guests gather facing them and a young-adult-or-older guest officiates;
+      the vows follow when both have arrived, or after 45 minutes where they stand. There are no ceremony-specific animations
+      (guests fold their arms, then wave) and no altar object besides the arbour.
     - Gifts are parcels at the recipient's lot (put away after two weeks); there is no unwrapping or re-gifting interaction.
     - A venue event needs the host at home or on the way at the departure time; if a trip is already under way it is retried
       every ten minutes until the start and then called off.
@@ -486,7 +488,7 @@ No save data changes.
 - Garments: a faint seam on the thigh where swimwear leaves the baked shorts visible; folds are static; seated skirts open
   like a lampshade.
 - AI hair: box-braids and twin-tails have flat parts; some bangs stop at eye level; the backs are invented by TRELLIS.
-- Weddings are not events, gifts are a $20 social, and dates are still planned at home.
+- Gifts are a $20 social. (Weddings are events and dates can be held at venues; see the gaps pass above.)
 - Room move, resize and duplicate are not implemented. Delete room is.
 - Only SwiftShader emulation so far; record real devices in the TEST_CHECKLIST device log.
 

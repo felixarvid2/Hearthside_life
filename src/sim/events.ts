@@ -27,6 +27,7 @@ import { hoursText, lotIsOpen, travelMinutes, venueInfo } from '../world/neighbo
 import { freeSurfaceTiles } from './cooking';
 import { isBroken } from './housekeeping';
 import { addMoodlet, computeMood } from './mood';
+import { beginCeremony, endCeremonyActions } from './ceremony';
 import { changeNeed } from './needs';
 import { homeLocation, takeOffLot, visitingLocation } from './places';
 import { startTrip, startTripHome } from './lotTravel';
@@ -512,6 +513,7 @@ export function performCeremony(ctx: SimCtx, id: Id): void {
   const occurrence = `wedding:${ev.id}:ceremony`;
   if (isProcessed(ctx.state, occurrence)) return;
   markProcessed(ctx.state, occurrence);
+  endCeremonyActions(ctx, ev); // whoever is still queued or walking to the spot stands down
   const a = ctx.state.people[ev.hostId], b = ctx.state.people[ev.partnerId];
   const la = a ? lotLoc(a) : null, lb = b ? lotLoc(b) : null;
   const engaged = !!a && !!b && ctx.state.bonds[pairKey(a.id, b.id)]?.status === 'engaged';
@@ -722,7 +724,7 @@ export function runEventEntry(ctx: SimCtx, e: ScheduledEvent): void {
   const id = e.data?.eventId;
   if (typeof id !== 'string') return;
   if (e.kind === 'eventStart') startEvent(ctx, id);
-  else if (e.kind === 'eventStage') performCeremony(ctx, id);
+  else if (e.kind === 'eventStage') { if (e.data?.phase === 'vows') performCeremony(ctx, id); else beginCeremony(ctx, id); }
   else if (e.kind === 'eventEnd') endEvent(ctx, id);
   else if (e.kind === 'eventTravel') {
     const ev = findEvent(ctx.state, id);

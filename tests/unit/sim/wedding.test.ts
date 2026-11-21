@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { pairKey } from '../../../src/core/ids';
 import { cancelEvent, canPlanEvent, endEvent, ensureEventEnds, performCeremony, planEvent, startEvent } from '../../../src/sim/events';
+import { findCeremonySpot } from '../../../src/sim/ceremony';
 import { runUntil } from './fixtures';
 import { bond, harness, pureCtx, setBoth, setNeeds, socialWorld } from './socialFixtures';
 import type { SocialWorld } from './socialFixtures';
@@ -73,7 +74,7 @@ describe('the wedding day', () => {
     runTo(sw, ev.startAt + 2);
     expect(ev).toMatchObject({ status: 'running', stage: 'ceremony' });
     expect(bondOf(sw, w.mira, ada)).toBe('engaged');
-    runTo(sw, ev.ceremonyAt! + 2);
+    runTo(sw, ev.ceremonyAt! + 60);
     expect(ev.stage).toBe('celebration');
     expect(ev.ceremony).toBe('done');
     expect(bondOf(sw, w.mira, ada)).toBe('spouse');
@@ -140,7 +141,7 @@ describe('the wedding day', () => {
     const sw = weddingWorld();
     const { w, h, ada } = sw;
     planEvent(pureCtx(h), { type: 'wedding', hostId: w.mira, guestIds: [ada] });
-    runTo(sw, theEvent(sw).ceremonyAt! + 2);
+    runTo(sw, theEvent(sw).ceremonyAt! + 60);
     const copy = cloneState(w.state);
     expect(copy.homeEvents![0]).toMatchObject({ type: 'wedding', ceremony: 'done', partnerId: ada });
     const h2 = harness(copy, h.content);
@@ -152,5 +153,34 @@ describe('the wedding day', () => {
     fillSocialDefaults(raw);
     expect((raw.homeEvents as Array<Record<string, unknown>>)[0]).toMatchObject({ type: 'wedding', ceremony: 'done', partnerId: ada });
     expect(((raw.homeEvents as Array<{ goals: Array<{ kind: string }> }>)[0]!.goals).some((g) => g.kind === 'ceremony')).toBe(true);
+  });
+});
+
+describe('the ceremony choreography', () => {
+  it('finds two side-by-side tiles for the couple and guest tiles facing them', () => {
+    const sw = weddingWorld();
+    const spot = findCeremonySpot(pureCtx(sw.h), sw.w.state.activeLotId);
+    expect(spot).not.toBeNull();
+    expect(Math.abs(spot!.a.x - spot!.b.x) + Math.abs(spot!.a.z - spot!.b.z)).toBe(1);
+    expect(spot!.guests.length).toBeGreaterThan(0);
+    const key = (t: { x: number; z: number }) => `${t.x},${t.z}`;
+    expect(spot!.guests.map(key)).not.toContain(key(spot!.a));
+    expect(spot!.guests.map(key)).not.toContain(key(spot!.b));
+    expect(findCeremonySpot(pureCtx(sw.h), sw.w.state.activeLotId)).toEqual(spot); // deterministic
+  });
+
+  it('walks the couple to the spot first; the vows follow once they are there, never later than the fallback', () => {
+    const sw = weddingWorld();
+    const { w, h, ada } = sw;
+    planEvent(pureCtx(h), { type: 'wedding', hostId: w.mira, guestIds: [ada] });
+    const ev = theEvent(sw);
+    runTo(sw, ev.ceremonyAt! + 1);
+    const mira = w.state.people[w.mira]!;
+    expect(mira.queue.some((a) => a.interactionId === 'attendCeremony') || ev.ceremony === 'done').toBe(true);
+    runTo(sw, ev.ceremonyAt! + 50);
+    expect(ev.ceremony).toBe('done');
+    expect(bondOf(sw, w.mira, ada)).toBe('spouse');
+    runTo(sw, ev.ceremonyAt! + 60);
+    expect(mira.queue.some((a) => a.interactionId === 'attendCeremony')).toBe(false);
   });
 });
