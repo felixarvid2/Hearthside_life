@@ -284,10 +284,10 @@ export class BuildSession {
   /** Where the room move drag started (tile) and the offset the tool had then. */
   private roomDrag: { tx: number; tz: number; dx: number; dz: number } | null = null;
 
-  /** True while the room move tool is active, so a drag on the room moves it (the pointer layer then lets the camera pan elsewhere). */
+  /** True while the room Move or Copy tool is active, so a drag on the (preview) room moves it (the pointer layer then lets the camera pan elsewhere). */
   roomDragActive(): boolean {
     const t = this.api.buildTool();
-    return !!t && t.kind === 'roomEdit' && t.edit === 'move';
+    return !!t && t.kind === 'roomEdit' && (t.edit === 'move' || t.edit === 'duplicate');
   }
 
   /** True when the screen point is on the room being moved (the room under the tool's target). */

@@ -370,7 +370,7 @@ No save data changes.
   - The game socials (`playPoolTogether` and the others): the pair walk to the table and face it before the game runs (the actor takes the use slot, the partner a tile on the opposite side), and the table is reserved for the game. The partner's spot is not route-checked when it is picked: if they cannot reach it the game is called off when they fail to arrive. Not run in a browser or tested beyond the one unit test.
   - The sofa bed's `sleep` slot excludes its two sit slots (`ObjectSlot.excludes`, checked both ways in `candidateFree`): nobody sits while someone sleeps and the other way round.
   - Room edits work on rectangular rooms only; moving a room never moves people (anyone inside blocks it). Moving is free, copying and
-    resizing are priced like building. The room move tool can also be dragged: press on the room and drag (mouse or one finger) to move it tile by tile; the arrow pad moves one tile per press.
+    resizing are priced like building. The Move and Copy tools can also be dragged: press on the room (or its moved preview) and drag (mouse or one finger) to move the preview tile by tile; a drag elsewhere still pans, the arrow pad moves one tile per press and Apply commits. Resize has no drag yet.
   - The recliner lean and the baby curl are bone poses measured by eye (no render check ran in CI); look at them in the browser
     (select a person at a recliner, open the baby's crib).
 
