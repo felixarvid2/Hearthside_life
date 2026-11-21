@@ -266,7 +266,66 @@ function gardenArbour() {
   return m;
 }
 
+/** A timber pergola with a slatted roof, 2 x 2: four posts, two beams and close-set slats. Roofs the tiles it stands over. */
+function gardenPergola() {
+  const m = new Model('garden-pergola');
+  for (const x of [0.12, 1.88]) for (const z of [0.12, 1.88]) {
+    m.rod('wood', [x, 0, z], [x, 2.3, z], 0.14); // posts
+    m.box('woodDark', [x - 0.1, 0, z - 0.1], [x + 0.1, 0.08, z + 0.1]); // post feet
+  }
+  for (const x of [0.12, 1.88]) m.box('woodDark', [x - 0.07, 2.3, 0.02], [x + 0.07, 2.42, 1.98]); // side beams
+  for (let i = 0; i < 11; i++) { // roof slats across the beams, a hand's width apart
+    const z = 0.1 + i * 0.18;
+    m.box('wood', [0, 2.42, z - 0.05], [2, 2.5, z + 0.05]);
+  }
+  for (const x of [0.12, 1.88]) for (const z of [0.12, 1.88]) { // corner braces
+    const dx = x < 1 ? 0.4 : -0.4, dz = z < 1 ? 0.4 : -0.4;
+    m.rod('woodDark', [x, 1.9, z], [x + dx, 2.3, z], 0.05, 0.06);
+    m.rod('woodDark', [x, 1.9, z], [x, 2.3, z + dz], 0.05, 0.06);
+  }
+  return m;
+}
+
+/** A fabric garden canopy on four steel poles, 3 x 2: a gently pitched cloth roof with a valance. */
+function gardenCanopy() {
+  const m = new Model('garden-canopy');
+  for (const x of [0.12, 2.88]) for (const z of [0.12, 1.88]) {
+    m.rod('metalDark', [x, 0, z], [x, 2.2, z], 0.07);
+    m.box('metalDark', [x - 0.1, 0, z - 0.1], [x + 0.1, 0.04, z + 0.1]);
+  }
+  for (const z of [0.12, 1.88]) m.rod('metalDark', [0.12, 2.2, z], [2.88, 2.2, z], 0.05); // rails along the long sides
+  for (const x of [0.12, 1.5, 2.88]) m.rod('metalDark', [x, 2.2, 0.12], [x, 2.2, 1.88], 0.05); // cross rails
+  // the cloth: six stripes rising to a ridge along x at z = 1, in two tones
+  for (let i = 0; i < 6; i++) {
+    const x0 = i * 0.5;
+    const mat = i % 2 ? 'carpetWhite' : 'carpet';
+    m.slab(mat, [x0, 2.2, 0.0], [0.5, 0, 0], [0, 0.22, 1.0], [0, 0.015, 0]);
+    m.slab(mat, [x0, 2.42, 1.0], [0.5, 0, 0], [0, -0.22, 1.0], [0, 0.015, 0]);
+    m.box(mat, [x0, 2.1, 0.0], [x0 + 0.5, 2.2, 0.03]); // valance, front and back
+    m.box(mat, [x0, 2.1, 1.97], [x0 + 0.5, 2.2, 2.0]);
+  }
+  return m;
+}
+
+/** A wall-mounted patio awning, 2 x 1: striped cloth on two folding arms, sloping down from the wall (back at z = 0). */
+function gardenAwning() {
+  const m = new Model('garden-awning');
+  m.box('metalDark', [0.04, 2.3, 0.0], [1.96, 2.4, 0.06]); // wall rail
+  for (const x of [0.1, 1.9]) {
+    m.rod('metalDark', [x, 2.34, 0.05], [x, 2.0, 0.92], 0.04, 0.05); // arm
+    m.rod('metalDark', [x, 2.0, 0.92], [x, 1.95, 0.96], 0.04);
+  }
+  for (let i = 0; i < 8; i++) { // eight stripes of cloth, sloping from y = 2.38 at the wall to 2.04 at the front
+    const x0 = 0.05 + i * 0.2375;
+    const mat = i % 2 ? 'carpetWhite' : 'carpet';
+    m.slab(mat, [x0, 2.38, 0.03], [0.2375, 0, 0], [0, -0.34, 0.9], [0, 0.015, 0]);
+    m.box(mat, [x0, 1.9, 0.93], [x0 + 0.2375, 2.04, 0.95]); // valance
+  }
+  return m;
+}
+
 export const GARDEN_MODELS = {
   gardenFlowerbed, gardenFlowerbedRound, gardenHedge, gardenTopiary, gardenVegpatch, gardenFruitTree, gardenHerbPlanter, gardenPond,
   gardenBirdbath, gardenTrellis, gardenHangingBasket, gardenCompost, gardenScarecrow, gardenLantern, gardenGnome, gardenArbour,
+  gardenPergola, gardenCanopy, gardenAwning,
 };

@@ -59,6 +59,8 @@ export interface OpeningDef {
   sill: number;
   /** Procedural model parameters used by the renderer (frame style, panes, colours). */
   style: Record<string, number | string | boolean>;
+  /** Windows with a hood (awning): how many tiles deep the outdoor tiles in front of it count as sheltered from rain and snow. Absent = none. */
+  shelter?: number;
   status: ContentStatus;
 }
 

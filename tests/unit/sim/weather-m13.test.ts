@@ -84,6 +84,44 @@ describe('shade as shelter', () => {
   });
 });
 
+describe('covers and window awnings', () => {
+  it('the pergola, canopy and patio awning shelter exactly their own footprint', () => {
+    for (const id of ['garden-pergola', 'garden-canopy', 'garden-awning']) expect(OBJECTS.find((o) => o.id === id)?.shelter).toBe(0);
+    expect(OBJECTS.find((o) => o.id === 'garden-pergola')?.blocksMovement).toBe(false);
+  });
+
+  it('an awning window shades the outdoor tile in front of it (the hood side, mirrored by flip), nothing else', () => {
+    const { state: w } = buildWorld({ seed: 1 });
+    const lot = w.lots[w.activeLotId]!;
+    const c = umbrellaContent();
+    c.openings['awn'] = { id: 'awn', kind: 'window', name: 'awn', description: '', tags: [], packs: [], tier: 'standard', price: 1, width: 1, height: 1, sill: 1, style: {}, shelter: 1, status: 'ready' };
+    c.openings['plain'] = { ...c.openings['awn']!, id: 'plain', shelter: undefined };
+    const put = (defId: string, wallId: string, flip: boolean) => {
+      const id = newId(w, 'opn');
+      lot.openings[id] = { id, defId, wallId, flip, purchasePrice: 1 };
+      return id;
+    };
+    const a = put('awn', '0:h:5:10', false); // wall on z = 10, hood faces +z: the tile (5, 10)
+    expect(shadedAt(w, c, lot.id, 0, 5.5, 10.5)).toBe(true);
+    expect(shadedAt(w, c, lot.id, 0, 5.5, 9.5)).toBe(false);
+    expect(shadedAt(w, c, lot.id, 0, 5.5, 11.5)).toBe(false); // only one tile deep
+    expect(shadedAt(w, c, lot.id, 0, 6.5, 10.5)).toBe(false); // beside the window
+    expect(shadedAt(w, c, lot.id, 1, 5.5, 10.5)).toBe(false); // another level
+    lot.openings[a]!.flip = true;
+    expect(shadedAt(w, c, lot.id, 0, 5.5, 9.5)).toBe(true);
+    expect(shadedAt(w, c, lot.id, 0, 5.5, 10.5)).toBe(false);
+    delete lot.openings[a];
+    const v = put('awn', '0:v:8:4', false); // wall on x = 8, hood faces -x: the tile (7, 4)
+    expect(shadedAt(w, c, lot.id, 0, 7.5, 4.5)).toBe(true);
+    expect(shadedAt(w, c, lot.id, 0, 8.5, 4.5)).toBe(false);
+    lot.openings[v]!.flip = true;
+    expect(shadedAt(w, c, lot.id, 0, 8.5, 4.5)).toBe(true);
+    delete lot.openings[v];
+    put('plain', '0:h:5:10', false);
+    expect(shadedAt(w, c, lot.id, 0, 5.5, 10.5)).toBe(false);
+  });
+});
+
 describe('rain melts the snow cover', () => {
   it('three hours of rain wash the cover away, snow resets the count', () => {
     const { state: w } = buildWorld({ seed: 5 });

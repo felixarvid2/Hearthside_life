@@ -29,6 +29,7 @@ function win(
 ): OpeningDef {
   return {
     id, kind: 'window', name, description, tags: ['window', ...tags], packs, tier: tierOf(price), price: dollars(price), width, height, sill, status: 'ready',
+    ...(style.hood === 'awning' ? { shelter: 1 } : {}),
     style: { holeWidth: width === 1 ? 0.8 : width * 0.88, frame: 0.045, casing: 0.06, frameColor: '#f3f0e8', hardware: '#9a9ea3', window: 'fixed', litesX: 1, litesY: 1, glass: 'clear', ...style },
   };
 }

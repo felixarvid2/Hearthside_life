@@ -366,7 +366,7 @@ function placementText(d: ObjectDef): string {
     case 'rug': parts.push('Lies flat on the floor; furniture can stand on it'); break;
     case 'wall': parts.push('Hangs on a wall'); break;
     case 'surface': parts.push('Goes on a counter, table, desk or other surface'); break;
-    case 'ceiling': parts.push('Hangs from the ceiling'); break;
+    case 'ceiling': parts.push(d.category === 'outdoor' ? 'Roofs the ground below; people and furniture fit underneath' : 'Hangs from the ceiling'); break;
   }
   if (d.needsWall && d.layer !== 'wall') parts.push('needs a wall behind it');
   if (d.surfaceHeight) parts.push(`has a ${fmtM(d.surfaceHeight)} high surface for small items`);
