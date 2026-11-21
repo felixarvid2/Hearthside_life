@@ -121,6 +121,8 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
     const sections: HTMLElement[] = [];
     const groups = GROUPS.map((g) => ({ g, items: options.filter((o) => o.group === g.id) })).filter((x) => x.items.length);
     const compact = layout().compact;
+    // Compact menu where nothing can be done: one line with the commonest reason instead of a wall of locked entries.
+    const allOff = compact && options.every((o) => !o.enabled);
     const itemButton = (o: MenuOption): HTMLButtonElement => {
       const b = h('button', { type: 'button', class: ['ctx-item', o.hint && 'has-hint'], role: 'menuitem', disabled: !o.enabled },
         h('span', { class: 'ctx-icon' }, icon(o.icon || 'info', 20)),
@@ -142,7 +144,8 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
         if (part.label && (parts.length > 1 || g.id === 'social')) sec.appendChild(h('div', { class: 'ctx-section-label', text: part.label }));
         const on = part.items.filter((o) => o.enabled), off = part.items.filter((o) => !o.enabled);
         for (const o of on) sec.appendChild(itemButton(o));
-        if (off.length > 0) {
+        if (allOff) for (const o of off) sec.appendChild(itemButton(o));
+        else if (off.length > 0) {
           // Unavailable entries keep their reasons but fold away on small screens so the usable ones stay in reach.
           const fold = h('details', { class: 'ctx-unavail' }, h('summary', { class: 'ctx-unavail-sum' }, icon('lock', 13), h('span', { text: `Unavailable (${off.length})` })), ...off.map(itemButton));
           fold.open = !compact || on.length === 0 && off.length <= 2;
@@ -152,9 +155,20 @@ export function createContextMenu(sh: Shell, visibleArea: () => Rect): ContextMe
       }
       sections.push(list);
     }
+    let body: HTMLElement[] = sections;
+    if (allOff) {
+      const counts = new Map<string, number>();
+      for (const o of options) counts.set(o.reason ?? '', (counts.get(o.reason ?? '') ?? 0) + 1);
+      const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+      const fold = h('details', { class: 'ctx-unavail ctx-unavail-all' },
+        h('summary', { class: 'ctx-unavail-sum' }, icon('lock', 13), h('span', { class: 'ctx-all-off', text: top || 'Nothing available right now' }), h('span', { class: 'ctx-all-count', text: `${options.length} actions` })),
+        ...sections);
+      fold.open = false;
+      body = [fold];
+    }
     el.replaceChildren(
       h('div', { class: 'ctx-head' }, h('div', { class: 'ctx-title' }, h('span', { class: 'ctx-target', text: title }), actor && !(pick.kind === 'person' && pick.personId === personId) ? h('span', { class: 'ctx-actor', text: `as ${actor.firstName}` }) : null), closeBtn),
-      h('div', { class: 'ctx-body' }, ...sections),
+      h('div', { class: 'ctx-body' }, ...body),
     );
     el.setAttribute('aria-label', `Actions${title ? ` for ${title}` : ''}`);
     el.hidden = false;
