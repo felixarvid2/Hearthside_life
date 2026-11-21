@@ -184,7 +184,7 @@ export const GARDEN_OBJECTS: ObjectDef[] = [
   garden('gardenArbour', {
     id: 'garden-arbour', name: 'Garden Arbour with Bench', subcategory: 'structure', style: 'cottage',
     description: 'A timber arbour wreathed in climbing plants, with a bench for two to sit under the leaves.',
-    tags: ['bench', 'seat', 'plant', 'garden', 'structure', 'outdoor'], price: dollars(680), quality: 4, functional: true,
+    tags: ['bench', 'seat', 'plant', 'garden', 'structure', 'outdoor', 'wedding-arch'], price: dollars(680), quality: 4, functional: true,
     footprint: FP21,
     slots: ([
       { id: 'seat-a', kind: 'sit', pos: [0.8, 0.5], height: 0.5, facing: 0, approach: [0, 1], posture: 'seated' },

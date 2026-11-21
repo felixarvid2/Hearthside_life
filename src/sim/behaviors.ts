@@ -16,6 +16,7 @@ import {
   behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
 import { bakeBehavior } from './baking';
+import { attendCeremonyBehavior } from './ceremony';
 import { jogLoopBehavior } from './jog';
 import { cookBehavior, eatMealBehavior } from './cooking';
 import { gardenBehavior } from './garden';
@@ -810,6 +811,7 @@ function buildRegistry(): Record<string, Behavior> {
     ageUp: ageUpBehavior,
     openAdopt: openAdoptBehavior,
     goHere: goHereBehavior,
+    attendCeremony: attendCeremonyBehavior,
     leaveLot: leaveLotBehavior,
     travelTo: travelToBehavior,
     inviteHome: inviteHomeBehavior,

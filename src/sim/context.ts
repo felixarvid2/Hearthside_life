@@ -70,6 +70,8 @@ export const BUILTIN_INTERACTIONS: Readonly<Record<string, InteractionDef>> = {
   travelTo: builtin('travelTo', 'Travel', 'move', 'travelTo', 'self'),
   /** Invite the person in front of you to your home (a visit in about an hour). Offered with the socials. */
   inviteHome: builtin('inviteHome', 'Invite to My Home', 'home', 'inviteHome', 'self'),
+  /** Internal: a place at a wedding ceremony (data.eventId, role, fx, fz; sim/ceremony.ts). Never offered in menus. */
+  attendCeremony: { ...builtin('attendCeremony', 'Attend the Ceremony', 'home', 'attendCeremony', 'tile'), ages: ['child', 'teen', 'youngAdult', 'adult', 'elder'] },
 };
 
 export function interactionDef(ctx: Pick<SimCtx, 'content'>, id: string): InteractionDef | undefined {
