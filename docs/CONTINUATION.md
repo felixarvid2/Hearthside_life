@@ -375,7 +375,7 @@ No save data changes.
     (select a person at a recliner, open the baby's crib).
 
 - M8 family and life stages:
-  - The move-out dialog scrolls in phone landscape.
+  - The move-out dialog lays out in two columns in phone landscape (`family.css`, `@media (orientation: landscape) and (max-height: 520px)`) so it fits 844x390; not yet checked in a browser.
   - Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry). Babies now lie curled (Milestone 13;
     the modular view now has the same spine effects, `ModularCharacter.applyPoseFx`).
   - Feet slid when walking at Fast and Very fast speed; the walk cycle now follows the measured ground speed (Milestone 13). A little
@@ -479,7 +479,7 @@ No save data changes.
     - Group chats pull in at most four more people within six tiles whom the speaker has met.
   - Acceptance step 8 once saw every computer option disabled ("Unavailable (6)") in landscape, for an unknown reason.
     The test now waits for an idle member with an enabled option and logs per-option reasons if it recurs.
-  - In compact menus where every entry is disabled, the entries fold into a closed "Unavailable" group (UX to revisit).
+  - In compact menus where every entry is disabled, the menu shows one line with the commonest reason and the action count; tapping it opens the list with each entry's reason (`contextMenu.ts`, `.ctx-unavail-all`).
   - Dailylife test seed 303 leaves a TV broken for days (nonessential repair weakness). The default seed is now 305.
   - Occasional flakes: creator "Random person" invalid household; neighbour not tappable in step 2.
 - Creator M3 run (`npm run e2e:creator`, `tests/e2e/creator-m3.mjs`): portrait ran once (73 checks passed); the script fixes made afterwards (suit picked in the wrong category, tie, export, substitution-dialog selectors, preview-change threshold) and the landscape and desktop viewports have not been run. Open: after Load household template the confirm button tap times out, and the Review tab was not reachable after that, which may be a real dialog or stacking bug. Hats: the sun hat brim hides the eyes in the forward-tilted idle pose; scarf tails and necklaces were retuned after the last screenshots.

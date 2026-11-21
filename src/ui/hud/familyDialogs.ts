@@ -90,7 +90,7 @@ export function openSplitDialog(sh: Shell, startPersonId: Id): void {
   const who = h('div', { class: 'split-who', role: 'group', attrs: { 'aria-label': 'Who moves' } });
   const where = h('div', { class: 'split-where', role: 'group', attrs: { 'aria-label': 'Where to' } });
   const lines = h('ul', { class: 'nbm-lines split-lines' });
-  const reason = h('p', { class: 'adopt-note' });
+  const reason = h('p', { class: 'adopt-note split-reason' });
   const go = button({ label: 'Move', icon: 'home', variant: 'primary', onClick: () => run() });
   const target = (): SplitTarget | null => (dest === 'lot' ? (lotId ? { kind: 'lot', lotId } : null) : (householdId ? { kind: 'household', householdId } : null));
 
@@ -112,6 +112,8 @@ export function openSplitDialog(sh: Shell, startPersonId: Id): void {
     where.replaceChildren(...rows);
   };
   const destSeg = segmented<Dest>({ label: 'Where to', value: dest, options: [{ id: 'lot', label: 'A home of their own' }, { id: 'household', label: 'Move in with...' }], onChange: (v) => { dest = v; renderWhere(); update(); } });
+
+  destSeg.el.classList.add('split-dest');
 
   function update(): void {
     const t = target();
@@ -139,11 +141,12 @@ export function openSplitDialog(sh: Shell, startPersonId: Id): void {
     );
   }
 
+  // Phone landscape (family.css) puts who/where on the left and the toggle plus preview on the right; elsewhere it is one stack.
   m.body.append(
-    h('p', { class: 'adopt-intro' }, icon('home', 18), h('span', { text: 'Choose who moves. Funds are shared by the number of people; at least one young adult or older stays.' })),
-    reason,
-    h('div', { class: 'field' }, h('div', { class: 'field-label', text: 'Who moves' }), who),
-    destSeg.el, where, lines,
+    h('p', { class: 'adopt-intro split-intro' }, icon('home', 18), h('span', { text: 'Choose who moves. Funds are shared by the number of people; at least one young adult or older stays.' })),
+    h('div', { class: 'split-cols' },
+      h('div', { class: 'split-col' }, h('div', { class: 'field split-who-field' }, h('div', { class: 'field-label', text: 'Who moves' }), who), where),
+      h('div', { class: 'split-col' }, destSeg.el, reason, lines)),
   );
   m.footer.append(button({ label: 'Cancel', variant: 'ghost', onClick: () => m.close() }), go);
   renderWho();
