@@ -375,7 +375,7 @@ No save data changes.
     (select a person at a recliner, open the baby's crib).
 
 - M8 family and life stages:
-  - The move-out dialog lays out in two columns in phone landscape (`family.css`, `@media (orientation: landscape) and (max-height: 520px)`) so it fits 844x390; not yet checked in a browser.
+  - The move-out dialog lays out in two columns in phone landscape (`family.css`, `@media (orientation: landscape) and (max-height: 520px)`) so it fits 844x390 without scrolling (checked in Playwright at 844x390 and 390x844, 2026-11-21).
   - Elder wrinkles are one procedural map shared by all elders (albedo and bump only, no geometry). Babies now lie curled (Milestone 13;
     the modular view now has the same spine effects, `ModularCharacter.applyPoseFx`).
   - Feet slid when walking at Fast and Very fast speed; the walk cycle now follows the measured ground speed (Milestone 13). A little
