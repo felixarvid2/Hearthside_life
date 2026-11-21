@@ -264,7 +264,7 @@ export class BuildSession {
   }
 
   /** Changes the room edit tool (offset, side, size, copy furniture) and re-previews at the same room. */
-  adjustRoomEdit(patch: Partial<Extract<BuildTool, { kind: 'roomEdit' }>>): void {
+  adjustRoomEdit(patch: Partial<Extract<BuildTool, { kind: 'roomEdit' }>>, quiet = false): void {
     const tool = this.api.buildTool();
     if (!tool || tool.kind !== 'roomEdit') return;
     const next: BuildTool = { ...tool, ...patch };
@@ -275,8 +275,53 @@ export class BuildSession {
     this.pending = true;
     this.lastKey = '';
     this.runPreview();
-    this.sound('tap');
+    if (!quiet) this.sound('tap');
     this.emit();
+  }
+
+  // ---- dragging the room being moved ----
+
+  /** Where the room move drag started (tile) and the offset the tool had then. */
+  private roomDrag: { tx: number; tz: number; dx: number; dz: number } | null = null;
+
+  /** True while the room Move or Copy tool is active, so a drag on the (preview) room moves it (the pointer layer then lets the camera pan elsewhere). */
+  roomDragActive(): boolean {
+    const t = this.api.buildTool();
+    return !!t && t.kind === 'roomEdit' && (t.edit === 'move' || t.edit === 'duplicate');
+  }
+
+  /** True when the screen point is on the room being moved (the room under the tool's target). */
+  roomDragAt(x: number, y: number): boolean {
+    if (!this.roomDragActive() || !this.target) return false; // no target yet: nothing to grab
+    const g = this.ground(x, y);
+    if (!g) return false;
+    const level = this.target.level ?? 0;
+    const t = this.api.buildTool();
+    // The preview sits at the current offset: a press on the moved preview maps back to the room's own tiles.
+    const ox = t && t.kind === 'roomEdit' ? t.dx ?? 0 : 0, oz = t && t.kind === 'roomEdit' ? t.dz ?? 0 : 0;
+    const room = this.api.roomAt({ x: Math.floor(this.target.from.x), z: Math.floor(this.target.from.z) }, level);
+    const under = this.api.roomAt({ x: Math.floor(g.x) - ox, z: Math.floor(g.z) - oz }, level);
+    return !!room && !room.outdoor && under?.uid === room.uid;
+  }
+
+  private roomDragStart(x: number, y: number): void {
+    const t = this.api.buildTool();
+    const g = this.ground(x, y);
+    if (!g || !t || t.kind !== 'roomEdit') return;
+    this.roomDrag = { tx: Math.floor(g.x), tz: Math.floor(g.z), dx: t.dx ?? 0, dz: t.dz ?? 0 };
+    this.dragging = true;
+  }
+
+  private roomDragMove(x: number, y: number): void {
+    const d = this.roomDrag;
+    const t = this.api.buildTool();
+    const g = this.ground(x, y);
+    if (!d || !g || !t || t.kind !== 'roomEdit') return;
+    const dx = d.dx + Math.floor(g.x) - d.tx;
+    const dz = d.dz + Math.floor(g.z) - d.tz;
+    if (dx === (t.dx ?? 0) && dz === (t.dz ?? 0)) return;
+    this.adjustRoomEdit({ dx, dz }, true);
+    this.dragging = true; // adjustRoomEdit leaves the drag flag alone, kept explicit for the preview guard
   }
 
   // ---- tool selection ----
@@ -377,6 +422,7 @@ export class BuildSession {
     this.preview = null;
     this.pending = false;
     this.dragging = false;
+    this.roomDrag = null;
     this.lastKey = '';
     try { this.api.highlightRoom(this.selectedRoom, 'selected'); } catch { /* optional */ }
   }
@@ -516,6 +562,7 @@ export class BuildSession {
 
   drawStart(x: number, y: number, rect = false): void {
     const tool = this.tool();
+    if (tool?.kind === 'roomEdit') { this.roomDragStart(x, y); return; }
     if (!tool || toolMode(tool) !== 'drag') return;
     const g = this.ground(x, y);
     if (!g) return;
@@ -529,6 +576,7 @@ export class BuildSession {
 
   /** `rect` (desktop Shift) switches a fence drag to the rectangle loop, or back when released. */
   draw(x: number, y: number, rect?: boolean): void {
+    if (this.roomDrag) { this.roomDragMove(x, y); return; }
     if (!this.dragging || !this.target) return;
     const g = this.ground(x, y);
     if (!g) return;
@@ -542,6 +590,15 @@ export class BuildSession {
 
   /** The drag ended: `interrupted` is a second finger or a cancelled pointer (the preview stays on touch). */
   drawEnd(x: number, y: number, interrupted: boolean, mouse: boolean, rect?: boolean): void {
+    if (this.roomDrag) {
+      // A room move always waits for Confirm, like the arrow pad; the preview stays at the last tile.
+      if (!interrupted) this.roomDragMove(x, y);
+      this.roomDrag = null;
+      this.dragging = false;
+      this.sound(this.preview && this.preview.ok ? 'tap' : 'error');
+      this.emit();
+      return;
+    }
     if (!this.dragging) return;
     if (!interrupted) this.draw(x, y, rect);
     this.dragging = false;

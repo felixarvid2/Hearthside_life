@@ -188,3 +188,6 @@ button.nbm-event { cursor: pointer; }
 .nbm-furniture { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .nbm-furniture .field-label { flex-basis: 100%; }
 .nbm-furniture[hidden] { display: none; }
+.nbm-autoplace { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-bottom: 10px; cursor: pointer; }
+.nbm-autoplace[hidden] { display: none; }
+.nbm-autoplace input { width: 22px; height: 22px; flex: none; }

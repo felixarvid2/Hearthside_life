@@ -119,7 +119,7 @@ describe('a date at a venue', () => {
     const at = atDayMinute(dayIndex(now(c)) + 1, 12 * 60);
     expect(c.planEvent({ type: 'wedding', hostId: host, guestIds: [guest], startAt: at, lotId: lot.id }).ok).toBe(true);
     const ev = s.homeEvents![0]!;
-    runTo(c, ev.ceremonyAt! + 5);
+    runTo(c, ev.ceremonyAt! + 60);
     expect(ev.ceremony).toBe('done');
     expect(s.bonds[pairKey(host, guest)]!.status).toBe('spouse');
     expect(s.activeLotId).toBe(lot.id);

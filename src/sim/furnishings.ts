@@ -5,11 +5,13 @@ import { potValue } from '../content/furnishingUse';
 import { addFeed } from '../core/state';
 import type { ActionInstance, Id, Person, WorldItem } from '../core/types';
 import type { ObjRef, SimCtx } from './context';
-import { isFridge, lotLoc, lotObjects, objectCenter } from './context';
+import { dist, insideFootprint, isFridge, lotLoc, lotObjects, objectCenter, objectName } from './context';
 import { interactionCheckNoCost } from './behaviors';
 import { isBroken } from './housekeeping';
 import type { Behavior, Step } from './steps';
-import { clearUsePoint, objectCandidates, pickUsePoint, usePointGoal, usePointObject } from './steps';
+import { surfaceKey } from './reservations';
+import type { Goal, UseCandidate } from './steps';
+import { clearUsePoint, objectCandidates, pickUsePoint, standCandidates, usePointGoal, usePointObject } from './steps';
 import { makePlacedObject } from '../world/objects';
 import { validatePlacement } from '../world/placement';
 
@@ -18,6 +20,52 @@ export function nearbyObjectWithTag(ctx: SimCtx, p: Person, tag: string): boolea
   const loc = lotLoc(p);
   if (!loc) return false;
   return lotObjects(ctx, loc.lotId, loc.level).some((r) => r.def.functional && r.def.tags.includes(tag) && !r.obj.condition.broken);
+}
+
+/**
+ * Reserves the spots of a two-person game social on the nearest free object with `tag`: the actor's under `use` (route planned),
+ * the partner's under `mate` (the opposite side of the object when it has no second use slot), and the object itself as a
+ * reserved surface so nobody else starts a game on it. Returns null or a readable reason; on failure nothing stays set.
+ */
+export function reserveGameSpots(ctx: SimCtx, p: Person, partner: Person, a: ActionInstance, tag: string): string | null {
+  const loc = lotLoc(p);
+  if (!loc) return `${p.firstName} isn't here.`;
+  const what = tag.replace(/-/g, ' ');
+  const refs = lotObjects(ctx, loc.lotId, loc.level)
+    .filter((r) => r.def.functional && r.def.tags.includes(tag) && !r.obj.condition.broken)
+    .map((r) => ({ r, d: dist(loc.x, loc.z, objectCenter(r).x, objectCenter(r).z) }))
+    .sort((x, y) => x.d - y.d || (x.r.obj.id < y.r.obj.id ? -1 : 1));
+  let reason = `Needs a ${what}.`;
+  for (const { r: ref } of refs) {
+    const clear = () => { clearUsePoint(a, 'use'); clearUsePoint(a, 'mate'); delete a.data.surfObj; a.route = []; };
+    if (!ctx.res.isFree(surfaceKey(ref.obj.id), a.id)) { reason = `Someone is using the ${what}.`; continue; }
+    const mine = pickUsePoint(ctx, p, a, 'use', objectCandidates(ctx, loc.lotId, ref.obj.id, []), { plan: true, what });
+    if (mine) { clear(); reason = mine; continue; }
+    const goal = usePointGoal(ctx, p, a, 'use');
+    if (typeof goal === 'string') { clear(); reason = goal; continue; }
+    const at = goal.kind === 'slot' ? goal.slot.approach : goal.kind === 'tile' ? goal.tile : null;
+    const c = objectCenter(ref);
+    // The partner takes another use slot, else a free tile beside the object (not inside it, not the actor's tile) nearest the
+    // spot opposite the actor.
+    const theirs: UseCandidate[] = [
+      ...objectCandidates(ctx, loc.lotId, ref.obj.id, ['use']).filter((u) => u.slot && u.slot.slotId !== a.data.useSlot),
+      ...standCandidates(ctx, loc.lotId, ref.obj.id).filter((u) => u.tile
+        && !insideFootprint(ref, u.tile.x + 0.5, u.tile.z + 0.5) && !(at && u.tile.x === at.x && u.tile.z === at.z)),
+    ];
+    const from = at ? { x: 2 * c.x - (at.x + 0.5), z: 2 * c.z - (at.z + 0.5) } : c;
+    const other = pickUsePoint(ctx, partner, a, 'mate', theirs, { plan: false, what, from });
+    if (other) { clear(); reason = other; continue; }
+    a.data.surfObj = ref.obj.id;
+    return null;
+  }
+  return reason;
+}
+
+/** What a game player is walking to and playing at: its spot, or a reason when the object is gone, out of order or the spot unusable. */
+export function gameGoal(ctx: SimCtx, p: Person, a: ActionInstance): Goal | string {
+  const ref = usePointObject(ctx, p, a, 'use');
+  if (ref?.obj.condition.broken) return `The ${objectName(ctx, ref.def.id)} is out of order.`;
+  return usePointGoal(ctx, p, a, 'use');
 }
 
 /**

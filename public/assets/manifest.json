@@ -4,7 +4,8 @@
   "characters": "Quaternius Universal Animation Library 1 and 2 (Standard), CC0 1.0, https://quaternius.com",
   "detailedCharacters": "meshy_a / meshy_b: AI-generated with Meshy (https://www.meshy.ai), 2026-11-01; see dev/meshy/README.md",
   "furniture": "Kenney Furniture Kit 2.0, CC0 1.0, https://kenney.nl",
-  "furnitureOriginal": "Original low-poly furniture models built by tools/furniture-extra (this project, CC0)"
+  "furnitureOriginal": "Original low-poly furniture models built by tools/furniture-extra (this project, CC0)",
+  "furnitureExterior": "Original low-poly garden and staircase models built by tools/exterior (this project, CC0)"
  },
  "characters": {
   "body_a": {
@@ -29955,6 +29956,124 @@
    ],
    "original": true,
    "group": "decor-hobby"
+  },
+  "gardenPergola": {
+   "file": "furniture/gardenPergola.glb",
+   "thumb": "furniture/thumbs/gardenPergola.png",
+   "min": [
+    0,
+    0,
+    0.01
+   ],
+   "max": [
+    1,
+    1.25,
+    0.99
+   ],
+   "materials": [
+    {
+     "name": "wood",
+     "color": [
+      0.896,
+      0.602,
+      0.393
+     ]
+    },
+    {
+     "name": "woodDark",
+     "color": [
+      0.678,
+      0.456,
+      0.299
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenCanopy": {
+   "file": "furniture/gardenCanopy.glb",
+   "thumb": "furniture/thumbs/gardenCanopy.png",
+   "min": [
+    0,
+    0,
+    0
+   ],
+   "max": [
+    1.5,
+    1.2175,
+    1
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
+  },
+  "gardenAwning": {
+   "file": "furniture/gardenAwning.glb",
+   "thumb": "furniture/thumbs/gardenAwning.png",
+   "min": [
+    0.02,
+    0.95,
+    0
+   ],
+   "max": [
+    0.98,
+    1.2,
+    0.4878
+   ],
+   "materials": [
+    {
+     "name": "metalDark",
+     "color": [
+      0.306,
+      0.388,
+      0.388
+     ]
+    },
+    {
+     "name": "carpet",
+     "color": [
+      0.943,
+      0.367,
+      0.343
+     ]
+    },
+    {
+     "name": "carpetWhite",
+     "color": [
+      0.973,
+      1,
+      1
+     ]
+    }
+   ],
+   "original": true,
+   "exterior": true
   }
  },
  "audio": {

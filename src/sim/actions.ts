@@ -89,6 +89,8 @@ function runAction(ctx: SimCtx, p: Person, a: ActionInstance): void {
       case 'route': {
         const step = beh.step(ctx, p, a);
         if (typeof step === 'string') { interrupt(ctx, p, a, beh, 'failed', step); continue; }
+        const gone = beh.routing ? beh.routing(ctx, p, a) : null;
+        if (gone) { interrupt(ctx, p, a, beh, 'failed', gone); continue; }
         const res = routeTick(ctx, p, a, step.goal);
         if (res === 'moving') return;
         if (typeof res === 'object') { interrupt(ctx, p, a, beh, 'failed', res.fail); continue; }

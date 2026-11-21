@@ -20,8 +20,11 @@ interface Patch {
 
 const DECOR_REMARK = /\s*(Decorative for now[^.]*\.|A display piece in this version: nobody plays it yet\.)/;
 
-/** The sofa bed's mattress runs along its width: the head is at the left end, the slot faces the foot (+x). */
-const SOFA_BED_SLOT: ObjectSlot = { id: 'bed', kind: 'sleep', pos: [1, 0.5], height: 0.5, facing: Math.PI / 2, approach: [1, 1], posture: 'lying' };
+/**
+ * The sofa bed's mattress runs along its width: the head is at the left end, the slot faces the foot (+x). It lies on top
+ * of the seats, so nobody sits while someone sleeps and the other way round.
+ */
+const SOFA_BED_SLOT: ObjectSlot = { id: 'bed', kind: 'sleep', pos: [1, 0.5], height: 0.5, facing: Math.PI / 2, approach: [1, 1], posture: 'lying', excludes: ['left', 'right'] };
 
 const LAUNDRY_BLURB = 'Do the Laundry from the menu: a wash cycle, fresh clothes and a Fresh Laundry mood.';
 const PATCHES: Record<string, Patch> = {
@@ -44,6 +47,10 @@ const PATCHES: Record<string, Patch> = {
   'parasol-standing': { shelter: 1, tags: ['shade'], blurb: 'Its shade keeps the rain off: people under it count as sheltered.' },
   'table-patio': { shelter: 1, tags: ['shade'] },
   'garden-arbour': { shelter: 1, tags: ['shade'] },
+  // roofs and awnings cover exactly their own footprint (radius 0)
+  'garden-pergola': { shelter: 0, tags: ['shade'], blurb: 'Its roof keeps the rain and snow off: people under it count as sheltered.' },
+  'garden-canopy': { shelter: 0, tags: ['shade'], blurb: 'Its cloth roof keeps the rain and snow off: people under it count as sheltered.' },
+  'garden-awning': { shelter: 0, tags: ['shade'], blurb: 'The tiles under it count as sheltered from rain and snow.' },
 };
 
 /** Applies the table to the catalog (a new array; definitions without a patch are returned as they are). */

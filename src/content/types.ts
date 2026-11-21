@@ -59,6 +59,8 @@ export interface OpeningDef {
   sill: number;
   /** Procedural model parameters used by the renderer (frame style, panes, colours). */
   style: Record<string, number | string | boolean>;
+  /** Windows with a hood (awning): how many tiles deep the outdoor tiles in front of it count as sheltered from rain and snow. Absent = none. */
+  shelter?: number;
   status: ContentStatus;
 }
 
@@ -86,6 +88,8 @@ export interface ObjectSlot {
   approach: [number, number];
   /** Posture while using the slot. */
   posture: Posture;
+  /** Ids of other slots on the same object that cannot be in use at the same time (the exclusion works both ways). */
+  excludes?: string[];
 }
 
 export interface FinishRegion {

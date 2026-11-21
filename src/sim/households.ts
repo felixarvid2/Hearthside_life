@@ -20,6 +20,7 @@ import { dayIndex } from '../core/clock';
 import type { SimCtx } from './context';
 import { clamp, lotLoc } from './context';
 import { ownsObject, saleValue } from '../building/plans';
+import { autoPlaceInventory, roomKindsOf } from './autoPlace';
 import { homeLotValue } from './economy';
 import { activeEvents } from './events';
 import { activateLot, activeTrip, startTrip, travelProblem } from './lotTravel';
@@ -151,7 +152,11 @@ export const SALE_RATE = 0.8;
 
 /** What happens to the furniture of the home that is left: stays (default), goes with the household into its inventory, or is sold. */
 export type FurnitureChoice = 'leave' | 'take' | 'sell';
-export interface MoveOptions { furniture?: FurnitureChoice }
+export interface MoveOptions {
+  furniture?: FurnitureChoice;
+  /** With 'take': place the taken pieces in the new home where they fit (sim/autoPlace.ts); the rest stays in the inventory. */
+  autoPlace?: boolean;
+}
 
 export interface FurnitureSummary {
   /** Movable pieces the household owns in the home it leaves (stairs and planted beds stay). */
@@ -160,6 +165,8 @@ export interface FurnitureSummary {
   worth: Cents;
   saleValue: Cents;
   choice: FurnitureChoice;
+  /** Whether the taken pieces are placed in the new home automatically. */
+  autoPlace?: boolean;
 }
 
 export interface MovePreview {
@@ -191,9 +198,9 @@ export function movableFurniture(ctx: Pick<SimCtx, 'state' | 'content'>, hh: Hou
   }).sort((a, b) => (a.id < b.id ? -1 : 1));
 }
 
-function furnitureSummary(ctx: SimCtx, hh: Household, old: Lot | undefined, choice: FurnitureChoice): FurnitureSummary {
+function furnitureSummary(ctx: SimCtx, hh: Household, old: Lot | undefined, choice: FurnitureChoice, autoPlace: boolean): FurnitureSummary {
   const list = movableFurniture(ctx, hh, old);
-  return { count: list.length, worth: list.reduce((a, o) => a + o.purchasePrice, 0), saleValue: list.reduce((a, o) => a + saleValue(ctx.state, o), 0), choice };
+  return { count: list.length, worth: list.reduce((a, o) => a + o.purchasePrice, 0), saleValue: list.reduce((a, o) => a + saleValue(ctx.state, o), 0), choice, autoPlace: choice === 'take' && autoPlace };
 }
 
 export function movePreview(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): MovePreview {
@@ -202,7 +209,7 @@ export function movePreview(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): Mov
   const lot = state.lots[lotId];
   const choice: FurnitureChoice = opts.furniture ?? 'leave';
   const oldLot = hh.homeLotId ? state.lots[hh.homeLotId] : undefined;
-  const furniture = furnitureSummary(ctx, hh, oldLot, choice);
+  const furniture = furnitureSummary(ctx, hh, oldLot, choice, opts.autoPlace === true);
   const none = (reason: string): MovePreview => ({ ok: false, reason, lotId, mode: null, cost: 0, proceeds: 0, lines: [], furniture });
   if (!lot) return none('There is no such home.');
   if (lot.kind !== 'residential') return none('Only homes can be lived in.');
@@ -224,7 +231,7 @@ export function movePreview(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): Mov
       ? `${lot.name} costs ${money(cost)} a week in rent. The first week is paid now and the rent replaces the property tax on the weekly bill.`
       : `${lot.name} costs ${money(cost)}. You will own it, and pay property tax on it.`,
     sells ? `Your home ${old!.name} is sold for ${money(proceeds)} (${Math.round(SALE_RATE * 100)} % of its value).` : old ? `You hand ${old.name} back; it becomes available again.` : '',
-    furniture.count === 0 ? '' : choice === 'take' ? `Your ${furniture.count} pieces of furniture go with you into the household inventory; place them in Buy mode.`
+    furniture.count === 0 ? '' : choice === 'take' ? `Your ${furniture.count} pieces of furniture go with you${furniture.autoPlace ? ' and are placed in the new home where they fit; anything that does not fit waits in your inventory.' : ' into the household inventory; place them in Buy mode.'}`
       : choice === 'sell' ? `Your ${furniture.count} pieces of furniture are sold for ${money(furnitureCash)}.`
         : `Your ${furniture.count} pieces of furniture stay in the house${sells ? ' (they are part of the sale)' : ''}.`,
     'Everyone who is with you travels there (20 to 40 minutes); anyone at work comes home to the new place.',
@@ -259,13 +266,17 @@ export function moveHousehold(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): {
     preview.mode === 'rent' ? `Rent deposit: ${lot.name}` : `Bought ${lot.name}`, { occurrence: `${tag}:cost` });
   if (!pay.ok) return { ok: false, reason: pay.reason };
   // The furniture leaves first, so the house is sold without it (taken: into the inventory; sold: paid once).
+  const takenIds: Id[] = [];
+  let takenKinds: Record<Id, string> = {};
   if (old && preview.furniture.choice !== 'leave') {
+    if (preview.furniture.autoPlace) takenKinds = roomKindsOf(ctx.content, old, movableFurniture(ctx, hh, old).map((o) => o.id));
     for (const o of movableFurniture(ctx, hh, old)) {
       if (preview.furniture.choice === 'take') {
         const object = JSON.parse(JSON.stringify(o)) as PlacedObject;
         delete object.supportId;
         object.ownerHouseholdId = hh.id;
         hh.inventory.push({ object, storedAt: ctx.now });
+        takenIds.push(object.id);
       }
       delete old.objects[o.id];
     }
@@ -291,6 +302,14 @@ export function moveHousehold(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): {
     delete lot.price;
     for (const o of Object.values(lot.objects)) o.ownerHouseholdId = hh.id;
   }
+  // Taken pieces go into the new home where they fit (after the buyer's ownership is set, before anyone arrives).
+  let notPlaced = 0;
+  if (preview.furniture.autoPlace && takenIds.length > 0) {
+    const r = autoPlaceInventory(state, ctx.content, hh, lot, takenIds, takenKinds);
+    notPlaced = r.left;
+    ctx.nav.invalidate(lot.id);
+    ctx.events.emit({ type: 'lot.changed', lotId: lot.id, what: 'objects' });
+  }
   hh.homeLotId = lot.id;
   for (const id of hh.memberIds) {
     const p = state.people[id];
@@ -299,6 +318,7 @@ export function moveHousehold(ctx: SimCtx, lotId: Id, opts: MoveOptions = {}): {
   if (nm) nm.moves = moveNo;
   addFeed(state, ctx.events, 'info', preview.mode === 'rent'
     ? `The ${hh.name} household rented ${lot.name}.` : `The ${hh.name} household bought ${lot.name}.`, hh.memberIds[0]);
+  if (notPlaced > 0) addFeed(state, ctx.events, 'info', `${notPlaced} ${notPlaced === 1 ? 'item' : 'items'} did not fit and ${notPlaced === 1 ? 'is' : 'are'} in your inventory.`, hh.memberIds[0]);
   ctx.events.emit({ type: 'household.moved', householdId: hh.id, fromLotId: old?.id ?? null, toLotId: lot.id });
 
   // Everybody who is out and about travels to the new home.

@@ -90,7 +90,12 @@ export function attachWorldInput(sh: Shell, canvas: HTMLElement, isBlocked: () =
   let touchPreviewKey: string | null = null;
   let hoverKey: string | null = null;
   const lastTool: { wall: Extract<PaintTool, { kind: 'wall' }> | null; floor: Extract<PaintTool, { kind: 'floor' }> | null } = { wall: null, floor: null };
-  const syncDraw = () => machine.setDrawMode(api.mode() === 'build' && toolMode(api.buildTool()) === 'drag');
+  const syncDraw = () => {
+    const inBuild = api.mode() === 'build';
+    machine.setDrawMode(inBuild && (toolMode(api.buildTool()) === 'drag' || sh.build.roomDragActive()));
+    // A room move drag only starts on the room being moved; anywhere else the press still pans the camera.
+    machine.setDrawGate(inBuild && sh.build.roomDragActive() ? (x, y) => sh.build.roomDragAt(x, y) : null);
+  };
   const unsubChange = api.onChange((w) => {
     if (w === 'build' || w === 'mode') syncDraw();
     if (w === 'paint') {

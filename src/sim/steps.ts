@@ -71,6 +71,8 @@ export interface Behavior {
    * first). Returning true means the behavior took the request over; the runner keeps the action running.
    */
   cancelGraceful?(ctx: SimCtx, p: Person, a: ActionInstance): boolean;
+  /** Every tick of the route phase, after the stage was computed and before walking: a reason fails the action (a game partner who walked off). */
+  routing?(ctx: SimCtx, p: Person, a: ActionInstance): string | null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -116,6 +118,16 @@ function setUsePoint(a: ActionInstance, prefix: UsePointPrefix, c: UseCandidate)
   else if (c.tile) { a.data[`${prefix}X`] = c.tile.x; a.data[`${prefix}Z`] = c.tile.z; }
 }
 
+/** Moves a use point from one action's data to another's (under another prefix); the caller re-syncs both reservations. */
+export function moveUsePoint(from: ActionInstance, fromPrefix: UsePointPrefix, to: ActionInstance, toPrefix: UsePointPrefix): void {
+  clearUsePoint(to, toPrefix);
+  for (const k of ['Obj', 'Slot', 'X', 'Z']) {
+    const v = from.data[`${fromPrefix}${k}`];
+    if (v !== undefined) to.data[`${toPrefix}${k}`] = v;
+  }
+  clearUsePoint(from, fromPrefix);
+}
+
 /** Item capacity for reservations: a meal's or a catch's remaining portions; dishes and messes are cleaned by one person at a time. */
 export function itemCapacity(ctx: SimCtx): (itemId: Id) => number {
   return (id) => { const it = ctx.state.items[id]; return !it ? 0 : it.kind === 'meal' || it.kind === 'fish' ? it.portions : 1; };
@@ -148,7 +160,15 @@ export function candidateFree(ctx: SimCtx, lotId: Id, level: number, c: UseCandi
     const seat = coincidentSeat(ctx, lotId, level, c.slot);
     if (seat?.slot && !ctx.res.isFree(slotKey(seat.objectId, seat.slot.slotId), actionId)) return false;
   }
-  return true;
+  return !slotExcluded(ctx, lotId, c, actionId);
+}
+
+/** True when a slot that `c.slot` excludes (or one that excludes it) is held by another action. */
+export function slotExcluded(ctx: SimCtx, lotId: Id, c: UseCandidate, actionId?: Id): boolean {
+  const s = c.slot;
+  if (!s) return false;
+  const others = ctx.nav.slotsOf(lotId, c.objectId).filter((o) => o.slotId !== s.slotId && (s.excludes?.includes(o.slotId) || o.excludes?.includes(s.slotId)));
+  return others.some((o) => !ctx.res.isFree(slotKey(c.objectId, o.slotId), actionId));
 }
 
 /**
@@ -213,7 +233,7 @@ export function standCandidates(ctx: SimCtx, lotId: Id, objectId: Id): UseCandid
 }
 
 const GONE: Record<UsePointPrefix, string> = {
-  use: 'It is gone.', seat: 'The seat is gone.', stove: 'The stove is gone.', surf: 'The counter is gone.', wash: 'The sink is gone.',
+  use: 'It is gone.', seat: 'The seat is gone.', stove: 'The stove is gone.', surf: 'The counter is gone.', wash: 'The sink is gone.', mate: 'It is gone.',
 };
 
 /** Goal for a stored use point, or a failure reason when its object or slot vanished. */

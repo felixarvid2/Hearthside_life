@@ -16,21 +16,23 @@ import {
   behaviorOf, dist, hashString, interactionDef, isSeat, isVisitor, lotLoc, lotObjects, objectCenter, objectName, objectRef, venueRestriction,
 } from './context';
 import { bakeBehavior } from './baking';
+import { attendCeremonyBehavior } from './ceremony';
 import { jogLoopBehavior } from './jog';
 import { cookBehavior, eatMealBehavior } from './cooking';
 import { gardenBehavior } from './garden';
 import { needsPower, powerIsOff } from './economy';
 import { BROKEN_OK_BEHAVIORS, isBroken } from './housekeeping';
-import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
+import { callRepairBehavior, cleanBehavior, mopBehavior, repairBehavior, unwrapGiftBehavior, serviceBehavior, tidyBehavior, washDishesBehavior } from './housework';
 import { getOutBehavior, paddleBehavior, poolSwimBehavior } from './pool';
 import { placePot, storeFishBehavior } from './furnishings';
 import { isOutdoors, nearestOutdoorTile } from './weather';
 import { makePlacedObject } from '../world/objects';
 import { validatePlacement } from '../world/placement';
+import { slotKey } from './reservations';
 import { socialBehavior } from './social';
 import type { Behavior, Step, UseCandidate } from './steps';
 import {
-  candidateFree, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
+  candidateFree, slotExcluded, defDuration, hasUsePoint, objectCandidates, performRates, pickUsePoint, skillRate, usePointGoal, usePointObject,
   clearUsePoint,
 } from './steps';
 import {
@@ -365,6 +367,16 @@ export function freeUsePointExists(ctx: SimCtx, p: Person, def: InteractionDef, 
   const seats = def.behavior === 'watchTv' ? tvSeats(ctx, p, ref) : def.behavior === 'computer' ? computerSeats(ctx, p, ref) : [];
   if (seats.some((c) => candidateFree(ctx, loc.lotId, loc.level, c))) return true;
   return cands.length === 0 && seats.length === 0;
+}
+
+/** Why `freeUsePointExists` is false: a slot taken by someone else, or one blocked by a slot it excludes (a sleeper on the sofa bed). */
+export function usePointBlockedReason(ctx: SimCtx, p: Person, def: InteractionDef, objectId: string): string {
+  const loc = lotLoc(p);
+  if (!loc) return 'Someone is using it.';
+  const cands = objectCandidates(ctx, loc.lotId, objectId, def.slotKinds);
+  const onlyExcluded = cands.some((c) => c.slot && ctx.res.isFree(slotKey(c.objectId, c.slot.slotId)) && slotExcluded(ctx, loc.lotId, c));
+  if (!onlyExcluded) return 'Someone is using it.';
+  return def.slotKinds.includes('sleep') ? 'Someone is sitting on it.' : 'Someone is sleeping on it.';
 }
 
 /** Watch TV: a free seat within 5 m facing the TV, else stand at the TV's slot. */
@@ -787,6 +799,7 @@ function buildRegistry(): Record<string, Behavior> {
     clean: cleanBehavior,
     washDishes: washDishesBehavior,
     mop: mopBehavior,
+    unwrapGift: unwrapGiftBehavior,
     tidy: tidyBehavior,
     repair: repairBehavior,
     service: serviceBehavior,
@@ -798,6 +811,7 @@ function buildRegistry(): Record<string, Behavior> {
     ageUp: ageUpBehavior,
     openAdopt: openAdoptBehavior,
     goHere: goHereBehavior,
+    attendCeremony: attendCeremonyBehavior,
     leaveLot: leaveLotBehavior,
     travelTo: travelToBehavior,
     inviteHome: inviteHomeBehavior,

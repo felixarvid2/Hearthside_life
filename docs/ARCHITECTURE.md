@@ -354,6 +354,7 @@ These ids are used across modules and must exist with these meanings.
 | `cleanObject` | `clean` | tag `cleanable`; scrubs dirt to 0; minutes = 6 + 24 x dirt, faster with Handiness |
 | `washDishes` | `washDishes` | item (dishes); pick up, carry to a working `sink`/`dishes` object, wash; item removed on completion |
 | `mopFloor` | `mop` | item (mess); wipes a puddle, spill or crumbs |
+| `unwrapGift` | `unwrapGift` | item (gift parcel of the actor's household); 3 minutes, parcel removed, feed line, `giftReceived` moodlet unless disliked; no autonomy |
 | `tidyUp` | `tidy` | self; takes 0.2 dirt off cleanable things within 5 tiles and sweeps crumbs |
 | `repairObject` | `repair` | tags `plumbing`/`appliance`/`electronics`, only when broken; success by Handiness/Logic/Programming, failures can shock or splash |
 | `serviceObject` | `service` | same tags; removes wear so the object breaks less often |
@@ -1135,7 +1136,7 @@ Files: `content/interactionsFurnishings.ts` (the interactions), `content/furnish
 - **Games.** New designs `pool-table-classic`, `dartboard-cabinet`, `foosball-table`, `table-tennis-table` (interactions `playPool`,
   `throwDarts`, `playFoosball`, `playTableTennis`: fun, a moodlet, table tennis also trains Fitness). With two people: socials
   `playPoolTogether`, `playDartsTogether`, `playFoosballTogether`, `playTableTennisTogether` carry `requires.objectTag` (the actor's lot
-  and level needs a working object with that tag); the pair chat as usual, there is no walk to the table.
+  and level needs a working object with that tag). `socialBehavior` runs them in stages: `reserveGameSpots` (sim/furnishings.ts) reserves the actor's spot (`use`), the partner's (`mate`) and the table (`surfObj`); the partner's listener action starts in the route phase (`Behavior.routing`) with the `mate` spot handed over, both walk there, `arrive` waits until the listener has arrived, then the usual timed stage runs with both facing the table. A removed or broken table or an unreachable spot fails the action cleanly (the listener ends with it).
 - **Pottery.** `pottery-wheel`: `throwPottery` (Creativity xp, fun) places a Handmade Pot (`pot-handmade`, status dev, `proc:pot` mesh) on a
   free tile near the potter; its recorded price is `potValue(creativity level)` and it was "bought yesterday", so Build mode sells it
   for 80 % of that. `sellPottery` pays a freelance fee once through `transact`.

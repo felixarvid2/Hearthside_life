@@ -46,6 +46,11 @@
 }
 .ctx-unavail-sum::-webkit-details-marker { display: none; }
 .ctx-unavail[open] > .ctx-unavail-sum { color: var(--ink-2); }
+.ctx-unavail-all > .ctx-unavail-sum { font-size: 0.86rem; }
+.ctx-all-off { flex: 1; min-width: 0; }
+.ctx-all-count { font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+.ctx-unavail-all > .ctx-unavail-sum::after { content: '\25BE'; margin-left: 2px; }
+.ctx-unavail-all[open] > .ctx-unavail-sum::after { content: '\25B4'; }
 
 /* ---------- Event tracker on the HUD ---------- */
 .ev-tracker {

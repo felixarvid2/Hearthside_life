@@ -31,3 +31,25 @@
 .aging-custom[hidden] { display: none; }
 .aging-hint { margin: 0 0 6px; }
 .split-dialog .chip, .adopt-dialog .seg { min-height: 44px; }
+.split-cols, .split-col { display: contents; }
+.split-intro { order: -3; }
+.split-reason { order: -2; }
+.split-who-field { order: 0; }
+.split-dest { order: 1; }
+.split-where { order: 2; }
+.split-lines { order: 3; }
+/* Phone landscape: who/where on the left, the toggle and preview on the right, so the dialog fits 844x390 without scrolling (buttons stay 44px). */
+@media (orientation: landscape) and (max-height: 520px) {
+  .split-dialog .modal-header { padding-top: 2px; padding-bottom: 2px; }
+  .split-dialog .modal-body { gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+  .split-intro { display: none; }
+  .split-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 16px; align-items: start; }
+  .split-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .split-dest .seg-btn, .split-dest button { font-size: 0.85rem; padding-left: 6px; padding-right: 6px; }
+  .split-reason { min-height: 0; font-size: 0.82rem; }
+  .split-reason:empty { display: none; }
+  .split-lines { font-size: 0.82rem; gap: 2px; }
+  .split-dialog .field { gap: 2px; }
+  .split-who, .split-where { gap: 4px; }
+  .split-dialog .modal-footer { padding-top: 6px; padding-bottom: 6px; }
+}

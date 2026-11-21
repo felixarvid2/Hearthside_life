@@ -68,6 +68,19 @@ export function giftLine(verdict: GiftVerdict, gift: GiftDef, a: string, b: stri
   return list[pick % list.length]!.replaceAll('{a}', a).replaceAll('{b}', b).replaceAll('{gift}', `a ${gift.name.toLowerCase()}`);
 }
 
+const UNWRAP_LINES: Record<GiftVerdict, string[]> = {
+  loved: ['{b} unwraps {gift}{from} and holds it close.', '{b} opens {gift}{from} with a big smile.'],
+  liked: ['{b} unwraps {gift}{from}. Lovely!', '{b} opens {gift}{from} and smiles.'],
+  fine: ['{b} unwraps {gift}{from} and nods politely.', '{b} opens {gift}{from}. How nice.'],
+  disliked: ['{b} unwraps {gift}{from} and tries to look pleased.', '{b} opens {gift}{from} and folds the paper away.'],
+};
+
+/** The feed line when a parcel is unwrapped: picked by the verdict and the parcel's creation time, so it is deterministic. */
+export function giftUnwrapLine(verdict: GiftVerdict, gift: GiftDef, b: string, from: string | null, pick: number): string {
+  const list = UNWRAP_LINES[verdict];
+  return list[Math.abs(Math.round(pick)) % list.length]!.replaceAll('{b}', b).replaceAll('{gift}', `a ${gift.name.toLowerCase()}`).replaceAll('{from}', from ? ` from ${from}` : '');
+}
+
 /** Why `giver` cannot give this gift to `recipient` now (age, money), or null. */
 export function giftProblem(ctx: SimCtx, giver: Person, recipient: Person, giftId: string): string | null {
   const gift = ctx.content.gifts?.[giftId];
